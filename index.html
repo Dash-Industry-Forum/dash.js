@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8"/>
+	<title>MediaSource</title>
+	<link href="styles.css" type="text/css" rel="stylesheet"/>
+	<meta name="description" content="" />
+    <script src="dash/iso-bmff.js"></script>
+	<script src="dash/vo/ValueObjects.js"></script>
+	<script src="dash/DashPlayer.js"></script>
+	<script src="dash/DashPlayerUI.js"></script>
+	<script src="dash/DashIndexHandler.js"></script>
+	<script src="dash/DashParser.js"></script>
+	<script src="dash/SegmentLoader.js"></script>
+    <script src="dash/SegmentIndexLoader.js"></script>
+	<script>
+		var player;
+		
+		function load()
+        {
+            var streams = {};
+
+            streams.list = "http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd";
+            streams.template = "http://www.digitalprimates.net/dash/streams/mp4-live/mp4-live-mpd-AV-BS.mpd";
+            streams.timeline = "http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd";
+            streams.base = "http://download.tsi.telecom-paristech.fr/gpac/DASH_CONFORMANCE/TelecomParisTech/mp4-onDemand/mp4-onDemand-mpd-AV.mpd";
+            streams.youtube = "http://dashdemo.edgesuite.net/digitalprimates/nexus/oops-20120802-manifest.mpd";
+            streams.bunny = "http://dash.edgesuite.net/adobe/bbb/bbb.mpd";
+
+            var custom = document.getElementById("custom-source");
+            var select = document.getElementById("sources");
+            var source = null;
+
+            source = custom.value;
+            if (source == null || source == "") {
+                source = streams[select.value];
+            }
+
+            console.log("manifest: " + source);
+
+			var video = document.querySelector(".dash-video-player video");
+			player = new dash.DashPlayer(video);
+			player.load(source);
+			var ui = new dash.DashPlayerUI(document.querySelector(".dash-video-player"));			
+		}
+		
+		function switchUp()
+        {
+			var newQuality = player.videoQuality + 1;
+            player.setVideoQualityIndex(newQuality);
+		}
+		
+		function switchDown()
+        {
+			var newQuality = player.videoQuality - 1;
+			player.setVideoQualityIndex(newQuality);
+        }
+
+        function fastForward()
+        {
+            var video = document.querySelector(".dash-video-player video");
+            video.currentTime+=20;
+        }
+
+        function rewind()
+        {
+            var video = document.querySelector(".dash-video-player video");
+            video.currentTime-=20;
+        }
+	</script>
+</head>
+<body>
+    <p style="width:600px;">This is an early draft of the DASH-IF JavaScript DASH-264 player, future versions will have a revised architecture with an eye towards extensibility.  It is not recommended for others to contribute or modify this source, as we know it is in flux and will change soon.</h1>
+    <div class="video-instructions">
+        1. Select a stream from the drop down.<br>
+        2. Click on Load.<br>
+        3. Click on the play button after it turns white.<br>
+        <i>Refresh the page to start a new stream.</i><br>
+    </div>
+    <div>
+        MPD: <input id="custom-source" style="width:300px;"/>
+    </div>
+	<div class="video-options">
+        <select id="sources">
+			<option value="list" selected="true">Segment List</option>
+			<option value="template">Segment Template</option>
+			<option value="timeline">Segment Timeline</option>
+			<option value="base">SegmentBase</option>
+            <option value="youtube">YouTube</option>
+            <!--
+            <option value="bunny">Bunny</option>
+            -->
+		</select>
+		<button type="button" onclick="load()">Load</button>
+		<button type="button" onclick="switchUp()">Bitrate Up</button>
+		<button type="button" onclick="switchDown()">Bitrate Down</button>
+        <button type="button" onclick="fastForward()">Fast Forward</button>
+        <button type="button" onclick="rewind()">Rewind</button>
+	</div>
+	<div class="dash-video-player">
+		<div class="video-wrapper">
+			<video controls="true"></video>
+		</div>
+		<div class="video-controls">
+			<a href="#" class="button-play-pause"></a>
+			<div class="time-current">00:00</div>
+			<div class="scrubber">
+				<div class="progress">
+					<div class="progress-indicator" style="width:1%;"></div>
+					<div class="buffer-indicator" style="width:1%;"></div>
+				</div>
+			</div>
+			<div class="time-total">00:00</div>
+			<a href="#" class="button-full-screen"></a>
+		</div>
+	</div>
+	<div class="release-notes" style="position:absolute;top:10px;right:10px;width:400px;">
+        <b>Known Issues</b><br/>
+        Erratic playback at higher bitrates.<br/>
+        Streams using high profile codecs may not play properly.<br/>
+        You may get the error "Media Source Close" when attempting to switch bitrates.
+
+        <p/>
+
+        <b>Release Notes v0.0.1</b><br/>
+        Requires Chrome 24 or later.<br/>
+        Basic implements for the four fragment description types work.<br/>
+        <i>SegmentList</i><br/>
+        <i>SegmentTemplate</i><br/>
+        <i>SegmentTemplate with SegmentTimeline</i><br/>
+        <i>SegmentBase</i><br/>
+        If you see the message "manifest failed to load" try turning off Chrome's web security.<br/>
+        <i>-Right click the Chrome icon and select "properties".</i><br/>
+        <i>-In the "target" field add "--disable-web-security".</i><br/>
+        <i>-After launching Chrome you will see the message "You are using an unsupported command-line flag: --disable-web-security.  Stability and security will suffer."</i>
+	</div>
+</body>
+</html>
