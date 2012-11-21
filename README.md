@@ -1,4 +1,4 @@
-dash-js
-=======
+dash-js-dp
+==========
 
-A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.
+dp version of dash js player

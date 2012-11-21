@@ -137,7 +137,23 @@ dash.vo.AdaptationSet.prototype = {
 		}
 		if(this.mimeType != null && this.mimeType.length > 0) return this.mimeType.indexOf("video") != -1;
 		return false;
-	}
+    },
+    /**
+     *
+     * @return {boolean}
+     */
+    getIsMain: function() {
+        // TODO : Check "Role" node.
+        return false;
+    },
+    /**
+     *
+     * @return {boolean}
+     */
+    getCodec: function () {
+        var representation = this.medias[0];
+        return representation.mimeType + '; codecs="' + representation.codecs.join(",") + '"';
+    }
 };
 
 
@@ -196,44 +212,133 @@ dash.vo.DashManifest = function() {
     me.source = null;
 };
 
-dash.vo.DashManifest.prototype = {
-    /**
-     * @return {number}
-     */
-    getDuration: function() {
-        if(this.mediaPresentationDuration)
-            return this.mediaPresentationDuration;
-        else if(this.availabilityEndTime && this.availabilityStartTime )
-            return this.availabilityEndTime.getTime() - this.availabilityStartTime.getTime();
-        return NaN;
-	},
-    /**
-     *
-     * @return {boolean}
-     */
-    getIsDVR: function() {
-		var containsDVR = !isNaN(this.timeShiftBufferDepth);
-		return this.getIsLive() && containsDVR;
-	}
-	,
-    /**
-     *
-     * @return {boolean}
-     */
-    getIsLive: function() {
-		return this.type == "dynamic";
-	}
-	,
-    /**
-     *
-     * @return {boolean}
-     */
-    getIsOnDemand: function() {
-		if(this.profiles && this.profiles.length > 0) return this.profiles.indexOf("urn:mpeg:dash:profile:isoff-on-demand:201") != -1;
-		return false;
-	}
+dash.vo.DashManifest.prototype = new streaming.Manifest();
+
+/**
+ * @private
+ * @param {string} contentType
+ * @return {dash.vo.AdaptationSet}
+ */
+dash.vo.DashManifest.prototype.getAdaptationSet = function (contentType)
+{
+    var adaptations = this.manifest.periods[0].adaptations;
+    for(var i=0; i<adaptations.length;i++)
+    {
+        if(contentType == "video" && adaptations[i].getIsVideo())
+            return adaptations[i];
+
+        if(contentType == "audio" && adaptations[i].getIsAudio())
+            return adaptations[i];
+    }
+    return null;
+},
+
+/**
+ * @return Object containing video data.
+ */
+dash.vo.DashManifest.prototype.getVideoData = function()
+{
+    var adaptations = this.periods[0].adaptations;
+    for (var i = 0; i < adaptations.length; i++)
+    {
+        if (adaptations[i].getIsVideo())
+        {
+            return adaptations[i];
+        }
+    }
 };
 
+/**
+ * @return Object containing primary audio data.
+ */
+dash.vo.DashManifest.prototype.getPrimaryAudioData = function()
+{
+    var audios = this.getAudioDatas();
+    for (var i = 0; i < audios.length; i++)
+    {
+        if (audios[i].getIsMain())
+        {
+            return audios[i];
+        }
+    }
+
+    // if nothing is marked as main just use the first one
+    return audios[0];
+};
+
+/**
+ * @return Array containing audio data objects.
+ */
+dash.vo.DashManifest.prototype.getAudioDatas = function()
+{
+    var adaptations = this.periods[0].adaptations;
+    var audios = new Array();
+    for (var i = 0; i < adaptations.length; i++)
+    {
+        if (adaptations[i].getIsAudio())
+        {
+            audios.push(adaptations[i]);
+        }
+    }
+    return audios;
+};
+
+/**
+* @return {number}
+*/
+dash.vo.DashManifest.prototype.hasVideoStream = function ()
+{
+    return (this.getVideoData() != null);
+};
+
+/**
+* @return {number}
+*/
+dash.vo.DashManifest.prototype.hasAudioStream = function ()
+{
+    return (this.getAudioDatas().length > 0);
+};
+
+/**
+* @return {number}
+*/
+dash.vo.DashManifest.prototype.getDuration = function()
+{
+    if(this.mediaPresentationDuration)
+        return this.mediaPresentationDuration;
+    else if(this.availabilityEndTime && this.availabilityStartTime )
+        return this.availabilityEndTime.getTime() - this.availabilityStartTime.getTime();
+    return NaN;
+};
+
+/**
+*
+* @return {boolean}
+*/
+dash.vo.DashManifest.prototype.getIsDVR = function()
+{
+    var containsDVR = !isNaN(this.timeShiftBufferDepth);
+    return this.getIsLive() && containsDVR;
+};
+
+/**
+*
+* @return {boolean}
+*/
+dash.vo.DashManifest.prototype.getIsLive = function()
+{
+    return this.type == "dynamic";
+};
+
+/**
+*
+* @return {boolean}
+*/
+dash.vo.DashManifest.prototype.getIsOnDemand = function()
+{
+    if (this.profiles && this.profiles.length > 0) return this.profiles.indexOf("urn:mpeg:dash:profile:isoff-on-demand:201") != -1;
+    return false;
+};
 
 /**
  * @constructor
@@ -436,7 +541,6 @@ dash.vo.Segment = function() {
     me.timescale = NaN;
 };
 
-
 /**
  * @constructor
  * @extends {dash.vo.MultipleSegmentBase}
@@ -447,26 +551,6 @@ dash.vo.SegmentList = function(base) {
     this.segments = null;
 	if(base) this.segments = base.segments;
 };
-
-
-/**
- * @constructor
- */
-dash.vo.SegmentRequest = function() {
-    var me  = this;
-    /** @type {number}*/
-    me.startTime = NaN;
-    /** @type {number}*/
-    me.duration = NaN;
-    /** @type {number}*/
-    me.endRange = null;
-    /** @type {number}*/
-    me.startRange = null;
-    /** @type {string|null}*/
-    me.url = null;
-};
-
-
 
 /**
  * @constructor

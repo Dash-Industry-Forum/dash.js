@@ -22,7 +22,9 @@ window["dash"] = window["dash"]||{};
  */
 dash.SegmentIndexLoader = function() {
     /** @type {string} */
-    this.url=null;
+    this.url = null;
+    /** @type {int} */
+    this.quality = -1;
     /** @type {dash.vo.IndexRange} */
     this.range=null;
     /**
@@ -36,17 +38,18 @@ dash.SegmentIndexLoader = function() {
     this.xhr=new XMLHttpRequest();
     this.xhr.responseType="arraybuffer";
     this.xhr.addEventListener("load", this.onSegmentDataLoaded.bind(this),false);
-    this.xhr.addEventListener("error", this.onSegmentDataError.bind(this),false);
+    this.xhr.addEventListener("error", this.onSegmentDataError.bind(this), false);
 };
 dash.SegmentIndexLoader.prototype={
     /**
      * @param {string} url
      * @param {dash.vo.IndexRange} segmentRange
      */
-    loadSegments:function(url,segmentRange)
+    loadSegments:function(url,segmentRange, quality)
     {
         this.range=segmentRange;
-        this.url=url;
+        this.url = url;
+        this.quality = quality;
         this.xhr.open("GET",url);
         this.xhr.setRequestHeader("Range", "bytes="+segmentRange.start+"-"+segmentRange.end);
         this.xhr.send(null);
@@ -57,7 +60,7 @@ dash.SegmentIndexLoader.prototype={
      */
     onSegmentDataLoaded:function(e)
     {
-        this.onSegmentsLoaded(this.parseSegments(this.xhr.response,this.url,this.range.start));
+        this.onSegmentsLoaded(this.parseSegments(this.xhr.response,this.url,this.range.start), this.quality);
     },
     /**
      * @private

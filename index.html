@@ -1,138 +1,352 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-	<meta charset="utf-8"/>
-	<title>MediaSource</title>
-	<link href="styles.css" type="text/css" rel="stylesheet"/>
-	<meta name="description" content="" />
-    <script src="dash/iso-bmff.js"></script>
-	<script src="dash/vo/ValueObjects.js"></script>
-	<script src="dash/DashPlayer.js"></script>
-	<script src="dash/DashPlayerUI.js"></script>
-	<script src="dash/DashIndexHandler.js"></script>
-	<script src="dash/DashParser.js"></script>
-	<script src="dash/SegmentLoader.js"></script>
-    <script src="dash/SegmentIndexLoader.js"></script>
-	<script>
-		var player;
-		
-		function load()
-        {
-            var streams = {};
+    <head>
+        <meta charset="utf-8"/>
+        <title>MediaSource</title>
+        <link href="styles.css" type="text/css" rel="stylesheet"/>
+        <meta name="description" content="" />
+        
+        <script src="streaming/vo/ValueObject.js"></script>
+        <script src="streaming/BufferManager.js"></script>
+        <script src="streaming/IndexHandler.js"></script>
+        <script src="streaming/iso-bmff.js"></script>
+        <script src="streaming/Loader.js"></script>
+        <script src="streaming/Manifest.js"></script>
+        <script src="streaming/Parser.js"></script>
+        <script src="streaming/PlayerUI.js"></script>
+        <script src="streaming/Stream.js"></script>
+        <script src="streaming/StreamFactory.js"></script>
+        
+        <script src="dash/vo/ValueObjects.js"></script>
+        <script src="dash/DashFactory.js"></script>
+        <script src="dash/DashHandler.js"></script>
+        <script src="dash/DashParser.js"></script>
+        <script src="dash/SegmentIndexLoader.js"></script>
+        
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+        <script src="highcharts/highcharts.js"></script>
+        <script src="highcharts/modules/exporting.js"></script>
+        
+        <script>
+            var player;
+            var ui;
+            var time = -1;
 
-            streams.list = "http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd";
-            streams.template = "http://www.digitalprimates.net/dash/streams/mp4-live/mp4-live-mpd-AV-BS.mpd";
-            streams.timeline = "http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd";
-            streams.base = "http://download.tsi.telecom-paristech.fr/gpac/DASH_CONFORMANCE/TelecomParisTech/mp4-onDemand/mp4-onDemand-mpd-AV.mpd";
-            streams.youtube = "http://dashdemo.edgesuite.net/digitalprimates/nexus/oops-20120802-manifest.mpd";
-            streams.bunny = "http://dash.edgesuite.net/adobe/bbb/bbb.mpd";
+            var bufferChart;
+            var fpsChart;
 
-            var custom = document.getElementById("custom-source");
-            var select = document.getElementById("sources");
-            var source = null;
-
-            source = custom.value;
-            if (source == null || source == "") {
-                source = streams[select.value];
+            function buildBufferGraph()
+            {
+                bufferChart = new Highcharts.Chart({
+                    chart: {
+                        renderTo: 'buffer-container',
+                        spacingRight: 20
+                    },
+                    title: {
+                        text: 'Video Buffer'
+                    },
+                    xAxis: {
+                        type: 'time',
+                        tickPixelInterval: 100
+                    },
+                    yAxis: {
+                        title: {
+                            text: null
+                        },
+                        min: 0
+                    },
+                    tooltip: {
+                        shared: true
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    plotOptions: {
+                        line: {
+                            dataLabels: {
+                                enabled: true
+                            },
+                            enableMouseTracking: false
+                        }
+                    },
+                    exporting: {
+                        enabled: false
+                    },
+                    printing: {
+                        enabled: false
+                    },
+                    series: [{
+                        name: 'avgfps',
+                        data: (function () {
+                            // generate an array of random data
+                            var data = [];
+                            for (var i = 0; i < 10; i++) {
+                                data.push({ x: 0, y: 0 });
+                            }
+                            return data;
+                        })()
+                    }]
+                });
             }
 
-            console.log("manifest: " + source);
+            function init()
+            {
+                buildBufferGraph();
+            }
 
-			var video = document.querySelector(".dash-video-player video");
-			player = new dash.DashPlayer(video);
-			player.load(source);
-			var ui = new dash.DashPlayerUI(document.querySelector(".dash-video-player"));			
-		}
+            function onProgress(e)
+            {
+                var video = document.querySelector(".dash-video-player video");
+                var series, x, y;
+
+                var newTime = Math.floor(video.currentTime);
+                
+                if (newTime != time)
+                {
+                    time = newTime;
+
+                    var metrics;
+                    var bitrateValue, bitrateIndex, numBitrates, bufferLength, fragDuration, fragTime;
+                    
+                    // video
+
+                    metrics = player.getVideoMetrics();
+
+                    bitrateValue = document.getElementById("video-value");
+                    bitrateValue.innerHTML = (metrics.bitrateValue / 1000) + " kbps";
+
+                    bitrateIndex = document.getElementById("video-index");
+                    bitrateIndex.innerHTML = metrics.bitrateIndex + 1;
+
+                    numBitrates = document.getElementById("num-video-bitrates");
+                    numBitrates.innerHTML = metrics.maxBitrateIndex;
+
+                    bufferLength = document.getElementById("video-buffer");
+                    bufferLength.innerHTML = metrics.bufferLength + " seconds";
+                    
+                    fragDuration = document.getElementById("video-frag-duration");
+                    fragDuration.innerHTML = metrics.lastFragmentDuration + " seconds";
+                    
+                    fragTime = document.getElementById("video-frag-dl-time");
+                    fragTime.innerHTML = metrics.lastFragmentDownloadTime + " seconds";
+
+                    series = bufferChart.series[0];
+                    x = time;
+                    y = Math.floor(metrics.bufferLength);
+                    series.addPoint([x, y], true, true, false);
+
+                    // audio
+                    
+                    metrics = player.getAudioMetrics();
+
+                    bitrateValue = document.getElementById("audio-value");
+                    bitrateValue.innerHTML = (metrics.bitrateValue / 1000) + " kbps";
+
+                    bitrateIndex = document.getElementById("audio-index");
+                    bitrateIndex.innerHTML = metrics.bitrateIndex + 1;
+
+                    numBitrates = document.getElementById("num-audio-bitrates");
+                    numBitrates.innerHTML = metrics.maxBitrateIndex;
+
+                    bufferLength = document.getElementById("audio-buffer");
+                    bufferLength.innerHTML = metrics.bufferLength + " seconds";
+                    
+                    fragDuration = document.getElementById("audio-frag-duration");
+                    fragDuration.innerHTML = metrics.lastFragmentDuration + " seconds";
+
+                    fragTime = document.getElementById("audio-frag-dl-time");
+                    fragTime.innerHTML = metrics.lastFragmentDownloadTime + " seconds";
+                }
+            }
+
+            function load()
+            {
+                var streams = {};
+
+                streams.list = "http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd";
+                streams.template = "http://www.digitalprimates.net/dash/streams/mp4-live-template/mp4-live-mpd-AV-BS.mpd";
+                streams.timeline = "http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd";
+                streams.base = "http://mantis.digitalprimates.net/dash/streams/mp4-onDemand/mp4-onDemand-mpd-AV.mpd";
+                streams.youtube = "http://yt-dash-mse-test.commondatastorage.googleapis.com/car-20120827-manifest.mpd";
+                streams.bunny = "http://dash.edgesuite.net/adobe/bbb/bbb.mpd";
+
+                var custom = document.getElementById("custom-source");
+                var select = document.getElementById("sources");
+                var source = null;
+            
+                source = custom.value;
+                if (source == null || source == "") {
+                    source = streams[select.value];
+                }
+
+                console.log("manifest: " + source);
+            
+                var video = document.querySelector(".dash-video-player video");
+                video.addEventListener("timeupdate", this.onProgress.bind(this), false);
+                
+                var factory = new dash.DashFactory();
+                player = new streaming.Stream(video, factory);
+                player.load(source);
+
+                var controls = document.querySelector(".dash-video-player");
+                ui = new streaming.PlayerUI(controls);
+            }
 		
-		function switchUp()
-        {
-			var newQuality = player.videoQuality + 1;
-            player.setVideoQualityIndex(newQuality);
-		}
+            function switchUp()
+            {
+                var newQuality = player.getVideoQuality() + 1;
+                player.setVideoQuality(newQuality);
+            }
 		
-		function switchDown()
-        {
-			var newQuality = player.videoQuality - 1;
-			player.setVideoQualityIndex(newQuality);
-        }
+            function switchDown()
+            {
+                var newQuality = player.getVideoQuality() - 1;
+                player.setVideoQuality(newQuality);
+            }
 
-        function fastForward()
-        {
-            var video = document.querySelector(".dash-video-player video");
-            video.currentTime+=20;
-        }
+            function fastForward()
+            {
+                var video = document.querySelector(".dash-video-player video");
+                video.currentTime+=20;
+            }
 
-        function rewind()
-        {
-            var video = document.querySelector(".dash-video-player video");
-            video.currentTime-=20;
-        }
-	</script>
-</head>
-<body>
-    <p style="width:600px;">This is an early draft of the DASH-IF JavaScript DASH-264 player, future versions will have a revised architecture with an eye towards extensibility.  It is not recommended for others to contribute or modify this source, as we know it is in flux and will change soon.</h1>
-    <div class="video-instructions">
-        1. Select a stream from the drop down.<br>
-        2. Click on Load.<br>
-        3. Click on the play button after it turns white.<br>
-        <i>Refresh the page to start a new stream.</i><br>
-    </div>
-    <div>
-        MPD: <input id="custom-source" style="width:300px;"/>
-    </div>
-	<div class="video-options">
-        <select id="sources">
-			<option value="list" selected="true">Segment List</option>
-			<option value="template">Segment Template</option>
-			<option value="timeline">Segment Timeline</option>
-			<option value="base">SegmentBase</option>
-            <option value="youtube">YouTube</option>
-            <!--
-            <option value="bunny">Bunny</option>
-            -->
-		</select>
-		<button type="button" onclick="load()">Load</button>
-		<button type="button" onclick="switchUp()">Bitrate Up</button>
-		<button type="button" onclick="switchDown()">Bitrate Down</button>
-        <button type="button" onclick="fastForward()">Fast Forward</button>
-        <button type="button" onclick="rewind()">Rewind</button>
-	</div>
-	<div class="dash-video-player">
-		<div class="video-wrapper">
-			<video controls="true"></video>
-		</div>
-		<div class="video-controls">
-			<a href="#" class="button-play-pause"></a>
-			<div class="time-current">00:00</div>
-			<div class="scrubber">
-				<div class="progress">
-					<div class="progress-indicator" style="width:1%;"></div>
-					<div class="buffer-indicator" style="width:1%;"></div>
-				</div>
-			</div>
-			<div class="time-total">00:00</div>
-			<a href="#" class="button-full-screen"></a>
-		</div>
-	</div>
-	<div class="release-notes" style="position:absolute;top:10px;right:10px;width:400px;">
-        <b>Known Issues</b><br/>
-        Erratic playback at higher bitrates.<br/>
-        Streams using high profile codecs may not play properly.<br/>
-        You may get the error "Media Source Close" when attempting to switch bitrates.
+            function rewind()
+            {
+                var video = document.querySelector(".dash-video-player video");
+                video.currentTime-=20;
+            }
+        </script>
+    </head>
 
-        <p/>
+    <body onload="init()">
+        <p style="width:600px;">This is an early draft of the DASH-IF JavaScript DASH-264 player, future versions will have a revised architecture with an eye towards extensibility.  It is not recommended for others to contribute or modify this source, as we know it is in flux and will change soon.</p>
+        <div class="video-instructions">
+            1. Select a stream from the drop down.<br/>
+            2. Click on Load.<br/>
+            3. Click on the play button after it turns white.<br/>
+            <i>Refresh the page to start a new stream.</i><br/>
+        </div>
+        <div>
+            MPD: <input id="custom-source" style="width:300px;"/>
+        </div>
+        <div class="video-options">
+            <select id="sources">
+                <option value="list" selected="selected">Segment List</option>
+                <option value="template">Segment Template</option>
+                <option value="timeline">Segment Timeline</option>
+                <option value="base">SegmentBase</option>
+                <option value="youtube">YouTube</option>
+            </select>
+            <button type="button" onclick="load()">Load</button>
+            <button type="button" onclick="switchUp()">Bitrate Up</button>
+            <button type="button" onclick="switchDown()">Bitrate Down</button>
+            <button type="button" onclick="fastForward()">Fast Forward</button>
+            <button type="button" onclick="rewind()">Rewind</button>
+        </div>
+        <div class="dash-video-player" style="float: left;">
+            <div class="video-wrapper">
+                <video controls="true"></video>
+            </div>
+            <div class="video-controls">
+                <a href="#" class="button-play-pause"></a>
+                <div class="time-current">00:00</div>
+                <div class="scrubber">
+                    <div class="progress">
+                        <div class="progress-indicator" style="width:1%;"></div>
+                        <div class="buffer-indicator" style="width:1%;"></div>
+                    </div>
+                </div>
+                <div class="time-total">00:00</div>
+                <a href="#" class="button-full-screen"></a>
+            </div>
+        </div>
+        <div class="metrics-graphs" style="width: 400px; float: left;">
+            <div id="buffer-container" style="width: 400px; height: 200px;"></div>
+        </div>
+        <div class="metrics-panel" style="width: 400px; float: left;">
+            <h1>Video</h1>
+            <table border="1">
+                <tr>
+                    <td>current bitrate</td>
+                    <td id="video-value"></td>
+                </tr>
+                <tr>
+                    <td>current index</td>
+                    <td id="video-index"></td>
+                </tr>
+                <tr>
+                    <td># of bitrates</td>
+                    <td id="num-video-bitrates"></td>
+                </tr>
+                <tr>
+                    <td>buffer length</td>
+                    <td id="video-buffer"></td>
+                </tr>
+                <tr>
+                    <td>last frag duration</td>
+                    <td id="video-frag-duration"></td>
+                </tr>
+                <tr>
+                    <td>last frag d/l time</td>
+                    <td id="video-frag-dl-time"></td>
+                </tr>
+            </table>
+            <h1>Audio</h1>
+            <table border="1">
+                <tr>
+                    <td>current bitrate</td>
+                    <td id="audio-value"></td>
+                </tr>
+                <tr>
+                    <td>current index</td>
+                    <td id="audio-index"></td>
+                </tr>
+                <tr>
+                    <td># of bitrates</td>
+                    <td id="num-audio-bitrates"></td>
+                </tr>
+                <tr>
+                    <td>buffer length</td>
+                    <td id="audio-buffer"></td>
+                </tr>
+                <tr>
+                    <td>last frag duration</td>
+                    <td id="audio-frag-duration"></td>
+                </tr>
+                <tr>
+                    <td>last frag d/l time</td>
+                    <td id="audio-frag-dl-time"></td>
+                </tr>
+            </table>
+        </div>
+        <div class="release-notes" style="clear: both;">
+            <b>Known Issues</b><br/>
+            Erratic playback at higher bitrates.<br/>
+            Streams using high profile codecs may not play properly.<br/>
+            You may get the error "Media Source Close" when attempting to switch bitrates.<br/>
+            
+            <p/>
 
-        <b>Release Notes v0.0.1</b><br/>
-        Requires Chrome 24 or later.<br/>
-        Basic implements for the four fragment description types work.<br/>
-        <i>SegmentList</i><br/>
-        <i>SegmentTemplate</i><br/>
-        <i>SegmentTemplate with SegmentTimeline</i><br/>
-        <i>SegmentBase</i><br/>
-        If you see the message "manifest failed to load" try turning off Chrome's web security.<br/>
-        <i>-Right click the Chrome icon and select "properties".</i><br/>
-        <i>-In the "target" field add "--disable-web-security".</i><br/>
-        <i>-After launching Chrome you will see the message "You are using an unsupported command-line flag: --disable-web-security.  Stability and security will suffer."</i>
-	</div>
-</body>
+            <b>Release Notes v0.0.2</b><br/>
+            Rearchitect the application for better extensibility.<br/>
+            Properly signal end of stream.<br/>
+            Add metrics tracking.<br/>
+            Add charts and tables with metrics info.<br/>
+
+            <p/>
+
+            <b>Release Notes v0.0.1</b><br/>
+            Requires Chrome 24 or later.<br/>
+            Basic implements for the four fragment description types work.<br/>
+            <i>SegmentList</i><br/>
+            <i>SegmentTemplate</i><br/>
+            <i>SegmentTemplate with SegmentTimeline</i><br/>
+            <i>SegmentBase</i><br/>
+            If you see the message "manifest failed to load" try turning off Chrome's web security.<br/>
+            <i>-Right click the Chrome icon and select "properties".</i><br/>
+            <i>-In the "target" field add "--disable-web-security".</i><br/>
+            <i>-After launching Chrome you will see the message "You are using an unsupported command-line flag: --disable-web-security.  Stability and security will suffer."</i>
+        </div>
+    </body>
+
 </html>

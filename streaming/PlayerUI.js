@@ -14,9 +14,9 @@
  *
  * copyright Digital Primates 2012
  */
-window["dash"] = window["dash"]||{};
+window["streaming"] = window["streaming"] || {};
 
-dash.DashPlayerUI = function(rootEl) {
+streaming.PlayerUI = function (rootEl) {
 	var me=this;
 	me.playPauseButton = rootEl.querySelector(".button-play-pause");
 	me.playPauseButton.addEventListener("click",me.onPlayPauseClick.bind(me),false);
@@ -33,7 +33,7 @@ dash.DashPlayerUI = function(rootEl) {
 	me.videoEl.addEventListener("timeupdate",me.onProgress.bind(me),false);
 };
 
-dash.DashPlayerUI.prototype = {
+streaming.PlayerUI.prototype = {
 	onProgressDown: function(e) {
 	}
 	,onPlayPauseClick: function(e) {
