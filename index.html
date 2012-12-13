@@ -12,10 +12,14 @@
         <script src="streaming/iso-bmff.js"></script>
         <script src="streaming/Loader.js"></script>
         <script src="streaming/Manifest.js"></script>
+        <script src="streaming/MbrManager.js"></script>
         <script src="streaming/Parser.js"></script>
         <script src="streaming/PlayerUI.js"></script>
         <script src="streaming/Stream.js"></script>
         <script src="streaming/StreamFactory.js"></script>
+        
+        <script src="streaming/rules/BaseRule.js"></script>
+        <script src="streaming/rules/BandwidthRule.js"></script>
         
         <script src="dash/vo/ValueObjects.js"></script>
         <script src="dash/DashFactory.js"></script>
@@ -33,7 +37,6 @@
             var time = -1;
 
             var bufferChart;
-            var fpsChart;
 
             function buildBufferGraph()
             {
@@ -163,10 +166,12 @@
             {
                 var streams = {};
 
+                streams.netflix = "http://dash.edgesuite.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd";
+                streams.fraunhofer = "http://dashdemo.edgesuite.net/dash264/TestCases/3b/fraunhofer/elephants_dream_heaac2_0.mpd";
                 streams.list = "http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd";
                 streams.template = "http://www.digitalprimates.net/dash/streams/mp4-live-template/mp4-live-mpd-AV-BS.mpd";
                 streams.timeline = "http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd";
-                streams.base = "http://mantis.digitalprimates.net/dash/streams/mp4-onDemand/mp4-onDemand-mpd-AV.mpd";
+                streams.base = "http://www.digitalprimates.net/dash/streams/mp4-onDemand/mp4-onDemand-mpd-AV.mpd";
                 streams.youtube = "http://yt-dash-mse-test.commondatastorage.googleapis.com/car-20120827-manifest.mpd";
                 streams.bunny = "http://dash.edgesuite.net/adobe/bbb/bbb.mpd";
 
@@ -185,9 +190,12 @@
                 video.addEventListener("timeupdate", this.onProgress.bind(this), false);
                 
                 var factory = new dash.DashFactory();
-                player = new streaming.Stream(video, factory);
-                player.load(source);
 
+                player = new streaming.Stream(video, factory);
+
+                player.setVideoAutoSwitchQuality(false);
+                player.load(source);
+                
                 var controls = document.querySelector(".dash-video-player");
                 ui = new streaming.PlayerUI(controls);
             }
@@ -231,7 +239,9 @@
         </div>
         <div class="video-options">
             <select id="sources">
-                <option value="list" selected="selected">Segment List</option>
+                <option value="netflix" selected="selected">Netflix</option>
+                <option value="fraunhofer">Fraunhofer</option>
+                <option value="list">Segment List</option>
                 <option value="template">Segment Template</option>
                 <option value="timeline">Segment Timeline</option>
                 <option value="base">SegmentBase</option>
@@ -324,6 +334,12 @@
             Erratic playback at higher bitrates.<br/>
             Streams using high profile codecs may not play properly.<br/>
             You may get the error "Media Source Close" when attempting to switch bitrates.<br/>
+            
+            <p/>
+
+            <b>Release Notes v0.0.3</b><br/>
+            Handle BaseURL with no SegmentTemplate, SegmentList, or SegmentBase.<br/>
+            Handle SegmentBase nodes without an indexRange or initializationRange.<br/>
             
             <p/>
 

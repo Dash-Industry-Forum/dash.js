@@ -79,15 +79,17 @@ function parseSIDX(ab, ab_first_byte_offset) {
   for (var i = 0; i < reference_count; i++) {
     var ref_size = d.getUint32(pos, false);
     var ref_type = ref_size & 0x80000000;
-    if (ref_type) throw "Unhandled indirect reference";
+    //if (ref_type) throw "Unhandled indirect reference";
     ref_size = ref_size & 0x7fffffff;
     var ref_dur = d.getUint32(pos+4, false);
     pos += 12;
-    references.push({'size': ref_size, 'offset': offset,
-                     'duration': ref_dur,
-                     'time': time,
-                     'timescale':timescale
-                    });
+    references.push({
+        'size': ref_size,
+        'offset': offset,
+        'duration': ref_dur,
+        'time': time,
+        'timescale':timescale
+    });
     offset += ref_size;
     time += ref_dur;
   }

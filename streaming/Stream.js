@@ -29,10 +29,6 @@ streaming.Stream = function (element, factory)
       * @private */
     this.autoplay = false; // TODO
 
-    /** @type {Boolean}
-      * @private */
-    this.autoSwitchBitrate = false;
-
     /** @type {Array}
       * @private */
     this.audios = null;
@@ -40,6 +36,10 @@ streaming.Stream = function (element, factory)
     //--------------------------
     // private variables
     //--------------------------
+
+    /** @type {Array}
+      * @private */
+    this.autoBitrateSwitch = null;
 
     /** @type {int}
       * @private */
@@ -91,6 +91,28 @@ streaming.Stream.prototype =
     //--------------------------
     // qualities and audio tracks
     //--------------------------
+
+    setVideoAutoSwitchQuality: function (value) {
+        this.autoBitrateSwitch = value;
+        
+        if (this.videoManager)
+            this.videoManager.autoSwitchBitrate = this.autoBitrateSwitch;
+
+        if (this.videoManager)
+            console.log("SET AUTO SWITCH 1: " + this.videoManager.autoSwitchBitrate);
+    },
+
+    setVideoQuality: function (value) {
+        if (this.videoManager)
+            this.videoManager.setQuality(value);
+    },
+
+    getVideoQuality: function () {
+        if (this.videoManager)
+            return this.videoManager.getQuality();
+
+        return 0;
+    },
 
     setVideoQuality: function (value)
     {
@@ -248,8 +270,9 @@ streaming.Stream.prototype =
             console.log("Video codec: " + data.getCodec());
 
             buffer = this.mediaSource.addSourceBuffer(data.getCodec());
-            indexHandler = this.factory.getIndexHandler(data, this.manifest.getDuration());
+            indexHandler = this.factory.getIndexHandler(data, this.manifest.getStreamItems(data), this.manifest.getDuration());
             this.videoManager = new streaming.BufferManager(this.element, buffer, indexHandler, bufferTime, "video");
+            this.videoManager.autoSwitchBitrate = this.autoBitrateSwitch;
         }
         else
         {
@@ -285,8 +308,10 @@ streaming.Stream.prototype =
             }
 
             buffer = this.mediaSource.addSourceBuffer(data.getCodec());
-            indexHandler = this.factory.getIndexHandler(data, this.manifest.getDuration());
+            indexHandler = this.factory.getIndexHandler(data, this.manifest.getStreamItems(data), this.manifest.getDuration());
             this.audioManager = new streaming.BufferManager(this.element, buffer, indexHandler, bufferTime, "audio");
+            // TODO : Finish this like video.
+            this.audioManager.autoSwitchBitrate = false;
         }
         else
         {

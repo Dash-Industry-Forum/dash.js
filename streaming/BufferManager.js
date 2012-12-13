@@ -15,6 +15,7 @@
  * copyright Digital Primates 2012
  */
 window["streaming"] = window["streaming"] || {};
+
 /**
  *
  * @constructor
@@ -39,11 +40,24 @@ streaming.BufferManager = function (element, buffer, indexHandler, bufferTime, t
     
     /**
      * @private
-     * @type {SourceBuffer}
+     * @type {streaming.IndexHandler}
      */
     this.indexHandler = indexHandler;
     this.indexHandler.onReady = this.onIndexHandlerReady.bind(this);
+
+    /**
+     * @public
+     * @type {boolean}
+     */
+    this.autoSwitchBitrate = true;
     
+    /**
+     * @private
+     * @type {streaming.MbrManager}
+     */
+    this.mbr = new streaming.MbrManager();
+    this.mbr.init();
+
     /**
      * @private
      * @type {String}
@@ -134,6 +148,9 @@ streaming.BufferManager.prototype =
 
     setQuality: function (value)
     {
+        if (this.quality == value)
+            return;
+        
         if (value < 0)
             return;
 
@@ -152,7 +169,7 @@ streaming.BufferManager.prototype =
         this.checkBuffers();
     },
 
-    checkBuffers: function ()
+    checkBuffers: function()
     {
         console.log("checkBuffers start");
 
@@ -172,6 +189,14 @@ streaming.BufferManager.prototype =
         {
             console.log("Have enough buffer - bail.");
             return;
+        }
+
+        if (this.autoSwitchBitrate)
+        {
+            console.log("Check MBR rules.");
+            var metrics = this.getMetrics();
+            var items = this.indexHandler.items;
+            this.setQuality(this.mbr.checkRules(metrics, items));
         }
 
         console.log("Populate buffers.");
@@ -290,7 +315,12 @@ streaming.BufferManager.prototype =
         var currentTime = this.element.currentTime;
         var ranges = this.buffer.buffered;
         var rangeIndex = this.getCurrentBufferRangeIndex(ranges, currentTime);
-
+        /*
+        console.log("Checking if enough is buffered.");
+        console.log(currentTime);
+        console.log(ranges);
+        console.log(rangeIndex);
+        */
         if (rangeIndex == -1)
             return false;
 

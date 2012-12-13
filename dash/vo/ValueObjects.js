@@ -219,19 +219,39 @@ dash.vo.DashManifest.prototype = new streaming.Manifest();
  * @param {string} contentType
  * @return {dash.vo.AdaptationSet}
  */
-dash.vo.DashManifest.prototype.getAdaptationSet = function (contentType)
+dash.vo.DashManifest.prototype.getAdaptationSet = function(contentType)
 {
     var adaptations = this.manifest.periods[0].adaptations;
-    for(var i=0; i<adaptations.length;i++)
+    for (var i = 0; i < adaptations.length; i++)
     {
-        if(contentType == "video" && adaptations[i].getIsVideo())
+        if (contentType == "video" && adaptations[i].getIsVideo())
             return adaptations[i];
 
-        if(contentType == "audio" && adaptations[i].getIsAudio())
+        if (contentType == "audio" && adaptations[i].getIsAudio())
             return adaptations[i];
     }
     return null;
 },
+
+/**
+ * @return Array of StreamItem objects.
+ */
+dash.vo.DashManifest.prototype.getStreamItems = function(data)
+{
+    var medias = data.medias;
+    var items = new Array();
+    
+    for (var i = 0; i < medias.length; i++)
+    {
+        var representation = medias[i];
+        var itm = new streaming.vo.StreamItem();
+        itm.id = representation.id;
+        itm.bandwidth = representation.bandwidth;
+        items.push(itm);
+    }
+
+    return items;
+};
 
 /**
  * @return Object containing video data.

@@ -15,23 +15,43 @@
  * copyright Digital Primates 2012
  */
 window["streaming"] = window["streaming"] || {};
+streaming.rules = streaming.rules || {};
+
 /**
+ *
  * @constructor
  */
-streaming.StreamFactory = function()
+streaming.rules.BandwidthRule = function ()
 {
-
+    this.test = -1;
 };
 
-streaming.StreamFactory.prototype =
-{
-    getManifestParser: function()
-    {
-        return null;
-    },
+streaming.rules.BandwidthRule.prototype = new streaming.rules.BaseRule();
 
-    getIndexHandler: function(data, items, duration)
-    {
-        return null;
-    }
+/**
+ * @public
+ */
+streaming.rules.BandwidthRule.prototype.checkIndex = function (metrics, items)
+{
+    this.test++;
+
+    if (this.test >= items.length)
+        this.test = 0;
+
+    return this.test;
+
+
+    /*
+    if (metrics == null)
+        return -1;
+
+
+    var downloadRatio = metrics.lastFragmentDuration / metrics.lastFragmentDownloadTime;
+
+
+
+
+
+    return -1;
+    */
 };

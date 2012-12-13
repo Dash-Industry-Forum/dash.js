@@ -19,41 +19,44 @@ window["streaming"] = window["streaming"] || {};
  *
  * @constructor
  */
-streaming.Manifest = function () {
-
+streaming.MbrManager = function()
+{
+    this.rules = null;
 };
 
-streaming.Manifest.prototype =
+streaming.MbrManager.prototype =
 {
-    /**
-     * @return Array of StreamItem objects.
-     */
-    getStreamItems: function(data)
+    createRules: function()
     {
-        return null;
+        var a = new Array();
+
+        a.push(new streaming.rules.BandwidthRule());
+
+        return a;
     },
 
-    /**
-     * @return Object containing video data.
-     */
-    getVideoData: function ()
-        {
-        return null;
+    init: function()
+    {
+        this.rules = this.createRules();
     },
     
-    /**
-     * @return Object containing primary audio data.
-     */
-    getPrimaryAudioData: function () 
+    checkRules: function(metrics, items)
     {
-        return null;
-    },
+        var idx = 999;
+        
+        for (var i = 0; i < this.rules.length; i++)
+        {
+            var r = this.rules[i];
+            var newIdx = r.checkIndex(metrics, items);
+            if (newIdx != -1)
+            {
+                idx = Math.min(idx, newIdx);
+            }
+        }
 
-    /**
-     * @return Array containing audio data objects.
-     */
-    getAudioDatas: function ()
-    {
-        return null;
+        if (idx == 999)
+            idx = metrics.bitrateIndex;
+
+        return idx;
     }
 };

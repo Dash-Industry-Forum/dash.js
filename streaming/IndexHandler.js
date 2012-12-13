@@ -19,9 +19,10 @@ window["streaming"] = window["streaming"] || {};
  *
  * @constructor
  */
-streaming.IndexHandler = function (data)
+streaming.IndexHandler = function (data, items)
 {
     this.data = data;
+    this.items = items;
     this.ready = true;
 };
 

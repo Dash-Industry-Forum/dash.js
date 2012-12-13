@@ -30,7 +30,7 @@ dash.DashFactory.prototype.getManifestParser = function ()
     return new dash.DashParser();
 };
 
-dash.DashFactory.prototype.getIndexHandler = function (data, duration)
+dash.DashFactory.prototype.getIndexHandler = function (data, items, duration)
 {
-    return new dash.DashHandler(data, duration);
+    return new dash.DashHandler(data, items, duration);
 };

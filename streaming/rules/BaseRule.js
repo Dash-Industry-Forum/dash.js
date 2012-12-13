@@ -15,23 +15,21 @@
  * copyright Digital Primates 2012
  */
 window["streaming"] = window["streaming"] || {};
+streaming.rules = streaming.rules || {};
+
 /**
+ *
  * @constructor
  */
-streaming.StreamFactory = function()
+streaming.rules.BaseRule = function ()
 {
 
 };
 
-streaming.StreamFactory.prototype =
+streaming.rules.BaseRule.prototype =
 {
-    getManifestParser: function()
+    checkIndex: function(metrics, items)
     {
-        return null;
-    },
-
-    getIndexHandler: function(data, items, duration)
-    {
-        return null;
+        return -1;
     }
 };

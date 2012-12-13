@@ -19,11 +19,15 @@ window["dash"] = window["dash"]||{};
  *
  * @constructor
  */
-dash.DashHandler = function (data, duration)
+dash.DashHandler = function (data, items, duration)
 {
     /** @type {dash.vo.AdaptationSet}
      * @private */
     this.adaptation = data;
+
+    /** @type {Array}
+     * @private */
+    this.items = items;
 
     /** @type {number}
      * @private */
@@ -37,6 +41,7 @@ dash.DashHandler = function (data, duration)
     
     /** @type {dash.SegmentIndexLoader} */
     this.segmentLoader = new dash.SegmentIndexLoader();
+    this.segmentLoader.onInitializationChanged = this.onInitializationChanged.bind(this);
     this.segmentLoader.onSegmentsLoaded = this.onSegmentsLoaded.bind(this);
 };
 
@@ -185,8 +190,10 @@ dash.DashHandler.prototype.getInitRequest = function(quality)
 {
     var media = this.getRepresentationForQuality(quality);
     
-    // special case
-    // for SegmentBase items we may not have the segments yet
+    // Special case!
+    // If this is the first time we're playing the representation, we won't know what the segments are yet.
+    // We have to load some of the single mp4 file to get the SIDX box.
+    // This box is going to contain the segment information.
     var segmentBase = media.segmentBase;
     if (segmentBase != null && media.segments == null)
     {
@@ -194,12 +201,20 @@ dash.DashHandler.prototype.getInitRequest = function(quality)
         this.ready = false;
         var url = this.getRequestURL(media.getInitialization(), media.baseURL, media);
         this.segmentLoader.loadSegments(url, segmentBase.indexRange, quality);
+        return null;
     }
 
     // get the initialization
     var init = media.getInitialization();
-    if (init != null) {
+    if (init != null)
+    {
         var initRange = media.getInitializationRange();
+        
+        // Special case..  SegmentBase with no range means no initialization.
+        if (media.segmentBase != null && initRange == null)
+        {
+            return null;
+        }
 
         var req = new streaming.vo.SegmentRequest();
         req.url = this.getRequestURL(init, media.baseURL, media);
@@ -357,6 +372,21 @@ dash.DashHandler.prototype.getNextSegmentRequest = function(quality)
     req.duration = segment.duration / segment.timescale;
     console.log(req);
     return req;
+};
+
+/**
+ * 
+ */
+dash.DashHandler.prototype.onInitializationChanged = function (start, end, q)
+{
+    var media = this.getRepresentationForQuality(q);
+    
+    if (media.segmentBase != null)
+    {
+        media.segmentBase.initializationRange = new dash.vo.IndexRange();
+        media.segmentBase.initializationRange.start = start;
+        media.segmentBase.initializationRange.end = end;
+    }
 };
 
 /**

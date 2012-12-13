@@ -52,7 +52,8 @@ streaming.vo.SegmentRequest = function () {
 /**
  * @constructor
  */
-streaming.vo.StreamMetrics = function() {
+streaming.vo.StreamMetrics = function()
+{
     /** @type {number}*/
     this.bitrateValue = NaN;
     /** @type {number}*/
@@ -65,4 +66,15 @@ streaming.vo.StreamMetrics = function() {
     this.lastFragmentDuration = NaN;
     /** @type {number}*/
     this.lastFragmentDownloadTime = NaN;
-}
+};
+
+/**
+ * @constructor
+ */
+streaming.vo.StreamItem = function()
+{
+    /** @type {string}*/
+    this.id = null;
+    /** @type {number}*/
+    this.bandwidth = 0;
+};

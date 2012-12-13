@@ -138,6 +138,26 @@ dash.DashParser.prototype.parseSegmentBase = function(xml, base)
 
 /**
 * @private
+* @param {Element} url
+* @return {dash.vo.SegmentBase}
+*/
+dash.DashParser.prototype.buildSegmentBaseFromURL = function (url, baseURL) {
+    var sb = new dash.vo.SegmentBase();
+    
+    if ((url.indexOf("http://") != 0) && (baseURL != null && baseURL != ""))
+    {
+        sb.initialization = baseURL + url;
+    }
+    else
+    {
+        sb.initialization = url;
+    }
+    
+    return sb;
+};
+
+/**
+* @private
 * @param {string} value
 * @return {dash.vo.IndexRange}
 */
@@ -284,26 +304,34 @@ dash.DashParser.prototype.parseRepresentations = function(items, parent)
         item.qualityRanking = parseFloat(xml.getAttribute("qualityRanking"));
         item.dependencyId = xml.getAttribute("dependencyId");
         item.mediaStreamStructureId = xml.getAttribute("mediaStreamStructureId");
+
         node = xml.querySelector(xml.nodeName + " > SegmentBase");
         if (node) item.segmentBase = this.parseSegmentBase(node, parent.segmentBase);
         else item.segmentBase = parent.segmentBase;
+
         node = xml.querySelector(xml.nodeName + " > SegmentList");
         if (node) item.segmentList = this.parseSegmentList(node, parent.segmentList);
         else item.segmentList = parent.segmentList;
+
         node = xml.querySelector(xml.nodeName + " > SegmentTemplate");
         if (node) item.segmentTemplate = this.parseSegmentTemplate(node, parent.segmentTemplate);
         else item.segmentTemplate = parent.segmentTemplate;
+
         var hasBase = item.segmentBase != null ? 1 : 0;
         var hasList = item.segmentList != null ? 1 : 0;
         var hasTemplate = item.segmentTemplate != null ? 1 : 0;
+
         var numInfos = hasBase + hasList + hasTemplate;
+        // Special Case!
+        // This means we have a 'SegmentBase' scenario, but without the extra information.
+        // Fake a SegmentBase object since this use-case and the SegmentBase are handled in the same way.
         if (numInfos == 0)
         {
-            throw "Must specify at least one SegmentBase, SegmentList, or SegmentTemplate.";
+            item.segmentBase = this.buildSegmentBaseFromURL(item.baseURL, this.manifest.baseURL);
         }
         if (numInfos > 1)
         {
-            throw "Must specify at least one SegmentBase, SegmentList, or SegmentTemplate.";
+            throw "Must specify at most SegmentBase, SegmentList, or SegmentTemplate.";
         }
         if (hasBase == 1)
         {
@@ -315,6 +343,7 @@ dash.DashParser.prototype.parseRepresentations = function(items, parent)
             item.segments = this.segmentsFromList(item.segmentList);
         else if (hasTemplate == 1)
             item.segments = this.segmentsFromTemplate(item.segmentTemplate);
+        
         sets.push(item);
     }
     sets.sort(
