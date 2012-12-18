@@ -20,17 +20,17 @@ window["dash"] = window["dash"] || {};
  */
 dash.DashFactory = function()
 {
-
+    this.parser = new dash.DashParser();
 };
 
 dash.DashFactory.prototype = new streaming.StreamFactory();
 
 dash.DashFactory.prototype.getManifestParser = function ()
 {
-    return new dash.DashParser();
+    return this.parser;
 };
 
-dash.DashFactory.prototype.getIndexHandler = function (data, items, duration)
+dash.DashFactory.prototype.getIndexHandler = function (data, items, duration, isLive)
 {
-    return new dash.DashHandler(data, items, duration);
+    return new dash.DashHandler(data, items, duration, isLive);
 };

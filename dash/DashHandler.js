@@ -19,7 +19,7 @@ window["dash"] = window["dash"]||{};
  *
  * @constructor
  */
-dash.DashHandler = function (data, items, duration)
+dash.DashHandler = function (data, items, duration, isLive)
 {
     /** @type {dash.vo.AdaptationSet}
      * @private */
@@ -32,6 +32,10 @@ dash.DashHandler = function (data, items, duration)
     /** @type {number}
      * @private */
     this.duration = duration;
+
+    /** @type {boolean}
+     * @private */
+    this.isLive = isLive;
 
     /** @type {boolean} */
     this.ready = true;
@@ -237,7 +241,7 @@ dash.DashHandler.prototype.isMediaFinished = function(quality)
 {
     var media = this.getRepresentationForQuality(quality);
 
-    if (false) // TODO : LIVE
+    if (this.isLive)
     {
         return false;
     }
@@ -293,7 +297,7 @@ dash.DashHandler.prototype.getSegmentRequestForTime = function(time, quality)
         return req;
     }
 
-    if (media.segments && media.segments.length)
+    if (media.segments && media.segments.length > 0)
     {
         segment = media.segments[this.currentIndex];
     }
@@ -347,7 +351,7 @@ dash.DashHandler.prototype.getNextSegmentRequest = function(quality)
         return req;
     }
 
-    if (media.segments && media.segments.length)
+    if (media.segments && media.segments.length > 0)
     {
         segment = media.segments[this.currentIndex];
     }

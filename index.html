@@ -6,6 +6,11 @@
         <link href="styles.css" type="text/css" rel="stylesheet"/>
         <meta name="description" content="" />
         
+        <style type="text/css" title="currentStyle">
+            @import "datatables/media/css/demo_table_jui.css";
+			@import "jquery-ui-1.9.2.custom/css/smoothness/jquery-ui-1.9.2.custom.min.css";
+        </style>
+
         <script src="streaming/vo/ValueObject.js"></script>
         <script src="streaming/BufferManager.js"></script>
         <script src="streaming/IndexHandler.js"></script>
@@ -30,6 +35,7 @@
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
         <script src="highcharts/highcharts.js"></script>
         <script src="highcharts/modules/exporting.js"></script>
+        <script src="datatables/media/js/jquery.dataTables.js"></script>
         
         <script>
             var player;
@@ -83,7 +89,7 @@
                         data: (function () {
                             // generate an array of random data
                             var data = [];
-                            for (var i = 0; i < 10; i++) {
+                            for (var i = 0; i < 15; i++) {
                                 data.push({ x: 0, y: 0 });
                             }
                             return data;
@@ -92,9 +98,26 @@
                 });
             }
 
+            function buildTables()
+            {
+                $.extend($.fn.dataTable.defaults, {
+                    "bFilter": false,
+                    "bSort": false,
+                    "bPaginate": false,
+                    "bInfo": false
+                });
+                
+                $(document).ready(function () {
+                    $('#metrics-table').dataTable({
+                        "bJQueryUI": true
+                    });
+                });
+            }
+
             function init()
             {
                 buildBufferGraph();
+                buildTables();
             }
 
             function onProgress(e)
@@ -109,7 +132,7 @@
                     time = newTime;
 
                     var metrics;
-                    var bitrateValue, bitrateIndex, numBitrates, bufferLength, fragDuration, fragTime;
+                    var bitrateValue, bitrateIndex, numBitrates, bufferLength, fragDuration, fragTime, len;
                     
                     // video
 
@@ -125,10 +148,14 @@
                     numBitrates.innerHTML = metrics.maxBitrateIndex;
 
                     bufferLength = document.getElementById("video-buffer");
-                    bufferLength.innerHTML = metrics.bufferLength + " seconds";
+                    len = metrics.bufferLength.toString();
+                    if (len.length > 5) len = len.substr(0, 4);
+                    bufferLength.innerHTML = len + " seconds";
                     
                     fragDuration = document.getElementById("video-frag-duration");
-                    fragDuration.innerHTML = metrics.lastFragmentDuration + " seconds";
+                    len = metrics.lastFragmentDuration.toString();
+                    if (len.length > 5) len = len.substr(0, 4);
+                    fragDuration.innerHTML = len + " seconds";
                     
                     fragTime = document.getElementById("video-frag-dl-time");
                     fragTime.innerHTML = metrics.lastFragmentDownloadTime + " seconds";
@@ -152,10 +179,14 @@
                     numBitrates.innerHTML = metrics.maxBitrateIndex;
 
                     bufferLength = document.getElementById("audio-buffer");
-                    bufferLength.innerHTML = metrics.bufferLength + " seconds";
+                    len = metrics.bufferLength.toString();
+                    if (len.length > 5) len = len.substr(0, 4);
+                    bufferLength.innerHTML = len + " seconds";
                     
                     fragDuration = document.getElementById("audio-frag-duration");
-                    fragDuration.innerHTML = metrics.lastFragmentDuration + " seconds";
+                    len = metrics.lastFragmentDuration.toString();
+                    if (len.length > 5) len = len.substr(0, 4);
+                    fragDuration.innerHTML = len + " seconds";
 
                     fragTime = document.getElementById("audio-frag-dl-time");
                     fragTime.innerHTML = metrics.lastFragmentDownloadTime + " seconds";
@@ -166,7 +197,9 @@
             {
                 var streams = {};
 
-                streams.netflix = "http://dash.edgesuite.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd";
+                streams.archive = "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd";
+                streams.live = "http://dashdemo.edgesuite.net/mediaexcel/live/ch1/dash.mpd";
+                streams.netflix = "http://dashdemo.edgesuite.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd";
                 streams.fraunhofer = "http://dashdemo.edgesuite.net/dash264/TestCases/3b/fraunhofer/elephants_dream_heaac2_0.mpd";
                 streams.list = "http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd";
                 streams.template = "http://www.digitalprimates.net/dash/streams/mp4-live-template/mp4-live-mpd-AV-BS.mpd";
@@ -193,66 +226,77 @@
 
                 player = new streaming.Stream(video, factory);
 
-                player.setVideoAutoSwitchQuality(false);
+                player.setAutoSwitchQuality(false);
                 player.load(source);
                 
                 var controls = document.querySelector(".dash-video-player");
                 ui = new streaming.PlayerUI(controls);
             }
 		
-            function switchUp()
+            function videoSwitchUp()
             {
                 var newQuality = player.getVideoQuality() + 1;
                 player.setVideoQuality(newQuality);
             }
 		
-            function switchDown()
+            function videoSwitchDown()
             {
                 var newQuality = player.getVideoQuality() - 1;
                 player.setVideoQuality(newQuality);
             }
 
-            function fastForward()
-            {
-                var video = document.querySelector(".dash-video-player video");
-                video.currentTime+=20;
+            function audioSwitchUp() {
+                var newQuality = player.getAudioQuality() + 1;
+                player.setAudioQuality(newQuality);
             }
 
-            function rewind()
-            {
-                var video = document.querySelector(".dash-video-player video");
-                video.currentTime-=20;
+            function audioSwitchDown() {
+                var newQuality = player.getAudioQuality() - 1;
+                player.setAudioQuality(newQuality);
             }
+           
         </script>
     </head>
 
     <body onload="init()">
-        <p style="width:600px;">This is an early draft of the DASH-IF JavaScript DASH-264 player, future versions will have a revised architecture with an eye towards extensibility.  It is not recommended for others to contribute or modify this source, as we know it is in flux and will change soon.</p>
-        <div class="video-instructions">
-            1. Select a stream from the drop down.<br/>
+        <!--<p style="width:600px;">This is an early draft of the DASH-IF JavaScript DASH-264 player, future versions will have a revised architecture with an eye towards extensibility.  It is not recommended for others to contribute or modify this source, as we know it is in flux and will change soon.</p>-->
+        <div class="video-instructions" style="float: left; padding-right: 10px;">
+            1. Select a stream from the drop down or type a mpd location into the input.<br/>
             2. Click on Load.<br/>
-            3. Click on the play button after it turns white.<br/>
             <i>Refresh the page to start a new stream.</i><br/>
         </div>
+        
+        <div style="width:10px; height:80px; border-left: 1px solid black; float:left;"></div>
+
+        <div class="security-instructions"></div>
+            If you see the message "manifest failed to load" try turning off Chrome's web security.<br/>
+            <i>-Right click the Chrome icon and select "properties".</i><br/>
+            <i>-In the "target" field add "--disable-web-security".</i><br/>
+            <i>-After launching Chrome you will see the message "You are using an unsupported command-line flag: --disable-web-security.  Stability and security will suffer."</i>
+        </div>
+
+        <hr style="clear: both;"/>
+        
         <div>
-            MPD: <input id="custom-source" style="width:300px;"/>
-        </div>
-        <div class="video-options">
-            <select id="sources">
-                <option value="netflix" selected="selected">Netflix</option>
-                <option value="fraunhofer">Fraunhofer</option>
-                <option value="list">Segment List</option>
-                <option value="template">Segment Template</option>
-                <option value="timeline">Segment Timeline</option>
-                <option value="base">SegmentBase</option>
-                <option value="youtube">YouTube</option>
-            </select>
+            <div style="float: left;">
+                MPD: <input id="custom-source" style="width:300px;"/>
+            </div>
+            <div class="video-options" style="float: left;">
+                <select id="sources">
+                    <option value="archive">Live Archive</option>
+                    <option value="live" selected="selected">Live</option>
+                    <option value="netflix">Netflix BaseURL</option>
+                    <option value="fraunhofer">Fraunhofer BaseURL</option>
+                    <option value="youtube">YouTube SegmentBase</option>
+                    <option value="list">Segment List</option>
+                    <option value="template">Segment Template</option>
+                    <option value="timeline">Segment Timeline</option>
+                    <!--<option value="base">SegmentBase</option>-->
+                </select>
+            </div>
             <button type="button" onclick="load()">Load</button>
-            <button type="button" onclick="switchUp()">Bitrate Up</button>
-            <button type="button" onclick="switchDown()">Bitrate Down</button>
-            <button type="button" onclick="fastForward()">Fast Forward</button>
-            <button type="button" onclick="rewind()">Rewind</button>
         </div>
+        
         <div class="dash-video-player" style="float: left;">
             <div class="video-wrapper">
                 <video controls="true"></video>
@@ -270,71 +314,79 @@
                 <a href="#" class="button-full-screen"></a>
             </div>
         </div>
-        <div class="metrics-graphs" style="width: 400px; float: left;">
-            <div id="buffer-container" style="width: 400px; height: 200px;"></div>
-        </div>
-        <div class="metrics-panel" style="width: 400px; float: left;">
-            <h1>Video</h1>
-            <table border="1">
-                <tr>
-                    <td>current bitrate</td>
-                    <td id="video-value"></td>
-                </tr>
-                <tr>
-                    <td>current index</td>
-                    <td id="video-index"></td>
-                </tr>
-                <tr>
-                    <td># of bitrates</td>
-                    <td id="num-video-bitrates"></td>
-                </tr>
-                <tr>
-                    <td>buffer length</td>
-                    <td id="video-buffer"></td>
-                </tr>
-                <tr>
-                    <td>last frag duration</td>
-                    <td id="video-frag-duration"></td>
-                </tr>
-                <tr>
-                    <td>last frag d/l time</td>
-                    <td id="video-frag-dl-time"></td>
-                </tr>
+        
+        <div style="width: 700px; float: left; padding-left: 20px;">
+            <div>
+                <div style="float: left; padding-right: 10px;">
+                    <h3>Video Controls</h3>
+                    <button type="button" onclick="videoSwitchUp()">Bitrate Up</button>
+                    <button type="button" onclick="videoSwitchDown()">Bitrate Down</button>
+                </div>
+                
+                <div style="width:10px; height:80px; border-left: 1px solid black; float:left;"></div>
+
+                <div style="float: left;">
+                    <h3>Audio Controls</h3>
+                    <button type="button" onclick="audioSwitchUp()">Bitrate Up</button>
+                    <button type="button" onclick="audioSwitchDown()">Bitrate Down</button>
+                </div>
+            </div>
+            
+            <p style="height: 10px; clear: both;"/>
+            
+            <div id="buffer-container" style="width: 100%; height: 200px;"></div>
+            
+            <h2 style="width: 100%; text-align: center">Metrics</h2>
+            
+            <table cellpadding="0" cellspacing="0" border="0" class="display" id="metrics-table" width="100%">
+                <thead>
+                    <tr>
+                        <th>Buffer Type</th>
+                        <th>Bitrate Value</th>
+                        <th>Bitrate Index</th>
+                        <th># of Bitrates</th>
+                        <th>Buffer Length</th>
+                        <th>Last Frag Duration</th>
+                        <th>Last Frag D/L Time</th>
+                    </tr>
+                </thead>
+                
+                <tbody>
+                    <tr class="gradeA">
+                        <td class="center">Video</td>
+                        <td id="video-value" class="center">0</td>
+                        <td id="video-index" class="center">0</td>
+                        <td id="num-video-bitrates" class="center">0</td>
+                        <td id="video-buffer" class="center">0</td>
+                        <td id="video-frag-duration" class="center">0</td>
+                        <td id="video-frag-dl-time" class="center">0</td>
+                    </tr>
+                    <tr class="gradeC">
+                        <td class="center">Audio</td>
+                        <td id="audio-value" class="center">0</td>
+                        <td id="audio-index" class="center">0</td>
+                        <td id="num-audio-bitrates" class="center">0</td>
+                        <td id="audio-buffer" class="center">0</td>
+                        <td id="audio-frag-duration" class="center">0</td>
+                        <td id="audio-frag-dl-time" class="center">0</td>
+                    </tr>
+                </tbody>
             </table>
-            <h1>Audio</h1>
-            <table border="1">
-                <tr>
-                    <td>current bitrate</td>
-                    <td id="audio-value"></td>
-                </tr>
-                <tr>
-                    <td>current index</td>
-                    <td id="audio-index"></td>
-                </tr>
-                <tr>
-                    <td># of bitrates</td>
-                    <td id="num-audio-bitrates"></td>
-                </tr>
-                <tr>
-                    <td>buffer length</td>
-                    <td id="audio-buffer"></td>
-                </tr>
-                <tr>
-                    <td>last frag duration</td>
-                    <td id="audio-frag-duration"></td>
-                </tr>
-                <tr>
-                    <td>last frag d/l time</td>
-                    <td id="audio-frag-dl-time"></td>
-                </tr>
-            </table>
         </div>
+
         <div class="release-notes" style="clear: both;">
             <b>Known Issues</b><br/>
             Erratic playback at higher bitrates.<br/>
             Streams using high profile codecs may not play properly.<br/>
             You may get the error "Media Source Close" when attempting to switch bitrates.<br/>
             
+            <p/>
+
+            <b>Release Notes v0.0.4</b><br/>
+            Add metrics bling.<br/>
+            Expose methods to change audio bitrate.<br/>
+            Play video automatically after loading completes.<br/>
+
             <p/>
 
             <b>Release Notes v0.0.3</b><br/>
@@ -358,10 +410,6 @@
             <i>SegmentTemplate</i><br/>
             <i>SegmentTemplate with SegmentTimeline</i><br/>
             <i>SegmentBase</i><br/>
-            If you see the message "manifest failed to load" try turning off Chrome's web security.<br/>
-            <i>-Right click the Chrome icon and select "properties".</i><br/>
-            <i>-In the "target" field add "--disable-web-security".</i><br/>
-            <i>-After launching Chrome you will see the message "You are using an unsupported command-line flag: --disable-web-security.  Stability and security will suffer."</i>
         </div>
     </body>
 

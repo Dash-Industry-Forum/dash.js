@@ -31,6 +31,14 @@ streaming.IndexHandler.prototype =
     /**
      * @public
      */
+    setData: function (value)
+    {
+        this.data = value;
+    },
+
+    /**
+     * @public
+     */
     getBandwidthForIndex: function (quality)
     {
         return 0;

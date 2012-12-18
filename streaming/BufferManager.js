@@ -122,6 +122,14 @@ streaming.BufferManager = function (element, buffer, indexHandler, bufferTime, t
 
 streaming.BufferManager.prototype =
 {
+    updateData: function(value)
+    {
+        if (this.indexHandler)
+        {
+            this.indexHandler.setData(value);
+        }
+    },
+
     onBytesLoaded: function (bytes, segment)
     {
         this.lastFragmentDuration = segment.duration;
@@ -129,7 +137,16 @@ streaming.BufferManager.prototype =
 
         console.log("Bytes loaded: " + this.type + " | " + this.lastFragmentDuration + " | " + this.lastDownloadTime);
 
-        this.buffer.append(new Uint8Array(bytes));
+        if (bytes != null && bytes.byteLength > 0)
+        {
+            console.log("Push bytes: " + bytes.byteLength);
+            this.buffer.append(new Uint8Array(bytes));
+        }
+        else
+        {
+            console.log("No bytes to push.");
+        }
+        
         this.checkBuffers();
     },
 
@@ -154,7 +171,7 @@ streaming.BufferManager.prototype =
         if (value < 0)
             return;
 
-        if (value > this.getMaxQuality())
+        if (value >= this.getMaxQuality()) // zero indexed
             return;
 
         this.quality = value;
@@ -209,7 +226,6 @@ streaming.BufferManager.prototype =
             if (!this.seeking)
             {
                 this.seeking = true;
-                this.seekTarget = this.element.currentTime;
             }
 
             this.qualityChanged = false;
@@ -230,14 +246,32 @@ streaming.BufferManager.prototype =
                 this.loader.load(request);
             }
         }
-
+        
         if (this.indexHandler.ready)
         {
             if (this.seeking)
             {
-                request = this.indexHandler.getSegmentRequestForTime(this.seekTarget, this.quality);
+                var st = -1;
+                
+                // If switching bitrates, go to the current time.
+                if (this.seekTarget == -1)
+                {
+                    st = this.element.currentTime;
+                }
+                // This is an actual seek, so go to the requested time.
+                else
+                {
+                    st = this.seekTarget;
+                }
+
+                request = this.indexHandler.getSegmentRequestForTime(st, this.quality);
                 this.seeking = false;
-                this.seekTarget = -1;
+                
+                if (this.element.currentTime != st)
+                {
+                    this.element.currentTime = st;
+                    this.seekTarget = -1;
+                }
             }
             else
             {
@@ -352,6 +386,8 @@ streaming.BufferManager.prototype =
 
         this.playing = true;
         this.checkBuffers();
+
+        setInterval(this.onTimer, 500, this);
     },
     
     pause: function ()
@@ -367,11 +403,20 @@ streaming.BufferManager.prototype =
     seek: function (time)
     {
         console.log("Buffer seek.");
-        
-        this.loader.abort();
 
         this.seeking = true;
-        this.seekTarget = this.element.currentTime;
+        this.seekTarget = time;
+
+        if (!this.hasPlayed)
+        {
+            this.play();
+        }
+        else
+        {
+            this.loader.abort();
+        }
+
+        this.checkBuffers();
     },
     
     /**
@@ -383,11 +428,6 @@ streaming.BufferManager.prototype =
         
         this.playing = false;
         this.hasPlayed = false;
-    },
-    
-    progress: function ()
-    {
-        this.checkBuffers();
     },
     
     handleStreamComplete: function ()
@@ -407,5 +447,10 @@ streaming.BufferManager.prototype =
         metrics.lastFragmentDownloadTime = this.lastDownloadTime;
        
         return metrics;
+    },
+    
+    onTimer: function(mgr)
+    {
+        mgr.checkBuffers();
     }
 };

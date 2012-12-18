@@ -68,6 +68,14 @@ streaming.Stream = function (element, factory)
     /** @type {XMLHttpRequest}
      * @private */
     this.xhr = new XMLHttpRequest();
+    this.xhr.addEventListener("load", this.onManifestLoad.bind(this), false);
+    this.xhr.addEventListener("error", this.onManifestLoadError.bind(this), false);
+
+    /** @type {XMLHttpRequest}
+     * @private */
+    this.refresh = new XMLHttpRequest();
+    this.refresh.addEventListener("load", this.onManifestRefresh.bind(this), false);
+    this.refresh.addEventListener("error", this.onManifestLoadError.bind(this), false);
 
     /** @type {HTMLVideoElement}
       * @private */
@@ -84,22 +92,29 @@ streaming.Stream = function (element, factory)
     /** @type {streaming.vo.DashManifest}
       * @private */
     this.manifest = null;
+    
+    /** @type {number}
+      * @private */
+    this.seekTarget = -1;
 };
 
 streaming.Stream.prototype =
 {
+    
+    // TODO : EXPOSE METHODS TO CHANGE AUDIO TRACKS!
+
     //--------------------------
     // qualities and audio tracks
     //--------------------------
 
-    setVideoAutoSwitchQuality: function (value) {
+    setAutoSwitchQuality: function (value) {
         this.autoBitrateSwitch = value;
         
         if (this.videoManager)
             this.videoManager.autoSwitchBitrate = this.autoBitrateSwitch;
-
-        if (this.videoManager)
-            console.log("SET AUTO SWITCH 1: " + this.videoManager.autoSwitchBitrate);
+        
+        if (this.audioManager)
+            this.audioManager.autoSwitchBitrate = this.autoBitrateSwitch;
     },
 
     setVideoQuality: function (value) {
@@ -114,16 +129,16 @@ streaming.Stream.prototype =
         return 0;
     },
 
-    setVideoQuality: function (value)
+    setAudioQuality: function (value)
     {
-        if (this.videoManager)
-            this.videoManager.setQuality(value);
+        if (this.audioManager)
+            this.audioManager.setQuality(value);
     },
     
-    getVideoQuality: function ()
+    getAudioQuality: function ()
     {
-        if (this.videoManager)
-            return this.videoManager.getQuality();
+        if (this.audioManager)
+            return this.audioManager.getQuality();
 
         return 0;
     },
@@ -166,12 +181,44 @@ streaming.Stream.prototype =
     // playback
     //--------------------------
 
+    initializePlayback: function()
+    {
+        console.log("Attempt to start playback for the first time...");
+        if (!this.videoElementInitialized || !this.mediaSourceInitialized)
+            return;
+
+        if (this.manifest.getIsLive())
+        {
+            this.mediaSource.duration = Number.POSITIVE_INFINITY;
+            console.log("Live event, set infinity duration.");
+
+            var now = new Date();
+            var start = this.manifest.availabilityStartTime;
+            var liveOffset = (now.getTime() - start.getTime()) / 1000;
+
+            console.log("Seek to live point and start playback: " + liveOffset);
+            this.seek(liveOffset);
+        }
+        else {
+            this.mediaSource.duration = this.manifest.getDuration();
+            console.log("Set media duration: " + this.manifest.getDuration());
+
+            this.play();
+            console.log("Start stream playback.");
+        }
+    },
+
     /**
      * @public
      */
     play: function ()
     {
-        // TODO : programatic
+        console.log("Attempt play...");
+        if (!this.videoElementInitialized || !this.mediaSourceInitialized)
+            return;
+        
+        console.log("Do play.");
+        this.element.play();
     },
 
     /**
@@ -180,7 +227,23 @@ streaming.Stream.prototype =
      */
     seek: function (time)
     {
-        // TODO : programatic
+        console.log("Attempt seek...");
+        if (!this.videoElementInitialized || !this.mediaSourceInitialized)
+            return;
+
+        console.log("Do seek.");
+
+        this.seekTarget = time;
+        this.element.play();
+    },
+
+    finishSeek: function()
+    {
+        console.log("Finish seek.");
+
+        this.videoManager.seek(this.seekTarget);
+        this.audioManager.seek(this.seekTarget);
+        this.seekTarget = -1;
     },
 
     /**
@@ -189,15 +252,21 @@ streaming.Stream.prototype =
      */
     onPlay: function (e)
     {
-        console.log("Attempt play...");
+        console.log("Got onPlay event.");
+        
         if (!this.videoElementInitialized || !this.mediaSourceInitialized)
-        {
             return;
-        }
 
-        console.log("Start playback.");
-        if (this.videoManager) this.videoManager.play();
-        if (this.audioManager) this.audioManager.play();
+        if (this.seekTarget != -1)
+        {
+            this.finishSeek();
+        }
+        else
+        {
+            console.log("Start playback.");
+            this.videoManager.play();
+            this.audioManager.play();
+        }
     },
     
     /**
@@ -226,8 +295,7 @@ streaming.Stream.prototype =
      */
     onProgress: function (e)
     {
-        if (this.videoManager) this.videoManager.progress();
-        if (this.audioManager) this.audioManager.progress();
+        
     },
 
     initElement: function ()
@@ -240,6 +308,7 @@ streaming.Stream.prototype =
         this.element.addEventListener("timeupdate", this.onProgress.bind(this), false);
 
         this.videoElementInitialized = true;
+        this.initializePlayback();
     },
 
     //--------------------------
@@ -270,7 +339,7 @@ streaming.Stream.prototype =
             console.log("Video codec: " + data.getCodec());
 
             buffer = this.mediaSource.addSourceBuffer(data.getCodec());
-            indexHandler = this.factory.getIndexHandler(data, this.manifest.getStreamItems(data), this.manifest.getDuration());
+            indexHandler = this.factory.getIndexHandler(data, this.manifest.getStreamItems(data), this.manifest.getDuration(), this.manifest.getIsLive());
             this.videoManager = new streaming.BufferManager(this.element, buffer, indexHandler, bufferTime, "video");
             this.videoManager.autoSwitchBitrate = this.autoBitrateSwitch;
         }
@@ -308,19 +377,17 @@ streaming.Stream.prototype =
             }
 
             buffer = this.mediaSource.addSourceBuffer(data.getCodec());
-            indexHandler = this.factory.getIndexHandler(data, this.manifest.getStreamItems(data), this.manifest.getDuration());
+            indexHandler = this.factory.getIndexHandler(data, this.manifest.getStreamItems(data), this.manifest.getDuration(), this.manifest.getIsLive());
             this.audioManager = new streaming.BufferManager(this.element, buffer, indexHandler, bufferTime, "audio");
-            // TODO : Finish this like video.
-            this.audioManager.autoSwitchBitrate = false;
+            this.audioManager.autoSwitchBitrate = this.autoSwitchBitrate;
         }
         else
         {
             console.log("No audio data.");
         }
         
-        this.mediaSource.duration = this.manifest.getDuration();
-        console.log("Media duration: " + this.manifest.getDuration());
         this.mediaSourceInitialized = true;
+        this.initializePlayback();
     },
 
     /**
@@ -380,6 +447,8 @@ streaming.Stream.prototype =
         this.initMediaSource();
         
         this.element.src = window.URL.createObjectURL(this.mediaSource);
+
+        this.startManifestRefresh();
     },
 
     /**
@@ -392,8 +461,53 @@ streaming.Stream.prototype =
         
         this.manifestUrl = url;
         this.xhr.open("GET", this.manifestUrl, true);
-        this.xhr.addEventListener("load", this.onManifestLoad.bind(this), false);
-        this.xhr.addEventListener("error", this.onManifestLoadError.bind(this), false);
         this.xhr.send(null);
+    },
+    
+    /**
+     * @private
+     * @param {Event} e
+     */
+    onManifestRefresh: function (e)
+    {
+        console.log("Manifest refresh complete.");
+
+        var baseUrl = "";
+        if (this.manifestUrl.indexOf("/") != -1)
+            baseUrl = this.manifestUrl.substring(0, this.manifestUrl.lastIndexOf("/") + 1);
+
+        var parser = this.factory.getManifestParser();
+        this.manifest = parser.parse(this.xhr.responseText, baseUrl);
+        console.log(this.manifest);
+
+        var data;
+
+        if (this.videoManager)
+        {
+            data = this.manifest.getVideoData();
+            this.videoManager.updateData(data);
+        }
+        
+        if (this.audioManager)
+        {
+            data = this.manifest.getPrimaryAudioData(); // TODO : Need to get the data that matches the currently playing audio track!
+            this.audioManager.updateData(data);
+        }
+        
+        this.startManifestRefresh();
+    },
+    
+    startManifestRefresh: function()
+    {
+        var refreshTime = (this.manifest.minimumUpdatePeriod * 1000);
+        if (!isNaN(refreshTime) && refreshTime > 0) {
+            console.log("Start manifest refresh.");
+
+            var me = this;
+            setTimeout(function() {
+                me.refresh.open("GET", me.manifestUrl, true);
+                me.refresh.send(null);
+            }, refreshTime);
+        }
     }
 };

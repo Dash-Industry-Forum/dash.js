@@ -53,7 +53,7 @@ dash.DashParser.prototype.parseSegmentTemplate = function (xml, base)
     item.media = xml.getAttribute("media");
     item.index = xml.getAttribute("index");
     item.bitstreamSwitching = xml.getAttribute("bitstreamSwitching");
-    item.timescale = parseFloat(xml.getAttribute("timescale"));
+    item.timescale = parseFloat(xml.getAttribute("timescale")) || item.timescale;
     item.initialization = xml.getAttribute("initialization") || item.initialization;
     var node = xml.querySelector("SegmentTimeline");
     if(node) {
@@ -100,7 +100,7 @@ dash.DashParser.prototype.parseSegmentList = function(xml, base)
     var list = new dash.vo.SegmentList(base);
     list.duration = parseFloat(xml.getAttribute("duration"));
     list.startNumber = parseFloat(xml.getAttribute("startNumber"));
-    list.timescale = parseFloat(xml.getAttribute("timescale"));
+    list.timescale = parseFloat(xml.getAttribute("timescale")) || list.timescale;
     var node = xml.querySelector("Initialization[sourceURL]");
     if (node) list.initialization = node.getAttribute("sourceURL");
     var items = xml.getElementsByTagName("SegmentURL");
@@ -127,7 +127,7 @@ dash.DashParser.prototype.parseSegmentBase = function(xml, base)
 {
     if (!xml) return null;
     var sb = new dash.vo.SegmentBase(base);
-    sb.timescale = parseFloat(xml.getAttribute("timescale"));
+    sb.timescale = parseFloat(xml.getAttribute("timescale")) || sb.timescale;
     sb.presentationTimeOffset = parseFloat(xml.getAttribute("presentationTimeOffset"));
     sb.indexRange = this.parseRangeValues(xml.getAttribute("indexRange"));
     sb.indexRangeExact = xml.getAttribute("indexRangeExact") == "true";
