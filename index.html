@@ -138,58 +138,64 @@
 
                     metrics = player.getVideoMetrics();
 
-                    bitrateValue = document.getElementById("video-value");
-                    bitrateValue.innerHTML = (metrics.bitrateValue / 1000) + " kbps";
+                    if (metrics)
+                    {
+                        bitrateValue = document.getElementById("video-value");
+                        bitrateValue.innerHTML = (metrics.bitrateValue / 1000) + " kbps";
 
-                    bitrateIndex = document.getElementById("video-index");
-                    bitrateIndex.innerHTML = metrics.bitrateIndex + 1;
+                        bitrateIndex = document.getElementById("video-index");
+                        bitrateIndex.innerHTML = metrics.bitrateIndex + 1;
 
-                    numBitrates = document.getElementById("num-video-bitrates");
-                    numBitrates.innerHTML = metrics.maxBitrateIndex;
+                        numBitrates = document.getElementById("num-video-bitrates");
+                        numBitrates.innerHTML = metrics.maxBitrateIndex;
 
-                    bufferLength = document.getElementById("video-buffer");
-                    len = metrics.bufferLength.toString();
-                    if (len.length > 5) len = len.substr(0, 4);
-                    bufferLength.innerHTML = len + " seconds";
-                    
-                    fragDuration = document.getElementById("video-frag-duration");
-                    len = metrics.lastFragmentDuration.toString();
-                    if (len.length > 5) len = len.substr(0, 4);
-                    fragDuration.innerHTML = len + " seconds";
-                    
-                    fragTime = document.getElementById("video-frag-dl-time");
-                    fragTime.innerHTML = metrics.lastFragmentDownloadTime + " seconds";
+                        bufferLength = document.getElementById("video-buffer");
+                        len = metrics.bufferLength.toString();
+                        if (len.length > 5) len = len.substr(0, 4);
+                        bufferLength.innerHTML = len + " seconds";
 
-                    series = bufferChart.series[0];
-                    x = time;
-                    y = Math.floor(metrics.bufferLength);
-                    series.addPoint([x, y], true, true, false);
+                        fragDuration = document.getElementById("video-frag-duration");
+                        len = metrics.lastFragmentDuration.toString();
+                        if (len.length > 5) len = len.substr(0, 4);
+                        fragDuration.innerHTML = len + " seconds";
+
+                        fragTime = document.getElementById("video-frag-dl-time");
+                        fragTime.innerHTML = metrics.lastFragmentDownloadTime + " seconds";
+
+                        series = bufferChart.series[0];
+                        x = time;
+                        y = Math.floor(metrics.bufferLength);
+                        series.addPoint([x, y], true, true, false);
+                    }
 
                     // audio
                     
                     metrics = player.getAudioMetrics();
 
-                    bitrateValue = document.getElementById("audio-value");
-                    bitrateValue.innerHTML = (metrics.bitrateValue / 1000) + " kbps";
+                    if (metrics)
+                    {
+                        bitrateValue = document.getElementById("audio-value");
+                        bitrateValue.innerHTML = (metrics.bitrateValue / 1000) + " kbps";
 
-                    bitrateIndex = document.getElementById("audio-index");
-                    bitrateIndex.innerHTML = metrics.bitrateIndex + 1;
+                        bitrateIndex = document.getElementById("audio-index");
+                        bitrateIndex.innerHTML = metrics.bitrateIndex + 1;
 
-                    numBitrates = document.getElementById("num-audio-bitrates");
-                    numBitrates.innerHTML = metrics.maxBitrateIndex;
+                        numBitrates = document.getElementById("num-audio-bitrates");
+                        numBitrates.innerHTML = metrics.maxBitrateIndex;
 
-                    bufferLength = document.getElementById("audio-buffer");
-                    len = metrics.bufferLength.toString();
-                    if (len.length > 5) len = len.substr(0, 4);
-                    bufferLength.innerHTML = len + " seconds";
-                    
-                    fragDuration = document.getElementById("audio-frag-duration");
-                    len = metrics.lastFragmentDuration.toString();
-                    if (len.length > 5) len = len.substr(0, 4);
-                    fragDuration.innerHTML = len + " seconds";
+                        bufferLength = document.getElementById("audio-buffer");
+                        len = metrics.bufferLength.toString();
+                        if (len.length > 5) len = len.substr(0, 4);
+                        bufferLength.innerHTML = len + " seconds";
 
-                    fragTime = document.getElementById("audio-frag-dl-time");
-                    fragTime.innerHTML = metrics.lastFragmentDownloadTime + " seconds";
+                        fragDuration = document.getElementById("audio-frag-duration");
+                        len = metrics.lastFragmentDuration.toString();
+                        if (len.length > 5) len = len.substr(0, 4);
+                        fragDuration.innerHTML = len + " seconds";
+
+                        fragTime = document.getElementById("audio-frag-dl-time");
+                        fragTime.innerHTML = metrics.lastFragmentDownloadTime + " seconds";
+                    }
                 }
             }
 
@@ -226,7 +232,7 @@
 
                 player = new streaming.Stream(video, factory);
 
-                player.setAutoSwitchQuality(false);
+                player.setAutoSwitchQuality(true);
                 player.load(source);
                 
                 var controls = document.querySelector(".dash-video-player");
@@ -284,11 +290,11 @@
             <div class="video-options" style="float: left;">
                 <select id="sources">
                     <option value="archive">Live Archive</option>
-                    <option value="live" selected="selected">Live</option>
+                    <option value="live">Live</option>
                     <option value="netflix">Netflix BaseURL</option>
                     <option value="fraunhofer">Fraunhofer BaseURL</option>
                     <option value="youtube">YouTube SegmentBase</option>
-                    <option value="list">Segment List</option>
+                    <option value="list" selected="selected">Segment List</option>
                     <option value="template">Segment Template</option>
                     <option value="timeline">Segment Timeline</option>
                     <!--<option value="base">SegmentBase</option>-->
@@ -379,7 +385,16 @@
             Erratic playback at higher bitrates.<br/>
             Streams using high profile codecs may not play properly.<br/>
             You may get the error "Media Source Close" when attempting to switch bitrates.<br/>
+            Only streams with segmentAlignment="true" will work with MBR.</b>
             
+            <p/>
+            
+            <b>Release Notes v0.0.5</b><br/>
+            Flesh out MBR support.<br/>
+            Add architecture for rule checking.<br/>
+            Add basic bandwidth rule.<br/>
+            <b>Introduced a limitation: only streams with segmentAlignment="true" will work with MBR.</b>
+
             <p/>
 
             <b>Release Notes v0.0.4</b><br/>

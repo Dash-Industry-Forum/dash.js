@@ -39,7 +39,7 @@ streaming.Stream = function (element, factory)
 
     /** @type {Array}
       * @private */
-    this.autoBitrateSwitch = null;
+    this.autoSwitchBitrate = true;
 
     /** @type {int}
       * @private */
@@ -108,13 +108,13 @@ streaming.Stream.prototype =
     //--------------------------
 
     setAutoSwitchQuality: function (value) {
-        this.autoBitrateSwitch = value;
+        this.autoSwitchBitrate = value;
         
         if (this.videoManager)
-            this.videoManager.autoSwitchBitrate = this.autoBitrateSwitch;
+            this.videoManager.autoSwitchBitrate = this.autoSwitchBitrate;
         
         if (this.audioManager)
-            this.audioManager.autoSwitchBitrate = this.autoBitrateSwitch;
+            this.audioManager.autoSwitchBitrate = this.autoSwitchBitrate;
     },
 
     setVideoQuality: function (value) {
@@ -241,8 +241,8 @@ streaming.Stream.prototype =
     {
         console.log("Finish seek.");
 
-        this.videoManager.seek(this.seekTarget);
-        this.audioManager.seek(this.seekTarget);
+        if (this.videoManager) this.videoManager.seek(this.seekTarget);
+        if (this.audioManager) this.audioManager.seek(this.seekTarget);
         this.seekTarget = -1;
     },
 
@@ -264,8 +264,8 @@ streaming.Stream.prototype =
         else
         {
             console.log("Start playback.");
-            this.videoManager.play();
-            this.audioManager.play();
+            if (this.videoManager) this.videoManager.play();
+            if (this.audioManager) this.audioManager.play();
         }
     },
     
@@ -330,7 +330,7 @@ streaming.Stream.prototype =
         if (isNaN(bufferTime) || bufferTime <= 0)
             bufferTime = 4;
         console.log("Buffer time: " + bufferTime);
-
+        
         if(this.manifest.hasVideoStream())
         {
             console.log("Create video buffer.");
@@ -341,7 +341,7 @@ streaming.Stream.prototype =
             buffer = this.mediaSource.addSourceBuffer(data.getCodec());
             indexHandler = this.factory.getIndexHandler(data, this.manifest.getStreamItems(data), this.manifest.getDuration(), this.manifest.getIsLive());
             this.videoManager = new streaming.BufferManager(this.element, buffer, indexHandler, bufferTime, "video");
-            this.videoManager.autoSwitchBitrate = this.autoBitrateSwitch;
+            this.videoManager.autoSwitchBitrate = this.autoSwitchBitrate;
         }
         else
         {

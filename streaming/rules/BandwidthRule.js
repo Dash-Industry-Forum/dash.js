@@ -33,25 +33,65 @@ streaming.rules.BandwidthRule.prototype = new streaming.rules.BaseRule();
  */
 streaming.rules.BandwidthRule.prototype.checkIndex = function (metrics, items)
 {
-    this.test++;
-
-    if (this.test >= items.length)
-        this.test = 0;
-
-    return this.test;
-
-
-    /*
-    if (metrics == null)
+    if (!metrics)
         return -1;
 
-
+    var newIdx = -1;
     var downloadRatio = metrics.lastFragmentDuration / metrics.lastFragmentDownloadTime;
+    var switchRatio;
 
+    console.log("Check bandwidth rule.");
+    console.log("Download ratio: " + downloadRatio);
 
+    if (isNaN(downloadRatio))
+    {
+        return -1;
+    }
+    else if (downloadRatio < 1.0)
+    {
+        if (metrics.bitrateIndex > 0)
+        {
+            switchRatio = metrics.getBitrateForIndex(metrics.bitrateIndex - 1) / metrics.getBitrateForIndex(metrics.bitrateIndex);
+            if (downloadRatio < switchRatio)
+            {
+                newIdx = 0;
+            }
+            else
+            {
+                newIdx = metrics.bitrateIndex - 1;
+            }
+        }
+    }
+    else
+    {
+        if (metrics.bitrateIndex < metrics.maxBitrateIndex) {
+            switchRatio = metrics.getBitrateForIndex(metrics.bitrateIndex + 1) / metrics.getBitrateForIndex(metrics.bitrateIndex);
+            if (downloadRatio >= switchRatio)
+            {
+                if (downloadRatio > 1000.0)
+                {
+                    newIdx = metrics.maxBitrateIndex - 1;
+                }
+                else if (downloadRatio > 100.0)
+                {
+                    newIdx = metrics.bitrateIndex + 1;
+                }
+                else
+                {
+                    while (newIdx++ < metrics.maxBitrateIndex + 1)
+                    {
+                        switchRatio = metrics.getBitrateForIndex(newIdx) / metrics.getBitrateForIndex(metrics.bitrateIndex);
+                        if (downloadRatio < switchRatio)
+                        {
+                            break;
+                        }
+                    }
+                    newIdx--;
+                }
+            }
+        }
+    }
 
-
-
-    return -1;
-    */
+    console.log("Proposed index: " + newIdx);
+    return newIdx;
 };

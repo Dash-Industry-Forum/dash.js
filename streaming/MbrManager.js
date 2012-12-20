@@ -54,7 +54,7 @@ streaming.MbrManager.prototype =
             }
         }
 
-        if (idx == 999)
+        if (idx == 999 || idx == -1)
             idx = metrics.bitrateIndex;
 
         return idx;

@@ -165,6 +165,8 @@ streaming.BufferManager.prototype =
 
     setQuality: function (value)
     {
+        console.log("Try to set quality: " + value + " | " + this.quality + " | " + this.getMaxQuality());
+
         if (this.quality == value)
             return;
         
@@ -218,7 +220,16 @@ streaming.BufferManager.prototype =
 
         console.log("Populate buffers.");
 
-        if (this.qualityChanged || this.initialPlayback)
+        // TODO : Perform a seek on quality changed.
+
+        // Do this so that if segmentAlignment="false" we will get the right fragment.
+        // This doesn't work right now because when we request, currentTime will not
+        // reflect the next fragment, so we just request the currently playing fragment again.
+
+        // Maybe keep track internally of the 'buffered time' so that we can seek to the latest
+        // buffered time?
+
+        if (this.initialPlayback)
         {
             console.log("Marking a special seek due to quality change or initial playback.");
 
@@ -228,15 +239,14 @@ streaming.BufferManager.prototype =
                 this.seeking = true;
             }
 
-            this.qualityChanged = false;
             this.initialPlayback = false;
         }
-
+        
         var request;
 
         // load the initialization segment now
         // this could trigger a load
-        if (this.seeking)
+        if (this.seeking || this.qualityChanged)
         {
             // we might not have an initialization!
             request = this.indexHandler.getInitRequest(this.quality);
@@ -245,6 +255,8 @@ streaming.BufferManager.prototype =
                 console.log("Loading initialization: " + request.url);
                 this.loader.load(request);
             }
+            
+            this.qualityChanged = false;
         }
         
         if (this.indexHandler.ready)
@@ -265,13 +277,20 @@ streaming.BufferManager.prototype =
                 }
 
                 request = this.indexHandler.getSegmentRequestForTime(st, this.quality);
-                this.seeking = false;
                 
+                console.log("Loading a seek at time: " + st);
+
+                this.seeking = false;
+                this.seekTarget = -1;
+                
+                /*
+                // TODO : This should be delayed.  See branch live_1.
                 if (this.element.currentTime != st)
                 {
                     this.element.currentTime = st;
                     this.seekTarget = -1;
                 }
+                */
             }
             else
             {
@@ -435,17 +454,24 @@ streaming.BufferManager.prototype =
         this.playing = false;
     },
     
+    getBitrateForIndex: function(index)
+    {
+        return this.indexHandler.getBandwidthForIndex(index);
+    },
+
     getMetrics: function ()
     {
         var metrics = new streaming.vo.StreamMetrics();
 
         metrics.bitrateIndex = this.getQuality();
-        metrics.bitrateValue = this.indexHandler.getBandwidthForIndex(metrics.bitrateIndex);
+        metrics.bitrateValue = this.getBitrateForIndex(metrics.bitrateIndex);
         metrics.maxBitrateIndex = this.getMaxQuality();
         metrics.bufferLength = this.getBufferLength();
         metrics.lastFragmentDuration = this.lastFragmentDuration;
         metrics.lastFragmentDownloadTime = this.lastDownloadTime;
        
+        metrics.getBitrateForIndex = this.getBitrateForIndex.bind(this);
+
         return metrics;
     },
     
