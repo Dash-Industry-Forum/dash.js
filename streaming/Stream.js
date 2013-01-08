@@ -109,7 +109,9 @@ streaming.Stream.prototype =
 
     setAutoSwitchQuality: function (value) {
         this.autoSwitchBitrate = value;
-        
+
+        console.log("Set auto switch quality: " + this.autoSwitchBitrate);
+
         if (this.videoManager)
             this.videoManager.autoSwitchBitrate = this.autoSwitchBitrate;
         

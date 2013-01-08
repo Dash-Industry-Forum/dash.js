@@ -190,23 +190,23 @@ streaming.BufferManager.prototype =
 
     checkBuffers: function()
     {
-        console.log("checkBuffers start");
+        //console.log("checkBuffers start");
 
         if (!this.playing)
         {
-            console.log("Not playing - bail.");
+            //console.log("Not playing - bail.");
             return;
         }
 
         if (this.loader.loading)
         {
-            console.log("Already loading - bail.");
+            //console.log("Already loading - bail.");
             return;
         }
 
         if (this.hasEnoughBuffered())
         {
-            console.log("Have enough buffer - bail.");
+            //console.log("Have enough buffer - bail.");
             return;
         }
 

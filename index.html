@@ -8,7 +8,11 @@
         
         <style type="text/css" title="currentStyle">
             @import "datatables/media/css/demo_table_jui.css";
-			@import "jquery-ui-1.9.2.custom/css/smoothness/jquery-ui-1.9.2.custom.min.css";
+		    @import "jquery-ui-1.9.2.custom/css/smoothness/jquery-ui-1.9.2.custom.min.css";
+            @import "960/reset.css";
+            @import "960/text.css";
+            @import "960/960.css";
+            @import "css/main.css";
         </style>
 
         <script src="streaming/vo/ValueObject.js"></script>
@@ -32,23 +36,25 @@
         <script src="dash/DashParser.js"></script>
         <script src="dash/SegmentIndexLoader.js"></script>
         
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+        <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+        <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
         <script src="highcharts/highcharts.js"></script>
         <script src="highcharts/modules/exporting.js"></script>
         <script src="datatables/media/js/jquery.dataTables.js"></script>
         
         <script>
             var player;
-            var ui;
+            //var ui;
             var time = -1;
 
-            var bufferChart;
+            var videoBufferChart;
+            var audioBufferChart;
 
-            function buildBufferGraph()
+            function buildVideoBufferGraph()
             {
-                bufferChart = new Highcharts.Chart({
+                videoBufferChart = new Highcharts.Chart({
                     chart: {
-                        renderTo: 'buffer-container',
+                        renderTo: 'video-buffer-container',
                         spacingRight: 20
                     },
                     title: {
@@ -89,7 +95,60 @@
                         data: (function () {
                             // generate an array of random data
                             var data = [];
-                            for (var i = 0; i < 15; i++) {
+                            for (var i = 0; i < 7; i++) {
+                                data.push({ x: 0, y: 0 });
+                            }
+                            return data;
+                        })()
+                    }]
+                });
+            }
+
+            function buildAudioBufferGraph() {
+                audioBufferChart = new Highcharts.Chart({
+                    chart: {
+                        renderTo: 'audio-buffer-container',
+                        spacingRight: 20
+                    },
+                    title: {
+                        text: 'Audio Buffer'
+                    },
+                    xAxis: {
+                        type: 'time',
+                        tickPixelInterval: 100
+                    },
+                    yAxis: {
+                        title: {
+                            text: null
+                        },
+                        min: 0
+                    },
+                    tooltip: {
+                        shared: true
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    plotOptions: {
+                        line: {
+                            dataLabels: {
+                                enabled: true
+                            },
+                            enableMouseTracking: false
+                        }
+                    },
+                    exporting: {
+                        enabled: false
+                    },
+                    printing: {
+                        enabled: false
+                    },
+                    series: [{
+                        name: 'avgfps',
+                        data: (function () {
+                            // generate an array of random data
+                            var data = [];
+                            for (var i = 0; i < 7; i++) {
                                 data.push({ x: 0, y: 0 });
                             }
                             return data;
@@ -114,9 +173,106 @@
                 });
             }
 
+            function updateBitrateControls()
+            {
+                var select = document.getElementById("bitrate-type");
+                var type = select.value;
+
+                if (type == "video")
+                {
+                    $("#audio-buffer-container").hide();
+                    $("#video-buffer-container").show();
+                }
+                else
+                {
+                    $("#audio-buffer-container").show();
+                    $("#video-buffer-container").hide();
+                }
+            }
+
+            function mbrUpClicked()
+            {
+                var select = document.getElementById("bitrate-type");
+                var type = select.value;
+
+                if (type == "video")
+                {
+                    var newQuality = player.getVideoQuality() + 1;
+                    player.setVideoQuality(newQuality);
+                }
+                else
+                {
+                    var newQuality = player.getAudioQuality() + 1;
+                    player.setAudioQuality(newQuality);
+                }
+            }
+
+            function mbrDownClicked()
+            {
+                var select = document.getElementById("bitrate-type");
+                var type = select.value;
+
+                if (type == "video")
+                {
+                    var newQuality = player.getVideoQuality() - 1;
+                    player.setVideoQuality(newQuality);
+                }
+                else
+                {
+                    var newQuality = player.getAudioQuality() - 1;
+                    player.setAudioQuality(newQuality);
+                }
+            }
+
+            function mbrAutoChanged()
+            {
+                var select = document.getElementById("mbr-auto");
+                var doAutoSwitch = select.value;
+                
+                if (doAutoSwitch == "true")
+                {
+                    player.setAutoSwitchQuality(true);
+                }
+                else
+                {
+                    player.setAutoSwitchQuality(false);
+                }
+            }
+
             function init()
             {
-                buildBufferGraph();
+                $(document).ready(function () {
+                    $("#mbr-up")
+                        .button()
+                        .click(function (event) {
+                            mbrUpClicked();
+                        }
+                    );
+
+                    $("#mbr-down")
+                        .button()
+                        .click(function (event) {
+                            mbrDownClicked();
+                        }
+                    );
+
+                    $("#mbr-auto")
+                        .click(function (event) {
+                            mbrAutoChanged();
+                        }
+                    );
+
+                    $("#bitrate-type")
+                        .click(function (event) {
+                            updateBitrateControls();
+                        }
+                    );
+
+                    updateBitrateControls();
+                });
+                
+                buildVideoBufferGraph();
+                buildAudioBufferGraph();
                 buildTables();
             }
 
@@ -162,7 +318,7 @@
                         fragTime = document.getElementById("video-frag-dl-time");
                         fragTime.innerHTML = metrics.lastFragmentDownloadTime + " seconds";
 
-                        series = bufferChart.series[0];
+                        series = videoBufferChart.series[0];
                         x = time;
                         y = Math.floor(metrics.bufferLength);
                         series.addPoint([x, y], true, true, false);
@@ -195,6 +351,11 @@
 
                         fragTime = document.getElementById("audio-frag-dl-time");
                         fragTime.innerHTML = metrics.lastFragmentDownloadTime + " seconds";
+
+                        series = audioBufferChart.series[0];
+                        x = time;
+                        y = Math.floor(metrics.bufferLength);
+                        series.addPoint([x, y], true, true, false);
                     }
                 }
             }
@@ -219,8 +380,10 @@
                 var source = null;
             
                 source = custom.value;
-                if (source == null || source == "") {
+                if (source == null || source == "")
+                {
                     source = streams[select.value];
+                    custom.value = source;
                 }
 
                 console.log("manifest: " + source);
@@ -236,196 +399,212 @@
                 player.load(source);
                 
                 var controls = document.querySelector(".dash-video-player");
-                ui = new streaming.PlayerUI(controls);
-            }
-		
-            function videoSwitchUp()
-            {
-                var newQuality = player.getVideoQuality() + 1;
-                player.setVideoQuality(newQuality);
-            }
-		
-            function videoSwitchDown()
-            {
-                var newQuality = player.getVideoQuality() - 1;
-                player.setVideoQuality(newQuality);
-            }
-
-            function audioSwitchUp() {
-                var newQuality = player.getAudioQuality() + 1;
-                player.setAudioQuality(newQuality);
-            }
-
-            function audioSwitchDown() {
-                var newQuality = player.getAudioQuality() - 1;
-                player.setAudioQuality(newQuality);
-            }
-           
+                //ui = new streaming.PlayerUI(controls);
+            }   
         </script>
     </head>
 
     <body onload="init()">
-        <!--<p style="width:600px;">This is an early draft of the DASH-IF JavaScript DASH-264 player, future versions will have a revised architecture with an eye towards extensibility.  It is not recommended for others to contribute or modify this source, as we know it is in flux and will change soon.</p>-->
-        <div class="video-instructions" style="float: left; padding-right: 10px;">
-            1. Select a stream from the drop down or type a mpd location into the input.<br/>
-            2. Click on Load.<br/>
-            <i>Refresh the page to start a new stream.</i><br/>
-        </div>
-        
-        <div style="width:10px; height:80px; border-left: 1px solid black; float:left;"></div>
+        <div class="container_12">
+            <div class="grid_6">
+                <p>
+                    1. Select a stream from the drop down or type a mpd location into the input.<br/>
+                    2. Click on Load.<br/>
+                    <i>Refresh the page to start a new stream.</i><br/>
+                </p>
+            </div>
 
-        <div class="security-instructions"></div>
-            If you see the message "manifest failed to load" try turning off Chrome's web security.<br/>
-            <i>-Right click the Chrome icon and select "properties".</i><br/>
-            <i>-In the "target" field add "--disable-web-security".</i><br/>
-            <i>-After launching Chrome you will see the message "You are using an unsupported command-line flag: --disable-web-security.  Stability and security will suffer."</i>
-        </div>
+            <div class="grid_6">
+                <p>
+                    If you see the message "manifest failed to load" try turning off Chrome's web security.<br/>
+                    <i>-Right click the Chrome icon and select "properties".</i><br/>
+                    <i>-In the "target" field add "--disable-web-security".</i><br/>
+                    <i>-After launching Chrome you will see the message "You are using an unsupported command-line flag: --disable-web-security.  Stability and security will suffer."</i>
+                </p>
+            </div>
 
-        <hr style="clear: both;"/>
-        
-        <div>
-            <div style="float: left;">
-                MPD: <input id="custom-source" style="width:300px;"/>
+            <div class="clear"></div>
+
+            <div class="grid_12">
+                <hr />
             </div>
-            <div class="video-options" style="float: left;">
-                <select id="sources">
-                    <option value="archive">Live Archive</option>
-                    <option value="live">Live</option>
-                    <option value="netflix">Netflix BaseURL</option>
-                    <option value="fraunhofer">Fraunhofer BaseURL</option>
-                    <option value="youtube">YouTube SegmentBase</option>
-                    <option value="list" selected="selected">Segment List</option>
-                    <option value="template">Segment Template</option>
-                    <option value="timeline">Segment Timeline</option>
-                    <!--<option value="base">SegmentBase</option>-->
-                </select>
-            </div>
-            <button type="button" onclick="load()">Load</button>
-        </div>
-        
-        <div class="dash-video-player" style="float: left;">
-            <div class="video-wrapper">
-                <video controls="true"></video>
-            </div>
-            <div class="video-controls">
-                <a href="#" class="button-play-pause"></a>
-                <div class="time-current">00:00</div>
-                <div class="scrubber">
-                    <div class="progress">
-                        <div class="progress-indicator" style="width:1%;"></div>
-                        <div class="buffer-indicator" style="width:1%;"></div>
+
+            <div class="clear"></div>
+
+            <div class="grid_7">
+
+                <div>
+                    <div style="float: left;">
+                        MPD: <input id="custom-source" style="width:290px;"/>
                     </div>
-                </div>
-                <div class="time-total">00:00</div>
-                <a href="#" class="button-full-screen"></a>
-            </div>
-        </div>
-        
-        <div style="width: 700px; float: left; padding-left: 20px;">
-            <div>
-                <div style="float: left; padding-right: 10px;">
-                    <h3>Video Controls</h3>
-                    <button type="button" onclick="videoSwitchUp()">Bitrate Up</button>
-                    <button type="button" onclick="videoSwitchDown()">Bitrate Down</button>
+                    <div class="video-options" style="float: left;">
+                        <select id="sources">
+                            <option value="archive">Live Archive</option>
+                            <option value="live">Live</option>
+                            <option value="netflix">Netflix BaseURL</option>
+                            <option value="fraunhofer">Fraunhofer BaseURL</option>
+                            <option value="youtube">YouTube SegmentBase</option>
+                            <option value="list" selected="selected">Segment List</option>
+                            <option value="template">Segment Template</option>
+                            <option value="timeline">Segment Timeline</option>
+                            <!--<option value="base">SegmentBase</option>-->
+                        </select>
+                    </div>
+                    <button type="button" onclick="load()">Load</button>
                 </div>
                 
-                <div style="width:10px; height:80px; border-left: 1px solid black; float:left;"></div>
-
-                <div style="float: left;">
-                    <h3>Audio Controls</h3>
-                    <button type="button" onclick="audioSwitchUp()">Bitrate Up</button>
-                    <button type="button" onclick="audioSwitchDown()">Bitrate Down</button>
+                <div class="dash-video-player" style="width:540px; height:303.75px;">
+                    <div class="video-wrapper" style="width:540px; height:303.75px;">
+                        <video controls="true"></video>
+                        <!--
+                        <div class="video-controls">
+                            <a href="#" class="button-play-pause"></a>
+                            <div class="time-current">00:00</div>
+                            <div class="scrubber">
+                                <div class="progress">
+                                    <div class="progress-indicator" style="width:1%;"></div>
+                                    <div class="buffer-indicator" style="width:1%;"></div>
+                                </div>
+                            </div>
+                            <div class="time-total">00:00</div>
+                            <a href="#" class="button-full-screen"></a>
+                        </div>
+                        -->
+                    </div>
+                </div>                   
+                
+            </div>
+            
+            <div class="grid_5">
+                <div class="grid_2 alpha">
+                    Bitrate Controls
+                </div>
+                <div class="grid_1 prefix_2 omega">
+                    <select id="bitrate-type">
+                        <option value="video" selected="selected">Video</option>
+                        <option value="audio">Audio</option>
+                    </select>
                 </div>
             </div>
             
-            <p style="height: 10px; clear: both;"/>
-            
-            <div id="buffer-container" style="width: 100%; height: 200px;"></div>
-            
-            <h2 style="width: 100%; text-align: center">Metrics</h2>
-            
-            <table cellpadding="0" cellspacing="0" border="0" class="display" id="metrics-table" width="100%">
-                <thead>
-                    <tr>
-                        <th>Buffer Type</th>
-                        <th>Bitrate Value</th>
-                        <th>Bitrate Index</th>
-                        <th># of Bitrates</th>
-                        <th>Buffer Length</th>
-                        <th>Last Frag Duration</th>
-                        <th>Last Frag D/L Time</th>
-                    </tr>
-                </thead>
+            <div class="grid_5">
+                <select id="mbr-auto" class="grid_2 alpha">
+                    <option value="true">Auto On</option>
+                    <option value="false">Auto Off</option>
+                </select>
+                <input id="mbr-up" type="submit" class="grid_1" value="Up" />
+                <input id="mbr-down" type="submit" class="grid_1 omega" value="Down" />
+            </div>
+
+            <div id="video-buffer-container" class="grid_5" style="width: 380px; height: 200px;"></div>
+            <div id="audio-buffer-container" class="grid_5" style="width: 380px; height: 200px;"></div>
+
+            <div class="clear" style="height:10px;"></div>
+
+            <div class="grid_12">
+                <table cellpadding="0" cellspacing="0" border="0" class="display" id="metrics-table" width="100%">
+                    <thead>
+                        <tr>
+                            <th>Buffer Type</th>
+                            <th>Bitrate Value</th>
+                            <th>Bitrate Index</th>
+                            <th># of Bitrates</th>
+                            <th>Buffer Length</th>
+                            <th>Last Frag Duration</th>
+                            <th>Last Frag D/L Time</th>
+                        </tr>
+                    </thead>
                 
-                <tbody>
-                    <tr class="gradeA">
-                        <td class="center">Video</td>
-                        <td id="video-value" class="center">0</td>
-                        <td id="video-index" class="center">0</td>
-                        <td id="num-video-bitrates" class="center">0</td>
-                        <td id="video-buffer" class="center">0</td>
-                        <td id="video-frag-duration" class="center">0</td>
-                        <td id="video-frag-dl-time" class="center">0</td>
-                    </tr>
-                    <tr class="gradeC">
-                        <td class="center">Audio</td>
-                        <td id="audio-value" class="center">0</td>
-                        <td id="audio-index" class="center">0</td>
-                        <td id="num-audio-bitrates" class="center">0</td>
-                        <td id="audio-buffer" class="center">0</td>
-                        <td id="audio-frag-duration" class="center">0</td>
-                        <td id="audio-frag-dl-time" class="center">0</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                    <tbody>
+                        <tr class="gradeA">
+                            <td class="center">Video</td>
+                            <td id="video-value" class="center">0</td>
+                            <td id="video-index" class="center">0</td>
+                            <td id="num-video-bitrates" class="center">0</td>
+                            <td id="video-buffer" class="center">0</td>
+                            <td id="video-frag-duration" class="center">0</td>
+                            <td id="video-frag-dl-time" class="center">0</td>
+                        </tr>
+                        <tr class="gradeC">
+                            <td class="center">Audio</td>
+                            <td id="audio-value" class="center">0</td>
+                            <td id="audio-index" class="center">0</td>
+                            <td id="num-audio-bitrates" class="center">0</td>
+                            <td id="audio-buffer" class="center">0</td>
+                            <td id="audio-frag-duration" class="center">0</td>
+                            <td id="audio-frag-dl-time" class="center">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <div class="release-notes" style="clear: both;">
-            <b>Known Issues</b><br/>
-            Erratic playback at higher bitrates.<br/>
-            Streams using high profile codecs may not play properly.<br/>
-            You may get the error "Media Source Close" when attempting to switch bitrates.<br/>
-            Only streams with segmentAlignment="true" will work with MBR.</b>
+            <div class="clear"></div>
+
+            <div class="grid_12">
+                <br />
+                <hr />
+            </div>
+
+            <div class="clear"></div>
+
+            <div class="grid_12">
+                <b>Known Issues</b><br/>
+                Erratic playback at higher bitrates.<br/>
+                Streams using high profile codecs may not play properly.<br/>
+                You may get the error "Media Source Close" when attempting to switch bitrates.<br/>
+                Only streams with segmentAlignment="true" will work with MBR.</b>
+            </div>
+
+            <div class="clear" style="height:10px;"></div>
+                
+            <div class="grid_12">
+                <b>Release Notes v0.0.5</b><br/>
+                Flesh out MBR support.<br/>
+                Add architecture for rule checking.<br/>
+                Add basic bandwidth rule.<br/>
+                <b>Introduced a limitation: only streams with segmentAlignment="true" will work with MBR.</b>
+            </div>
+
+            <div class="clear" style="height:10px;"></div>
             
-            <p/>
+            <div class="grid_12">
+                <b>Release Notes v0.0.4</b><br/>
+                Add metrics bling.<br/>
+                Expose methods to change audio bitrate.<br/>
+                Play video automatically after loading completes.<br/>
+            </div>
+
+            <div class="clear" style="height:10px;"></div>
             
-            <b>Release Notes v0.0.5</b><br/>
-            Flesh out MBR support.<br/>
-            Add architecture for rule checking.<br/>
-            Add basic bandwidth rule.<br/>
-            <b>Introduced a limitation: only streams with segmentAlignment="true" will work with MBR.</b>
+            <div class="grid_12">
+                <b>Release Notes v0.0.3</b><br/>
+                Handle BaseURL with no SegmentTemplate, SegmentList, or SegmentBase.<br/>
+                Handle SegmentBase nodes without an indexRange or initializationRange.<br/>
+            </div>
 
-            <p/>
-
-            <b>Release Notes v0.0.4</b><br/>
-            Add metrics bling.<br/>
-            Expose methods to change audio bitrate.<br/>
-            Play video automatically after loading completes.<br/>
-
-            <p/>
-
-            <b>Release Notes v0.0.3</b><br/>
-            Handle BaseURL with no SegmentTemplate, SegmentList, or SegmentBase.<br/>
-            Handle SegmentBase nodes without an indexRange or initializationRange.<br/>
+            <div class="clear" style="height:10px;"></div>
             
-            <p/>
+            <div class="grid_12">
+                <b>Release Notes v0.0.2</b><br/>
+                Rearchitect the application for better extensibility.<br/>
+                Properly signal end of stream.<br/>
+                Add metrics tracking.<br/>
+                Add charts and tables with metrics info.<br/>
+            </div>
 
-            <b>Release Notes v0.0.2</b><br/>
-            Rearchitect the application for better extensibility.<br/>
-            Properly signal end of stream.<br/>
-            Add metrics tracking.<br/>
-            Add charts and tables with metrics info.<br/>
+            <div class="clear" style="height:10px;"></div>
+            
+            <div class="grid_12">
+                <b>Release Notes v0.0.1</b><br/>
+                Requires Chrome 24 or later.<br/>
+                Basic implements for the four fragment description types work.<br/>
+                <i>SegmentList</i><br/>
+                <i>SegmentTemplate</i><br/>
+                <i>SegmentTemplate with SegmentTimeline</i><br/>
+                <i>SegmentBase</i><br/>
+            </div>
 
-            <p/>
-
-            <b>Release Notes v0.0.1</b><br/>
-            Requires Chrome 24 or later.<br/>
-            Basic implements for the four fragment description types work.<br/>
-            <i>SegmentList</i><br/>
-            <i>SegmentTemplate</i><br/>
-            <i>SegmentTemplate with SegmentTimeline</i><br/>
-            <i>SegmentBase</i><br/>
+            <div class="clear" style="height:10px;"></div>
         </div>
     </body>
-
 </html>
