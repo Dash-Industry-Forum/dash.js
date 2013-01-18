@@ -14,109 +14,80 @@
  *
  * copyright Digital Primates 2012
  */
-window["streaming"] = window["streaming"] || {};
-/**
- *
- * @constructor
- */
-streaming.Loader = function ()
-{
-    /**
-     * @private
-     * @type {*} */
-    this.onBytesLoaded = function (a, b) { };
-    /**
-     * @private
-     * @type {boolean} */
-    this.loading = false;
-    /**
-     * @private
-     * @type {dash.vo.SegmentRequest} */
-    this.lastRequest = null;
-    /**
-     * @private
-     * @type {Array.<dash.vo.SegmentRequest>} */
-    this.requests = [];
-    /**
-     * @private
-     * @type {XMLHttpRequest} */
-    this.xhr = new XMLHttpRequest();
-    this.xhr.responseType = "arraybuffer";
-    this.xhr.addEventListener("load", this.onLoad.bind(this), false);
-    this.xhr.addEventListener("error", this.onError.bind(this), false);
-};
+Stream.modules.Loader = (function () {
+    "use strict";
 
-streaming.Loader.prototype =
-{
-    /**
-     * @private
-     * @param {Event} e
-     */
-    onLoad: function (e)
-    {
-        var bytes = e.currentTarget.response;
-        this.lastRequest.requestEndDate = new Date();
-        this.onBytesLoaded(bytes, this.lastRequest);
-        
-        // load the next
-        this.loadNext();
-    },
-    
-    /**
-     * @private
-     * @param {Event} e
-     */
-    onError: function (e)
-    {
-        alert("load error");
-    },
-    
-    /**
-     * @private
-     */
-    loadNext: function ()
-    {
-        this.lastRequest = this.requests.shift();
-        if (this.lastRequest != null)
-        {
-            this.lastRequest.requestStartDate = new Date();
-            this.loading = true;
-            this.xhr.open("GET", this.lastRequest.url);
-            if (this.lastRequest.endRange)
-            {
-                this.xhr.setRequestHeader("Range", "bytes=" + this.lastRequest.startRange + "-" + this.lastRequest.endRange);
-            }
-            this.xhr.send(null);
-        }
-        else
-        {
-            this.loading = false;
-        }
-    },
-    
-    /**
-     * Cancels all pending requests and clears the loading queue.
-     */
-    abort: function ()
-    {
-        this.xhr.abort();
-        this.requests = [];
-        this.lastRequest = null;
+    var Constr;
+
+    Constr = function () {
+        this.onBytesLoaded = function (a, b) { };
         this.loading = false;
-    },
-    
-    /**
-     * Add a url to the loading queue.
-     * @param {dash.vo.SegmentRequest|null} request
-     */
-    load: function (request)
-    {
-        if (request == null)
-            return;
+        this.lastRequest = null;
+        this.requests = [];
+        this.xhr = new XMLHttpRequest();
+        this.xhr.responseType = "arraybuffer";
+        this.xhr.addEventListener("load", this.onLoad.bind(this), false);
+        this.xhr.addEventListener("error", this.onError.bind(this), false);
+    };
 
-        this.requests.push(request);
+    Constr.prototype = {
+        constructor: Stream.modules.Loader,
 
-        if (!this.loading)
+        loadNext: function () {
+            this.lastRequest = this.requests.shift();
+            if (this.lastRequest !== null && this.lastRequest !== undefined) {
+                this.lastRequest.requestStartDate = new Date();
+                this.loading = true;
+                this.xhr.open("GET", this.lastRequest.url);
+                if (this.lastRequest.endRange) {
+                    this.xhr.setRequestHeader("Range", "bytes=" + this.lastRequest.startRange + "-" + this.lastRequest.endRange);
+                }
+                this.xhr.send(null);
+            } else {
+                this.loading = false;
+            }
+        },
+
+        onLoad: function (e) {
+            var bytes = e.currentTarget.response;
+            this.lastRequest.requestEndDate = new Date();
+            this.onBytesLoaded(bytes, this.lastRequest);
+
+            // load the next
             this.loadNext();
-    }
-};
+        },
+
+        onError: function (e) {
+            alert("load error");
+        },
+
+        setOnBytesLoadedHandler: function (func) {
+            this.onBytesLoaded = func;
+        },
+
+        getLoading: function () {
+            return this.loading;
+        },
+
+        abort: function () {
+            this.xhr.abort();
+            this.requests = [];
+            this.lastRequest = null;
+            this.loading = false;
+        },
+
+        load: function (request) {
+            if (this.request === null) {
+                return;
+            }
+
+            this.requests.push(request);
+
+            if (!this.loading) {
+                this.loadNext();
+            }
+        }
+    };
+
+    return Constr;
+}());

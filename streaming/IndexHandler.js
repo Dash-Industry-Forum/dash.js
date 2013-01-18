@@ -14,67 +14,41 @@
  *
  * copyright Digital Primates 2012
  */
-window["streaming"] = window["streaming"] || {};
-/**
- *
- * @constructor
- */
-streaming.IndexHandler = function (data, items)
-{
-    this.data = data;
-    this.items = items;
-    this.ready = true;
-};
+Stream.modules.IndexHandler = (function () {
+    "use strict";
 
-streaming.IndexHandler.prototype =
-{
-    /**
-     * @public
-     */
-    setData: function (value)
-    {
-        this.data = value;
-    },
+    var Constr;
 
-    /**
-     * @public
-     */
-    getBandwidthForIndex: function (quality)
-    {
-        return 0;
-    },
-    
-    /**
-     * @public
-     */
-    getMaxQuality: function ()
-    {
-        return 0;
-    },
+    Constr = function (data, streamItems) {
+        this.data = null;
+        this.items = null;
+        this.ready = false;
+        this.onReady = null;
+    };
 
-    /**
-     * @public
-     */
-    getInitRequest: function (quality)
-    {
-        return null;
-    },
-    
-    /**
-     * @public
-     * return streaming.vo.SegmentRequest
-     */
-    getSegmentRequestForTime: function (time, quality)
-    {
-        return null;
-    },
-    
-    /**
-     * @public
-     * return streaming.vo.SegmentRequest
-     */
-    getNextSegmentRequest: function (quality)
-    {
-        return null;
-    }
-};
+    Constr.prototype = {
+        constructor: Stream.modules.IndexHandler,
+
+        getBandwidthForIndex: function (quality) {
+            return 0;
+        },
+
+        getMaxQuality: function () {
+            return 0;
+        },
+
+        getInitRequest: function (quality) {
+            return null;
+        },
+
+        getSegmentRequestForTime: function (time, quality) {
+            return null;
+        },
+
+        getNextSegmentRequest: function (quality) {
+            return null;
+        }
+    };
+
+    return Constr;
+}());

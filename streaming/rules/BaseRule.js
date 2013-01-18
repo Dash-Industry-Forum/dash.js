@@ -14,22 +14,21 @@
  *
  * copyright Digital Primates 2012
  */
-window["streaming"] = window["streaming"] || {};
-streaming.rules = streaming.rules || {};
+Stream.rules.BaseRule = (function () {
+    "use strict";
 
-/**
- *
- * @constructor
- */
-streaming.rules.BaseRule = function ()
-{
+    var Constr;
 
-};
+    Constr = function () {
 
-streaming.rules.BaseRule.prototype =
-{
-    checkIndex: function(metrics, items)
-    {
-        return -1;
-    }
-};
+    };
+
+    Constr.prototype = {
+        constructor: Stream.rules.BaseRule,
+        checkIndex: function (metrics, items) {
+            return -1;
+        }
+    };
+
+    return Constr;
+}());

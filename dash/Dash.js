@@ -14,28 +14,15 @@
  *
  * copyright Digital Primates 2012
  */
-Dash.modules.DashFactory = (function () {
+Dash = (function () {
     "use strict";
 
-    var Constr;
-
-    Constr = function () {
-        this.parser = new Dash.modules.DashParser();
-    };
-
-    Stream.utils.inherit(Constr, Stream.modules.StreamFactory);
-
-    Constr.prototype = {
-        constructor: Dash.modules.DashFactory,
-        
-        getManifestParser: function () {
-            return this.parser;
-        },
-
-        getIndexHandler: function (data, items, duration, isLive) {
-            return new Dash.modules.DashHandler(data, items, duration, isLive);
+    return {
+        getFactory: function () {
+            return new Dash.modules.DashFactory();
         }
     };
-
-    return Constr;
 }());
+
+Dash.modules = {};
+Dash.vo = {};

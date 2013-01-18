@@ -14,295 +14,279 @@
  *
  * copyright Digital Primates 2012
  */
-window["streaming"] = window["streaming"] || {};
-/**
- * @param {HTMLVideoElement} element
- * @constructor
- */
-streaming.Stream = function (element, factory)
-{
-    //--------------------------
-    // public variables
-    //--------------------------
-    
-    /** @type {Boolean}
-      * @private */
-    this.autoplay = false; // TODO
+function Stream(element, factory, callback) {
+    "use strict";
 
-    /** @type {Array}
-      * @private */
+    if (!(this instanceof Stream)) {
+        return new Stream(element, factory, callback);
+    }
+
+    this.mediaSource = null;
+    this.manifestUrl = null;
+    this.manifest = null;
     this.audios = null;
 
-    //--------------------------
-    // private variables
-    //--------------------------
-
-    /** @type {Array}
-      * @private */
     this.autoSwitchBitrate = true;
-
-    /** @type {int}
-      * @private */
     this.audioIndex = 0;
 
-    /** @type {Boolean}
-      * @private */
-    this.videoElementInitialized = false;
-    
-    /** @type {Boolean}
-      * @private */
-    this.mediaSourceInitialized = false;
-
-    /** @type {streaming.BufferManager}
-      * @private */
     this.videoManager = null;
-
-    /** @type {streaming.BufferManager}
-      * @private */
     this.audioManager = null;
 
-    /** @type {String}
-      * @private */
-    this.manifestUrl = null;
+    this.videoElementInitialized = false;
+    this.mediaSourceInitialized = false;
 
-    /** @type {XMLHttpRequest}
-     * @private */
+    this.element = element;
+    this.factory = factory;
+    this.seekTarget = -1;
+    
     this.xhr = new XMLHttpRequest();
     this.xhr.addEventListener("load", this.onManifestLoad.bind(this), false);
     this.xhr.addEventListener("error", this.onManifestLoadError.bind(this), false);
 
-    /** @type {XMLHttpRequest}
-     * @private */
     this.refresh = new XMLHttpRequest();
     this.refresh.addEventListener("load", this.onManifestRefresh.bind(this), false);
     this.refresh.addEventListener("error", this.onManifestLoadError.bind(this), false);
 
-    /** @type {HTMLVideoElement}
-      * @private */
-    this.element = element;
-    
-    /** @type {stream.StreamFactory}
-      * @private */
-    this.factory = factory;
+    callback(this);
+}
 
-    /** @type {Array}
-      * @private */
-    this.buffers = {};
-    
-    /** @type {streaming.vo.DashManifest}
-      * @private */
-    this.manifest = null;
-    
-    /** @type {number}
-      * @private */
-    this.seekTarget = -1;
+Stream.modules = {};
+Stream.rules = {};
+Stream.vo = {};
+Stream.utils = {};
+
+Stream.utils.inherit = function (C, P) {
+    "use strict";
+    var F = function () { };
+    F.prototype = P.prototype;
+    C.prototype = new F();
+    C.uber = P.prototype;
+    C.prototype.constructor = C;
 };
 
-streaming.Stream.prototype =
-{
-    
-    // TODO : EXPOSE METHODS TO CHANGE AUDIO TRACKS!
-
-    //--------------------------
-    // qualities and audio tracks
-    //--------------------------
-
-    setAutoSwitchQuality: function (value) {
-        this.autoSwitchBitrate = value;
-
-        console.log("Set auto switch quality: " + this.autoSwitchBitrate);
-
-        if (this.videoManager)
-            this.videoManager.autoSwitchBitrate = this.autoSwitchBitrate;
-        
-        if (this.audioManager)
-            this.audioManager.autoSwitchBitrate = this.autoSwitchBitrate;
-    },
-
-    setVideoQuality: function (value) {
-        if (this.videoManager)
-            this.videoManager.setQuality(value);
-    },
-
-    getVideoQuality: function () {
-        if (this.videoManager)
-            return this.videoManager.getQuality();
-
-        return 0;
-    },
-
-    setAudioQuality: function (value)
-    {
-        if (this.audioManager)
-            this.audioManager.setQuality(value);
-    },
-    
-    getAudioQuality: function ()
-    {
-        if (this.audioManager)
-            return this.audioManager.getQuality();
-
-        return 0;
-    },
-
-    setAudioIndex: function (value)
-    {
-        if (value < 0 || value >= audios.length)
-            return;
-
-        this.audioIndex = value;
-        // TODO : Change data on buffer manager.
-    },
-    
-    /**
-     * @public
-     * The index of the currently playing audio track.
-     */
-    getAudioIndex: function (value)
-    {
-        return this.audioIndex;
-    },
-
-    getVideoMetrics: function ()
-    {
-        if (this.videoManager)
-            return this.videoManager.getMetrics();
-        
-        return null;
-    },
-    
-    getAudioMetrics: function ()
-    {
-        if (this.audioManager)
-            return this.audioManager.getMetrics();
-
-        return null;
-    },
-
-    //--------------------------
-    // playback
-    //--------------------------
-
-    initializePlayback: function()
-    {
-        console.log("Attempt to start playback for the first time...");
-        if (!this.videoElementInitialized || !this.mediaSourceInitialized)
-            return;
-
-        if (this.manifest.getIsLive())
-        {
-            this.mediaSource.duration = Number.POSITIVE_INFINITY;
-            console.log("Live event, set infinity duration.");
-
-            var now = new Date();
-            var start = this.manifest.availabilityStartTime;
-            var liveOffset = (now.getTime() - start.getTime()) / 1000;
-
-            console.log("Seek to live point and start playback: " + liveOffset);
-            this.seek(liveOffset);
+// default implementation
+Stream.modules.debug = (function () {
+    "use strict";
+    return {
+        log: function (message) {
+            console.log(message);
         }
-        else {
-            this.mediaSource.duration = this.manifest.getDuration();
-            console.log("Set media duration: " + this.manifest.getDuration());
+    };
+}());
 
-            this.play();
-            console.log("Start stream playback.");
-        }
-    },
+Stream.prototype = {
+    play: function () {
+        var debug = Stream.modules.debug;
+        debug.log("Attempt play...");
 
-    /**
-     * @public
-     */
-    play: function ()
-    {
-        console.log("Attempt play...");
-        if (!this.videoElementInitialized || !this.mediaSourceInitialized)
+        if (!this.videoElementInitialized || !this.mediaSourceInitialized) {
             return;
-        
-        console.log("Do play.");
+        }
+
+        debug.log("Do play.");
         this.element.play();
     },
 
-    /**
-     * @public
-     * @param {Number} time
-     */
-    seek: function (time)
-    {
-        console.log("Attempt seek...");
-        if (!this.videoElementInitialized || !this.mediaSourceInitialized)
-            return;
+    seek: function (time) {
+        var debug = Stream.modules.debug;
+        debug.log("Attempt seek...");
 
-        console.log("Do seek.");
+        if (!this.videoElementInitialized || !this.mediaSourceInitialized) {
+            return;
+        }
+
+        debug.log("Do seek.");
 
         this.seekTarget = time;
         this.element.play();
     },
 
-    finishSeek: function()
-    {
-        console.log("Finish seek.");
+    load: function (url) {
+        var debug = Stream.modules.debug;
+        debug.log("Start loading manifest.");
 
-        if (this.videoManager) this.videoManager.seek(this.seekTarget);
-        if (this.audioManager) this.audioManager.seek(this.seekTarget);
+        this.manifestUrl = url;
+        this.xhr.open("GET", this.manifestUrl, true);
+        this.xhr.send(null);
+    },
+
+    startManifestRefresh: function () {
+        var refreshTime = (this.manifest.minimumUpdatePeriod * 1000),
+            debug = Stream.modules.debug,
+            me = this;
+
+        if (!isNaN(refreshTime) && refreshTime > 0) {
+            debug.log("Start manifest refresh.");
+            setTimeout(function () {
+                me.refresh.open("GET", me.manifestUrl, true);
+                me.refresh.send(null);
+            }, refreshTime);
+        }
+    },
+
+    // INITIALIZATION
+
+    initializePlayback: function () {
+        if (!this.videoElementInitialized || !this.mediaSourceInitialized) {
+            return;
+        }
+
+        var debug = Stream.modules.debug,
+            now = new Date(),
+            start = this.manifest.availabilityStartTime,
+            liveOffset = (now.getTime() - start.getTime()) / 1000;
+
+        debug.log("Attempt to start playback for the first time...");
+
+        if (this.manifest.getIsLive()) {
+            this.mediaSource.duration = Number.POSITIVE_INFINITY;
+            debug.log("Live event, set infinity duration.");
+            debug.log("Seek to live point and start playback: " + this.liveOffset);
+            this.seek(this.liveOffset);
+        } else {
+            this.mediaSource.duration = this.manifest.getDuration();
+            debug.log("Set media duration: " + this.manifest.getDuration());
+            this.play();
+            debug.log("Start stream playback.");
+        }
+    },
+
+    // HANDLERS
+
+    finishSeek: function () {
+        var debug = Stream.modules.debug;
+        debug.log("Finish seek.");
+
+        if (this.videoManager) {
+            this.videoManager.seek(this.seekTarget);
+        }
+        if (this.audioManager) {
+            this.audioManager.seek(this.seekTarget);
+        }
         this.seekTarget = -1;
     },
 
-    /**
-     * @private
-     * @param {Event} e
-     */
-    onPlay: function (e)
-    {
-        console.log("Got onPlay event.");
-        
-        if (!this.videoElementInitialized || !this.mediaSourceInitialized)
+    onPlay: function (e) {
+        var debug = Stream.modules.debug;
+        debug.log("Got onPlay event.");
+
+        if (!this.videoElementInitialized || !this.mediaSourceInitialized) {
             return;
+        }
 
-        if (this.seekTarget != -1)
-        {
+        if (this.seekTarget !== -1) {
             this.finishSeek();
+        } else {
+            debug.log("Start playback.");
+
+            if (this.videoManager) {
+                this.videoManager.play();
+            }
+            if (this.audioManager) {
+                this.audioManager.play();
+            }
         }
-        else
-        {
-            console.log("Start playback.");
-            if (this.videoManager) this.videoManager.play();
-            if (this.audioManager) this.audioManager.play();
+    },
+
+    onPause: function (e) {
+        var debug = Stream.modules.debug;
+        debug.log("Pause");
+    },
+
+    onSeeking: function (e) {
+        var debug = Stream.modules.debug;
+        debug.log("Process seek: " + this.element.currentTime);
+
+        if (this.videoManager) {
+            this.videoManager.seek(this.element.currentTime);
+        }
+        if (this.audioManager) {
+            this.audioManager.seek(this.element.currentTime);
         }
     },
-    
-    /**
-     * @private
-     * @param {Event} e
-     */
-    onPause: function (e)
-    {
-        console.log("Pause");
+
+    onProgress: function (e) {
+
     },
 
-    /**
-     * @private
-     * @param {Event} e
-     */
-    onSeeking: function (e)
-    {
-        console.log("Process seek: " + this.element.currentTime);
-        if (this.videoManager) this.videoManager.seek(this.element.currentTime);
-        if (this.audioManager) this.audioManager.seek(this.element.currentTime);
+    onMediaSourceReady: function (e) {
+        var debug = Stream.modules.debug,
+            data,
+            buffer,
+            indexHandler,
+            bufferTime = this.manifest.minBufferTime,
+            i,
+            max,
+            manifestDuration = this.manifest.getDuration(),
+            manifestIsLive = this.manifest.getIsLive();
+
+        debug.log("MediaSource initialized!");
+
+        if (isNaN(this.bufferTime) || this.bufferTime <= 0) {
+            this.bufferTime = 4;
+        }
+
+        debug.log("Buffer time: " + this.bufferTime);
+
+        if (this.manifest.hasVideoStream()) {
+            debug.log("Create video buffer.");
+
+            // assume one video stream
+            data = this.manifest.getVideoData();
+            debug.log("Video codec: " + data.getCodec());
+
+            buffer = this.mediaSource.addSourceBuffer(data.getCodec());
+            indexHandler = this.factory.getIndexHandler(data, this.manifest.getStreamItems(data), manifestDuration, manifestIsLive);
+            this.videoManager = new Stream.modules.BufferManager(this.element, buffer, indexHandler, this.bufferTime, "video");
+            this.videoManager.autoSwitchBitrate = this.autoSwitchBitrate;
+        } else {
+            debug.log("No video data.");
+        }
+
+        if (this.manifest.hasAudioStream()) {
+            debug.log("Create audio buffer.");
+            // assume multiple audio streams
+            audios = this.manifest.getAudioDatas();
+            debug.log("Num audio streams: " + audios.length);
+
+            // get primary audio stream to start
+            data = this.manifest.getPrimaryAudioData();
+            debug.log("Audio codec: " + data.getCodec());
+
+            // figure out index of main audio stream
+            if (audios.length === 1) {
+                audioIndex = 0;
+            } else {
+                for (i = 0, max = audios.length; i < max; i += 1) {
+                    if (audios[i] === data) {
+                        audioIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            buffer = this.mediaSource.addSourceBuffer(data.getCodec());
+            indexHandler = this.factory.getIndexHandler(data, this.manifest.getStreamItems(data), manifestDuration, manifestIsLive);
+            this.audioManager = new Stream.modules.BufferManager(this.element, buffer, indexHandler, this.bufferTime, "audio");
+            this.audioManager.autoSwitchBitrate = this.autoSwitchBitrate;
+        } else {
+            debug.log("No audio data.");
+        }
+
+        this.mediaSourceInitialized = true;
+        this.initializePlayback();
     },
 
-    /**
-     * @private
-     * @param {Event} e
-     */
-    onProgress: function (e)
-    {
-        
+    onMediaSourceClose: function (e) {
+        var debug = Stream.modules.debug;
+        debug.log("Error initializing MediaSource.");
+        debug.log(e);
+        alert("Error: Media Source Close.");
     },
 
-    initElement: function ()
-    {
-        console.log("Initialize video element.");
+    addElementHandlers: function () {
+        var debug = Stream.modules.debug;
+        debug.log("Initialize video element.");
 
         this.element.addEventListener("play", this.onPlay.bind(this), false);
         this.element.addEventListener("pause", this.onPause.bind(this), false);
@@ -313,100 +297,10 @@ streaming.Stream.prototype =
         this.initializePlayback();
     },
 
-    //--------------------------
-    // mediasource
-    //--------------------------
+    addMediaSourceHandlers: function () {
+        var debug = Stream.modules.debug;
+        debug.log("Initialize MediaSource.");
 
-    /**
-     * @private
-     * @param {Event} e
-     */
-    onMediaSourceReady: function (e) {
-        console.log("MediaSource initialized!");
-        
-        var data;
-        var buffer;
-        var indexHandler;
-
-        var bufferTime = this.manifest.minBufferTime;
-        if (isNaN(bufferTime) || bufferTime <= 0)
-            bufferTime = 4;
-        console.log("Buffer time: " + bufferTime);
-        
-        if(this.manifest.hasVideoStream())
-        {
-            console.log("Create video buffer.");
-            // assume one video stream
-            data = this.manifest.getVideoData();
-            console.log("Video codec: " + data.getCodec());
-
-            buffer = this.mediaSource.addSourceBuffer(data.getCodec());
-            indexHandler = this.factory.getIndexHandler(data, this.manifest.getStreamItems(data), this.manifest.getDuration(), this.manifest.getIsLive());
-            this.videoManager = new streaming.BufferManager(this.element, buffer, indexHandler, bufferTime, "video");
-            this.videoManager.autoSwitchBitrate = this.autoSwitchBitrate;
-        }
-        else
-        {
-            console.log("No video data.");
-        }
-        
-        if (this.manifest.hasAudioStream())
-        {
-            console.log("Create audio buffer.");
-            // assume multiple audio streams
-            this.audios = this.manifest.getAudioDatas();
-            console.log("Num audio streams: " + this.audios.length);
-
-            // get primary audio stream to start
-            data = this.manifest.getPrimaryAudioData();
-            console.log("Audio codec: " + data.getCodec());
-            
-            // figure out index of main audio stream
-            if (this.audios.length == 1)
-            {
-                this.audioIndex = 0;
-            }
-            else
-            {
-                for (var i = 0; i < this.audios.length; i++)
-                {
-                    if (this.audios[i] == data)
-                    {
-                        this.audioIndex = i;
-                        break;
-                    }
-                }
-            }
-
-            buffer = this.mediaSource.addSourceBuffer(data.getCodec());
-            indexHandler = this.factory.getIndexHandler(data, this.manifest.getStreamItems(data), this.manifest.getDuration(), this.manifest.getIsLive());
-            this.audioManager = new streaming.BufferManager(this.element, buffer, indexHandler, bufferTime, "audio");
-            this.audioManager.autoSwitchBitrate = this.autoSwitchBitrate;
-        }
-        else
-        {
-            console.log("No audio data.");
-        }
-        
-        this.mediaSourceInitialized = true;
-        this.initializePlayback();
-    },
-
-    /**
-     * @private
-     * @param {Event} e
-     */
-    onMediaSourceClose: function (e)
-    {
-        console.log("Error initializing MediaSource.");
-        console.log(e);
-        alert("Media Source Close");
-    },
-
-    initMediaSource: function ()
-    {
-        console.log("Initialize MediaSource.");
-        
         this.mediaSource = new WebKitMediaSource();
         this.mediaSource.addEventListener("sourceopen", this.onMediaSourceReady.bind(this), false);
         this.mediaSource.addEventListener("webkitsourceopen", this.onMediaSourceReady.bind(this), false);
@@ -414,102 +308,131 @@ streaming.Stream.prototype =
         this.mediaSource.addEventListener("webkitsourceclose", this.onMediaSourceClose.bind(this), false);
     },
 
-    //--------------------------
-    // manifest
-    //--------------------------
-
-    /**
-     * @private
-     * @param {Event} e
-     */
-    onManifestLoadError: function (e)
-    {
-        console.log("Error loading manifest.");
-        console.log(e);
-        alert("manifest failed to load");
+    onManifestLoadError: function (e) {
+        var debug = Stream.modules.debug;
+        debug.log("Error loading manifest.");
+        debug.log(e);
+        alert("Manifest failed to load!");
     },
-    
-    /**
-     * @private
-     * @param {Event} e
-     */
-    onManifestLoad: function (e)
-    {
-        console.log("Manifest loaded.");
 
-        var baseUrl = "";
-        if (this.manifestUrl.indexOf("/") != -1)
-            baseUrl = this.manifestUrl.substring(0, this.manifestUrl.lastIndexOf("/") + 1);
+    onManifestLoad: function (e) {
+        var debug = Stream.modules.debug,
+            baseUrl = "",
+            parser = this.factory.getManifestParser();
 
-        var parser = this.factory.getManifestParser();
-        this.manifest = parser.parse(this.xhr.responseText, baseUrl);
-        console.log(this.manifest);
+        debug.log("Manifest loaded.");
 
-        this.initElement();
-        this.initMediaSource();
-        
+        if (this.manifestUrl.indexOf("/") !== -1) {
+            this.baseUrl = this.manifestUrl.substring(0, this.manifestUrl.lastIndexOf("/") + 1);
+        }
+
+        this.manifest = parser.parse(this.xhr.responseText, this.baseUrl);
+        debug.log(this.manifest);
+
+        this.addElementHandlers();
+        this.addMediaSourceHandlers();
+
         this.element.src = window.URL.createObjectURL(this.mediaSource);
 
         this.startManifestRefresh();
     },
 
-    /**
-     * @public
-     * @param {String} url
-     */
-    load: function (url)
-    {
-        console.log("Start loading manifest.");
-        
-        this.manifestUrl = url;
-        this.xhr.open("GET", this.manifestUrl, true);
-        this.xhr.send(null);
-    },
-    
-    /**
-     * @private
-     * @param {Event} e
-     */
-    onManifestRefresh: function (e)
-    {
-        console.log("Manifest refresh complete.");
+    onManifestRefresh: function (e) {
+        var debug = Stream.modules.debug,
+            baseUrl = "",
+            parser = this.factory.getManifestParser(),
+            data;
 
-        var baseUrl = "";
-        if (this.manifestUrl.indexOf("/") != -1)
-            baseUrl = this.manifestUrl.substring(0, this.manifestUrl.lastIndexOf("/") + 1);
+        debug.log("Manifest refresh complete.");
 
-        var parser = this.factory.getManifestParser();
-        this.manifest = parser.parse(this.xhr.responseText, baseUrl);
-        console.log(this.manifest);
+        if (this.manifestUrl.indexOf("/") !== -1) {
+            this.baseUrl = this.manifestUrl.substring(0, this.manifestUrl.lastIndexOf("/") + 1);
+        }
 
-        var data;
+        this.manifest = this.parser.parse(this.xhr.responseText, this.baseUrl);
+        debug.log(this.manifest);
 
-        if (this.videoManager)
-        {
+        if (this.videoManager) {
             data = this.manifest.getVideoData();
             this.videoManager.updateData(data);
         }
-        
-        if (this.audioManager)
-        {
-            data = this.manifest.getPrimaryAudioData(); // TODO : Need to get the data that matches the currently playing audio track!
+
+        if (this.audioManager) {
+            // TODO : Need to get the data that matches the currently playing audio track!
+            data = this.manifest.getPrimaryAudioData();
             this.audioManager.updateData(data);
         }
-        
+
         this.startManifestRefresh();
     },
-    
-    startManifestRefresh: function()
-    {
-        var refreshTime = (this.manifest.minimumUpdatePeriod * 1000);
-        if (!isNaN(refreshTime) && refreshTime > 0) {
-            console.log("Start manifest refresh.");
 
-            var me = this;
-            setTimeout(function() {
-                me.refresh.open("GET", me.manifestUrl, true);
-                me.refresh.send(null);
-            }, refreshTime);
+    getAutoSwitchQuality: function () {
+        return this.autoSwitchBitrate;
+    },
+
+    setAutoSwitchQuality: function (value) {
+        var debug = Stream.modules.debug;
+        debug.log("Set auto switch quality: " + this.autoSwitchBitrate);
+
+        this.autoSwitchBitrate = value;
+        if (this.videoManager) {
+            this.videoManager.autoSwitchBitrate = this.autoSwitchBitrate;
         }
+        if (this.audioManager) {
+            this.audioManager.autoSwitchBitrate = this.autoSwitchBitrate;
+        }
+    },
+
+    setVideoQuality: function (value) {
+        if (this.videoManager) {
+            this.videoManager.setQuality(value);
+        }
+    },
+
+    getVideoQuality: function () {
+        if (this.videoManager) {
+            return this.videoManager.getQuality();
+        }
+        return 0;
+    },
+
+    setAudioQuality: function (value) {
+        if (this.audioManager) {
+            this.audioManager.setQuality(value);
+        }
+    },
+
+    getAudioQuality: function () {
+        if (this.audioManager) {
+            return this.audioManager.getQuality();
+        }
+        return 0;
+    },
+
+    setAudioTrackIndex: function (value) {
+        if (value < 0 || value >= audios.length) {
+            return;
+        }
+
+        this.audioIndex = value;
+        // TODO : Change data on buffer manager.
+    },
+
+    getAudioTrackIndex: function (value) {
+        return this.audioIndex;
+    },
+
+    getVideoMetrics: function () {
+        if (this.videoManager) {
+            return this.videoManager.getMetrics();
+        }
+        return null;
+    },
+
+    getAudioMetrics: function () {
+        if (this.audioManager) {
+            return this.audioManager.getMetrics();
+        }
+        return null;
     }
 };

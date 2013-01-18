@@ -14,84 +14,70 @@
  *
  * copyright Digital Primates 2012
  */
-window["streaming"] = window["streaming"] || {};
-streaming.rules = streaming.rules || {};
+Stream.rules.BandwidthRule = (function () {
+    "use strict";
 
-/**
- *
- * @constructor
- */
-streaming.rules.BandwidthRule = function ()
-{
-    this.test = -1;
-};
+    var Constr;
 
-streaming.rules.BandwidthRule.prototype = new streaming.rules.BaseRule();
+    Constr = function () {
 
-/**
- * @public
- */
-streaming.rules.BandwidthRule.prototype.checkIndex = function (metrics, items)
-{
-    if (!metrics)
-        return -1;
+    };
 
-    var newIdx = -1;
-    var downloadRatio = metrics.lastFragmentDuration / metrics.lastFragmentDownloadTime;
-    var switchRatio;
+    Stream.utils.inherit(Constr, Stream.rules.BaseRule);
 
-    console.log("Check bandwidth rule.");
-    console.log("Download ratio: " + downloadRatio);
-
-    if (isNaN(downloadRatio))
-    {
-        return -1;
-    }
-    else if (downloadRatio < 1.0)
-    {
-        if (metrics.bitrateIndex > 0)
-        {
-            switchRatio = metrics.getBitrateForIndex(metrics.bitrateIndex - 1) / metrics.getBitrateForIndex(metrics.bitrateIndex);
-            if (downloadRatio < switchRatio)
-            {
-                newIdx = 0;
+    Constr.prototype = {
+        constructor: Stream.rules.BandwidthRule,
+        checkIndex: function (metrics, items) {
+            if (!metrics) {
+                return -1;
             }
-            else
-            {
-                newIdx = metrics.bitrateIndex - 1;
-            }
-        }
-    }
-    else
-    {
-        if (metrics.bitrateIndex < metrics.maxBitrateIndex) {
-            switchRatio = metrics.getBitrateForIndex(metrics.bitrateIndex + 1) / metrics.getBitrateForIndex(metrics.bitrateIndex);
-            if (downloadRatio >= switchRatio)
-            {
-                if (downloadRatio > 1000.0)
-                {
-                    newIdx = metrics.maxBitrateIndex - 1;
+            
+            var debug = Stream.modules.debug,
+                newIdx = -1,
+                downloadRatio = metrics.lastFragmentDuration / metrics.lastFragmentDownloadTime,
+                switchRatio;
+
+            debug.log("Check bandwidth rule.");
+            debug.log("Download ratio: " + downloadRatio);
+
+            if (isNaN(downloadRatio)) {
+                newIdx = -1;
+            } else if (downloadRatio < 1.0) {
+                if (metrics.bitrateIndex > 0) {
+                    switchRatio = metrics.getBitrateForIndex(metrics.bitrateIndex - 1) / metrics.getBitrateForIndex(metrics.bitrateIndex);
+                    if (downloadRatio < switchRatio) {
+                        newIdx = 0;
+                    } else {
+                        newIdx = metrics.bitrateIndex - 1;
+                    }
                 }
-                else if (downloadRatio > 100.0)
-                {
-                    newIdx = metrics.bitrateIndex + 1;
-                }
-                else
-                {
-                    while (newIdx++ < metrics.maxBitrateIndex + 1)
-                    {
-                        switchRatio = metrics.getBitrateForIndex(newIdx) / metrics.getBitrateForIndex(metrics.bitrateIndex);
-                        if (downloadRatio < switchRatio)
-                        {
-                            break;
+            } else {
+                if (metrics.bitrateIndex < metrics.maxBitrateIndex) {
+                    switchRatio = metrics.getBitrateForIndex(metrics.bitrateIndex + 1) / metrics.getBitrateForIndex(metrics.bitrateIndex);
+                    if (downloadRatio >= switchRatio) {
+                        if (downloadRatio > 1000.0) {
+                            newIdx = metrics.maxBitrateIndex - 1;
+                        }
+                        else if (downloadRatio > 100.0) {
+                            newIdx = metrics.bitrateIndex + 1;
+                        }
+                        else {
+                            while ((newIdx += 1) < metrics.maxBitrateIndex + 1) {
+                                switchRatio = metrics.getBitrateForIndex(newIdx) / metrics.getBitrateForIndex(metrics.bitrateIndex);
+                                if (downloadRatio < switchRatio) {
+                                    break;
+                                }
+                            }
+                            newIdx -= 1;
                         }
                     }
-                    newIdx--;
                 }
             }
-        }
-    }
 
-    console.log("Proposed index: " + newIdx);
-    return newIdx;
-};
+            debug.log("Proposed index: " + newIdx);
+            return newIdx;
+        }
+    };
+
+    return Constr;
+}());

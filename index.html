@@ -15,33 +15,40 @@
             @import "css/main.css";
         </style>
 
-        <script src="streaming/vo/ValueObject.js"></script>
-        <script src="streaming/BufferManager.js"></script>
+        <!-- Generic Player Scripts -->
+        <script src="streaming/Stream.js"></script>
+        
+        <script src="streaming/vo/ValueObjects.js"></script>
+        <script src="streaming/rules/BaseRule.js"></script>
+        <script src="streaming/rules/BandwidthRule.js"></script>
+        
+        <!--<script src="streaming/Debug.js"></script>-->
         <script src="streaming/IndexHandler.js"></script>
-        <script src="streaming/iso-bmff.js"></script>
         <script src="streaming/Loader.js"></script>
         <script src="streaming/Manifest.js"></script>
         <script src="streaming/MbrManager.js"></script>
         <script src="streaming/Parser.js"></script>
-        <script src="streaming/PlayerUI.js"></script>
-        <script src="streaming/Stream.js"></script>
+        <script src="streaming/BufferManager.js"></script>
         <script src="streaming/StreamFactory.js"></script>
         
-        <script src="streaming/rules/BaseRule.js"></script>
-        <script src="streaming/rules/BandwidthRule.js"></script>
+        <!-- Dash Extensions -->
+        <script src="dash/Dash.js"></script>
         
         <script src="dash/vo/ValueObjects.js"></script>
-        <script src="dash/DashFactory.js"></script>
+        
+        <script src="dash/SegmentIndexLoader.js"></script>
         <script src="dash/DashHandler.js"></script>
         <script src="dash/DashParser.js"></script>
-        <script src="dash/SegmentIndexLoader.js"></script>
+        <script src="dash/DashFactory.js"></script>
         
+        <!-- Other Stuff -->
         <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
         <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
         <script src="highcharts/highcharts.js"></script>
         <script src="highcharts/modules/exporting.js"></script>
         <script src="datatables/media/js/jquery.dataTables.js"></script>
         
+        <!-- TODO : Make into main.js. -->
         <script>
             var player;
             //var ui;
@@ -362,6 +369,10 @@
 
             function load()
             {
+                var debug = Stream.modules.debug;
+
+                // GET VIDEO SOURCE
+
                 var streams = {};
 
                 streams.archive = "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd";
@@ -374,31 +385,38 @@
                 streams.base = "http://www.digitalprimates.net/dash/streams/mp4-onDemand/mp4-onDemand-mpd-AV.mpd";
                 streams.youtube = "http://yt-dash-mse-test.commondatastorage.googleapis.com/car-20120827-manifest.mpd";
                 streams.bunny = "http://dash.edgesuite.net/adobe/bbb/bbb.mpd";
+                streams.envivio = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
 
-                var custom = document.getElementById("custom-source");
-                var select = document.getElementById("sources");
-                var source = null;
-            
+                var custom = document.getElementById("custom-source"),
+                    select = document.getElementById("sources"),
+                    source = null;
+
                 source = custom.value;
-                if (source == null || source == "")
-                {
+                if (source == null || source == "") {
                     source = streams[select.value];
                     custom.value = source;
                 }
 
-                console.log("manifest: " + source);
-            
-                var video = document.querySelector(".dash-video-player video");
+                debug.log("manifest | " + source);
+
+                // SET UP VIDEO PLAYER
+
+                var video = document.querySelector(".dash-video-player video"),
+                    factory = new Dash.modules.DashFactory(),
+                    // create a sandbox to isolate the video player
+                    videoSandbox = function (box) {
+                        debug.log("Video sandbox created.");
+                        debug.log(box);
+                    };
+
+                // bind this listener for updating charts and graphs
                 video.addEventListener("timeupdate", this.onProgress.bind(this), false);
                 
-                var factory = new dash.DashFactory();
-
-                player = new streaming.Stream(video, factory);
-
-                player.setAutoSwitchQuality(true);
+                // create the Stream object and initiate a load
+                player = new Stream(video, factory, videoSandbox);
                 player.load(source);
-                
-                var controls = document.querySelector(".dash-video-player");
+
+                //var controls = document.querySelector(".dash-video-player");
                 //ui = new streaming.PlayerUI(controls);
             }   
         </script>
@@ -441,6 +459,7 @@
                         <select id="sources">
                             <option value="archive">Live Archive</option>
                             <option value="live">Live</option>
+                            <option value="envivio">Envivio</option>
                             <option value="netflix">Netflix BaseURL</option>
                             <option value="fraunhofer">Fraunhofer BaseURL</option>
                             <option value="youtube">YouTube SegmentBase</option>
@@ -553,6 +572,23 @@
                 Streams using high profile codecs may not play properly.<br/>
                 You may get the error "Media Source Close" when attempting to switch bitrates.<br/>
                 Only streams with segmentAlignment="true" will work with MBR.</b>
+            </div>
+
+			<div class="clear" style="height:10px;"></div>
+                
+            <div class="grid_12">
+                <b>Release Notes v0.0.7</b><br/>
+                Changes for structure and contents of JavaScript files.</br>
+                <i>-Scope is now better isolated.</i></br>
+                <i>-Better patterns for object creation.</i></br>
+                <i>-Overall cleaner code.</i>
+            </div>
+
+            <div class="clear" style="height:10px;"></div>
+                
+            <div class="grid_12">
+                <b>Release Notes v0.0.6</b><br/>
+                UI changes.
             </div>
 
             <div class="clear" style="height:10px;"></div>

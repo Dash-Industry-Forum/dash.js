@@ -14,24 +14,22 @@
  *
  * copyright Digital Primates 2012
  */
-window["streaming"] = window["streaming"] || {};
-/**
- *
- * @constructor
- */
-streaming.Parser = function ()
-{
-    
-};
+Stream.modules.Parser = (function () {
+    "use strict";
 
-streaming.Parser.prototype =
-{
-    /**
-     * @param {string} value
-     * @param {string} baseURL
-     * @return {streaming.Manifest}
-     */
-    parse: function (value, baseURL) {
-        return null;
-    }
-};
+    var Constr;
+
+    Constr = function () {
+
+    };
+
+    Constr.prototype = {
+        constructor: Stream.modules.Parser,
+
+        parse: function (value, baseURL) {
+            return null;
+        }
+    };
+
+    return Constr;
+}());

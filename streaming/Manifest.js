@@ -14,46 +14,34 @@
  *
  * copyright Digital Primates 2012
  */
-window["streaming"] = window["streaming"] || {};
-/**
- *
- * @constructor
- */
-streaming.Manifest = function () {
+Stream.modules.Manifest = (function () {
+    "use strict";
 
-};
+    var Constr;
 
-streaming.Manifest.prototype =
-{
-    /**
-     * @return Array of StreamItem objects.
-     */
-    getStreamItems: function(data)
-    {
-        return null;
-    },
+    Constr = function () {
 
-    /**
-     * @return Object containing video data.
-     */
-    getVideoData: function ()
-        {
-        return null;
-    },
+    };
+
+    Constr.prototype = {
+        constructor: Stream.modules.Manifest,
+
+        getStreamItems: function (data) {
+            return null;
+        },
+
+        getVideoData: function () {
+            return null;
+        },
     
-    /**
-     * @return Object containing primary audio data.
-     */
-    getPrimaryAudioData: function () 
-    {
-        return null;
-    },
+        getPrimaryAudioData: function ()  {
+            return null;
+        },
 
-    /**
-     * @return Array containing audio data objects.
-     */
-    getAudioDatas: function ()
-    {
-        return null;
-    }
-};
+        getAudioDatas: function () {
+            return null;
+        }
+    };
+
+    return Constr;
+}());

@@ -14,49 +14,43 @@
  *
  * copyright Digital Primates 2012
  */
-window["streaming"] = window["streaming"] || {};
-/**
- *
- * @constructor
- */
-streaming.MbrManager = function()
-{
-    this.rules = null;
-};
+Stream.modules.MbrManager = (function () {
+    "use strict";
 
-streaming.MbrManager.prototype =
-{
-    createRules: function()
-    {
-        var a = new Array();
-
-        a.push(new streaming.rules.BandwidthRule());
-
-        return a;
-    },
-
-    init: function()
-    {
+    var Constr;
+    Constr = function () {
         this.rules = this.createRules();
-    },
-    
-    checkRules: function(metrics, items)
-    {
-        var idx = 999;
-        
-        for (var i = 0; i < this.rules.length; i++)
-        {
-            var r = this.rules[i];
-            var newIdx = r.checkIndex(metrics, items);
-            if (newIdx != -1)
-            {
-                idx = Math.min(idx, newIdx);
+    };
+
+    Constr.prototype = {
+        constructor: Stream.modules.MbrManager,
+
+        createRules: function () {
+            return [new Stream.rules.BandwidthRule()];
+        },
+
+        checkRules: function (metrics, items) {
+            var idx = 999,
+                i,
+                max,
+                r,
+                newIdx;
+
+            for (i = 0, max = this.rules.length; i < max; i += 1) {
+                r = this.rules[i];
+                newIdx = r.checkIndex(metrics, items);
+                if (newIdx !== -1) {
+                    idx = Math.min(idx, newIdx);
+                }
             }
+
+            if (idx === 999 || idx === -1) {
+                idx = metrics.bitrateIndex;
+            }
+
+            return idx;
         }
+    };
 
-        if (idx == 999 || idx == -1)
-            idx = metrics.bitrateIndex;
-
-        return idx;
-    }
-};
+    return Constr;
+}());
