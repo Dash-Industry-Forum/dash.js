@@ -87,6 +87,18 @@ Stream.prototype = {
         this.element.play();
     },
 
+    pause: function () {
+        var debug = Stream.modules.debug;
+        debug.log("Attempt pause...");
+
+        if (!this.videoElementInitialized || !this.mediaSourceInitialized) {
+            return;
+        }
+
+        debug.log("Do pause.");
+        this.element.pause();
+    },
+
     seek: function (time) {
         var debug = Stream.modules.debug;
         debug.log("Attempt seek...");
@@ -190,7 +202,14 @@ Stream.prototype = {
 
     onPause: function (e) {
         var debug = Stream.modules.debug;
-        debug.log("Pause");
+        debug.log("Pause playback.");
+
+        if (this.videoManager) {
+            this.videoManager.pause();
+        }
+        if (this.audioManager) {
+            this.audioManager.pause();
+        }
     },
 
     onSeeking: function (e) {

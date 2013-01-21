@@ -107,7 +107,7 @@ Dash.modules.DashParser = (function () {
         },
 
         parseSegmentURL: function (xml) {
-            var segment = new Dash.vo.SegmentURL();
+            var segment = new Dash.vo.Segment();
             segment.media = xml.getAttribute("media");
             segment.mediaRange = this.parseRangeValues(xml.getAttribute("mediaRange"));
             segment.index = xml.getAttribute("index");

@@ -152,7 +152,6 @@ Dash.vo.DashManifest = (function () {
         this.type = null;
         this.profiles = null;
         this.id = null;
-        this.source = null;
     };
 
     Stream.utils.inherit(Constr, Stream.modules.Manifest);
@@ -332,10 +331,12 @@ Dash.vo.MultipleSegmentBase = (function () {
     Constr = function (base) {
         this.startNumber = 0;
         this.duration = 0;
+        this.index = null;
 
         if (base) {
             this.duration = base.duration;
             this.startNumber = base.startNumber;
+            this.index = base.index;
         }
 
         Dash.vo.SegmentBase.call(this, base);
@@ -464,6 +465,7 @@ Dash.vo.Segment = (function () {
 
     Constr = function () {
         this.indexRange = null;
+        this.index = null;
         this.mediaRange = null;
         this.media = null;
         this.duration = NaN;
@@ -510,12 +512,10 @@ Dash.vo.SegmentTemplate = (function () {
     Constr = function (base) {
         this.segments = null;
         this.bitstreamSwitching = null;
-        this.index = null;
         this.media = null;
 
         if (base) {
             this.media = base.media;
-            this.index = base.index;
             this.bitstreamSwitching = base.bitstreamSwitching;
             this.segments = base.segments;
         }
@@ -527,25 +527,6 @@ Dash.vo.SegmentTemplate = (function () {
 
     Constr.prototype = {
         constructor: Dash.vo.SegmentTemplate
-    };
-
-    return Constr;
-}());
-
-Dash.vo.SegmentURL = (function () {
-    "use strict";
-
-    var Constr;
-
-    Constr = function () {
-        this.indexRange = null;
-        this.index = null;
-        this.mediaRange = null;
-        this.media = null;
-    };
-
-    Constr.prototype = {
-        constructor: Dash.vo.SegmentURL
     };
 
     return Constr;

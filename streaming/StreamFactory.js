@@ -30,7 +30,7 @@ Stream.modules.StreamFactory = (function () {
             return null;
         },
 
-        getIndexHandler: function (data, items, duration) {
+        getIndexHandler: function (data, items, duration, isLive) {
             return null;
         }
     };
