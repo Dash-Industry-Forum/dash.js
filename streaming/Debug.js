@@ -16,9 +16,21 @@
  */
 Stream.modules.debug = (function () {
     "use strict";
+    
+    var htmlConsole = null;
+    
     return {
+        init: function (hc) {
+            htmlConsole = hc;
+        },
+        
         log: function (message) {
             console.log(message);
+            
+            if (htmlConsole !== null) {
+                var output = message + "<br/>" + htmlConsole.innerHTML;
+                htmlConsole.innerHTML = output;
+            }
         }
     };
 }());

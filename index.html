@@ -22,7 +22,7 @@
         <script src="streaming/rules/BaseRule.js"></script>
         <script src="streaming/rules/BandwidthRule.js"></script>
         
-        <!--<script src="streaming/Debug.js"></script>-->
+        <script src="streaming/Debug.js"></script>
         <script src="streaming/IndexHandler.js"></script>
         <script src="streaming/Loader.js"></script>
         <script src="streaming/Manifest.js"></script>
@@ -369,7 +369,9 @@
 
             function load()
             {
+            	var console = document.getElementById("debug_log");
                 var debug = Stream.modules.debug;
+                debug.init(console);
 
                 // GET VIDEO SOURCE
 
@@ -459,11 +461,11 @@
                         <select id="sources">
                             <option value="archive">Live Archive</option>
                             <option value="live">Live</option>
-                            <option value="envivio">Envivio</option>
+                            <option value="envivio" selected="selected">Envivio</option>
                             <option value="netflix">Netflix BaseURL</option>
                             <option value="fraunhofer">Fraunhofer BaseURL</option>
                             <option value="youtube">YouTube SegmentBase</option>
-                            <option value="list" selected="selected">Segment List</option>
+                            <option value="list">Segment List</option>
                             <option value="template">Segment Template</option>
                             <option value="timeline">Segment Timeline</option>
                             <!--<option value="base">SegmentBase</option>-->
@@ -555,6 +557,21 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+			<div class="clear"></div>
+
+            <div class="grid_12">
+                <br />
+                <hr />
+            </div>
+
+			<div class="grid_12">
+                <h3>Debug Log:</h3>
+            </div>
+			
+			<div id="debug_log" class="grid_12" style="border:solid 1px; height: 303px; overflow: auto;">
+                Waiting...
             </div>
 
             <div class="clear"></div>
