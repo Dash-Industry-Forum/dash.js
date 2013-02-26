@@ -22,7 +22,10 @@ MediaPlayer.utils.Capabilities.prototype = {
     constructor: MediaPlayer.utils.Capabilities,
     
     supportsMediaSource: function() {
-        return (window.WebKitMediaSource !== null);
+        var hasWebKit = (window.WebKitMediaSource !== null),
+            hasMediaSource = (window.MediaSource !== null);
+        
+        return (hasWebKit || hasMediaSource);
     },
     
     supportsCodec: function (element, codec) {

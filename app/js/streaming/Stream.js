@@ -180,7 +180,7 @@ MediaPlayer.dependencies.Stream = function () {
                                 }
                             ).then(
                                 function (audioDatas) {
-                                    if (audioDatas !== null) {
+                                    if (audioDatas !== null && audioDatas.length > 0) {
                                         self.debug.log("Have audio streams: " + audioDatas.length);
                                         self.manifestExt.getPrimaryAudioData(manifest).then(
                                             function (primaryAudioData) {
