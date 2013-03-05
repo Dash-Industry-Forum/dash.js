@@ -12,17 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 Dash.di.DashContext = function () {
+    "use strict";
+
     return {
         system : undefined,
-        setup : function() {
+        setup : function () {
             Dash.di.DashContext.prototype.setup.call(this);
-            
+
             this.system.mapClass('parser', Dash.dependencies.DashParser);
             this.system.mapClass('indexHandler', Dash.dependencies.DashHandler);
             this.system.mapClass('baseURLExt', Dash.dependencies.BaseURLExtensions);
+            this.system.mapClass('fragmentExt', Dash.dependencies.FragmentExtensions);
             this.system.mapSingleton('manifestExt', Dash.dependencies.DashManifestExtensions);
         }
     };

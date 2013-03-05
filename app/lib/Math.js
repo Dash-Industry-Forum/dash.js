@@ -14,18 +14,21 @@
  *
  * author Digital Primates
  * copyright dash-if 2012
- */
-Dash.vo.Segment = function () {
-    "use strict";
-    this.indexRange = null;
-    this.index = null;
-    this.mediaRange = null;
-    this.media = null;
-    this.duration = NaN;
-    this.startTime = NaN;
-    this.timescale = NaN;
-};
+ */ 
+ if(typeof(utils) == "undefined"){
+ 	var utils = {};
+ }
+ 
+ if(typeof(utils.Math) == "undefined"){
+ 	utils.Math = {};
+ }
+ 
+ utils.Math.to64BitNumber = function(low, high) {
+	var highNum, lowNum, expected;
 
-Dash.vo.Segment.prototype = {
-    constructor: Dash.vo.Segment
-};
+	highNum = new goog.math.Long(0, high);
+	lowNum = new goog.math.Long(low, 0);
+	expected = highNum.add(lowNum);
+
+	return expected.toNumber();
+}

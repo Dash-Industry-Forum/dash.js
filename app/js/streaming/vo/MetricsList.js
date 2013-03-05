@@ -11,18 +11,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
+ * 
+ * author Digital Primates
+ * copyright dash-if 2012
  */
-MediaPlayer.vo.StreamMetrics = function () {
+MediaPlayer.models.MetricsList = function () {
     "use strict";
-    this.bitrateValue = NaN;
-    this.bitrateIndex = NaN;
-    this.maxBitrateIndex = NaN;
-    this.bufferLength = NaN;
-    this.lastFragmentDuration = NaN;
-    this.lastFragmentDownloadTime = NaN;
+
+    return {
+        TcpList: [],
+        HttpList: [],
+        RepSwitchList: [],
+        BufferLevel: [],
+        PlayList: []
+    };
 };
 
-MediaPlayer.vo.StreamMetrics.prototype = {
-    constructor: MediaPlayer.vo.StreamMetrics
+MediaPlayer.models.MetricsList.prototype = {
+    constructor: MediaPlayer.models.MetricsList
 };

@@ -12,11 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 Dash.dependencies.DashParser = function () {
     "use strict";
-    
+
     var durationRegex = /PT(([0-9]*)H)?(([0-9]*)M)?(([0-9.]*)S)?/,
         datetimeRegex = /^(\d{4}\-\d\d\-\d\d([tT][\d:\.]*)?)([zZ]|([+\-])(\d\d):(\d\d))?$/,
         numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/,
@@ -52,7 +53,7 @@ Dash.dependencies.DashParser = function () {
                 }
             }
         ],
-        
+
         getCommonValuesMap = function () {
             var adaptationSet,
                 representation,
@@ -60,76 +61,76 @@ Dash.dependencies.DashParser = function () {
                 common;
 
             common = [
-                      {
-                          name: 'profiles',
-                          merge: false
-                      },
-                      {
-                          name: 'width',
-                          merge: false
-                      },
-                      {
-                          name: 'height',
-                          merge: false
-                      },
-                      {
-                          name: 'sar',
-                          merge: false
-                      },
-                      {
-                          name: 'frameRate',
-                          merge: false
-                      },
-                      {
-                          name: 'audioSamplingRate',
-                          merge: false
-                      },
-                      {
-                          name: 'mimeType',
-                          merge: false
-                      },
-                      {
-                          name: 'segmentProfiles',
-                          merge: false
-                      },
-                      {
-                          name: 'codecs',
-                          merge: false
-                      },
-                      {
-                          name: 'maximumSAPPeriod',
-                          merge: false
-                      },
-                      {
-                          name: 'startsWithSap',
-                          merge: false
-                      },
-                      {
-                          name: 'maxPlayoutRate',
-                          merge: false
-                      },
-                      {
-                          name: 'codingDependency',
-                          merge: false
-                      },
-                      {
-                          name: 'scanType',
-                          merge: false
-                      },
-                      {
-                          name: 'FramePacking',
-                          merge: true
-                      },
-                      {
-                          name: 'AudioChannelConfiguration',
-                          merge: true
-                      },
-                      {
-                          name: 'ContentProtection',
-                          merge: true
-                      }
-                     ];
-            
+                {
+                    name: 'profiles',
+                    merge: false
+                },
+                {
+                    name: 'width',
+                    merge: false
+                },
+                {
+                    name: 'height',
+                    merge: false
+                },
+                {
+                    name: 'sar',
+                    merge: false
+                },
+                {
+                    name: 'frameRate',
+                    merge: false
+                },
+                {
+                    name: 'audioSamplingRate',
+                    merge: false
+                },
+                {
+                    name: 'mimeType',
+                    merge: false
+                },
+                {
+                    name: 'segmentProfiles',
+                    merge: false
+                },
+                {
+                    name: 'codecs',
+                    merge: false
+                },
+                {
+                    name: 'maximumSAPPeriod',
+                    merge: false
+                },
+                {
+                    name: 'startsWithSap',
+                    merge: false
+                },
+                {
+                    name: 'maxPlayoutRate',
+                    merge: false
+                },
+                {
+                    name: 'codingDependency',
+                    merge: false
+                },
+                {
+                    name: 'scanType',
+                    merge: false
+                },
+                {
+                    name: 'FramePacking',
+                    merge: true
+                },
+                {
+                    name: 'AudioChannelConfiguration',
+                    merge: true
+                },
+                {
+                    name: 'ContentProtection',
+                    merge: true
+                }
+            ];
+
             adaptationSet = {};
             adaptationSet.name = "AdaptationSet";
             adaptationSet.isRoot = false;
@@ -137,28 +138,28 @@ Dash.dependencies.DashParser = function () {
             adaptationSet.parent = null;
             adaptationSet.children = [];
             adaptationSet.properties = common;
-            
-                representation = {};
-                representation.name = "Representation";
-                representation.isRoot = false;
-                representation.isArray = true;
-                representation.parent = adaptationSet;
-                representation.children = [];
-                representation.properties = common;
-                adaptationSet.children.push(representation);
-            
-                    subRepresentation = {};
-                    subRepresentation.name = "SubRepresentation";
-                    subRepresentation.isRoot = false;
-                    subRepresentation.isArray = true;
-                    subRepresentation.parent = representation;
-                    subRepresentation.children = [];
-                    subRepresentation.properties = common;
-                    representation.children.push(subRepresentation);
+
+            representation = {};
+            representation.name = "Representation";
+            representation.isRoot = false;
+            representation.isArray = true;
+            representation.parent = adaptationSet;
+            representation.children = [];
+            representation.properties = common;
+            adaptationSet.children.push(representation);
+
+            subRepresentation = {};
+            subRepresentation.name = "SubRepresentation";
+            subRepresentation.isRoot = false;
+            subRepresentation.isArray = true;
+            subRepresentation.parent = representation;
+            subRepresentation.children = [];
+            subRepresentation.properties = common;
+            representation.children.push(subRepresentation);
 
             return adaptationSet;
         },
-        
+
         getSegmentValuesMap = function () {
             var period,
                 adaptationSet,
@@ -166,20 +167,20 @@ Dash.dependencies.DashParser = function () {
                 common;
 
             common = [
-                      {
-                          name: 'SegmentBase',
-                          merge: true
-                      },
-                      {
-                          name: 'SegmentTemplate',
-                          merge: true
-                      },
-                      {
-                          name: 'SegmentList',
-                          merge: true
-                      }
-                     ];
-            
+                {
+                    name: 'SegmentBase',
+                    merge: true
+                },
+                {
+                    name: 'SegmentTemplate',
+                    merge: true
+                },
+                {
+                    name: 'SegmentList',
+                    merge: true
+                }
+            ];
+
             period = {};
             period.name = "Period";
             period.isRoot = false;
@@ -187,28 +188,28 @@ Dash.dependencies.DashParser = function () {
             period.parent = null;
             period.children = [];
             period.properties = common;
-            
-                adaptationSet = {};
-                adaptationSet.name = "AdaptationSet";
-                adaptationSet.isRoot = false;
-                adaptationSet.isArray = true;
-                adaptationSet.parent = period;
-                adaptationSet.children = [];
-                adaptationSet.properties = common;
-                period.children.push(adaptationSet);
-            
-                    representation = {};
-                    representation.name = "Representation";
-                    representation.isRoot = false;
-                    representation.isArray = true;
-                    representation.parent = adaptationSet;
-                    representation.children = [];
-                    representation.properties = common;
-                    adaptationSet.children.push(representation);
-            
+
+            adaptationSet = {};
+            adaptationSet.name = "AdaptationSet";
+            adaptationSet.isRoot = false;
+            adaptationSet.isArray = true;
+            adaptationSet.parent = period;
+            adaptationSet.children = [];
+            adaptationSet.properties = common;
+            period.children.push(adaptationSet);
+
+            representation = {};
+            representation.name = "Representation";
+            representation.isRoot = false;
+            representation.isArray = true;
+            representation.parent = adaptationSet;
+            representation.children = [];
+            representation.properties = common;
+            adaptationSet.children.push(representation);
+
             return period;
         },
-        
+
         getBaseUrlValuesMap = function () {
             var mpd,
                 period,
@@ -217,20 +218,24 @@ Dash.dependencies.DashParser = function () {
                 common;
 
             common = [
-                      {
-                          name: 'BaseURL',
-                          merge: true,
-                          mergeFunction: function (parentValue, childValue) {
-                              // child is absolute, don't merge
-                              if (childValue.indexOf("http://") === 0) {
-                                  return childValue;
-                              } else {
-                                  return parentValue + childValue;
-                              }
-                          }
-                      }
-                     ];
-            
+                {
+                    name: 'BaseURL',
+                    merge: true,
+                    mergeFunction: function (parentValue, childValue) {
+                        var mergedValue;
+
+                        // child is absolute, don't merge
+                        if (childValue.indexOf("http://") === 0) {
+                            mergedValue = childValue;
+                        } else {
+                            mergedValue = parentValue + childValue;
+                        }
+
+                        return mergedValue;
+                    }
+                }
+            ];
+
             mpd = {};
             mpd.name = "mpd";
             mpd.isRoot = true;
@@ -238,57 +243,57 @@ Dash.dependencies.DashParser = function () {
             mpd.parent = null;
             mpd.children = [];
             mpd.properties = common;
-            
-                period = {};
-                period.name = "Period";
-                period.isRoot = false;
-                period.isArray = true;
-                period.parent = null;
-                period.children = [];
-                period.properties = common;
-                mpd.children.push(period);
-                
-                    adaptationSet = {};
-                    adaptationSet.name = "AdaptationSet";
-                    adaptationSet.isRoot = false;
-                    adaptationSet.isArray = true;
-                    adaptationSet.parent = period;
-                    adaptationSet.children = [];
-                    adaptationSet.properties = common;
-                    period.children.push(adaptationSet);
-                
-                        representation = {};
-                        representation.name = "Representation";
-                        representation.isRoot = false;
-                        representation.isArray = true;
-                        representation.parent = adaptationSet;
-                        representation.children = [];
-                        representation.properties = common;
-                        adaptationSet.children.push(representation);
-            
+
+            period = {};
+            period.name = "Period";
+            period.isRoot = false;
+            period.isArray = true;
+            period.parent = null;
+            period.children = [];
+            period.properties = common;
+            mpd.children.push(period);
+
+            adaptationSet = {};
+            adaptationSet.name = "AdaptationSet";
+            adaptationSet.isRoot = false;
+            adaptationSet.isArray = true;
+            adaptationSet.parent = period;
+            adaptationSet.children = [];
+            adaptationSet.properties = common;
+            period.children.push(adaptationSet);
+
+            representation = {};
+            representation.name = "Representation";
+            representation.isRoot = false;
+            representation.isArray = true;
+            representation.parent = adaptationSet;
+            representation.children = [];
+            representation.properties = common;
+            adaptationSet.children.push(representation);
+
             return mpd;
         },
-        
+
         getDashMap = function () {
             var result = [];
-            
+
             result.push(getCommonValuesMap());
             result.push(getSegmentValuesMap());
             result.push(getBaseUrlValuesMap());
-            
+
             return result;
         },
-        
+
         internalParse = function (data, baseUrl) {
             this.debug.log("Doing parse.");
-            
+
             var manifest,
                 converter = new X2JS(matchers, '', true),
                 iron = new ObjectIron(getDashMap());
-            
+
             this.debug.log("Converting from XML.");
             manifest = converter.xml_str2json(data);
-            
+
             if (!manifest.hasOwnProperty("BaseURL")) {
                 this.debug.log("Setting baseURL: " + baseUrl);
                 manifest.BaseURL = baseUrl;
@@ -296,14 +301,14 @@ Dash.dependencies.DashParser = function () {
             if (manifest.BaseURL.indexOf("http") !== 0) {
                 manifest.BaseURL = baseUrl + manifest.BaseURL;
             }
-            
+
             this.debug.log("Flatten manifest properties.");
             iron.run(manifest);
-            
+
             this.debug.log("Parsing complete.");
             return Q.when(manifest);
         };
-    
+
     return {
         debug: undefined,
         parse: internalParse

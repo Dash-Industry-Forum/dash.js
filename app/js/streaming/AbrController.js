@@ -11,45 +11,110 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * copyright Digital Primates 2012
+ * 
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.dependencies.AbrController = function () {
     "use strict";
-    
-    var autoSwitchBitrate = false,
+
+    var autoSwitchBitrate = true,
         quality = 0;
-    
+
     return {
         debug: undefined,
         abrRulesCollection: undefined,
-        
+        manifestExt: undefined,
+        metricsModel: undefined,
+
         getAutoSwitchBitrate: function () {
             return autoSwitchBitrate;
         },
-        
-        getPlaybackQuality: function (metrics, data) {
-            var newQuality = 999,
+
+        setAutoSwitchBitrate: function (value) {
+            autoSwitchBitrate = value;
+        },
+
+        getMetricsFor: function (data) {
+            var deferred = Q.defer(),
+                self = this;
+
+            self.manifestExt.getIsVideo(data).then(
+                function (isVideo) {
+                    if (isVideo) {
+                        deferred.resolve(self.metricsModel.getMetricsFor("video"));
+                    } else {
+                        self.manifestExt.getIsAudio(data).then(
+                            function (isAudio) {
+                                if (isAudio) {
+                                    deferred.resolve(self.metricsModel.getMetricsFor("audio"));
+                                } else {
+                                    deferred.resolve(self.metricsModel.getMetricsFor("stream"));
+                                }
+                            }
+                        );
+                    }
+                }
+            );
+
+            return deferred.promise;
+        },
+
+        getPlaybackQuality: function (data) {
+            var self = this,
+                deferred = Q.defer(),
+                newQuality = 999,
                 ruleQuality,
                 rules,
                 i,
-                len;
-            
-            this.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
+                len,
+                funcs = [];
+
+            self.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
+
             if (autoSwitchBitrate) {
-                this.debug.log("Check ABR rules.");
-                rules = this.abrRulesCollection.getRules();
-                
-                for (i = 0, len = rules.length; i < len; i += 1) {
-                    ruleQuality = rules[i].checkIndex(metrics);
-                    newQuality = Math.min(newQuality, ruleQuality);
-                }
-                
-                quality = newQuality;
+                self.debug.log("Check ABR rules.");
+
+                self.getMetricsFor(data).then(
+                    function (metrics) {
+                        self.abrRulesCollection.getRules().then(
+                            function (rules) {
+                                for (i = 0, len = rules.length; i < len; i += 1) {
+                                    funcs.push(rules[i].checkIndex(quality, metrics, data));
+                                }
+                                Q.all(funcs).then(
+                                    function (results) {
+                                        for (i = 0, len = results.length; i < len; i += 1) {
+                                            if (results[i] !== -1) {
+                                                newQuality = Math.min(newQuality, results[i]);
+                                            }
+                                        }
+
+                                        if (newQuality !== 999) {
+                                            quality = newQuality;
+                                        }
+
+                                        self.debug.log("New quality of " + quality);
+                                        deferred.resolve(quality);
+                                    }
+                                );
+                            }
+                        );
+                    }
+                );
+            } else {
+                self.debug.log("Unchanged quality of " + quality);
+                deferred.resolve(quality);
             }
-            
-            this.debug.log("Returning quality of " + newQuality);
-            return Q.when(quality);
+
+            return deferred.promise;
+        },
+
+        setPlaybackQuality: function (newPlaybackQuality) {
+            if (newPlaybackQuality === quality) {
+                return;
+            }
+            quality = newPlaybackQuality;
         }
     };
 };

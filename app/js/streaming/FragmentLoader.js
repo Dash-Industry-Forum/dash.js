@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.dependencies.FragmentLoader = function () {
     "use strict";
@@ -20,65 +21,114 @@ MediaPlayer.dependencies.FragmentLoader = function () {
     var requests = [],
         lastRequest = null,
         loading = false,
-        
+
         loadNext = function () {
-            var req = new XMLHttpRequest();
+            var req = new XMLHttpRequest(),
+                httpRequestMetrics = new MediaPlayer.vo.metrics.HTTPRequest(),
+                self = this;
 
             if (requests.length > 0) {
                 lastRequest = requests.shift();
                 lastRequest.requestStartDate = new Date();
                 loading = true;
-                
+
                 req.responseType = "arraybuffer";
                 req.open("GET", lastRequest.url, true);
                 if (lastRequest.range) {
                     req.setRequestHeader("Range", "bytes=" + lastRequest.range);
                 }
-                
+
                 req.onload = function () {
-                    var bytes = req.response;
-                    lastRequest.requestEndDate = new Date();
+                    var entry = new MediaPlayer.vo.metrics.HTTPRequest.Trace(),
+                        currentTime = new Date(),
+                        bytes = req.response;
+
+                    entry.s = currentTime;
+                    lastRequest.requestEndDate = currentTime;
+
+                    httpRequestMetrics = self.metricsModel.addHttpRequest(lastRequest.streamType,
+                                                                          null,
+                                                                          lastRequest.type,
+                                                                          lastRequest.url,
+                                                                          null,
+                                                                          lastRequest.range,
+                                                                          lastRequest.requestStartDate,
+                                                                          lastRequest.requestEndDate,
+                                                                          req.status,
+                                                                          null,
+                                                                          lastRequest.duration);
+
+                    self.metricsModel.appendHttpTrace(httpRequestMetrics,
+                                                      currentTime,
+                                                      new Date().getTime() - currentTime.getTime(),
+                                                      [bytes.byteLength]);
+
                     lastRequest.deferred.resolve({
                         data: bytes,
                         request: lastRequest
                     });
-                    loadNext();
+
+                    lastRequest.deferred = null;
+                    lastRequest = null;
+                    req = null;
+
+                    loadNext.call(self);
                 };
-                
+
                 req.onerror = function () {
+                    httpRequestMetrics = self.metricsModel.addHttpRequest(lastRequest.streamType,
+                                                                          null,
+                                                                          lastRequest.type,
+                                                                          lastRequest.url,
+                                                                          null,
+                                                                          lastRequest.range,
+                                                                          lastRequest.requestStartDate,
+                                                                          new Date(),
+                                                                          req.status,
+                                                                          null,
+                                                                          lastRequest.duration);
                     lastRequest.deferred.reject("Error loading fragment.");
                 };
-                
+
                 req.send();
             } else {
                 loading = false;
             }
         },
-        
+
         loadRequest = function (req) {
-            var deferred = Q.defer();
+            var deferred = Q.defer(),
+                promise = null;
+
             req.deferred = deferred;
-            
+
             requests.push(req);
-            
+
             if (!loading) {
-                loadNext();
+                loadNext.call(this);
             }
-            
-            return deferred.promise;
+
+            promise = deferred.promise;
+
+            return promise;
         };
 
     return {
+        metricsModel: undefined,
+
         getLoading: function () {
             return loading;
         },
-        
+
         load: function (req) {
+            var promise = null;
+
             if (!req) {
                 return;
             }
-            
-            return loadRequest(req);
+
+            promise = loadRequest.call(this, req);
+            return promise;
         }
     };
 };

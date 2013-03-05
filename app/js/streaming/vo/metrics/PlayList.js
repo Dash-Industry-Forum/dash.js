@@ -11,20 +11,26 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
+ * 
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.vo.metrics.PlayList = function () {
     "use strict";
-    
-    this.start = null;  // Real-Time | Measurement period start.
-    this.mstart = null;  // Measurement period duration (ms).
-    this.starttype = [];    // List of integers counting the bytes received in each trace interval within the measurement period.
-    this.trace = [];
+
+    this.start = null;      // Real-Time | Timestamp of the user action that starts the playback period...
+    this.mstart = null;     // Media-Time | Presentation time at which playout was requested by the user...
+    this.starttype = null;  // Type of user action which triggered playout
+                            //      - New playout request (e.g. initial playout or seeking)
+                            //      - Resume from pause
+                            //        - Other user request (e.g. user-requested quality change)
+                            //        - Start of a metrics collection period (hence earlier entries in the play list not collected)
+    this.trace = [];        // List of periods of continuous rendering of decoded samples.
 };
 
-MediaPlayer.vo.metrics.PlayList.prototype = {
-    constructor: MediaPlayer.vo.metrics.PlayList,
-    
+MediaPlayer.vo.metrics.PlayList.Trace = function () {
+    "use strict";
+
     /*
      * representationid - The value of the Representation@id of the Representation from which the samples were taken.
      * subreplevel      - If not present, this metrics concerns the Representation as a whole. If present, subreplevel indicates the greatest value of any Subrepresentation@level being rendered.
@@ -41,21 +47,28 @@ MediaPlayer.vo.metrics.PlayList.prototype = {
      *                    end of content
      *                    end of a metrics collection period
      */
-    addTrace: function (representationid,
-                        subreplevel,
-                        start,
-                        mstart,
-                        duration,
-                        playbackspeed,
-                        stopreason) {
-        this.trace.push({
-            representationid: representationid,
-            subreplevel: subreplevel,
-            start: start,
-            mstart: mstart,
-            duration: duration,
-            playbackspeed: playbackspeed,
-            stopreason: stopreason
-        });
-    }
+    this.representationid = null;
+    this.subreplevel = null;
+    this.start = null;
+    this.mstart = null;
+    this.duration = null;
+    this.playbackspeed = null;
+    this.stopreason = null;
 };
+
+MediaPlayer.vo.metrics.PlayList.prototype = {
+    constructor: MediaPlayer.vo.metrics.PlayList
+};
+
+/* Public Static Constants */
+MediaPlayer.vo.metrics.PlayList.INITIAL_PLAY_START_REASON = "initial_start";
+MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON = "seek";
+
+MediaPlayer.vo.metrics.PlayList.Trace.prototype = {
+    constructor: MediaPlayer.vo.metrics.PlayList.Trace()
+};
+
+/* Public Static Constants */
+MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON = "user_request";
+MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON = "representation_switch";
+MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON = "end_of_content";

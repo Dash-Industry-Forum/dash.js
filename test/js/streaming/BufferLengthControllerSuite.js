@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
  
  describe("BufferLengthController Test Suite", function(){
@@ -39,7 +40,7 @@
 			};
 			
 		runs(function(){
-			promise = bufferLengthController.shouldBufferMore(bufferLength, minBufferTime, metrics);
+			promise = bufferLengthController.shouldBufferMore(bufferLength);
 			promise.then(success, failure);
 		});
 		
@@ -67,7 +68,7 @@
 			};
  		
  		runs(function(){
-			promise = bufferLengthController.shouldBufferMore(bufferLength, minBufferTime, metrics);
+			promise = bufferLengthController.shouldBufferMore(bufferLength);
 			promise.then(success, failure);
 		});
 		

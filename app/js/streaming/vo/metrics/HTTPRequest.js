@@ -11,11 +11,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
+ * 
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.vo.metrics.HTTPRequest = function () {
     "use strict";
-    
+
     this.tcpid = null;          // Identifier of the TCP connection on which the HTTP request was sent.
     this.type = null;           // This is an optional parameter and should not be included in HTTP request/response transactions for progressive download.
                                     // The type of the request:
@@ -33,22 +35,27 @@ MediaPlayer.vo.metrics.HTTPRequest = function () {
     this.tresponse = null;      // Real-Time | The real time at which the first byte of the response was received.
     this.responsecode = null;   // The HTTP response code.
     this.interval = null;       // The duration of the throughput trace intervals (ms), for successful requests only.
+    this.mediaduration = null;  // The duration of the media requests, if available, in milliseconds.
     this.trace = [];            // Throughput traces, for successful requests only.
 };
 
 MediaPlayer.vo.metrics.HTTPRequest.prototype = {
-    constructor: MediaPlayer.vo.metrics.HTTPRequest,
-    
+    constructor: MediaPlayer.vo.metrics.HTTPRequest
+};
+
+MediaPlayer.vo.metrics.HTTPRequest.Trace = function () {
+    "use strict";
+
     /*
      * s - Real-Time | Measurement period start.
      * d - Measurement period duration (ms).
      * b - List of integers counting the bytes received in each trace interval within the measurement period.
      */
-    addTrace: function (s, d, b) {
-        this.trace.push({
-            s: s,
-            d: d,
-            b: b
-        });
-    }
+    this.s = null;
+    this.d = null;
+    this.b = [];
+};
+
+MediaPlayer.vo.metrics.HTTPRequest.Trace.prototype = {
+    constructor : MediaPlayer.vo.metrics.HTTPRequest.Trace
 };

@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.utils.Capabilities = function () {
     "use strict";
@@ -20,19 +21,23 @@ MediaPlayer.utils.Capabilities = function () {
 
 MediaPlayer.utils.Capabilities.prototype = {
     constructor: MediaPlayer.utils.Capabilities,
-    
-    supportsMediaSource: function() {
-        var hasWebKit = (window.WebKitMediaSource !== null),
-            hasMediaSource = (window.MediaSource !== null);
-        
+
+    supportsMediaSource: function () {
+        "use strict";
+
+        var hasWebKit = (window.WebKitMediaSource !== null && window.WebKitMediaSource !== undefined),
+            hasMediaSource = (window.MediaSource !== null && window.MediaSource !== undefined);
+
         return (hasWebKit || hasMediaSource);
     },
-    
+
     supportsCodec: function (element, codec) {
+        "use strict";
+
         if (!(element instanceof HTMLVideoElement)) {
             throw "element must be of type HTMLVideoElement.";
         }
-        
+
         var canPlay = element.canPlayType(codec);
         return (canPlay === "probably");
     }

@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.dependencies.FragmentController = function () {
     "use strict";
@@ -20,14 +21,16 @@ MediaPlayer.dependencies.FragmentController = function () {
 
 MediaPlayer.dependencies.FragmentController.prototype = {
     constructor: MediaPlayer.dependencies.FragmentController,
-    
+
     process: function (bytes) {
+        "use strict";
+
         var result = null;
-        
+
         if (bytes !== null && bytes.byteLength > 0) {
             result = new Uint8Array(bytes);
         }
-        
+
         return Q.when(result);
     }
 };

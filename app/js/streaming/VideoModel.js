@@ -12,41 +12,103 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.models.VideoModel = function () {
     "use strict";
-    
-    var element;
-    
+
+    var element,
+        stalledStreams = [],
+
+        isStalled = function () {
+            return (stalledStreams.length > 0);
+        },
+
+        addStalledStream = function (type) {
+            if (type === null || stalledStreams[type] === true) {
+                return;
+            }
+
+            stalledStreams.push(type);
+            stalledStreams[type] = true;
+
+            // Halt playback until nothing is stalled.
+            element.playbackRate = 0;
+        },
+
+        removeStalledStream = function (type) {
+            if (type === null) {
+                return;
+            }
+
+            stalledStreams[type] = false;
+            var index = stalledStreams.indexOf(type);
+            if (index !== -1) {
+                stalledStreams.splice(index, 1);
+            }
+
+            // If nothing is stalled resume playback.
+            if (isStalled() === false) {
+                element.playbackRate = 1;
+            }
+        },
+
+        stallStream = function (type, isStalled) {
+            if (isStalled) {
+                addStalledStream(type);
+            } else {
+                removeStalledStream(type);
+            }
+        };
+
     return {
         play: function () {
             element.play();
         },
-        
+
         pause: function () {
             element.pause();
         },
-        
+
+        isPaused: function () {
+            return element.paused;
+        },
+
+        getPlaybackRate:  function () {
+            return element.playbackRate;
+        },
+
+        setPlaybackRate: function (value) {
+            element.playbackRate = value;
+        },
+
         getCurrentTime: function () {
             return element.currentTime;
         },
-        
+
+        setCurrentTime : function (currentTime) {
+            element.currentTime = currentTime;
+        },
+
         listen: function (type, callback) {
             element.addEventListener(type, callback, false);
         },
-        
+
         getElement: function () {
             return element;
         },
-        
+
         setElement: function (value) {
             element = value;
         },
-        
+
         setSource: function (source) {
             element.src = source;
-        }
+        },
+
+        stallStream: stallStream,
+        isStalled: isStalled
     };
 };
 

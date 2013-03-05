@@ -12,22 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.rules.BaseRulesCollection = function () {
     "use strict";
-    
-    var rules;
-    
+
+    var rules = [];
+
     return {
         bandwidthRule: undefined,
-        
-        setup: function () {
-            rules = [this.bandwidthRule];
-        },
-        
+
         getRules: function () {
-            return rules;
+            return Q.when(rules);
+        },
+
+        setup: function () {
+            var self = this;
+
+            self.getRules().then(
+                function (r) {
+                    r.push(self.bandwidthRule);
+                }
+            );
         }
     };
 };

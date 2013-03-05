@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <title>Dash JavaScript Player</title>
     <meta name="description" content="" />
-    
+
     <style type="text/css" title="currentStyle">
         @import "app/lib/datatables/media/css/demo_table_jui.css";
 	    @import "app/lib/jquery/css/smoothness/jquery-ui-1.9.2.custom.min.css";
@@ -15,24 +15,26 @@
     </style>
 
 	<!-- Libraries -->
-	
+
     <script src="app/lib/jquery/js/jquery-1.8.3.min.js"></script>
     <script src="app/lib/jquery/js/jquery-ui-1.9.2.custom.min.js"></script>
     <script src="app/lib/highcharts/highcharts.js"></script>
     <script src="app/lib/highcharts/modules/exporting.js"></script>
     <script src="app/lib/datatables/media/js/jquery.dataTables.js"></script>
-	
+
 	<script src="app/lib/xml2json.js"></script>
 	<script src="app/lib/objectiron.js"></script>
-	
+	<script src="app/lib/long.js"></script>
+	<script src="app/lib/Math.js"></script>
+
 	<!-- https://github.com/kriskowal/q -->
 	<script src="app/lib/q.js"></script>
-	
+
 	<!-- https://github.com/creynders/dijon-framework -->
 	<script src="app/lib/dijon.js"></script>
-	
+
 	<!-- Player -->
-	
+
 	<script src="app/js/streaming/MediaPlayer.js"></script>
 	<script src="app/js/streaming/Context.js"></script>
 	<script src="app/js/streaming/Capabilities.js"></script>
@@ -50,17 +52,28 @@
 	<script src="app/js/streaming/BufferController.js"></script>
 	<script src="app/js/streaming/rules/BandwidthRule.js"></script>
 	<script src="app/js/streaming/rules/BaseRulesCollection.js"></script>
-	
+
+	<!-- Metrics -->
+
+	<script src="app/js/streaming/vo/MetricsList.js"></script>
+	<script src="app/js/streaming/MetricsModel.js"></script>
+	<script src="app/js/streaming/vo/metrics/BufferLevel.js"></script>
+	<script src="app/js/streaming/vo/metrics/HTTPRequest.js"></script>
+	<script src="app/js/streaming/vo/metrics/PlayList.js"></script>
+	<script src="app/js/streaming/vo/metrics/RepresentationSwitch.js"></script>
+	<script src="app/js/streaming/vo/metrics/TCPConnection.js"></script>
+
 	<!-- Dash -->
-	
+
 	<script src="app/js/dash/Dash.js"></script>
 	<script src="app/js/dash/DashContext.js"></script>
 	<script src="app/js/dash/vo/Segment.js"></script>
 	<script src="app/js/dash/DashParser.js"></script>
 	<script src="app/js/dash/DashHandler.js"></script>
 	<script src="app/js/dash/BaseURLExtensions.js"></script>
+	<script src="app/js/dash/FragmentExtensions.js"></script>
 	<script src="app/js/dash/DashManifestExtensions.js"></script>
-	
+
     <!-- TODO : Make into main.js. -->
     <script>
         var player;
@@ -185,7 +198,7 @@
                 "bPaginate": false,
                 "bInfo": false
             });
-            
+
             $(document).ready(function () {
                 $('#metrics-table').dataTable({
                     "bJQueryUI": true
@@ -234,13 +247,31 @@
 
             if (type == "video")
             {
-                var newQuality = player.getVideoQuality() - 1;
-                player.setVideoQuality(newQuality);
+                //var newQuality = player.getVideoQuality() - 1;
+                //player.setVideoQuality(newQuality);
+                player.getVideoQuality().then(
+                	function(videoQuality) {
+                		if(videoQuality <= 0) {
+                			return;
+                		}
+                		videoQuality = videoQuality - 1;
+                		player.setVideoQuality(videoQuality);
+                	}
+                );
             }
             else
             {
-                var newQuality = player.getAudioQuality() - 1;
-                player.setAudioQuality(newQuality);
+                //var newQuality = player.getAudioQuality() - 1;
+              	//player.setAudioQuality(newQuality);
+              	player.getAudioQuality().then(
+              		function(audioQuality) {
+              			if(audioQuality <= 0) {
+              				return;
+              			}
+              			audioQuality = audioQuality - 1;
+              			player.setAudioQuality(audioQuality);
+              		}
+              	);
             }
         }
 
@@ -248,7 +279,7 @@
         {
             var select = document.getElementById("mbr-auto");
             var doAutoSwitch = select.value;
-            
+
             if (doAutoSwitch == "true")
             {
                 player.setAutoSwitchQuality(true);
@@ -290,10 +321,12 @@
 
                 updateBitrateControls();
             });
-            
+
             buildVideoBufferGraph();
             buildAudioBufferGraph();
             buildTables();
+
+            Q.longStackJumpLimit = 0;
         }
 
         function onProgress(e)
@@ -302,14 +335,14 @@
             var series, x, y;
 
             var newTime = Math.floor(video.currentTime);
-            
+
             if (newTime != time)
             {
                 time = newTime;
 
                 var metrics;
                 var bitrateValue, bitrateIndex, numBitrates, bufferLength, fragDuration, fragTime, len;
-                
+
                 // video
 
                 metrics = player.getVideoMetrics();
@@ -345,7 +378,7 @@
                 }
 
                 // audio
-                
+
                 metrics = player.getAudioMetrics();
 
                 if (metrics)
@@ -397,6 +430,7 @@
             streams.youtube = "http://yt-dash-mse-test.commondatastorage.googleapis.com/car-20120827-manifest.mpd";
             streams.bunny = "http://dash.edgesuite.net/adobe/bbb/bbb.mpd";
             streams.envivio = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
+            streams.custom = "http://64.105.129.38/manifest.txt";
 
             var custom = document.getElementById("custom-source"),
                 select = document.getElementById("sources"),
@@ -413,17 +447,17 @@
 				player = new MediaPlayer(context),
 				console = document.getElementById("debug_log"),
 				debug;
-			
+
 			player.startup();
-			
+
 			debug = player.debug;
 			debug.init(console);
 			debug.log("manifest | " + source);
-			
+
 			player.autoPlay = true;
 			player.attachView(video);
 			player.attachSource(source);
-        }   
+        }
     </script>
 </head>
 
@@ -471,12 +505,13 @@
                         <option value="list">Segment List</option>
                         <option value="template">Segment Template</option>
                         <option value="timeline">Segment Timeline</option>
+                        <option value="custom">Custom</option>
                         <!--<option value="base">SegmentBase</option>-->
                     </select>
                 </div>
                 <button type="button" onclick="load()">Load</button>
             </div>
-            
+
             <div class="dash-video-player" style="width:540px; height:303.75px;">
                 <div class="video-wrapper" style="width:540px; height:303.75px;">
                     <video controls="true"></video>
@@ -495,10 +530,10 @@
                     </div>
                     -->
                 </div>
-            </div>                   
-            
+            </div>
+
         </div>
-        
+
         <div class="grid_5">
             <div class="grid_2 alpha">
                 Bitrate Controls
@@ -510,7 +545,7 @@
                 </select>
             </div>
         </div>
-        
+
         <div class="grid_5">
             <select id="mbr-auto" class="grid_2 alpha">
                 <option value="true">Auto On</option>
@@ -538,7 +573,7 @@
                         <th>Last Frag D/L Time</th>
                     </tr>
                 </thead>
-            
+
                 <tbody>
                     <tr class="gradeA">
                         <td class="center">Video</td>
@@ -572,7 +607,7 @@
 		<div class="grid_12">
             <h3>Debug Log:</h3>
         </div>
-		
+
 		<div id="debug_log" class="grid_12" style="border:solid 1px; height: 303px; overflow: auto;">
             Waiting...
         </div>
@@ -592,6 +627,18 @@
             Streams using high profile codecs may not play properly.<br/>
             You may get the error "Media Source Close" when attempting to switch bitrates.<br/>
             Only streams with segmentAlignment="true" will work with MBR.
+        </div>
+
+        <div class="clear" style="height:10px;"></div>
+
+        <div class="grid_12">
+            <b>Release Notes v0.1.1</b><br/>
+            Metrics first pass.<br/>
+            Live first pass (still not working).<br/>
+            ABR first pass.<br/>
+            If a buffer runs dry playback stalls until more data is loaded.<br/>
+            Fix some (maybe not all) performance issues.<br/>
+            Change copyright information.
         </div>
 
 		<div class="clear" style="height:10px;"></div>
@@ -618,14 +665,14 @@
         </div>
 
         <div class="clear" style="height:10px;"></div>
-            
+
         <div class="grid_12">
             <b>Release Notes v0.0.6</b><br/>
             UI changes.
         </div>
 
         <div class="clear" style="height:10px;"></div>
-            
+
         <div class="grid_12">
             <b>Release Notes v0.0.5</b><br/>
             Flesh out MBR support.<br/>
@@ -635,7 +682,7 @@
         </div>
 
         <div class="clear" style="height:10px;"></div>
-        
+
         <div class="grid_12">
             <b>Release Notes v0.0.4</b><br/>
             Add metrics bling.<br/>
@@ -644,7 +691,7 @@
         </div>
 
         <div class="clear" style="height:10px;"></div>
-        
+
         <div class="grid_12">
             <b>Release Notes v0.0.3</b><br/>
             Handle BaseURL with no SegmentTemplate, SegmentList, or SegmentBase.<br/>
@@ -652,7 +699,7 @@
         </div>
 
         <div class="clear" style="height:10px;"></div>
-        
+
         <div class="grid_12">
             <b>Release Notes v0.0.2</b><br/>
             Rearchitect the application for better extensibility.<br/>
@@ -662,7 +709,7 @@
         </div>
 
         <div class="clear" style="height:10px;"></div>
-        
+
         <div class="grid_12">
             <b>Release Notes v0.0.1</b><br/>
             Requires Chrome 24 or later.<br/>

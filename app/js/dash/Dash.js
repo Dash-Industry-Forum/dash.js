@@ -12,11 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 Dash = (function () {
     "use strict";
-    
+
     return {
         modules: {},
         dependencies: {},

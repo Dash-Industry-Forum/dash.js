@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 Dash.dependencies.BaseURLExtensions = function () {
     "use strict";
@@ -66,7 +67,8 @@ Dash.dependencies.BaseURLExtensions = function () {
                 pos += 8;
             } else {
                 // TODO(strobe): Overflow checks
-                earliest_presentation_time = (d.getUint32(pos, false) << 32) + d.getUint32(pos + 4, false);
+                //earliest_presentation_time = (d.getUint32(pos, false) << 32) + d.getUint32(pos + 4, false);
+            	earliest_presentation_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
                 first_offset = (d.getUint32(pos + 8, false) << 32) + d.getUint32(pos + 12, false);
                 pos += 16;
             }
@@ -394,7 +396,8 @@ Dash.dependencies.BaseURLExtensions = function () {
         debug: undefined,
         
         loadSegments: loadSegments,
-        loadInitialization: loadInit
+        loadInitialization: loadInit,
+        findSIDX : findSIDX
     };
 };
 

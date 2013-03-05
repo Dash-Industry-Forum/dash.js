@@ -12,10 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.vo.metrics.BufferLevel = function () {
     "use strict";
-    
+
     this.t = null;      // Real-Time | Time of the measurement of the buffer level.
     this.level = null;  // Level of the buffer in milliseconds. Indicates the playout duration for which media data of all active media components is available starting from the current playout time.
 };

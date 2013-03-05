@@ -12,12 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.vo.SegmentRequest = function () {
     "use strict";
     this.action = "download";
     this.startTime = NaN;
+    this.streamType = null;
+    this.type = null;
     this.duration = NaN;
+    this.timescale = NaN;
     this.range = null;
     this.url = null;
     this.requestStartDate = null;

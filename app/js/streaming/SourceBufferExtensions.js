@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.dependencies.SourceBufferExtensions = function () {
     "use strict";
@@ -20,17 +21,22 @@ MediaPlayer.dependencies.SourceBufferExtensions = function () {
 
 MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
     constructor: MediaPlayer.dependencies.SourceBufferExtensions,
-    
+
     createSourceBuffer: function (mediaSource, codec) {
+        "use strict";
+
         return Q.when(mediaSource.addSourceBuffer(codec));
     },
-    
+
     getBufferLength: function (buffer, time) {
+        "use strict";
+
         var ranges = null,
             rangeIndex = -1,
+            bufferLength = 0,
             len,
             i;
-            
+
         ranges = buffer.buffered;
 
         if (ranges !== null) {
@@ -40,15 +46,17 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 }
             }
         }
-        
-        if (rangeIndex === -1) {
-            return Q.when(0);
-        } else {
-            return Q.when(ranges.end(rangeIndex) - time);
+
+        if (rangeIndex !== -1) {
+            bufferLength = ranges.end(rangeIndex) - time;
         }
+
+        return (function () { return Q.when(bufferLength); }());
     },
-    
+
     append: function (buffer, bytes) {
+        "use strict";
+
         buffer.append(bytes);
         return Q.when(true);
     }

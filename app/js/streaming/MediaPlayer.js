@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer = function (aContext) {
     "use strict";
@@ -42,7 +43,6 @@ MediaPlayer = function (aContext) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    
     var context = aContext,
         system,
         element,
@@ -52,30 +52,32 @@ MediaPlayer = function (aContext) {
         initialized = false,
         playing = false,
         autoPlay = true,
-        
+
         isReady = function () {
             return (element !== undefined && source !== undefined);
         },
-        
+
         play = function () {
             if (!initialized) {
                 throw "MediaPlayer not initialized!";
             }
-            
+
             if (!this.capabilities.supportsMediaSource()) {
-                throw "Media Source not supported.";
+                alert("Media Source not supported.");
+                //throw "Media Source not supported.";
+                return;
             }
-            
+
             if (!element || !source) {
                 throw "Missing view or source.";
             }
-            
+
             playing = true;
             this.debug.log("Playback initiated!");
             stream = system.getObject("stream");
             stream.load(source);
         },
-        
+
         doAutoPlay = function () {
             if (autoPlay && isReady()) {
                 play.call(this);
@@ -87,57 +89,99 @@ MediaPlayer = function (aContext) {
     system.mapValue("system", system);
     system.mapOutlet("system");
     system.injectInto(context);
-    
+
     return {
         debug: undefined,
         capabilities: undefined,
         videoModel: undefined,
-        
+
         startup: function () {
             if (!initialized) {
                 system.injectInto(this);
                 initialized = true;
             }
         },
-        
-        setAutoPlay: function(value) {
+
+        setAutoPlay: function (value) {
             autoPlay = value;
         },
-        
-        getAutoPlay: function() {
+
+        getAutoPlay: function () {
             return autoPlay;
         },
-        
+
+        getAudioQuality : function () {
+            if (stream === null) {
+                return null;
+            }
+            return stream.getAudioQuality();
+        },
+
+        setAudioQuality : function (value) {
+            if (stream === null) {
+                return;
+            }
+            stream.setAudioQuality(value);
+        },
+
+        getVideoQuality : function () {
+            if (stream === null) {
+                return null;
+            }
+            return stream.getVideoQuality();
+        },
+
+        setVideoQuality : function (value) {
+            if (stream === null) {
+                return;
+            }
+            stream.setVideoQuality(value);
+        },
+
+        getAutoSwitchQuality : function () {
+            if (stream === null) {
+                return null;
+            }
+            return stream.getAutoSwitchQuality();
+        },
+
+        setAutoSwitchQuality : function (value) {
+            if (stream === null) {
+                return;
+            }
+            stream.setAutoSwitchQuality(value);
+        },
+
         attachView: function (view) {
             if (!initialized) {
                 throw "MediaPlayer not initialized!";
             }
-            
+
             element = view;
             model = new MediaPlayer.models.VideoModel(element);
             this.videoModel.setElement(element);
-            
+
             // TODO : update
-            
+
             if (!playing) {
                 doAutoPlay.call(this);
             }
         },
-        
+
         attachSource: function (url) {
             if (!initialized) {
                 throw "MediaPlayer not initialized!";
             }
-            
+
             source = url;
-            
+
             // TODO : update
-            
+
             if (!playing) {
                 doAutoPlay.call(this);
             }
         },
-        
+
         play: play
     };
 };

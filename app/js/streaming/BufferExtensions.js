@@ -12,26 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.dependencies.BufferExtensions = function () {
     "use strict";
-    
+
     var bufferTime;
-    
+
     return {
-        decideBufferLength: function(minBufferTime) {
+        decideBufferLength: function (minBufferTime) {
             if (isNaN(minBufferTime) || minBufferTime <= 0) {
                 bufferTime = 4;
             } else {
                 bufferTime = minBufferTime;
             }
-            return Q.when(bufferTime);
+            return (function () { return Q.when(bufferTime); }());
         },
-        
-        shouldBufferMore: function (bufferLength, metrics) {
+
+        shouldBufferMore: function (bufferLength) {
             var result = (bufferLength < bufferTime);
-            return Q.when(result);
+            return (function () { return Q.when(result); }());
         }
     };
 };

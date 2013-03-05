@@ -12,51 +12,78 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.dependencies.ManifestLoader = function () {
     "use strict";
 
     var parseBaseUrl = function (url) {
             var base = null;
-            
+
             if (url.indexOf("/") !== -1) {
                 base = url.substring(0, url.lastIndexOf("/") + 1);
             }
-            
+
             return base;
         },
-        
+
         load = function (url) {
             var baseUrl = parseBaseUrl(url),
                 deferred = Q.defer(),
                 request = new XMLHttpRequest(),
+                requestTime = new Date(),
                 self = this;
-            
+
             this.debug.log("Start loading manifest: " + url);
-            
+
             request.open("GET", url, true);
-            
+
             request.onload = function () {
+                self.metricsModel.addHttpRequest("stream",
+                                                 null,
+                                                 "MPD",
+                                                 url,
+                                                 null,
+                                                 null,
+                                                 requestTime,
+                                                 new Date(),
+                                                 request.status,
+                                                 null,
+                                                 null);
+
                 self.parser.parse(request.responseText, baseUrl).then(
                     function (manifest) {
                         deferred.resolve(manifest);
                     }
                 );
             };
-            
+
             request.onerror = function () {
+                self.metricsModel.addHttpRequest("stream",
+                                                 null,
+                                                 "MPD",
+                                                 url,
+                                                 null,
+                                                 null,
+                                                 requestTime,
+                                                 new Date(),
+                                                 request.status,
+                                                 null,
+                                                 null);
+
                 deferred.reject("Error loading manifest.");
             };
-            
-            request.send();  
-            
+
+            request.send();
+
             return deferred.promise;
         };
-    
+
     return {
         debug: undefined,
         parser: undefined,
+        metricsModel: undefined,
         load: load
     };
 };

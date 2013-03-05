@@ -12,24 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * copyright Digital Primates 2012
+ * author Digital Primates
+ * copyright dash-if 2012
  */
 MediaPlayer.utils.Debug = function () {
     "use strict";
-    
+
     var htmlConsole = null;
-    
+
     return {
         init: function (hc) {
-            htmlConsole = hc;
+            htmlConsole = $(hc);
         },
-        
+
         log: function (message) {
             console.log(message);
-            
+
             if (htmlConsole !== null) {
-                var output = message + "</br>" + htmlConsole.innerHTML;
-                htmlConsole.innerHTML = output;
+                var output = message + "</br>";//var output = message + "</br>" + htmlConsole.innerHTML;
+                htmlConsole.prepend(output);//htmlConsole.innerHTML = output;
             }
         }
     };
