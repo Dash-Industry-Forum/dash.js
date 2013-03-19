@@ -5,9 +5,23 @@
     <title>Dash JavaScript Player</title>
     <meta name="description" content="" />
 
+    <!--
+        JSLint
+
+        Directive:
+        /*jslint bitwise: true, continue: false, nomen: true, regexp: true, todo: true */
+
+        Allowed Globals:
+        (javascript) $ alert console setInterval clearInterval
+        (libraries)  Q dijon ObjectIron X2JS
+        (player)     MediaPlayer Dash
+    -->
+
     <style type="text/css" title="currentStyle">
         @import "app/lib/datatables/media/css/demo_table_jui.css";
-	    @import "app/lib/jquery/css/smoothness/jquery-ui-1.9.2.custom.min.css";
+        @import "app/lib/jquery/css/smoothness/jquery-ui-1.9.2.custom.min.css";
+        @import "app/lib/kendo/kendo.common.min.css";
+        @import "app/lib/kendo/kendo.default.min.css";
         @import "app/css/960/reset.css";
         @import "app/css/960/text.css";
         @import "app/css/960/960.css";
@@ -18,6 +32,7 @@
 
     <script src="app/lib/jquery/js/jquery-1.8.3.min.js"></script>
     <script src="app/lib/jquery/js/jquery-ui-1.9.2.custom.min.js"></script>
+    <script src="app/lib/kendo/kendo.web.min.js"></script>
     <script src="app/lib/highcharts/highcharts.js"></script>
     <script src="app/lib/highcharts/modules/exporting.js"></script>
     <script src="app/lib/datatables/media/js/jquery.dataTables.js"></script>
@@ -42,15 +57,22 @@
 	<script src="app/js/streaming/VideoModel.js"></script>
 	<script src="app/js/streaming/vo/SegmentRequest.js"></script>
 	<script src="app/js/streaming/ManifestLoader.js"></script>
+	<script src="app/js/streaming/ManifestUpdater.js"></script>
+	<script src="app/js/streaming/ManifestModel.js"></script>
 	<script src="app/js/streaming/MediaSourceExtensions.js"></script>
 	<script src="app/js/streaming/SourceBufferExtensions.js"></script>
+	<script src="app/js/streaming/VideoModelExtensions.js"></script>
 	<script src="app/js/streaming/BufferExtensions.js"></script>
 	<script src="app/js/streaming/FragmentController.js"></script>
 	<script src="app/js/streaming/AbrController.js"></script>
 	<script src="app/js/streaming/FragmentLoader.js"></script>
 	<script src="app/js/streaming/Stream.js"></script>
 	<script src="app/js/streaming/BufferController.js"></script>
-	<script src="app/js/streaming/rules/BandwidthRule.js"></script>
+	<script src="app/js/streaming/BufferControllerUpdater.js"></script>
+	<script src="app/js/streaming/rules/SwitchRequest.js"></script>
+	<script src="app/js/streaming/rules/DownloadRatioRule.js"></script>
+	<script src="app/js/streaming/rules/InsufficientBufferRule.js"></script>
+	<script src="app/js/streaming/rules/LimitSwitchesRule.js"></script>
 	<script src="app/js/streaming/rules/BaseRulesCollection.js"></script>
 
 	<!-- Metrics -->
@@ -62,6 +84,7 @@
 	<script src="app/js/streaming/vo/metrics/PlayList.js"></script>
 	<script src="app/js/streaming/vo/metrics/RepresentationSwitch.js"></script>
 	<script src="app/js/streaming/vo/metrics/TCPConnection.js"></script>
+	<script src="app/js/streaming/vo/metrics/DroppedFrames.js"></script>
 
 	<!-- Dash -->
 
@@ -73,12 +96,16 @@
 	<script src="app/js/dash/BaseURLExtensions.js"></script>
 	<script src="app/js/dash/FragmentExtensions.js"></script>
 	<script src="app/js/dash/DashManifestExtensions.js"></script>
+	<script src="app/js/dash/DashMetricsExtensions.js"></script>
+	<script src="app/js/dash/DashMetricsConverter.js"></script>
 
     <!-- TODO : Make into main.js. -->
     <script>
         var player;
         //var ui;
         var time = -1;
+        var timer;
+        var videoMetricsTreeView, audioMetricsTreeView;
 
         var videoBufferChart;
         var audioBufferChart;
@@ -247,8 +274,6 @@
 
             if (type == "video")
             {
-                //var newQuality = player.getVideoQuality() - 1;
-                //player.setVideoQuality(newQuality);
                 player.getVideoQuality().then(
                 	function(videoQuality) {
                 		if(videoQuality <= 0) {
@@ -261,8 +286,6 @@
             }
             else
             {
-                //var newQuality = player.getAudioQuality() - 1;
-              	//player.setAudioQuality(newQuality);
               	player.getAudioQuality().then(
               		function(audioQuality) {
               			if(audioQuality <= 0) {
@@ -329,6 +352,8 @@
             Q.longStackJumpLimit = 0;
         }
 
+
+
         function onProgress(e)
         {
             var video = document.querySelector(".dash-video-player video");
@@ -340,77 +365,211 @@
             {
                 time = newTime;
 
-                var metrics;
-                var bitrateValue, bitrateIndex, numBitrates, bufferLength, fragDuration, fragTime, len;
+                var metrics,
+                    metricsExt = player.getMetricsExt(),
+                    video = e.currentTarget,
+                    bitrateValue,
+                    bandwidthValue,
+                    bitrateIndex,
+                    bitrateIndexValue,
+                    repSwitch,
+                    numBitrates,
+                    numBitratesValue,
+                    bufferLevel,
+                    bufferLength,
+                    bufferLengthValue = 0,
+                    fragDuration,
+                    lastFragmentDuration,
+                    fragTime,
+                    lastFragmentDownloadTime,
+                    httpRequest,
+                    len,
+                    droppedFrames,
+                    droppedFramesMetrics,
+                    droppedFramesValue = 0;
 
                 // video
+                metrics = player.getMetricsFor("video");
 
-                metrics = player.getVideoMetrics();
+                if (metrics) {
 
-                if (metrics)
-                {
-                    bitrateValue = document.getElementById("video-value");
-                    bitrateValue.innerHTML = (metrics.bitrateValue / 1000) + " kbps";
+                    if (metricsExt) {
 
-                    bitrateIndex = document.getElementById("video-index");
-                    bitrateIndex.innerHTML = metrics.bitrateIndex + 1;
+                        repSwitch = metricsExt.getCurrentRepresentationSwitch(metrics);
+                        bufferLevel = metricsExt.getCurrentBufferLevel(metrics);
+                        httpRequest = metricsExt.getCurrentHttpRequest(metrics);
+                        droppedFramesMetrics = metricsExt.getCurrentDroppedFrames(metrics);
 
-                    numBitrates = document.getElementById("num-video-bitrates");
-                    numBitrates.innerHTML = metrics.maxBitrateIndex;
+                        if (repSwitch !== null) {
+                            bitrateIndexValue = metricsExt.getIndexForRepresentation(repSwitch.to);
+                            bandwidthValue = metricsExt.getBandwidthForRepresentation(repSwitch.to);
+                            bandwidthValue = bandwidthValue / 1000;
+                            bandwidthValue = Math.round(bandwidthValue);
+                        }
 
-                    bufferLength = document.getElementById("video-buffer");
-                    len = metrics.bufferLength.toString();
-                    if (len.length > 5) len = len.substr(0, 4);
-                    bufferLength.innerHTML = len + " seconds";
+                        numBitratesValue = metricsExt.getMaxIndexForBufferType("video");
 
-                    fragDuration = document.getElementById("video-frag-duration");
-                    len = metrics.lastFragmentDuration.toString();
-                    if (len.length > 5) len = len.substr(0, 4);
-                    fragDuration.innerHTML = len + " seconds";
+                        if (bufferLevel !== null) {
+                            bufferLengthValue = bufferLevel.level;
+                        }
 
-                    fragTime = document.getElementById("video-frag-dl-time");
-                    fragTime.innerHTML = metrics.lastFragmentDownloadTime + " seconds";
+                        if (httpRequest !== null) {
+                            lastFragmentDuration = httpRequest.mediaduration;
+                            lastFragmentDownloadTime = httpRequest.tresponse.getTime() - httpRequest.trequest.getTime();
 
-                    series = videoBufferChart.series[0];
-                    x = time;
-                    y = Math.floor(metrics.bufferLength);
-                    series.addPoint([x, y], true, true, false);
+                            // convert milliseconds to seconds
+                            lastFragmentDownloadTime = lastFragmentDownloadTime / 1000;
+                            lastFragmentDuration = lastFragmentDuration.toPrecision(4);
+                        }
+
+                        if (droppedFramesMetrics !== null) {
+                            droppedFramesValue = droppedFramesMetrics.droppedFrames;
+                        }
+
+                        bitrateValue = document.getElementById("video-value");
+                        bitrateValue.innerHTML = (bandwidthValue) + " kbps";
+
+
+                        bitrateIndex = document.getElementById("video-index");
+                        bitrateIndex.innerHTML = bitrateIndexValue + 1;
+
+                        numBitrates = document.getElementById("num-video-bitrates");
+                        numBitrates.innerHTML = numBitratesValue;
+
+                        bufferLength = document.getElementById("video-buffer");
+                        if (bufferLengthValue > 0) {
+                            bufferLengthValue = bufferLengthValue.toPrecision(5);
+                        }
+                        bufferLength.innerHTML = bufferLengthValue + " seconds";
+
+
+                        fragDuration = document.getElementById("video-frag-duration");
+                        fragDuration.innerHTML = lastFragmentDuration + " seconds";
+
+                        fragTime = document.getElementById("video-frag-dl-time");
+                        fragTime.innerHTML = lastFragmentDownloadTime + " seconds";
+
+                        droppedFrames = document.getElementById("video-dropped-frames");
+                        droppedFrames.innerHTML = droppedFramesValue;
+
+                        series = videoBufferChart.series[0];
+                        x = video.currentTime;
+                        y = Math.round(bufferLengthValue);
+                        series.addPoint([x, y], true, true, false);
+                    }
                 }
 
                 // audio
-
-                metrics = player.getAudioMetrics();
+                metrics = player.getMetricsFor("audio");
 
                 if (metrics)
                 {
-                    bitrateValue = document.getElementById("audio-value");
-                    bitrateValue.innerHTML = (metrics.bitrateValue / 1000) + " kbps";
+                    if (metricsExt) {
 
-                    bitrateIndex = document.getElementById("audio-index");
-                    bitrateIndex.innerHTML = metrics.bitrateIndex + 1;
+                        repSwitch = metricsExt.getCurrentRepresentationSwitch(metrics);
+                        bufferLevel = metricsExt.getCurrentBufferLevel(metrics);
+                        httpRequest = metricsExt.getCurrentHttpRequest(metrics);
+                        droppedFramesMetrics = metricsExt.getCurrentDroppedFrames(metrics);
 
-                    numBitrates = document.getElementById("num-audio-bitrates");
-                    numBitrates.innerHTML = metrics.maxBitrateIndex;
+                        if (repSwitch !== null) {
+                            bitrateIndexValue = metricsExt.getIndexForRepresentation(repSwitch.to);
+                            bandwidthValue = metricsExt.getBandwidthForRepresentation(repSwitch.to);
+                            bandwidthValue = bandwidthValue / 1000;
+                            bandwidthValue = Math.round(bandwidthValue);
+                        }
 
-                    bufferLength = document.getElementById("audio-buffer");
-                    len = metrics.bufferLength.toString();
-                    if (len.length > 5) len = len.substr(0, 4);
-                    bufferLength.innerHTML = len + " seconds";
+                        numBitratesValue = metricsExt.getMaxIndexForBufferType("audio");
 
-                    fragDuration = document.getElementById("audio-frag-duration");
-                    len = metrics.lastFragmentDuration.toString();
-                    if (len.length > 5) len = len.substr(0, 4);
-                    fragDuration.innerHTML = len + " seconds";
+                        if (bufferLevel !== null) {
+                            bufferLengthValue = bufferLevel.level;
+                        }
 
-                    fragTime = document.getElementById("audio-frag-dl-time");
-                    fragTime.innerHTML = metrics.lastFragmentDownloadTime + " seconds";
+                        if (httpRequest !== null) {
+                            lastFragmentDuration = httpRequest.mediaduration;
+                            lastFragmentDownloadTime = httpRequest.tresponse.getTime() - httpRequest.trequest.getTime();
 
-                    series = audioBufferChart.series[0];
-                    x = time;
-                    y = Math.floor(metrics.bufferLength);
-                    series.addPoint([x, y], true, true, false);
+                            // convert milliseconds to seconds
+                            lastFragmentDownloadTime = lastFragmentDownloadTime / 1000;
+                            lastFragmentDuration = lastFragmentDuration.toPrecision(4);
+                        }
+
+                        if (droppedFramesMetrics !== null) {
+                            droppedFramesValue = droppedFramesMetrics.droppedFrames;
+                        }
+
+                        bitrateValue = document.getElementById("audio-value");
+                        bitrateValue.innerHTML = (bandwidthValue) + " kbps";
+
+
+                        bitrateIndex = document.getElementById("audio-index");
+                        bitrateIndex.innerHTML = bitrateIndexValue + 1;
+
+                        numBitrates = document.getElementById("num-audio-bitrates");
+                        numBitrates.innerHTML = numBitratesValue;
+
+                        bufferLength = document.getElementById("audio-buffer");
+                        if (bufferLengthValue > 0) {
+                            bufferLengthValue = bufferLengthValue.toPrecision(5);
+                        }
+                        bufferLength.innerHTML = bufferLengthValue + " seconds";
+
+
+                        fragDuration = document.getElementById("audio-frag-duration");
+                        fragDuration.innerHTML = lastFragmentDuration + " seconds";
+
+                        fragTime = document.getElementById("audio-frag-dl-time");
+                        fragTime.innerHTML = lastFragmentDownloadTime + " seconds";
+
+                        droppedFrames = document.getElementById("audio-dropped-frames");
+                        droppedFrames.innerHTML = droppedFramesValue;
+
+                        series = audioBufferChart.series[0];
+                        x = video.currentTime;
+                        y = Math.round(bufferLengthValue);
+                        series.addPoint([x, y], true, true, false);
+                    }
                 }
             }
+        }
+
+        function handleFilterInputChanged (evt) {
+            var debug = player.getDebug(),
+                target = evt.currentTarget,
+                text;
+
+            if (target !== null) {
+                text = target.value;
+                debug.setFilter(text);
+            }
+        }
+
+        function handleFilterEnabledChanged (evt) {
+            var debug = player.getDebug(),
+                target = evt.currentTarget,
+                checked;
+
+            if (target !== null) {
+                checked = target.checked;
+                debug.setLogToHtmlConsole(checked);
+            }
+        }
+
+        function handleVideoMetricsUpdate () {
+            var metrics = player.getMetricsFor("video"),
+                metricsConverter = player.getMetricsConverter(),
+                videoTreeDataSource;
+
+            videoTreeDataSource = metricsConverter.toTreeViewDataSource(metrics);
+            videoMetricsTreeView.data("kendoTreeView").setDataSource(videoTreeDataSource);
+        }
+
+        function handleAudioMetricsUpdate () {
+            var metrics = player.getMetricsFor("audio"),
+                metricsConverter = player.getMetricsConverter(),
+                audioTreeDataSource;
+
+            audioTreeDataSource = metricsConverter.toTreeViewDataSource(metrics);
+            audioMetricsTreeView.data("kendoTreeView").setDataSource(audioTreeDataSource);
         }
 
         function load()
@@ -420,7 +579,7 @@
             var streams = {};
 
             streams.archive = "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd";
-            streams.live = "http://dashdemo.edgesuite.net/mediaexcel/live/ch1/dash.mpd";
+            streams.live = "http://dashdemo.edgesuite.net/mediaexcel/live/ch1/dash.mpd"; //"http://venus.mediaexcel.com/hera/videos/ch1/dash.mpd";
             streams.netflix = "http://dashdemo.edgesuite.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd";
             streams.fraunhofer = "http://dashdemo.edgesuite.net/dash264/TestCases/3b/fraunhofer/elephants_dream_heaac2_0.mpd";
             streams.list = "http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd";
@@ -430,11 +589,12 @@
             streams.youtube = "http://yt-dash-mse-test.commondatastorage.googleapis.com/car-20120827-manifest.mpd";
             streams.bunny = "http://dash.edgesuite.net/adobe/bbb/bbb.mpd";
             streams.envivio = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
-            streams.custom = "http://64.105.129.38/manifest.txt";
 
             var custom = document.getElementById("custom-source"),
                 select = document.getElementById("sources"),
-                source = null;
+                source = null,
+                filterInput = document.getElementById("filterInput"),
+                filterEnabled = document.getElementById("loggingEnabled");
 
             source = custom.value;
             if (source == null || source == "") {
@@ -444,10 +604,12 @@
 
 			var video = document.querySelector(".dash-video-player video"),
 				context = new Dash.di.DashContext(),
-				player = new MediaPlayer(context),
 				console = document.getElementById("debug_log"),
 				debug;
 
+			player = new MediaPlayer(context);
+
+            video.addEventListener("timeupdate", onProgress);
 			player.startup();
 
 			debug = player.debug;
@@ -457,7 +619,24 @@
 			player.autoPlay = true;
 			player.attachView(video);
 			player.attachSource(source);
+
+			filterInput.oninput = handleFilterInputChanged;
+			filterEnabled.onchange = handleFilterEnabledChanged;
         }
+
+        $(document).ready(function() {
+
+            $("#informationTabs").tabs();
+            $("#videoMetricsUpdateButton").button().click(handleVideoMetricsUpdate);
+            $("#audioMetricsUpdateButton").button().click(handleAudioMetricsUpdate);
+
+            var defaultDataSource = new kendo.data.HierarchicalDataSource({
+                data: [ {text: "No Data"} ]
+            });
+
+            videoMetricsTreeView = $("#videoMetricsTree").kendoTreeView({dataSource:defaultDataSource});
+            audioMetricsTreeView = $("#audioMetricsTree").kendoTreeView({dataSource:defaultDataSource});
+        });
     </script>
 </head>
 
@@ -505,8 +684,6 @@
                         <option value="list">Segment List</option>
                         <option value="template">Segment Template</option>
                         <option value="timeline">Segment Timeline</option>
-                        <option value="custom">Custom</option>
-                        <!--<option value="base">SegmentBase</option>-->
                     </select>
                 </div>
                 <button type="button" onclick="load()">Load</button>
@@ -571,6 +748,7 @@
                         <th>Buffer Length</th>
                         <th>Last Frag Duration</th>
                         <th>Last Frag D/L Time</th>
+                        <th>Dropped Frames</th>
                     </tr>
                 </thead>
 
@@ -583,6 +761,7 @@
                         <td id="video-buffer" class="center">0</td>
                         <td id="video-frag-duration" class="center">0</td>
                         <td id="video-frag-dl-time" class="center">0</td>
+                        <td id="video-dropped-frames" class="center">0</td>
                     </tr>
                     <tr class="gradeC">
                         <td class="center">Audio</td>
@@ -592,6 +771,7 @@
                         <td id="audio-buffer" class="center">0</td>
                         <td id="audio-frag-duration" class="center">0</td>
                         <td id="audio-frag-dl-time" class="center">0</td>
+                        <td id="audio-dropped-frames" class="center">0</td>
                     </tr>
                 </tbody>
             </table>
@@ -603,13 +783,38 @@
             <br />
             <hr />
         </div>
+        <div id="informationTabs">
+            <ul>
+                <li><a href="#debug-log-tab">Debug log</a></li>
+                <li><a href="#video-metrics-tree-tab">Video Metrics Tree</a></li>
+                <li><a href="#audio-metrics-tree-tab">Audio Metrics Tree</a></li>
+            </ul>
+            <div id="debug-log-tab" >
+                <div >
+                    <div id="filter">
+                        <label id="filterInputLabel">Filter Debug Log: </label>
+                        <input type="text" id="filterInput"/>
+                    </div>
+                    <div>
+                        <label id="loggingEnabledFilter">Logging Enabled: </label>
+                        <input type="checkbox" id="loggingEnabled" checked="true"/>
+                    </div>
+                </div>
 
-		<div class="grid_12">
-            <h3>Debug Log:</h3>
-        </div>
-
-		<div id="debug_log" class="grid_12" style="border:solid 1px; height: 303px; overflow: auto;">
-            Waiting...
+                <div id="debug_log" style="border:solid 1px; height: 303px; overflow: auto;">
+                    <dt>Waiting...</dt>
+                </div>
+            </div>
+            <div id="video-metrics-tree-tab" class="grid_12">
+                <input id="videoMetricsUpdateButton" type="button" value="Update Video Metrics" />
+                <div id="videoMetricsTree">
+                </div>
+            </div>
+            <div id="audio-metrics-tree-tab" class="grid_12">
+                <input id="audioMetricsUpdateButton" type="button" value="Update Audio Metrics" />
+                <div id="audioMetricsTree">
+                </div>
+            </div>
         </div>
 
         <div class="clear"></div>
@@ -627,6 +832,21 @@
             Streams using high profile codecs may not play properly.<br/>
             You may get the error "Media Source Close" when attempting to switch bitrates.<br/>
             Only streams with segmentAlignment="true" will work with MBR.
+        </div>
+
+        <div class="clear" style="height:10px;"></div>
+
+        <div class="grid_12">
+            <b>Release Notes v0.1.2</b><br/>
+            Live pass #2.  Working better, but still not done.<br/>
+            Live w/ SegmentTemplate is working pretty good.<br/>
+            Live support for other methods is spotty.<br/>
+            Implement manifest refreshing.<br/>
+            Add filter to debug window.  **WARNING** Filtering has performance issues that still need to be sorted out.<br/>
+            Add trees to view metrics. **Must manually populate due to performance issues.**<br/>
+            Band-aid some VOD seeking bugs.<br/>
+            Implement use of presentation delay.</br>
+            Fix some bugs.
         </div>
 
         <div class="clear" style="height:10px;"></div>

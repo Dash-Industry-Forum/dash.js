@@ -47,6 +47,7 @@ Dash.dependencies.DashHandler = function () {
         },
 
         replaceIDForTemplate = function (url, value) {
+            if (value === null || url.indexOf("$RepresentationID$") === -1) { return url; }
             var v = value.toString();
             return url.split("$RepresentationID$").join(v);
         },
@@ -83,12 +84,12 @@ Dash.dependencies.DashHandler = function () {
                     initialization = replaceIDForTemplate(initialization, representation.id);
                 }
             } else if (representation.hasOwnProperty("SegmentList") &&
-                     representation.SegmentList.hasOwnProperty("Initialization") &&
-                     representation.SegmentList.Initialization.hasOwnProperty("sourceURL")) {
+                       representation.SegmentList.hasOwnProperty("Initialization") &&
+                       representation.SegmentList.Initialization.hasOwnProperty("sourceURL")) {
                 initialization = representation.SegmentList.Initialization.sourceURL;
             } else if (representation.hasOwnProperty("SegmentBase") &&
-                     representation.SegmentBase.hasOwnProperty("Initialization") &&
-                     representation.SegmentBase.Initialization.hasOwnProperty("range")) {
+                       representation.SegmentBase.hasOwnProperty("Initialization") &&
+                       representation.SegmentBase.Initialization.hasOwnProperty("range")) {
                 initialization = representation.BaseURL;
                 range = representation.SegmentBase.Initialization.range;
             } else {
@@ -285,9 +286,9 @@ Dash.dependencies.DashHandler = function () {
                 frag = null;
 
                 while (ft <= time && (idx + 1) < segments.length) {
-                    idx += 1;
                     frag = segments[idx];
                     ft += frag.duration / frag.timescale;
+                    idx += 1;
                 }
                 idx -= 1;
             }

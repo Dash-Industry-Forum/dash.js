@@ -54,6 +54,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
 
                 self.parser.parse(request.responseText, baseUrl).then(
                     function (manifest) {
+                        manifest.mpdUrl = url;
                         deferred.resolve(manifest);
                     }
                 );

@@ -25,24 +25,29 @@ MediaPlayer.di.Context = function () {
 
             this.system.mapSingleton('debug', MediaPlayer.utils.Debug);
             this.system.mapSingleton('capabilities', MediaPlayer.utils.Capabilities);
-            this.system.mapSingleton('videoModel', MediaPlayer.models.VideoModel);
 
-            this.system.mapClass('metrics', MediaPlayer.models.MetricsList);
+            this.system.mapSingleton('videoModel', MediaPlayer.models.VideoModel);
+            this.system.mapSingleton('manifestModel', MediaPlayer.models.ManifestModel);
             this.system.mapSingleton('metricsModel', MediaPlayer.models.MetricsModel);
 
             this.system.mapSingleton('mediaSourceExt', MediaPlayer.dependencies.MediaSourceExtensions);
             this.system.mapSingleton('sourceBufferExt', MediaPlayer.dependencies.SourceBufferExtensions);
             this.system.mapSingleton('bufferExt', MediaPlayer.dependencies.BufferExtensions);
-
             this.system.mapSingleton('abrController', MediaPlayer.dependencies.AbrController);
-            this.system.mapClass('bandwidthRule', MediaPlayer.rules.BandwidthRule);
+
+            this.system.mapClass('metrics', MediaPlayer.models.MetricsList);
+            this.system.mapClass('downloadRatioRule', MediaPlayer.rules.DownloadRatioRule);
+            this.system.mapClass('insufficientBufferRule', MediaPlayer.rules.InsufficientBufferRule);
+            this.system.mapClass('limitSwitchesRule', MediaPlayer.rules.LimitSwitchesRule);
             this.system.mapClass('abrRulesCollection', MediaPlayer.rules.BaseRulesCollection);
 
             this.system.mapClass('bufferController', MediaPlayer.dependencies.BufferController);
             this.system.mapClass('manifestLoader', MediaPlayer.dependencies.ManifestLoader);
+            this.system.mapClass('manifestUpdater', MediaPlayer.dependencies.ManifestUpdater);
             this.system.mapClass('fragmentController', MediaPlayer.dependencies.FragmentController);
             this.system.mapClass('fragmentLoader', MediaPlayer.dependencies.FragmentLoader);
-            this.system.mapClass('stream', MediaPlayer.dependencies.Stream);
+            this.system.mapSingleton('stream', MediaPlayer.dependencies.Stream);
+            this.system.mapHandler('manifestUpdated', 'stream', 'manifestHasUpdated');
         }
     };
 };

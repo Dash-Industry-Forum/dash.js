@@ -19,7 +19,9 @@ MediaPlayer.models.VideoModel = function () {
     "use strict";
 
     var element,
+        isLive = false,
         stalledStreams = [],
+        _currentTime = 0,
 
         isStalled = function () {
             return (stalledStreams.length > 0);
@@ -60,9 +62,20 @@ MediaPlayer.models.VideoModel = function () {
             } else {
                 removeStalledStream(type);
             }
+        },
+        handleSetCurrentTimeNotification = function (e) {
+            if (element.currentTime !== _currentTime) {
+                element.currentTime = _currentTime;
+            }
         };
 
     return {
+        system : undefined,
+
+        setup : function () {
+            this.system.mapHandler("setCurrentTime", undefined, handleSetCurrentTimeNotification.bind(this));
+        },
+
         play: function () {
             element.play();
         },
@@ -87,8 +100,8 @@ MediaPlayer.models.VideoModel = function () {
             return element.currentTime;
         },
 
-        setCurrentTime : function (currentTime) {
-            element.currentTime = currentTime;
+        setCurrentTime: function (currentTime) {
+            _currentTime = currentTime;
         },
 
         listen: function (type, callback) {
@@ -105,6 +118,14 @@ MediaPlayer.models.VideoModel = function () {
 
         setSource: function (source) {
             element.src = source;
+        },
+
+        getIsLive: function () {
+            return isLive;
+        },
+
+        setIsLive: function (value) {
+            isLive = value;
         },
 
         stallStream: stallStream,

@@ -21,7 +21,9 @@ MediaPlayer.rules.BaseRulesCollection = function () {
     var rules = [];
 
     return {
-        bandwidthRule: undefined,
+        downloadRatioRule: undefined,
+        insufficientBufferRule: undefined,
+        //limitSwitchesRule: undefined,
 
         getRules: function () {
             return Q.when(rules);
@@ -32,7 +34,9 @@ MediaPlayer.rules.BaseRulesCollection = function () {
 
             self.getRules().then(
                 function (r) {
-                    r.push(self.bandwidthRule);
+                    r.push(self.downloadRatioRule);
+                    r.push(self.insufficientBufferRule);
+                    //r.push(self.limitSwitchesRule);
                 }
             );
         }

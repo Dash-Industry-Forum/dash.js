@@ -15,12 +15,20 @@
  * author Digital Primates
  * copyright dash-if 2012
  */
-MediaPlayer.rules.BandwidthRule = function () {
+MediaPlayer.rules.DownloadRatioRule = function () {
     "use strict";
 
-    var rules,
+    /*
+     * This rule is intended to be sure that we can download fragments in a
+     * timely manner.  The general idea is that it should take longer to download
+     * a fragment than it will take to play the fragment.
+     *
+     * This rule is not sufficient by itself.  We may be able to download a fragment
+     * fine, but if the buffer is not sufficiently long playback hiccups will happen.
+     * Be sure to use this rule in conjuction with the InsufficientBufferRule.
+     */
 
-        checkRatio = function (newIdx, currentIdx) {
+    var checkRatio = function (newIdx, currentIdx) {
             var self = this,
                 deferred = Q.defer();
 
@@ -53,16 +61,16 @@ MediaPlayer.rules.BandwidthRule = function () {
                 i,
                 len;
 
-            self.debug.log("Checking bandwidth rule...");
+            self.debug.log("Checking download ratio rule...");
 
             if (!metrics) {
                 self.debug.log("No metrics, bailing.");
-                return Q.when(-1);
+                return Q.when(new MediaPlayer.rules.SwitchRequest());
             }
 
             if (httpRequests === null || httpRequests === undefined || httpRequests.length === 0) {
                 self.debug.log("No requests made for this stream yet, bailing.");
-                return Q.when(-1);
+                return Q.when(new MediaPlayer.rules.SwitchRequest());
             }
 
             lastRequest = httpRequests[httpRequests.length - 1];
@@ -70,15 +78,17 @@ MediaPlayer.rules.BandwidthRule = function () {
 
             if (downloadTime <= 0) {
                 self.debug.log("Don't know how long the download of the last fragment took, bailing.");
-                return Q.when(-1);
+                return Q.when(new MediaPlayer.rules.SwitchRequest());
             }
 
             if (lastRequest.mediaduration === null ||
                 lastRequest.mediaduration === undefined ||
                 lastRequest.mediaduration <= 0) {
                 self.debug.log("Don't know the duration of the last media fragment, bailing.");
-                return Q.when(-1);
+                return Q.when(new MediaPlayer.rules.SwitchRequest());
             }
+
+            // TODO : I structured this all goofy and messy.  fix plz
 
             deferred = Q.defer();
 
@@ -87,7 +97,7 @@ MediaPlayer.rules.BandwidthRule = function () {
 
             if (isNaN(downloadRatio)) {
                 self.debug.log("Invalid ratio, bailing.");
-                deferred.resolve(-1);
+                deferred.resolve(new MediaPlayer.rules.SwitchRequest());
             } else if (downloadRatio < 1.0) {
                 self.debug.log("Download ratio is poor.");
                 if (current > 0) {
@@ -105,10 +115,10 @@ MediaPlayer.rules.BandwidthRule = function () {
 
                                                     if (downloadRatio < switchRatio) {
                                                         self.debug.log("Things must be going pretty bad, switch all the way down.");
-                                                        deferred.resolve(0);
+                                                        deferred.resolve(new MediaPlayer.rules.SwitchRequest(0));
                                                     } else {
                                                         self.debug.log("Things could be better, so just switch down one index.");
-                                                        deferred.resolve(current - 1);
+                                                        deferred.resolve(new MediaPlayer.rules.SwitchRequest(current - 1));
                                                     }
                                                 }
                                             );
@@ -119,7 +129,7 @@ MediaPlayer.rules.BandwidthRule = function () {
                         }
                     );
                 } else {
-                    deferred.resolve(current);
+                    deferred.resolve(new MediaPlayer.rules.SwitchRequest(current));
                 }
             } else {
                 self.debug.log("Download ratio is good.");
@@ -142,11 +152,11 @@ MediaPlayer.rules.BandwidthRule = function () {
                                                             if (downloadRatio >= switchRatio) {
                                                                 if (downloadRatio > 1000.0) {
                                                                     self.debug.log("Tons of bandwidth available, go all the way up.");
-                                                                    deferred.resolve(max - 1);
+                                                                    deferred.resolve(new MediaPlayer.rules.SwitchRequest(max - 1));
                                                                 }
                                                                 else if (downloadRatio > 100.0) {
                                                                     self.debug.log("Just enough bandwidth available, switch up one.");
-                                                                    deferred.resolve(current + 1);
+                                                                    deferred.resolve(new MediaPlayer.rules.SwitchRequest(current + 1));
                                                                 }
                                                                 else {
                                                                     self.debug.log("Not exactly sure where to go, so do some math.");
@@ -164,13 +174,13 @@ MediaPlayer.rules.BandwidthRule = function () {
                                                                                 }
                                                                             }
                                                                             self.debug.log("Calculated ideal new quality index is: " + i);
-                                                                            deferred.resolve(i);
+                                                                            deferred.resolve(new MediaPlayer.rules.SwitchRequest(i));
                                                                         }
                                                                     );
                                                                 }
                                                             } else {
                                                                 self.debug.log("Not enough bandwidth to switch up.");
-                                                                deferred.resolve(-1);
+                                                                deferred.resolve(new MediaPlayer.rules.SwitchRequest());
                                                             }
                                                         }
                                                     );
@@ -181,7 +191,7 @@ MediaPlayer.rules.BandwidthRule = function () {
                                 }
                             );
                         } else {
-                            deferred.resolve(max);
+                            deferred.resolve(new MediaPlayer.rules.SwitchRequest(max));
                         }
                     }
                 );
@@ -192,6 +202,6 @@ MediaPlayer.rules.BandwidthRule = function () {
     };
 };
 
-MediaPlayer.rules.BandwidthRule.prototype = {
-    constructor: MediaPlayer.rules.BandwidthRule
+MediaPlayer.rules.DownloadRatioRule.prototype = {
+    constructor: MediaPlayer.rules.DownloadRatioRule
 };

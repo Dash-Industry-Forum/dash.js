@@ -20,7 +20,7 @@ MediaPlayer = function (aContext) {
 
 /*
  * Initialization:
- * 
+ *
  * 1) Check if MediaSource is available.
  * 2) Load manifest.
  * 3) Parse manifest.
@@ -32,9 +32,9 @@ MediaPlayer = function (aContext) {
  *      b. Calculate live point.
  *      c. Calculate offset between availabilityStartTime and initial video timestamp.
  * 8) Start buffer managers.
- * 
+ *
  * Buffer Management:
- * 
+ *
  * 1) Generate metrics.
  * 2) Check if fragments should be loaded.
  * 3) Check ABR for change in quality.
@@ -94,6 +94,8 @@ MediaPlayer = function (aContext) {
         debug: undefined,
         capabilities: undefined,
         videoModel: undefined,
+        metricsModel: undefined,
+        metricsConverter: undefined,
 
         startup: function () {
             if (!initialized) {
@@ -102,12 +104,37 @@ MediaPlayer = function (aContext) {
             }
         },
 
+        getMetricsConverter: function () {
+            return this.metricsConverter;
+        },
+
+        getDebug: function () {
+            return this.debug;
+        },
+
+        getVideoModel: function () {
+            return this.videoModel;
+        },
+
         setAutoPlay: function (value) {
             autoPlay = value;
         },
 
         getAutoPlay: function () {
             return autoPlay;
+        },
+
+        getMetricsExt : function () {
+            if (stream === null) {
+                return null;
+            }
+
+            return stream.metricsExt;
+        },
+
+        getMetricsFor : function (type) {
+            var metrics = this.metricsModel.getReadOnlyMetricsFor(type);
+            return metrics;
         },
 
         getAudioQuality : function () {
@@ -158,6 +185,11 @@ MediaPlayer = function (aContext) {
             }
 
             element = view;
+
+            // Set the video to autoplay.
+            // We'll tell it when to go.
+            element.autoplay = true;
+
             model = new MediaPlayer.models.VideoModel(element);
             this.videoModel.setElement(element);
 

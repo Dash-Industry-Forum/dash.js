@@ -18,7 +18,12 @@
 Dash.dependencies.DashParser = function () {
     "use strict";
 
-    var durationRegex = /PT(([0-9]*)H)?(([0-9]*)M)?(([0-9.]*)S)?/,
+    var SECONDS_IN_YEAR = 365 * 24 * 60 * 60,
+        SECONDS_IN_MONTH = 30 * 24 * 60 * 60, // not precise!
+        SECONDS_IN_DAY = 24 * 60 * 60,
+        SECONDS_IN_HOUR = 60 * 60,
+        SECONDS_IN_MIN = 60,
+        durationRegex = /P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/,
         datetimeRegex = /^(\d{4}\-\d\d\-\d\d([tT][\d:\.]*)?)([zZ]|([+\-])(\d\d):(\d\d))?$/,
         numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/,
         matchers = [
@@ -28,10 +33,14 @@ Dash.dependencies.DashParser = function () {
                     return durationRegex.test(str);
                 },
                 converter: function (str) {
+                    //str = "P10Y10M10DT10H10M10.1S";
                     var match = durationRegex.exec(str);
-                    return (parseFloat(match[2] || 0) * 3600 +
-                            parseFloat(match[4] || 0) * 60 +
-                            parseFloat(match[6] || 0));
+                    return (parseFloat(match[2] || 0) * SECONDS_IN_YEAR +
+                            parseFloat(match[4] || 0) * SECONDS_IN_MONTH +
+                            parseFloat(match[6] || 0) * SECONDS_IN_DAY +
+                            parseFloat(match[8] || 0) * SECONDS_IN_HOUR +
+                            parseFloat(match[10] || 0) * SECONDS_IN_MIN +
+                            parseFloat(match[12] || 0));
                 }
             },
             {

@@ -22,6 +22,14 @@ MediaPlayer.models.MetricsModel = function () {
         system:undefined,
         streamMetrics: {},
 
+        getReadOnlyMetricsFor: function(type) {
+            if (this.streamMetrics.hasOwnProperty(type)) {
+                return this.streamMetrics[type];
+            }
+
+            return null;
+        },
+
         getMetricsFor: function(type) {
             var metrics;
 

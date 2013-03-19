@@ -11,23 +11,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  * author Digital Primates
  * copyright dash-if 2012
  */
-MediaPlayer.models.MetricsList = function () {
+MediaPlayer.vo.metrics.DroppedFrames = function () {
     "use strict";
 
-    return {
-        TcpList: [],
-        HttpList: [],
-        RepSwitchList: [],
-        BufferLevel: [],
-        PlayList: [],
-        DroppedFrames: []
-    };
+    this.time = null;      // Real-Time | Time of the measurement of the dropped frames.
+    this.droppedFrames = null;  // Number of dropped frames.
 };
 
-MediaPlayer.models.MetricsList.prototype = {
-    constructor: MediaPlayer.models.MetricsList
+MediaPlayer.vo.metrics.DroppedFrames.prototype = {
+    constructor: MediaPlayer.vo.metrics.DroppedFrames
 };

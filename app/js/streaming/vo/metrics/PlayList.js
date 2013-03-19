@@ -11,7 +11,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  * author Digital Primates
  * copyright dash-if 2012
  */
@@ -72,3 +72,4 @@ MediaPlayer.vo.metrics.PlayList.Trace.prototype = {
 MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON = "user_request";
 MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON = "representation_switch";
 MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON = "end_of_content";
+MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON = "rebuffering";

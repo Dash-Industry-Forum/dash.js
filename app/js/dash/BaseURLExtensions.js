@@ -17,13 +17,13 @@
  */
 Dash.dependencies.BaseURLExtensions = function () {
     "use strict";
-    
+
     var url,
         range,
         searching = false,
         bytesLoaded = 0,
         bytesToLoad = 1500,
-        
+
         // From YouTube player.  Reformatted for JSLint.
         parseSIDX = function (ab, ab_first_byte_offset) {
             var d = new DataView(ab),
@@ -34,18 +34,32 @@ Dash.dependencies.BaseURLExtensions = function () {
                 earliest_presentation_time,
                 first_offset,
                 reference_count,
-                offset,
-                time,
-                references,
+                references = [],
                 i,
                 ref_size,
-                ref_type,
-                ref_dur;
+                ref_dur,
+                type,
+                size,
+                charCode;
 
-            while (d.getUint32(pos + 4, false) !== 0x73696478) {
-                pos += d.getUint32(pos, false);
-                if (pos >= ab.byteLength) {
-                    throw "Could not find sidx";
+            while (type !== "sidx" && pos < d.byteLength) {
+                size = d.getUint32(pos); // subtract 8 for including the size and type
+                pos += 4;
+
+                type = "";
+                for (i = 0; i < 4; i += 1) {
+                    charCode = d.getInt8(pos);
+                    type += String.fromCharCode(charCode);
+                    pos += 1;
+                }
+
+                if (type !== "moof" && type !== "traf" && type !== "sidx") {
+                    pos += size - 8;
+                } else if (type === "sidx") {
+                    // reset the position to the beginning of the box...
+                    // if we do not reset the position, the evaluation
+                    // of sidxEnd to ab.byteLength will fail.
+                    pos -= 8;
                 }
             }
 
@@ -67,37 +81,32 @@ Dash.dependencies.BaseURLExtensions = function () {
                 pos += 8;
             } else {
                 // TODO(strobe): Overflow checks
-                //earliest_presentation_time = (d.getUint32(pos, false) << 32) + d.getUint32(pos + 4, false);
-            	earliest_presentation_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
+                earliest_presentation_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
+                //first_offset = utils.Math.to64BitNumber(d.getUint32(pos + 8, false), d.getUint32(pos + 12, false));
                 first_offset = (d.getUint32(pos + 8, false) << 32) + d.getUint32(pos + 12, false);
                 pos += 16;
             }
+
             first_offset += sidxEnd + (ab_first_byte_offset || 0);
 
             // skipped reserved(16)
             reference_count = d.getUint16(pos + 2, false);
             pos += 4;
 
-            offset = first_offset;
-            time = earliest_presentation_time;
-            references = [];
-
             for (i = 0; i < reference_count; i += 1) {
                 ref_size = d.getUint32(pos, false);
-                ref_type = ref_size & 0x80000000;
-                //if (ref_type) throw "Unhandled indirect reference";
                 ref_size = ref_size & 0x7fffffff;
                 ref_dur = d.getUint32(pos + 4, false);
                 pos += 12;
                 references.push({
                     'size': ref_size,
-                    'offset': offset,
+                    'offset': first_offset,
                     'duration': ref_dur,
-                    'time': time,
+                    'time': earliest_presentation_time,
                     'timescale': timescale
                 });
-                offset += ref_size;
-                time += ref_dur;
+                first_offset += ref_size;
+                earliest_presentation_time += ref_dur;
             }
 
             if (pos !== sidxEnd) {
@@ -106,7 +115,7 @@ Dash.dependencies.BaseURLExtensions = function () {
 
             return references;
         },
-        
+
         parseSegments = function (data, media, offset) {
             var parsed,
                 segments,
@@ -125,18 +134,18 @@ Dash.dependencies.BaseURLExtensions = function () {
                 segment.media = media;
                 segment.startTime = parsed[i].time;
                 segment.timescale = parsed[i].timescale;
-                
+
                 start = parsed[i].offset;
                 end = parsed[i].offset + parsed[i].size - 1;
                 segment.mediaRange = start + "-" + end;
-                
+
                 segments.push(segment);
             }
 
             this.debug.log("Parsed SIDX box: " + segments.length + " segments.");
             return Q.when(segments);
         },
-        
+
         findInit = function (data) {
             var deferred = Q.defer(),
                 start,
@@ -169,9 +178,9 @@ Dash.dependencies.BaseURLExtensions = function () {
                     pos += size - 8;
                 }
             }
-            
+
             bytesAvailable = d.byteLength - pos;
-            
+
             if (type !== "moov") {
                 // Case 1
                 // We didn't download enough bytes to find the moov.
@@ -184,7 +193,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 range.end = bytesLoaded + bytesToLoad;
 
                 request = new XMLHttpRequest();
-                
+
                 request.onload = function () {
                     bytesLoaded = range.end;
                     findInit.call(self, request.response).then(
@@ -193,11 +202,11 @@ Dash.dependencies.BaseURLExtensions = function () {
                         }
                     );
                 };
-                
+
                 request.onerror = function () {
                     deferred.reject("Error loading initialization.");
                 };
-                
+
                 request.responseType = "arraybuffer";
                 request.open("GET", url);
                 request.setRequestHeader("Range", "bytes=" + range.start + "-" + range.end);
@@ -212,22 +221,22 @@ Dash.dependencies.BaseURLExtensions = function () {
                 self.debug.log("Found the initialization.  Range: " + range);
                 deferred.resolve(range);
             }
-            
+
             return deferred.promise;
         },
-        
-        loadInit = function(media) {
+
+        loadInit = function (media) {
             var deferred = Q.defer(),
                 request = new XMLHttpRequest(),
                 self = this;
-            
+
             url = media;
             range = {};
-            
+
             self.debug.log("Start searching for initialization.");
             range.start = 0;
             range.end = bytesToLoad;
-            
+
             request.onload = function () {
                 bytesLoaded = range.end;
                 findInit.call(self, request.response).then(
@@ -236,23 +245,24 @@ Dash.dependencies.BaseURLExtensions = function () {
                     }
                 );
             };
-            
+
             request.onerror = function () {
                 deferred.reject("Error finding initialization.");
             };
-            
+
             request.responseType = "arraybuffer";
             request.open("GET", url);
             request.setRequestHeader("Range", "bytes=" + range.start + "-" + range.end);
             request.send(null);
             self.debug.log("Perform init search: " + url);
-            
+
             return deferred.promise;
         },
-        
+
         findSIDX = function (data) {
             var deferred = Q.defer(),
                 d = new DataView(data),
+                request = new XMLHttpRequest(),
                 pos = 0,
                 type = "",
                 size = 0,
@@ -300,8 +310,6 @@ Dash.dependencies.BaseURLExtensions = function () {
                 range.start = 0;
                 range.end = bytesLoaded + (size - bytesAvailable);
 
-                var request = new XMLHttpRequest();
-                
                 request.onload = function () {
                     bytesLoaded = range.end;
                     findSIDX.call(self, request.response).then(
@@ -310,11 +318,11 @@ Dash.dependencies.BaseURLExtensions = function () {
                         }
                     );
                 };
-                
+
                 request.onerror = function () {
                     deferred.reject("Error loading sidx.");
                 };
-                
+
                 request.responseType = "arraybuffer";
                 request.open("GET", url);
                 request.setRequestHeader("Range", "bytes=" + range.start + "-" + range.end);
@@ -327,26 +335,26 @@ Dash.dependencies.BaseURLExtensions = function () {
 
                 self.debug.log("Found the SIDX box.  Start: " + range.start + " | End: " + range.end);
                 sidxBytes = data.slice(range.start, range.end);
-                
+
                 parseSegments.call(self, sidxBytes, url, range.start).then(
                     function (segments) {
                         deferred.resolve(segments);
                     }
                 );
             }
-            
+
             return deferred.promise;
         },
-        
-        loadSegments = function(media, theRange) {
+
+        loadSegments = function (media, theRange) {
             var deferred = Q.defer(),
                 request = new XMLHttpRequest(),
                 parts,
                 self = this;
-            
+
             url = media;
             range = {};
-            
+
             // We might not know exactly where the sidx box is.
             // Load the first n bytes (say 1500) and look for it.
             if (theRange === null) {
@@ -359,7 +367,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 range.start = parseFloat(parts[0]);
                 range.end = parseFloat(parts[1]);
             }
-            
+
             request.onload = function () {
                 // If we didn't know where the SIDX box was, we have to look for it.
                 // Iterate over the data checking out the boxes to find it.
@@ -378,23 +386,23 @@ Dash.dependencies.BaseURLExtensions = function () {
                     );
                 }
             };
-            
+
             request.onerror = function () {
                 deferred.reject("Error loading sidx.");
             };
-            
+
             request.responseType = "arraybuffer";
             request.open("GET", url);
             request.setRequestHeader("Range", "bytes=" + range.start + "-" + range.end);
             request.send(null);
             self.debug.log("Perform SIDX load: " + url);
-            
+
             return deferred.promise;
         };
-    
+
     return {
         debug: undefined,
-        
+
         loadSegments: loadSegments,
         loadInitialization: loadInit,
         findSIDX : findSIDX

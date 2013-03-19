@@ -113,11 +113,61 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(false);
     },
 
+    processAdaptation: function (adaptation) {
+        if (adaptation.Representation_asArray !== undefined && adaptation.Representation_asArray !== null) {
+            adaptation.Representation_asArray.sort(function(a, b) {
+                return a.bandwidth - b.bandwidth;
+            });
+        }
+
+        return adaptation;
+    },
+
+    getDataForId: function (id, manifest) {
+        var self = this,
+            adaptations = manifest.Period_asArray[0].AdaptationSet_asArray,
+            i,
+            len;
+
+        for (i = 0, len = adaptations.length; i < len; i += 1) {
+            if (adaptations[i].hasOwnProperty("id") && adaptations[i].id === id) {
+                return Q.when(adaptations[i]);
+            }
+        }
+
+        return Q.when(null);
+    },
+
+    getDataForIndex: function (index, manifest) {
+        var self = this,
+            adaptations = manifest.Period_asArray[0].AdaptationSet_asArray;
+
+        return Q.when(adaptations[index]);
+    },
+
+    getDataIndex: function (data, manifest) {
+        "use strict";
+
+        var self = this,
+            adaptations = manifest.Period_asArray[0].AdaptationSet_asArray,
+            i,
+            len;
+
+        for (i = 0, len = adaptations.length; i < len; i += 1) {
+            if (adaptations[i] === data) {
+                return Q.when(i);
+            }
+        }
+
+        return Q.when(-1);
+    },
+
     getVideoData: function (manifest) {
         "use strict";
         //return Q.when(null);
         //------------------------------------
-        var adaptations = manifest.Period_asArray[0].AdaptationSet_asArray,
+        var self = this,
+            adaptations = manifest.Period_asArray[0].AdaptationSet_asArray,
             i,
             len,
             deferred = Q.defer(),
@@ -132,7 +182,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 for (i = 0, len = results.length; i < len; i += 1) {
                     if (results[i] === true) {
                         found = true;
-                        deferred.resolve(adaptations[i]);
+                        deferred.resolve(self.processAdaptation(adaptations[i]));
                     }
                 }
                 if (!found) {
@@ -148,7 +198,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         "use strict";
         //return Q.when(null);
         //------------------------------------
-        var adaptations = manifest.Period_asArray[0].AdaptationSet_asArray,
+        var self = this,
+            adaptations = manifest.Period_asArray[0].AdaptationSet_asArray,
             i,
             len,
             deferred = Q.defer(),
@@ -163,7 +214,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 var datas = [];
                 for (i = 0, len = results.length; i < len; i += 1) {
                     if (results[i] === true) {
-                        datas.push(adaptations[i]);
+                        datas.push(self.processAdaptation(adaptations[i]));
                     }
                 }
                 deferred.resolve(datas);
@@ -197,7 +248,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                         for (i = 0, len = results.length; i < len; i += 1) {
                             if (results[i] === true) {
                                 found = true;
-                                deferred.resolve(datas[i]);
+                                deferred.resolve(self.processAdaptation(datas[i]));
                             }
                         }
                         if (!found) {
@@ -221,6 +272,47 @@ Dash.dependencies.DashManifestExtensions.prototype = {
     getIsLive: function (manifest) {
         "use strict";
         return Q.when(manifest.type === "dynamic");
+    },
+
+    getLiveOffset: function (manifest) {
+        var delay = 20;
+
+        if (manifest.hasOwnProperty("suggestedPresentationDelay")) {
+            delay = manifest.suggestedPresentationDelay;
+        }
+
+        return Q.when(delay);
+    },
+
+    getLiveEdge: function (manifest) {
+        var self = this,
+            deferred = Q.defer(),
+            liveOffset = 0,
+            now = new Date(),
+            start = manifest.availabilityStartTime,
+            end;
+
+        self.getLiveOffset(manifest).then(
+            function (delay) {
+                if (manifest.hasOwnProperty("availabilityEndTime")) {
+                    end = manifest.availabilityEndTime;
+                    liveOffset = ((end.getTime() - start.getTime()) / 1000);
+                } else {
+                    liveOffset = ((now.getTime() - start.getTime()) / 1000);
+                }
+
+                liveOffset -= delay;
+
+                // Be sure the delay doesn't push us out of range.
+                if (liveOffset < 0) {
+                    liveOffset = 0;
+                }
+
+                deferred.resolve(liveOffset);
+            }
+        );
+
+        return deferred.promise;
     },
 
     getIsDVR: function (manifest) {
@@ -273,6 +365,16 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
     getBandwidth: function (representation) {
         return Q.when(representation.bandwidth);
+    },
+
+    getRefreshDelay: function (manifest) {
+        var delay = NaN;
+
+        if (manifest.hasOwnProperty("minimumUpdatePeriod")) {
+            delay = parseFloat(manifest.minimumUpdatePeriod);
+        }
+
+        return Q.when(delay);
     },
 
     getRepresentationCount: function (adaptation) {

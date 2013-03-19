@@ -97,8 +97,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         },
 
         loadRequest = function (req) {
-            var deferred = Q.defer(),
-                promise = null;
+            var deferred = Q.defer();
 
             req.deferred = deferred;
 
@@ -108,9 +107,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 loadNext.call(this);
             }
 
-            promise = deferred.promise;
-
-            return promise;
+            return deferred.promise;
         };
 
     return {

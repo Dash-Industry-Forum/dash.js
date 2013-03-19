@@ -11,23 +11,28 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  * author Digital Primates
  * copyright dash-if 2012
  */
-MediaPlayer.models.MetricsList = function () {
+MediaPlayer.rules.SwitchRequest = function (q, p) {
     "use strict";
+    this.quality = q;
+    this.priority = p;
 
-    return {
-        TcpList: [],
-        HttpList: [],
-        RepSwitchList: [],
-        BufferLevel: [],
-        PlayList: [],
-        DroppedFrames: []
-    };
+    if (this.quality === undefined) {
+        this.quality = 999;
+    }
+
+    if (this.priority === undefined) {
+        this.priority = 0.5;
+    }
 };
 
-MediaPlayer.models.MetricsList.prototype = {
-    constructor: MediaPlayer.models.MetricsList
+MediaPlayer.rules.SwitchRequest.prototype = {
+    constructor: MediaPlayer.rules.SwitchRequest,
+    NO_CHANGE: 999,
+    DEFAULT: 0.5,
+    STRONG: 1,
+    WEAK: 0
 };

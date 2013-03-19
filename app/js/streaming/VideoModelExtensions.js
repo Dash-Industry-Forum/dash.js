@@ -15,31 +15,23 @@
  * author Digital Primates
  * copyright dash-if 2012
  */
-MediaPlayer.dependencies.BufferExtensions = function () {
+MediaPlayer.dependencies.VideoModelExtensions = function () {
     "use strict";
 
-    var bufferTime;
-
     return {
-        decideBufferLength: function (minBufferTime) {
-            bufferTime = 4;
-            /*
-            if (isNaN(minBufferTime) || minBufferTime <= 0) {
-                bufferTime = 4;
-            } else {
-                bufferTime = minBufferTime;
-            }
-            */
-            return Q.when(bufferTime);
-        },
+        getDroppedFrames: function (videoElement) {
+            var hasWebKit = videoElement.webkitDroppedFrameCount !== null,
+                droppedFrameCount = -1;
 
-        shouldBufferMore: function (bufferLength) {
-            var result = (bufferLength < bufferTime);
-            return Q.when(result);
+            if (hasWebKit) {
+                droppedFrameCount = videoElement.webkitDroppedFrameCount;
+            }
+
+            return droppedFrameCount;
         }
     };
 };
 
-MediaPlayer.dependencies.BufferExtensions.prototype = {
-    constructor: MediaPlayer.dependencies.BufferExtensions
+MediaPlayer.dependencies.VideoModelExtensions.prototype = {
+    constructor: MediaPlayer.dependencies.VideoModelExtensions
 };
