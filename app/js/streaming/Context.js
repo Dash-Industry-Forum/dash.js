@@ -34,6 +34,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('sourceBufferExt', MediaPlayer.dependencies.SourceBufferExtensions);
             this.system.mapSingleton('bufferExt', MediaPlayer.dependencies.BufferExtensions);
             this.system.mapSingleton('abrController', MediaPlayer.dependencies.AbrController);
+            this.system.mapSingleton('errHandler', MediaPlayer.dependencies.ErrorHandler);
 
             this.system.mapClass('metrics', MediaPlayer.models.MetricsList);
             this.system.mapClass('downloadRatioRule', MediaPlayer.rules.DownloadRatioRule);

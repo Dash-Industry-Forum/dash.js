@@ -104,7 +104,11 @@ function ObjectIron(map) {
                             }
                             // simple objects; merge them together
                             else {
-                                child[property.name] = parentValue + childValue;
+                                if (property.mergeFunction != null) {
+                                    child[property.name] = property.mergeFunction(parentValue, childValue);
+                                } else {
+                                    child[property.name] = parentValue + childValue;
+                                }
                             }
                         }
                     } else {

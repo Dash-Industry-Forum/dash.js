@@ -25,6 +25,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         loadNext = function () {
             var req = new XMLHttpRequest(),
                 httpRequestMetrics = new MediaPlayer.vo.metrics.HTTPRequest(),
+                loaded = false,
                 self = this;
 
             if (requests.length > 0) {
@@ -38,7 +39,15 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     req.setRequestHeader("Range", "bytes=" + lastRequest.range);
                 }
 
-                req.onload = function () {
+                req.onloadend = function (e) {
+                    if (!loaded) {
+                        lastRequest.deferred.reject("Error loading fragment.");
+                    }
+                };
+
+                req.onload = function (e) {
+                    loaded = true;
+
                     var entry = new MediaPlayer.vo.metrics.HTTPRequest.Trace(),
                         currentTime = new Date(),
                         bytes = req.response;
@@ -75,7 +84,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     loadNext.call(self);
                 };
 
-                req.onerror = function () {
+                req.onerror = function (e) {
                     httpRequestMetrics = self.metricsModel.addHttpRequest(lastRequest.streamType,
                                                                           null,
                                                                           lastRequest.type,

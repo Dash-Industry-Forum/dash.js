@@ -82,6 +82,11 @@ MediaPlayer = function (aContext) {
             if (autoPlay && isReady()) {
                 play.call(this);
             }
+        },
+
+        resetAndAutoPlay = function () {
+            stream.reset();
+            doAutoPlay.call(this);
         };
 
     // Set up DI.
@@ -94,8 +99,10 @@ MediaPlayer = function (aContext) {
         debug: undefined,
         capabilities: undefined,
         videoModel: undefined,
+        abrController: undefined,
         metricsModel: undefined,
         metricsConverter: undefined,
+        metricsExt: undefined,
 
         startup: function () {
             if (!initialized) {
@@ -124,59 +131,29 @@ MediaPlayer = function (aContext) {
             return autoPlay;
         },
 
-        getMetricsExt : function () {
-            if (stream === null) {
-                return null;
-            }
-
-            return stream.metricsExt;
+        getMetricsExt: function () {
+            return this.metricsExt;
         },
 
-        getMetricsFor : function (type) {
+        getMetricsFor: function (type) {
             var metrics = this.metricsModel.getReadOnlyMetricsFor(type);
             return metrics;
         },
 
-        getAudioQuality : function () {
-            if (stream === null) {
-                return null;
-            }
-            return stream.getAudioQuality();
+        getQualityFor: function (type) {
+            return this.abrController.getQualityFor(type);
         },
 
-        setAudioQuality : function (value) {
-            if (stream === null) {
-                return;
-            }
-            stream.setAudioQuality(value);
-        },
-
-        getVideoQuality : function () {
-            if (stream === null) {
-                return null;
-            }
-            return stream.getVideoQuality();
-        },
-
-        setVideoQuality : function (value) {
-            if (stream === null) {
-                return;
-            }
-            stream.setVideoQuality(value);
+        setQualityFor: function (type, value) {
+            this.abrController.setPlaybackQuality(type, value);
         },
 
         getAutoSwitchQuality : function () {
-            if (stream === null) {
-                return null;
-            }
-            return stream.getAutoSwitchQuality();
+            return this.abrController.getAutoSwitchBitrate();
         },
 
         setAutoSwitchQuality : function (value) {
-            if (stream === null) {
-                return;
-            }
-            stream.setAutoSwitchQuality(value);
+            this.abrController.setAutoSwitchBitrate(value);
         },
 
         attachView: function (view) {
@@ -211,6 +188,8 @@ MediaPlayer = function (aContext) {
 
             if (!playing) {
                 doAutoPlay.call(this);
+            } else {
+                resetAndAutoPlay.call(this);
             }
         },
 

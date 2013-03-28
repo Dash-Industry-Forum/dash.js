@@ -129,17 +129,28 @@ Dash.dependencies.FragmentExtensions = function () {
         loadFragment = function (media) {
             var deferred = Q.defer(),
                 request = new XMLHttpRequest(),
-                url;
+                url,
+                loaded = false,
+                errorStr,
+                parsed;
 
             url = media;
 
+            request.onloadend = function (e) {
+                if (!loaded) {
+                    errorStr = "Error loading fragment: " + url;
+                    deferred.reject(errorStr);
+                }
+            };
+
             request.onload = function () {
-                var parsed = parseTFDT(request.response);
+                loaded = true;
+                parsed = parseTFDT(request.response);
                 deferred.resolve(parsed);
             };
 
             request.onerror = function () {
-                var errorStr = "Error loading fragment: " + url;
+                errorStr = "Error loading fragment: " + url;
                 deferred.reject(errorStr);
             };
 

@@ -159,6 +159,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 i,
                 c,
                 request,
+                loaded = false,
                 self = this;
 
             self.debug.log("Searching for initialization.");
@@ -194,7 +195,14 @@ Dash.dependencies.BaseURLExtensions = function () {
 
                 request = new XMLHttpRequest();
 
+                request.onloadend = function (e) {
+                    if (!loaded) {
+                        deferred.reject("Error loading initialization.");
+                    }
+                };
+
                 request.onload = function () {
+                    loaded = true;
                     bytesLoaded = range.end;
                     findInit.call(self, request.response).then(
                         function (segments) {
@@ -228,6 +236,7 @@ Dash.dependencies.BaseURLExtensions = function () {
         loadInit = function (media) {
             var deferred = Q.defer(),
                 request = new XMLHttpRequest(),
+                loaded = false,
                 self = this;
 
             url = media;
@@ -237,7 +246,14 @@ Dash.dependencies.BaseURLExtensions = function () {
             range.start = 0;
             range.end = bytesToLoad;
 
+            request.onloadend = function (e) {
+                if (!loaded) {
+                    deferred.reject("Error finding initialization.");
+                }
+            };
+
             request.onload = function () {
+                loaded = true;
                 bytesLoaded = range.end;
                 findInit.call(self, request.response).then(
                     function (range) {
@@ -270,6 +286,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 sidxBytes,
                 i,
                 c,
+                loaded = false,
                 self = this;
 
             self.debug.log("Searching for SIDX box.");
@@ -310,7 +327,14 @@ Dash.dependencies.BaseURLExtensions = function () {
                 range.start = 0;
                 range.end = bytesLoaded + (size - bytesAvailable);
 
+                request.onloadend = function (e) {
+                    if (!loaded) {
+                        deferred.reject("Error loading sidx.");
+                    }
+                };
+
                 request.onload = function () {
+                    loaded = true;
                     bytesLoaded = range.end;
                     findSIDX.call(self, request.response).then(
                         function (segments) {
@@ -350,6 +374,7 @@ Dash.dependencies.BaseURLExtensions = function () {
             var deferred = Q.defer(),
                 request = new XMLHttpRequest(),
                 parts,
+                loaded = false,
                 self = this;
 
             url = media;
@@ -368,7 +393,15 @@ Dash.dependencies.BaseURLExtensions = function () {
                 range.end = parseFloat(parts[1]);
             }
 
+            request.onloadend = function (e) {
+                if (!loaded) {
+                    deferred.reject("Error loading sidx.");
+                }
+            };
+
             request.onload = function () {
+                loaded = true;
+
                 // If we didn't know where the SIDX box was, we have to look for it.
                 // Iterate over the data checking out the boxes to find it.
                 if (searching) {
@@ -405,7 +438,9 @@ Dash.dependencies.BaseURLExtensions = function () {
 
         loadSegments: loadSegments,
         loadInitialization: loadInit,
-        findSIDX : findSIDX
+        parseSegments: parseSegments,
+        parseSIDX: parseSIDX,
+        findSIDX: findSIDX
     };
 };
 

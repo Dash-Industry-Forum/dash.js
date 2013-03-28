@@ -33,13 +33,22 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 deferred = Q.defer(),
                 request = new XMLHttpRequest(),
                 requestTime = new Date(),
+                loaded = false,
                 self = this;
 
             this.debug.log("Start loading manifest: " + url);
 
             request.open("GET", url, true);
 
+            request.onloadend = function (e) {
+                if (!loaded) {
+                    deferred.reject("Error loading manifest.");
+                }
+            };
+
             request.onload = function () {
+                loaded = true;
+
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
                                                  "MPD",

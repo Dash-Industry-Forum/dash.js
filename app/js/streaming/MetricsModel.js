@@ -19,8 +19,16 @@ MediaPlayer.models.MetricsModel = function () {
     "use strict";
 
     return {
-        system:undefined,
+        system : undefined,
         streamMetrics: {},
+
+        clearCurrentMetricsForType: function (type) {
+            delete this.streamMetrics[type];
+        },
+
+        clearAllCurrentMetrics: function () {
+            this.streamMetrics = {};
+        },
 
         getReadOnlyMetricsFor: function(type) {
             if (this.streamMetrics.hasOwnProperty(type)) {

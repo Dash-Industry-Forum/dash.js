@@ -265,8 +265,8 @@ MediaPlayer.dependencies.BufferController = function () {
                 state = READY;
             }
 
-            alert("Error loading fragment.");
-            throw error;
+            //alert("Error loading fragment.");
+            this.errHandler.downloadError("Error loading fragment.");
         },
 
         signalStreamComplete = function () {
@@ -367,14 +367,14 @@ MediaPlayer.dependencies.BufferController = function () {
                                             qualityChanged = (quality !== lastQuality);
 
                                             if (qualityChanged === true) {
-                                                    representation = getRepresentationForQuality(newQuality, self.getData());
+                                                representation = getRepresentationForQuality(newQuality, self.getData());
 
-                                                    if (representation === null || representation === undefined) {
-                                                        throw "Unexpected error!";
-                                                    }
+                                                if (representation === null || representation === undefined) {
+                                                    throw "Unexpected error!";
+                                                }
 
-                                                    clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
-                                                    self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, representation.id);
+                                                clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
+                                                self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, representation.id);
                                             }
 
                                             self.debug.log(qualityChanged ? ("Quality changed to: " + quality) : "Quality didn't change.");
@@ -446,6 +446,7 @@ MediaPlayer.dependencies.BufferController = function () {
         indexHandler: undefined,
         debug: undefined,
         system: undefined,
+        errHandler: undefined,
 
         setup: function () {
             var self = this;
@@ -477,16 +478,6 @@ MediaPlayer.dependencies.BufferController = function () {
             if (this.indexHandler !== undefined) {
                 this.indexHandler.setType(value);
             }
-        },
-
-        getQuality : function () {
-            var self = this;
-            return self.abrController.getPlaybackQuality();
-        },
-
-        setQuality : function (value) {
-            var self = this;
-            self.abrController.setPlaybackQuality(value);
         },
 
         getAutoSwitchBitrate : function () {
@@ -522,6 +513,16 @@ MediaPlayer.dependencies.BufferController = function () {
 
         setMinBufferTime: function (value) {
             minBufferTime = value;
+        },
+
+        clearMetrics: function (value) {
+            var self = this;
+
+            if (type === null || type === "") {
+                return;
+            }
+
+            self.metricsModel.clearCurrentMetricsForType(type);
         },
 
         start: doStart,

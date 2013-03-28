@@ -19,7 +19,23 @@ MediaPlayer.dependencies.AbrController = function () {
     "use strict";
 
     var autoSwitchBitrate = true,
-        qualityDict = {};
+        qualityDict = {},
+
+        getInternalQuality = function (type) {
+            var quality;
+
+            if (!qualityDict.hasOwnProperty(type)) {
+                qualityDict[type] = 0;
+            }
+
+            quality = qualityDict[type];
+
+            return quality;
+        },
+
+        setInternalQuality = function (type, value) {
+            qualityDict[type] = value;
+        };
 
     return {
         debug: undefined,
@@ -73,11 +89,7 @@ MediaPlayer.dependencies.AbrController = function () {
                 values,
                 quality;
 
-            if (!qualityDict.hasOwnProperty("type")) {
-                qualityDict[type] = 0;
-            }
-
-            quality = qualityDict[type];
+            quality = getInternalQuality(type);
 
             self.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
 
@@ -120,7 +132,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
                                         if (newQuality !== 999 && newQuality !== undefined) {
                                             quality = newQuality;
-                                            qualityDict[type] = quality;
+                                            setInternalQuality(type, quality);
                                             self.debug.log("New quality of " + quality);
                                         }
 
@@ -152,11 +164,16 @@ MediaPlayer.dependencies.AbrController = function () {
             return deferred.promise;
         },
 
-        setPlaybackQuality: function (newPlaybackQuality) {
-            if (newPlaybackQuality === quality) {
-                return;
+        setPlaybackQuality: function (type, newPlaybackQuality) {
+            var quality = getInternalQuality(type);
+
+            if (newPlaybackQuality !== quality) {
+                setInternalQuality(type, newPlaybackQuality);
             }
-            quality = newPlaybackQuality;
+        },
+
+        getQualityFor: function (type) {
+            return getInternalQuality(type);
         }
     };
 };

@@ -28,6 +28,12 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         return Q.when(mediaSource.addSourceBuffer(codec));
     },
 
+    removeSourceBuffer: function (mediaSource, buffer) {
+        "use strict";
+
+        return Q.when(mediaSource.removeSourceBuffer(buffer));
+    },
+
     getBufferLength: function (buffer, time) {
         "use strict";
 
@@ -62,5 +68,10 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         } catch (err) {
             return Q.when(false);
         }
+    },
+
+    abort: function (buffer) {
+        "use strict";
+        return Q.when(buffer.abort());
     }
 };

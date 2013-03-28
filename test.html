@@ -10,6 +10,41 @@
             sourceBuffer,
             video;
 
+        function getParameterByName(name) {
+          name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+          var regexS = "[\\?&]" + name + "=([^&#]*)";
+          var regex = new RegExp(regexS);
+          var results = regex.exec(window.location.search);
+          if(results == null)
+            return "";
+          else
+            return decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+        function init() {
+            var mimetypeInput = document.getElementById("mimetype-source"),
+                codecInput = document.getElementById("codec-source"),
+                initInput = document.getElementById("init-source"),
+                fragInput = document.getElementById("frag-source");
+
+            var mimetype = getParameterByName("mimetype"),
+                codec = getParameterByName("codec"),
+                init = getParameterByName("initialization"),
+                frag = getParameterByName("fragment");
+
+            if (mimetype !== null && mimetype !== undefined && mimetype !== "")
+                mimetypeInput.value = mimetype;
+
+            if (codec !== null && codec !== undefined && codec !== "")
+                codecInput.value = codec;
+
+            if (init !== null && init !== undefined && init !== "")
+                initInput.value = init;
+
+            if (frag !== null && frag !== undefined && frag !== "")
+                fragInput.value = frag;
+        }
+
         function load() {
             console.log("START");
             window.MediaSource = window.MediaSource || window.WebKitMediaSource;
@@ -94,7 +129,7 @@
     </script>
 </head>
 
-<body>
+<body onload="init()">
     <div>
         MimeType: <input id="mimetype-source" style="width:290px;" value="video/mp4"/>
     </div>

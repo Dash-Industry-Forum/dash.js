@@ -1,4 +1,4 @@
-    /*
+/*
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,6 +104,10 @@ Dash.dependencies.DashHandler = function () {
                         request.url = getRequestUrl(url, representation.BaseURL);
                         request.range = theRange;
                         deferred.resolve(request);
+                    },
+                    function (err) {
+                        //alert("Error loading initialization.");
+                        self.errHandler.downloadError("Error loading initialization.");
                     }
                 );
             }
@@ -240,7 +244,8 @@ Dash.dependencies.DashHandler = function () {
 
         getSegmentsFromSource = function (representation) {
             var url = representation.BaseURL,
-                range = null;
+                range = null,
+                manifest = this.manifestModel.getValue();
 
             if (representation.hasOwnProperty("SegmentBase")) {
                 if (representation.SegmentBase.hasOwnProperty("indexRange")) {
@@ -248,7 +253,12 @@ Dash.dependencies.DashHandler = function () {
                 }
             }
 
-            return this.baseURLExt.loadSegments(url, range);
+            // TODO - Make this decision in a better way.
+            if (manifest.profiles.indexOf("http://xmlns.sony.net/metadata/mpeg/dash/profile/senvu/2012") !== -1) {
+                return this.sonyExt.loadSegments(url, range);
+            } else {
+                return this.baseURLExt.loadSegments(url, range);
+            }
         },
 
         getSegments = function (representation) {
@@ -513,6 +523,9 @@ Dash.dependencies.DashHandler = function () {
     return {
         debug: undefined,
         baseURLExt: undefined,
+        sonyExt: undefined,
+        manifestModel: undefined,
+        errHandler: undefined,
 
         getType: function () {
             return type;
