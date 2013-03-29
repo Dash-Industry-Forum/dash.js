@@ -172,8 +172,23 @@ function populateMetricsFor(type, bitrateValue, bitrateIndex, pendingIndex, numB
             droppedFramesValue = droppedFramesMetrics.droppedFrames;
         }
 
-        bitrateValue.innerHTML = (bandwidthValue) + " kbps";
+        if (isNaN(bandwidthValue) || bandwidthValue === undefined) {
+            bandwidthValue = 0;
+        }
 
+        if (isNaN(bitrateIndexValue) || bitrateIndexValue === undefined) {
+            bitrateIndexValue = 0;
+        }
+
+        if (isNaN(numBitratesValue) || numBitratesValue === undefined) {
+            numBitratesValue = 0;
+        }
+
+        if (isNaN(bufferLengthValue) || bufferLengthValue === undefined) {
+            bufferLengthValue = 0;
+        }
+
+        bitrateValue.innerHTML = (bandwidthValue) + " kbps";
         bitrateIndex.innerHTML = bitrateIndexValue + 1;
 
         pendingValue = player.getQualityFor(type);

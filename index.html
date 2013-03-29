@@ -188,20 +188,20 @@
                     </div>
                     <br style="clear: both;"/>
                     <div style="padding-right: 13px;">
-                        <span class="stats-label palette-text-pumpkin" style="float: left;" id="video-value"></span>
+                        <span class="stats-label palette-text-pumpkin" style="float: left;" id="video-value">0 kbps</span>
                     </div>
                     <br style="clear: both;"/>
-                    <span class="stats-label">Bitrate: </span>
-                    <span class="stats-label palette-text-firm-dark" id="video-index"></span>
+                    <span class="stats-label">Rep Index: </span>
+                    <span class="stats-label palette-text-firm-dark" id="video-index">0</span>
                     <span class="stats-label palette-text-wisteria" id="video-pending-index"></span>
                     <span class="stats-label">/</span>
-                    <span class="stats-label palette-text-firm-dark" id="num-video-bitrates"></span>
+                    <span class="stats-label palette-text-firm-dark" id="num-video-bitrates">0</span>
                     <br style="clear: both;"/>
                     <span class="stats-label">Buffer Length: </span>
-                    <span class="stats-label palette-text-info-dark" id="video-buffer"></span>
+                    <span class="stats-label palette-text-info-dark" id="video-buffer">0</span>
                     <br style="clear: both;"/>
                     <span class="stats-label">Dropped Frames: </span>
-                    <span class="stats-label palette-text-night" id="video-dropped-frames"></span>
+                    <span class="stats-label palette-text-night" id="video-dropped-frames">0</span>
                 </div>
                 <div class="statsbox">
                     <i class="fui-volume-16 btn btn-primary"></i>
@@ -215,20 +215,20 @@
                     </div>
                     <br style="clear: both;"/>
                     <div style="padding-right: 13px;">
-                        <span class="stats-label palette-text-pumpkin" style="float: left;" id="audio-value"></span>
+                        <span class="stats-label palette-text-pumpkin" style="float: left;" id="audio-value">0 kbps</span>
                     </div>
                     <br style="clear: both;"/>
-                    <span class="stats-label">Bitrate: </span>
-                    <span class="stats-label palette-text-firm-dark" id="audio-index"></span>
+                    <span class="stats-label">Rep Index: </span>
+                    <span class="stats-label palette-text-firm-dark" id="audio-index">0</span>
                     <span class="stats-label palette-text-wisteria" id="audio-pending-index"></span>
                     <span class="stats-label">/</span>
-                    <span class="stats-label palette-text-firm-dark" id="num-audio-bitrates"></span>
+                    <span class="stats-label palette-text-firm-dark" id="num-audio-bitrates">0</span>
                     <br style="clear: both;"/>
                     <span class="stats-label">Buffer Length: </span>
-                    <span class="stats-label palette-text-alizarin" id="audio-buffer"></span>
+                    <span class="stats-label palette-text-alizarin" id="audio-buffer">0</span>
                     <br style="clear: both;"/>
                     <span class="stats-label">Dropped Frames: </span>
-                    <span class="stats-label palette-text-night" id="audio-dropped-frames"></span>
+                    <span class="stats-label palette-text-night" id="audio-dropped-frames">0</span>
                 </div>
             </div>
         </div>
@@ -292,7 +292,9 @@
                         Add some UI bits to make things more clear.<br/>
                         Added test vectors to sources dropdown.<br/>
                         Clean up the filtering so that it doesn't bog down the stream as much.<br/>
-                        Add test application to verify that fragments work with MediaSource.
+                        Add test application to verify that fragments work with MediaSource.<br/>
+                        Added ability to change streams without refreshing the page.<br/>
+                        Better error messaging.
                     </div>
 
                     <div>

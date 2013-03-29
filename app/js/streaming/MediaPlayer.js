@@ -82,11 +82,6 @@ MediaPlayer = function (aContext) {
             if (autoPlay && isReady()) {
                 play.call(this);
             }
-        },
-
-        resetAndAutoPlay = function () {
-            stream.reset();
-            doAutoPlay.call(this);
         };
 
     // Set up DI.
@@ -186,11 +181,12 @@ MediaPlayer = function (aContext) {
 
             // TODO : update
 
-            if (!playing) {
-                doAutoPlay.call(this);
-            } else {
-                resetAndAutoPlay.call(this);
+            if (playing) {
+                stream.reset();
+                stream = null;
             }
+
+            doAutoPlay.call(this);
         },
 
         play: play

@@ -29,6 +29,7 @@ MediaPlayer.dependencies.Stream = function () {
         ready = false,
         loaded = false,
         urlSource,
+        errored = false,
 
         play = function () {
             this.debug.log("Attempting play...");
@@ -68,11 +69,41 @@ MediaPlayer.dependencies.Stream = function () {
                 self = this,
 
                 onMediaSourceClose = function (e) {
+                    var error = self.videoModel.getElement().error,
+                        code = (error !== null && error !== undefined) ? error.code : -1,
+                        msg = "";
+
+                    if (code === -1) {
+                        // not an error!
+                        return;
+                    }
+
+                    switch (code) {
+                        case 1:
+                            msg = "MEDIA_ERR_ABORTED";
+                            break;
+                        case 2:
+                            msg = "MEDIA_ERR_NETWORK";
+                            break;
+                        case 3:
+                            msg = "MEDIA_ERR_DECODE";
+                            break;
+                        case 4:
+                            msg = "MEDIA_ERR_SRC_NOT_SUPPORTED";
+                            break;
+                        case 5:
+                            msg = "MEDIA_ERR_ENCRYPTED";
+                            break;
+                    }
+
+                    errored = true;
+
                     pause.call(self);
                     self.debug.log("MediaSource Close.");
                     self.debug.log(e);
                     self.debug.log("Video Element Error:");
                     self.debug.log(self.videoModel.getElement().error);
+                    self.errHandler.mediaSourceError(msg);
                 },
 
                 onMediaSourceOpen = function (e) {
@@ -99,27 +130,35 @@ MediaPlayer.dependencies.Stream = function () {
             return deferred.promise;
         },
 
+        clearMetrics = function () {
+            videoController.clearMetrics();
+            audioController.clearMetrics();
+        },
+
         tearDownMediaSource = function () {
             var self = this,
                 videoBuffer,
                 audioBuffer;
 
             videoController.stop();
-            videoBuffer = videoController.getBuffer();
-            self.sourceBufferExt.abort(videoBuffer);
-            self.sourceBufferExt.removeSourceBuffer(mediaSource, videoBuffer);
-
             audioController.stop();
-            audioBuffer = audioController.getBuffer();
-            self.sourceBufferExt.abort(audioBuffer);
-            self.sourceBufferExt.removeSourceBuffer(mediaSource, audioBuffer);
+
+            clearMetrics.call(this);
+
+            if (!errored) {
+                videoBuffer = videoController.getBuffer();
+                self.sourceBufferExt.abort(videoBuffer);
+                self.sourceBufferExt.removeSourceBuffer(mediaSource, videoBuffer);
+
+                audioBuffer = audioController.getBuffer();
+                self.sourceBufferExt.abort(audioBuffer);
+                self.sourceBufferExt.removeSourceBuffer(mediaSource, audioBuffer);
+            }
+
+            videoController = null;
+            audioController = null;
 
             self.videoModel.setSource(null);
-        },
-
-        clearMetrics = function () {
-            videoController.clearMetrics();
-            audioController.clearMetrics();
         },
 
         checkIfInitialized = function (videoReady, audioReady, deferred) {
@@ -473,6 +512,7 @@ MediaPlayer.dependencies.Stream = function () {
         debug: undefined,
         metricsExt: undefined,
         bufferControllerUpdater: undefined,
+        errHandler: undefined,
 
         setup: function () {
             this.videoModel.listen("play", onPlay.bind(this));
@@ -508,7 +548,6 @@ MediaPlayer.dependencies.Stream = function () {
         reset: function () {
             pause.call(this);
             tearDownMediaSource.call(this);
-            clearMetrics.call(this);
         },
 
         play: play,
