@@ -184,7 +184,7 @@ p {
 }
 
 .plus-symbol {
-    background-image: url("http://localhost/dash-js-dp/app/img/plus.png");
+    background-image: url("../img/plus.png");
     background-repeat: no-repeat;
     background-position:center;
     width: 16px;
@@ -194,27 +194,7 @@ p {
 }
 
 .minus-symbol {
-    background-image: url("http://localhost/dash-js-dp/app/img/minus.png");
-    background-repeat: no-repeat;
-    background-position:center;
-    width: 16px;
-    height: 16px;
-    margin: 0;
-    padding: 0;
-}
-
-.video-symbol {
-    background-image: url("http://localhost/dash-js-dp/app/img/video.png");
-    background-repeat: no-repeat;
-    background-position:center;
-    width: 16px;
-    height: 16px;
-    margin: 0;
-    padding: 0;
-}
-
-.audio-symbol {
-    background-image: url("http://localhost/dash-js-dp/app/img/audio.png");
+    background-image: url("../img/minus.png");
     background-repeat: no-repeat;
     background-position:center;
     width: 16px;
