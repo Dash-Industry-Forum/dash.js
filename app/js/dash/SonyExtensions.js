@@ -320,7 +320,7 @@ Dash.dependencies.SonyExtensions = function () {
                 }
             }
 
-            bytesAvailable = d.byteLength - pos;
+            bytesAvailable = d.byteLength;
 
             if (type !== "sidx") {
                 // Case 1

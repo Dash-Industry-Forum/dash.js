@@ -18,7 +18,7 @@
 MediaPlayer.dependencies.AbrController = function () {
     "use strict";
 
-    var autoSwitchBitrate = true,
+    var autoSwitchBitrate = false,
         qualityDict = {},
 
         getInternalQuality = function (type) {

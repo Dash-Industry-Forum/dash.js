@@ -27,15 +27,13 @@ Dash.dependencies.BaseURLExtensions = function () {
         // From YouTube player.  Reformatted for JSLint.
         parseSIDX = function (ab, ab_first_byte_offset) {
             var d = new DataView(ab),
+                sidx = {},
                 pos = 0,
+                offset,
+                time,
                 sidxEnd,
-                version,
-                timescale,
-                earliest_presentation_time,
-                first_offset,
-                reference_count,
-                references = [],
                 i,
+                ref_type,
                 ref_size,
                 ref_dur,
                 type,
@@ -68,56 +66,63 @@ Dash.dependencies.BaseURLExtensions = function () {
                 throw "sidx terminates after array buffer";
             }
 
-            version = d.getUint8(pos + 8);
+            sidx.version = d.getUint8(pos + 8);
             pos += 12;
 
             // skipped reference_ID(32)
-            timescale = d.getUint32(pos + 4, false);
+            sidx.timescale = d.getUint32(pos + 4, false);
             pos += 8;
 
-            if (version === 0) {
-                earliest_presentation_time = d.getUint32(pos, false);
-                first_offset = d.getUint32(pos + 4, false);
+            if (sidx.version === 0) {
+                sidx.earliest_presentation_time = d.getUint32(pos, false);
+                sidx.first_offset = d.getUint32(pos + 4, false);
                 pos += 8;
             } else {
                 // TODO(strobe): Overflow checks
-                earliest_presentation_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
+                sidx.earliest_presentation_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
                 //first_offset = utils.Math.to64BitNumber(d.getUint32(pos + 8, false), d.getUint32(pos + 12, false));
-                first_offset = (d.getUint32(pos + 8, false) << 32) + d.getUint32(pos + 12, false);
+                sidx.first_offset = (d.getUint32(pos + 8, false) << 32) + d.getUint32(pos + 12, false);
                 pos += 16;
             }
 
-            first_offset += sidxEnd + (ab_first_byte_offset || 0);
+            sidx.first_offset += sidxEnd + (ab_first_byte_offset || 0);
 
             // skipped reserved(16)
-            reference_count = d.getUint16(pos + 2, false);
+            sidx.reference_count = d.getUint16(pos + 2, false);
             pos += 4;
 
-            for (i = 0; i < reference_count; i += 1) {
+            sidx.references = [];
+            offset = sidx.first_offset;
+            time = sidx.earliest_presentation_time;
+
+            for (i = 0; i < sidx.reference_count; i += 1) {
                 ref_size = d.getUint32(pos, false);
+                ref_type = (ref_size >>> 31);
                 ref_size = ref_size & 0x7fffffff;
                 ref_dur = d.getUint32(pos + 4, false);
                 pos += 12;
-                references.push({
+                sidx.references.push({
                     'size': ref_size,
-                    'offset': first_offset,
+                    'type': ref_type,
+                    'offset': offset,
                     'duration': ref_dur,
-                    'time': earliest_presentation_time,
-                    'timescale': timescale
+                    'time': time,
+                    'timescale': sidx.timescale
                 });
-                first_offset += ref_size;
-                earliest_presentation_time += ref_dur;
+                offset += ref_size;
+                time += ref_dur;
             }
 
             if (pos !== sidxEnd) {
                 throw "Error: final pos " + pos + " differs from SIDX end " + sidxEnd;
             }
 
-            return references;
+            return sidx;
         },
 
         parseSegments = function (data, media, offset) {
             var parsed,
+                ref,
                 segments,
                 segment,
                 i,
@@ -126,17 +131,18 @@ Dash.dependencies.BaseURLExtensions = function () {
                 end;
 
             parsed = parseSIDX.call(this, data, offset);
+            ref = parsed.references;
             segments = [];
 
-            for (i = 0, len = parsed.length; i < len; i += 1) {
+            for (i = 0, len = ref.length; i < len; i += 1) {
                 segment = new Dash.vo.Segment();
-                segment.duration = parsed[i].duration;
+                segment.duration = ref[i].duration;
                 segment.media = media;
-                segment.startTime = parsed[i].time;
-                segment.timescale = parsed[i].timescale;
+                segment.startTime = ref[i].time;
+                segment.timescale = ref[i].timescale;
 
-                start = parsed[i].offset;
-                end = parsed[i].offset + parsed[i].size - 1;
+                start = ref[i].offset;
+                end = ref[i].offset + ref[i].size - 1;
                 segment.mediaRange = start + "-" + end;
 
                 segments.push(segment);
@@ -287,6 +293,9 @@ Dash.dependencies.BaseURLExtensions = function () {
                 i,
                 c,
                 loaded = false,
+                parsed,
+                ref,
+                loadMultiSidx = false,
                 self = this;
 
             self.debug.log("Searching for SIDX box.");
@@ -360,11 +369,49 @@ Dash.dependencies.BaseURLExtensions = function () {
                 self.debug.log("Found the SIDX box.  Start: " + range.start + " | End: " + range.end);
                 sidxBytes = data.slice(range.start, range.end);
 
-                parseSegments.call(self, sidxBytes, url, range.start).then(
-                    function (segments) {
-                        deferred.resolve(segments);
+                parsed = this.parseSIDX.call(this, sidxBytes, range.start);
+
+                // We need to check to see if we are loading multiple sidx.
+                // For now just check the first reference and assume they are all the same.
+                // TODO : Can the referenceTypes be mixed?
+                // TODO : Load them all now, or do it as needed?
+
+                ref = parsed.references;
+                if (ref !== null && ref !== undefined && ref.length > 0) {
+                    loadMultiSidx = (ref[0].type === 1);
+                }
+
+                if (loadMultiSidx) {
+                    self.debug.log("Initiate multiple SIDX load.");
+
+                    var j, len, ss, se, r, funcs = [], segs;
+
+                    for (j = 0, len = ref.length; j < len; j += 1) {
+                        ss = ref[j].offset;
+                        se = ref[j].offset + ref[j].size - 1;
+                        r = ss + "-" + se;
+
+                        funcs.push(this.loadSegments.call(self, url, r));
                     }
-                );
+
+                    Q.all(funcs).then(
+                        function (results) {
+                            segs = [];
+                            for (j = 0, len = results.length; j < len; j += 1) {
+                                segs = segs.concat(results[j]);
+                            }
+                            deferred.resolve(segs);
+                        }
+                    );
+
+                } else {
+                    self.debug.log("Parsing segments from SIDX.");
+                    parseSegments.call(self, sidxBytes, url, range.start).then(
+                        function (segments) {
+                            deferred.resolve(segments);
+                        }
+                    );
+                }
             }
 
             return deferred.promise;

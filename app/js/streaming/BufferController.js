@@ -90,13 +90,71 @@ MediaPlayer.dependencies.BufferController = function () {
             var self = this,
                 deferred = Q.defer(),
                 isLive = self.videoModel.getIsLive(),
-                quality = 0;
+                quality = 0,
+                startTime = 0,
+                now;
 
             if (isLive) {
                 self.debug.log("Gathering information for live.");
                 liveStartTime = self.manifestModel.getValue().availabilityStartTime;
 
-                self.indexHandler.getSegmentRequestForTime(0, quality, data).then(
+                if (liveStartTime !== null && liveStartTime !== undefined) {
+                    now = new Date();
+                    startTime = Math.floor(((now.getTime() - liveStartTime.getTime()) / 1000));
+                }
+
+                applyLiveSeekOffset.call(self);
+            }
+
+            deferred.resolve(isLive); // TODO : REMOVE
+
+            /*
+            if (isLive) {
+                self.debug.log("Gathering information for live.");
+                liveStartTime = self.manifestModel.getValue().availabilityStartTime;
+
+                if (liveStartTime !== null && liveStartTime !== undefined) {
+                    now = new Date();
+                    startTime = Math.floor(((now.getTime() - liveStartTime.getTime()) / 1000));
+                }
+                */
+                /*
+                self.indexHandler.getInitRequest(quality, data).then(
+                    function (request) {
+                        self.debug.log("Got live init.");
+                        self.fragmentLoader.load(request).then(
+                            function (response) {
+                                self.debug.log("Live request loaded, parsing...");
+                                self.fragmentExt.parseSIDX(response.data).then(
+                                    function (sidx) {
+                                        self.indexHandler.getSegmentRequestForTime(startTime, quality, data).then(
+                                            function (request2) {
+                                                self.debug.log("Got live request.");
+                                                self.fragmentLoader.load(request2).then(
+                                                    function (response2) {
+                                                        self.debug.log("Live request loaded, parsing...");
+                                                        self.fragmentExt.parseTFDT(response2.data).then(
+                                                            function (tfdt) {
+                                                                liveOffset = tfdt.base_media_decode_time / sidx.timescale;
+                                                                buffer.timestampOffset = -liveOffset;
+                                                                self.debug.log("Got live offset: " + liveOffset);
+                                                                applyLiveSeekOffset.call(self);
+                                                                deferred.resolve(isLive);
+                                                            }
+                                                        );
+                                                    }
+                                                );
+                                            }
+                                        );
+                                    }
+                                );
+                            }
+                        );
+                    }
+                );
+                */
+                /*
+                self.indexHandler.getSegmentRequestForTime(startTime, quality, data).then(
                     function (request) {
                         self.debug.log("Got live request.");
                         self.fragmentLoader.load(request).then(
@@ -105,6 +163,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                 self.fragmentExt.parseSIDX(response.data).then(
                                     function (sidx) {
                                         liveOffset = sidx.earliestPresentationTime / sidx.timescale;
+                                        //liveOffset = tfdt.base_media_decode_time / 30000;
                                         buffer.timestampOffset = -liveOffset;
                                         self.debug.log("Got live offset: " + liveOffset);
                                         applyLiveSeekOffset.call(self);
@@ -115,9 +174,11 @@ MediaPlayer.dependencies.BufferController = function () {
                         );
                     }
                 );
+
             } else {
                 deferred.resolve(isLive);
             }
+            */
 
             return deferred.promise;
         },
@@ -173,6 +234,11 @@ MediaPlayer.dependencies.BufferController = function () {
             this.debug.log("BufferController seek.");
             seeking = true;
             seekTarget = time;
+
+            if (liveOffset !== -1) {
+                seekTarget -= liveOffset;
+            }
+
             applyLiveSeekOffset.call(this);
 
             setSeek = true;
@@ -245,8 +311,10 @@ MediaPlayer.dependencies.BufferController = function () {
                                         // If the stream is a live stream and the first time bytes have been appended,
                                         // we need to update the current time of the video model...
                                         setCurrentTimeForLiveStream.call(self, time);
+                                        //setCurrentTimeForLiveStream.call(self, time + liveOffset);
 
                                         setSeek = false;
+                                        seekTarget = -1;
                                     }
                                 }
                                 finishValidation.call(self);
@@ -309,7 +377,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 this.debug.log("Loading the fragment for time: " + seekTarget);
                 promise = this.indexHandler.getSegmentRequestForTime(seekTarget, quality, data);
                 seeking = false;
-                seekTarget = -1;
+                //seekTarget = -1;
             } else {
                 this.debug.log("Loading the next fragment.");
                 promise = this.indexHandler.getNextSegmentRequest(quality, data);
@@ -339,7 +407,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             self.sourceBufferExt.getBufferLength(buffer, currentTime).then(
                 function (length) {
-                    //self.debug.log("Current " + type + " buffer length: " + length);
+                    self.debug.log("Current " + type + " buffer length: " + length);
                     if (state === LOADING && length < STALL_THRESHOLD) {
                         if (!stalled) {
                             self.debug.log("Stalling Buffer: " + type);
@@ -449,15 +517,12 @@ MediaPlayer.dependencies.BufferController = function () {
         errHandler: undefined,
 
         setup: function () {
-            var self = this;
+            var self = this,
+                isLive = self.videoModel.getIsLive();
 
-            self.manifestExt.getIsLive(self.manifestModel.getValue()).then(
-                function (isLive) {
-                    self.indexHandler.setIsLive(isLive);
-                }
-            );
+            self.indexHandler.setIsLive(isLive);
 
-            self.manifestExt.getDuration(self.manifestModel.getValue()).then(
+            self.manifestExt.getDuration(self.manifestModel.getValue(), isLive).then(
                 function (duration) {
                     self.indexHandler.setDuration(duration);
                 }

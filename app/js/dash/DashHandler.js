@@ -253,12 +253,7 @@ Dash.dependencies.DashHandler = function () {
                 }
             }
 
-            // TODO - Make this decision in a better way.
-            if (manifest.profiles.indexOf("http://xmlns.sony.net/metadata/mpeg/dash/profile/senvu/2012") !== -1) {
-                return this.sonyExt.loadSegments(url, range);
-            } else {
-                return this.baseURLExt.loadSegments(url, range);
-            }
+            return this.baseURLExt.loadSegments(url, range);
         },
 
         getSegments = function (representation) {
@@ -345,6 +340,7 @@ Dash.dependencies.DashHandler = function () {
             if (template.hasOwnProperty("timescale")) {
                 time = time / template.timescale;
             }
+            time = Math.floor(time);
 
             url = template.media;
 

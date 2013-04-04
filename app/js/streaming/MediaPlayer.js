@@ -126,6 +126,14 @@ MediaPlayer = function (aContext) {
             return autoPlay;
         },
 
+        getIsLive: function () {
+            return this.videoModel.getIsLive();
+        },
+
+        setIsLive: function (value) {
+            this.videoModel.setIsLive(value);
+        },
+
         getMetricsExt: function () {
             return this.metricsExt;
         },
@@ -172,12 +180,13 @@ MediaPlayer = function (aContext) {
             }
         },
 
-        attachSource: function (url) {
+        attachSource: function (mediaSource) {
             if (!initialized) {
                 throw "MediaPlayer not initialized!";
             }
 
-            source = url;
+            source = mediaSource.url;
+            this.setIsLive(mediaSource.isLive);
 
             // TODO : update
 
