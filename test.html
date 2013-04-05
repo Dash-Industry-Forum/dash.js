@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>MediaSource Test</title>
+    <meta name="description" content="" />
+
+    <script>
+        var ms,
+            sourceBuffer,
+            video;
+
+        function getParameterByName(name) {
+          name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+          var regexS = "[\\?&]" + name + "=([^&#]*)";
+          var regex = new RegExp(regexS);
+          var results = regex.exec(window.location.search);
+          if(results == null)
+            return "";
+          else
+            return decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+        function init() {
+            var mimetypeInput = document.getElementById("mimetype-source"),
+                codecInput = document.getElementById("codec-source"),
+                initInput = document.getElementById("init-source"),
+                fragInput = document.getElementById("frag-source");
+
+            var mimetype = getParameterByName("mimetype"),
+                codec = getParameterByName("codec"),
+                init = getParameterByName("initialization"),
+                frag = getParameterByName("fragment");
+
+            if (mimetype !== null && mimetype !== undefined && mimetype !== "")
+                mimetypeInput.value = mimetype;
+
+            if (codec !== null && codec !== undefined && codec !== "")
+                codecInput.value = codec;
+
+            if (init !== null && init !== undefined && init !== "")
+                initInput.value = init;
+
+            if (frag !== null && frag !== undefined && frag !== "")
+                fragInput.value = frag;
+        }
+
+        function load() {
+            console.log("START");
+            window.MediaSource = window.MediaSource || window.WebKitMediaSource;
+
+            ms = new MediaSource();
+
+            video = document.querySelector('video');
+            video.src = window.URL.createObjectURL(ms);
+
+            ms.addEventListener('webkitsourceopen', opened, false);
+            ms.addEventListener('webkitsourceclose', closed, false);
+        }
+
+        function opened() {
+            var codecInput = document.getElementById("codec-source"),
+                codecStr = codecInput.value,
+                typeInput = document.getElementById("mimetype-source"),
+                typeStr = typeInput.value,
+                value = typeStr + ';codecs="' + codecStr + '"';
+
+            console.log("OPENED");
+            console.log(value);
+
+            sourceBuffer = ms.addSourceBuffer(value);
+
+            loadInit();
+        }
+
+        function loadInit() {
+            var input = document.getElementById("init-source"),
+                url = input.value;
+
+            if (url !== "") {
+                console.log("LOAD INIT");
+                var req = new XMLHttpRequest();
+                req.responseType = "arraybuffer";
+                req.open("GET", url, true);
+
+                req.onload = function () {
+                    console.log("INIT DONE LOADING");
+                    sourceBuffer.append(new Uint8Array(req.response));
+                    loadFragment();
+                }
+
+                req.onerror = function () {
+                    alert("Could not load init.");
+                }
+
+                req.send();
+            } else {
+                loadFragment();
+            }
+        }
+
+        function loadFragment() {
+            var input = document.getElementById("frag-source"),
+                url = input.value;
+
+            if (url !== "") {
+                console.log("LOAD FRAGMENT");
+                var req = new XMLHttpRequest();
+                req.responseType = "arraybuffer";
+                req.open("GET", url, true);
+
+                req.onload = function () {
+                    console.log("FRAGMENT DONE LOADING");
+                    sourceBuffer.append(new Uint8Array(req.response));
+                    video.play();
+                }
+
+                req.onerror = function () {
+                    alert("Could not load fragment.");
+                }
+
+                req.send();
+            }
+        }
+
+        function closed() {
+            alert("MediaSource Closed.");
+        }
+    </script>
+</head>
+
+<body onload="init()">
+    <div>
+        MimeType: <input id="mimetype-source" style="width:290px;" value="video/mp4"/>
+    </div>
+    <div>
+        Codec: <input id="codec-source" style="width:290px;"/>
+    </div>
+    <div>
+        Init: <input id="init-source" style="width:290px;"/>
+    </div>
+    <div>
+        Fragment: <input id="frag-source" style="width:290px;"/>
+    </div>
+
+    <button type="button" onclick="load()">Load</button>
+
+    <video controls autoplay width="320" height="240"></video>
+</body>
+</html>
