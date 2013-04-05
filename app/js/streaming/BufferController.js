@@ -301,6 +301,19 @@ MediaPlayer.dependencies.BufferController = function () {
                             function (appended) {
                                 self.debug.log("Append complete: " + buffer.buffered.length);
                                 if (buffer.buffered.length > 0) {
+                                    //---
+                                    /*
+                                    var ranges = buffer.buffered,
+                                        i,
+                                        len;
+
+                                    self.debug.log("Number of buffered ranges: " + ranges.length);
+                                    for (i = 0, len = ranges.length; i < len; i += 1) {
+                                        self.debug.log("Buffered Range: " + ranges.start(i) + " - " + ranges.end(i));
+                                    }
+                                    */
+                                    //---
+
                                     if (setSeek) {
                                         if (seekTarget !== -1) {
                                             time = seekTarget;
@@ -408,6 +421,7 @@ MediaPlayer.dependencies.BufferController = function () {
             self.sourceBufferExt.getBufferLength(buffer, currentTime).then(
                 function (length) {
                     self.debug.log("Current " + type + " buffer length: " + length);
+                    self.debug.log("Video time: " + currentVideoTime);
                     if (state === LOADING && length < STALL_THRESHOLD) {
                         if (!stalled) {
                             self.debug.log("Stalling Buffer: " + type);

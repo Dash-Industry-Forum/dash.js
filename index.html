@@ -117,7 +117,10 @@
 
 <body onload="init()">
     <div class="container">
-        <h3 class="demo-panel-title">Dash IF JavaScript Player</h3>
+        <div class="row title-header">
+            <h3 class="demo-panel-title-header">Dash IF JavaScript Player</h3>
+            <img class="image" src="app/img/dp.png"/>
+        </div>
 
         <div class="row">
             <div class="span7">
@@ -125,7 +128,7 @@
             </div>
             <div class="span3">
                 <select id="sources" class="span3">
-                    <option value="ipvidnet" selected="selected">ipvidnet</option>
+                    <option value="ipvidnet" selected="selected">Path 1</option>
 
                     <option value="archive">Live Archive</option>
                     <option value="live">Live</option>
@@ -234,8 +237,18 @@
         </div>
 
         <div class="row" style="margin-top: 10px;">
-            <div class="span12 tooltip-box" style="height:185px;">
-                <h3 class="tooltip-box-header" style="margin-left: 10px;">Buffer</h3>
+            <div id="graph-header" class="span12 tooltip-box tooltip-box-top">
+               <h3 class="tooltip-box-header" style="margin-left: 10px;">Buffer</h3>
+               <div style="padding-top: 10px; padding-right: 10px;">
+                   <div class="toggle" style="float: right; ">
+                        <label class="toggle-radio" for="hide-graph">HIDE</label>
+                        <input type="radio" name="graph-toggle" id="hide-graph" value="true">
+                        <label class="toggle-radio" for="show-graph">SHOW</label>
+                        <input type="radio" name="graph-toggle" id="show-graph" value="false" checked="true">
+                    </div>
+               </div>
+            </div>
+            <div id="graph-body" class="span12 tooltip-box tooltip-box-bottom" style="height:185px;">
                 <div id="buffer-placeholder" class="graph-placeholder">
                     <div id="buffer-container" class="display-graph"></div>
                 </div>

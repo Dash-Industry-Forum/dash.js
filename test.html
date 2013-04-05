@@ -113,6 +113,7 @@
                     console.log("FRAGMENT DONE LOADING");
                     sourceBuffer.append(new Uint8Array(req.response));
                     video.play();
+                    video.currentTime = sourceBuffer.buffered.start(0);
                 }
 
                 req.onerror = function () {

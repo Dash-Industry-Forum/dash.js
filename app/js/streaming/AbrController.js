@@ -18,7 +18,7 @@
 MediaPlayer.dependencies.AbrController = function () {
     "use strict";
 
-    var autoSwitchBitrate = false,
+    var autoSwitchBitrate = true,
         qualityDict = {},
 
         getInternalQuality = function (type) {
@@ -132,8 +132,6 @@ MediaPlayer.dependencies.AbrController = function () {
 
                                         if (newQuality !== 999 && newQuality !== undefined) {
                                             quality = newQuality;
-                                            setInternalQuality(type, quality);
-                                            self.debug.log("New quality of " + quality);
                                         }
 
                                         self.manifestExt.getRepresentationCount(data).then(
@@ -146,6 +144,9 @@ MediaPlayer.dependencies.AbrController = function () {
                                                 if (quality >= max) {
                                                     quality = max - 1;
                                                 }
+
+                                                setInternalQuality(type, quality);
+                                                self.debug.log("New quality of " + quality);
 
                                                 deferred.resolve(quality);
                                             }

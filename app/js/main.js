@@ -78,6 +78,20 @@ function init() {
     "use strict";
     $(document).ready(
         function () {
+        	$("#hide-graph")
+    			.click(
+					function (event) {
+						$("#graph-body").hide();
+						$("#graph-header").addClass("tooltip-box-bottom");
+					}
+    			);
+    		$("#show-graph")
+    			.click(
+					function (event) {
+						$("#graph-body").show();
+						$("#graph-header").removeClass("tooltip-box-bottom");
+					}
+				);
             $("#video-abr-up")
                 .click(
                     function (event) {
@@ -125,6 +139,9 @@ function init() {
     );
 
     buildBufferGraph();
+
+    $("#graph-body").hide();
+	$("#graph-header").addClass("tooltip-box-bottom");
 
     Q.longStackJumpLimit = 0;
 }

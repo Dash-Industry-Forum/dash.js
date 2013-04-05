@@ -24,6 +24,20 @@ p {
     text-align: left;
 }
 
+.demo-panel-title-header {
+    float: left;
+    padding-top: 3px;
+}
+
+.image {
+    float: right;
+    height: 50px;
+}
+
+.title-header {
+    margin-left: 0px;
+}
+
 .dash-link {
     bottom: 0px;
     right: 0px;
@@ -60,9 +74,25 @@ p {
 
 .tooltip-box {
     background-color: #FFFFFF;
-    border: 2px solid #dce4ec;
-    border-radius: 6px;
+    /*border: 2px solid #dce4ec;*/
+    /*border-radius: 6px;*/
     position: relative;
+    border-left: 2px solid #dce4ec;
+    border-right: 2px solid #dce4ec;
+}
+
+.tooltip-box-top {
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    
+    border-top: 2px solid #dce4ec;    
+}
+
+.tooltip-box-bottom {
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    
+    border-bottom: 2px solid #dce4ec;
 }
 /*
 .tooltip-box:before {
@@ -134,7 +164,7 @@ p {
 .graph-placeholder {
     position: absolute;
     right: 5px;
-    left: 70px;
+    left: 5px;
     top: 5px;
     bottom: 5px;
 }
