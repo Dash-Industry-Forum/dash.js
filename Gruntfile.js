@@ -1,39 +1,36 @@
 module.exports = function(grunt) {
   grunt.initConfig({
     connect: {
-      server: {
-        base: ".",
-        port: 8000
-      }
+      default_options: {}
     },
     watch: {},
     jshint: {
       all: [
-        "app/js/streaming/MediaPlayer.js",
-        "app/js/streaming/Context.js",
-        "app/js/streaming/Capabilities.js",
-        "app/js/streaming/Debug.js",
-        "app/js/streaming/VideoModel.js",
-        "app/js/streaming/vo/SegmentRequest.js",
-        "app/js/streaming/ManifestLoader.js",
-        "app/js/streaming/MediaSourceExtensions.js",
-        "app/js/streaming/SourceBufferExtensions.js",
-        "app/js/streaming/BufferExtensions.js",
-        "app/js/streaming/FragmentController.js",
-        "app/js/streaming/AbrController.js",
-        "app/js/streaming/FragmentLoader.js",
-        "app/js/streaming/Stream.js",
-        "app/js/streaming/BufferController.js",
-        "app/js/streaming/rules/BandwidthRule.js",
-        "app/js/streaming/rules/BaseRulesCollection.js",
+        "dash.js/app/js/streaming/MediaPlayer.js",
+        "dash.js/app/js/streaming/Context.js",
+        "dash.js/app/js/streaming/Capabilities.js",
+        "dash.js/app/js/streaming/Debug.js",
+        "dash.js/app/js/streaming/VideoModel.js",
+        "dash.js/app/js/streaming/vo/SegmentRequest.js",
+        "dash.js/app/js/streaming/ManifestLoader.js",
+        "dash.js/app/js/streaming/MediaSourceExtensions.js",
+        "dash.js/app/js/streaming/SourceBufferExtensions.js",
+        "dash.js/app/js/streaming/BufferExtensions.js",
+        "dash.js/app/js/streaming/FragmentController.js",
+        "dash.js/app/js/streaming/AbrController.js",
+        "dash.js/app/js/streaming/FragmentLoader.js",
+        "dash.js/app/js/streaming/Stream.js",
+        "dash.js/app/js/streaming/BufferController.js",
+        "dash.js/app/js/streaming/rules/BandwidthRule.js",
+        "dash.js/app/js/streaming/rules/BaseRulesCollection.js",
 
-        "app/js/dash/Dash.js",
-        "app/js/dash/DashContext.js",
-        "app/js/dash/vo/Segment.js",
-        "app/js/dash/DashParser.js",
-        "app/js/dash/DashHandler.js",
-        "app/js/dash/BaseURLExtensions.js",
-        "app/js/dash/DashManifestExtensions.js"],
+        "dash.js/app/js/dash/Dash.js",
+        "dash.js/app/js/dash/DashContext.js",
+        "dash.js/app/js/dash/vo/Segment.js",
+        "dash.js/app/js/dash/DashParser.js",
+        "dash.js/app/js/dash/DashHandler.js",
+        "dash.js/app/js/dash/BaseURLExtensions.js",
+        "dash.js/app/js/dash/DashManifestExtensions.js"],
 
       options: {
         browser: true,
@@ -48,105 +45,54 @@ module.exports = function(grunt) {
       }
     },
     jasmine: {
-      tests: {
-        src: [
-          "app/js/streaming/MediaPlayer.js",
-          "app/js/streaming/MetricsList.js",
-          "app/js/streaming/Context.js",
-          "app/js/streaming/Capabilities.js",
-          "app/js/streaming/Debug.js",
-          "app/js/streaming/VideoModel.js",
-          "app/js/streaming/vo/SegmentRequest.js",
-          "app/js/streaming/ManifestLoader.js",
-          "app/js/streaming/MediaSourceExtensions.js",
-          "app/js/streaming/SourceBufferExtensions.js",
-          "app/js/streaming/BufferExtensions.js",
-          "app/js/streaming/FragmentController.js",
-          "app/js/streaming/AbrController.js",
-          "app/js/streaming/FragmentLoader.js",
-          "app/js/streaming/Stream.js",
-          "app/js/streaming/BufferController.js",
-          "app/js/streaming/rules/BandwidthRule.js",
-          "app/js/streaming/rules/BaseRulesCollection.js",
+      src: [
+        "dash.js/app/js/streaming/MediaPlayer.js",
+        "dash.js/app/js/streaming/MetricsList.js",
+        "dash.js/app/js/streaming/Context.js",
+        "dash.js/app/js/streaming/Capabilities.js",
+        "dash.js/app/js/streaming/Debug.js",
+        "dash.js/app/js/streaming/VideoModel.js",
+        "dash.js/app/js/streaming/vo/SegmentRequest.js",
+        "dash.js/app/js/streaming/ManifestLoader.js",
+        "dash.js/app/js/streaming/MediaSourceExtensions.js",
+        "dash.js/app/js/streaming/SourceBufferExtensions.js",
+        "dash.js/app/js/streaming/BufferExtensions.js",
+        "dash.js/app/js/streaming/FragmentController.js",
+        "dash.js/app/js/streaming/AbrController.js",
+        "dash.js/app/js/streaming/FragmentLoader.js",
+        "dash.js/app/js/streaming/Stream.js",
+        "dash.js/app/js/streaming/BufferController.js",
+        "dash.js/app/js/streaming/rules/BandwidthRule.js",
+        "dash.js/app/js/streaming/rules/BaseRulesCollection.js",
 
-          "app/js/dash/Dash.js",
-          "app/js/dash/DashContext.js",
-          "app/js/dash/vo/Segment.js",
-          "app/js/dash/DashParser.js",
-          "app/js/dash/DashHandler.js",
-          "app/js/dash/BaseURLExtensions.js",
-          "app/js/dash/FragmentExtensions.js",
-          "app/js/dash/DashManifestExtensions.js"],
+        "dash.js/app/js/dash/Dash.js",
+        "dash.js/app/js/dash/DashContext.js",
+        "dash.js/app/js/dash/vo/Segment.js",
+        "dash.js/app/js/dash/DashParser.js",
+        "dash.js/app/js/dash/DashHandler.js",
+        "dash.js/app/js/dash/BaseURLExtensions.js",
+        "dash.js/app/js/dash/FragmentExtensions.js",
+        "dash.js/app/js/dash/DashManifestExtensions.js"],
 
-        options: {
-          host: 'http://127.0.0.1:8000/',
-          specs: [
-            './test/js/dash/DashParserSuite.js',
-            './test/js/streaming/MediaPlayerSuite.js',
-            './test/js/streaming/SourceBufferExtensionsSuite.js'],
-          helpers: './test/js/helper/matchers.js',
-          vendor: [
-            "app/lib/xml2json.js",
-            "app/lib/objectiron.js",
-            "app/lib/q.js",
-            "app/lib/dijon.js",
-          ],
-          junit: {
-              path: grunt.option('jsunit-path'),
-              consolidate: true
-          }
-        }
-      }
-    },
-	istanbul: {
-      tests: {
-        src: [
-          "app/js/streaming/MediaPlayer.js",
-          "app/js/streaming/MetricsList.js",
-          "app/js/streaming/Context.js",
-          "app/js/streaming/Capabilities.js",
-          "app/js/streaming/Debug.js",
-          "app/js/streaming/VideoModel.js",
-          "app/js/streaming/vo/SegmentRequest.js",
-          "app/js/streaming/ManifestLoader.js",
-          "app/js/streaming/MediaSourceExtensions.js",
-          "app/js/streaming/SourceBufferExtensions.js",
-          "app/js/streaming/BufferExtensions.js",
-          "app/js/streaming/FragmentController.js",
-          "app/js/streaming/AbrController.js",
-          "app/js/streaming/FragmentLoader.js",
-          "app/js/streaming/Stream.js",
-          "app/js/streaming/BufferController.js",
-          "app/js/streaming/rules/BandwidthRule.js",
-          "app/js/streaming/rules/BaseRulesCollection.js",
-
-          "app/js/dash/Dash.js",
-          "app/js/dash/DashContext.js",
-          "app/js/dash/vo/Segment.js",
-          "app/js/dash/DashParser.js",
-          "app/js/dash/DashHandler.js",
-          "app/js/dash/BaseURLExtensions.js",
-          "app/js/dash/FragmentExtensions.js",
-          "app/js/dash/DashManifestExtensions.js"],
-
-        options: {
-          host: 'http://127.0.0.1:8000/',
-          specs: [
-            './test/js/dash/DashParserSuite.js',
-            './test/js/streaming/MediaPlayerSuite.js',
-            './test/js/streaming/SourceBufferExtensionsSuite.js'],
-          helpers: './test/js/helper/matchers.js',
-          vendor: [
-            "app/lib/xml2json.js",
-            "app/lib/objectiron.js",
-            "app/lib/q.js",
-            "app/lib/dijon.js",
-          ],
-          junit: {
-              path: grunt.option('jsunit-path'),
-              consolidate: true
-          }
-        }
+      options: {
+        host: 'http://127.0.0.1:8000/',
+        specs: [
+          './test/js/dash/HandlerSuite.js',
+          './test/js/dash/DashManifestExtensionsSuite.js'],
+        vendor: [
+          "dash.js/app/lib/jquery/js/jquery-1.8.3.min.js",
+          "dash.js/app/lib/jquery/js/jquery-ui-1.9.2.custom.min.js",
+          "dash.js/app/lib/q.min.js",
+          "dash.js/app/lib/xml2json.js",
+          "dash.js/app/lib/objectiron.js",
+          "dash.js/app/lib/dijon.js"],
+        template : require('grunt-template-jasmine-istanbul'),
+        templateOptions: {
+          coverage: 'reports/coverage.json',
+          report: 'reports/coverage'},
+        junit: {
+            path: grunt.option('jsunit-path'),
+            consolidate: true}
       }
     }
   });
@@ -156,8 +102,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-istanbul');
 
   // Define tasks
-  grunt.registerTask('default', ['connect','jasmine','jshint','istanbul']);
+  grunt.registerTask('default', ['connect','jshint','jasmine']);
 };
