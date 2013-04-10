@@ -16,6 +16,7 @@
 	<script src="../app/lib/q.min.js"></script>
 	<script src="../app/lib/xml2json.js"></script>
 	<script src="../app/lib/objectiron.js"></script>
+	<script src="../app/lib/dijon.js"></script>
 	
 	<!-- Player -->
 	
@@ -33,11 +34,19 @@
 	<script src="../app/js/streaming/FragmentLoader.js"></script>
 	<script src="../app/js/streaming/Stream.js"></script>
 	<script src="../app/js/streaming/BufferController.js"></script>
+	<script src="../app/js/streaming/Context.js"></script>
+	
+
 	
 	<!-- Dash -->
 	
 	<script src="../app/js/dash/Dash.js"></script>
 	<script src="../app/js/dash/DashParser.js"></script>
+	<script src="../app/js/dash/DashHandler.js"></script>
+	<script src="../app/js/dash/DashManifestExtensions.js"></script>
+	<script src="../app/js/dash/DashContext.js"></script>
+	<script src="../app/js/dash/BaseURLExtensions.js"></script>
+	
 	
 	<!-- Unit Testing -->
 	
@@ -45,22 +54,24 @@
 	<script src="lib/jasmine-1.3.1/jasmine-html.js"></script>
 	
 	<!-- TESTS -->
-	<script src="js/streaming/ParserSuite.js"></script>
-	<!--
+<!--	<script src="js/streaming/ParserSuite.js"></script>
+	
 	<script src="js/streaming/MediaPlayerSuite.js"></script>
 	<script src="js/streaming/SourceBufferExtensionsSuite.js"></script>
 	<script src="js/streaming/BufferLengthControllerSuite.js"></script>
 	<script src="js/streaming/CapabilitiesSuite.js"></script>
-	<script src="js/streaming/MediaSourceExtensionsSuite.js"></script>
-	<script src="js/streaming/ParserSuite.js"></script>
-	<script src="js/streaming/LoaderSuite.js"></script>
-	<script src="js/streaming/ManifestLoaderSuite.js"></script>
-	-->
+	<script src="js/streaming/MediaSourceExtensionsSuite.js"></script>-->
+	
+	<script src="js/streaming/HandlerSuite.js"></script>
+	<script src="js/streaming/ParserSuite.js"></script>	
+	<script src="js/streaming/DashManifestExtensionsSuite.js"></script>
+<!--	<script src="js/streaming/LoaderSuite.js"></script>
+	<script src="js/streaming/ManifestLoaderSuite.js"></script>-->
+	
 	
 	<script type="text/javascript">
 		var jasmineEnv = jasmine.getEnv();
 		jasmineEnv.updateInterval = 250;
-		
 		var htmlReporter = new jasmine.HtmlReporter();
 		jasmineEnv.addReporter(htmlReporter);
 		
