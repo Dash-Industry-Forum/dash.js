@@ -1,3 +1,7 @@
+/*
+ *
+ */
+
  describe("Manifest Extension Test Suite", function(){
  	var baseUrl, manExtn;
  	
