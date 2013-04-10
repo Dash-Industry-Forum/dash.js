@@ -18,14 +18,8 @@
 Dash.dependencies.BaseURLExtensions = function () {
     "use strict";
 
-    var url,
-        range,
-        searching = false,
-        bytesLoaded = 0,
-        bytesToLoad = 1500,
-
         // From YouTube player.  Reformatted for JSLint.
-        parseSIDX = function (ab, ab_first_byte_offset) {
+    var parseSIDX = function (ab, ab_first_byte_offset) {
             var d = new DataView(ab),
                 sidx = {},
                 pos = 0,
@@ -152,11 +146,10 @@ Dash.dependencies.BaseURLExtensions = function () {
             return Q.when(segments);
         },
 
-        findInit = function (data) {
+        findInit = function (data, info) {
             var deferred = Q.defer(),
                 start,
                 end,
-                range,
                 d = new DataView(data),
                 pos = 0,
                 type = "",
@@ -166,6 +159,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 c,
                 request,
                 loaded = false,
+                irange,
                 self = this;
 
             self.debug.log("Searching for initialization.");
@@ -196,8 +190,8 @@ Dash.dependencies.BaseURLExtensions = function () {
                 //        Throw error is no moov is found in the entire file.
                 //        Protection from loading the entire file?
                 self.debug.log("Loading more bytes to find initialization.");
-                range.start = 0;
-                range.end = bytesLoaded + bytesToLoad;
+                info.range.start = 0;
+                info.range.end = info.bytesLoaded + info.bytesToLoad;
 
                 request = new XMLHttpRequest();
 
@@ -209,7 +203,7 @@ Dash.dependencies.BaseURLExtensions = function () {
 
                 request.onload = function () {
                     loaded = true;
-                    bytesLoaded = range.end;
+                    info.bytesLoaded = info.range.end;
                     findInit.call(self, request.response).then(
                         function (segments) {
                             deferred.resolve(segments);
@@ -222,18 +216,18 @@ Dash.dependencies.BaseURLExtensions = function () {
                 };
 
                 request.responseType = "arraybuffer";
-                request.open("GET", url);
-                request.setRequestHeader("Range", "bytes=" + range.start + "-" + range.end);
+                request.open("GET", info.url);
+                request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
                 request.send(null);
             } else {
                 // Case 2
                 // We have the entire range, so continue.
                 start = pos - 8;
                 end = start + size - 1;
-                range = start + "-" + end;
+                irange = start + "-" + end;
 
-                self.debug.log("Found the initialization.  Range: " + range);
-                deferred.resolve(range);
+                self.debug.log("Found the initialization.  Range: " + irange);
+                deferred.resolve(irange);
             }
 
             return deferred.promise;
@@ -243,14 +237,19 @@ Dash.dependencies.BaseURLExtensions = function () {
             var deferred = Q.defer(),
                 request = new XMLHttpRequest(),
                 loaded = false,
-                self = this;
-
-            url = media;
-            range = {};
+                self = this,
+                info = {
+                    url: media,
+                    range: {},
+                    searching: false,
+                    bytesLoaded: 0,
+                    bytesToLoad: 1500,
+                    request: request
+                };
 
             self.debug.log("Start searching for initialization.");
-            range.start = 0;
-            range.end = bytesToLoad;
+            info.range.start = 0;
+            info.range.end = info.bytesToLoad;
 
             request.onloadend = function (e) {
                 if (!loaded) {
@@ -260,8 +259,8 @@ Dash.dependencies.BaseURLExtensions = function () {
 
             request.onload = function () {
                 loaded = true;
-                bytesLoaded = range.end;
-                findInit.call(self, request.response).then(
+                info.bytesLoaded = info.range.end;
+                findInit.call(self, request.response, info).then(
                     function (range) {
                         deferred.resolve(range);
                     }
@@ -273,15 +272,15 @@ Dash.dependencies.BaseURLExtensions = function () {
             };
 
             request.responseType = "arraybuffer";
-            request.open("GET", url);
-            request.setRequestHeader("Range", "bytes=" + range.start + "-" + range.end);
+            request.open("GET", info.url);
+            request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
             request.send(null);
-            self.debug.log("Perform init search: " + url);
+            self.debug.log("Perform init search: " + info.url);
 
             return deferred.promise;
         },
 
-        findSIDX = function (data) {
+        findSIDX = function (data, info) {
             var deferred = Q.defer(),
                 d = new DataView(data),
                 request = new XMLHttpRequest(),
@@ -299,7 +298,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 self = this;
 
             self.debug.log("Searching for SIDX box.");
-            self.debug.log(bytesLoaded + " bytes loaded.");
+            self.debug.log(info.bytesLoaded + " bytes loaded.");
 
             while (type !== "sidx" && pos < d.byteLength) {
                 size = d.getUint32(pos); // subtract 8 for including the size and type
@@ -327,14 +326,14 @@ Dash.dependencies.BaseURLExtensions = function () {
                 //        Throw error is no sidx is found in the entire file.
                 //        Protection from loading the entire file?
                 throw ("Could not find SIDX box!");
-            } else if (bytesAvailable < size) {
+            } else if (bytesAvailable < (size - 8)) {
                 // Case 2
                 // We don't have the entire box.
                 // Increase the number of bytes to read and load again.
                 self.debug.log("Found SIDX but we don't have all of it.");
 
-                range.start = 0;
-                range.end = bytesLoaded + (size - bytesAvailable);
+                info.range.start = 0;
+                info.range.end = info.bytesLoaded + (size - bytesAvailable);
 
                 request.onloadend = function (e) {
                     if (!loaded) {
@@ -344,8 +343,8 @@ Dash.dependencies.BaseURLExtensions = function () {
 
                 request.onload = function () {
                     loaded = true;
-                    bytesLoaded = range.end;
-                    findSIDX.call(self, request.response).then(
+                    info.bytesLoaded = info.range.end;
+                    findSIDX.call(self, request.response, info).then(
                         function (segments) {
                             deferred.resolve(segments);
                         }
@@ -357,19 +356,19 @@ Dash.dependencies.BaseURLExtensions = function () {
                 };
 
                 request.responseType = "arraybuffer";
-                request.open("GET", url);
-                request.setRequestHeader("Range", "bytes=" + range.start + "-" + range.end);
+                request.open("GET", info.url);
+                request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
                 request.send(null);
             } else {
                 // Case 3
                 // We have the entire box, so parse it and continue.
-                range.start = pos - 8;
-                range.end = range.start + size;
+                info.range.start = pos - 8;
+                info.range.end = info.range.start + size;
 
-                self.debug.log("Found the SIDX box.  Start: " + range.start + " | End: " + range.end);
-                sidxBytes = data.slice(range.start, range.end);
+                self.debug.log("Found the SIDX box.  Start: " + info.range.start + " | End: " + info.range.end);
+                sidxBytes = data.slice(info.range.start, info.range.end);
 
-                parsed = this.parseSIDX.call(this, sidxBytes, range.start);
+                parsed = this.parseSIDX.call(this, sidxBytes, info.range.start);
 
                 // We need to check to see if we are loading multiple sidx.
                 // For now just check the first reference and assume they are all the same.
@@ -391,7 +390,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                         se = ref[j].offset + ref[j].size - 1;
                         r = ss + "-" + se;
 
-                        funcs.push(this.loadSegments.call(self, url, r));
+                        funcs.push(this.loadSegments.call(self, info.url, r));
                     }
 
                     Q.all(funcs).then(
@@ -406,7 +405,7 @@ Dash.dependencies.BaseURLExtensions = function () {
 
                 } else {
                     self.debug.log("Parsing segments from SIDX.");
-                    parseSegments.call(self, sidxBytes, url, range.start).then(
+                    parseSegments.call(self, sidxBytes, info.url, info.range.start).then(
                         function (segments) {
                             deferred.resolve(segments);
                         }
@@ -422,22 +421,27 @@ Dash.dependencies.BaseURLExtensions = function () {
                 request = new XMLHttpRequest(),
                 parts,
                 loaded = false,
-                self = this;
-
-            url = media;
-            range = {};
+                self = this,
+                info = {
+                    url: media,
+                    range: {},
+                    searching: false,
+                    bytesLoaded: 0,
+                    bytesToLoad: 1500,
+                    request: request
+                };
 
             // We might not know exactly where the sidx box is.
             // Load the first n bytes (say 1500) and look for it.
             if (theRange === null) {
                 self.debug.log("No known range for SIDX request.");
-                searching = true;
-                range.start = 0;
-                range.end = bytesToLoad;
+                info.searching = true;
+                info.range.start = 0;
+                info.range.end = info.bytesToLoad;
             } else {
                 parts = theRange.split("-");
-                range.start = parseFloat(parts[0]);
-                range.end = parseFloat(parts[1]);
+                info.range.start = parseFloat(parts[0]);
+                info.range.end = parseFloat(parts[1]);
             }
 
             request.onloadend = function (e) {
@@ -451,15 +455,15 @@ Dash.dependencies.BaseURLExtensions = function () {
 
                 // If we didn't know where the SIDX box was, we have to look for it.
                 // Iterate over the data checking out the boxes to find it.
-                if (searching) {
-                    bytesLoaded = range.end;
-                    findSIDX.call(self, request.response).then(
+                if (info.searching) {
+                    info.bytesLoaded = info.range.end;
+                    findSIDX.call(self, request.response, info).then(
                         function (segments) {
                             deferred.resolve(segments);
                         }
                     );
                 } else {
-                    parseSegments.call(self, request.response, url, range.start).then(
+                    parseSegments.call(self, request.response, info.url, info.range.start).then(
                         function (segments) {
                             deferred.resolve(segments);
                         }
@@ -472,10 +476,10 @@ Dash.dependencies.BaseURLExtensions = function () {
             };
 
             request.responseType = "arraybuffer";
-            request.open("GET", url);
-            request.setRequestHeader("Range", "bytes=" + range.start + "-" + range.end);
+            request.open("GET", info.url);
+            request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
             request.send(null);
-            self.debug.log("Perform SIDX load: " + url);
+            self.debug.log("Perform SIDX load: " + info.url);
 
             return deferred.promise;
         };

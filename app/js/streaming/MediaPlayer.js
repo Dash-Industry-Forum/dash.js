@@ -180,13 +180,12 @@ MediaPlayer = function (aContext) {
             }
         },
 
-        attachSource: function (mediaSource) {
+        attachSource: function (url) {
             if (!initialized) {
                 throw "MediaPlayer not initialized!";
             }
 
-            source = mediaSource.url;
-            this.setIsLive(mediaSource.isLive);
+            source = url;
 
             // TODO : update
 

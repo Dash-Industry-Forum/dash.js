@@ -118,13 +118,26 @@
 <body onload="init()">
     <div class="container">
         <div class="row title-header">
+            <h4>Compatibility Notes:</h4>
+            <div>
+                Chrome is the only browser supported.<br/>
+                Use the most up-to-date version of Chrome for the best compatibility.<br/>
+                Many of the streams in the dropdown box only work in the developer channel or Canary versions of Chrome.<br/>
+            </div>
+        </div>
+
+        <div class="row title-header">
             <h3 class="demo-panel-title-header">Dash IF JavaScript Player</h3>
             <img class="image" src="app/img/dp.png"/>
         </div>
 
         <div class="row">
             <div class="span7">
-                <input class="span7" type="text" id="custom-source" placeholder="MPD Location"/>
+                <input style="width: 75%; float: left;" type="text" id="custom-source" placeholder="MPD Location"/>
+                <label class="checkbox span1" for="live-checkbox" style="margin-top: 10px;">
+                    <input type="checkbox" value="" id="live-checkbox"/>
+                    Live
+                </label>
             </div>
             <div class="span3">
                 <select id="sources" class="span3">
@@ -253,17 +266,30 @@
             </div>
         </div>
 
-        <div class="btn-toolbar" style="margin-top: 10px; width: 100%; margin-left: 2px;">
-            <div class="btn-group">
-                <a id="debug-log-btn" class="btn btn-primary active" href="#">Debug Console</a>
-                <a id="video-metrics-btn" class="btn btn-primary" href="#">Video Metrics</a>
-                <a id="audio-metrics-btn" class="btn btn-primary" href="#">Audio Metrics</i></a>
-                <a id="release-notes-btn" class="btn btn-primary" href="#">Release Notes</a>
-            </div>
-        </div>
 
-        <div class="row" style="margin-top: -10px;">
-            <div class="span12 pill-box" style="height:500px;">
+
+        <div class="row" style="margin-top: 10px;">
+            <div id="debug-header" class="span12 tooltip-box tooltip-box-top">
+                <h3 class="tooltip-box-header" style="margin-left: 10px;">Debug</h3>
+                <div style="padding-top: 10px; padding-right: 10px;">
+                    <div class="toggle" style="float: right; ">
+                        <label class="toggle-radio" for="hide-debug">HIDE</label>
+                        <input type="radio" name="debug-toggle" id="hide-debug" value="true">
+                        <label class="toggle-radio" for="show-debug">SHOW</label>
+                        <input type="radio" name="graph-toggle" id="show-debug" value="false" checked="true">
+                    </div>
+               </div>
+            </div>
+            <div id="debug-body" class="span12 tooltip-debug-box tooltip-box-bottom">
+                <div class="btn-toolbar" style="float: left; padding-left: 10px;">
+                    <div class="btn-group">
+                        <a id="debug-log-btn" class="btn btn-primary active" href="#">Debug Console</a>
+                        <a id="video-metrics-btn" class="btn btn-primary" href="#">Video Metrics</a>
+                        <a id="audio-metrics-btn" class="btn btn-primary" href="#">Audio Metrics</i></a>
+                        <a id="release-notes-btn" class="btn btn-primary" href="#">Release Notes</a>
+                    </div>
+                </div>
+            <div style="width: 900px;">
                 <div id="debug-log-tab" class="tab-content">
                     <div class="btn btn-primary" id="debug-clear" style="float: left; margin-right: 10px;">Clear</div>
 
@@ -274,25 +300,38 @@
 
                     <input type="text" id="filter-source" placeholder="filter" style="float: right; margin-right: 20px;"/>
 
-                    <div id="debug_log" style="height: 425px; width: 920px; overflow: auto; clear: both;">
+                    <div id="debug_log" style="height: 425px; width: 900px; overflow: auto; clear: both;">
                         <dt>Waiting...</dt>
                     </div>
                 </div>
                 <div id="video-metrics-tree-tab" class="tab-content">
                     <div class="btn btn-primary" id="videoMetricsUpdateButton">Update</div>
-                    <div id="videoMetricsTree" style="height: 425px; width: 920px;"></div>
+                    <div id="videoMetricsTree" style="height: 425px; width: 900px;"></div>
                 </div>
                 <div id="audio-metrics-tree-tab" class="tab-content">
                     <div class="btn btn-primary" id="audioMetricsUpdateButton">Update</div>
-                    <div id="audioMetricsTree" style="height: 425px; width: 920px;"></div>
+                    <div id="audioMetricsTree" style="height: 425px; width: 900px;"></div>
                 </div>
-                <div id="release-notes-tab" class="tab-content" style="height: 480px; width: 910px;">
+                <div id="release-notes-tab" class="tab-content" style="height: 500px">
                     <div>
                         <b>Known Issues</b><br/>
                         Erratic playback at higher bitrates.<br/>
                         Streams using high profile codecs may not play properly.<br/>
                         You may get the error "Media Source Close" when attempting to switch bitrates.<br/>
                         Only streams with segmentAlignment="true" will work with abr.
+                    </div>
+
+                    <div>
+                        <b>Release Notes v0.2.1</b><br/>
+                        Add support for SegmentBase manifests with reference_type = 1.  (Multi-level SIDX.)<br/>
+                        Finish externalizing live toggle.  The player no longer attempts to discover liveness from the manifest.<br/>
+                        Add a live toggle to the main UI.<br/>
+                        Fix an issue where a custom value in the text input was ignored.<br/>
+                        Fixed some bugs and clean up the SIDX loading.<br/>
+                        Clean up some of the UI.<br/>
+                        Added some new MediaSource test pages.<br/>
+                        Expanded test.html to work with byte ranges.<br/>
+                        Redid how live works again to support particular streams.  Live still needs more work.
                     </div>
 
                     <div>
@@ -395,6 +434,8 @@
                     </div>
                 </div>
             </div>
+            </div>
+
         </div>
     </div>
 </body>

@@ -78,6 +78,20 @@ function init() {
     "use strict";
     $(document).ready(
         function () {
+        	$("#hide-debug")
+        		.click(
+					function (event) {
+						$("#debug-body").hide();
+						$("#debug-header").addClass("tooltip-box-bottom");
+					}
+				);
+        	$("#show-debug")
+        		.click(
+    				function (event) {
+    					$("#debug-body").show();
+    					$("#debug-header").removeClass("tooltip-box-bottom");
+    				}
+				);
         	$("#hide-graph")
     			.click(
 					function (event) {
@@ -142,6 +156,9 @@ function init() {
 
     $("#graph-body").hide();
 	$("#graph-header").addClass("tooltip-box-bottom");
+
+	$("#debug-body").hide();
+	$("#debug-header").addClass("tooltip-box-bottom");
 
     Q.longStackJumpLimit = 0;
 }
@@ -299,20 +316,25 @@ function handleAudioMetricsUpdate() {
 function handleSourcesChange() {
     "use strict";
     var custom = $("#custom-source"),
+        liveBox = $("#live-checkbox"),
         select = $("#sources"),
-        streamObject,
-        streamSource;
+        streamObject;
 
     streamObject = streams[select.val()];
-    streamSource = streamObject.url;
-    custom.val(streamSource);
+
+    custom.val(streamObject.url);
+
+    if (streamObject.isLive) {
+        liveBox.attr('checked','checked');
+    } else {
+        liveBox.removeAttr('checked');
+    }
+    setupLabel();
 }
 
 function initStreamData() {
     "use strict";
     streams = {};
-
-    streams.ipvidnet = {url: "http://pixie.path1.com/dash/manifest.txt", isLive: true};
 
     streams.archive = {url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd", isLive: false};
     streams.live = {url: "http://dashdemo.edgesuite.net/mediaexcel/live/ch1/dash.mpd", isLive: true}; //"http://venus.mediaexcel.com/hera/videos/ch1/dash.mpd";
@@ -365,18 +387,23 @@ function initDebugControls() {
             debug = player.getDebug();
             debug.setFilter($("#filter-source").attr("value"));
         }
-        );
+    );
 }
 
 function load() {
     "use strict";
-    var select = $("#sources"),
+    var input = $("#custom-source"),
+        liveBox = $("#live-checkbox"),
         debug = player.getDebug(),
-        streamObject;
+        url,
+        isLive = false;
 
-    streamObject = streams[select.val()];
-    player.attachSource(streamObject);
-    debug.log("manifest | " + streamObject);
+    url = input.val();
+    isLive = liveBox.is(':checked');
+
+    player.attachSource(url);
+    player.setIsLive(isLive);
+    debug.log("manifest = " + url + " | isLive = " + isLive);
 
     playing = true;
 
