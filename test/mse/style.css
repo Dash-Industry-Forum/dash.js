@@ -1,0 +1,201 @@
+/* Copyright 2013 Google Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *     * Neither the name of Google Inc. nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+body {
+  font-family: Sans-Serif;
+  background: #fff;
+  font-size: 10px;
+  margin: 30px;
+}
+
+textarea { color: #369; }
+
+h3 {
+  margin: 10px 0 0 0;
+}
+
+.test-table .index { width: 30px; text-align: right; }
+.test-table .status {
+  width: 20px;
+  color: #fff;
+  text-align: right;
+}
+
+.test-table .status_current {
+  width: 20px;
+  text-align: right;
+}
+
+.test-table .desc { width: 200px; }
+.test-table .state { width: 30px; text-align: center; }
+.test-table .failstate { width: 30px; text-align: center; }
+
+.test-table {
+  table-layout: fixed;
+  font-family: Sans-Serif;
+  width: 480px;
+  border-collapse: collapse;
+  text-align: left;
+  margin: 20px;
+  display: inline-block;
+  white-space:nowrap;
+}
+
+.test-table th {
+  font-weight: normal;
+  color: #039;
+  border-bottom: 2px solid #6678b1;
+  padding: 10px 8px 4px;
+}
+
+.test-table td {
+  font-size: 90%;
+  color: #669;
+  border-bottom: 1px solid #e6e8f1;
+  padding: 9px 8px 0;
+}
+
+.test-table td.failstate {
+  font-size: 90%;
+  color: #f00;
+  border-bottom: 1px solid #e6e8f1;
+  padding: 9px 8px 0;
+}
+
+.test-table td.small {
+  font-size: 60%;
+  color: #0a0;
+  border-bottom: 1px solid #e6e8f1;
+  padding: 9px 8px 0;
+}
+
+.compact-list .cell-category {
+  font-weight: bold;
+  color: #039;
+  border-bottom: 2px solid #6678b1;
+}
+
+.compact-list .cell-divider {
+  width: 5px;
+}
+
+.compact-list .cell-status-normal {
+  min-width: 30px;
+  text-align: center;
+}
+
+.compact-list .cell-status-running {
+  min-width: 30px;
+  text-align: center;
+}
+
+.compact-list .cell-status-fail {
+  min-width: 30px;
+  background-color: #800;
+  color: #FFF;
+  text-align: center;
+}
+
+.compact-list .cell-status-pass {
+  min-width: 30px;
+  background-color: #080;
+  color: #FFF;
+  text-align: center;
+}
+
+div.container {
+  width:100%;
+  margin:5px 0 5px 0;
+  padding:5px 0 5px 0;
+  overflow:hidden;
+}
+
+div.container_hidden {
+  width:100%;
+  margin:10px 0 10px 0;
+  overflow:hidden;
+  display:none;
+}
+
+.box-left {
+  width:670px;
+  float:left;
+  border-collapse:collapse;
+}
+
+.box-right {
+  width:420px;
+  margin-top:2cm;
+  border-collapse:collapse;
+}
+
+.desc-expl-popup {
+  position: absolute;
+  padding: 0.5em;
+  max-width: 20em;
+  z-index: 100;
+  background-color: white;
+  border: solid 1px black;
+  box-shadow: 3px 3px 4px #000;
+  white-space: normal;
+  display: none;
+}
+
+.desc-expl-point:hover .desc-expl-popup {
+  display: inline-block;
+}
+
+span.nowrap {
+  display: inline-block;
+  white-space: nowrap;
+  margin: 0px 10px 0px 0px;
+  width: 200px;
+}
+
+span.code {
+  font-family: Courier;
+}
+
+.rightmargin20 {
+  margin-left: 0px;
+  margin-right: 20px;
+}
+
+.rightmargin20new {
+  margin-left: 0px;
+  margin-right: 20px;
+  color: #f00;
+  font-weight: bold;
+}
+
+a:focus {
+  border-width: 1px;
+  border-style: solid;
+}

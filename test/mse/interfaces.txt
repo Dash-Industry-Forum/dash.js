@@ -1,0 +1,16 @@
+1. test-list
+  void selectAll()
+  void deselectAll()
+  void generate(div)
+  void addTest(desc)
+  desc getTest(int index)
+  bool anySelected()
+
+2. test-view
+  void initialize()
+  void addTest(desc)
+  void generate()
+  desc getTest(int index)
+  void finishedOneTest()
+  bool anySelected()
+

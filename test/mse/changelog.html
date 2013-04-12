@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!--
+Copyright 2013, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+    * Neither the name of Google Inc. nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<html>
+  <head>
+    <title>Change Log - Media Source and Encrypted Media Conformance Tests</title>
+    <link rel="stylesheet" href="style.css" type="text/css"></link>
+  </head>
+  <body>
+    <h1>Change Log</h1>
+    <h3>2013-3-10</h3>
+    <ol>
+      <li>Add new command "exclude" to exclude particular tests.
+      See <span class='code'><a href="instructions.html">instructions</a></span>
+      for more information.
+      </li>
+    </ol>
+    <h3>2013-3-6</h3>
+    <ol>
+      <li>Explicitly set the duration of the stream in seek related tests to
+      ensure that their seek position is valid.</li>
+    </ol>
+    <h3>2013-1-9</h3>
+    <ol>
+      <li>Put the tests used to check resource leaks into <span class='code'><a
+          href="main.html?test_type=endurance-test">
+          Endurance Tests</a></span>.
+      </li>
+    </ol>
+    <h3>2013-1-3</h3>
+    <ol>
+      <li>Add a set of <span class='code'><a
+          href="main.html?test_type=performance-test">
+          Performance Tests</a></span> to measure the performance of
+      individual implementation.
+      </li>
+    </ol>
+    <h3>2012-12-12</h3>
+    <ol>
+      <li>Add TestXHROpenState test to ensure that we can set responseType
+      before open the request.
+      </li>
+      <li>Add a switch to enable stop on error during test. Add parameter
+      "stoponfailure" to enable it via url.
+      See <span class='code'><a href="instructions.html">instructions</a></span>
+      for more information.
+      </li>
+      <li>Add new command "loop" to turn on loop.
+      See <span class='code'><a href="instructions.html">instructions</a></span>
+      for more information.
+      </li>
+      <li>Add new command "run" to run the tests.
+      See <span class='code'><a href="instructions.html">instructions</a></span>
+      for more information.
+      The commands 'runselected' and 'runselectedloop' are deprecated.
+      </li>
+    </ol>
+    <h3>2012-12-06</h3>
+    <ol>
+      <li>Make test for media.paused into a separate test instead of putting it
+      inside SourceChain test.
+      </li>
+      <li>Add parameter "tests" to select only the tests listed.
+      See <span class='code'><a href="instructions.html">instructions</a></span>
+      for more information.
+      </li>
+      <li>Simplify the ReadyState test to only check dimension and rename it to
+      VideoDimension.
+      </li>
+    </ol>
+    <h3>2012-12-04</h3>
+    <ol>
+      <li>Add parameter "timeout" to override the default timeout.
+      See <span class='code'><a href="instructions.html">instructions</a></span>
+      for more information.
+      </li>
+      <li>Add parameter "disable_log" to disable log output.
+      See <span class='code'><a href="instructions.html">instructions</a></span>
+      for more information.
+      </li>
+      <li>Add test CannotPlayWidevine to ensure that no one incorrectly
+      reports to be able to playback media protected by widevine.
+      </li>
+      <li>Add WebMHandling test to test if the implementation report its WebM
+      support correctly.
+      </li>
+    </ol>
+  </body>
+</html>
+
