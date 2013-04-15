@@ -1,119 +1,231 @@
-
 // The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
 //
 // Copyright (c) 2013, Microsoft Open Technologies, Inc. 
 //
 // All rights reserved.
 // Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-// -             Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-// -             Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-// -             Neither the name of the Microsoft Open Technologies, Inc. nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+//     -             Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+//     -             Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+//     -             Neither the name of the Microsoft Open Technologies, Inc. nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- describe("Manifest Extension Test Suite", function(){
- 	var baseUrl, manExtn;
+ describe("Manifest Extension Test Suite", function () {
+ 	var baseUrl, manExtn, adaptationSet,representation,matchers,durationRegex,datetimeRegex,numericRegex,manifest,period;
  	
  	beforeEach(function(){
  		baseUrl = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
  		manExtn = new Dash.dependencies.DashManifestExtensions();
+		durationRegex = /PT(([0-9]*)H)?(([0-9]*)M)?(([0-9.]*)S)?/;
+        datetimeRegex = /^(\d{4}\-\d\d\-\d\d([tT][\d:\.]*)?)([zZ]|([+\-])(\d\d):(\d\d))?$/;
+        numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/;
+		matchers = [
+            {
+                type: "duration",
+                test: function (str) {
+                    return durationRegex.test(str);
+                },
+                converter: function (str) {
+                    var match = durationRegex.exec(str);
+                    return (parseFloat(match[2] || 0) * 3600 +
+                            parseFloat(match[4] || 0) * 60 +
+                            parseFloat(match[6] || 0));
+                }
+            },
+            {
+                type: "datetime",
+                test: function (str) {
+                    return datetimeRegex.test(str);
+                },
+                converter: function (str) {
+                    return new Date(str);
+                }
+            },
+            {
+                type: "numeric",
+                test: function (str) {
+                    return numericRegex.test(str);
+                },
+                converter: function (str) {
+                    return parseFloat(str);
+                }
+            }
+        ]
+		var	common = [
+                {
+                    name: 'profiles',
+                    merge: false
+                },
+                {
+                    name: 'width',
+                    merge: false
+                },
+                {
+                    name: 'height',
+                    merge: false
+                },
+                {
+                    name: 'sar',
+                    merge: false
+                },
+                {
+                    name: 'frameRate',
+                    merge: false
+                },
+                {
+                    name: 'audioSamplingRate',
+                    merge: false
+                },
+                {
+                    name: 'mimeType',
+                    merge: false
+                },
+                {
+                    name: 'segmentProfiles',
+                    merge: false
+                },
+                {
+                    name: 'codecs',
+                    merge: false
+                },
+                {
+                    name: 'maximumSAPPeriod',
+                    merge: false
+                },
+                {
+                    name: 'startsWithSap',
+                    merge: false
+                },
+                {
+                    name: 'maxPlayoutRate',
+                    merge: false
+                },
+                {
+                    name: 'codingDependency',
+                    merge: false
+                },
+                {
+                    name: 'scanType',
+                    merge: false
+                },
+                {
+                    name: 'FramePacking',
+                    merge: true
+                },
+                {
+                    name: 'AudioChannelConfiguration',
+                    merge: true
+                },
+                {
+                    name: 'ContentProtection',
+                    merge: true
+                }
+            ];
+			
+			manifest = {};
+            manifest.name = "manifest";
+            manifest.isRoot = true;
+            manifest.isArray = true;
+            manifest.parent = null;
+            manifest.Period_asArray = [];//children
+            manifest.properties = common;
+            
+			period = {};
+            period.name = "period";
+            period.isRoot = false;
+            period.isArray = true;
+            period.parent = manifest;
+            period.AdaptationSet_asArray = [];//children
+            period.properties = common;
+            manifest.Period_asArray.push(period);
+			
+		    adaptationSet = {};
+            adaptationSet.name = "AdaptationSet";
+            adaptationSet.isRoot = false;
+            adaptationSet.isArray = true;
+            adaptationSet.parent = period;
+            adaptationSet.Representation_asArray = [];//children
+            adaptationSet.properties = common;
+            			
+			representation = {};
+            representation.name = "Representation";
+            representation.isRoot = false;
+            representation.isArray = true;
+            representation.parent = adaptationSet;
+            representation.children = null;
+            representation.properties = common;
+			
+			adaptationSet.properties[0].mimeType="video/mp4";
+			adaptationSet.properties[0].segmentAlignment="true";
+			adaptationSet.properties[0].startWithSAP="1";
+			adaptationSet.properties[0].maxWidth="1280";
+			adaptationSet.properties[0].maxHeight="720";
+			adaptationSet.properties[0].maxFrameRate="25";
+			adaptationSet.properties[0].par="video/mp4";
+			adaptationSet.properties[0].maxFrameRate="video/mp4";
+			adaptationSet.properties[0].mimeType="video/mp4";
+			adaptationSet.properties[0].maxFrameRate="video/mp4";
+			adaptationSet.properties[0].par="16:9";
+			period.AdaptationSet_asArray.push(adaptationSet);
+			
+			
+			representation.properties[0].id="video1";
+			representation.properties[0].width="true";
+			representation.properties[0].height="1";
+			representation.properties[0].frameRate="1280";
+			representation.properties[0].sar="720";
+			representation.properties[0].scanType="25";
+			representation.properties[0].bandwidth="video/mp4";
+			representation.properties[0].codecs="video/mp4";
+		
+			representation.properties[1].id="video2";
+			representation.properties[1].width="true";
+			representation.properties[1].height="1";
+			representation.properties[1].frameRate="1280";
+			representation.properties[1].sar="720";
+			representation.properties[1].scanType="25";
+			representation.properties[1].bandwidth="video/mp4";
+			representation.properties[1].codecs="video/mp4";
+			
+			representation.properties[2].id="video3";
+			representation.properties[2].width="true";
+			representation.properties[2].height="1";
+			representation.properties[2].frameRate="1280";
+			representation.properties[2].sar="720";
+			representation.properties[2].scanType="25";
+			representation.properties[2].bandwidth="video/mp4";
+			representation.properties[2].codecs="video/mp4";
+			adaptationSet.Representation_asArray.push(representation);
+ 
  	});
     
-	it("getIsAudio_Null", function(){ 
-			adaptationSet = {};
-            adaptationSet.name = "AdaptationSet";
-            adaptationSet.isRoot = false;
-            adaptationSet.isArray = true;
-            adaptationSet.parent = period;
-            adaptationSet.children = [];
-            adaptationSet.properties = common;
-            period.children.push(adaptationSet); 
+	it("getIsAudio", function(){  
+		
 		expect(manExtn.getIsAudio(adaptationSet)).not.toBeNull();
+		
  	});
 	
-	it("getIsAudio_NotNull", function(){ 
-			adaptationSet = {};
-            adaptationSet.name = "AdaptationSet";
-            adaptationSet.isRoot = false;
-            adaptationSet.isArray = true;
-            adaptationSet.parent = period;
-            adaptationSet.children = [];
-            adaptationSet.properties = common;
-            period.children.push(adaptationSet); 
-		expect(manExtn.getIsAudio(adaptationSet)).not.toBeNull();
- 	});
+	it("getIsVideo", function(){ 
 	
-	it("getIsVideo_Null", function(){ 
-			adaptationSet = {};
-            adaptationSet.name = "AdaptationSet";
-            adaptationSet.isRoot = false;
-            adaptationSet.isArray = true;
-            adaptationSet.parent = period;
-            adaptationSet.children = [];
-            adaptationSet.properties = common;
-            
-		expect(manExtn.getIsVideo(null)).toBeNull();
- 	});
-	
-	it("getIsVideo_NotNull", function(){ 
-			adaptationSet = {};
-            adaptationSet.name = "AdaptationSet";
-            adaptationSet.isRoot = false;
-            adaptationSet.isArray = true;
-            adaptationSet.parent = period;
-            adaptationSet.children = [];
-            adaptationSet.properties = common;
-            
 		expect(manExtn.getIsVideo(adaptationSet)).not.toBeNull();
  	});
 	
-	it("getIsMain_Null", function(){ 
-			adaptationSet = {};
-            adaptationSet.name = "AdaptationSet";
-            adaptationSet.isRoot = false;
-            adaptationSet.isArray = true;
-            adaptationSet.parent = period;
-            adaptationSet.children = [];
-            adaptationSet.properties = common;
-            
-		expect(manExtn.getIsMain(null)).toBeNull();
- 	});
 	
-	it("getIsMain_NotNull", function(){ 
-			adaptationSet = {};
-            adaptationSet.name = "AdaptationSet";
-            adaptationSet.isRoot = false;
-            adaptationSet.isArray = true;
-            adaptationSet.parent = period;
-            adaptationSet.children = [];
-            adaptationSet.properties = common;
+	it("getIsMain", function(){ 
+		            
 		expect(manExtn.getIsMain(adaptationSet)).not.toBeNull();
  	});
 
-	it("getRepresentationCount_Null", function(){ 
-			adaptationSet = {};
-            adaptationSet.name = "AdaptationSet";
-            adaptationSet.isRoot = false;
-            adaptationSet.isArray = true;
-            adaptationSet.parent = period;
-            adaptationSet.children = [];
-            adaptationSet.properties = common;            
-		expect(manExtn.getRepresentationCount(null)).toBeNull();
- 	});
+	it("getRepresentationCount", function(){ 
 	
-	it("getVideoData_Null", function(){ 
-		var manifest = null;
-		expect(manExtn.getVideoData(manifest)).toBeNull();
+		expect(manExtn.getRepresentationCount(adaptationSet)).not.toBeNull();
  	});
-	
-	it("getVideoData_NotNull", function(){ 
-			var manifest,
-                converter = new X2JS(matchers, '', true),
-                iron = new ObjectIron(getDashMap());
-            manifest = converter.xml_str2json(data);
+
+	it("getVideoData", function(){ 
+            
 		expect(manExtn.getVideoData(manifest)).not.toBeNull();
  	});
-	
+	/*
 	it("getAudioDatas_NotNull", function(){ 
 			var manifest,
                 converter = new X2JS(matchers, '', true),
@@ -126,46 +238,21 @@
 			var manifest=null;
 		expect(manExtn.getAudioDatas(manifest)).toBeNull();
  	});
-	
-	it("getPrimaryAudioData_NotNull", function(){ 
-			var manifest,
-                converter = new X2JS(matchers, '', true),
-                iron = new ObjectIron(getDashMap());
-            manifest = converter.xml_str2json(data);
+	*/
+	it("getPrimaryAudioData", function(){ 
+			
 		expect(manExtn.getPrimaryAudioData(manifest)).not.toBeNull();
  	});
-	
+	/*
 	it("getPrimaryAudioData_Null", function(){ 
 			var manifest = null;
 		expect(manExtn.getPrimaryAudioData(manifest)).toBeNull();
- 	});
+ 	});*/
 	
-	it("getCodec_NotNull", function(){ 
-	var data = '<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:DASH:schema:MPD:2011" xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd" type="static" mediaPresentationDuration="PT260.266S" availabilityStartTime="2012-09-05T09:00:00Z" maxSegmentDuration="PT4.080S" minBufferTime="PT5.001S" profiles="urn:mpeg:dash:profile:isoff-live:2011">' + 
-						'<Period>' +
-							'<AdaptationSet mimeType="video/mp4" segmentAlignment="true" startWithSAP="1" maxWidth="1280" maxHeight="720" maxFrameRate="25" par="16:9">' +
-								'<SegmentTemplate presentationTimeOffset="0" timescale="90000" initialization="$RepresentationID$/Header.m4s" media="$RepresentationID$/$Number$.m4s" duration="360000" startNumber="0"/>' +
-                                '<Representation id="video1" width="1280" height="720" frameRate="25" sar="1:1" scanType="progressive" bandwidth="3000000" codecs="avc1.4D4020"/>' +
-                                '<Representation id="video2" width="1024" height="576" frameRate="25" sar="1:1" scanType="progressive" bandwidth="2000000" codecs="avc1.4D401F"/>' +
-                                '<Representation id="video3" width="704" height="396" frameRate="25" sar="1:1" scanType="progressive" bandwidth="1000000" codecs="avc1.4D401E"/>' +
-                                '<Representation id="video4" width="480" height="270" frameRate="25" sar="1:1" scanType="progressive" bandwidth="600000" codecs="avc1.4D4015"/>' +
-                                '<Representation id="video5" width="320" height="180" frameRate="25" sar="1:1" scanType="progressive" bandwidth="349952" codecs="avc1.4D400D"/>' +
-                        	'</AdaptationSet>' +
-							'<AdaptationSet mimeType="audio/mp4" lang="en" segmentAlignment="true" startWithSAP="1">' +
-                          		'<SegmentTemplate presentationTimeOffset="0" timescale="48000" initialization="$RepresentationID$/Header.m4s" media="$RepresentationID$/$Number$.m4s" duration="192000" startNumber="0"/>' +
-                           		'<Representation id="audio" audioSamplingRate="48000" bandwidth="56000" codecs="mp4a.40.2">' +
-                            		'<AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>' +
-                        		'</Representation>' +
-            				'</AdaptationSet>' +
-    					'</Period>' +
-					'</MPD>';
-		expect(manExtn.getCodec(data)).toBeNull();
- 	});
-	
-	it("getCodec_Null", function(){ 
-	var data = null;
-	expect(manExtn.getCodec(data)).toBeNull();
- 	});
+	it("getCodec", function(){ 
+
+		expect(manExtn.getCodec(adaptationSet)).not.toBeNull();
+ 	});/*
 	
 	it("getIsLive_NotNull", function(){ 
 			var manifest,
@@ -174,20 +261,17 @@
             manifest = converter.xml_str2json(data);
 		expect(manExtn.getIsLive(manifest)).not.toBeNull();
  	});
-	
-	it("getIsLive_Null", function(){ 
-			var manifest,
-                converter = new X2JS(matchers, '', true),
-                iron = new ObjectIron(getDashMap());
-            manifest = converter.xml_str2json(data);
-		expect(manExtn.getIsLive(manifest)).toBeNull();
+	*/
+	it("getIsLive", function(){ 
+			
+		expect(manExtn.getIsLive(manifest)).not.toBeNull();
  	});
 	
 	it("getIsDVR_Null", function(){ 
-			var manifest = null;
-		expect(manExtn.getIsDVR(manifest)).toBeNull();
- 	});
 	
+		expect(manExtn.getIsDVR(manifest)).not.toBeNull();
+ 	});
+	/*
 	it("getIsLive_NotNull", function(){ 
 			var manifest,
                 converter = new X2JS(matchers, '', true),
@@ -195,32 +279,26 @@
             manifest = converter.xml_str2json(data);
 		expect(manExtn.getIsDVR(manifest)).not.toBeNull();
  	});
-	
-	it("getIsOnDemand_NotNull", function(){ 
-			var manifest,
-                converter = new X2JS(matchers, '', true),
-                iron = new ObjectIron(getDashMap());
-            manifest = converter.xml_str2json(data);
+	*/
+	it("getIsOnDemand", function(){ 
+			
 		expect(manExtn.getIsOnDemand(manifest)).not.toBeNull();
  	});
-	
+	/*
 	it("getIsOnDemand_Null", function(){ 
 			var manifest=null;
 		expect(manExtn.getIsOnDemand(manifest)).toBeNull();
  	});
-	
-	it("getDuration_NotNull", function(){ 
-			var manifest,
-                converter = new X2JS(matchers, '', true),
-                iron = new ObjectIron(getDashMap());
-            manifest = converter.xml_str2json(data);
+	*/
+	it("getDuration", function(){ 
+			
 		expect(manExtn.getDuration(manifest)).not.toBeNull();
  	});
 	
-	it("getDuration_Null", function(){ 
-			var manifest = null;
-		expect(manExtn.getDuration(manifest)).toBeNull();
- 	});
+	// it("getDuration", function(){ 
+			
+		// expect(manExtn.getDuration(manifest)).not.toBeNull();
+ 	// });
 	
 	});
 	
