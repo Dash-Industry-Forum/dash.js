@@ -398,7 +398,7 @@ function initStreamSources( browserVersion ) {
 		sourceOptions.each(function (index, item) {
 			var feeds = $(item).attr("data-channels");
 			if (feeds.indexOf(filterValue) === -1) {
-				item.remove();
+				$(item).remove();
 			}
 		});
 	}

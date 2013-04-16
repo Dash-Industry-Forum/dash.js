@@ -63,7 +63,7 @@ MediaPlayer = function (aContext) {
             }
 
             if (!this.capabilities.supportsMediaSource()) {
-                alert("Media Source not supported.");
+                alert("Your browser does not support the MediaSource API.  Please try another browser, such as Chrome.");
                 //throw "Media Source not supported.";
                 return;
             }
