@@ -336,6 +336,8 @@ function initStreamData() {
     "use strict";
     streams = {};
 
+    streams.test = {url: "http://live.unified-streaming.com/loop/loop.isml/loop.mpd?format=mp4", isLive: true};
+
     streams.archive = {url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd", isLive: false};
     streams.live = {url: "http://dashdemo.edgesuite.net/mediaexcel/live/ch1/dash.mpd", isLive: true}; //"http://venus.mediaexcel.com/hera/videos/ch1/dash.mpd";
     streams.list = {url: "http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd", isLive: false};
@@ -344,7 +346,7 @@ function initStreamData() {
     streams.base = {url: "http://www.digitalprimates.net/dash/streams/mp4-onDemand/mp4-onDemand-mpd-AV.mpd", isLive: false};
     streams.youtube = {url: "http://yt-dash-mse-test.commondatastorage.googleapis.com/car-20120827-manifest.mpd", isLive: false};
     streams.bunny = {url: "http://dash.edgesuite.net/adobe/bbb/bbb.mpd", isLive: false};
-    streams.envivio = {url: "http://dashdemo.edgesuite.net/envivio/dashpr/clear/Manifest.mpd", isLive: false};
+    streams.envivio = {url: "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd ", isLive: false};
 
     streams["1a-netflix"] = {url: "http://dash.edgesuite.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd", isLive: false};
     streams["1a-sony"] = {url: "http://dash.edgesuite.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd", isLive: false};
@@ -362,6 +364,44 @@ function initStreamData() {
     streams["5b-thomson/envivio"] = {url: "http://dash.edgesuite.net/dash264/TestCases/5b/1/manifest.mpd", isLive: false};
     streams["6c-envivio1"] = {url: "http://dash.edgesuite.net/dash264/TestCases/6c/envivio/manifest.mpd", isLive: false};
     streams["6c-envivio2"] = {url: "http://dash.edgesuite.net/dash264/TestCases/6c/envivio/manifest2.mpd", isLive: false};
+}
+
+function initStreamSources( browserVersion ) {
+	"use strict";
+	var sourceOptions = $("#sources > option"),
+		testChannel = false,
+		filterValue;
+
+	browserVersion = browserVersion.toLowerCase();
+
+	switch( browserVersion )
+	{
+		case "beta":
+			filterValue = "b";
+			break;
+		case "canary":
+			filterValue = "c";
+			break;
+		case "dev":
+			filterValue = "d";
+			break;
+		case "all":
+			testChannel = true;
+			break;
+		case "stable":
+		default:
+			filterValue = "s";
+			break;
+	}
+
+	if (testChannel === false) {
+		sourceOptions.each(function (index, item) {
+			var feeds = $(item).attr("data-channels");
+			if (feeds.indexOf(filterValue) === -1) {
+				item.remove();
+			}
+		});
+	}
 }
 
 function initDebugControls() {
@@ -390,6 +430,37 @@ function initDebugControls() {
     );
 }
 
+function parseBrowserVersion( searchStr ) {
+	var versionIndex,
+		subSearchStr,
+		ampIndex,
+		equalIndex,
+		result;
+
+	if ( searchStr === null || searchStr.length === 0) {
+		return "stable";
+	}
+
+	searchStr = searchStr.toLowerCase();
+	versionIndex = searchStr.indexOf("version=");
+
+	if (versionIndex === -1) {
+		return "stable"
+	}
+
+	subSearchStr = searchStr.substr( versionIndex, searchStr.length );
+	ampIndex = subSearchStr.indexOf("&");
+	equalIndex = subSearchStr.indexOf("=");
+
+	if (ampIndex === -1) {
+		result = subSearchStr.substr((equalIndex + 1), subSearchStr.length);
+	} else {
+		result = subSearchStr.substr((equalIndex + 1), (ampIndex - equalIndex - 1));
+	}
+
+	return result;
+}
+
 function load() {
     "use strict";
     var input = $("#custom-source"),
@@ -401,8 +472,8 @@ function load() {
     url = input.val();
     isLive = liveBox.is(':checked');
 
-    player.attachSource(url);
     player.setIsLive(isLive);
+    player.attachSource(url);
     debug.log("manifest = " + url + " | isLive = " + isLive);
 
     playing = true;
@@ -419,14 +490,18 @@ function load() {
 $(document).ready(function() {
     "use strict";
     var defaultDataSource,
+    	browserVersion,
         video = document.querySelector(".dash-video-player video"),
         context = new Dash.di.DashContext(),
         console = document.getElementById("debug_log"),
         debug,
         lastChild = $("#debug-log-tab");
 
-    initDebugControls();
+	browserVersion = parseBrowserVersion( location.search );
+
+	initDebugControls();
     initStreamData();
+    initStreamSources( browserVersion );
     handleSourcesChange();
 
     // JS input/textarea placeholder

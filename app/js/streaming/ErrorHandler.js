@@ -21,7 +21,10 @@ MediaPlayer.dependencies.ErrorHandler = function () {
 
     return {
         downloadError: function (err) {
-            var msg = "<span>If you see the message 'XMLHttpRequest cannot load URL Origin URL is not allowed by Access-Control-Allow-Origin.' in the console, try turning off Chrome's web security.<br/>-Right click the Chrome icon and select 'properties'.<br/>-In the 'target' field add '--disable-web-security'.<br/>-After launching Chrome you will see the message 'You are using an unsupported command-line flag: --disable-web-security. Stability and security will suffer.'</span>",
+            //var msg = "<span>If you see the message 'XMLHttpRequest cannot load URL Origin URL is not allowed by Access-Control-Allow-Origin.' in the console, try turning off Chrome's web security.<br/>-Right click the Chrome icon and select 'properties'.<br/>-In the 'target' field add '--disable-web-security'.<br/>-After launching Chrome you will see the message 'You are using an unsupported command-line flag: --disable-web-security. Stability and security will suffer.'</span>",
+            //    div = "<div id='message' class='message' style='display: none'><p><span style='text-align: center; width: 100%; font-weight: bold;'>" + err + "</span><br/><br/>" + msg + "</p><a href='#' class='close-notify'>X</a></div>";
+
+            var msg = "<span>File loading error.  This is most likely caused by the Cross Origin Resource Sharing (CORS) headers not being present in the response from the server which is hosting the file. Please check your server implementation to ensure that CORS headers are in place, as the JavaScript will not be able to request the manifest or segments without them.</span>",
                 div = "<div id='message' class='message' style='display: none'><p><span style='text-align: center; width: 100%; font-weight: bold;'>" + err + "</span><br/><br/>" + msg + "</p><a href='#' class='close-notify'>X</a></div>";
 
             $("body").append(div);

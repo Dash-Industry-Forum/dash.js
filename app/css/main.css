@@ -24,6 +24,10 @@ p {
     text-align: left;
 }
 
+/* This is to get around a sizing issue with dropkick */
+.dk_options {
+    width: 460px;
+}
 .demo-panel-title-header {
     float: left;
     padding-top: 3px;

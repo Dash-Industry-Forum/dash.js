@@ -302,7 +302,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                 self.debug.log("Append complete: " + buffer.buffered.length);
                                 if (buffer.buffered.length > 0) {
                                     //---
-                                    /*
+
                                     var ranges = buffer.buffered,
                                         i,
                                         len;
@@ -311,7 +311,9 @@ MediaPlayer.dependencies.BufferController = function () {
                                     for (i = 0, len = ranges.length; i < len; i += 1) {
                                         self.debug.log("Buffered Range: " + ranges.start(i) + " - " + ranges.end(i));
                                     }
-                                    */
+
+                                    self.debug.log("Finished append, set seek? " + setSeek);
+
                                     //---
 
                                     if (setSeek) {
@@ -329,6 +331,8 @@ MediaPlayer.dependencies.BufferController = function () {
                                         setSeek = false;
                                         seekTarget = -1;
                                     }
+
+                                    self.debug.log("Current time after append: " + self.videoModel.getCurrentTime());
                                 }
                                 finishValidation.call(self);
                             }
@@ -465,7 +469,8 @@ MediaPlayer.dependencies.BufferController = function () {
                                     ).then(
                                         function (request) {
                                             if (request !== null) {
-                                                self.debug.log("Loading initialization: " + request.url);
+                                                self.debug.log("Loading initialization.");
+                                                self.debug.log(request);
                                                 self.fragmentLoader.load(request).then(onBytesLoaded.bind(self), onBytesError.bind(self));
                                             }
                                             return loadNextFragment.call(self, newQuality);

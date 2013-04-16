@@ -27,7 +27,7 @@ MediaPlayer.dependencies.FragmentController.prototype = {
 
         var result = null;
 
-        if (bytes !== null && bytes.byteLength > 0) {
+        if (bytes !== null && bytes !== undefined && bytes.byteLength > 0) {
             result = new Uint8Array(bytes);
         }
 
