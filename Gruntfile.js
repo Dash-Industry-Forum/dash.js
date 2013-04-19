@@ -32,7 +32,6 @@ module.exports = function(grunt) {
         options: {
           host: 'http://127.0.0.1:8000/',
           specs: [
-            './test/js/dash/HandlerSuite.js',
             './test/js/dash/ParserSuite.js',
             './test/js/dash/FragmentExtensionsSuite.js',
             './test/js/dash/DashMetricsExtensionsSuite.js',

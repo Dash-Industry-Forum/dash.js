@@ -156,20 +156,5 @@
             data.Representation_asArray.push(representation);
     });
  
- 
- it("getSegmentRequestForTime", function(){ 
-            
-        quality=0;
-        expect(indexHandler.getSegmentRequestForTime(0,quality,data)).not.toBeNull();
-        //expect(indexHandler.getSegmentRequestForTime(null,null,data)).toBeNull();
-    });
-
- it("getInitRequest", function(){ 
-
-        quality=0;
-
-        expect(indexHandler.getInitRequest(quality, data)).not.toBeNull();
-    });
-
  });
  
