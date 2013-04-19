@@ -11,11 +11,21 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  describe("Manifest Extension Test Suite", function () {
- 	var baseUrl, manExtn, adaptationSet,representation,matchers,durationRegex,datetimeRegex,numericRegex,manifest,period;
+    var context, baseUrl, manExtn, adaptationSet, representation, matchers, durationRegex, datetimeRegex, numericRegex, manifest, period;
  	
  	beforeEach(function(){
  		baseUrl = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
- 		manExtn = new Dash.dependencies.DashManifestExtensions();
+
+ 	    // Set up DI.
+ 		system = new dijon.System();
+ 		system.mapValue("system", system);
+ 		system.mapOutlet("system");
+
+ 		context = new Dash.di.DashContext();
+ 		system.injectInto(context);
+
+ 		manExtn = system.getObject("manifestExt");
+
 		durationRegex = /PT(([0-9]*)H)?(([0-9]*)M)?(([0-9.]*)S)?/;
         datetimeRegex = /^(\d{4}\-\d\d\-\d\d([tT][\d:\.]*)?)([zZ]|([+\-])(\d\d):(\d\d))?$/;
         numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/;
@@ -262,11 +272,6 @@
 		expect(manExtn.getIsLive(manifest)).not.toBeNull();
  	});
 	*/
-	it("getIsLive", function(){ 
-			
-		expect(manExtn.getIsLive(manifest)).not.toBeNull();
- 	});
-	
 	it("getIsDVR_Null", function(){ 
 	
 		expect(manExtn.getIsDVR(manifest)).not.toBeNull();

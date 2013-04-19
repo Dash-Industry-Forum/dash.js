@@ -11,25 +11,20 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  describe("Handler Test Suite", function () {
- 	var baseUrl, handler,debug,baseURLExt;
+     var context, indexHandler, baseUrl;
  	
  	beforeEach(function(){
  		baseUrl = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
- 		handler = new Dash.dependencies.DashHandler();
-		parser = new Dash.dependencies.DashParser();
-		debug = new MediaPlayer.utils.Debug;
-		system = new dijon.System();
-		system.mapValue("debug", debug);
-		system.mapOutlet("debug");
-		system.injectInto(handler);
-		
-		
-		baseURLExt = new Dash.dependencies.BaseURLExtensions();
-		//system = new dijon.System();
-		system.mapValue("baseURLExt", baseURLExt);
-		system.mapOutlet("baseURLExt");
-		system.injectInto(baseURLExt);
-		system.injectInto(handler);
+
+ 	    // Set up DI.
+ 		system = new dijon.System();
+ 		system.mapValue("system", system);
+ 		system.mapOutlet("system");
+
+ 		context = new Dash.di.DashContext();
+		system.injectInto(context);
+
+		indexHandler = system.getObject("indexHandler");
  	});
  
  
@@ -181,8 +176,8 @@
 			
 			data.Representation_asArray.push(representation);
 		quality=0;
-		expect(handler.getSegmentRequestForTime(null,quality,data)).not.toBeNull();
-		//expect(handler.getSegmentRequestForTime(null,null,data)).toBeNull();
+		expect(indexHandler.getSegmentRequestForTime(null, quality, data)).not.toBeNull();
+     //expect(indexHandler.getSegmentRequestForTime(null,null,data)).toBeNull();
 	});
 	
 it("getInitRequest", function(){ 
@@ -335,7 +330,7 @@ it("getInitRequest", function(){
 		quality=0; 
 					
 		
-		expect(handler.getInitRequest(quality,data)).not.toBeNull();
+		expect(indexHandler.getInitRequest(quality, data)).not.toBeNull();
  	});
 /*			
 it("getNextSegmentRequest", function(){ 
@@ -487,8 +482,8 @@ it("getNextSegmentRequest", function(){
 			data.Representation_asArray.push(representation);
 		quality=0; 
 		handler.getSegmentRequestForTime(null,quality,data);
-		//expect(handler.getNextSegmentRequest(quality,data)).not.toBeNull();
-		//expect(handler.getNextSegmentRequest(null,data)).toBeNull();
+		//expect(indexHandler.getNextSegmentRequest(quality,data)).not.toBeNull();
+		//expect(indexHandler.getNextSegmentRequest(null,data)).toBeNull();
 	});*/
 
  });
