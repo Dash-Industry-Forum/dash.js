@@ -3,10 +3,15 @@ Dash.js Test Framework
 Prerequisites:
 
 •   Install Node.js
+
 •   npm install -g grunt-cli
+
 •   Clone this repository
+
 •   git submodule init
+
 •   git submodule update --recursive
+
 •   npm install
 
 Grunt Integration:
@@ -24,8 +29,12 @@ Known Issues:
 
 Example development:
 
-•   git checkout <branch>
-•   git checkout -b <alias>/<feature>
+•   git checkout &lt;branch&gt;
+
+•   git checkout -b &lt;alias&gt;/&lt;feature&gt;
+
 •   git submodule update --recursive
+
 •   git commit ...
-•   git push origin <alias>/<feature>
+
+•   git push origin &lt;alias&gt;/&lt;feature&gt;
