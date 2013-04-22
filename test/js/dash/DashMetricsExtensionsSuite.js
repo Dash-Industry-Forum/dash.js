@@ -24,7 +24,85 @@
         context = new Dash.di.DashContext();
         system.injectInto(context);
 
-        metricExtn = system.getObject("metricsExt");
+       metricExtn = system.getObject("metricsExt");
+		
+			manifest = {};
+            manifest.name = "manifest";
+            manifest.isRoot = true;
+            manifest.isArray = true;
+            manifest.parent = null;
+            manifest.Period_asArray = [];//children
+            manifest.properties = common;
+            
+			period = {};
+            period.name = "period";
+            period.isRoot = false;
+            period.isArray = true;
+            period.parent = manifest;
+            period.AdaptationSet_asArray = [];//children
+            period.properties = common;
+            manifest.Period_asArray.push(period);
+			
+		    adaptationSet = {};
+            adaptationSet.name = "AdaptationSet";
+            adaptationSet.isRoot = false;
+            adaptationSet.isArray = true;
+            adaptationSet.parent = period;
+            adaptationSet.Representation_asArray = [];//children
+            adaptationSet.properties = common;
+            			
+			representation = {};
+            representation.name = "Representation";
+            representation.isRoot = false;
+            representation.isArray = true;
+            representation.parent = adaptationSet;
+            representation.children = null;
+            representation.properties = common;
+			
+			adaptationSet.properties[0].mimeType="video/mp4";
+			adaptationSet.properties[0].segmentAlignment="true";
+			adaptationSet.properties[0].startWithSAP="1";
+			adaptationSet.properties[0].maxWidth="1280";
+			adaptationSet.properties[0].maxHeight="720";
+			adaptationSet.properties[0].maxFrameRate="25";
+			adaptationSet.properties[0].par="video/mp4";
+			adaptationSet.properties[0].maxFrameRate="video/mp4";
+			adaptationSet.properties[0].mimeType="video/mp4";
+			adaptationSet.properties[0].maxFrameRate="video/mp4";
+			adaptationSet.properties[0].par="16:9";
+			period.AdaptationSet_asArray.push(adaptationSet);
+			
+			
+			representation.properties[0].id="video1";
+			representation.properties[0].width="true";
+			representation.properties[0].height="1";
+			representation.properties[0].frameRate="1280";
+			representation.properties[0].sar="720";
+			representation.properties[0].scanType="25";
+			representation.properties[0].bandwidth="video/mp4";
+			representation.properties[0].codecs="video/mp4";
+		
+			representation.properties[1].id="video2";
+			representation.properties[1].width="true";
+			representation.properties[1].height="1";
+			representation.properties[1].frameRate="1280";
+			representation.properties[1].sar="720";
+			representation.properties[1].scanType="25";
+			representation.properties[1].bandwidth="video/mp4";
+			representation.properties[1].codecs="video/mp4";
+			
+			representation.properties[2].id="video3";
+			representation.properties[2].width="true";
+			representation.properties[2].height="1";
+			representation.properties[2].frameRate="1280";
+			representation.properties[2].sar="720";
+			representation.properties[2].scanType="25";
+			representation.properties[2].bandwidth="video/mp4";
+			representation.properties[2].codecs="video/mp4";
+			adaptationSet.Representation_asArray.push(representation);		
+
+		
+		
     });
     
     it("getBandwidthForRepresentation is a function", function(){
@@ -70,5 +148,35 @@
         var result = (typeof metricExtn.getCurrentDroppedFrames);
         expect(result).toEqual('function');
     });
+	
+	it("findRepresentationIndexInPeriodArray returns value", function(){
+	
+ 		expect(metricExtn.findRepresentationIndexInPeriodArray(manifest.Period_asArray,'video1').not.toBeNull());
+ 	});
+	
+	it("adaptationIsType returns value", function(){
+			
+ 		expect(metricExtn.adaptationIsType(adaptation,'video').not.toBeNull());
+ 	});
+	
+	it("getBandwidthForRepresentation returns value", function(){
+			
+ 		expect(metricExtn.getBandwidthForRepresentation('video1').not.toBeNull());
+ 	});
+	
+	it("getIndexForRepresentation returns value", function(){
+			
+ 		expect(metricExtn.getIndexForRepresentation('video1').not.toBeNull());
+ 	});
+	
+	it("getMaxIndexForBufferType returns value", function(){
+			
+ 		expect(metricExtn.getMaxIndexForBufferType('video').not.toBeNull());
+ 	});
+	
+	it("findRepresentionInPeriodArray returns value", function(){
+	
+ 		expect(metricExtn.findRepresentionInPeriodArray(manifest.Period_asArray,'video1').not.toBeNull());
+ 	});
         
  });
