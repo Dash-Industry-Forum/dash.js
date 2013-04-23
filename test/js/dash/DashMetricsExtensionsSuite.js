@@ -122,16 +122,12 @@
         adaptationSet.Representation_asArray = [];//children
         adaptationSet.properties = common;
                     
-        adaptationSet.properties[0].mimeType="video/mp4";
-        adaptationSet.properties[0].segmentAlignment="true";
-        adaptationSet.properties[0].startWithSAP="1";
-        adaptationSet.properties[0].maxWidth="1280";
-        adaptationSet.properties[0].maxHeight="720";
-        adaptationSet.properties[0].maxFrameRate="25";
-        adaptationSet.properties[0].par="video/mp4";
-        adaptationSet.properties[0].maxFrameRate="video/mp4";
-        adaptationSet.properties[0].mimeType="video/mp4";
-        adaptationSet.properties[0].maxFrameRate="video/mp4";
+        adaptationSet.mimeType="video/mp4";
+        adaptationSet.segmentAlignment="true";
+        adaptationSet.startWithSAP="1";
+        adaptationSet.maxWidth="1280";
+        adaptationSet.maxHeight="720";
+        adaptationSet.maxFrameRate="25";
         adaptationSet.properties[0].par="16:9";
         period.AdaptationSet_asArray.push(adaptationSet);
         
@@ -247,6 +243,26 @@
     
         var result = (typeof metricExtn.getCurrentDroppedFrames);
         expect(result).toEqual('function');
+    });
+	
+	it("getBandwidthForRepresentation returns a value", function(){
+            
+        expect(metricExtn.getBandwidthForRepresentation('video1')).not.toBeNull();
+    });
+	
+	it("getIndexForRepresentation returns correct index", function(){
+            
+        expect(metricExtn.getIndexForRepresentation('video2')).toEqual(1);
+    });
+	
+	it("getMaxIndexForBufferType returns correct index", function(){
+            
+        expect(metricExtn.getMaxIndexForBufferType('video')).toEqual(3);
+    });
+	
+	it("getCurrentRepresentationSwitch returns null", function(){
+            
+        expect(metricExtn.getCurrentRepresentationSwitch(null)).toBeNull();
     });
     
  });
