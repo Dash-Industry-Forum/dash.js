@@ -128,7 +128,7 @@
         adaptationSet.maxWidth="1280";
         adaptationSet.maxHeight="720";
         adaptationSet.maxFrameRate="25";
-        adaptationSet.properties[0].par="16:9";
+        adaptationSet.par="16:9";
         period.AdaptationSet_asArray.push(adaptationSet);
         
         {
@@ -183,7 +183,7 @@
             representation.id="video3";
             representation.width="true";
             representation.height="1";
-            representation.rameRate="1280";
+            representation.frameRate="1280";
             representation.sar="720";
             representation.scanType="25";
             representation.bandwidth="875000";
@@ -211,15 +211,13 @@
     
         var result = (typeof metricExtn.getIndexForRepresentation);
         expect(result).toEqual('function');
-    });
-    
+    });   
     
     it("getMaxIndexForBufferType is a function", function(){
     
         var result = (typeof metricExtn.getMaxIndexForBufferType);
         expect(result).toEqual('function');
-    });
-    
+    });    
     
     it("getCurrentRepresentationSwitch is a function", function(){
     
@@ -244,25 +242,52 @@
         var result = (typeof metricExtn.getCurrentDroppedFrames);
         expect(result).toEqual('function');
     });
-	
-	it("getBandwidthForRepresentation returns a value", function(){
-            
-        expect(metricExtn.getBandwidthForRepresentation('video1')).not.toBeNull();
-    });
-	
-	it("getIndexForRepresentation returns correct index", function(){
+        
+    it("getIndexForRepresentation returns correct index", function(){
             
         expect(metricExtn.getIndexForRepresentation('video2')).toEqual(1);
     });
-	
-	it("getMaxIndexForBufferType returns correct index", function(){
+    
+    it("getMaxIndexForBufferType returns correct index", function(){
             
         expect(metricExtn.getMaxIndexForBufferType('video')).toEqual(3);
     });
-	
-	it("getCurrentRepresentationSwitch returns null", function(){
+    
+    it("getCurrentRepresentationSwitch returns null", function(){
             
         expect(metricExtn.getCurrentRepresentationSwitch(null)).toBeNull();
     });
+
+    it("getCurrentHttpRequest returns value", function(){
+        var metrics = {};
+        metrics.BufferLevel = "";
+        metrics.PlayList = [];
+        metrics.RepSwitchList = [];
+        metrics.DroppedFrames = [];
+        metrics.HttpList = [];
+        metrics.TcpList = [];
+        
+        expect(metricExtn.getCurrentHttpRequest(metrics)).toBeNull();
+    });
+    
+    it("getCurrentHttpRequest returns null", function(){
+            
+        expect(metricExtn.getCurrentHttpRequest(null)).toBeNull();
+    });
+    
+    it("getCurrentDroppedFrames returns correct value", function(){
+        
+        var metrics = {};
+        metrics.DroppedFrames = [];
+        metrics.DroppedFrames[0] = 1;
+        
+        expect(metricExtn.getCurrentDroppedFrames(metrics)).toEqual(1);
+    });	
+    
+    it("getCurrentDroppedFrames returns null", function(){
+        
+        var metrics = null;		
+        expect(metricExtn.getCurrentDroppedFrames(metrics)).toBeNull();
+    });	
     
  });

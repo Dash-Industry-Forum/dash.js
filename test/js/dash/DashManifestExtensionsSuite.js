@@ -156,7 +156,16 @@
             adaptationSet.parent = period;
             adaptationSet.Representation_asArray = [];//children
             adaptationSet.properties = common;
-                        
+                         
+            adaptationSet.mimeType="video/mp4";
+            adaptationSet.segmentAlignment="true";
+            adaptationSet.startWithSAP="1";
+            adaptationSet.maxWidth="1280";
+            adaptationSet.maxHeight="720";
+            adaptationSet.maxFrameRate="25";
+            adaptationSet.par="16:9";
+            period.AdaptationSet_asArray.push(adaptationSet);
+        {
             representation = {};
             representation.name = "Representation";
             representation.isRoot = false;
@@ -164,105 +173,186 @@
             representation.parent = adaptationSet;
             representation.children = null;
             representation.properties = common;
-            
-            adaptationSet.properties[0].mimeType="video/mp4";
-            adaptationSet.properties[0].segmentAlignment="true";
-            adaptationSet.properties[0].startWithSAP="1";
-            adaptationSet.properties[0].maxWidth="1280";
-            adaptationSet.properties[0].maxHeight="720";
-            adaptationSet.properties[0].maxFrameRate="25";
-            adaptationSet.properties[0].par="video/mp4";
-            adaptationSet.properties[0].maxFrameRate="video/mp4";
-            adaptationSet.properties[0].mimeType="video/mp4";
-            adaptationSet.properties[0].maxFrameRate="video/mp4";
-            adaptationSet.properties[0].par="16:9";
-            period.AdaptationSet_asArray.push(adaptationSet);
-            
-            
-            representation.properties[0].id="video1";
-            representation.properties[0].width="true";
-            representation.properties[0].height="1";
-            representation.properties[0].frameRate="1280";
-            representation.properties[0].sar="720";
-            representation.properties[0].scanType="25";
-            representation.properties[0].bandwidth="video/mp4";
-            representation.properties[0].codecs="video/mp4";
-        
-            representation.properties[1].id="video2";
-            representation.properties[1].width="true";
-            representation.properties[1].height="1";
-            representation.properties[1].frameRate="1280";
-            representation.properties[1].sar="720";
-            representation.properties[1].scanType="25";
-            representation.properties[1].bandwidth="video/mp4";
-            representation.properties[1].codecs="video/mp4";
-            
-            representation.properties[2].id="video3";
-            representation.properties[2].width="true";
-            representation.properties[2].height="1";
-            representation.properties[2].frameRate="1280";
-            representation.properties[2].sar="720";
-            representation.properties[2].scanType="25";
-            representation.properties[2].bandwidth="video/mp4";
-            representation.properties[2].codecs="video/mp4";
+
+            representation.id="video1";
+            representation.width="true";
+            representation.height="1";
+            representation.frameRate="1280";
+            representation.sar="720";
+            representation.scanType="25";
+            representation.bandwidth="275000";
+            representation.codecs="video/mp4";
             adaptationSet.Representation_asArray.push(representation);
+        }
+    
+        {
+            representation = {};
+            representation.name = "Representation";
+            representation.isRoot = false;
+            representation.isArray = true;
+            representation.parent = adaptationSet;
+            representation.children = null;
+            representation.properties = common;
+
+            representation.id="video2";
+            representation.width="true";
+            representation.height="1";
+            representation.frameRate="1280";
+            representation.sar="720";
+            representation.scanType="25";
+            representation.bandwidth="475000";
+            representation.codecs="video/mp4";
+            adaptationSet.Representation_asArray.push(representation);
+        }
+        
+        {
+            representation = {};
+            representation.name = "Representation";
+            representation.isRoot = false;
+            representation.isArray = true;
+            representation.parent = adaptationSet;
+            representation.children = null;
+            representation.properties = common;
+
+            representation.id="video3";
+            representation.width="true";
+            representation.height="1";
+            representation.frameRate="1280";
+            representation.sar="720";
+            representation.scanType="25";
+            representation.bandwidth="875000";
+            representation.codecs="video/mp4";
+            adaptationSet.Representation_asArray.push(representation);
+        }
  
     });
     
-    it("getIsAudio", function(){  
-        
-        expect(manExtn.getIsAudio(adaptationSet)).not.toBeNull();
-        
-    });
-    
-    it("getIsVideo", function(){ 
-    
-        expect(manExtn.getIsVideo(adaptationSet)).not.toBeNull();
-    });
-    
-    
-    it("getIsMain", function(){ 
-                    
-        expect(manExtn.getIsMain(adaptationSet)).not.toBeNull();
+    it("getIsAudio returns correct value", function () {
+        var resBool = '';
+        manExtn.getIsAudio(adaptationSet).then(function (Data) {
+            resBool = Data;
+        }, function (Error) {
+            resBool = Error;
+        });
+        waitsFor(function () {
+            if (resBool.toString() != '') return true;
+        }, "data is null", 100);
+        runs(function () {
+            resBool == true ? expect(resBool).toBeTruthy() : expect(resBool).not.toBeTruthy();
+        });
     });
 
-    it("getRepresentationCount", function(){ 
-    
-        expect(manExtn.getRepresentationCount(adaptationSet)).not.toBeNull();
+
+    it("getIsVideo returns correct value", function () {
+        var resBool = '';
+        manExtn.getIsVideo(adaptationSet).then(function (Data) {
+            resBool = Data;
+        }, function (Error) {
+            resBool = Error;
+        });
+        waitsFor(function () {
+            if (resBool.toString() != '') return true;
+        }, "data is null", 100);
+        runs(function () {
+            resBool == true ? expect(resBool).toBeTruthy() : expect(resBool).not.toBeTruthy();
+        });
     });
 
-    it("getVideoData", function(){ 
-            
-        expect(manExtn.getVideoData(manifest)).not.toBeNull();
+
+    it("getIsMain returns correct value", function () {
+        var resBool = '';
+        manExtn.getIsMain(adaptationSet).then(function (Data) {
+            resBool = Data;
+        }, function (Error) {
+            resBool = Error;
+        });
+        waitsFor(function () {
+            if (resBool.toString() != '') return true;
+        }, "data is null", 100);
+        runs(function () {
+            resBool == true ? expect(resBool).toBeTruthy() : expect(resBool).not.toBeTruthy();
+        });
+    });
+
+    it("getRepresentationCount returns correct value", function () {
+        var res = '';
+        manExtn.getRepresentationCount(adaptationSet).then(function (Data) {
+            res = Data;
+        }, function (Error) {
+            res = Error;
+        });
+        waitsFor(function () {
+            if (res != '') return true;
+        }, "data is null", 100);
+        runs(function () {
+            expect(res + 1).toBeGreaterThan(0);
+        });
+    });
+
+    it("getVideoData returns correct value", function () {
+        var pass = '';
+        manExtn.getVideoData(manifest).then(function (Data) {
+            pass = true;
+        }, function (Error) {
+            pass = false;
+        });
+        waitsFor(function () {
+            if (pass.toString() != '') return true;
+        }, "data is null", 100);
+        runs(function () {
+            expect(pass).toBeTruthy()
+        });
+
     });
     /*
     it("getAudioDatas_NotNull", function(){ 
-            var manifest,
-                converter = new X2JS(matchers, '', true),
-                iron = new ObjectIron(getDashMap());
-            manifest = converter.xml_str2json(data);
-        expect(manExtn.getAudioDatas(manifest)).not.toBeNull();
+    var manifest,
+    converter = new X2JS(matchers, '', true),
+    iron = new ObjectIron(getDashMap());
+    manifest = converter.xml_str2json(data);
+    expect(manExtn.getAudioDatas(manifest)).not.toBeNull();
     });
     
     it("getAudioDatas_Null", function(){ 
-            var manifest=null;
-        expect(manExtn.getAudioDatas(manifest)).toBeNull();
+    var manifest=null;
+    expect(manExtn.getAudioDatas(manifest)).toBeNull();
     });
     */
-    it("getPrimaryAudioData", function(){ 
-            
-        expect(manExtn.getPrimaryAudioData(manifest)).not.toBeNull();
+    it("getPrimaryAudioData returns correct value", function () {
+        var pass = '';
+        manExtn.getPrimaryAudioData(manifest).then(function (Data) {
+            pass = true;
+        }, function (Error) {
+            pass = false;
+        });
+        waitsFor(function () {
+            if (pass.toString() != '') return true;
+        }, "data is null", 100);
+        runs(function () {
+            expect(pass).toBeTruthy()
+        });
     });
     /*
     it("getPrimaryAudioData_Null", function(){ 
-            var manifest = null;
-        expect(manExtn.getPrimaryAudioData(manifest)).toBeNull();
+    var manifest = null;
+    expect(manExtn.getPrimaryAudioData(manifest)).toBeNull();
     });*/
-    
-    it("getCodec", function(){ 
 
-        expect(manExtn.getCodec(adaptationSet)).not.toBeNull();
-    });/*
+    it("getCodec returns correct value", function () {
+        var data = '';
+        manExtn.getCodec(adaptationSet).then(function (Data) {
+            data = Data;
+        }, function (Error) {
+            data = null;
+        });
+        waitsFor(function () {
+            if (data != '') return true;
+        }, "data is null", 100);
+        runs(function () {
+            expect(data).not.toBeNull();
+        });
+
+    }); /*
     
     it("getIsLive_NotNull", function(){ 
             var manifest,
@@ -273,52 +363,115 @@
     });
 
     */
-    it("getIsDVR_Null", function(){ 
-    
-        expect(manExtn.getIsDVR(manifest)).not.toBeNull();
+    it("getIsDVR returns correct value", function () {
+        var pass = '';
+        manExtn.getIsDVR(manifest).then(function (Data) {
+            pass = true;
+        }, function (Error) {
+            pass = false;
+        });
+        waitsFor(function () {
+            if (pass.toString() != '') return true;
+        }, "data is null", 100);
+        runs(function () {
+            pass == true ? expect(pass).toBeTruthy() : expect(pass).not.toBeTruthy();
+        });
     });
     /*
     it("getIsLive_NotNull", function(){ 
-            var manifest,
-                converter = new X2JS(matchers, '', true),
-                iron = new ObjectIron(getDashMap());
-            manifest = converter.xml_str2json(data);
-        expect(manExtn.getIsDVR(manifest)).not.toBeNull();
+    var manifest,
+    converter = new X2JS(matchers, '', true),
+    iron = new ObjectIron(getDashMap());
+    manifest = converter.xml_str2json(data);
+    expect(manExtn.getIsDVR(manifest)).not.toBeNull();
     });
     */
-    it("getIsOnDemand", function(){ 
-            
-        expect(manExtn.getIsOnDemand(manifest)).not.toBeNull();
+    it("getIsOnDemand returns correct value", function () {
+        var pass = '';
+        manExtn.getIsOnDemand(manifest).then(function (Data) {
+            pass = true;
+        }, function (Error) {
+            pass = false;
+        });
+        waitsFor(function () {
+            if (pass.toString() != '') return true;
+        }, "data is null", 100);
+        runs(function () {
+            pass == true ? expect(pass).toBeTruthy() : expect(pass).not.toBeTruthy();
+        });
     });
     /*
     it("getIsOnDemand_Null", function(){ 
-            var manifest=null;
-        expect(manExtn.getIsOnDemand(manifest)).toBeNull();
+    var manifest=null;
+    expect(manExtn.getIsOnDemand(manifest)).toBeNull();
     });
     */
-    it("getDuration", function(){ 
-            
-        expect(manExtn.getDuration(manifest)).not.toBeNull();
+    it("getDuration returns correct value", function () {
+        var res = '';
+        manExtn.getDuration(manifest, true).then(function (Data) {
+            res = Data;
+        }, function (Error) {
+            res = Error;
+        });
+        waitsFor(function () {
+            if (res != '') return true;
+        }, "data is null", 100);
+        runs(function () {
+            expect(res + 1).toBeGreaterThan(0);
+        });
     });
-    
+
     // it("getDuration", function(){ 
-            
-        // expect(manExtn.getDuration(manifest)).not.toBeNull();
+
+    // expect(manExtn.getDuration(manifest)).not.toBeNull();
     // });
-    
-    it("getBandwidth", function(){ 
-            
-        expect(manExtn.getBandwidth(representation)).not.toBeNull();
+
+    it("getBandwidth returns correct value", function () {
+        var res = '';
+        manExtn.getBandwidth(adaptationSet.Representation_asArray[0]).then(function (Data) {
+            res = Data;
+        }, function (Error) {
+            res = Error;
+        });
+        waitsFor(function () {
+            if (res != '') return true;
+        }, "data is null", 100);
+        runs(function () {
+            expect(res).toEqual(adaptationSet.Representation_asArray[0].bandwidth);
+        });
     });
-    
-    it("getRefreshDelay", function(){ 
-            
-        expect(manExtn.getRefreshDelay(manifest)).not.toBeNull();
+
+    it("getRefreshDelay returns correct value", function () {
+        var res = '';
+        manExtn.getRefreshDelay(manifest).then(function (Data) {
+            res = Data;
+        }, function (Error) {
+            res = Error;
+        });
+        waitsFor(function () {
+            if (res != '') return true;
+        }, "data is null", 100);
+        runs(function () {
+            isNaN(res) ? expect(isNaN(res)).toBeTruthy() : expect(res + 1).toBeGreaterThan(0);
+
+        });
     });
-    
-    it("getRepresentationFor", function(){ 
+
+    it("getRepresentationFor returns correct value", function () {
         var index = 0;
-        expect(manExtn.getRepresentationFor(index,adaptationSet)).not.toBeNull();
+        var res = '';
+        manExtn.getRepresentationFor(index, adaptationSet).then(function (Data) {
+            res = Data;
+        }, function (Error) {
+            res = Error;
+        });
+        waitsFor(function () {
+            if (res != '') return true;
+        }, "data is null", 100);
+        runs(function () {
+            expect(res.name).toEqual("Representation");
+
+        });
     });
     
     });
