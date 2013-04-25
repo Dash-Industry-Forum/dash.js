@@ -13,6 +13,37 @@
  describe("Parser Test Suite", function(){
     var baseUrl, parser, system, stub;   
 
+     //Method to read mpd and convert to string
+	function XmlToString(xmlPath) {
+
+		// predeclare to prevent strict js error.
+		var xmlDoc;
+		var mpdString;
+
+		// For IE based browsers:
+		if (window.ActiveXObject) {
+			xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+			xmlDoc.async = false;
+			xmlDoc.load(xmlPath);
+			mpdString = xmlDoc.xml.toString();
+		}
+
+		// For Mozilla/chrome based (standards compliant) browsers:
+		else if (document.implementation && document.implementation.createDocument) {
+			var xmlHttp = new window.XMLHttpRequest();
+			xmlHttp.open("GET", xmlPath, false);
+			xmlHttp.send(null);
+			xmlDoc = xmlHttp.responseXML.documentElement;
+
+			var serializer = new XMLSerializer();
+			mpdString = serializer.serializeToString(xmlDoc);
+		}
+
+		return mpdString;
+
+	}
+    
+    
     beforeEach(function(){
         baseUrl = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
         
@@ -24,282 +55,7 @@
         context = new Dash.di.DashContext();
         system.injectInto(context);
 
-        parser = system.getObject("parser");
-        
-                stub = '<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:DASH:schema:MPD:2011" xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011  DASH-MPD.xsd" type="static" mediaPresentationDuration="PT260.266S" availabilityStartTime="2012-09-05T09:00:00Z" maxSegmentDuration="PT4.080S" minBufferTime="PT5.001S" profiles="urn:mpeg:dash:profile:isoff-live:2011">' + 
-                        '<Period>' +
-                            '<AdaptationSet mimeType="video/mp4" segmentAlignment="true" startWithSAP="1" maxWidth="1280" maxHeight="720" maxFrameRate="25" par="16:9">' +
-                                '<SegmentTemplate presentationTimeOffset="0" timescale="90000" initialization="$RepresentationID$/Header.m4s" media="$RepresentationID$/$Number$.m4s" duration="360000" startNumber="0"/>' +
-                                '<Representation id="video1" width="1280" height="720" frameRate="25" sar="1:1" scanType="progressive" bandwidth="3000000" codecs="avc1.4D4020"/>' +
-                                '<Representation id="video2" width="1024" height="576" frameRate="25" sar="1:1" scanType="progressive" bandwidth="2000000" codecs="avc1.4D401F"/>' +
-                                '<Representation id="video3" width="704" height="396" frameRate="25" sar="1:1" scanType="progressive" bandwidth="1000000" codecs="avc1.4D401E"/>' +
-                                '<Representation id="video4" width="480" height="270" frameRate="25" sar="1:1" scanType="progressive" bandwidth="600000" codecs="avc1.4D4015"/>' +
-                                '<Representation id="video5" width="320" height="180" frameRate="25" sar="1:1" scanType="progressive" bandwidth="349952" codecs="avc1.4D400D"/>' +
-                            '</AdaptationSet>' +
-                            '<AdaptationSet mimeType="audio/mp4" lang="en" segmentAlignment="true" startWithSAP="1">' +
-                                '<SegmentTemplate presentationTimeOffset="0" timescale="48000" initialization="$RepresentationID$/Header.m4s" media="$RepresentationID$/$Number$.m4s" duration="192000" startNumber="0"/>' +
-                                '<Representation id="audio" audioSamplingRate="48000" bandwidth="56000" codecs="mp4a.40.2">' +
-                                    '<AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>' +
-                                '</Representation>' +
-                            '</AdaptationSet>' +
-                        '</Period>' +
-                    '</MPD>';     
-        var common = [
-                {
-                    name: 'profiles',
-                    merge: false
-                },
-                {
-                    name: 'width',
-                    merge: false
-                },
-                {
-                    name: 'height',
-                    merge: false
-                },
-                {
-                    name: 'sar',
-                    merge: false
-                },
-                {
-                    name: 'frameRate',
-                    merge: false
-                },
-                {
-                    name: 'audioSamplingRate',
-                    merge: false
-                },
-                {
-                    name: 'mimeType',
-                    merge: false
-                },
-                {
-                    name: 'segmentProfiles',
-                    merge: false
-                },
-                {
-                    name: 'codecs',
-                    merge: false
-                },
-                {
-                    name: 'maximumSAPPeriod',
-                    merge: false
-                },
-                {
-                    name: 'startsWithSap',
-                    merge: false
-                },
-                {
-                    name: 'maxPlayoutRate',
-                    merge: false
-                },
-                {
-                    name: 'codingDependency',
-                    merge: false
-                },
-                {
-                    name: 'scanType',
-                    merge: false
-                },
-                {
-                    name: 'FramePacking',
-                    merge: true
-                },
-                {
-                    name: 'AudioChannelConfiguration',
-                    merge: true
-                },
-                {
-                    name: 'ContentProtection',
-                    merge: true
-                },
-                {
-                    name: 'SegmentBase',
-                    merge: true
-                },
-                {
-                    name: 'SegmentTemplate',
-                    merge: true
-                },
-                {
-                    name: 'SegmentList',
-                    merge: true
-                }
-            ];
-            
-        manifest = {};
-        manifest.name = "manifest";
-        manifest.isRoot = true;
-        manifest.isArray = true;
-        manifest.parent = null;
-        manifest.Period_asArray = [];//children
-        manifest.properties = common;
-        manifest.mediaPresentationDuration=260.266;
-        manifest.availabilityStartTime="2012-09-05T09:00:00Z";
-        manifest.maxSegmentDuration="4.080";
-        manifest.minBufferTime="5.001";
-        manifest.profiles="urn:mpeg:dash:profile:isoff-live:2011";
-
-        
-        period = {};
-        period.name = "period";
-        period.isRoot = false;
-        period.isArray = true;
-        period.parent = manifest;
-        period.AdaptationSet_asArray = [];//children
-        period.properties = common;
-        manifest.Period_asArray.push(period);
-        {        
-            adaptationSet = {};
-            adaptationSet.name = "AdaptationSet";
-            adaptationSet.isRoot = false;
-            adaptationSet.isArray = true;
-            adaptationSet.parent = period;
-            adaptationSet.Representation_asArray = [];//children
-            adaptationSet.properties = common;
-                        
-            adaptationSet.mimeType="video/mp4";
-            adaptationSet.segmentAlignment="true";
-            adaptationSet.startWithSAP="1";
-            adaptationSet.maxWidth="1280";
-            adaptationSet.maxHeight="720";
-            adaptationSet.maxFrameRate="25";
-            adaptationSet.par="16:9";
-            // adaptationSet.SegmentTemplate.presentationTimeOffset="0";
-            // adaptationSet.SegmentTemplate.timescale="90000";
-            // adaptationSet.SegmentTemplate.initialization="$RepresentationID$/Header.m4s";
-            // adaptationSet.SegmentTemplate.media="$RepresentationID$/$Number$.m4s";
-            // adaptationSet.SegmentTemplate.duration="360000";
-            // adaptationSet.SegmentTemplate.startNumber="0";
-            period.AdaptationSet_asArray.push(adaptationSet);
-        }
-
-        
-        {
-            representation = {};
-            representation.name = "Representation";
-            representation.isRoot = false;
-            representation.isArray = true;
-            representation.parent = adaptationSet;
-            representation.children = null;
-            representation.properties = common;
-
-            representation.id="video1";
-            representation.width="1280";
-            representation.height="720";
-            representation.frameRate="25";
-            representation.sar="1:1";
-            representation.scanType="progressive";            
-            representation.codecs="avc1.4D4020";
-            adaptationSet.Representation_asArray.push(representation);
-        }
-
-        {
-            representation = {};
-            representation.name = "Representation";
-            representation.isRoot = false;
-            representation.isArray = true;
-            representation.parent = adaptationSet;
-            representation.children = null;
-            representation.properties = common;
-
-            representation.id="video2";
-            representation.width="1024";
-            representation.height="576";
-            representation.frameRate="25";
-            representation.sar="1:1";
-            representation.scanType="progressive";
-            representation.bandwidth="2000000";
-            representation.codecs="avc1.4D401F";
-            adaptationSet.Representation_asArray.push(representation);
-        }
-
-        {
-            representation = {};
-            representation.name = "Representation";
-            representation.isRoot = false;
-            representation.isArray = true;
-            representation.parent = adaptationSet;
-            representation.children = null;
-            representation.properties = common;
-
-            representation.id="video3";
-            representation.width="704";
-            representation.height="396";
-            representation.frameRate="25";
-            representation.sar="1:1";
-            representation.scanType="pogressive";
-            representation.bandwidth="1000000";
-            representation.codecs="avc1.4D401E";
-            adaptationSet.Representation_asArray.push(representation);
-        }
-        
-        {
-            representation = {};
-            representation.name = "Representation";
-            representation.isRoot = false;
-            representation.isArray = true;
-            representation.parent = adaptationSet;
-            representation.children = null;
-            representation.properties = common;
-
-            representation.id="video4";
-            representation.width="480";
-            representation.height="270";
-            representation.frameRate="25";
-            representation.sar="1:1";
-            representation.scanType="pogressive";
-            representation.bandwidth="1000000";
-            representation.codecs="avc1.4D4015";
-            adaptationSet.Representation_asArray.push(representation);
-        }
-        {
-            representation = {};
-            representation.name = "Representation";
-            representation.isRoot = false;
-            representation.isArray = true;
-            representation.parent = adaptationSet;
-            representation.children = null;
-            representation.properties = common;
-
-            representation.id="video5";
-            representation.width="320";
-            representation.height="180";
-            representation.frameRate="25";
-            representation.sar="1:1";
-            representation.scanType="pogressive";
-            representation.bandwidth="1000000";
-            representation.codecs="avc1.4D400D";
-            adaptationSet.Representation_asArray.push(representation);
-        }
-    {        
-            adaptationSet = {};
-            adaptationSet.name = "AdaptationSet";
-            adaptationSet.isRoot = false;
-            adaptationSet.isArray = true;
-            adaptationSet.parent = period;
-            adaptationSet.Representation_asArray = [];//children
-            adaptationSet.properties = common;
-                        
-            adaptationSet.mimeType="audio/mp4";
-            adaptationSet.segmentAlignment="true";
-            period.AdaptationSet_asArray.push(adaptationSet);
-        }
-    {
-            representation = {};
-            representation.name = "Representation";
-            representation.isRoot = false;
-            representation.isArray = true;
-            representation.parent = adaptationSet;
-            representation.children = null;
-            representation.properties = common;
-
-            representation.id="audio";
-            representation.audioSamplingRate="48000";
-            representation.bandwidth="bandwidth";
-            representation.codecs="mp4a.40.2";
-            adaptationSet.Representation_asArray.push(representation);
-       }
+        parser = system.getObject("parser");        
          
     });
     
@@ -309,11 +65,169 @@
         expect(result).toEqual('function');
     });
     
-   it("parse returns valid mimeType", function () {
+    it("parse reads mpd file and returns valid objects - MPD Type 1", function () {
         var data = '';
+        
+        var xmlPath = "http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd"
+        stub = XmlToString(xmlPath);
+        
+        parser.parse(stub,baseUrl).then(function (Data) {        
+            data = Data;
+            
+        }, function (Error) {
+            data = Error;
+        });
+        waitsFor(function () {
+            if (data != '') return true;
+        }, "parsed data is null", 50);
+        runs(function () {
+        
+            expect(data.xmlns).toEqual("urn:mpeg:DASH:schema:MPD:2011");
+            expect(data.type).toEqual("static");
+            expect(data.minBufferTime).toEqual(1.5);
+            expect(data.mediaPresentationDuration).toEqual(600);
+            expect(data.profiles).toEqual("urn:mpeg:dash:profile:isoff-main:2011");
+            expect(data.ProgramInformation.moreInformationURL).toEqual("http://gpac.sourceforge.net");
+            expect(data.ProgramInformation.Title).toEqual("mp4-main-multi-mpd-AV-NBS.mpd generated by GPAC");
+            expect(data.ProgramInformation.Copyright).toEqual("TelecomParisTech(c)2012");
+            expect(data.Period.start).toEqual(0);
+            expect(data.Period.duration).toEqual(600);
+            expect(data.Period.AdaptationSet[0].segmentAlignment).toBeTruthy();
+            expect(data.Period.AdaptationSet[0].maxWidth).toEqual(1920);
+            expect(data.Period.AdaptationSet[0].maxHeight).toEqual(1080);
+            expect(data.Period.AdaptationSet[0].maxFrameRate).toEqual(25);
+            expect(data.Period.AdaptationSet[0].par).toEqual("16:9");
+            expect(data.Period.AdaptationSet[0].ContentComponent.id).toEqual(1);
+            expect(data.Period.AdaptationSet[0].ContentComponent.contentType).toEqual("video");
+            
+            //Representation set1
+            expect(data.Period.AdaptationSet[0].Representation[0].id).toEqual("h264bl_low");
+            expect(data.Period.AdaptationSet[0].Representation[0].mimeType).toEqual("video/mp4");
+            expect(data.Period.AdaptationSet[0].Representation[0].codecs).toEqual("avc1.42c00d");
+            expect(data.Period.AdaptationSet[0].Representation[0].width).toEqual(320);
+            expect(data.Period.AdaptationSet[0].Representation[0].height).toEqual(180);
+            expect(data.Period.AdaptationSet[0].Representation[0].frameRate).toEqual(25);
+            expect(data.Period.AdaptationSet[0].Representation[0].sar).toEqual("1:1");
+            expect(data.Period.AdaptationSet[0].Representation[0].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[0].Representation[0].bandwidth).toEqual(50877);
+            expect(data.Period.AdaptationSet[0].Representation[0].SegmentList.timescale).toEqual(1000);
+            expect(data.Period.AdaptationSet[0].Representation[0].SegmentList.duration).toEqual(10000);            
+            expect(data.Period.AdaptationSet[0].Representation[0].SegmentList.Initialization.sourceURL).toEqual("mp4-main-multi-h264bl_low-.mp4");
+            for(var i=1; i<=60 ;i++)
+            {
+                expect(data.Period.AdaptationSet[0].Representation[0].SegmentList.SegmentURL[i-1].media).toEqual("mp4-main-multi-h264bl_low-" + i + ".m4s");
+            }
+            
+            //Representation set2
+            expect(data.Period.AdaptationSet[0].Representation[1].id).toEqual("h264bl_mid");
+            expect(data.Period.AdaptationSet[0].Representation[1].mimeType).toEqual("video/mp4");
+            expect(data.Period.AdaptationSet[0].Representation[1].codecs).toEqual("avc1.42c01e");
+            expect(data.Period.AdaptationSet[0].Representation[1].width).toEqual(640);
+            expect(data.Period.AdaptationSet[0].Representation[1].height).toEqual(360);
+            expect(data.Period.AdaptationSet[0].Representation[1].frameRate).toEqual(25);
+            expect(data.Period.AdaptationSet[0].Representation[1].sar).toEqual("1:1");
+            expect(data.Period.AdaptationSet[0].Representation[1].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[0].Representation[1].bandwidth).toEqual(194870);
+            expect(data.Period.AdaptationSet[0].Representation[1].SegmentList.timescale).toEqual(1000);
+            expect(data.Period.AdaptationSet[0].Representation[1].SegmentList.duration).toEqual(10000);
+            expect(data.Period.AdaptationSet[0].Representation[1].SegmentList.Initialization.sourceURL).toEqual("mp4-main-multi-h264bl_mid-.mp4");
+            for(var i=1; i<=60 ;i++)
+            {
+                expect(data.Period.AdaptationSet[0].Representation[1].SegmentList.SegmentURL[i-1].media).toEqual("mp4-main-multi-h264bl_mid-" + i + ".m4s");
+            }
+            
+            //Representation set3
+            expect(data.Period.AdaptationSet[0].Representation[2].id).toEqual("h264bl_hd");
+            expect(data.Period.AdaptationSet[0].Representation[2].mimeType).toEqual("video/mp4");
+            expect(data.Period.AdaptationSet[0].Representation[2].codecs).toEqual("avc1.42c01f");
+            expect(data.Period.AdaptationSet[0].Representation[2].width).toEqual(1280);
+            expect(data.Period.AdaptationSet[0].Representation[2].height).toEqual(720);
+            expect(data.Period.AdaptationSet[0].Representation[2].frameRate).toEqual(25);
+            expect(data.Period.AdaptationSet[0].Representation[2].sar).toEqual("1:1");
+            expect(data.Period.AdaptationSet[0].Representation[2].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[0].Representation[2].bandwidth).toEqual(514828);
+            expect(data.Period.AdaptationSet[0].Representation[2].SegmentList.timescale).toEqual(1000);
+            expect(data.Period.AdaptationSet[0].Representation[2].SegmentList.duration).toEqual(10000);
+            expect(data.Period.AdaptationSet[0].Representation[2].SegmentList.Initialization.sourceURL).toEqual("mp4-main-multi-h264bl_hd-.mp4");
+            for(var i=1; i<=60 ;i++)
+            {
+                expect(data.Period.AdaptationSet[0].Representation[2].SegmentList.SegmentURL[i-1].media).toEqual("mp4-main-multi-h264bl_hd-" + i + ".m4s");
+            }
+            
+            //Representation set4
+            expect(data.Period.AdaptationSet[0].Representation[3].id).toEqual("h264bl_full");
+            expect(data.Period.AdaptationSet[0].Representation[3].mimeType).toEqual("video/mp4");
+            expect(data.Period.AdaptationSet[0].Representation[3].codecs).toEqual("avc1.42c028");
+            expect(data.Period.AdaptationSet[0].Representation[3].width).toEqual(1920);
+            expect(data.Period.AdaptationSet[0].Representation[3].height).toEqual(1080);
+            expect(data.Period.AdaptationSet[0].Representation[3].frameRate).toEqual(25);
+            expect(data.Period.AdaptationSet[0].Representation[3].sar).toEqual("1:1");
+            expect(data.Period.AdaptationSet[0].Representation[3].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[0].Representation[3].bandwidth).toEqual(770699);
+            expect(data.Period.AdaptationSet[0].Representation[3].SegmentList.timescale).toEqual(1000);
+            expect(data.Period.AdaptationSet[0].Representation[3].SegmentList.duration).toEqual(10000);
+            expect(data.Period.AdaptationSet[0].Representation[3].SegmentList.Initialization.sourceURL).toEqual("mp4-main-multi-h264bl_full-.mp4");
+            for(var i=1; i<=60 ;i++)
+            {
+                expect(data.Period.AdaptationSet[0].Representation[3].SegmentList.SegmentURL[i-1].media).toEqual("mp4-main-multi-h264bl_full-" + i + ".m4s");
+            }
+            
+            //AdaptationSet 2
+            expect(data.Period.AdaptationSet[1].segmentAlignment).toBeTruthy();
+            expect(data.Period.AdaptationSet[1].lang).toEqual("und");
+            expect(data.Period.AdaptationSet[1].ContentComponent.id).toEqual(1);
+            expect(data.Period.AdaptationSet[1].ContentComponent.contentType).toEqual("audio");
+            expect(data.Period.AdaptationSet[1].ContentComponent.lang).toEqual("und");
+           
+            //Representation set1
+            expect(data.Period.AdaptationSet[1].Representation[0].id).toEqual("aaclc_low");
+            expect(data.Period.AdaptationSet[1].Representation[0].mimeType).toEqual("audio/mp4");
+            expect(data.Period.AdaptationSet[1].Representation[0].codecs).toEqual("mp4a.40.2");
+            expect(data.Period.AdaptationSet[1].Representation[0].audioSamplingRate).toEqual(44100);
+            expect(data.Period.AdaptationSet[1].Representation[0].lang).toEqual("und");
+            expect(data.Period.AdaptationSet[1].Representation[0].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[1].Representation[0].bandwidth).toEqual(19079);
+            expect(data.Period.AdaptationSet[1].Representation[0].AudioChannelConfiguration.schemeIdUri).toEqual("urn:mpeg:dash:23003:3:audio_channel_configuration:2011");
+            expect(data.Period.AdaptationSet[1].Representation[0].AudioChannelConfiguration.value).toEqual(1);
+            expect(data.Period.AdaptationSet[1].Representation[0].SegmentList.timescale).toEqual(1000);
+            expect(data.Period.AdaptationSet[1].Representation[0].SegmentList.duration).toEqual(9520);            
+            expect(data.Period.AdaptationSet[1].Representation[0].SegmentList.Initialization.sourceURL).toEqual("mp4-main-multi-aaclc_low-.mp4");
+            for(var i=1; i<=64 ;i++)
+            {
+                expect(data.Period.AdaptationSet[1].Representation[0].SegmentList.SegmentURL[i-1].media).toEqual("mp4-main-multi-aaclc_low-" + i + ".m4s");
+            }
+            
+            //Representation set1
+            expect(data.Period.AdaptationSet[1].Representation[1].id).toEqual("aaclc_high");
+            expect(data.Period.AdaptationSet[1].Representation[1].mimeType).toEqual("audio/mp4");
+            expect(data.Period.AdaptationSet[1].Representation[1].codecs).toEqual("mp4a.40.2");
+            expect(data.Period.AdaptationSet[1].Representation[1].audioSamplingRate).toEqual(44100);
+            expect(data.Period.AdaptationSet[1].Representation[1].lang).toEqual("und");
+            expect(data.Period.AdaptationSet[1].Representation[1].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[1].Representation[1].bandwidth).toEqual(66378);
+            expect(data.Period.AdaptationSet[1].Representation[1].AudioChannelConfiguration.schemeIdUri).toEqual("urn:mpeg:dash:23003:3:audio_channel_configuration:2011");
+            expect(data.Period.AdaptationSet[1].Representation[1].AudioChannelConfiguration.value).toEqual(1);
+            expect(data.Period.AdaptationSet[1].Representation[1].SegmentList.timescale).toEqual(1000);
+            expect(data.Period.AdaptationSet[1].Representation[1].SegmentList.duration).toEqual(9520);            
+            expect(data.Period.AdaptationSet[1].Representation[1].SegmentList.Initialization.sourceURL).toEqual("mp4-main-multi-aaclc_high-.mp4");
+            for(var i=1; i<=64 ;i++)
+            {
+                expect(data.Period.AdaptationSet[1].Representation[1].SegmentList.SegmentURL[i-1].media).toEqual("mp4-main-multi-aaclc_high-" + i + ".m4s");
+            }
+            
+        });
+        
+    });
+    
+    it("parse reads mpd file and returns valid objects - MPD Type 2", function () {
+        var data = '';
+
+        var xmlPath = "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd"
+        stub = XmlToString(xmlPath);
+
         parser.parse(stub, baseUrl).then(function (Data) {
-        
-            data = Data.Period.AdaptationSet[0].mimeType;
+            data = Data;
+
         }, function (Error) {
             data = Error;
         });
@@ -321,81 +235,150 @@
             if (data != '') return true;
         }, "parsed data is null", 50);
         runs(function () {
-            expect(data).toEqual("video/mp4");
+            expect(data.xmlns).toEqual("urn:mpeg:dash:schema:mpd:2011");
+            expect(data.type).toEqual("static");
+            expect(data.minBufferTime).toEqual(2);
+            expect(data.mediaPresentationDuration).toEqual(234);
+            expect(data.profiles).toEqual("urn:mpeg:dash:profile:isoff-live:2011");
+
+            //AdaptationSet set1
+            expect(data.Period.AdaptationSet[0].mimeType).toEqual("video/mp4");
+            expect(data.Period.AdaptationSet[0].segmentAlignment).toBeTruthy();
+            expect(data.Period.AdaptationSet[0].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.duration).toEqual(2);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.startNumber).toEqual(1);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.media).toEqual("video_$Number$_$Bandwidth$bps.mp4");
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.initialization).toEqual("video_$Bandwidth$bps.mp4");
+            expect(data.Period.AdaptationSet[0].Representation[0].id).toEqual("v0");
+            expect(data.Period.AdaptationSet[0].Representation[0].codecs).toEqual("avc1.4d401e");
+            expect(data.Period.AdaptationSet[0].Representation[0].width).toEqual(720);
+            expect(data.Period.AdaptationSet[0].Representation[0].height).toEqual(576);
+            expect(data.Period.AdaptationSet[0].Representation[0].bandwidth).toEqual(900000);
+            expect(data.Period.AdaptationSet[0].Representation[1].id).toEqual("v1");
+            expect(data.Period.AdaptationSet[0].Representation[1].codecs).toEqual("avc1.4d401e");
+            expect(data.Period.AdaptationSet[0].Representation[1].width).toEqual(720);
+            expect(data.Period.AdaptationSet[0].Representation[1].height).toEqual(576);
+            expect(data.Period.AdaptationSet[0].Representation[1].bandwidth).toEqual(500000);
+
+
+            //AdaptationSet set2
+            expect(data.Period.AdaptationSet[1].mimeType).toEqual("audio/mp4");
+            expect(data.Period.AdaptationSet[1].codecs).toEqual("mp4a.40.5");
+            expect(data.Period.AdaptationSet[1].segmentAlignment).toBeTruthy();
+            expect(data.Period.AdaptationSet[1].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.duration).toEqual(2);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.startNumber).toEqual(1);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.media).toEqual("audio_$Number$_$Bandwidth$bps_Input_2.mp4");
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.initialization).toEqual("audio_$Bandwidth$bps_Input_2.mp4");
+            expect(data.Period.AdaptationSet[1].Representation.id).toEqual("a2");
+            expect(data.Period.AdaptationSet[1].Representation.bandwidth).toEqual(56000);
         });
-        
-    });
-    
-    it("parse returns valid RepresentationID", function () {
-        var data = '';
-        parser.parse(stub,baseUrl).then(function (Data) {
-        
-            data = Data.Period.AdaptationSet[0].Representation[0].id;
-            
-        }, function (Error) {
-            data = Error;
-        });
-        waitsFor(function () {
-            if (data != '') return true;
-        }, "parsed data is null", 50);
-        runs(function () {
-            expect(data).toEqual("video1");
-        });
-        
-    });
-    
-    it("parse returns valid manifestPresentationDuration", function () {
-        var data = '';
-        parser.parse(stub,baseUrl).then(function (Data) {
-        
-            data = Data.mediaPresentationDuration;
-            
-        }, function (Error) {
-            data = Error;
-        });
-        waitsFor(function () {
-            if (data != '') return true;
-        }, "parsed data is null", 50);
-        runs(function () {
-            expect(data).toEqual(manifest.mediaPresentationDuration);
-        });
-        
-    });
-    
-    it("parse returns valid width", function () {
-        var data = '';
-        parser.parse(stub,baseUrl).then(function (Data) {
-        
-            data = Data.Period.AdaptationSet[0].Representation[1].width;
-            
-        }, function (Error) {
-            data = Error;
-        });
-        waitsFor(function () {
-            if (data != '') return true;
-        }, "parsed data is null", 50);
-        runs(function () {
-            expect(data).toEqual(1024);
-        });
-        
-    });
-    
-    it("parse returns valid codecs", function () {
-        var data = '';
-        parser.parse(stub,baseUrl).then(function (Data) {
-        
-            data = Data.Period.AdaptationSet[0].Representation[0].codecs;
-            
-        }, function (Error) {
-            data = Error;
-        });
-        waitsFor(function () {
-            if (data != '') return true;
-        }, "parsed data is null", 50);
-        runs(function () {
-            expect(data).toEqual("avc1.4D4020");
-        });
-        
     });
 
- });
+    it("parse reads mpd file and returns valid objects - MPD Type 3", function () {
+        var data = '';
+
+        var xmlPath = "http://www.digitalprimates.net/dash/streams/mp4-live-template/mp4-live-mpd-AV-BS.mpd"
+        stub = XmlToString(xmlPath);
+
+        parser.parse(stub, baseUrl).then(function (Data) {
+            data = Data;
+
+        }, function (Error) {
+            data = Error;
+        });
+        waitsFor(function () {
+            if (data != '') return true;
+        }, "parsed data is null", 50);
+        runs(function () {
+            expect(data.xmlns).toEqual("urn:mpeg:dash:schema:mpd:2011");
+            expect(data.type).toEqual("static");
+            expect(data.minBufferTime).toEqual(1.5);
+            expect(data.mediaPresentationDuration).toEqual(600);
+            expect(data.profiles).toEqual("urn:mpeg:dash:profile:isoff-live:2011");
+            expect(data.ProgramInformation.moreInformationURL).toEqual("http://gpac.sourceforge.net");
+            expect(data.ProgramInformation.Title).toEqual("mp4-live-mpd-AV-BS.mpd generated by GPAC");
+            expect(data.ProgramInformation.Copyright).toEqual("TelecomParisTech(c)2012");
+            expect(data.Period.start).toEqual(0);
+            expect(data.Period.duration).toEqual(600);
+
+            //AdaptationSet set1
+            expect(data.Period.AdaptationSet[0].segmentAlignment).toBeTruthy();
+            expect(data.Period.AdaptationSet[0].bitstreamSwitching).toBeTruthy();
+            expect(data.Period.AdaptationSet[0].maxWidth).toEqual(1920);
+            expect(data.Period.AdaptationSet[0].maxHeight).toEqual(1080);
+            expect(data.Period.AdaptationSet[0].maxFrameRate).toEqual(25);
+            expect(data.Period.AdaptationSet[0].par).toEqual("16:9");
+            expect(data.Period.AdaptationSet[0].ContentComponent.id).toEqual(1);
+            expect(data.Period.AdaptationSet[0].ContentComponent.contentType).toEqual("video");
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.timescale).toEqual(1000);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.duration).toEqual(10000);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.media).toEqual("mp4-live-$RepresentationID$-$Number$.m4s");
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.startNumber).toEqual(1);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.initialization).toEqual("mp4-live-mpd-AV-BS_set1_init.mp4");
+            expect(data.Period.AdaptationSet[0].Representation[0].id).toEqual("h264bl_low");
+            expect(data.Period.AdaptationSet[0].Representation[0].mimeType).toEqual("video/mp4");
+            expect(data.Period.AdaptationSet[0].Representation[0].codecs).toEqual("avc1.42c00d");
+            expect(data.Period.AdaptationSet[0].Representation[0].width).toEqual(320);
+            expect(data.Period.AdaptationSet[0].Representation[0].height).toEqual(180);
+            expect(data.Period.AdaptationSet[0].Representation[0].frameRate).toEqual(25);
+            expect(data.Period.AdaptationSet[0].Representation[0].sar).toEqual("1:1");
+            expect(data.Period.AdaptationSet[0].Representation[0].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[0].Representation[0].bandwidth).toEqual(50842);
+            expect(data.Period.AdaptationSet[0].Representation[1].id).toEqual("h264bl_mid");
+            expect(data.Period.AdaptationSet[0].Representation[1].mimeType).toEqual("video/mp4");
+            expect(data.Period.AdaptationSet[0].Representation[1].codecs).toEqual("avc1.42c01e");
+            expect(data.Period.AdaptationSet[0].Representation[1].width).toEqual(640);
+            expect(data.Period.AdaptationSet[0].Representation[1].height).toEqual(360);
+            expect(data.Period.AdaptationSet[0].Representation[1].frameRate).toEqual(25);
+            expect(data.Period.AdaptationSet[0].Representation[1].sar).toEqual("1:1");
+            expect(data.Period.AdaptationSet[0].Representation[1].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[0].Representation[1].bandwidth).toEqual(194834);
+            expect(data.Period.AdaptationSet[0].Representation[2].id).toEqual("h264bl_hd");
+            expect(data.Period.AdaptationSet[0].Representation[2].mimeType).toEqual("video/mp4");
+            expect(data.Period.AdaptationSet[0].Representation[2].codecs).toEqual("avc1.42c01f");
+            expect(data.Period.AdaptationSet[0].Representation[2].width).toEqual(1280);
+            expect(data.Period.AdaptationSet[0].Representation[2].height).toEqual(720);
+            expect(data.Period.AdaptationSet[0].Representation[2].frameRate).toEqual(25);
+            expect(data.Period.AdaptationSet[0].Representation[2].sar).toEqual("1:1");
+            expect(data.Period.AdaptationSet[0].Representation[2].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[0].Representation[2].bandwidth).toEqual(514793);
+            expect(data.Period.AdaptationSet[0].Representation[3].id).toEqual("h264bl_full");
+            expect(data.Period.AdaptationSet[0].Representation[3].mimeType).toEqual("video/mp4");
+            expect(data.Period.AdaptationSet[0].Representation[3].codecs).toEqual("avc1.42c028");
+            expect(data.Period.AdaptationSet[0].Representation[3].width).toEqual(1920);
+            expect(data.Period.AdaptationSet[0].Representation[3].height).toEqual(1080);
+            expect(data.Period.AdaptationSet[0].Representation[3].frameRate).toEqual(25);
+            expect(data.Period.AdaptationSet[0].Representation[3].sar).toEqual("1:1");
+            expect(data.Period.AdaptationSet[0].Representation[3].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[0].Representation[3].bandwidth).toEqual(770663);
+
+            //AdaptationSet set2
+            expect(data.Period.AdaptationSet[1].segmentAlignment).toBeTrue;
+            expect(data.Period.AdaptationSet[1].bitstreamSwitching).toBeTrue;
+            expect(data.Period.AdaptationSet[1].lang).toEqual("und");
+            expect(data.Period.AdaptationSet[1].AudioChannelConfiguration.schemeIdUri).toEqual("urn:mpeg:dash:23003:3:audio_channel_configuration:2011");
+            expect(data.Period.AdaptationSet[1].AudioChannelConfiguration.value).toEqual(1);
+            expect(data.Period.AdaptationSet[1].ContentComponent.id).toEqual(1);
+            expect(data.Period.AdaptationSet[1].ContentComponent.contentType).toEqual("audio");
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.timescale).toEqual(1000);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.duration).toEqual(9520);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.media).toEqual("mp4-live-$RepresentationID$-$Number$.m4s");
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.startNumber).toEqual(1);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.initialization).toEqual("mp4-live-mpd-AV-BS_set2_init.mp4");
+            expect(data.Period.AdaptationSet[1].Representation[0].id).toEqual("aaclc_low");
+            expect(data.Period.AdaptationSet[1].Representation[0].mimeType).toEqual("audio/mp4");
+            expect(data.Period.AdaptationSet[1].Representation[0].codecs).toEqual("mp4a.40.2");
+            expect(data.Period.AdaptationSet[1].Representation[0].audioSamplingRate).toEqual(44100);
+            expect(data.Period.AdaptationSet[1].Representation[0].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[1].Representation[0].bandwidth).toEqual(19042);
+            expect(data.Period.AdaptationSet[1].Representation[1].id).toEqual("aaclc_high");
+            expect(data.Period.AdaptationSet[1].Representation[1].mimeType).toEqual("audio/mp4");
+            expect(data.Period.AdaptationSet[1].Representation[1].codecs).toEqual("mp4a.40.2");
+            expect(data.Period.AdaptationSet[1].Representation[1].audioSamplingRate).toEqual(44100);
+            expect(data.Period.AdaptationSet[1].Representation[1].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[1].Representation[1].bandwidth).toEqual(66341);
+        });
+    });
+ 
+    });

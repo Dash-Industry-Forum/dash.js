@@ -196,53 +196,11 @@
         
     });
     
-    it("getBandwidthForRepresentation is a function", function(){
-    
-        var result = (typeof metricExtn.getBandwidthForRepresentation);
-        expect(result).toEqual('function');
-    });
-
     it("getBandwidthForRepresentation returns correct bandwidth", function(){
     
         expect(metricExtn.getBandwidthForRepresentation("video1")).toEqual("275000");
     });
-        
-    it("getIndexForRepresentation is a function", function(){
-    
-        var result = (typeof metricExtn.getIndexForRepresentation);
-        expect(result).toEqual('function');
-    });   
-    
-    it("getMaxIndexForBufferType is a function", function(){
-    
-        var result = (typeof metricExtn.getMaxIndexForBufferType);
-        expect(result).toEqual('function');
-    });    
-    
-    it("getCurrentRepresentationSwitch is a function", function(){
-    
-        var result = (typeof metricExtn.getCurrentRepresentationSwitch);
-        expect(result).toEqual('function');
-    }); 
-        
-    it("getCurrentBufferLevel is a function", function(){
-    
-        var result = (typeof metricExtn.getCurrentBufferLevel);
-        expect(result).toEqual('function');
-    });
-    
-    it("getCurrentHttpRequest is a function", function(){
-    
-        var result = (typeof metricExtn.getCurrentHttpRequest);
-        expect(result).toEqual('function');
-    });
-    
-    it("getCurrentDroppedFrames is a function", function(){
-    
-        var result = (typeof metricExtn.getCurrentDroppedFrames);
-        expect(result).toEqual('function');
-    });
-        
+          
     it("getIndexForRepresentation returns correct index", function(){
             
         expect(metricExtn.getIndexForRepresentation('video2')).toEqual(1);
@@ -258,7 +216,7 @@
         expect(metricExtn.getCurrentRepresentationSwitch(null)).toBeNull();
     });
 
-    it("getCurrentHttpRequest returns value", function(){
+    it("getCurrentHttpRequest returns null", function(){
         var metrics = {};
         metrics.BufferLevel = "";
         metrics.PlayList = [];
@@ -269,13 +227,8 @@
         
         expect(metricExtn.getCurrentHttpRequest(metrics)).toBeNull();
     });
-    
-    it("getCurrentHttpRequest returns null", function(){
-            
-        expect(metricExtn.getCurrentHttpRequest(null)).toBeNull();
-    });
-    
-    it("getCurrentDroppedFrames returns correct value", function(){
+       
+    it("getCurrentDroppedFrames returns correct currentDroppedFrames", function(){
         
         var metrics = {};
         metrics.DroppedFrames = [];
