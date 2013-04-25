@@ -15,7 +15,7 @@ var MpdArray = ["http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks
 
 for(var iLoop = 0;iLoop < MpdArray.length;iLoop++){
     (function(iLoop) {
-        describe("Manifest Extension Test Suite for " + MpdArray[iLoop], function () {
+        describe("Manifest Extension Test Suite for MPD Type" + (iLoop +1), function () {
             var context, baseUrl, manExtn, adaptationSetAudio, adaptationSetVideo, representation, matchers, durationRegex, datetimeRegex, numericRegex, manifest, period, stub, manifestObj,docMpdProto;
 
         //Method to read mpd and convert to string

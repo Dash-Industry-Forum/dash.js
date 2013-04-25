@@ -380,5 +380,190 @@
             expect(data.Period.AdaptationSet[1].Representation[1].bandwidth).toEqual(66341);
         });
     });
- 
+     
+    it("parse reads mpd file and returns valid objects - MPD Type 4", function () {
+    
+        var data = '';
+        
+        var xmlPath = "http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd"
+        stub = XmlToString(xmlPath);
+        
+        parser.parse(stub,baseUrl).then(function (Data) {        
+            data = Data;
+            
+        }, function (Error) {
+            data = Error;
+        });
+        waitsFor(function () {
+            if (data != '') return true;
+        }, "parsed data is null", 50);
+        runs(function () {
+                    
+            expect(data.xmlns).toEqual("urn:mpeg:dash:schema:mpd:2011");        
+            expect(data.type).toEqual("static");
+            expect(data.minBufferTime).toEqual(10);
+            expect(data.mediaPresentationDuration).toEqual(102.72800000000001);
+            expect(data.maxSegmentDuration).toEqual(5);
+            expect(data.profiles).toEqual("urn:mpeg:dash:profile:isoff-live:2011,urn:com:dashif:dash264,urn:hbbtv:dash:profile:isoff-live:2012");
+            expect(data.Period).not.toBeNull();
+            expect(data.Period.BaseURL).toEqual("http://demo.unified-streaming.com/video/ateam/ateam.ism/dash/");
+            
+            
+            //AdaptationSet1
+            expect(data.Period.AdaptationSet[0].group).toEqual(1);
+            expect(data.Period.AdaptationSet[0].mimeType).toEqual("audio/mp4");
+            expect(data.Period.AdaptationSet[0].minBandwidth).toEqual(148000);
+            expect(data.Period.AdaptationSet[0].maxBandwidth).toEqual(148000);
+            expect(data.Period.AdaptationSet[0].segmentAlignment).toBeTruthy();
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.timescale).toEqual(48000);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.initialization).toEqual("ateam-$RepresentationID$.dash");
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.media).toEqual("ateam-$RepresentationID$-$Time$.dash");
+			expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline).not.toBeNull();
+			expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].t).toEqual(0);
+			expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].d).toEqual(200704);
+			expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[1].d).toEqual(119808);
+			expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[2].d).toEqual(102400);
+			expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[3].d).toEqual(104448);
+			expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[4].d).toEqual(141312);
+			expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[5].d).toEqual(114688);
+			expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[6].d).toEqual(111616);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[7].d).toEqual(102400);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[8].d).toEqual(116736);
+			expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[9].d).toEqual(117760);
+			expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[10].d).toEqual(102400);
+			expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[11].d).toEqual(101376);
+			expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[12].d).toEqual(102400);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[13].d).toEqual(111616);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[14].d).toEqual(116736);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[15].d).toEqual(128000);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[16].d).toEqual(138240);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[17].d).toEqual(174080);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[18].d).toEqual(132096);            
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[19].d).toEqual(106496);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[20].d).toEqual(105472);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[21].d).toEqual(110592);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[22].d).toEqual(105472);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[23].d).toEqual(106496);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[24].d).toEqual(102400);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[25].d).toEqual(128000);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[26].d).toEqual(107520);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[27].d).toEqual(131072);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[28].d).toEqual(189440);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[29].d).toEqual(116736);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[30].d).toEqual(199680);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[31].d).toEqual(104448);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[32].d).toEqual(102400);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[33].d).toEqual(117760);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[34].d).toEqual(111616);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[35].d).toEqual(124928);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[36].d).toEqual(117760);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[37].d).toEqual(108544);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[38].d).toEqual(199680);
+            expect(data.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[39].d).toEqual(94208);
+            
+            //Representation set1
+            expect(data.Period.AdaptationSet[0].Representation.id).toEqual("audio=148000");
+            expect(data.Period.AdaptationSet[0].Representation.mimeType).toEqual("audio/mp4");
+            expect(data.Period.AdaptationSet[0].Representation.codecs).toEqual("mp4a.40.2");
+            expect(data.Period.AdaptationSet[0].Representation.bandwidth).toEqual(148000);
+			expect(data.Period.AdaptationSet[0].Representation.audioSamplingRate).toEqual(48000);			
+            expect(data.Period.AdaptationSet[0].Representation.AudioChannelConfiguration.schemeIdUri).toEqual("urn:mpeg:dash:23003:3:audio_channel_configuration:2011");			
+			expect(data.Period.AdaptationSet[0].Representation.AudioChannelConfiguration.value).toEqual(2);
+            
+            //AdaptationSet2
+            expect(data.Period.AdaptationSet[1].group).toEqual(2);
+            expect(data.Period.AdaptationSet[1].mimeType).toEqual("video/mp4");
+            expect(data.Period.AdaptationSet[1].par).toEqual("16:9");
+            expect(data.Period.AdaptationSet[1].minBandwidth).toEqual(475000);
+            expect(data.Period.AdaptationSet[1].maxBandwidth).toEqual(6589000);
+            expect(data.Period.AdaptationSet[1].minWidth).toEqual(176);
+            expect(data.Period.AdaptationSet[1].maxWidth).toEqual(1680);
+            expect(data.Period.AdaptationSet[1].minHeight).toEqual(99);
+            expect(data.Period.AdaptationSet[1].maxHeight).toEqual(944);
+            expect(data.Period.AdaptationSet[1].startWithSAP).toEqual(1);
+            expect(data.Period.AdaptationSet[1].segmentAlignment).toBeTruthy();
+            
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.timescale).toEqual(1000);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.initialization).toEqual("ateam-$RepresentationID$.dash");
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.media).toEqual("ateam-$RepresentationID$-$Time$.dash");
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline).not.toBeNull();
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[0].t).toEqual(0);
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[0].d).toEqual(4171);
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[1].d).toEqual(2503);
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[2].d).toEqual(2127);
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[3].d).toEqual(2169);
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[4].d).toEqual(2961);
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[5].d).toEqual(2377);
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[6].d).toEqual(2336);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[7].d).toEqual(2127);
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[8].d).toEqual(2419);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[9].d).toEqual(2461);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[10].d).toEqual(2127);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[10].r).toEqual(2);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[11].d).toEqual(2336);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[12].d).toEqual(2419);
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[13].d).toEqual(2670);
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[14].d).toEqual(2877);
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[15].d).toEqual(3629);
+			expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[16].d).toEqual(2753);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[17].d).toEqual(2210);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[18].d).toEqual(2211);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[19].d).toEqual(2294);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[20].d).toEqual(2210);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[21].d).toEqual(2211);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[22].d).toEqual(2127);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[23].d).toEqual(2669);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[24].d).toEqual(2253);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[25].d).toEqual(2711);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[26].d).toEqual(3962);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[27].d).toEqual(2419);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[28].d).toEqual(4171);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[29].d).toEqual(2169);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[30].d).toEqual(2127);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[31].d).toEqual(2461);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[32].d).toEqual(2335);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[33].d).toEqual(2586);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[34].d).toEqual(2461);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[35].d).toEqual(2252);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[36].d).toEqual(4171);
+            expect(data.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S[37].d).toEqual(2002);
+                       
+		
+            //Representation set2
+            expect(data.Period.AdaptationSet[1].Representation[0].id).toEqual("video=475000");
+            expect(data.Period.AdaptationSet[1].Representation[0].bandwidth).toEqual(475000);
+            expect(data.Period.AdaptationSet[1].Representation[0].codecs).toEqual("avc1.42C00D");
+            expect(data.Period.AdaptationSet[1].Representation[0].width).toEqual(176);
+			expect(data.Period.AdaptationSet[1].Representation[0].height).toEqual(99);			
+            expect(data.Period.AdaptationSet[1].Representation[0].frameRate).toEqual("24000/1001");
+            
+            //Representation set3
+            expect(data.Period.AdaptationSet[1].Representation[1].id).toEqual("video=639000");
+            expect(data.Period.AdaptationSet[1].Representation[1].bandwidth).toEqual(639000);
+            expect(data.Period.AdaptationSet[1].Representation[1].codecs).toEqual("avc1.42C014");
+            expect(data.Period.AdaptationSet[1].Representation[1].width).toEqual(369);
+			expect(data.Period.AdaptationSet[1].Representation[1].height).toEqual(208);			
+            expect(data.Period.AdaptationSet[1].Representation[1].frameRate).toEqual("24000/1001");	
+
+            //Representation set4
+            expect(data.Period.AdaptationSet[1].Representation[2].id).toEqual("video=2083000");
+            expect(data.Period.AdaptationSet[1].Representation[2].bandwidth).toEqual(2083000);
+            expect(data.Period.AdaptationSet[1].Representation[2].codecs).toEqual("avc1.42C01E");
+            expect(data.Period.AdaptationSet[1].Representation[2].width).toEqual(768);
+			expect(data.Period.AdaptationSet[1].Representation[2].height).toEqual(432);			
+            expect(data.Period.AdaptationSet[1].Representation[2].frameRate).toEqual("24000/1001");	            
+            
+            //Representation set4
+            expect(data.Period.AdaptationSet[1].Representation[3].id).toEqual("video=6589000");
+            expect(data.Period.AdaptationSet[1].Representation[3].bandwidth).toEqual(6589000);
+            expect(data.Period.AdaptationSet[1].Representation[3].codecs).toEqual("avc1.42C028");
+            expect(data.Period.AdaptationSet[1].Representation[3].width).toEqual(1680);
+			expect(data.Period.AdaptationSet[1].Representation[3].height).toEqual(944);			
+            expect(data.Period.AdaptationSet[1].Representation[3].frameRate).toEqual("24000/1001");	 
+           
+        });
+        
+    });
+   
+    
     });
