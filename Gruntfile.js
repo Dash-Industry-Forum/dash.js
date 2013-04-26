@@ -42,6 +42,8 @@ module.exports = function(grunt) {
             "dash.js/app/lib/q.min.js",
             "dash.js/app/lib/xml2json.js",
             "dash.js/app/lib/objectiron.js",
+            "./test/js/utils/MPDfiles.js",
+            "./test/js/utils/utils.js",
             "dash.js/app/lib/dijon.js"],
           template : require('grunt-template-jasmine-istanbul'),
           templateOptions: {
