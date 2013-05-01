@@ -2,19 +2,15 @@
 ## Node.js
 #################
 
-
 node_modules
-
 
 #################
 ## Grunt
 #################
 
-
 .grunt
 _SpecRunner.html
 reports
-
 
 #################
 ## Eclipse
