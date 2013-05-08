@@ -5,18 +5,20 @@ module.exports = function(grunt) {
     },
     watch: {},
     jshint: {
-      all: [
-        "app/js/*/**/*.js"],
-
+      all: ["app/js/*/**/*.js"],
       options: {
-        browser: true,
-        devel: true, // this should be temporary
-        jquery: true,
-        globals: {
-          dijon: true,
-          Q: true,
-          X2JS: true,
-          ObjectIron: true
+        jshintrc: ".jshintrc"
+      }
+    },
+    uglify : {
+      dist : {
+        files: {
+          "dash.min.js" : [
+            "app/js/streaming/MediaPlayer.js",
+            "app/js/streaming/Context.js",
+            "app/js/dash/Dash.js",
+            "app/js/dash/DashContext.js",
+            "app/js/*/**/*.js"],
         }
       }
     },
@@ -61,7 +63,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
 
   // Define tasks
-  grunt.registerTask('default', ['connect','jshint','jasmine']);
+  grunt.registerTask('default', ['uglify', 'connect', 'jasmine', 'jshint']);
 };
