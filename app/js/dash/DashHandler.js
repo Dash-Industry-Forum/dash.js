@@ -1,19 +1,35 @@
 /*
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * author Digital Primates
- * copyright dash-if 2012
+ * The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ * 
+ * Copyright (c) 2013, Dash Industry Forum
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * •  Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * •  Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * •  Neither the name of the Dash Industry Forum nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 Dash.dependencies.DashHandler = function () {
     "use strict";
@@ -171,8 +187,11 @@ Dash.dependencies.DashHandler = function () {
                 seg,
                 time = 0,
                 count = 0,
-                url,
-                tIdx;
+                url;
+
+            if (template.hasOwnProperty("startNumber")) {
+                count = template.startNumber;
+            }
 
             fragments = timeline.S_asArray;
             for (i = 0, len = fragments.length; i < len; i += 1) {
@@ -195,14 +214,8 @@ Dash.dependencies.DashHandler = function () {
 
                     seg.duration = frag.d;
 
-                    if (template.hasOwnProperty("startNumber")) {
-                        tIdx = template.startNumber + count;
-                    } else {
-                        tIdx = count;
-                    }
-
                     url = template.media;
-                    url = replaceNumberForTemplate(url, tIdx);
+                    url = replaceNumberForTemplate(url, count);
                     url = replaceTimeForTemplate(url, seg.startTime);
                     seg.media = url;
 
@@ -221,7 +234,15 @@ Dash.dependencies.DashHandler = function () {
                 i,
                 len,
                 seg,
-                s;
+                s,
+                start = 1,
+                baseTime;
+
+            if (list.hasOwnProperty("startNumber")) {
+                start = Math.max(list.startNumber, 1);
+            }
+
+            baseTime = (start - 1) * list.duration;
 
             for (i = 0, len = list.SegmentURL_asArray.length; i < len; i += 1) {
                 s = list.SegmentURL_asArray[i];
@@ -234,7 +255,7 @@ Dash.dependencies.DashHandler = function () {
 
                 seg.timescale = list.timescale;
                 seg.duration = list.duration;
-                seg.startTime = i * list.duration;
+                seg.startTime = baseTime + (i * list.duration);
 
                 segments.push(seg);
             }
@@ -283,11 +304,39 @@ Dash.dependencies.DashHandler = function () {
         getIndexForSegments = function (time, segments) {
             var idx = -1,
                 frag,
-                ft;
+                ft,
+                fd,
+                i,
+                len;
 
-            if (segments) {
+            if (segments && segments.length > 0) {
+                for (i = segments.length - 1; i >= 0; i--) {
+                    frag = segments[i];
+                    ft = frag.startTime / frag.timescale;
+                    fd = frag.duration / frag.timescale;
+                    if (time >= ft && time <= (ft + fd)) {
+                        idx = i;
+                        break;
+                    }
+                }
+            }
+
+            if (idx === -1) {
+                console.log("Couldn't figure out a time!");
+                console.log("Time: " + time);
+                console.log(segments);
+            }
+
+            // TODO : This is horrible.
+            // Temp fix for SegmentTimeline refreshes.
+            //if (idx === -1) {
+            //    idx = 0;
+            //}
+
+            /*
+            if (segments && segments.length > 0) {
                 idx = 0;
-                ft = 0;
+                ft = segments[0].startTime / segments[0].timescale;
                 frag = null;
 
                 while (ft <= time && (idx + 1) < segments.length) {
@@ -297,8 +346,9 @@ Dash.dependencies.DashHandler = function () {
                 }
                 idx -= 1;
             }
+            */
 
-            return (function () { return Q.when(idx); }());
+            return Q.when(idx);
         },
 
         getIndexForTemplate = function (time, template) {
@@ -321,20 +371,15 @@ Dash.dependencies.DashHandler = function () {
             dur = (fDuration / fTimescale);
             idx = Math.floor(time / dur);
 
-            return (function () { return Q.when(idx); }());
+            idx += 1; // SegmentTemplate starts at 1, not zero, so apply that offset here.
+
+            return Q.when(idx);
         },
 
         getRequestForTemplate = function (index, template, representation) {
             var request = new MediaPlayer.vo.SegmentRequest(),
                 url,
-                tIdx,
                 time;
-
-            if (template.hasOwnProperty("startNumber")) {
-                tIdx = template.startNumber + index;
-            } else {
-                tIdx = index;
-            }
 
             time = (template.duration * index);
             if (template.hasOwnProperty("timescale")) {
@@ -344,7 +389,7 @@ Dash.dependencies.DashHandler = function () {
 
             url = template.media;
 
-            url = replaceNumberForTemplate(url, tIdx);
+            url = replaceNumberForTemplate(url, index);
             url = replaceTimeForTemplate(url, time);
             url = replaceBandwidthForTemplate(url, representation.bandwidth);
             url = replaceIDForTemplate(url, representation.id);
@@ -354,12 +399,16 @@ Dash.dependencies.DashHandler = function () {
             request.url = getRequestUrl(url, representation.BaseURL);
             request.duration = template.duration / template.timescale;
             request.timescale = template.timescale;
-            request.startTime = (tIdx * template.duration) / template.timescale;
+            request.startTime = (index * template.duration) / template.timescale;
 
-            return (function () { return Q.when(request); }());
+            return Q.when(request);
         },
 
         getRequestForSegment = function (index, segment, representation) {
+            if (segment === null || segment === undefined) {
+                return Q.when(null);
+            }
+
             var request = new MediaPlayer.vo.SegmentRequest(),
                 url;
 
@@ -377,7 +426,7 @@ Dash.dependencies.DashHandler = function () {
             request.duration = segment.duration / segment.timescale;
             request.timescale = segment.timescale;
 
-            return (function () { return Q.when(request); }());
+            return Q.when(request);
         },
 
         getForTime = function (time, quality, data) {
@@ -514,6 +563,61 @@ Dash.dependencies.DashHandler = function () {
             );
 
             return deferred.promise;
+        },
+
+        getCurrentTime = function (quality, data) {
+            if (index === -1) {
+                return Q.when(0);
+            }
+
+            var self,
+                representation = getRepresentationForQuality(quality, data),
+                time,
+                bufferedIndex,
+                fs,
+                fd,
+                ft = 1,
+                deferred = Q.defer();
+
+            // get the last time again to be safe
+            bufferedIndex = index; // - 1;
+            if (bufferedIndex < 0) {
+                bufferedIndex = 0;
+            }
+
+            getSegments.call(self, representation).then(
+                function (segments) {
+                    // There's no segments so we *must* have a SegmentTemplate.
+                    if (segments === null || segments === undefined) {
+                        if (!representation.hasOwnProperty("SegmentTemplate")) {
+                            throw "Expected SegmentTemplate!";
+                        }
+
+                        fd = representation.SegmentTemplate.duration;
+                        if (representation.SegmentTemplate.hasOwnProperty("timescale")) {
+                            ft = representation.SegmentTemplate.timescale;
+                        }
+
+                        time = (fd / ft) * (bufferedIndex); // + 1);
+                    } else {
+                        if (bufferedIndex >= segments.length) {
+                            bufferedIndex = segments.length - 1;
+                        }
+
+                        fs = segments[bufferedIndex].startTime;
+                        fd = segments[bufferedIndex].duration;
+                        if (segments[bufferedIndex].hasOwnProperty("timescale")) {
+                            ft = segments[bufferedIndex].timescale;
+                        }
+
+                        time = (fs / ft); // + (fd / ft);
+                    }
+
+                    deferred.resolve(time);
+                }
+            )
+
+            return deferred.promise;
         };
 
     return {
@@ -547,7 +651,8 @@ Dash.dependencies.DashHandler = function () {
 
         getInitRequest: getInit,
         getSegmentRequestForTime: getForTime,
-        getNextSegmentRequest: getNext
+        getNextSegmentRequest: getNext,
+        getCurrentTime: getCurrentTime
     };
 };
 

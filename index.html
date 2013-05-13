@@ -81,7 +81,6 @@
     <script src="app/js/streaming/FragmentLoader.js"></script>
     <script src="app/js/streaming/Stream.js"></script>
     <script src="app/js/streaming/BufferController.js"></script>
-    <script src="app/js/streaming/BufferControllerUpdater.js"></script>
     <script src="app/js/streaming/rules/SwitchRequest.js"></script>
     <script src="app/js/streaming/rules/DownloadRatioRule.js"></script>
     <script src="app/js/streaming/rules/InsufficientBufferRule.js"></script>
@@ -120,15 +119,16 @@
         <div class="row title-header">
             <h4>Compatibility Notes:</h4>
             <div>
-                Chrome is the only browser supported.<br/>
+                A browser that supports MSE (Media Source Extensions) is required.<br/>
+                As of 5/13/13, Chrome is the only browser supported.<br/>
                 Use the most up-to-date version of Chrome for the best compatibility.<br/>
                 Many of the streams in the dropdown box only work in the developer channel or Canary versions of Chrome.<br/>
             </div>
         </div>
 
         <div class="row title-header">
-            <h3 class="demo-panel-title-header">Dash IF JavaScript Player</h3>
-            <img class="image" src="app/img/dp.png"/>
+            <h3 class="demo-panel-title-header">DASH IF Reference Client</h3>
+            <a href="http://www.digitalprimates.net/"><img class="image" src="app/img/dp.png"/></a>
         </div>
 
         <div class="row">
@@ -144,15 +144,33 @@
                         s -> Stable
                     -->
 
-                    <!--<option data-channels="" value="test" selected="selected">TEST</option>-->
+                    <option data-channels="" value="ipvidnetLive">Path 1 Live</option>
+                    <option data-channels="" value="uspLive">Unified Streaming Live</option>
+                    <option data-channels="" value="wowzaList">Wowza SegmentList</option>
+                    <option data-channels="" value="wowzaTemplate">Wowza SegmentTemplate</option>
+                    <option data-channels="" value="wowzaTimeline">Wowza SegmentTimeline</option>
+                    <option data-channels="" value="thomsonLive">Thomson Live</option>
+                    <!--<option data-channels="" value="live">Live</option>-->
 
                     <option data-channels="cd" value="archive">Live Archive</option>
-                    <option data-channels="" value="live">Live</option>
-                    <option data-channels="cdsb" value="envivio">Envivio</option>
-                    <!--<option data-channels="" value="youtube">YouTube SegmentBase</option>--> <!-- Invalid manifest, wrong audio codec.  Should be mp4a.40.2. -->
+                    <option data-channels="cdsb" value="envivio" selected="selected">Envivio</option>
                     <option data-channels="cdsb" value="list">Segment List</option>
                     <option data-channels="cdsb" value="template">Segment Template</option>
-                    <option data-channels="cdsb" value="timeline">Segment Timeline</option>
+                    <option data-channels="cdsb" value="timeline">Unified Streaming - Timeline</option>
+                    <!--<option data-channels="" value="youtube">YouTube SegmentBase</option>--> <!-- Invalid manifest, wrong audio codec.  Should be mp4a.40.2. -->
+
+                    <option data-channels="cd" value="microsoft1">Microsoft #1</option>
+                    <option data-channels="cd" value="microsoft2">Microsoft #2</option>
+                    <option data-channels="cd" value="microsoft3">Microsoft #3</option>
+                    <option data-channels="cd" value="microsoft4">Microsoft #4</option>
+                    <option data-channels="cd" value="microsoft5">Microsoft #5</option>
+
+                    <option data-channels="" value="microsoftCenc1">Microsoft Cenc #1</option>
+                    <option data-channels="" value="microsoftCenc2">Microsoft Cenc #2</option>
+                    <option data-channels="" value="microsoftCenc3">Microsoft Cenc #3</option>
+                    <option data-channels="" value="microsoftCenc4">Microsoft Cenc #4</option>
+                    <option data-channels="" value="microsoftCenc5">Microsoft Cenc #5</option>
+                    <option data-channels="" value="microsoftCenc6">Microsoft Cenc #6</option>
 
                     <option data-channels="cdsb" value="1a-netflix">DASH-AVC/264 – test vector 1a - Netflix</option>
                     <option data-channels="cd" value="1a-sony">DASH-AVC/264 – test vector 1a - Sony</option>

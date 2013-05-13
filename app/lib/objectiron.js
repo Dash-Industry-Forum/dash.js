@@ -25,7 +25,7 @@
                         merge: false
                     }
                 ];
- * 
+ *
  * parent = {};
  * parent.name = "ParentNode";
  * parent.isRoor = false;
@@ -33,7 +33,7 @@
  * parent.parent = null;
  * parent.children = [];
  * parent.properties = properties;
- * 
+ *
  * child = {};
  * child.name = "ChildNode";
  * child.isRoor = false;
@@ -42,13 +42,13 @@
  * child.children = null;
  * child.properties = properties;
  * parent.children.push(child);
- * 
+ *
  */
 
 function ObjectIron(map) {
-    
+
     var lookup;
-    
+
     // create a list of top level items to search for
     lookup = [];
     for (i = 0, len = map.length; i < len; i += 1) {
@@ -58,16 +58,16 @@ function ObjectIron(map) {
             lookup.push(map[i].name);
         }
     }
-    
+
     var mergeValues = function (parentItem, childItem) {
             var name,
                 parentValue,
                 childValue;
-            
+
             if (parentItem === null || childItem === null) {
                 return;
             }
-            
+
             for (name in parentItem) {
                 if (parentItem.hasOwnProperty(name)) {
                     if (!childItem.hasOwnProperty(name)) {
@@ -76,28 +76,28 @@ function ObjectIron(map) {
                 }
             }
         },
-    
+
         mapProperties = function (properties, parent, child) {
             var i,
                 len,
                 property,
                 parentValue,
                 childValue;
-            
+
             if (properties === null || properties.length === 0) {
                 return;
             }
-            
+
             for (i = 0, len = properties.length; i < len; i += 1) {
                 property = properties[i];
-                
+
                 if (parent.hasOwnProperty(property.name)) {
                     if (child.hasOwnProperty(property.name)) {
                         // check to see if we should merge
                         if (property.merge) {
                            parentValue = parent[property.name];
                            childValue = child[property.name];
-                            
+
                             // complex objects; merge properties
                             if (typeof parentValue === 'object' && typeof childValue === 'object') {
                                 mergeValues(parentValue, childValue);
@@ -118,7 +118,7 @@ function ObjectIron(map) {
                 }
             }
         },
-    
+
         mapItem = function (obj, node) {
             var item = obj,
                 i,
@@ -129,14 +129,14 @@ function ObjectIron(map) {
                 childItem,
                 childNode,
                 property;
-            
+
             if (item.children === null || item.children.length === 0) {
                 return;
             }
-            
+
             for (i = 0, len = item.children.length; i < len; i += 1) {
                 childItem = item.children[i];
-                
+
                 if (node.hasOwnProperty(childItem.name)) {
                     if (childItem.isArray) {
                         array = node[childItem.name + "_asArray"];
@@ -153,7 +153,7 @@ function ObjectIron(map) {
                 }
             }
         },
-    
+
         performMapping = function (source) {
             var i,
                 len,
@@ -162,15 +162,15 @@ function ObjectIron(map) {
                 item,
                 node,
                 array;
-            
+
             if (source === null) {
-                return;
+                return source;
             }
-            
+
             if (typeof source !== 'object') {
-                return;
+                return source;
             }
-            
+
             // first look to see if anything cares about the root node
             for (i = 0, len = lookup.length; i < len; i += 1) {
                 if (lookup[i] === "root") {
@@ -179,14 +179,14 @@ function ObjectIron(map) {
                     mapItem(item, node);
                 }
             }
-            
+
             // iterate over the objects and look for any of the items we care about
             for (pp in source) {
                 if (source.hasOwnProperty(pp)) {
                     pi = lookup.indexOf(pp);
                     if (pi !== -1) {
                         item = map[pi];
-                        
+
                         if (item.isArray) {
                             array = source[pp + "_asArray"];
                             for (i = 0, len = array.length; i < len; i += 1) {
@@ -202,10 +202,10 @@ function ObjectIron(map) {
                     performMapping(source[pp]);
                 }
             }
-            
+
             return source;
         };
-    
+
     return {
         run: performMapping
     };

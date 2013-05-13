@@ -1,19 +1,35 @@
 /*
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * author Digital Primates
- * copyright dash-if 2012
+ * The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ * 
+ * Copyright (c) 2013, Dash Industry Forum
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * •  Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * •  Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * •  Neither the name of the Dash Industry Forum nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 MediaPlayer.dependencies.Stream = function () {
     "use strict";
@@ -30,6 +46,13 @@ MediaPlayer.dependencies.Stream = function () {
         loaded = false,
         urlSource,
         errored = false,
+        DEFAULT_KEY_TYPE = "webkit-org.w3.clearkey",
+
+        playListener,
+        pauseListener,
+        seekingListener,
+        seekedListener,
+        timeupdateListener,
 
         play = function () {
             this.debug.log("Attempting play...");
@@ -64,6 +87,35 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
+        // Encrypted Media Extensions
+
+        onMediaSourceNeedsKey = function (event) {
+            this.debug.log("DRM: Key required.");
+            this.debug.log("DRM: Generating key request...");
+            this.videoModel.generateKeyRequest(DEFAULT_KEY_TYPE, event.initData);
+        },
+
+        onMediaSourceKeyMessage = function (event) {
+            this.debug.log("DRM: Got a key message...");
+            this.debug.log("DRM: Key system = " + event.keySystem);
+            if (event.keySystem === DEFAULT_KEY_TYPE) {
+                // todo : request license?
+                //requestLicense(e.message, e.sessionId, this);
+            } else {
+                this.debug.log("DRM: Key type not supported!");
+            }
+        },
+
+        onMediaSourceKeyAdded = function (event) {
+            this.debug.log("DRM: Key added.");
+        },
+
+        addKey = function (key, data, id) {
+            this.videoModel.addKey(DEFAULT_KEY_TYPE, key, data, id);
+        },
+
+        // Media Source
+
         setUpMediaSource = function () {
             var deferred = Q.defer(),
                 self = this,
@@ -79,21 +131,21 @@ MediaPlayer.dependencies.Stream = function () {
                     }
 
                     switch (code) {
-                    case 1:
-                        msg = "MEDIA_ERR_ABORTED";
-                        break;
-                    case 2:
-                        msg = "MEDIA_ERR_NETWORK";
-                        break;
-                    case 3:
-                        msg = "MEDIA_ERR_DECODE";
-                        break;
-                    case 4:
-                        msg = "MEDIA_ERR_SRC_NOT_SUPPORTED";
-                        break;
-                    case 5:
-                        msg = "MEDIA_ERR_ENCRYPTED";
-                        break;
+                        case 1:
+                            msg = "MEDIA_ERR_ABORTED";
+                            break;
+                        case 2:
+                            msg = "MEDIA_ERR_NETWORK";
+                            break;
+                        case 3:
+                            msg = "MEDIA_ERR_DECODE";
+                            break;
+                        case 4:
+                            msg = "MEDIA_ERR_SRC_NOT_SUPPORTED";
+                            break;
+                        case 5:
+                            msg = "MEDIA_ERR_ENCRYPTED";
+                            break;
                     }
 
                     errored = true;
@@ -116,7 +168,7 @@ MediaPlayer.dependencies.Stream = function () {
                     deferred.resolve(mediaSource);
                 };
 
-            this.debug.log("MediaSource should be closed. (" + mediaSource.readyState + ")");
+            self.debug.log("MediaSource should be closed. (" + mediaSource.readyState + ")");
 
             mediaSource.addEventListener("sourceclose", onMediaSourceClose, false);
             mediaSource.addEventListener("webkitsourceclose", onMediaSourceClose, false);
@@ -124,8 +176,12 @@ MediaPlayer.dependencies.Stream = function () {
             mediaSource.addEventListener("sourceopen", onMediaSourceOpen, false);
             mediaSource.addEventListener("webkitsourceopen", onMediaSourceOpen, false);
 
-            this.mediaSourceExt.attachMediaSource(mediaSource, this.videoModel);
-            this.debug.log("MediaSource attached to video.  Waiting on open...");
+            mediaSource.addEventListener("webkitneedkey", onMediaSourceNeedsKey.bind(self), false);
+            mediaSource.addEventListener("webkitkeymessage", onMediaSourceKeyMessage.bind(self), false);
+            mediaSource.addEventListener("webkitkeyadded", onMediaSourceKeyAdded.bind(self), false);
+
+            self.mediaSourceExt.attachMediaSource(mediaSource, self.videoModel);
+            self.debug.log("MediaSource attached to video.  Waiting on open...");
 
             return deferred.promise;
         },
@@ -296,7 +352,6 @@ MediaPlayer.dependencies.Stream = function () {
                                                     audioController.setBuffer(buffer);
                                                     audioController.setMinBufferTime(minBufferTime);
                                                     self.debug.log("Audio is ready!");
-                                                    //self.bufferControllerUpdater.addBufferController(audioController, 'audio'); TODO
                                                 }
 
                                                 audioReady = true;
@@ -385,6 +440,12 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
+        onSeeked = function (e) {
+            this.debug.log("Seek complete.");
+            this.videoModel.listen("seeking", seekingListener);
+            this.videoModel.unlisten("seeked", seekedListener);
+        },
+
         onProgress = function (e) {
             //this.debug.log("Got timeupdate event.");
         },
@@ -436,11 +497,23 @@ MediaPlayer.dependencies.Stream = function () {
                             }
                         );
                     } else {
-                        self.debug.log("Got VOD content.  Starting playback.");
-                        play.call(self);
+                        self.manifestExt.getPresentationOffset(self.manifestModel.getValue()).then(
+                            function (offset) {
+                                self.debug.log("Got VOD content.  Starting playback at offset: " + offset);
+                                seek.call(self, offset);
+                                //play.call(self);
+                            }
+                        );
                     }
                 }
             );
+        },
+
+        currentTimeChanged = function () {
+            this.debug.log("Current time has changed, block programmatic seek.");
+
+            this.videoModel.unlisten("seeking", seekingListener);
+            this.videoModel.listen("seeked", seekedListener);
         },
 
         manifestHasUpdated = function () {
@@ -504,14 +577,22 @@ MediaPlayer.dependencies.Stream = function () {
         capabilities: undefined,
         debug: undefined,
         metricsExt: undefined,
-        bufferControllerUpdater: undefined,
         errHandler: undefined,
 
         setup: function () {
-            this.videoModel.listen("play", onPlay.bind(this));
-            this.videoModel.listen("pause", onPause.bind(this));
-            this.videoModel.listen("seeking", onSeeking.bind(this));
-            this.videoModel.listen("timeupdate", onProgress.bind(this));
+            this.system.mapHandler("manifestUpdated", undefined, manifestHasUpdated.bind(this));
+            this.system.mapHandler("setCurrentTime", undefined, currentTimeChanged.bind(this));
+
+            playListener = onPlay.bind(this);
+            pauseListener = onPause.bind(this);
+            seekingListener = onSeeking.bind(this);
+            seekedListener = onSeeked.bind(this);
+            timeupdateListener = onProgress.bind(this);
+
+            this.videoModel.listen("play", playListener);
+            this.videoModel.listen("pause", pauseListener);
+            this.videoModel.listen("seeking", seekingListener);
+            this.videoModel.listen("timeupdate", timeupdateListener);
 
             ready = true;
             doLoad.call(this);
@@ -535,8 +616,6 @@ MediaPlayer.dependencies.Stream = function () {
             loaded = true;
             doLoad.call(this);
         },
-
-        manifestHasUpdated: manifestHasUpdated,
 
         reset: function () {
             pause.call(this);

@@ -134,6 +134,15 @@
                     sourceBuffer.append(new Uint8Array(req.response));
                     video.play();
                     video.currentTime = sourceBuffer.buffered.start(0);
+
+                    console.log("BUFFERED RANGES --------");
+
+                    var i, len;
+                    for (i = 0, len = sourceBuffer.buffered.length; i < len; i += 1) {
+                        console.log("RANGE: " + sourceBuffer.buffered.start(i) + " - " + sourceBuffer.buffered.end(i));
+                    }
+
+                    console.log("------------------------");
                 }
 
                 req.onerror = function () {
