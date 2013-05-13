@@ -1918,11 +1918,12 @@ input.todo-search-field {
   .todo-search {
     background-image: "../images/todo/search-2x.png"; } }
 footer {
-  background-color: #eceff1;
+  background-color: #FFFFFF;
   color: #bdc1c5;
   font-size: 15px;
   padding: 0; }
   footer a {
+      text-decoration: none;
     color: #a1a4a7;
     font-weight: 700; }
   footer p {
@@ -1930,7 +1931,7 @@ footer {
     line-height: 20px; }
 
 .footer-title {
-  margin: 0 0 22px;
+  margin: 0 0 0px;
   padding-top: 21px; }
 
 .footer-brand {
@@ -1938,13 +1939,14 @@ footer {
   margin-bottom: 26px;
   width: 220px; }
   .footer-brand img {
-    width: 216px; }
+    margin-right: 10px;
+    height: 40px; }
 
 .footer-banner {
   background-color: #1abc9c;
   color: #cff3ec;
-  margin-left: 42px;
-  min-height: 286px;
+  margin-left: 0px;
+  min-height: 340px;
   padding: 0 30px 30px; }
   .footer-banner .footer-title {
     color: white; }

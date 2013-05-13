@@ -117,18 +117,8 @@
 <body onload="init()">
     <div class="container">
         <div class="row title-header">
-            <h4>Compatibility Notes:</h4>
-            <div>
-                A browser that supports MSE (Media Source Extensions) is required.<br/>
-                As of 5/13/13, Chrome is the only browser supported.<br/>
-                Use the most up-to-date version of Chrome for the best compatibility.<br/>
-                Many of the streams in the dropdown box only work in the developer channel or Canary versions of Chrome.<br/>
-            </div>
-        </div>
-
-        <div class="row title-header">
             <h3 class="demo-panel-title-header">DASH IF Reference Client</h3>
-            <a href="http://www.digitalprimates.net/"><img class="image" src="app/img/dp.png"/></a>
+            <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
         </div>
 
         <div class="row">
@@ -356,6 +346,14 @@
                     </div>
 
                     <div>
+                        <b>Release Notes v0.2.3</b><br/>
+                        Change license header.<br/>
+                        Add footer.<br/>
+                        Add more live support.  Still a work in progress.<br/>
+                        Fix some bugs with the timeline.
+                    </div>
+
+                    <div>
                         <b>Release Notes v0.2.1</b><br/>
                         Add support for SegmentBase manifests with reference_type = 1.  (Multi-level SIDX.)<br/>
                         Finish externalizing live toggle.  The player no longer attempts to discover liveness from the manifest.<br/>
@@ -471,6 +469,61 @@
             </div>
 
         </div>
+
+        <div class="row" style="height: 15px;"></div>
     </div>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="span6">
+                    <div class="footer-banner">
+                        <h3 class="footer-title">Compatibility Notes:</h3>
+                        <ul>
+                            <li>A browser that supports MSE (Media Source Extensions) is required.</li>
+                            <li>As of 5/13/13, Chrome is the only browser supported.</li>
+                            <li>Use the most up-to-date version of Chrome for the best compatibility.</li>
+                            <li>Many of the streams in the dropdown box only work in the developer channel or Canary version of Chrome.</li>
+                            <li><a href="index.html?version=stable">Stable Chrome Streams</a></li>
+                            <li><a href="index.html?version=beta">Beta Chrome Streams</a></li>
+                            <li><a href="index.html?version=dev">Dev Chrome Streams</a></li>
+                            <li><a href="index.html?version=canary">Canary Chrome Streams</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="span3">
+                    <h3 class="footer-title">Libraries:</h3>
+                    <a class="footer-brand" href="http://jquery.com/" target="_blank">
+                      jquery
+                    </a>
+                    <a class="footer-brand" href="https://github.com/kriskowal/q" target="_blank">
+                      q
+                    </a>
+                    <a class="footer-brand" href="https://github.com/creynders/dijon-framework" target="_blank">
+                      dijon
+                    </a>
+                    <a class="footer-brand" href="http://pivotal.github.io/jasmine/" target="_blank">
+                      jasmine
+                    </a>
+                    <a class="footer-brand" href="https://github.com/designmodo/Flat-UI" target="_blank">
+                      flat ui
+                    </a>
+                    <a class="footer-brand" href="http://www.flotcharts.org/" target="_blank">
+                      flot
+                    </a>
+                    <a class="footer-brand" href="http://www.kendoui.com/web.aspx" target="_blank">
+                      kendo
+                    </a>
+                </div>
+                <div class="span3">
+                    <h3 class="footer-title">Contributors:</h3>
+                    <a class="footer-brand" href="http://www.digitalprimates.net" target="_blank">
+                      <img src="app/img/dp.png" alt="www.digitalprimates.net"/>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
 </body>
 </html>

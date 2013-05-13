@@ -3,7 +3,7 @@ body {
     font-size: 11px;
     font-family: "Lato", sans-serif;
     height: auto;
-    padding-bottom: 20px;
+    padding-bottom: 0px;
 }
 
 h1 {
@@ -28,6 +28,7 @@ p {
 .dk_options {
     width: 460px;
 }
+
 .demo-panel-title-header {
     float: left;
     padding-top: 3px;
@@ -88,14 +89,14 @@ p {
 .tooltip-box-top {
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
-    
-    border-top: 2px solid #dce4ec;    
+
+    border-top: 2px solid #dce4ec;
 }
 
 .tooltip-box-bottom {
     border-bottom-left-radius: 6px;
     border-bottom-right-radius: 6px;
-    
+
     border-bottom: 2px solid #dce4ec;
 }
 
