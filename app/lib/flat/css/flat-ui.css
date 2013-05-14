@@ -259,9 +259,9 @@ h6 {
   .btn.btn-primary {
     background-color: #0066FF; }
     .btn.btn-primary:hover, .btn.btn-primary:focus {
-      background-color: #2fe2bf; }
+      background-color: #00AFFF; }
     .btn.btn-primary:active, .btn.btn-primary.active {
-      background-color: #16a085; }
+      background-color: #0002FF; }
   .btn.btn-info {
     background-color: #3498db; }
     .btn.btn-info:hover, .btn.btn-info:focus {
@@ -657,11 +657,11 @@ h6 {
   transition: 0.25s;
   -webkit-backface-visibility: hidden; }
   .dk_toggle:hover, .dk_toggle:focus, .dk_focus .dk_toggle {
-    background-color: #2fe2bf;
+    background-color: #00AFFF;
     color: white;
     outline: none; }
   .dk_toggle:active {
-    background-color: #16a085;
+    background-color: #0002FF;
     outline: none; }
     .dk_toggle:active .select-icon {
       border-left-color: transparent; }
@@ -686,7 +686,7 @@ h6 {
   .dk_open .dk_toggle {
     background-color: #0066FF; }
     .dk_open .dk_toggle .select-icon {
-      background-color: #16a085;
+      background-color: #0002FF;
       border-left-color: transparent; }
 
 .dk_options {
@@ -1185,7 +1185,7 @@ textarea,
         left: -120%; }
   .toggle .toggle-radio {
     background: url("../images/toggle/icon-on.png") right top no-repeat;
-    color: #0066FF;
+    color: white;
     display: block;
     font-weight: 700;
     height: 21px;
@@ -1262,7 +1262,7 @@ textarea,
     transition: 0.14s linear;
     -webkit-backface-visibility: hidden; }
     .tagsinput .tag:hover {
-      background-color: #16a085;
+      background-color: #0002FF;
       padding-left: 12px;
       padding-right: 20px; }
       .tagsinput .tag:hover .tagsinput-remove-link {
@@ -1365,7 +1365,7 @@ textarea,
   position: relative; }
 
 .ui-slider-handle {
-  background-color: #16a085;
+  background-color: #0002FF;
   border-radius: 50%;
   cursor: pointer;
   height: 18px;
@@ -1382,10 +1382,10 @@ textarea,
   .ui-slider-handle[style*='100'] {
     margin-left: -15px; }
   .ui-slider-handle:hover, .ui-slider-handle:focus {
-    background-color: #2fe2bf;
+    background-color: #00AFFF;
     outline: none; }
   .ui-slider-handle:active {
-    background-color: #16a085; }
+    background-color: #0002FF; }
 
 .ui-slider-range {
   background-color: #0066FF;
@@ -1523,8 +1523,8 @@ textarea,
       transition: background 0.2s ease-out, border-color 0.2s ease-out, color 0.2s ease-out;
       -webkit-backface-visibility: hidden; }
     .pagination ul > li > a:active, .pagination ul > li > span:active {
-      background-color: #16a085;
-      border-color: #16a085; }
+      background-color: #0002FF;
+      border-color: #0002FF; }
   .pagination ul img {
     height: 14px;
     margin-top: -1px;
@@ -1633,7 +1633,7 @@ textarea,
   color: #0066FF; }
 
 .palette-text-firm-dark {
-  color: #16a085; }
+  color: #0002FF; }
 
 .palette-text-success {
   color: #2ecc71; }
@@ -1711,7 +1711,7 @@ textarea,
   background-color: #0066FF; }
 
 .palette-firm-dark {
-  background-color: #16a085; }
+  background-color: #0002FF; }
 
 .palette-success {
   background-color: #2ecc71; }
@@ -2206,7 +2206,7 @@ body.vjs-full-window {
     border-radius: 32px; }
 
 .vjs-seek-handle {
-  background-color: #16a085;
+  background-color: #0002FF;
   border-radius: 50%;
   position: absolute;
   width: 18px;
