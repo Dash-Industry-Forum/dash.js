@@ -29,8 +29,8 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 lastRequest.requestStartDate = new Date();
                 loading = true;
 
-                req.responseType = "arraybuffer";
                 req.open("GET", lastRequest.url, true);
+                req.responseType = "arraybuffer";
                 if (lastRequest.range) {
                     req.setRequestHeader("Range", "bytes=" + lastRequest.range);
                 }

@@ -21,15 +21,14 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
     createMediaSource: function () {
         "use strict";
 
-        var hasWebKit = (window.WebKitMediaSource !== null),
-            hasMediaSource = (window.MediaSource !== null);
+        var hasWebKit = ("WebKitMediaSource" in window),
+            hasMediaSource = ("MediaSource" in window);
 
-        if (hasWebKit) {
-            return Q.when(new WebKitMediaSource());
-        }
         if (hasMediaSource) {
             return Q.when(new MediaSource());
-        }
+        } else if (hasWebKit) {
+            return Q.when(new WebKitMediaSource());
+        } 
 
         return null;
     },
