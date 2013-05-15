@@ -59,11 +59,16 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
     append: function (buffer, bytes, videoModel) {
         "use strict";
         try {
-            buffer.append(bytes);
-            return Q.when(true);
+            if ("append" in buffer) {
+                buffer.append(bytes);
+                return Q.when(true);
+            } else if ("appendBuffer" in buffer) {
+                buffer.appendBuffer(bytes);
+                return Q.when(true);
+            } 
         } catch (err) {
-            return Q.when(false);
         }
+        return Q.when(false);
     },
 
     abort: function (buffer) {
