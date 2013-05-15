@@ -81,26 +81,26 @@ Dash.dependencies.DashMetricsExtensions = function () {
                 contentType = contentComponent.contentType;
             }
 
-            if (contentType !== undefined && contentType !== null)
+            if (contentType !== undefined && contentType !== null) {
                 contentType = contentType.toLowerCase();
 
-            if (bufferType !== undefined && bufferType !== null)
-                bufferType = bufferType.toLowerCase();
+                if (bufferType !== undefined && bufferType !== null) 
+                    bufferType = bufferType.toLowerCase();
 
-            if (contentType.indexOf(bufferType) !== -1) {
-                found = true;
+                if (contentType.indexOf(bufferType) !== -1) 
+                    found = true;
+
             }
-
             return found;
         },
 
         findMaxBufferIndex = function (periodArray, bufferType) {
             var period,
-                adaptationSet,
-                adaptationSetArray,
-                representationArray,
-                periodArrayIndex,
-                adaptationSetArrayIndex;
+            adaptationSet,
+            adaptationSetArray,
+            representationArray,
+            periodArrayIndex,
+            adaptationSetArrayIndex;
 
             for (periodArrayIndex = 0; periodArrayIndex < periodArray.length; periodArrayIndex = periodArrayIndex + 1) {
                 period = periodArray[periodArrayIndex];
@@ -119,9 +119,9 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
         getBandwidthForRepresentation = function (representationId) {
             var self = this,
-                manifest = self.manifestModel.getValue(),
-                representation,
-                periodArray = manifest.Period_asArray;
+            manifest = self.manifestModel.getValue(),
+            representation,
+            periodArray = manifest.Period_asArray;
 
             representation = findRepresentionInPeriodArray.call(self, periodArray, representationId);
 
@@ -134,9 +134,9 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
         getIndexForRepresentation = function (representationId) {
             var self = this,
-                manifest = self.manifestModel.getValue(),
-                representationIndex,
-                periodArray = manifest.Period_asArray;
+            manifest = self.manifestModel.getValue(),
+            representationIndex,
+            periodArray = manifest.Period_asArray;
 
             representationIndex = findRepresentationIndexInPeriodArray.call(self, periodArray, representationId);
             return representationIndex;
@@ -144,9 +144,9 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
         getMaxIndexForBufferType = function (bufferType) {
             var self = this,
-                manifest = self.manifestModel.getValue(),
-                maxIndex,
-                periodArray = manifest.Period_asArray;
+            manifest = self.manifestModel.getValue(),
+            maxIndex,
+            periodArray = manifest.Period_asArray;
 
             maxIndex = findMaxBufferIndex(periodArray, bufferType);
             return maxIndex;
@@ -235,13 +235,13 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
     return {
         manifestModel: undefined,
-        getBandwidthForRepresentation : getBandwidthForRepresentation,
-        getIndexForRepresentation : getIndexForRepresentation,
-        getMaxIndexForBufferType : getMaxIndexForBufferType,
-        getCurrentRepresentationSwitch : getCurrentRepresentationSwitch,
-        getCurrentBufferLevel : getCurrentBufferLevel,
-        getCurrentHttpRequest : getCurrentHttpRequest,
-        getCurrentDroppedFrames : getCurrentDroppedFrames
+            getBandwidthForRepresentation : getBandwidthForRepresentation,
+            getIndexForRepresentation : getIndexForRepresentation,
+            getMaxIndexForBufferType : getMaxIndexForBufferType,
+            getCurrentRepresentationSwitch : getCurrentRepresentationSwitch,
+            getCurrentBufferLevel : getCurrentBufferLevel,
+            getCurrentHttpRequest : getCurrentHttpRequest,
+            getCurrentDroppedFrames : getCurrentDroppedFrames
     };
 };
 

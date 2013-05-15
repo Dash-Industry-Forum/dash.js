@@ -250,8 +250,7 @@ MediaPlayer.dependencies.Stream = function () {
                                         var deferred;
                                         self.debug.log("Video codec: " + codec);
                                         if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
-                                            self.debug.log("Codec (" + codec + ") is not supported.");
-                                            alert("Codec (" + codec + ") is not supported.");
+                                            self.debug.warn("Codec (" + codec + ") is not supported.");
                                             deferred = Q.when(null);
                                         } else {
                                             deferred = self.sourceBufferExt.createSourceBuffer(mediaSource, codec);
@@ -279,7 +278,7 @@ MediaPlayer.dependencies.Stream = function () {
                                         checkIfInitialized.call(self, videoReady, audioReady, initialize);
                                     },
                                     function (error) {
-                                        alert("Error creating source buffer.");
+                                        self.debug.warn("Error creating source buffer.");
                                         videoReady = true;
                                         checkIfInitialized.call(self, videoReady, audioReady, initialize);
                                     }
@@ -338,7 +337,8 @@ MediaPlayer.dependencies.Stream = function () {
                                                 checkIfInitialized.call(self, videoReady, audioReady, initialize);
                                             },
                                             function (error) {
-                                                alert("Error creating source buffer.");
+
+                                                self.debug.warn("Error creating source buffer.");
                                                 audioReady = true;
                                                 checkIfInitialized.call(self, videoReady, audioReady, initialize);
                                             }
