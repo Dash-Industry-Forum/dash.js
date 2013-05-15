@@ -93,6 +93,16 @@ MediaPlayer.utils.Debug = function () {
                 htmlConsole.prepend(trace);
                 filterLatest();
             }
+        },
+
+        warn: function (message) {
+            console.warn(message);
+
+            if (htmlConsole !== null && logToHtmlConsole) {
+                var trace = "<dt><em>" + message + "</em></dt>";
+                htmlConsole.prepend(trace);
+                filterLatest();
+            }
         }
     };
 };
