@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Baseline Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+
+    <!-- Libraries -->
+    <script src="app/lib/jquery/js/jquery-1.8.3.min.js"></script>
+    <script src="app/lib/q.js"></script>
+    <script src="app/lib/dijon.js"></script>
+    <script src="app/lib/xml2json.js"></script>
+    <script src="app/lib/objectiron.js"></script>
+    <script src="app/lib/long.js"></script>
+    <script src="app/lib/Math.js"></script>
+
+    <!-- Player -->
+    <script src="app/js/streaming/MediaPlayer.js"></script>
+    <script src="app/js/streaming/Context.js"></script>
+    <script src="app/js/streaming/ErrorHandler.js"></script>
+    <script src="app/js/streaming/Capabilities.js"></script>
+    <script src="app/js/streaming/Debug.js"></script>
+    <script src="app/js/streaming/VideoModel.js"></script>
+    <script src="app/js/streaming/vo/SegmentRequest.js"></script>
+    <script src="app/js/streaming/ManifestLoader.js"></script>
+    <script src="app/js/streaming/ManifestUpdater.js"></script>
+    <script src="app/js/streaming/ManifestModel.js"></script>
+    <script src="app/js/streaming/MediaSourceExtensions.js"></script>
+    <script src="app/js/streaming/SourceBufferExtensions.js"></script>
+    <script src="app/js/streaming/VideoModelExtensions.js"></script>
+    <script src="app/js/streaming/BufferExtensions.js"></script>
+    <script src="app/js/streaming/FragmentController.js"></script>
+    <script src="app/js/streaming/AbrController.js"></script>
+    <script src="app/js/streaming/FragmentLoader.js"></script>
+    <script src="app/js/streaming/Stream.js"></script>
+    <script src="app/js/streaming/BufferController.js"></script>
+    <script src="app/js/streaming/rules/SwitchRequest.js"></script>
+    <script src="app/js/streaming/rules/DownloadRatioRule.js"></script>
+    <script src="app/js/streaming/rules/InsufficientBufferRule.js"></script>
+    <script src="app/js/streaming/rules/LimitSwitchesRule.js"></script>
+    <script src="app/js/streaming/rules/BaseRulesCollection.js"></script>
+
+    <!-- Metrics -->
+    <script src="app/js/streaming/vo/MetricsList.js"></script>
+    <script src="app/js/streaming/MetricsModel.js"></script>
+    <script src="app/js/streaming/vo/metrics/BufferLevel.js"></script>
+    <script src="app/js/streaming/vo/metrics/HTTPRequest.js"></script>
+    <script src="app/js/streaming/vo/metrics/PlayList.js"></script>
+    <script src="app/js/streaming/vo/metrics/RepresentationSwitch.js"></script>
+    <script src="app/js/streaming/vo/metrics/TCPConnection.js"></script>
+    <script src="app/js/streaming/vo/metrics/DroppedFrames.js"></script>
+
+    <!-- Dash -->
+    <script src="app/js/dash/Dash.js"></script>
+    <script src="app/js/dash/DashContext.js"></script>
+    <script src="app/js/dash/vo/Segment.js"></script>
+    <script src="app/js/dash/DashParser.js"></script>
+    <script src="app/js/dash/DashHandler.js"></script>
+    <script src="app/js/dash/BaseURLExtensions.js"></script>
+    <script src="app/js/dash/SonyExtensions.js"></script>
+    <script src="app/js/dash/FragmentExtensions.js"></script>
+    <script src="app/js/dash/DashManifestExtensions.js"></script>
+    <script src="app/js/dash/DashMetricsExtensions.js"></script>
+    <script src="app/js/dash/DashMetricsConverter.js"></script>
+
+    <script>
+        function startVideo() {
+            var url = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd",
+                video,
+                context,
+                player;
+
+            context = new Dash.di.DashContext();
+            player = new MediaPlayer(context);
+            player.startup();
+
+            player.setIsLive(false);
+            player.attachSource(url);
+
+            video = document.querySelector(".dash-video-player video"),
+            player.autoPlay = true;
+            player.attachView(video);
+        }
+    </script>
+
+    <body onload="startVideo()">
+        <div class="dash-video-player">
+            <video controls="true" style="width: 640px; height: 480px;"></video>
+        </div>
+    </body>
+</html>
