@@ -299,7 +299,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             fStart = 1,
             fDuration,
             fTimescale = 1,
-            representation;
+            representation,
+            list = null,
+            template = null;
 
         // We don't really care what representation we use; they should all start at the same time.
         // Just grab the first representation; if this isn't there, we have bigger problems.

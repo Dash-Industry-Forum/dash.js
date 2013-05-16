@@ -78,12 +78,13 @@ MediaPlayer.dependencies.Stream = function () {
         onMediaSourceKeyMessage = function (event) {
             this.debug.log("DRM: Got a key message...");
             this.debug.log("DRM: Key system = " + event.keySystem);
-            if (event.keySystem === DEFAULT_KEY_TYPE) {
-                // todo : request license?
-                //requestLicense(e.message, e.sessionId, this);
-            } else {
+            if (event.keySystem !== DEFAULT_KEY_TYPE) {
                 this.debug.log("DRM: Key type not supported!");
             }
+            // else {
+                // todo : request license?
+                //requestLicense(e.message, e.sessionId, this);
+            // }
         },
 
         onMediaSourceKeyAdded = function (event) {

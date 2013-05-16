@@ -595,7 +595,7 @@ Dash.dependencies.DashHandler = function () {
 
                     deferred.resolve(time);
                 }
-            )
+            );
 
             return deferred.promise;
         };

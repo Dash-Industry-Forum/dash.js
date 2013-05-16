@@ -541,7 +541,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                 playingTime = time;
                                 data = value;
                             }
-                        )
+                        );
                     }
                 );
             } else {

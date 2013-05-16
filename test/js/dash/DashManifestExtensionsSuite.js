@@ -627,16 +627,16 @@ for (var MPDstring in strMpd) {
 				runs(function () {
 					switch (docMpdProto) {
 					case 1:
-						expect(data).toEqual(5);
+						expect(data).toEqual(15);
 						break;
 					case 2:
-						expect(data).toEqual(5);
+						expect(data).toEqual(15);
 						break;
 					case 3:
-						expect(data).toEqual(5);
+						expect(data).toEqual(15);
 						break;
 					case 4:
-						expect(data).toEqual(5);
+						expect(data).toEqual(15);
 						break;
 					default:
 						expect(data).not.toBeNull();
