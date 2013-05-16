@@ -87,14 +87,14 @@ MediaPlayer.dependencies.Stream = function () {
             // }
         },
 
-        onMediaSourceKeyAdded = function (event) {
+        onMediaSourceKeyAdded = function () {
             this.debug.log("DRM: Key added.");
         },
-
+/*
         addKey = function (key, data, id) {
             this.videoModel.addKey(DEFAULT_KEY_TYPE, key, data, id);
         },
-
+*/
         // Media Source
 
         setUpMediaSource = function () {
@@ -226,7 +226,7 @@ MediaPlayer.dependencies.Stream = function () {
             // Figure out some bits about the stream before building anything.
             self.debug.log("Gathering information for buffers. (1)");
             self.manifestExt.getDuration(manifest, isLive).then(
-                function (duration) {
+                function (/*duration*/) {
                     self.debug.log("Gathering information for buffers. (2)");
                     self.bufferExt.decideBufferLength(manifest.minBufferTime).then(
                         function (time) {
@@ -279,7 +279,7 @@ MediaPlayer.dependencies.Stream = function () {
                                         videoReady = true;
                                         checkIfInitialized.call(self, videoReady, audioReady, initialize);
                                     },
-                                    function (error) {
+                                    function (/*error*/) {
                                         alert("Error creating source buffer.");
                                         videoReady = true;
                                         checkIfInitialized.call(self, videoReady, audioReady, initialize);
@@ -338,7 +338,7 @@ MediaPlayer.dependencies.Stream = function () {
                                                 audioReady = true;
                                                 checkIfInitialized.call(self, videoReady, audioReady, initialize);
                                             },
-                                            function (error) {
+                                            function (/*error*/) {
                                                 alert("Error creating source buffer.");
                                                 audioReady = true;
                                                 checkIfInitialized.call(self, videoReady, audioReady, initialize);
@@ -372,7 +372,7 @@ MediaPlayer.dependencies.Stream = function () {
                     return self.mediaSourceExt.setDuration(mediaSource, duration);
                 }
             ).then(
-                function (value) {
+                function (/*value*/) {
                     self.debug.log("Duration successfully set.");
                     initialized = true;
                     initialize.resolve(true);
@@ -382,7 +382,7 @@ MediaPlayer.dependencies.Stream = function () {
             return initialize.promise;
         },
 
-        onPlay = function (e) {
+        onPlay = function () {
             this.debug.log("Got play event.");
 
             if (!initialized) {
@@ -399,7 +399,7 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
-        onPause = function (e) {
+        onPause = function () {
             this.debug.log("Got pause event.");
 
             if (videoController) {
@@ -410,7 +410,7 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
-        onSeeking = function (e) {
+        onSeeking = function () {
             this.debug.log("Got seeking event.");
 
             if (videoController) {
@@ -421,13 +421,13 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
-        onSeeked = function (e) {
+        onSeeked = function () {
             this.debug.log("Seek complete.");
             this.videoModel.listen("seeking", seekingListener);
             this.videoModel.unlisten("seeked", seekedListener);
         },
 
-        onProgress = function (e) {
+        onProgress = function () {
             //this.debug.log("Got timeupdate event.");
         },
 
@@ -458,17 +458,17 @@ MediaPlayer.dependencies.Stream = function () {
                     return setUpMediaSource.call(self);
                 }
             ).then(
-                function (result) {
+                function (/*result*/) {
                     self.debug.log("MediaSource set up.");
                     return initializeMediaSource.call(self);
                 }
             ).then(
-                function (result) {
+                function (/*result*/) {
                     self.debug.log("Start initializing playback.");
                     return initializePlayback.call(self);
                 }
             ).then(
-                function (done) {
+                function (/*done*/) {
                     self.debug.log("Playback initialized!");
                     if (isLive) {
                         self.manifestExt.getLiveEdge(self.manifestModel.getValue()).then(

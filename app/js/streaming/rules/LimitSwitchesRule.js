@@ -28,7 +28,7 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
     return {
         debug: undefined,
 
-        checkIndex: function (current, metrics, data) {
+        checkIndex: function (current, metrics /*, data*/) {
             if (waiting > 0) {
                 waiting -= 1;
                 return Q.when(new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG));

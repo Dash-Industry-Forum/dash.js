@@ -3,6 +3,7 @@
     "noempty": true,
     "latedef": true,
     "undef": true,
+    "unused": true,
     "strict": false,
     "trailing": true,
     "node": true,

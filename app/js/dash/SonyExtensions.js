@@ -191,7 +191,7 @@ Dash.dependencies.SonyExtensions = function () {
 
                 request = new XMLHttpRequest();
 
-                request.onloadend = function (e) {
+                request.onloadend = function () {
                     if (!loaded) {
                         deferred.reject("Error loading initialization.");
                     }
@@ -242,7 +242,7 @@ Dash.dependencies.SonyExtensions = function () {
             range.start = 0;
             range.end = bytesToLoad;
 
-            request.onloadend = function (e) {
+            request.onloadend = function () {
                 if (!loaded) {
                     deferred.reject("Error finding initialization.");
                 }
@@ -335,7 +335,7 @@ Dash.dependencies.SonyExtensions = function () {
                 range.start = 0;
                 range.end = bytesLoaded + (size - bytesAvailable);
 
-                request.onloadend = function (e) {
+                request.onloadend = function () {
                     if (!loaded) {
                         deferred.reject("Error loading sidx.");
                     }
@@ -434,7 +434,7 @@ Dash.dependencies.SonyExtensions = function () {
                 range.end = parseFloat(parts[1]);
             }
 
-            request.onloadend = function (e) {
+            request.onloadend = function () {
                 if (!loaded) {
                     deferred.reject("Error loading sidx.");
                 }
