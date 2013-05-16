@@ -68,16 +68,10 @@ Dash.dependencies.FragmentExtensions = function () {
         parseSIDX = function (ab) {
             var d = new DataView(ab),
                 pos = 0,
-                sidxEnd,
                 version,
                 timescale,
                 earliest_presentation_time,
-                first_offset,
-                reference_count,
-                references = [],
                 i,
-                ref_size,
-                ref_dur,
                 type,
                 size,
                 charCode;
@@ -132,7 +126,7 @@ Dash.dependencies.FragmentExtensions = function () {
 
             url = media;
 
-            request.onloadend = function (e) {
+            request.onloadend = function () {
                 if (!loaded) {
                     errorStr = "Error loading fragment: " + url;
                     deferred.reject(errorStr);

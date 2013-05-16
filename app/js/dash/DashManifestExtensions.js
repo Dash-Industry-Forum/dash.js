@@ -102,7 +102,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(result);
     },
 
-    getIsMain: function (adaptation) {
+    getIsMain: function (/*adaptation*/) {
         "use strict";
         // TODO : Check "Role" node.
         // TODO : Use this somewhere.
@@ -122,8 +122,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
     getDataForId: function (id, manifest) {
         "use strict";
-        var self = this,
-            adaptations = manifest.Period_asArray[0].AdaptationSet_asArray,
+        var adaptations = manifest.Period_asArray[0].AdaptationSet_asArray,
             i,
             len;
 
@@ -138,8 +137,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
     getDataForIndex: function (index, manifest) {
         "use strict";
-        var self = this,
-            adaptations = manifest.Period_asArray[0].AdaptationSet_asArray;
+        var adaptations = manifest.Period_asArray[0].AdaptationSet_asArray;
 
         return Q.when(adaptations[index]);
     },
@@ -147,8 +145,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
     getDataIndex: function (data, manifest) {
         "use strict";
 
-        var self = this,
-            adaptations = manifest.Period_asArray[0].AdaptationSet_asArray,
+        var adaptations = manifest.Period_asArray[0].AdaptationSet_asArray,
             i,
             len;
 
@@ -299,7 +296,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             fStart = 1,
             fDuration,
             fTimescale = 1,
-            representation;
+            representation,
+            list = null,
+            template = null;
 
         // We don't really care what representation we use; they should all start at the same time.
         // Just grab the first representation; if this isn't there, we have bigger problems.
@@ -349,11 +348,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             liveOffset = 0,
             now = new Date(),
             start = manifest.availabilityStartTime,
-            end,
-            representation,
-            list,
-            template,
-            timeline;
+            end;
 
         self.getLiveOffset(manifest).then(
             function (delay) {

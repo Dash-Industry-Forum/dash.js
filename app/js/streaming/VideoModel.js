@@ -17,7 +17,7 @@ MediaPlayer.models.VideoModel = function () {
     var element,
         isLive = false,
         stalledStreams = [],
-        _currentTime = 0,
+        //_currentTime = 0,
 
         isStalled = function () {
             return (stalledStreams.length > 0);
@@ -58,12 +58,12 @@ MediaPlayer.models.VideoModel = function () {
             } else {
                 removeStalledStream(type);
             }
-        },
-        handleSetCurrentTimeNotification = function (e) {
+        }/*,
+        handleSetCurrentTimeNotification = function () {
             if (element.currentTime !== _currentTime) {
                 element.currentTime = _currentTime;
             }
-        };
+        }*/;
 
     return {
         system : undefined,

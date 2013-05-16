@@ -35,7 +35,6 @@ MediaPlayer.dependencies.BufferController = function () {
         onTimer = null,
         stalled = false,
         liveOffset = -1,
-        liveStartTime = null,
         isLiveStream = false,
         liveInitialization = false,
 
@@ -174,8 +173,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         onBytesLoaded = function (response) {
-            var self = this,
-                time = 0;
+            var self = this;
 
             self.debug.log("Bytes finished loading.");
 
@@ -194,7 +192,7 @@ MediaPlayer.dependencies.BufferController = function () {
                         }
 
                         self.sourceBufferExt.append(buffer, data, self.videoModel).then(
-                            function (appended) {
+                            function (/*appended*/) {
                                 self.debug.log("Append complete: " + buffer.buffered.length);
                                 if (buffer.buffered.length > 0) {
                                     var ranges = buffer.buffered,
@@ -218,7 +216,7 @@ MediaPlayer.dependencies.BufferController = function () {
             );
         },
 
-        onBytesError = function (error) {
+        onBytesError = function () {
             if (state === LOADING) {
                 setState(READY);
             }
@@ -256,8 +254,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
         loadNextFragment = function (quality) {
             var promise,
-                self = this,
-                time = 0;
+                self = this;
 
             if (dataChanged && !seeking) {
                 //time = self.videoModel.getCurrentTime();
@@ -361,7 +358,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 newQuality,
                 representation = null,
                 now = new Date(),
-                segmentRequest,
                 currentVideoTime = self.videoModel.getCurrentTime(),
                 currentTime = getWorkingTime.call(self);
 
@@ -541,7 +537,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                 playingTime = time;
                                 data = value;
                             }
-                        )
+                        );
                     }
                 );
             } else {
@@ -565,7 +561,7 @@ MediaPlayer.dependencies.BufferController = function () {
             minBufferTime = value;
         },
 
-        clearMetrics: function (value) {
+        clearMetrics: function () {
             var self = this;
 
             if (type === null || type === "") {

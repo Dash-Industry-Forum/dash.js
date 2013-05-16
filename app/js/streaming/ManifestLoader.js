@@ -36,7 +36,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
 
             request.open("GET", url, true);
 
-            request.onloadend = function (e) {
+            request.onloadend = function () {
                 if (!loaded) {
                     deferred.reject("Error loading manifest.");
                 }
