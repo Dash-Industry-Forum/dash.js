@@ -36,7 +36,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
     return {
         debug: undefined,
 
-        checkIndex: function (current, metrics, data) {
+        checkIndex: function (current, metrics /*, data*/) {
             var self = this,
                 playlist,
                 trace,

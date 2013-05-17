@@ -101,7 +101,7 @@ Dash.dependencies.DashHandler = function () {
                         request.range = theRange;
                         deferred.resolve(request);
                     },
-                    function (err) {
+                    function () {
                         //alert("Error loading initialization.");
                         self.errHandler.downloadError("Error loading initialization.");
                     }
@@ -245,8 +245,7 @@ Dash.dependencies.DashHandler = function () {
 
         getSegmentsFromSource = function (representation) {
             var url = representation.BaseURL,
-                range = null,
-                manifest = this.manifestModel.getValue();
+                range = null;
 
             if (representation.hasOwnProperty("SegmentBase")) {
                 if (representation.SegmentBase.hasOwnProperty("indexRange")) {
@@ -286,8 +285,7 @@ Dash.dependencies.DashHandler = function () {
                 frag,
                 ft,
                 fd,
-                i,
-                len;
+                i;
 
             if (segments && segments.length > 0) {
                 for (i = segments.length - 1; i >= 0; i--) {
@@ -595,7 +593,7 @@ Dash.dependencies.DashHandler = function () {
 
                     deferred.resolve(time);
                 }
-            )
+            );
 
             return deferred.promise;
         };

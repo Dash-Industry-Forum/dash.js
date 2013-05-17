@@ -35,13 +35,13 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     req.setRequestHeader("Range", "bytes=" + lastRequest.range);
                 }
 
-                req.onloadend = function (e) {
+                req.onloadend = function () {
                     if (!loaded) {
                         lastRequest.deferred.reject("Error loading fragment.");
                     }
                 };
 
-                req.onload = function (e) {
+                req.onload = function () {
                     loaded = true;
 
                     var entry = new MediaPlayer.vo.metrics.HTTPRequest.Trace(),
@@ -80,7 +80,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     loadNext.call(self);
                 };
 
-                req.onerror = function (e) {
+                req.onerror = function () {
                     httpRequestMetrics = self.metricsModel.addHttpRequest(lastRequest.streamType,
                                                                           null,
                                                                           lastRequest.type,
