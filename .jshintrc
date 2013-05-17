@@ -1,0 +1,25 @@
+{
+    "noarg": true,
+    "noempty": true,
+    "latedef": true,
+    "undef": true,
+    "unused": true,
+    "strict": false,
+    "trailing": true,
+    "node": true,
+    "jquery" : true,
+    "devel" : true, 
+    "browser": true,
+    "loopfunc" : true,
+    "predef" : [ 
+        "dijon", 
+        "Q", 
+        "ObjectIron", 
+        "X2JS",
+        "kendo",
+        "utils",
+        "MediaPlayer",
+        "Dash",
+        "WebKitMediaSource",
+        "MediaSource"] 
+}

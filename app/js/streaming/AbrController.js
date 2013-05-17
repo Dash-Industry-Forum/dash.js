@@ -76,8 +76,6 @@ MediaPlayer.dependencies.AbrController = function () {
             var self = this,
                 deferred = Q.defer(),
                 newQuality = 999,
-                ruleQuality,
-                rules,
                 i,
                 len,
                 funcs = [],

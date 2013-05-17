@@ -191,7 +191,7 @@ Dash.dependencies.BaseURLExtensions = function () {
 
                 request = new XMLHttpRequest();
 
-                request.onloadend = function (e) {
+                request.onloadend = function () {
                     if (!loaded) {
                         deferred.reject("Error loading initialization.");
                     }
@@ -247,7 +247,7 @@ Dash.dependencies.BaseURLExtensions = function () {
             info.range.start = 0;
             info.range.end = info.bytesToLoad;
 
-            request.onloadend = function (e) {
+            request.onloadend = function () {
                 if (!loaded) {
                     deferred.reject("Error finding initialization.");
                 }
@@ -331,7 +331,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 info.range.start = 0;
                 info.range.end = info.bytesLoaded + (size - bytesAvailable);
 
-                request.onloadend = function (e) {
+                request.onloadend = function () {
                     if (!loaded) {
                         deferred.reject("Error loading sidx.");
                     }
@@ -440,7 +440,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 info.range.end = parseFloat(parts[1]);
             }
 
-            request.onloadend = function (e) {
+            request.onloadend = function () {
                 if (!loaded) {
                     deferred.reject("Error loading sidx.");
                 }
