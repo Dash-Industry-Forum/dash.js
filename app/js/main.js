@@ -439,6 +439,16 @@ function initStreamData() {
         isLive: true
     };
 
+    streams.mediaExcelLive1 = {
+        url: "http://dashdemo.edgesuite.net/mediaexcel/live/ch1/dash.mpd",
+        isLive: true
+    };
+
+    streams.mediaExcelLive2 = {
+        url: "http://dashdemo.edgesuite.net/mediaexcel/live/ch2/dash.mpd",
+        isLive: true
+    };
+
     streams.microsoft1 = {
         url: "http://origintest.cloudapp.net/media/SintelTrailer_MP4_from_WAME/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)",
         isLive: false
