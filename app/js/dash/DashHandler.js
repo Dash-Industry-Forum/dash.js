@@ -333,6 +333,7 @@ Dash.dependencies.DashHandler = function () {
             var idx = -1,
                 fDuration,
                 fTimescale = 1,
+                startNumber = 1, // SegmentTemplate offset controlled by @startNumber attribute or 1 by default
                 dur;
 
             if (template.hasOwnProperty("duration")) {
@@ -346,10 +347,14 @@ Dash.dependencies.DashHandler = function () {
                 fTimescale = template.timescale;
             }
 
+            if (template.hasOwnProperty("startNumber")) {
+                startNumber = template.startNumber;
+            }
+
             dur = (fDuration / fTimescale);
             idx = Math.floor(time / dur);
 
-            idx += 1; // SegmentTemplate starts at 1, not zero, so apply that offset here.
+            idx += startNumber; // apply first item offset
 
             return Q.when(idx);
         },
