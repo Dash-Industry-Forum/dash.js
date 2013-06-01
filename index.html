@@ -81,7 +81,6 @@
     <script src="app/js/streaming/FragmentLoader.js"></script>
     <script src="app/js/streaming/Stream.js"></script>
     <script src="app/js/streaming/BufferController.js"></script>
-    <script src="app/js/streaming/BufferControllerUpdater.js"></script>
     <script src="app/js/streaming/rules/SwitchRequest.js"></script>
     <script src="app/js/streaming/rules/DownloadRatioRule.js"></script>
     <script src="app/js/streaming/rules/InsufficientBufferRule.js"></script>
@@ -105,7 +104,6 @@
     <script src="app/js/dash/DashParser.js"></script>
     <script src="app/js/dash/DashHandler.js"></script>
     <script src="app/js/dash/BaseURLExtensions.js"></script>
-    <script src="app/js/dash/SonyExtensions.js"></script>
     <script src="app/js/dash/FragmentExtensions.js"></script>
     <script src="app/js/dash/DashManifestExtensions.js"></script>
     <script src="app/js/dash/DashMetricsExtensions.js"></script>
@@ -118,44 +116,100 @@
 <body onload="init()">
     <div class="container">
         <div class="row title-header">
-            <h3 class="demo-panel-title-header">Dash IF JavaScript Player</h3>
-            <img class="image" src="app/img/dp.png"/>
+            <h3 class="demo-panel-title-header">DASH IF Reference Client</h3>
+            <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
         </div>
 
         <div class="row">
-            <div class="span7">
-                <input class="span7" type="text" id="custom-source" placeholder="MPD Location"/>
-            </div>
-            <div class="span3">
-                <select id="sources" class="span3">
-                    <option value="archive">Live Archive</option>
-                    <option value="live">Live</option>
-                    <option value="envivio" selected="selected">Envivio</option>
-                    <option value="youtube">YouTube SegmentBase</option>
-                    <option value="list">Segment List</option>
-                    <option value="template">Segment Template</option>
-                    <option value="timeline">Segment Timeline</option>
+            <div class="span6">
+                <select id="sources" class="span6">
+                    <!--
+                        NOTE:
+                        The data-channels attribute corresponds to the Chrome Browser release in which the feed
+                        will play in.
+                        b -> Beta
+                        c -> Canary
+                        d -> Development
+                        s -> Stable
+                    -->
+<!--
+                    <option data-channels="" value="sony_dp">Sony DP</option>
+-->
+                    <option data-channels="" value="fraunhofer_480p_heacc2_0_dream">Fraunhofer - HEACC 2.0 - Dream</option>
+                    <option data-channels="" value="fraunhofer_480p_heacc2_0_sintel">Fraunhofer - HEACC 2.0 - Sintel</option>
+                    <option data-channels="" value="fraunhofer_480p_heacc5_1_6chId">Fraunhofer - HEACC 5.1 - 6 CH ID</option>
+                    <option data-channels="" value="fraunhofer_480p_heacc5_1_dream">Fraunhofer - HEACC 5.1 - Dream</option>
+                    <option data-channels="" value="fraunhofer_480p_heacc5_1_sintel">Fraunhofer - HEACC 5.1 - Sintel</option>
+                    <option data-channels="" value="fraunhofer_480p_heacc7_1_8chId">Fraunhofer - HEACC 7.1 - 8 CH ID</option>
+                    <option data-channels="" value="fraunhofer_480p_mps5_0_6chId">Fraunhofer - MPS 5.0 - 6 CH ID</option>
+                    <option data-channels="" value="fraunhofer_480p_mps5_0_dream">Fraunhofer - MPS 5.0 - Dream</option>
+                    <option data-channels="" value="fraunhofer_480p_mps5_0_sintel">Fraunhofer - MPS 5.0 - Sintel</option>
+                    <option data-channels="" value="fraunhofer_audio_only_dream">Fraunhofer - Audio Only - Dream</option>
+                    <option data-channels="" value="fraunhofer_audio_only_sintel">Fraunhofer - Audio Only - Sintel</option>
 
-                    <option value="1a-netflix">1a - Netflix</option>
-                    <option value="1a-sony">1a - Sony</option>
-                    <option value="1b-envivio">1b - Envivio</option>
-                    <option value="1b-thomson">1b - Thomson</option>
-                    <option value="1c-envivio">1c - Envivio</option>
-                    <option value="2a-envivio">2a - Envivio</option>
-                    <option value="2a-sony">2a - Sony</option>
-                    <option value="2a-thomson">2a - Thomson</option>
-                    <option value="3a-fraunhofer">3a - Fraunhofer</option>
-                    <option value="3b-fraunhofer">3b - Fraunhofer</option>
-                    <option value="3b-sony">3b - Sony</option>
-                    <option value="4b-sony">4b - Sony</option>
-                    <option value="5a-thomson/envivio">5a - Thomson/Envivio</option>
-                    <option value="5b-thomson/envivio">5b - Thomson/Envivio</option>
-                    <option value="6c-envivio1">6c - Envivio Manifest 1</option>
-                    <option value="6c-envivio2">6c - Envivio Manifest 2</option>
+                    <option data-channels="" value="ipvidnetLive">Path 1 Live</option>
+                    <option data-channels="" value="uspLive">Unified Streaming Live</option>
+                    <option data-channels="" value="wowzaList">Wowza SegmentList</option>
+                    <option data-channels="" value="wowzaTemplate">Wowza SegmentTemplate</option>
+                    <option data-channels="" value="wowzaTimeline">Wowza SegmentTimeline</option>
+                    <option data-channels="" value="thomsonLive">Thomson Live</option>
+                    <option data-channels="" value="mediaExcelLive1">Media Excel Live 1</option>
+                    <option data-channels="" value="mediaExcelLive2">Media Excel Live 2</option>
+                    <!--<option data-channels="" value="live">Live</option>-->
+
+                    <option data-channels="cd" value="archive">Live Archive</option>
+                    <option data-channels="cdsb" value="envivio" selected="selected">Envivio</option>
+                    <option data-channels="cdsb" value="list">Segment List</option>
+                    <option data-channels="cdsb" value="template">Segment Template</option>
+                    <option data-channels="cdsb" value="timeline">Unified Streaming - Timeline</option>
+                    <!--<option data-channels="" value="youtube">YouTube SegmentBase</option>--> <!-- Invalid manifest, wrong audio codec.  Should be mp4a.40.2. -->
+
+                    <option data-channels="cd" value="microsoft1">Microsoft #1</option>
+                    <option data-channels="cd" value="microsoft2">Microsoft #2</option>
+                    <option data-channels="cd" value="microsoft3">Microsoft #3</option>
+                    <option data-channels="cd" value="microsoft4">Microsoft #4</option>
+                    <option data-channels="cd" value="microsoft5">Microsoft #5</option>
+
+                    <option data-channels="" value="microsoftCenc1">Microsoft Cenc #1</option>
+                    <option data-channels="" value="microsoftCenc2">Microsoft Cenc #2</option>
+                    <option data-channels="" value="microsoftCenc3">Microsoft Cenc #3</option>
+                    <option data-channels="" value="microsoftCenc4">Microsoft Cenc #4</option>
+                    <option data-channels="" value="microsoftCenc5">Microsoft Cenc #5</option>
+                    <option data-channels="" value="microsoftCenc6">Microsoft Cenc #6</option>
+
+                    <option data-channels="cdsb" value="1a-netflix">DASH-AVC/264 – test vector 1a - Netflix</option>
+                    <option data-channels="cd" value="1a-sony">DASH-AVC/264 – test vector 1a - Sony</option>
+                    <option data-channels="cd" value="1b-envivio">DASH-AVC/264 – test vector 1b - Envivio</option>
+                    <option data-channels="cd" value="1b-thomson">DASH-AVC/264 – test vector 1b - Thomson</option>
+                    <option data-channels="" value="1c-envivio">DASH-AVC/264 – test vector 1c - Envivio</option>
+                    <option data-channels="cd" value="2a-envivio">DASH-AVC/264 – test vector 2a - Envivio</option>
+                    <option data-channels="cd" value="2a-sony">DASH-AVC/264 – test vector 2a - Sony</option>
+                    <option data-channels="" value="2a-thomson">DASH-AVC/264 – test vector 2a - Thomson</option>
+                    <option data-channels="" value="3a-fraunhofer">DASH-AVC/264 – test vector 3a - Fraunhofer</option>
+                    <option data-channels="" value="3b-fraunhofer">DASH-AVC/264 – test vector 3b - Fraunhofer</option>
+                    <option data-channels="cd" value="3b-sony">DASH-AVC/264 – test vector 3b - Sony</option>
+                    <option data-channels="cd" value="4b-sony">DASH-AVC/264 – test vector 4b - Sony</option>
+                    <option data-channels="cd" value="5a-thomson/envivio">DASH-AVC/264 – test vector 5a - Thomson/Envivio</option>
+                    <option data-channels="cd" value="5b-thomson/envivio">DASH-AVC/264 – test vector 5b - Thomson/Envivio</option>
+                    <option data-channels="" value="6c-envivio1">DASH-AVC/264 – test vector 6c - Envivio Manifest 1</option>
+                    <option data-channels="" value="6c-envivio2">DASH-AVC/264 – test vector 6c - Envivio Manifest 2</option>
                 </select>
             </div>
+            <div class="span4"></div>
             <div class="span2">
                 <button type="button" class="btn btn-large" style="width: 100%;" onclick="load()">Load</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="span11">
+                <input class="span11" type="text" id="custom-source" placeholder="MPD Location"/>
+            </div>
+            <div class="span1">
+                <label class="checkbox" for="live-checkbox" style="margin-top: 10px;">
+                    <input type="checkbox" value="" id="live-checkbox"/>
+                    Live
+                </label>
             </div>
         </div>
 
@@ -253,17 +307,28 @@
             </div>
         </div>
 
-        <div class="btn-toolbar" style="margin-top: 10px; width: 100%; margin-left: 2px;">
-            <div class="btn-group">
-                <a id="debug-log-btn" class="btn btn-primary active" href="#">Debug Console</a>
-                <a id="video-metrics-btn" class="btn btn-primary" href="#">Video Metrics</a>
-                <a id="audio-metrics-btn" class="btn btn-primary" href="#">Audio Metrics</i></a>
-                <a id="release-notes-btn" class="btn btn-primary" href="#">Release Notes</a>
+        <div class="row" style="margin-top: 10px;">
+            <div id="debug-header" class="span12 tooltip-box tooltip-box-top">
+                <h3 class="tooltip-box-header" style="margin-left: 10px;">Debug</h3>
+                <div style="padding-top: 10px; padding-right: 10px;">
+                    <div class="toggle" style="float: right; ">
+                        <label class="toggle-radio" for="hide-debug">HIDE</label>
+                        <input type="radio" name="debug-toggle" id="hide-debug" value="true">
+                        <label class="toggle-radio" for="show-debug">SHOW</label>
+                        <input type="radio" name="graph-toggle" id="show-debug" value="false" checked="true">
+                    </div>
+               </div>
             </div>
-        </div>
-
-        <div class="row" style="margin-top: -10px;">
-            <div class="span12 pill-box" style="height:500px;">
+            <div id="debug-body" class="span12 tooltip-debug-box tooltip-box-bottom">
+                <div class="btn-toolbar" style="float: left; padding-left: 10px;">
+                    <div class="btn-group">
+                        <a id="debug-log-btn" class="btn btn-primary active" href="#">Debug Console</a>
+                        <a id="video-metrics-btn" class="btn btn-primary" href="#">Video Metrics</a>
+                        <a id="audio-metrics-btn" class="btn btn-primary" href="#">Audio Metrics</i></a>
+                        <a id="release-notes-btn" class="btn btn-primary" href="#">Release Notes</a>
+                    </div>
+                </div>
+            <div style="width: 900px;">
                 <div id="debug-log-tab" class="tab-content">
                     <div class="btn btn-primary" id="debug-clear" style="float: left; margin-right: 10px;">Clear</div>
 
@@ -274,25 +339,46 @@
 
                     <input type="text" id="filter-source" placeholder="filter" style="float: right; margin-right: 20px;"/>
 
-                    <div id="debug_log" style="height: 425px; width: 920px; overflow: auto; clear: both;">
+                    <div id="debug_log" style="height: 425px; width: 900px; overflow: auto; clear: both;">
                         <dt>Waiting...</dt>
                     </div>
                 </div>
                 <div id="video-metrics-tree-tab" class="tab-content">
                     <div class="btn btn-primary" id="videoMetricsUpdateButton">Update</div>
-                    <div id="videoMetricsTree" style="height: 425px; width: 920px;"></div>
+                    <div id="videoMetricsTree" style="height: 425px; width: 900px;"></div>
                 </div>
                 <div id="audio-metrics-tree-tab" class="tab-content">
                     <div class="btn btn-primary" id="audioMetricsUpdateButton">Update</div>
-                    <div id="audioMetricsTree" style="height: 425px; width: 920px;"></div>
+                    <div id="audioMetricsTree" style="height: 425px; width: 900px;"></div>
                 </div>
-                <div id="release-notes-tab" class="tab-content" style="height: 480px; width: 910px;">
+                <div id="release-notes-tab" class="tab-content" style="height: 500px">
                     <div>
                         <b>Known Issues</b><br/>
                         Erratic playback at higher bitrates.<br/>
                         Streams using high profile codecs may not play properly.<br/>
                         You may get the error "Media Source Close" when attempting to switch bitrates.<br/>
                         Only streams with segmentAlignment="true" will work with abr.
+                    </div>
+
+                    <div>
+                        <b>Release Notes v0.2.3</b><br/>
+                        Change license header.<br/>
+                        Add footer.<br/>
+                        Add more live support.  Still a work in progress.<br/>
+                        Fix some bugs with the timeline.
+                    </div>
+
+                    <div>
+                        <b>Release Notes v0.2.1</b><br/>
+                        Add support for SegmentBase manifests with reference_type = 1.  (Multi-level SIDX.)<br/>
+                        Finish externalizing live toggle.  The player no longer attempts to discover liveness from the manifest.<br/>
+                        Add a live toggle to the main UI.<br/>
+                        Fix an issue where a custom value in the text input was ignored.<br/>
+                        Fixed some bugs and clean up the SIDX loading.<br/>
+                        Clean up some of the UI.<br/>
+                        Added some new MediaSource test pages.<br/>
+                        Expanded test.html to work with byte ranges.<br/>
+                        Redid how live works again to support particular streams.  Live still needs more work.
                     </div>
 
                     <div>
@@ -395,7 +481,70 @@
                     </div>
                 </div>
             </div>
+            </div>
+
         </div>
+
+        <div class="row" style="height: 15px;"></div>
     </div>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="span6">
+                    <div class="footer-banner">
+                        <h3 class="footer-title">Compatibility Notes:</h3>
+                        <ul>
+                            <li>A browser that supports MSE (Media Source Extensions) is required.</li>
+                            <li>As of 5/13/13, Chrome is the only browser supported.</li>
+                            <li>Use the most up-to-date version of Chrome for the best compatibility.</li>
+                            <li>Many of the streams in the dropdown box only work in the developer channel or Canary version of Chrome.</li>
+                            <li><a href="index.html?version=stable">Stable Chrome Streams</a></li>
+                            <li><a href="index.html?version=beta">Beta Chrome Streams</a></li>
+                            <li><a href="index.html?version=dev">Dev Chrome Streams</a></li>
+                            <li><a href="index.html?version=canary">Canary Chrome Streams</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="span3">
+                    <h3 class="footer-title">Libraries:</h3>
+                    <a class="footer-brand" href="http://jquery.com/" target="_blank">
+                      jquery
+                    </a>
+                    <a class="footer-brand" href="https://github.com/kriskowal/q" target="_blank">
+                      q
+                    </a>
+                    <a class="footer-brand" href="https://github.com/creynders/dijon-framework" target="_blank">
+                      dijon
+                    </a>
+                    <a class="footer-brand" href="http://pivotal.github.io/jasmine/" target="_blank">
+                      jasmine
+                    </a>
+                    <a class="footer-brand" href="https://github.com/designmodo/Flat-UI" target="_blank">
+                      flat ui
+                    </a>
+                    <a class="footer-brand" href="http://www.flotcharts.org/" target="_blank">
+                      flot
+                    </a>
+                    <a class="footer-brand" href="http://www.kendoui.com/web.aspx" target="_blank">
+                      kendo
+                    </a>
+                </div>
+                <div class="span3">
+                    <h3 class="footer-title">Contributors:</h3>
+                    <a class="footer-brand" href="http://www.digitalprimates.net" target="_blank">
+                      <img src="app/img/dp.png" alt="www.digitalprimates.net"/>
+                    </a>
+                    <a class="footer-brand" href="http://msopentech.com" target="_blank">
+                      <img src="app/img/msopentech.jpg" alt="msopentech.com"/>
+                    </a>
+                    <a class="footer-brand" href="http://www.youtube.com" target="_blank">
+                      <img src="app/img/youtube.png" alt="www.youtube.com"/>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
 </body>
 </html>

@@ -1,3 +1,16 @@
+/*
+ * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Digital Primates
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 var player,
     playing = false,
     time = -1,
@@ -78,6 +91,20 @@ function init() {
     "use strict";
     $(document).ready(
         function () {
+        	$("#hide-debug")
+        		.click(
+					function (event) {
+						$("#debug-body").hide();
+						$("#debug-header").addClass("tooltip-box-bottom");
+					}
+				);
+        	$("#show-debug")
+        		.click(
+    				function (event) {
+    					$("#debug-body").show();
+    					$("#debug-header").removeClass("tooltip-box-bottom");
+    				}
+				);
         	$("#hide-graph")
     			.click(
 					function (event) {
@@ -142,6 +169,9 @@ function init() {
 
     $("#graph-body").hide();
 	$("#graph-header").addClass("tooltip-box-bottom");
+
+	$("#debug-body").hide();
+	$("#debug-header").addClass("tooltip-box-bottom");
 
     Q.longStackJumpLimit = 0;
 }
@@ -299,47 +329,343 @@ function handleAudioMetricsUpdate() {
 function handleSourcesChange() {
     "use strict";
     var custom = $("#custom-source"),
+        liveBox = $("#live-checkbox"),
         select = $("#sources"),
-        streamObject,
-        streamSource;
+        streamObject;
 
     streamObject = streams[select.val()];
-    streamSource = streamObject.url;
-    custom.val(streamSource);
+
+    custom.val(streamObject.url);
+
+    if (streamObject.isLive) {
+        liveBox.attr('checked','checked');
+    } else {
+        liveBox.removeAttr('checked');
+    }
+    setupLabel();
 }
 
 function initStreamData() {
     "use strict";
     streams = {};
 
-    streams.ipvidnet = {url: "http://pixie.path1.com/dash/manifest.txt", isLive: true};
+    streams.sony_dp = {
+        url: "http://dash.edgesuite.net/digitalprimates/sony/DISC1651343080050699_TEST_US_12_28_56_DASH/DASH_vod.mpd",
+        isLive: false
+    };
 
-    streams.archive = {url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd", isLive: false};
-    streams.live = {url: "http://dashdemo.edgesuite.net/mediaexcel/live/ch1/dash.mpd", isLive: true}; //"http://venus.mediaexcel.com/hera/videos/ch1/dash.mpd";
-    streams.list = {url: "http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd", isLive: false};
-    streams.template = {url: "http://www.digitalprimates.net/dash/streams/mp4-live-template/mp4-live-mpd-AV-BS.mpd", isLive: false};
-    streams.timeline = {url: "http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd", isLive: false};
-    streams.base = {url: "http://www.digitalprimates.net/dash/streams/mp4-onDemand/mp4-onDemand-mpd-AV.mpd", isLive: false};
-    streams.youtube = {url: "http://yt-dash-mse-test.commondatastorage.googleapis.com/car-20120827-manifest.mpd", isLive: false};
-    streams.bunny = {url: "http://dash.edgesuite.net/adobe/bbb/bbb.mpd", isLive: false};
-    streams.envivio = {url: "http://dashdemo.edgesuite.net/envivio/dashpr/clear/Manifest.mpd", isLive: false};
+    streams.fraunhofer_480p_heacc2_0_dream = {
+        url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/ElephantsDream/elephants_dream_480p_heaac2_0.mpd",
+        isLive: false
+    };
 
-    streams["1a-netflix"] = {url: "http://dash.edgesuite.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd", isLive: false};
-    streams["1a-sony"] = {url: "http://dash.edgesuite.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd", isLive: false};
-    streams["1b-envivio"] = {url: "http://dash.edgesuite.net/dash264/TestCases/1b/envivio/manifest.mpd", isLive: false};
-    streams["1b-thomson"] = {url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd", isLive: false};
-    streams["1c-envivio"] = {url: "http://dash.edgesuite.net/dash264/TestCases/1c/envivio/manifest.mpd", isLive: false};
-    streams["2a-envivio"] = {url: "http://dash.edgesuite.net/dash264/TestCases/2a/envivio/manifest.mpd", isLive: false};
-    streams["2a-sony"] = {url: "http://dash.edgesuite.net/dash264/TestCases/2a/sony/SNE_DASH_CASE_2A_SD_REVISED.mpd", isLive: false};
-    streams["2a-thomson"] = {url: "http://dash.edgesuite.net/dash264/TestCases/2a/thomson-networks/manifest.mpd", isLive: false};
-    streams["3a-fraunhofer"] = {url: "http://dash.edgesuite.net/dash264/TestCases/3a/fraunhofer/ed.mpd", isLive: false};
-    streams["3b-fraunhofer"] = {url: "http://dash.edgesuite.net/dash264/TestCases/3b/fraunhofer/elephants_dream_heaac2_0.mpd", isLive: false};
-    streams["3b-sony"] = {url: "http://dash.edgesuite.net/dash264/TestCases/3b/sony/SNE_DASH_CASE3B_SD_REVISED.mpd", isLive: false};
-    streams["4b-sony"] = {url: "http://dash.edgesuite.net/dash264/TestCases/4b/sony/SNE_DASH_CASE4B_SD_REVISED.mpd", isLive: false};
-    streams["5a-thomson/envivio"] = {url: "http://dash.edgesuite.net/dash264/TestCases/5a/1/manifest.mpd", isLive: false};
-    streams["5b-thomson/envivio"] = {url: "http://dash.edgesuite.net/dash264/TestCases/5b/1/manifest.mpd", isLive: false};
-    streams["6c-envivio1"] = {url: "http://dash.edgesuite.net/dash264/TestCases/6c/envivio/manifest.mpd", isLive: false};
-    streams["6c-envivio2"] = {url: "http://dash.edgesuite.net/dash264/TestCases/6c/envivio/manifest2.mpd", isLive: false};
+    streams.fraunhofer_480p_heacc2_0_sintel = {
+        url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/Sintel/sintel_480p_heaac2_0.mpd",
+        isLive: false
+    };
+
+    streams.fraunhofer_480p_heacc5_1_6chId = {
+        url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_5_1_with_video/6chId/6chId_480p_heaac5_1.mpd",
+        isLive: false
+    };
+
+    streams.fraunhofer_480p_heacc5_1_dream = {
+        url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_5_1_with_video/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
+        isLive: false
+    };
+
+    streams.fraunhofer_480p_heacc5_1_sintel = {
+        url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_5_1_with_video/Sintel/sintel_480p_heaac5_1.mpd",
+        isLive: false
+    };
+
+    streams.fraunhofer_480p_heacc7_1_8chId = {
+        url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_7_1_with_video/8chId/8ch_id_480p_heaac7_1.mpd",
+        isLive: false
+    };
+
+    streams.fraunhofer_480p_mps5_0_6chId = {
+        url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/mps_5_1_with_video/6chId/6chId_480p_mps5_1.mpd",
+        isLive: false
+    };
+
+    streams.fraunhofer_480p_mps5_0_dream = {
+        url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/mps_5_1_with_video/ElephantsDream/elephants_dream_480p_mps5_1.mpd",
+        isLive: false
+    };
+
+    streams.fraunhofer_480p_mps5_0_sintel = {
+        url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/mps_5_1_with_video/Sintel/sintel_480p_mps5_1.mpd",
+        isLive: false
+    };
+
+    streams.fraunhofer_audio_only_dream = {
+        url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/audio_only/heaac_2_0_without_video/ElephantsDream/elephants_dream_audio_only_heaac2_0.mpd",
+        isLive: false
+    };
+
+    streams.fraunhofer_audio_only_sintel = {
+        url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/audio_only/heaac_2_0_without_video/Sintel/sintel_audio_only_heaac2_0.mpd",
+        isLive: false
+    };
+
+    streams.ipvidnetLive = {
+        url: "http://dash-live-path1.edgesuite.net/dash/manifest.mpd",
+        isLive: true
+    };
+
+    streams.uspLive = {
+        url: "http://live.unified-streaming.com/loop/loop.isml/loop.mpd?format=mp4&session_id=25020",
+        isLive: true
+    };
+
+    streams.wowzaList = {
+        url: "http://174.129.39.107:1935/livedash/myStream/manifest_mpm4sav_mvsegment.mpd",
+        isLive: true
+    };
+
+    streams.wowzaTemplate = {
+        url: "http://174.129.39.107:1935/livedash/myStream/manifest_mpm4sav_mvchunk.mpd",
+        isLive: true
+    };
+
+    streams.wowzaTimeline = {
+        url: "http://174.129.39.107:1935/livedash/myStream/manifest_mpm4sav_mvtime.mpd",
+        isLive: true
+    };
+
+    streams.thomsonLive = {
+        url: "http://tvnlive.dashdemo.edgesuite.net/live/manifest.mpd",
+        isLive: true
+    };
+
+    streams.mediaExcelLive1 = {
+        url: "http://dashdemo.edgesuite.net/mediaexcel/live/ch1/dash.mpd",
+        isLive: true
+    };
+
+    streams.mediaExcelLive2 = {
+        url: "http://dashdemo.edgesuite.net/mediaexcel/live/ch2/dash.mpd",
+        isLive: true
+    };
+
+    streams.microsoft1 = {
+        url: "http://origintest.cloudapp.net/media/SintelTrailer_MP4_from_WAME/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)",
+        isLive: false
+    };
+
+    streams.microsoft2 = {
+        url: "http://origintest.cloudapp.net/media/SintelTrailer_Smooth_from_WAME/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)",
+        isLive: false
+    };
+
+    streams.microsoft3 = {
+        url: "http://origintest.cloudapp.net/media/SintelTrailer_Smooth_from_WAME_720p_Main_Profile/sintel_trailer-720p.ism/manifest(format=mpd-time-csf)",
+        isLive: false
+    };
+
+    streams.microsoft4 = {
+        url: "http://origintest.cloudapp.net/media/MPTExpressionData01/ElephantsDream_1080p24_IYUV_2ch.ism/manifest(format=mpd-time-csf)",
+        isLive: false
+    };
+
+    streams.microsoft5 = {
+        url: "http://origintest.cloudapp.net/media/MPTExpressionData02/BigBuckBunny_1080p24_IYUV_2ch.ism/manifest(format=mpd-time-csf)",
+        isLive: false
+    };
+
+    streams.microsoftCenc1 = {
+        url: "http://origintest.cloudapp.net/media/SintelTrailer_Smooth_from_WAME_720p_Main_Profile_CENC/CENC/sintel_trailer-720p.ism/manifest(format=mpd-time-csf)",
+        isLive: false
+    };
+
+    streams.microsoftCenc2 = {
+        url: "http://origintest.cloudapp.net/media/SintelTrailer_Smooth_from_WAME_720p_Main_Profile_CENC/NoSubSampleAdjustment/sintel_trailer-720p.ism/manifest(format=mpd-time-csf)",
+        isLive: false
+    };
+
+    streams.microsoftCenc3 = {
+        url: "http://origintest.cloudapp.net/media/SintelTrailer_Smooth_from_WAME_720p_Main_Profile_CENC/NoSubSampleAdjustmentNoSenc/sintel_trailer-720p.ism/manifest(format=mpd-time-csf)",
+        isLive: false
+    };
+
+    streams.microsoftCenc4 = {
+        url: "http://origintest.cloudapp.net/media/SintelTrailer_Smooth_from_WAME_CENC/CENC/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)",
+        isLive: false
+    };
+
+    streams.microsoftCenc5 = {
+        url: "http://origintest.cloudapp.net/media/SintelTrailer_Smooth_from_WAME_CENC/NoSubSampleAdjustment/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)",
+        isLive: false
+    };
+
+    streams.microsoftCenc6 = {
+        url: "http://origintest.cloudapp.net/media/SintelTrailer_Smooth_from_WAME_CENC/NoSubSampleAdjustmentNoSenc/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)",
+        isLive: false
+    };
+
+    streams.archive = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd",
+        isLive: false
+    };
+
+    streams.live = {
+        url: "http://dashdemo.edgesuite.net/mediaexcel/live/ch1/dash.mpd",
+        isLive: true
+    };
+
+    streams.list = {
+        url: "http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd",
+        isLive: false
+    };
+
+    streams.template = {
+        url: "http://www.digitalprimates.net/dash/streams/mp4-live-template/mp4-live-mpd-AV-BS.mpd",
+        isLive: false
+    };
+
+    streams.timeline = {
+        url: "http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd",
+        isLive: false
+    };
+
+    streams.base = {
+        url: "http://www.digitalprimates.net/dash/streams/mp4-onDemand/mp4-onDemand-mpd-AV.mpd",
+        isLive: false
+    };
+
+    streams.youtube = {
+        url: "http://yt-dash-mse-test.commondatastorage.googleapis.com/car-20120827-manifest.mpd",
+        isLive: false
+    };
+
+    streams.bunny = {
+        url: "http://dash.edgesuite.net/adobe/bbb/bbb.mpd",
+        isLive: false
+    };
+
+    streams.envivio = {
+        url: "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd",
+        isLive: false
+    };
+
+    streams["1a-netflix"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd",
+        isLive: false
+    };
+
+    streams["1a-sony"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+        isLive: false
+    };
+
+    streams["1b-envivio"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/1b/envivio/manifest.mpd",
+        isLive: false
+    };
+
+    streams["1b-thomson"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd",
+        isLive: false
+    };
+
+    streams["1c-envivio"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/1c/envivio/manifest.mpd",
+        isLive: false
+    };
+
+    streams["2a-envivio"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/2a/envivio/manifest.mpd",
+        isLive: false
+    };
+
+    streams["2a-sony"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/2a/sony/SNE_DASH_CASE_2A_SD_REVISED.mpd",
+        isLive: false
+    };
+
+    streams["2a-thomson"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/2a/thomson-networks/manifest.mpd",
+        isLive: false
+    };
+
+    streams["3a-fraunhofer"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/3a/fraunhofer/ed.mpd",
+        isLive: false
+    };
+
+    streams["3b-fraunhofer"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/3b/fraunhofer/elephants_dream_heaac2_0.mpd",
+        isLive: false
+    };
+
+    streams["3b-sony"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/3b/sony/SNE_DASH_CASE3B_SD_REVISED.mpd",
+        isLive: false
+    };
+
+    streams["4b-sony"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/4b/sony/SNE_DASH_CASE4B_SD_REVISED.mpd",
+        isLive: false
+    };
+
+    streams["5a-thomson/envivio"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/5a/1/manifest.mpd",
+        isLive: false
+    };
+
+    streams["5b-thomson/envivio"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/5b/1/manifest.mpd",
+        isLive: false
+    };
+
+    streams["6c-envivio1"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/6c/envivio/manifest.mpd",
+        isLive: false
+    };
+
+    streams["6c-envivio2"] = {
+        url: "http://dash.edgesuite.net/dash264/TestCases/6c/envivio/manifest2.mpd",
+        isLive: false
+    };
+}
+
+function initStreamSources( browserVersion ) {
+	"use strict";
+	var sourceOptions = $("#sources > option"),
+		testChannel = false,
+		filterValue;
+
+	browserVersion = browserVersion.toLowerCase();
+
+	switch( browserVersion )
+	{
+		case "beta":
+			filterValue = "b";
+			break;
+		case "canary":
+			filterValue = "c";
+			break;
+		case "dev":
+			filterValue = "d";
+			break;
+		case "all":
+			testChannel = true;
+			break;
+		case "stable":
+		default:
+			filterValue = "s";
+			break;
+	}
+
+	if (testChannel === false) {
+		sourceOptions.each(function (index, item) {
+			var feeds = $(item).attr("data-channels");
+			if (feeds.indexOf(filterValue) === -1) {
+				$(item).remove();
+			}
+		});
+	}
 }
 
 function initDebugControls() {
@@ -365,18 +691,54 @@ function initDebugControls() {
             debug = player.getDebug();
             debug.setFilter($("#filter-source").attr("value"));
         }
-        );
+    );
+}
+
+function parseBrowserVersion( searchStr ) {
+	var versionIndex,
+		subSearchStr,
+		ampIndex,
+		equalIndex,
+		result;
+
+	if ( searchStr === null || searchStr.length === 0) {
+		return "stable";
+	}
+
+	searchStr = searchStr.toLowerCase();
+	versionIndex = searchStr.indexOf("version=");
+
+	if (versionIndex === -1) {
+		return "stable"
+	}
+
+	subSearchStr = searchStr.substr( versionIndex, searchStr.length );
+	ampIndex = subSearchStr.indexOf("&");
+	equalIndex = subSearchStr.indexOf("=");
+
+	if (ampIndex === -1) {
+		result = subSearchStr.substr((equalIndex + 1), subSearchStr.length);
+	} else {
+		result = subSearchStr.substr((equalIndex + 1), (ampIndex - equalIndex - 1));
+	}
+
+	return result;
 }
 
 function load() {
     "use strict";
-    var select = $("#sources"),
+    var input = $("#custom-source"),
+        liveBox = $("#live-checkbox"),
         debug = player.getDebug(),
-        streamObject;
+        url,
+        isLive = false;
 
-    streamObject = streams[select.val()];
-    player.attachSource(streamObject);
-    debug.log("manifest | " + streamObject);
+    url = input.val();
+    isLive = liveBox.is(':checked');
+
+    player.setIsLive(isLive);
+    player.attachSource(url);
+    debug.log("manifest = " + url + " | isLive = " + isLive);
 
     playing = true;
 
@@ -392,14 +754,18 @@ function load() {
 $(document).ready(function() {
     "use strict";
     var defaultDataSource,
+    	browserVersion,
         video = document.querySelector(".dash-video-player video"),
         context = new Dash.di.DashContext(),
         console = document.getElementById("debug_log"),
         debug,
         lastChild = $("#debug-log-tab");
 
-    initDebugControls();
+	browserVersion = parseBrowserVersion( location.search );
+
+	initDebugControls();
     initStreamData();
+    initStreamSources( browserVersion );
     handleSourcesChange();
 
     // JS input/textarea placeholder
