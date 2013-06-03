@@ -37,6 +37,7 @@ MediaPlayer.dependencies.BufferController = function () {
         liveOffset = -1,
         isLiveStream = false,
         liveInitialization = false,
+        deferredAppend = null,
 
         type,
         data,
@@ -98,6 +99,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     isLiveStream = isLive;
                     self.debug.log("BufferController begin validation.");
                     setState(READY);
+                    clearInterval(timer);
                     timer = setInterval(onTimer.bind(self), VALIDATE_DELAY, self);
                 }
             );
@@ -191,21 +193,24 @@ MediaPlayer.dependencies.BufferController = function () {
                             playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, representation.id, null, currentTime, currentVideoTime, null, 1.0, null);
                         }
 
-                        self.sourceBufferExt.append(buffer, data, self.videoModel).then(
-                            function (/*appended*/) {
-                                self.debug.log("Append complete: " + buffer.buffered.length);
-                                if (buffer.buffered.length > 0) {
-                                    var ranges = buffer.buffered,
-                                        i,
-                                        len;
+                        Q.when(deferredAppend || true).then(
+                            function() {
+                                deferredAppend = self.sourceBufferExt.append(buffer, data, self.videoModel);
+                                deferredAppend.then(function (/*appended*/) {
+                                    self.debug.log("Append complete: " + buffer.buffered.length);
+                                    if (buffer.buffered.length > 0) {
+                                        var ranges = buffer.buffered,
+                                            i,
+                                            len;
 
-                                    self.debug.log("Buffer type: " + type);
-                                    self.debug.log("Number of buffered ranges: " + ranges.length);
-                                    for (i = 0, len = ranges.length; i < len; i += 1) {
-                                        self.debug.log("Buffered Range: " + ranges.start(i) + " - " + ranges.end(i));
+                                        self.debug.log("Buffer type: " + type);
+                                        self.debug.log("Number of buffered ranges: " + ranges.length);
+                                        for (i = 0, len = ranges.length; i < len; i += 1) {
+                                            self.debug.log("Buffered Range: " + ranges.start(i) + " - " + ranges.end(i));
+                                        }
                                     }
-                                }
-                                finishValidation.call(self);
+                                    finishValidation.call(self);
+                                });
                             }
                         );
                     } else {
