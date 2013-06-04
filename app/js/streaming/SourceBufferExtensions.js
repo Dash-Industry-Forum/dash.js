@@ -59,7 +59,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
     append: function (buffer, bytes /*, videoModel*/) {
         "use strict";
         var defer = Q.defer(),
-            updateEndHandler = function(e) {
+            updateEndHandler = function() {
                 buffer.removeEventListener("updateend", updateEndHandler, false);
                 defer.resolve(true);
             };

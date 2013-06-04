@@ -249,7 +249,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 initialPlayback = false;
             }
 
-            if (qualityChanged || seeking) {
+            if (qualityChanged) {
                 initializationPromise = this.indexHandler.getInitRequest(quality, data);
             } else {
                 initializationPromise = Q.when(null);
@@ -342,11 +342,14 @@ MediaPlayer.dependencies.BufferController = function () {
         getWorkingTime = function () {
             var time = -1;
 
+            /* seeking gets stuck on when the buffer already has the segment containing seekTarget appended
             if (seeking) {
                 time = seekTarget;
                 this.debug.log("Working time is seek time: " + time);
             }
-            else if (waitingForBuffer) {
+            else
+            */
+            if (waitingForBuffer) {
                 time = mseGetDesiredTime();
                 this.debug.log("Working time is mse time: " + time);
             }
