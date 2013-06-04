@@ -545,5 +545,47 @@ describe("Parser Test Suite", function () {
 		});
 
 	});
+    
+    //Negative testcase
+    it("parse reads mpd file and returns valid objects with stub as null", function () {
+
+		var data = '';
+		parser.parse(emptyMpdData["MPD1"], baseUrl).then(function (Data) {
+			data = Data;
+
+		}, function (Error) {
+			data = Error;
+		});
+		waitsFor(function () {
+			if (data != '')
+				return true;
+		}, "parsed data is null", 50);
+		runs(function () {
+			expect(data.__cnt).toEqual(8)
+		});
+
+	});
+		
+    
+    
+   it("parse reads mpd file and returns valid objects with baseurl as null", function () {
+		var data = '',
+        stub =  strMpd["MPD4"];
+
+		parser.parse(stub, null).then(function (Data) {
+			data = Data;
+		}, function (Error) {
+			data = Error;
+		});
+		
+        waitsFor(function () {
+			if (data != '')
+				return true;
+		}, "parsed data is null", 50);
+		runs(function () {
+          expect(data.__cnt).toEqual(13);
+        });
+	});
+
 
 });

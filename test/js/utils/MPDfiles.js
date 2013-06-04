@@ -587,3 +587,15 @@ var strMpd = {
 				  </Period>\
 				</MPD>'
 };
+
+var emptyMpdData = {
+    MPD1 : '<?xml version="1.0"?>\
+				<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\
+				  xmlns="urn:mpeg:dash:schema:mpd:2011"\
+				  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd"\
+				  type="static"\
+				  minBufferTime="PT2S"\
+				  profiles="urn:mpeg:dash:profile:isoff-live:2011"\
+				  mediaPresentationDuration="PT234S">\
+				</MPD>',
+};
