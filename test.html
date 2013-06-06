@@ -25,12 +25,16 @@
             var mimetypeInput = document.getElementById("mimetype-source"),
                 codecInput = document.getElementById("codec-source"),
                 initInput = document.getElementById("init-source"),
-                fragInput = document.getElementById("frag-source");
+                initRangeInput = document.getElementById("init-range"),
+                fragInput = document.getElementById("frag-source"),
+                fragRangeInput = document.getElementById("frag-range");
 
             var mimetype = getParameterByName("mimetype"),
                 codec = getParameterByName("codec"),
                 init = getParameterByName("initialization"),
-                frag = getParameterByName("fragment");
+                initRange = getParameterByName("initrange"),
+                frag = getParameterByName("fragment"),
+                fragRange = getParameterByName("fragrange");
 
             if (mimetype !== null && mimetype !== undefined && mimetype !== "")
                 mimetypeInput.value = mimetype;
@@ -41,8 +45,14 @@
             if (init !== null && init !== undefined && init !== "")
                 initInput.value = init;
 
+            if (initRange !== null && initRange !== undefined && initRange !== "")
+                initRangeInput.value = initRange;
+
             if (frag !== null && frag !== undefined && frag !== "")
                 fragInput.value = frag;
+
+            if (fragRange !== null && fragRange !== undefined && fragRange !== "")
+                fragRangeInput.value = fragRange;
         }
 
         function load() {
@@ -75,13 +85,18 @@
 
         function loadInit() {
             var input = document.getElementById("init-source"),
-                url = input.value;
+                url = input.value,
+                rinput = document.getElementById("init-range"),
+                range = rinput.value;
 
             if (url !== "") {
                 console.log("LOAD INIT");
                 var req = new XMLHttpRequest();
                 req.responseType = "arraybuffer";
                 req.open("GET", url, true);
+
+                if (range !== undefined && range !== null && range.length > 0)
+                    req.setRequestHeader("Range", "bytes=" + range);
 
                 req.onload = function () {
                     console.log("INIT DONE LOADING");
@@ -101,7 +116,9 @@
 
         function loadFragment() {
             var input = document.getElementById("frag-source"),
-                url = input.value;
+                url = input.value,
+                rinput = document.getElementById("frag-range"),
+                range = rinput.value;
 
             if (url !== "") {
                 console.log("LOAD FRAGMENT");
@@ -109,11 +126,23 @@
                 req.responseType = "arraybuffer";
                 req.open("GET", url, true);
 
+                if (range !== undefined && range !== null && range.length > 0)
+                    req.setRequestHeader("Range", "bytes=" + range);
+
                 req.onload = function () {
                     console.log("FRAGMENT DONE LOADING");
                     sourceBuffer.append(new Uint8Array(req.response));
                     video.play();
                     video.currentTime = sourceBuffer.buffered.start(0);
+
+                    console.log("BUFFERED RANGES --------");
+
+                    var i, len;
+                    for (i = 0, len = sourceBuffer.buffered.length; i < len; i += 1) {
+                        console.log("RANGE: " + sourceBuffer.buffered.start(i) + " - " + sourceBuffer.buffered.end(i));
+                    }
+
+                    console.log("------------------------");
                 }
 
                 req.onerror = function () {
@@ -131,20 +160,31 @@
 </head>
 
 <body onload="init()">
-    <div>
-        MimeType: <input id="mimetype-source" style="width:290px;" value="video/mp4"/>
-    </div>
-    <div>
-        Codec: <input id="codec-source" style="width:290px;"/>
-    </div>
-    <div>
-        Init: <input id="init-source" style="width:290px;"/>
-    </div>
-    <div>
-        Fragment: <input id="frag-source" style="width:290px;"/>
-    </div>
-
-    <button type="button" onclick="load()">Load</button>
+    <form>
+        <table style="width: 400px;">
+            <tr>
+                <td>mimetype:</td>
+                <td colspan="2"><input type="text" id="mimetype-source" style="width:93%;" value="video/mp4"/></td>
+            </tr>
+            <tr>
+                <td>codec:</td>
+                <td colspan="2"><input type="text" id="codec-source" style="width:93%;"/></td>
+            </tr>
+            <tr>
+                <td>initialization:</td>
+                <td><input type="text" id="init-source" style="width:95%;"/></td>
+                <td>(range) <input type="text" id="init-range" style="width:60px;"/></td>
+            </tr>
+            <tr>
+                <td>fragment:</td>
+                <td><input type="text" id="frag-source" style="width:95%;"/></td>
+                <td>(range) <input type="text" id="frag-range" style="width:60px;"/></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="text-align: center;"><button type="button" onclick="load()">Load</button></td>
+            </tr>
+        </table>
+    </form>
 
     <video controls autoplay width="320" height="240"></video>
 </body>

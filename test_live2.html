@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>MediaSource Test</title>
+    <meta name="description" content="" />
+
+    <script>
+        var ms,
+            sourceBuffer,
+            video,
+            baseUrl = "http://tvnlive.dashdemo.edgesuite.net/live/",
+            mimetype,
+            codec,
+            loaded = 0,
+            frags,
+            template,
+            playbackStarted = false;
+
+        /*
+        <AdaptationSet mimeType="video/mp4" segmentAlignment="true" startWithSAP="1" maxWidth="1280" maxHeight="720" maxFrameRate="25" par="16:9">
+            <SegmentTemplate duration="2" startNumber="20931215" media="video_$Number$_$Bandwidth$bps.mp4" initialization="video_$Bandwidth$bps.mp4"></SegmentTemplate>
+            <Representation id="v1" codecs="avc1.4d401f" width="1280" height="720" scanType="progressive" frameRate="25" sar="1:1" bandwidth="3000000"/>
+            <Representation id="v2" codecs="avc1.4d401e" width="720" height="576" scanType="progressive" frameRate="25" sar="64:45" bandwidth="1500000"/>
+            <Representation id="v3" codecs="avc1.4d401e" width="640" height="480" scanType="progressive" frameRate="25" sar="4:3" bandwidth="900000"/>
+            <Representation id="v4" codecs="avc1.4d400d" width="320" height="240" scanType="progressive" frameRate="25" sar="4:3" bandwidth="500000"/>
+            <Representation id="v5" codecs="avc1.4d400c" width="176" height="144" scanType="progressive" frameRate="25" sar="16:11" bandwidth="250000"/>
+            <Representation id="v6" codecs="avc1.4d400b" width="128" height="96" scanType="progressive" frameRate="25" sar="4:3" bandwidth="100000"/>
+        </AdaptationSet>
+        <AdaptationSet mimeType="audio/mp4" codecs="mp4a.40.5" audioSamplingRate="24000" lang="und" segmentAlignment="true" startWithSAP="1">
+            <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+            <SegmentTemplate duration="2" startNumber="20931215" media="audio_$Number$_$Bandwidth$bps_Input_0.mp4" initialization="audio_$Bandwidth$bps_Input_0.mp4"></SegmentTemplate>
+            <Representation id="a0" bandwidth="128000"/>
+        </AdaptationSet>
+        */
+
+        function loadVideo() {
+            mimetype = "video/mp4";
+            codec = "avc1.4d401f";
+
+            template = {
+                timescale: 1,
+                duration: 2,
+                startNumber: 20931215,
+                media: "video_$Number$_3000000bps.mp4",
+                initialization: "video_3000000bps.mp4"
+            };
+
+            loadTemplate();
+        }
+
+        function loadAudio() {
+            mimetype = "audio/mp4";
+            codec = "mp4a.40.5";
+
+            template = {
+                timescale: 1,
+                duration: 2,
+                startNumber: 20931215,
+                media: "audio_$Number$_128000bps_Input_0.mp4",
+                initialization: "audio_128000bps_Input_0.mp4"
+            };
+
+            loadTemplate();
+        }
+
+        function loadTemplate() {
+            console.log("CALCULATE FRAGMENTS");
+            var startTime = new Date("2013-04-19T12:27:13Z"),
+                now = new Date(),
+                offset = (now.getTime() - startTime.getTime()) / 1000,
+                len,
+                num;
+
+            offset -= 20;
+
+            frags = [];
+            num = Math.floor(offset / (template.duration / template.timescale));
+            len = num + 10;
+            for (num; num < len; num += 1) {
+                frags.push(baseUrl + template.media.split("$Number$").join(num + template.startNumber));
+            }
+
+            console.log("FRAGMENTS:");
+            console.log(frags);
+
+            console.log("START");
+            window.MediaSource = window.MediaSource || window.WebKitMediaSource;
+
+            ms = new MediaSource();
+
+            video = document.querySelector('video');
+            video.src = window.URL.createObjectURL(ms);
+
+            ms.addEventListener('webkitsourceopen', opened, false);
+            ms.addEventListener('webkitsourceclose', closed, false);
+        }
+
+        function opened() {
+            var value = mimetype + ';codecs="' + codec + '"',
+                url = baseUrl + template.initialization;
+
+            console.log("OPENED");
+            console.log(value);
+
+            sourceBuffer = ms.addSourceBuffer(value);
+
+            console.log("LOAD INIT");
+            var req = new XMLHttpRequest();
+            req.responseType = "arraybuffer";
+            req.open("GET", url, true);
+
+            req.onload = function () {
+                console.log("INIT DONE LOADING");
+                sourceBuffer.append(new Uint8Array(req.response));
+                loadNext();
+            }
+
+            req.onerror = function () {
+                alert("Could not load init.");
+            }
+
+            req.send();
+        }
+
+        function loadNext() {
+            if (loaded >= frags.length) {
+                console.log("EVERYTHING IS LOADED!");
+                return;
+            }
+
+            var url = frags[loaded],
+                i,
+                len,
+                ranges = sourceBuffer.buffered;
+
+            console.log("--STATUS-------");
+            console.log("CURRENT TIME: " + video.currentTime);
+            console.log("BUFFERED RANGES: " + ranges.length);
+            for (i = 0, len = ranges.length; i < len; i += 1) {
+                console.log("RANGE: " + ranges.start(i) + " - " + ranges.end(i));
+            }
+            console.log("---------------");
+
+            console.log("LOAD FRAGMENT: " + url);
+
+            var req = new XMLHttpRequest();
+            req.responseType = "arraybuffer";
+            req.open("GET", url, true);
+
+            req.onload = function () {
+                console.log("FRAGMENT DONE LOADING");
+                sourceBuffer.append(new Uint8Array(req.response));
+
+                if (!playbackStarted) {
+                    playbackStarted = true;
+                    video.play();
+                    video.currentTime = sourceBuffer.buffered.start(0);
+                }
+
+                loaded += 1;
+                loadNext();
+            }
+
+            req.onerror = function () {
+                alert("Could not load fragment.");
+            }
+
+            req.send();
+        }
+
+        function closed() {
+            alert("MediaSource Closed.");
+        }
+    </script>
+</head>
+
+<body>
+    <button type="button" onclick="loadVideo()">Load Video</button>
+    <button type="button" onclick="loadAudio()">Load Audio</button>
+
+    <video controls autoplay width="320" height="240"></video>
+</body>
+</html>

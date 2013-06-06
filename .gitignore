@@ -1,10 +1,17 @@
 #################
-## Node/Grunt
+## Node.js
 #################
 
-.grunt/
-node_modules/
-reports/
+node_modules
+npm-debug.log
+
+#################
+## Grunt
+#################
+
+.grunt
+_SpecRunner.html
+reports
 
 #################
 ## Eclipse

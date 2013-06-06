@@ -3,7 +3,7 @@ body {
     font-size: 11px;
     font-family: "Lato", sans-serif;
     height: auto;
-    padding-bottom: 20px;
+    padding-bottom: 0px;
 }
 
 h1 {
@@ -22,6 +22,11 @@ p {
     overflow: hidden;
     padding: 10px 0;
     text-align: left;
+}
+
+/* This is to get around a sizing issue with dropkick */
+.dk_options {
+    width: 460px;
 }
 
 .demo-panel-title-header {
@@ -84,15 +89,24 @@ p {
 .tooltip-box-top {
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
-    
-    border-top: 2px solid #dce4ec;    
+
+    border-top: 2px solid #dce4ec;
 }
 
 .tooltip-box-bottom {
     border-bottom-left-radius: 6px;
     border-bottom-right-radius: 6px;
-    
+
     border-bottom: 2px solid #dce4ec;
+}
+
+.tooltip-debug-box {
+    background-color: #FFFFFF;
+    /*border: 2px solid #dce4ec;*/
+    /*border-radius: 6px;*/
+    /*position: relative;*/
+    border-left: 2px solid #dce4ec;
+    border-right: 2px solid #dce4ec;
 }
 /*
 .tooltip-box:before {
@@ -257,7 +271,11 @@ p {
 .tab-content {
     width: 100%;
     height: 100%;
-    padding: 10px;
+    padding-left: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    border: 2px solid #dce4ec;
 }
 
 .tab-content div {
