@@ -85,6 +85,7 @@ MediaPlayer = function (aContext) {
         };
 
     // Set up DI.
+	console.log("Setting up DI...");
     system = new dijon.System();
     system.mapValue("system", system);
     system.mapOutlet("system");
