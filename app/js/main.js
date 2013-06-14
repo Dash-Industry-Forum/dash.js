@@ -725,6 +725,41 @@ function parseBrowserVersion( searchStr ) {
 	return result;
 }
 
+function parseMpd( searchStr ) {
+    var mpdIndex,
+        subSearchStr,
+        ampIndex,
+        equalIndex,
+        result;
+
+    if ( searchStr === null || searchStr.length === 0) {
+        return null;
+    }
+
+    searchStr = searchStr.toLowerCase();
+    mpdIndex = searchStr.indexOf("mpd=");
+
+    if (mpdIndex === -1) {
+        return "stable"
+    }
+
+    subSearchStr = searchStr.substr( mpdIndex, searchStr.length );
+    ampIndex = subSearchStr.indexOf("&");
+    equalIndex = subSearchStr.indexOf("=");
+
+    if (ampIndex === -1) {
+        result = subSearchStr.substr((equalIndex + 1), subSearchStr.length);
+    } else {
+        result = subSearchStr.substr((equalIndex + 1), (ampIndex - equalIndex - 1));
+    }
+
+    if (result.length === 0) {
+        return null;
+    }
+
+    return result;
+}
+
 function load() {
     "use strict";
     var input = $("#custom-source"),
@@ -755,6 +790,8 @@ $(document).ready(function() {
     "use strict";
     var defaultDataSource,
     	browserVersion,
+        specifiedMpd,
+        mpdUrl = $("#custom-source"),
         video = document.querySelector(".dash-video-player video"),
         context = new Dash.di.DashContext(),
         console = document.getElementById("debug_log"),
@@ -762,6 +799,7 @@ $(document).ready(function() {
         lastChild = $("#debug-log-tab");
 
 	browserVersion = parseBrowserVersion( location.search );
+    specifiedMpd = parseMpd( location.search );
 
 	initDebugControls();
     initStreamData();
@@ -841,4 +879,9 @@ $(document).ready(function() {
 
     player.autoPlay = true;
     player.attachView(video);
+
+    if (specifiedMpd !== null) {
+        mpdUrl.val(specifiedMpd);
+        load();
+    }
 });
