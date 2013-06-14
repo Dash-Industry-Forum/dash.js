@@ -29,8 +29,9 @@ MediaPlayer.dependencies.BufferExtensions = function () {
             return Q.when(bufferTime);
         },
 
-        shouldBufferMore: function (bufferLength) {
-            var result = (bufferLength < bufferTime);
+        shouldBufferMore: function (bufferLength, delay) {
+            // Is more data needed in the next 'delay' seconds?
+            var result = ((bufferLength - delay) < (bufferTime * 1.5));
             return Q.when(result);
         }
     };
