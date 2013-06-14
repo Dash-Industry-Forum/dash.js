@@ -60,7 +60,7 @@ MediaPlayer.models.MetricsModel = function () {
             return vo;
         },
 
-        addHttpRequest: function (streamType, tcpid, type, url, actualurl, range, trequest, tresponse, responsecode, interval, mediaduration) {
+        addHttpRequest: function (streamType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, interval, mediaduration) {
             var vo = new MediaPlayer.vo.metrics.HTTPRequest();
 
             vo.tcpid = tcpid;
@@ -70,6 +70,7 @@ MediaPlayer.models.MetricsModel = function () {
             vo.range = range;
             vo.trequest = trequest;
             vo.tresponse = tresponse;
+            vo.tfinish = tfinish;
             vo.responsecode = responsecode;
             vo.interval = interval;
             vo.mediaduration = mediaduration;
