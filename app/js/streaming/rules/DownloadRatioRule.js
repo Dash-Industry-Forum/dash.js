@@ -50,7 +50,9 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 httpRequests = metrics.HttpList,
                 lastRequest,
                 downloadTime,
+                totalTime,
                 downloadRatio,
+                totalRatio,
                 switchRatio,
                 deferred,
                 funcs,
@@ -70,9 +72,11 @@ MediaPlayer.rules.DownloadRatioRule = function () {
             }
 
             lastRequest = httpRequests[httpRequests.length - 1];
-            downloadTime = (lastRequest.tresponse.getTime() - lastRequest.trequest.getTime()) / 1000;
 
-            if (downloadTime <= 0) {
+            totalTime = (lastRequest.tfinish.getTime() - lastRequest.trequest.getTime()) / 1000;
+            downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
+
+            if (totalTime <= 0) {
                 self.debug.log("Don't know how long the download of the last fragment took, bailing.");
                 return Q.when(new MediaPlayer.rules.SwitchRequest());
             }
@@ -88,7 +92,25 @@ MediaPlayer.rules.DownloadRatioRule = function () {
 
             deferred = Q.defer();
 
+            totalRatio = lastRequest.mediaduration / totalTime;
             downloadRatio = lastRequest.mediaduration / downloadTime;
+
+            if (isNaN(downloadRatio) || isNaN(totalRatio)) {
+                self.debug.log("Total time: " + totalTime + "s");
+                self.debug.log("Download time: " + downloadTime + "s");
+                self.debug.log("The ratios are NaN, bailing.");
+                return Q.when(new MediaPlayer.rules.SwitchRequest());
+            }
+
+            self.debug.log("Total ratio: " + totalRatio);
+            self.debug.log("Download ratio: " + downloadRatio);
+
+//            if (totalRatio * 2 < downloadRatio) {
+                // don't let data buffering or caching hide the time it 
+                // took to down load the data in the latency bucket
+                downloadRatio = totalRatio;
+//            }
+
             self.debug.log("Download ratio: " + downloadRatio);
 
             if (isNaN(downloadRatio)) {
@@ -125,6 +147,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                         }
                     );
                 } else {
+                    self.debug.log("We are at the lowest bitrate and cannot switch down, use current.");
                     deferred.resolve(new MediaPlayer.rules.SwitchRequest(current));
                 }
             } else {
@@ -187,6 +210,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                                 }
                             );
                         } else {
+                            self.debug.log("We are at the highest bitrate and cannot switch up, use current.");
                             deferred.resolve(new MediaPlayer.rules.SwitchRequest(max));
                         }
                     }

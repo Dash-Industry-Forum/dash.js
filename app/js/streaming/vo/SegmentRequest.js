@@ -22,6 +22,7 @@ MediaPlayer.vo.SegmentRequest = function () {
     this.range = null;
     this.url = null;
     this.requestStartDate = null;
+    this.firstByteDate = null;
     this.requestEndDate = null;
     this.deferred = null;
 };

@@ -30,7 +30,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         return Q.when(mediaSource.removeSourceBuffer(buffer));
     },
 
-    getBufferLength: function (buffer, time) {
+    getBufferRange: function (buffer, time) {
         "use strict";
 
         var ranges = null,
@@ -45,15 +45,35 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             for (i = 0, len = ranges.length; i < len; i += 1) {
                 if (time >= ranges.start(i) && time < ranges.end(i)) {
                     rangeIndex = i;
+                    break;
                 }
+            }
+
+            if (rangeIndex !== -1 && rangeIndex !== ranges.length) {
+                return Q.when({index: rangeIndex, start: ranges.start(rangeIndex), end: ranges.end(rangeIndex)});
             }
         }
 
-        if (rangeIndex !== -1) {
-            bufferLength = ranges.end(rangeIndex) - time;
-        }
+        return Q.when(null);
+    },
 
-        return Q.when(bufferLength);
+    getBufferLength: function (buffer, time) {
+        "use strict";
+
+        var self = this,
+            deferred = Q.defer();
+
+        self.getBufferRange(buffer, time).then(
+            function (range) {
+                if (range === null) {
+                    deferred.resolve(0);
+                } else {
+                    deferred.resolve(range.end - time);
+                }
+            }
+        );
+
+        return deferred.promise;
     },
 
     append: function (buffer, bytes /*, videoModel*/) {

@@ -24,10 +24,12 @@ MediaPlayer.dependencies.Stream = function () {
         initialized = false,
         ready = false,
         loaded = false,
+        load = null,
         urlSource,
         errored = false,
         DEFAULT_KEY_TYPE = "webkit-org.w3.clearkey",
 
+        loadedListener,
         playListener,
         pauseListener,
         seekingListener,
@@ -58,6 +60,9 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             this.debug.log("Do seek: " + time);
+
+            this.system.notify("setCurrentTime");
+            this.videoModel.setCurrentTime(time);
 
             if (videoController) {
                 videoController.seek(time);
@@ -382,6 +387,11 @@ MediaPlayer.dependencies.Stream = function () {
             return initialize.promise;
         },
 
+        onLoad = function () {
+            this.debug.log("Got loadmetadata event.");
+            load.resolve(null);
+        },
+
         onPlay = function () {
             this.debug.log("Got play event.");
 
@@ -470,6 +480,12 @@ MediaPlayer.dependencies.Stream = function () {
             ).then(
                 function (/*done*/) {
                     self.debug.log("Playback initialized!");
+                    play.call(self);
+                    return load.promise;
+                }
+            ).then(
+                function () {
+                    self.debug.log("element loaded!");
                     if (isLive) {
                         self.manifestExt.getLiveEdge(self.manifestModel.getValue()).then(
                             function (edge) {
@@ -482,7 +498,6 @@ MediaPlayer.dependencies.Stream = function () {
                             function (offset) {
                                 self.debug.log("Got VOD content.  Starting playback at offset: " + offset);
                                 seek.call(self, offset);
-                                //play.call(self);
                             }
                         );
                     }
@@ -564,16 +579,20 @@ MediaPlayer.dependencies.Stream = function () {
             this.system.mapHandler("manifestUpdated", undefined, manifestHasUpdated.bind(this));
             this.system.mapHandler("setCurrentTime", undefined, currentTimeChanged.bind(this));
 
+            load = Q.defer();
+
             playListener = onPlay.bind(this);
             pauseListener = onPause.bind(this);
             seekingListener = onSeeking.bind(this);
             seekedListener = onSeeked.bind(this);
             timeupdateListener = onProgress.bind(this);
+            loadedListener = onLoad.bind(this);
 
             this.videoModel.listen("play", playListener);
             this.videoModel.listen("pause", pauseListener);
             this.videoModel.listen("seeking", seekingListener);
             this.videoModel.listen("timeupdate", timeupdateListener);
+            this.videoModel.listen("loadedmetadata", loadedListener);
 
             ready = true;
             doLoad.call(this);

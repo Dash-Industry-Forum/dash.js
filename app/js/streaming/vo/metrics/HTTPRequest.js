@@ -29,6 +29,7 @@ MediaPlayer.vo.metrics.HTTPRequest = function () {
     this.range = null;          // The contents of the byte-range-spec part of the HTTP Range header.
     this.trequest = null;       // Real-Time | The real time at which the request was sent.
     this.tresponse = null;      // Real-Time | The real time at which the first byte of the response was received.
+    this.tfinish = null;        // Real-Time | The real time at which the request finshed.
     this.responsecode = null;   // The HTTP response code.
     this.interval = null;       // The duration of the throughput trace intervals (ms), for successful requests only.
     this.mediaduration = null;  // The duration of the media requests, if available, in milliseconds.
