@@ -740,7 +740,7 @@ function parseMpd( searchStr ) {
     mpdIndex = searchStr.indexOf("mpd=");
 
     if (mpdIndex === -1) {
-        return "stable"
+        return null;
     }
 
     subSearchStr = searchStr.substr( mpdIndex, searchStr.length );
