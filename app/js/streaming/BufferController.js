@@ -611,6 +611,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         setMinBufferTime: function (value) {
+            var self = this;
             minBufferTime = value;
             validateInterval = (minBufferTime * 1000.0) / 4;
             validateInterval = Math.max(validateInterval, 1000);
