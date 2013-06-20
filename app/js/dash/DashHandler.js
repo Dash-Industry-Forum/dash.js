@@ -166,11 +166,17 @@ Dash.dependencies.DashHandler = function () {
                 repeat,
                 seg,
                 time = 0,
-                count = 0,
+                count = 1,
+                fTimescale = 1,
                 url;
 
             if (template.hasOwnProperty("startNumber")) {
                 count = template.startNumber;
+            }
+
+            // default to 1 if not present
+            if (template.hasOwnProperty("timescale")) {
+                fTimescale = template.timescale;
             }
 
             fragments = timeline.S_asArray;
@@ -184,7 +190,7 @@ Dash.dependencies.DashHandler = function () {
                 for (j = 0; j <= repeat; j += 1) {
                     seg = new Dash.vo.Segment();
 
-                    seg.timescale = template.timescale;
+                    seg.timescale = fTimescale;
                     if (frag.hasOwnProperty("t")) {
                         seg.startTime = frag.t;
                         time = frag.t;
@@ -362,12 +368,15 @@ Dash.dependencies.DashHandler = function () {
         getRequestForTemplate = function (index, template, representation) {
             var request = new MediaPlayer.vo.SegmentRequest(),
                 url,
+                fTimescale = 1,
                 time;
 
-            time = (template.duration * index);
+            // default to 1 if not present
             if (template.hasOwnProperty("timescale")) {
-                time = time / template.timescale;
+                fTimescale = template.timescale;
             }
+
+            time = (template.duration * index) / fTimescale;
             time = Math.floor(time);
 
             url = template.media;
@@ -380,9 +389,9 @@ Dash.dependencies.DashHandler = function () {
             request.streamType = type;
             request.type = "Media Segment";
             request.url = getRequestUrl(url, representation.BaseURL);
-            request.duration = template.duration / template.timescale;
-            request.timescale = template.timescale;
-            request.startTime = (index * template.duration) / template.timescale;
+            request.duration = template.duration / fTimescale;
+            request.timescale = fTimescale;
+            request.startTime = (index * template.duration) / fTimescale;
 
             return Q.when(request);
         },
