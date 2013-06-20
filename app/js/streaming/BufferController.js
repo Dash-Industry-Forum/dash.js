@@ -25,7 +25,7 @@ MediaPlayer.dependencies.BufferController = function () {
         waitingForBuffer = false,
         initialPlayback = true,
         seeking = false,
-        mseSetTime = false,
+        //mseSetTime = false,
         seekTarget = -1,
         qualityChanged = false,
         dataChanged = true,
@@ -78,18 +78,18 @@ MediaPlayer.dependencies.BufferController = function () {
 
             return Q.when(isLive);
         },
-
+/*
         setCurrentTimeOnVideo = function (time) {
             var ct = this.videoModel.getCurrentTime();
             if (ct === time) {
                 return;
             }
 
-            this.debug.log("Set current time on video.");
+            this.debug.log("Set current time on video: " + time);
             this.system.notify("setCurrentTime");
             this.videoModel.setCurrentTime(time);
         },
-
+*/
         startPlayback = function () {
             if (!ready || !started) {
                 return;
@@ -119,13 +119,13 @@ MediaPlayer.dependencies.BufferController = function () {
                 currentTime = new Date();
                 clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
                 playListMetrics = this.metricsModel.addPlayList(type, currentTime, 0, MediaPlayer.vo.metrics.PlayList.INITIAL_PLAY_START_REASON);
+                //mseSetTime = true;
             }
 
             this.debug.log("BufferController " + type + " start.");
 
             started = true;
             waitingForBuffer = true;
-            mseSetTime = true;
             startPlayback.call(this);
         },
 
@@ -178,10 +178,10 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
-        onBytesLoaded = function (response) {
+        onBytesLoaded = function (request, response) {
             var self = this;
 
-            self.debug.log(type + " Bytes finished loading.");
+            self.debug.log(type + " Bytes finished loading: " + request.url);
 
             self.fragmentController.process(response.data).then(
                 function (data) {
@@ -224,15 +224,25 @@ MediaPlayer.dependencies.BufferController = function () {
             );
         },
 
-        onBytesError = function () {
+        onBytesError = function (request) {
             var self = this;
+
+            // remove the failed request from the list
+            for (var i = fragmentRequests.length - 1; i >= 0 ; --i) {
+                if (fragmentRequests[i].startTime === request.startTime) {
+                    if (fragmentRequests[i].url === request.url) {
+                        fragmentRequests.splice(i, 1);
+                    }
+                    break;
+                }
+            }
 
             if (state === LOADING) {
                 setState.call(self, READY);
             }
 
             //alert("Error loading fragment.");
-            this.errHandler.downloadError("Error loading " + type + " fragment.");
+            this.errHandler.downloadError("Error loading " + type + " fragment: " + request.url);
         },
 
         signalStreamComplete = function () {
@@ -324,7 +334,7 @@ MediaPlayer.dependencies.BufferController = function () {
                         fragmentRequests.push(request);
                         self.debug.log("Loading an " + type + " fragment: " + request.url);
                         setState.call(self, LOADING);
-                        self.fragmentLoader.load(request).then(onBytesLoaded.bind(self), onBytesError.bind(self));
+                        self.fragmentLoader.load(request).then(onBytesLoaded.bind(self, request), onBytesError.bind(self, request));
                         break;
                     default:
                         self.debug.log("Unknown request action.");
@@ -354,7 +364,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 }
             }
         },
-
+/*
         mseGetDesiredTime = function () {
             var ranges = buffer.buffered,
                 time = 0;
@@ -389,14 +399,13 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             time = mseGetDesiredTime();
-            this.debug.log("Set time to: " + time);
             setCurrentTimeOnVideo.call(this, time);
 
             liveInitialization = false;
             mseSetTime = false;
             seekTarget = -1;
         },
-
+*/
         getWorkingTime = function () {
             var time = -1;
 
@@ -406,12 +415,12 @@ MediaPlayer.dependencies.BufferController = function () {
                 this.debug.log("Working time is seek time: " + time);
             }
             else
-            */
             if (waitingForBuffer && !seeking) {
                 time = mseGetDesiredTime();
                 this.debug.log("Working time is mse time: " + time);
-            }
-            else {
+            } else
+            */
+            {
                 time = this.videoModel.getCurrentTime();
                 this.debug.log("Working time is video time: " + time);
             }
@@ -437,7 +446,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     self.debug.log("Current " + type + " buffer length: " + length);
 
                     checkIfSufficientBuffer.call(self, length);
-                    mseSetTimeIfPossible.call(self);
+                    //mseSetTimeIfPossible.call(self);
 
                     if (state === LOADING && length < STALL_THRESHOLD) {
                         if (!stalled) {
@@ -482,10 +491,10 @@ MediaPlayer.dependencies.BufferController = function () {
                                     ).then(
                                         function (request) {
                                             if (request !== null) {
-                                                self.debug.log("Loading " + type + " initialization.");
+                                                self.debug.log("Loading " + type + " initialization: " + request.url);
                                                 self.debug.log(request);
                                                 setState.call(self, LOADING);
-                                                self.fragmentLoader.load(request).then(onBytesLoaded.bind(self), onBytesError.bind(self));
+                                                self.fragmentLoader.load(request).then(onBytesLoaded.bind(self, request), onBytesError.bind(self, request));
                                                 lastQuality = newQuality;
                                             } else {
                                                 loadNextFragment.call(self, newQuality).then(onFragmentRequest.bind(self));
