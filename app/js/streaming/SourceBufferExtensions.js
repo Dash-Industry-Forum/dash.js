@@ -30,11 +30,13 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         return Q.when(mediaSource.removeSourceBuffer(buffer));
     },
 
-    getBufferRange: function (buffer, time) {
+    getBufferRange: function (buffer, time, tolerance) {
         "use strict";
 
         var ranges = null,
-            rangeIndex = -1,
+            startIndex = -1,
+            finishIndex = -1,
+            toler = (tolerance || .1),
             len,
             i;
 
@@ -42,27 +44,34 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
         if (ranges !== null) {
             for (i = 0, len = ranges.length; i < len; i += 1) {
-                if (time >= ranges.start(i) && time < ranges.end(i)) {
-                    rangeIndex = i;
-                    break;
+                if (finishIndex !== -1) {
+                    if ((ranges.start(i) - ranges.end(finishIndex)) <= toler) {
+                        // the discontinuity is smaller than the tolerance, combine the ranges
+                        finishIndex = i;
+                    } else {
+                        break;
+                    }
+                } else if (time >= ranges.start(i) && time < ranges.end(i)) {
+                    startIndex = i;
+                    finishIndex = i;
                 }
             }
 
-            if (rangeIndex !== -1 && rangeIndex !== ranges.length) {
-                return Q.when({index: rangeIndex, start: ranges.start(rangeIndex), end: ranges.end(rangeIndex)});
+            if (startIndex !== -1) {
+                return Q.when({start: ranges.start(startIndex), end: ranges.end(finishIndex)});
             }
         }
 
         return Q.when(null);
     },
 
-    getBufferLength: function (buffer, time) {
+    getBufferLength: function (buffer, time, tolerance) {
         "use strict";
 
         var self = this,
             deferred = Q.defer();
 
-        self.getBufferRange(buffer, time).then(
+        self.getBufferRange(buffer, time, tolerance).then(
             function (range) {
                 if (range === null) {
                     deferred.resolve(0);
