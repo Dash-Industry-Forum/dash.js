@@ -23,7 +23,7 @@ MediaPlayer.utils.Debug = function () {
     "use strict";
 
     var htmlConsole = null,
-        logToHtmlConsole = true,
+        logToHtmlConsole = false,
         filter = "",
 
         updateFilter = function () {
