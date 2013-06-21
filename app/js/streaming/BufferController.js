@@ -326,6 +326,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                     self.indexHandler.getNextSegmentRequest(lastQuality, data).then(onFragmentRequest.bind(self));
                                     return;
                                 } else {
+                                    // remove overlapping segement of a different quality
                                     fragmentRequests.splice(i, 1);
                                 }
                                 break;
@@ -444,6 +445,7 @@ MediaPlayer.dependencies.BufferController = function () {
             self.sourceBufferExt.getBufferLength(buffer, currentTime).then(
                 function (length) {
                     self.debug.log("Current " + type + " buffer length: " + length);
+                    self.metricsModel.addBufferLevel(type, new Date(), length);
 
                     checkIfSufficientBuffer.call(self, length);
                     //mseSetTimeIfPossible.call(self);
@@ -458,7 +460,6 @@ MediaPlayer.dependencies.BufferController = function () {
                         }
                     } else if (state === READY) {
                         setState.call(self, VALIDATING);
-                        self.metricsModel.addBufferLevel(type, new Date(), length);
                         self.bufferExt.shouldBufferMore(length, validateInterval / 1000.0).then(
                             function (shouldBuffer) {
                                 //self.debug.log("Buffer more " + type + ": " + shouldBuffer);
