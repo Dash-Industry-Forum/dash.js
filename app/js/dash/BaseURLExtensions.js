@@ -18,7 +18,7 @@ Dash.dependencies.BaseURLExtensions = function () {
     var parseSIDX = function (ab, ab_first_byte_offset) {
             var parseOffset = (ab_first_byte_offset || 0),
                 d = new DataView(ab),
-                bytes = new Uint8Array(ab, parseOffset, ab.byteLength - parseOffset),
+                //bytes = new Uint8Array(ab, parseOffset, ab.byteLength - parseOffset),
                 sidx = {},
                 pos = parseOffset,
                 time,

@@ -11,7 +11,7 @@ module.exports = function(grunt) {
       }
     },
     uglify : {
-      dist : {
+      min : {
         files: {
           "dash.min.js" : [
             "app/js/streaming/MediaPlayer.js",
@@ -19,6 +19,23 @@ module.exports = function(grunt) {
             "app/js/dash/Dash.js",
             "app/js/dash/DashContext.js",
             "app/js/*/**/*.js"],
+        }
+      },
+      all : {
+        files: {
+          "dash.all.js" : [
+            "./app/lib/jquery/js/jquery-1.8.3.min.js",
+            "./app/lib/q.min.js",
+            "./app/lib/xml2json.js",
+            "./app/lib/objectiron.js",
+            "./app/lib/dijon.js",
+            "./app/lib/Math.js",
+            "./app/lib/long.js",
+            "./app/js/streaming/MediaPlayer.js",
+            "./app/js/streaming/Context.js",
+            "./app/js/dash/Dash.js",
+            "./app/js/dash/DashContext.js",
+            "./app/js/*/**/*.js"],
         }
       }
     },
@@ -57,6 +74,8 @@ module.exports = function(grunt) {
             "./app/lib/q.min.js",
             "./app/lib/xml2json.js",
             "./app/lib/objectiron.js",
+            "./app/lib/Math.js",
+            "./app/lib/long.js",
             "./test/js/utils/MPDfiles.js",   
             "./test/js/utils/Main.js",
             "./app/lib/kendo/kendo.web.min.js",            
@@ -82,5 +101,5 @@ module.exports = function(grunt) {
 
   
    // Define tasks
-    grunt.registerTask('default', ['uglify','connect','jasmine','jshint']);
+    grunt.registerTask('default', ['jshint','connect','jasmine','uglify']);
 };
