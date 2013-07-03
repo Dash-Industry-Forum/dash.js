@@ -34,8 +34,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         "use strict";
 
         var ranges = null,
-            startIndex = -1,
-            finishIndex = -1,
+            start = 0,
+            end = 0,
+            firstStart = null,
+            lastEnd = null,
+            gap = 0,
             toler = (tolerance || 0.1),
             len,
             i;
@@ -44,21 +47,34 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
         if (ranges !== null) {
             for (i = 0, len = ranges.length; i < len; i += 1) {
-                if (finishIndex !== -1) {
-                    if ((ranges.start(i) - ranges.end(finishIndex)) <= toler) {
+                start = ranges.start(i);
+                end = ranges.end(i);
+                if (firstStart === null) {
+                    gap = Math.abs(start - time);
+                    if (time < toler && gap <= toler) {
+                        // start the range even though the buffer does not contain time 0
+                        firstStart = start;
+                        lastEnd = end;
+                        continue;
+                    } else if (time >= start && time < end) {
+                        // start the range
+                        firstStart = start;
+                        lastEnd = end;
+                        continue;
+                    } 
+                } else {
+                    gap = start - lastEnd;
+                    if (gap <= toler) {
                         // the discontinuity is smaller than the tolerance, combine the ranges
-                        finishIndex = i;
+                        lastEnd = end;
                     } else {
                         break;
-                    }
-                } else if (time >= ranges.start(i) && time < ranges.end(i)) {
-                    startIndex = i;
-                    finishIndex = i;
+                    } 
                 }
             }
 
-            if (startIndex !== -1) {
-                return Q.when({start: ranges.start(startIndex), end: ranges.end(finishIndex)});
+            if (firstStart !== null) {
+                return Q.when({start: firstStart, end: lastEnd});
             }
         }
 
