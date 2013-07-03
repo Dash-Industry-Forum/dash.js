@@ -51,17 +51,17 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 end = ranges.end(i);
                 if (firstStart === null) {
                     gap = Math.abs(start - time);
-                    if (time < toler && gap <= toler) {
-                        // start the range even though the buffer does not contain time 0
-                        firstStart = start;
-                        lastEnd = end;
-                        continue;
-                    } else if (time >= start && time < end) {
+                    if (time >= start && time < end) {
                         // start the range
                         firstStart = start;
                         lastEnd = end;
                         continue;
-                    } 
+                    } else if (gap <= toler) {
+                        // start the range even though the buffer does not contain time 0
+                        firstStart = start;
+                        lastEnd = end;
+                        continue;
+                    }
                 } else {
                     gap = start - lastEnd;
                     if (gap <= toler) {
