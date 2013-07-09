@@ -565,7 +565,7 @@ function initStreamData() {
     };
 
     streams["1b-thomson"] = {
-        url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd",
+        url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/1/manifest.mpd",
         isLive: false
     };
 
@@ -585,7 +585,7 @@ function initStreamData() {
     };
 
     streams["2a-thomson"] = {
-        url: "http://dash.edgesuite.net/dash264/TestCases/2a/thomson-networks/manifest.mpd",
+        url: "http://dash.edgesuite.net/dash264/TestCases/2a/thomson-networks/1/manifest.mpd",
         isLive: false
     };
 
