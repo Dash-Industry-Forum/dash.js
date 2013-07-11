@@ -649,6 +649,9 @@ function initStreamSources( browserVersion ) {
 		case "dev":
 			filterValue = "d";
 			break;
+		case "explorer":
+			filterValue = "i";
+			break;
 		case "all":
 			testChannel = true;
 			break;
