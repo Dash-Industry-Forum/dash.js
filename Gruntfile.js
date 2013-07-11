@@ -18,6 +18,10 @@ module.exports = function(grunt) {
             "app/js/streaming/Context.js",
             "app/js/dash/Dash.js",
             "app/js/dash/DashContext.js",
+            "app/lib/q.min.js",
+            "app/lib/xml2json.js",
+            "app/lib/objectiron.js",
+            "app/lib/dijon.js",
             "app/js/*/**/*.js"],
         }
       },
@@ -35,7 +39,7 @@ module.exports = function(grunt) {
             "./app/js/streaming/Context.js",
             "./app/js/dash/Dash.js",
             "./app/js/dash/DashContext.js",
-            "./app/js/*/**/*.js"],
+            "./app/js/*/**/*.js"]
         }
       }
     },
