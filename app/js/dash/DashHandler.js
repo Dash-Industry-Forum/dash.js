@@ -28,8 +28,27 @@ Dash.dependencies.DashHandler = function () {
         },
 
         replaceNumberForTemplate = function (url, value) {
+            var startI=url.indexOf("$Number");
+            var endI=url.indexOf("$", startI+7);
+            var per=url.indexOf("%", startI+7);
+
+            if (per>startI && per<endI) {
+                var d=url.indexOf("d", per+1);
+                var c=url.substring(per+1, d);
+                value=addZeros(value, c);
+            }
+
             var v = value.toString();
-            return url.split("$Number$").join(v);
+            return url.substring(0, startI)+v+url.substring(endI+1);
+        },
+
+        addZeros = function (s, count) {
+            if (s.length==count)
+                return s;
+            else {
+                s="0"+s;
+                return addZeros(s, count);
+           }
         },
 
         replaceTimeForTemplate = function (url, value) {
