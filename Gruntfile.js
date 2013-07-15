@@ -62,7 +62,7 @@ module.exports = function(grunt) {
             './test/js/dash/DashManifestExtensions_Suite.js',
             './test/js/dash/DashManifestExtensionsNeg_Suite.js',
             './test/js/dash/DashHandler_Suite.js',
-            './test/js/streaming/MediaPlayer_Suite.js',            
+            './test/js/streaming/MediaPlayer_Suite.js',
             './test/js/streaming/Stream_Suite.js',
             './test/js/streaming/AbrController_Suite.js',
             './test/js/streaming/BufferController_Suite.js',
@@ -80,9 +80,9 @@ module.exports = function(grunt) {
             "./app/lib/objectiron.js",
             "./app/lib/Math.js",
             "./app/lib/long.js",
-            "./test/js/utils/MPDfiles.js",   
+            "./test/js/utils/MPDfiles.js",
             "./test/js/utils/Main.js",
-            "./app/lib/kendo/kendo.web.min.js",            
+            "./app/lib/kendo/kendo.web.min.js",
             "./app/lib/dijon.js"],
           template : require('grunt-template-jasmine-istanbul'),
           templateOptions: {
@@ -103,7 +103,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
-  
+
    // Define tasks
     grunt.registerTask('default', ['jshint','connect','jasmine','uglify']);
 };
