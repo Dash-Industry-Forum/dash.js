@@ -285,6 +285,8 @@ Dash.dependencies.BaseURLExtensions = function () {
                 size = 0,
                 bytesAvailable,
                 sidxBytes,
+                sidxSlice,
+                sidxOut,
                 i,
                 c,
                 loaded = false,
@@ -362,7 +364,11 @@ Dash.dependencies.BaseURLExtensions = function () {
                 info.range.end = info.range.start + size;
 
                 self.debug.log("Found the SIDX box.  Start: " + info.range.start + " | End: " + info.range.end);
-                sidxBytes = data.slice(info.range.start, info.range.end);
+//                sidxBytes = data.slice(info.range.start, info.range.end);
+                sidxBytes = new ArrayBuffer(info.range.end - info.range.start);
+                sidxOut = new Uint8Array(sidxBytes);
+                sidxSlice = new Uint8Array(data, info.range.start, info.range.end - info.range.start);
+                sidxOut.set(sidxSlice);
 
                 parsed = this.parseSIDX.call(this, sidxBytes, info.range.start);
 
