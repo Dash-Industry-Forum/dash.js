@@ -2,7 +2,7 @@
 
 A reference client implementation for the playback of MPEG DASH via JavaScript and compliant browsers. Learn more about DASH IF Reference Client 
 
-Current version is now in Master, rather than dev.
+All new work should be in the development branch.  Master is now reserved to tag builds.
 
 ## Quick Start
 
@@ -21,4 +21,3 @@ Download 'master' or latest tagged release, extract and open main folder dash.js
 ```
 grunt --config Gruntfile.js --force
 ```
-

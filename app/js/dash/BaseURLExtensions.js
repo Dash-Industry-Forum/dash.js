@@ -16,13 +16,11 @@ Dash.dependencies.BaseURLExtensions = function () {
 
         // From YouTube player.  Reformatted for JSLint.
     var parseSIDX = function (ab, ab_first_byte_offset) {
-            var parseOffset = (ab_first_byte_offset || 0),
-                d = new DataView(ab),
-                //bytes = new Uint8Array(ab, parseOffset, ab.byteLength - parseOffset),
+            var d = new DataView(ab),
                 sidx = {},
-                pos = parseOffset,
-                time,
+                pos = 0,
                 offset,
+                time,
                 sidxEnd,
                 i,
                 ref_type,
@@ -34,12 +32,6 @@ Dash.dependencies.BaseURLExtensions = function () {
 
             while (type !== "sidx" && pos < d.byteLength) {
                 size = d.getUint32(pos); // subtract 8 for including the size and type
-                if (size < 8) {
-                    throw "box must at least contain size and type fields";
-                }
-                if (size > (pos + d.byteLength)) {
-                    throw "box is larger than the array buffer";
-                }
                 pos += 4;
 
                 type = "";
@@ -83,7 +75,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 pos += 16;
             }
 
-            sidx.first_offset += sidxEnd + parseOffset;
+            sidx.first_offset += sidxEnd + (ab_first_byte_offset || 0);
 
             // skipped reserved(16)
             sidx.reference_count = d.getUint16(pos + 2, false);
@@ -372,12 +364,13 @@ Dash.dependencies.BaseURLExtensions = function () {
                 info.range.end = info.range.start + size;
 
                 self.debug.log("Found the SIDX box.  Start: " + info.range.start + " | End: " + info.range.end);
+//                sidxBytes = data.slice(info.range.start, info.range.end);
                 sidxBytes = new ArrayBuffer(info.range.end - info.range.start);
                 sidxOut = new Uint8Array(sidxBytes);
                 sidxSlice = new Uint8Array(data, info.range.start, info.range.end - info.range.start);
                 sidxOut.set(sidxSlice);
 
-                parsed = this.parseSIDX.call(this, sidxBytes);
+                parsed = this.parseSIDX.call(this, sidxBytes, info.range.start);
 
                 // We need to check to see if we are loading multiple sidx.
                 // For now just check the first reference and assume they are all the same.
@@ -414,7 +407,7 @@ Dash.dependencies.BaseURLExtensions = function () {
 
                 } else {
                     self.debug.log("Parsing segments from SIDX.");
-                    parseSegments.call(self, sidxBytes, info.url).then(
+                    parseSegments.call(self, sidxBytes, info.url, info.range.start).then(
                         function (segments) {
                             deferred.resolve(segments);
                         }
@@ -472,7 +465,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                         }
                     );
                 } else {
-                    parseSegments.call(self, request.response, info.url).then(
+                    parseSegments.call(self, request.response, info.url, info.range.start).then(
                         function (segments) {
                             deferred.resolve(segments);
                         }
@@ -488,7 +481,7 @@ Dash.dependencies.BaseURLExtensions = function () {
             request.responseType = "arraybuffer";
             request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
             request.send(null);
-            self.debug.log("Perform SIDX load (" + theRange + "): " + info.url);
+            self.debug.log("Perform SIDX load: " + info.url);
 
             return deferred.promise;
         };
