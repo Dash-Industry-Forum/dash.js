@@ -874,6 +874,7 @@ $(document).ready(function() {
     setTimeout(update, graphUpdateInterval);
 
     player = new MediaPlayer(context);
+    $("#version-number").text("version " + player.getVersion());
 
     player.startup();
 
