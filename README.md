@@ -6,9 +6,13 @@ Current version is now in Master, rather than dev.
 
 ## Quick Start
 
-Download 'master' or latest tagged release, extract and open main folder dash.js/index.html in your web browser to view the main test file. 
-
-### Install Dependencies  
+Download 'master' or latest tagged release, extract and put the contents of the dash.js folder on a webserver.
+An easy way to do this is to run 
+```
+python -m SimpleHTTPServer 
+```
+in the dash.js folder and then open [http://127.0.0.1:8000/index.html](http://127.0.0.1:8000/index.html) in your browser (currently only Chrome is supported) to view the main test file. 
+### Install Dependencies (only needed for development) 
 1. [install nodejs](http://nodejs.org/)
 2. [install grunt](http://gruntjs.com/getting-started) 
 	* npm install -g grunt-cli
