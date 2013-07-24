@@ -53,6 +53,7 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
         manifestModel: undefined,
         manifestExt: undefined,
         metricsExt: undefined,
+        debug: undefined,
         /*
         setup:function()
         {
@@ -78,6 +79,8 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
                 bufferTime = Math.max(DEFAULT_MIN_BUFFER_TIME, minBufferTime);
             }
 
+            //this.debug.log("Akamai minimum buffer time : " + bufferTime);
+
             return Q.when(bufferTime);
         },
         shouldBufferMore: function (bufferLength, delay) 
@@ -97,6 +100,7 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
                 result = ((bufferLength - delay) < (bufferTime * 1.5));
             }
 
+            //this.debug.log("Akamai should buffer more : " + result + " :  isPlayingAtTopQuality: " + isPlayingAtTopQuality);
             return Q.when(result);
         }
     };
