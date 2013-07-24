@@ -2,27 +2,24 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
 {
     "use strict";
 
-
     var bufferTime,
         duration,
         isLongFormContent,
-        manifest,
         videoData,
         totalRepresentationCount,
-
+        manifest,
     // These values should never be set, treat as constants.
+        DEFAULT_MIN_BUFFER_TIME = 8,
         BUFFER_TIME_AT_STARTUP = 1,
-        BUFFER_TIME_BELOW_TOP_QUALITY = 30,
-        BUFFER_TIME_BELOW_TOP_QUALITY_LONG_FORM = 30,
         BUFFER_TIME_AT_TOP_QUALITY = 30,
         BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 300,
         LONG_FORM_CONTENT_DURATION_THRESHOLD = 600,
 
-        init = function(manifestExt, manifestModel, videoModel)
+        init = function()
         {
-            manifest = manifestModel.getValue();
+            manifest = this.manifestModel.getValue();
 
-            manifestExt.getDuration(manifest, videoModel.getIsLive()).then(
+            this.manifestExt.getDuration(manifest, this.videoModel.getIsLive()).then(
                 function(d)
                 {
                     duration = d;
@@ -30,7 +27,7 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
                 }
             );
 
-            manifestExt.getVideoData(manifest).then(
+            this.manifestExt.getVideoData(manifest).then(
                 function(data)
                 {
                     videoData = data;
@@ -38,12 +35,13 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
                 }
             );
         },
-        getCurrentIndex = function(metrics, metricsExt)
+        getCurrentIndex = function(metrics)
         {
-            var repSwitch = metricsExt.getCurrentRepresentationSwitch(metrics);
+            var repSwitch = this.metricsExt.getCurrentRepresentationSwitch(metrics);
+
             if (repSwitch != null)
             {
-                return metricsExt.getIndexForRepresentation(repSwitch.to);
+                return this.metricsExt.getIndexForRepresentation(repSwitch.to);
             }
             return null;
         };
@@ -58,8 +56,9 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
         /*
         setup:function()
         {
-             TODO: I wanted to try to do what is in init() in this setup function but the manifestModel returns
-             null for getValue() when this is called when mapped.
+            // TODO: I wanted to try to do what is in init() in this setup function but the manifestModel returns
+            // null for getValue() at this point.  Must be the order of mapping. can try to delay.. timeout but
+            // that is a hack.
         },
         */
         decideBufferLength: function (minBufferTime, waitingForBuffer)
@@ -68,23 +67,23 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
             {
                 bufferTime = BUFFER_TIME_AT_STARTUP;
 
+                // See setup notes.
                 if (manifest === undefined)
                 {
-                    init(this.manifestExt, this.manifestModel, this.videoModel);
+                    init.call(this);
                 }
             }
             else
             {
-                bufferTime = (isNaN(minBufferTime) || minBufferTime <= 0) ? 4 : minBufferTime;
+                bufferTime = Math.max(DEFAULT_MIN_BUFFER_TIME, minBufferTime);
             }
 
             return Q.when(bufferTime);
         },
-
         shouldBufferMore: function (bufferLength, delay) 
 		{
             var metrics = player.getMetricsFor("video"),
-                isPlayingAtTopQuality = (getCurrentIndex(metrics, this.metricsExt) === totalRepresentationCount),
+                isPlayingAtTopQuality = (getCurrentIndex.call(this, metrics) === totalRepresentationCount),
                 result;
 
             if (isPlayingAtTopQuality)
@@ -102,7 +101,6 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
         }
     };
 };
-
 
 MediaPlayer.dependencies.AkamaiBufferExtensions.prototype = new MediaPlayer.dependencies.BufferExtensions();
 MediaPlayer.dependencies.AkamaiBufferExtensions.prototype.constructor = MediaPlayer.dependencies.AkamaiBufferExtensions;

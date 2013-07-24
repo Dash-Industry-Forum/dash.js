@@ -111,6 +111,11 @@
 
     <!-- App -->
     <script src="app/js/main.js"></script>
+
+    <!--Akamai -->
+    <script src="app/js/akamai/AkamaiContext.js"></script>
+    <script src="app/js/akamai/AkamaiBufferExtensions.js"></script>
+
 </head>
 
 <body onload="init()">
@@ -198,7 +203,13 @@
                     <option data-channels="" value="6c-envivio2">DASH-AVC/264 – test vector 6c - Envivio Manifest 2</option>
                 </select>
             </div>
-            <div class="span4"></div>
+            <div class="span4">
+                <label class="checkbox" for="akamai-checkbox" style="margin-top: 10px;">
+                    <input type="checkbox" value="" id="akamai-checkbox" checked/>
+                    Akamai Enhancments
+                </label>
+            </div>
+
             <div class="span2">
                 <button type="button" class="btn btn-large" style="width: 100%;" onclick="load()">Load</button>
             </div>

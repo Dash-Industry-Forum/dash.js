@@ -265,6 +265,9 @@ function populateMetricsFor(type, bitrateValue, bitrateIndex, pendingIndex, numB
         if (series.data.length > maxGraphPoints) {
             series.data = series.data.slice(series.data.length - maxGraphPoints);
         }
+
+
+
     }
 }
 
@@ -767,15 +770,29 @@ function load() {
     "use strict";
     var input = $("#custom-source"),
         liveBox = $("#live-checkbox"),
-        debug = player.getDebug(),
+        video = document.querySelector(".dash-video-player video"),
+        context,
+        console = document.getElementById("debug_log"),
+        debug,
         url,
         isLive = false;
 
     url = input.val();
     isLive = liveBox.is(':checked');
 
+    context = $("#akamai-checkbox").is(':checked') ? new Dash.di.AkamaiContext() : new Dash.di.DashContext();
+
+
+    player = new MediaPlayer(context);
+    player.startup();
+    player.autoPlay = true;
+    player.attachView(video);
     player.setIsLive(isLive);
     player.attachSource(url);
+
+    debug = player.debug;
+    debug.init(console);
+
     debug.log("manifest = " + url + " | isLive = " + isLive);
 
     playing = true;
@@ -795,10 +812,6 @@ $(document).ready(function() {
     	browserVersion,
         specifiedMpd,
         mpdUrl = $("#custom-source"),
-        video = document.querySelector(".dash-video-player video"),
-        context = new Dash.di.DashContext(),
-        console = document.getElementById("debug_log"),
-        debug,
         lastChild = $("#debug-log-tab");
 
 	browserVersion = parseBrowserVersion( location.search );
@@ -873,15 +886,15 @@ $(document).ready(function() {
 
     setTimeout(update, graphUpdateInterval);
 
-    player = new MediaPlayer(context);
-
-    player.startup();
-
-    debug = player.debug;
-    debug.init(console);
-
-    player.autoPlay = true;
-    player.attachView(video);
+//    player = new MediaPlayer(context);
+//
+//    player.startup();
+//
+//    debug = player.debug;
+//    debug.init(console);
+//
+//    player.autoPlay = true;
+//    player.attachView(video);
 
     if (specifiedMpd !== null) {
         mpdUrl.val(specifiedMpd);
