@@ -1,4 +1,3 @@
-
 Dash.di.AkamaiContext = function () {
     "use strict";
 
@@ -6,8 +5,8 @@ Dash.di.AkamaiContext = function () {
         system : undefined,
         setup : function () {
             Dash.di.AkamaiContext.prototype.setup.call(this);
-
             this.system.mapSingleton('bufferExt', MediaPlayer.dependencies.AkamaiBufferExtensions);
+
         }
     };
 };

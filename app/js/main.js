@@ -266,8 +266,10 @@ function populateMetricsFor(type, bitrateValue, bitrateIndex, pendingIndex, numB
             series.data = series.data.slice(series.data.length - maxGraphPoints);
         }
 
-
-
+        if ($("#akamai-checkbox").is(':checked'))
+        {
+            bufferChart.autoScale();
+        }
     }
 }
 

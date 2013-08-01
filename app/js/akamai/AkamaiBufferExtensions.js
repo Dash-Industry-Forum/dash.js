@@ -66,7 +66,7 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
         {
             if (waitingForBuffer || waitingForBuffer == undefined)
             {
-                bufferTime = BUFFER_TIME_AT_STARTUP;
+                bufferTime = Math.max(BUFFER_TIME_AT_STARTUP, minBufferTime);
 
                 // See setup notes.
                 if (manifest === undefined)
