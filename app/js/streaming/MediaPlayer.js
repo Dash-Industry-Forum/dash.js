@@ -46,7 +46,8 @@ MediaPlayer = function (aContext) {
         system,
         element,
         source,
-        stream,
+        model,
+        streamController,
         initialized = false,
         playing = false,
         autoPlay = true,
@@ -72,8 +73,9 @@ MediaPlayer = function (aContext) {
 
             playing = true;
             this.debug.log("Playback initiated!");
-            stream = system.getObject("stream");
-            stream.load(source);
+            streamController = system.getObject("streamController");
+            streamController.setVideoModel(this.videoModel);
+            streamController.load(source);
         },
 
         doAutoPlay = function () {
@@ -173,6 +175,7 @@ MediaPlayer = function (aContext) {
             // We'll tell it when to go.
             element.autoplay = true;
 
+            model = new MediaPlayer.models.VideoModel(element);
             this.videoModel.setElement(element);
 
             // TODO : update
@@ -192,8 +195,8 @@ MediaPlayer = function (aContext) {
             // TODO : update
 
             if (playing) {
-                stream.reset();
-                stream = null;
+                streamController.reset();
+                streamController = null;
             }
 
             doAutoPlay.call(this);

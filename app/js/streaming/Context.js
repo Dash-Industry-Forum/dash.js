@@ -22,7 +22,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('debug', MediaPlayer.utils.Debug);
             this.system.mapSingleton('capabilities', MediaPlayer.utils.Capabilities);
 
-            this.system.mapSingleton('videoModel', MediaPlayer.models.VideoModel);
+            this.system.mapClass('videoModel', MediaPlayer.models.VideoModel);
             this.system.mapSingleton('manifestModel', MediaPlayer.models.ManifestModel);
             this.system.mapSingleton('metricsModel', MediaPlayer.models.MetricsModel);
             this.system.mapSingleton('protectionModel', MediaPlayer.models.ProtectionModel);
@@ -46,6 +46,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('manifestUpdater', MediaPlayer.dependencies.ManifestUpdater);
             this.system.mapClass('fragmentController', MediaPlayer.dependencies.FragmentController);
             this.system.mapClass('fragmentLoader', MediaPlayer.dependencies.FragmentLoader);
+            this.system.mapSingleton('streamController', MediaPlayer.dependencies.StreamController);
             this.system.mapClass('stream', MediaPlayer.dependencies.Stream);
         }
     };

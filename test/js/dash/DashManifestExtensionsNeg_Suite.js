@@ -36,6 +36,7 @@ for (var MPDstring in strMpd) {
 
 			beforeEach(function () {
 				baseUrl = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
+                period = 0;
 
 				// Set up DI.
 				system = new dijon.System();
@@ -207,7 +208,7 @@ for (var MPDstring in strMpd) {
             it("getDataForId with id null", function () {
 				var res = '';
 				var id = null;
-				manExtn.getDataForId(id, manifestObj).then(function (Data) {
+				manExtn.getDataForId(id, manifestObj, period).then(function (Data) {
 					res = Data ? Data.id : null;
 				}, function (Error) {
 					res = Error;
@@ -243,7 +244,7 @@ for (var MPDstring in strMpd) {
             it("getVideoData  with empty data", function () {
 				var data = '';
                 manifestObj.Period_asArray[0].AdaptationSet_asArray={};
-				manExtn.getVideoData(manifestObj).then(function (Data) {
+				manExtn.getVideoData(manifestObj, period).then(function (Data) {
 					expect(Data).toBe(null);
 				}, function (Error) {
 					data = Error;
@@ -254,7 +255,7 @@ for (var MPDstring in strMpd) {
             it("getAudioData with empty data", function () {
 				var data = [];
                 manifestObj.Period_asArray[0].AdaptationSet_asArray={};
-				manExtn.getAudioDatas(manifestObj).then(function (Data) {
+				manExtn.getAudioDatas(manifestObj, period).then(function (Data) {
 						expect(Data).toBe(Data);
 				}, function (Error) {
 					data = Error;
@@ -264,7 +265,7 @@ for (var MPDstring in strMpd) {
             it("getPrimaryAudioData with empty data", function () {
 				var data = '';
                 manifestObj.Period_asArray[0].AdaptationSet_asArray={};
-				manExtn.getPrimaryAudioData(manifestObj).then(function (Data) {
+				manExtn.getPrimaryAudioData(manifestObj, period).then(function (Data) {
 					expect(Data).toBe(null);
 				}, function (Error) {
 					data = Error;
