@@ -250,6 +250,7 @@
                             for (var i = 0; i < lenght; i++) {
                                 stream = self.system.getObject("stream");
                                 stream.setVideoModel(i === 0 ? self.videoModel : createVideoModel.call(self));
+                                stream.initProtection();
                                 stream.load(manifest, i);
                                 streams.push(stream);
                             }

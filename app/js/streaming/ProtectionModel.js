@@ -29,6 +29,11 @@ MediaPlayer.models.ProtectionModel = function () {
             element = this.videoModel.getElement();
         },
 
+        init: function (videoModel) {
+            this.videoModel = videoModel;
+            element = this.videoModel.getElement();
+        },
+
         addKeySession: function (kid, mediaCodec, initData) {
             var session = null;
 

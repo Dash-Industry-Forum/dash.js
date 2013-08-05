@@ -710,17 +710,6 @@ MediaPlayer.dependencies.Stream = function () {
             seekedListener = onSeeked.bind(this);
             timeupdateListener = onProgress.bind(this);
             loadedListener = onLoad.bind(this);
-
-            needKeyListener = onMediaSourceNeedsKey.bind(this);
-            keyMessageListener = onMediaSourceKeyMessage.bind(this);
-            keyAddedListener = onMediaSourceKeyAdded.bind(this);
-            keyErrorListener = onMediaSourceKeyError.bind(this);
-
-            this.protectionModel.listenToNeedKey(needKeyListener);
-
-            this.protectionModel.listenToKeyMessage(keyMessageListener);
-            this.protectionModel.listenToKeyError(keyErrorListener);
-            this.protectionModel.listenToKeyAdded(keyAddedListener);
         },
 
         load: function(manifest, periodIndexValue) {
@@ -736,6 +725,23 @@ MediaPlayer.dependencies.Stream = function () {
             this.videoModel.listen("seeking", seekingListener);
             this.videoModel.listen("timeupdate", timeupdateListener);
             this.videoModel.listen("loadedmetadata", loadedListener);
+        },
+
+        initProtection: function() {
+            needKeyListener = onMediaSourceNeedsKey.bind(this);
+            keyMessageListener = onMediaSourceKeyMessage.bind(this);
+            keyAddedListener = onMediaSourceKeyAdded.bind(this);
+            keyErrorListener = onMediaSourceKeyError.bind(this);
+
+            this.protectionModel = this.system.getObject("protectionModel");
+            this.protectionModel.init(this.getVideoModel());
+            this.protectionController = this.system.getObject("protectionController");
+            this.protectionController.init(this.videoModel, this.protectionModel);
+
+            this.protectionModel.listenToNeedKey(needKeyListener);
+            this.protectionModel.listenToKeyMessage(keyMessageListener);
+            this.protectionModel.listenToKeyError(keyErrorListener);
+            this.protectionModel.listenToKeyAdded(keyAddedListener);
         },
 
         getVideoModel: function() {
