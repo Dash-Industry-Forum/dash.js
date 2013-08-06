@@ -266,10 +266,7 @@ function populateMetricsFor(type, bitrateValue, bitrateIndex, pendingIndex, numB
             series.data = series.data.slice(series.data.length - maxGraphPoints);
         }
 
-        if ($("#akamai-checkbox").is(':checked'))
-        {
-            bufferChart.autoScale();
-        }
+        bufferChart.autoScale();
     }
 }
 
@@ -570,7 +567,7 @@ function initStreamData() {
     };
 
     streams["1b-thomson"] = {
-        url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/1/manifest.mpd",
+        url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd",
         isLive: false
     };
 
@@ -590,7 +587,7 @@ function initStreamData() {
     };
 
     streams["2a-thomson"] = {
-        url: "http://dash.edgesuite.net/dash264/TestCases/2a/thomson-networks/1/manifest.mpd",
+        url: "http://dash.edgesuite.net/dash264/TestCases/2a/thomson-networks/manifest.mpd",
         isLive: false
     };
 
@@ -653,9 +650,6 @@ function initStreamSources( browserVersion ) {
 			break;
 		case "dev":
 			filterValue = "d";
-			break;
-		case "explorer":
-			filterValue = "i";
 			break;
 		case "all":
 			testChannel = true;
@@ -772,29 +766,15 @@ function load() {
     "use strict";
     var input = $("#custom-source"),
         liveBox = $("#live-checkbox"),
-        video = document.querySelector(".dash-video-player video"),
-        context,
-        console = document.getElementById("debug_log"),
-        debug,
+        debug = player.getDebug(),
         url,
         isLive = false;
 
     url = input.val();
     isLive = liveBox.is(':checked');
 
-    context = $("#akamai-checkbox").is(':checked') ? new Dash.di.AkamaiContext() : new Dash.di.DashContext();
-
-
-    player = new MediaPlayer(context);
-    player.startup();
-    player.autoPlay = true;
-    player.attachView(video);
     player.setIsLive(isLive);
     player.attachSource(url);
-
-    debug = player.debug;
-    debug.init(console);
-
     debug.log("manifest = " + url + " | isLive = " + isLive);
 
     playing = true;
@@ -814,6 +794,10 @@ $(document).ready(function() {
     	browserVersion,
         specifiedMpd,
         mpdUrl = $("#custom-source"),
+        video = document.querySelector(".dash-video-player video"),
+        context = new Dash.di.AkamaiContext(),
+        console = document.getElementById("debug_log"),
+        debug,
         lastChild = $("#debug-log-tab");
 
 	browserVersion = parseBrowserVersion( location.search );
@@ -888,15 +872,15 @@ $(document).ready(function() {
 
     setTimeout(update, graphUpdateInterval);
 
-//    player = new MediaPlayer(context);
-//
-//    player.startup();
-//
-//    debug = player.debug;
-//    debug.init(console);
-//
-//    player.autoPlay = true;
-//    player.attachView(video);
+    player = new MediaPlayer(context);
+
+    player.startup();
+
+    debug = player.debug;
+    debug.init(console);
+
+    player.autoPlay = true;
+    player.attachView(video);
 
     if (specifiedMpd !== null) {
         mpdUrl.val(specifiedMpd);

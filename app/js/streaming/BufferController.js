@@ -13,7 +13,7 @@
  */
 MediaPlayer.dependencies.BufferController = function () {
     "use strict";
-    var validateInterval = 1000,
+    var validateInterval = 500,
         STALL_THRESHOLD = 0.5,
         WAITING = "WAITING",
         READY = "READY",
@@ -620,15 +620,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         setMinBufferTime: function (value) {
-            var self = this;
             minBufferTime = value;
-            validateInterval = (minBufferTime * 1000.0) / 4;
-            validateInterval = Math.max(validateInterval, 1000);
-            if (timer !== null) {
-                self.debug.log("Changing " + type + " validate interval: " + validateInterval);
-                clearInterval(timer);
-                timer = setInterval(onTimer.bind(this), validateInterval, this);
-            }
         },
 
         clearMetrics: function () {

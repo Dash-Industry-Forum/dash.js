@@ -6,7 +6,6 @@ Dash.di.AkamaiContext = function () {
         setup : function () {
             Dash.di.AkamaiContext.prototype.setup.call(this);
             this.system.mapSingleton('bufferExt', MediaPlayer.dependencies.AkamaiBufferExtensions);
-
         }
     };
 };

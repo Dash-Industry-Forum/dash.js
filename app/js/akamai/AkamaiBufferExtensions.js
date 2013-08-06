@@ -2,13 +2,12 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
 {
     "use strict";
 
-    var bufferTime,
+    var baseBufferTime,
         duration,
         isLongFormContent,
         videoData,
         totalRepresentationCount,
         manifest,
-    // These values should never be set, treat as constants.
         DEFAULT_MIN_BUFFER_TIME = 8,
         BUFFER_TIME_AT_STARTUP = 1,
         BUFFER_TIME_AT_TOP_QUALITY = 30,
@@ -54,20 +53,11 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
         manifestExt: undefined,
         metricsExt: undefined,
         debug: undefined,
-        /*
-        setup:function()
-        {
-            // TODO: I wanted to try to do what is in init() in this setup function but the manifestModel returns
-            // null for getValue() at this point.  Must be the order of mapping. can try to delay.. timeout but
-            // that is a hack.
-        },
-        */
         decideBufferLength: function (minBufferTime, waitingForBuffer)
         {
             if (waitingForBuffer || waitingForBuffer == undefined)
             {
-                bufferTime = Math.max(BUFFER_TIME_AT_STARTUP, minBufferTime);
-
+                baseBufferTime = BUFFER_TIME_AT_STARTUP; //Math.max(BUFFER_TIME_AT_STARTUP, minBufferTime);
                 // See setup notes.
                 if (manifest === undefined)
                 {
@@ -76,31 +66,28 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
             }
             else
             {
-                bufferTime = Math.max(DEFAULT_MIN_BUFFER_TIME, minBufferTime);
+                baseBufferTime = Math.max(DEFAULT_MIN_BUFFER_TIME, minBufferTime);
             }
 
-            //this.debug.log("Akamai minimum buffer time : " + bufferTime);
-
-            return Q.when(bufferTime);
+            return Q.when(baseBufferTime);
         },
         shouldBufferMore: function (bufferLength, delay) 
 		{
             var metrics = player.getMetricsFor("video"),
                 isPlayingAtTopQuality = (getCurrentIndex.call(this, metrics) === totalRepresentationCount),
+                bufferTarget,
                 result;
 
             if (isPlayingAtTopQuality)
             {
-                var bufferTargetTime =  isLongFormContent ?  BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM : BUFFER_TIME_AT_TOP_QUALITY;
-                result = bufferLength < bufferTargetTime;
+                bufferTarget =  isLongFormContent ?  BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM : BUFFER_TIME_AT_TOP_QUALITY;
+                result = bufferLength < bufferTarget;
             }
             else
             {
-                //TODO: set a base buffer value or use this?  Need ot understand what the delay value is all about.
-                result = ((bufferLength - delay) < (bufferTime * 1.5));
+                result = bufferLength < baseBufferTime;
             }
 
-            //this.debug.log("Akamai should buffer more : " + result + " :  isPlayingAtTopQuality: " + isPlayingAtTopQuality);
             return Q.when(result);
         }
     };
