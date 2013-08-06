@@ -3,9 +3,7 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
     "use strict";
 
     var baseBufferTime,
-        duration,
         isLongFormContent,
-        videoData,
         totalRepresentationCount,
         manifest,
         DEFAULT_MIN_BUFFER_TIME = 8,
@@ -19,9 +17,8 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
             manifest = this.manifestModel.getValue();
 
             this.manifestExt.getDuration(manifest, this.videoModel.getIsLive()).then(
-                function(d)
+                function(duration)
                 {
-                    duration = d;
                     isLongFormContent = (duration >= LONG_FORM_CONTENT_DURATION_THRESHOLD);
                 }
             );
@@ -29,8 +26,7 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
             this.manifestExt.getVideoData(manifest).then(
                 function(data)
                 {
-                    videoData = data;
-                    totalRepresentationCount = data.Representation_asArray.length - 1 ; // Zero Based
+                    totalRepresentationCount = data.Representation_asArray.length - 1;
                 }
             );
         },
@@ -52,13 +48,12 @@ MediaPlayer.dependencies.AkamaiBufferExtensions = function ()
         manifestModel: undefined,
         manifestExt: undefined,
         metricsExt: undefined,
-        debug: undefined,
         decideBufferLength: function (minBufferTime, waitingForBuffer)
         {
             if (waitingForBuffer || waitingForBuffer == undefined)
             {
-                baseBufferTime = BUFFER_TIME_AT_STARTUP; //Math.max(BUFFER_TIME_AT_STARTUP, minBufferTime);
-                // See setup notes.
+                baseBufferTime = BUFFER_TIME_AT_STARTUP;
+
                 if (manifest === undefined)
                 {
                     init.call(this);
