@@ -59,7 +59,8 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 deferred,
                 funcs,
                 i,
-                len;
+                len,
+                DOWNLOAD_RATIO_SAFETY_FACTOR = .75;
 
             self.debug.log("Checking download ratio rule...");
 
@@ -95,7 +96,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
             deferred = Q.defer();
 
             totalRatio = lastRequest.mediaduration / totalTime;
-            downloadRatio = (lastRequest.mediaduration / downloadTime) * .75;
+            downloadRatio = (lastRequest.mediaduration / downloadTime) * DOWNLOAD_RATIO_SAFETY_FACTOR;
 
             if (isNaN(downloadRatio) || isNaN(totalRatio)) {
                 self.debug.log("Total time: " + totalTime + "s");
@@ -110,7 +111,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
 //            if (totalRatio * 2 < downloadRatio) {
                 // don't let data buffering or caching hide the time it 
                 // took to down load the data in the latency bucket
-                //downloadRatio = (totalRatio * .75);
+                //downloadRatio = (totalRatio * DOWNLOAD_RATIO_SAFETY_FACTOR);
 //            }
 
             self.debug.log("Download ratio: " + downloadRatio);

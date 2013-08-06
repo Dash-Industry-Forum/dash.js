@@ -24,6 +24,7 @@ MediaPlayer.utils.Debug = function () {
 
     var htmlConsole = null,
         logToHtmlConsole = false,
+        enableLoggingToBrowswer = true,
         filter = "",
 
         updateFilter = function () {
@@ -100,7 +101,11 @@ MediaPlayer.utils.Debug = function () {
         },
 
         log: function (message) {
-            console.log(message);
+
+            if (enableLoggingToBrowswer)
+            {
+                console.log(message);
+            }
 
             if (htmlConsole !== null && logToHtmlConsole) {
                 var trace = "<dt>" + message + "</dt>";
