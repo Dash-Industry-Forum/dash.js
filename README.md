@@ -15,7 +15,7 @@ An easy way to do this is to run
 ```
 python -m SimpleHTTPServer 
 ```
-in the dash.js folder and then open [http://127.0.0.1:8000/index.html](http://127.0.0.1:8000/index.html) in your browser (currently only Chrome is supported) to view the main test file. 
+in the dash.js folder and then open [http://127.0.0.1:8000/index.html](http://127.0.0.1:8000/index.html) in your browser (currently only Chrome and Internet Explorer 11 have the neccessary APIs) to view the main test file. 
 
 ### Install Dependencies (only needed for development) 
 1. [install nodejs](http://nodejs.org/)
