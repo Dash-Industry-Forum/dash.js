@@ -39,7 +39,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             firstStart = null,
             lastEnd = null,
             gap = 0,
-            toler = (tolerance || 0.1),
+            toler = (tolerance || 0.15),
             len,
             i;
 
@@ -69,7 +69,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                         lastEnd = end;
                     } else {
                         break;
-                    } 
+                    }
                 }
             }
 
