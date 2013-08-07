@@ -55,6 +55,9 @@
     <!-- https://github.com/creynders/dijon-framework -->
     <script src="app/lib/dijon.js"></script>
 
+    <!-- http://bannister.us/weblog/2007/06/09/simple-base64-encodedecode-javascript/ -->
+    <script src="app/lib/base64.js"></script>
+
     <!-- Misc Libs -->
     <script src="app/lib/xml2json.js"></script>
     <script src="app/lib/objectiron.js"></script>
@@ -81,6 +84,9 @@
     <script src="app/js/streaming/FragmentLoader.js"></script>
     <script src="app/js/streaming/Stream.js"></script>
     <script src="app/js/streaming/BufferController.js"></script>
+    <script src="app/js/streaming/ProtectionModel.js"></script>
+    <script src="app/js/streaming/ProtectionController.js"></script>
+    <script src="app/js/streaming/ProtectionExtensions.js"></script>
     <script src="app/js/streaming/rules/SwitchRequest.js"></script>
     <script src="app/js/streaming/rules/DownloadRatioRule.js"></script>
     <script src="app/js/streaming/rules/InsufficientBufferRule.js"></script>
@@ -175,12 +181,12 @@
                     <option data-channels="cdsbi" value="microsoft4">Microsoft #4</option>
                     <option data-channels="cdsbi" value="microsoft5">Microsoft #5</option>
 
-                    <option data-channels="" value="microsoftCenc1">Microsoft Cenc #1</option>
-                    <option data-channels="" value="microsoftCenc2">Microsoft Cenc #2</option>
-                    <option data-channels="" value="microsoftCenc3">Microsoft Cenc #3</option>
-                    <option data-channels="" value="microsoftCenc4">Microsoft Cenc #4</option>
-                    <option data-channels="" value="microsoftCenc5">Microsoft Cenc #5</option>
-                    <option data-channels="" value="microsoftCenc6">Microsoft Cenc #6</option>
+                    <option data-channels="i" value="microsoftCenc1">Microsoft Cenc #1</option>
+                    <option data-channels="i" value="microsoftCenc2">Microsoft Cenc #2</option>
+                    <option data-channels="i" value="microsoftCenc3">Microsoft Cenc #3</option>
+                    <option data-channels="i" value="microsoftCenc4">Microsoft Cenc #4</option>
+                    <option data-channels="i" value="microsoftCenc5">Microsoft Cenc #5</option>
+                    <option data-channels="i" value="microsoftCenc6">Microsoft Cenc #6</option>
 
                     <option data-channels="" value="DDash1">D-Dash #1</option>
                     <option data-channels="" value="DDash2">D-Dash #2</option>

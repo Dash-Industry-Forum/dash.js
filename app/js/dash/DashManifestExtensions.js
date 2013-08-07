@@ -265,6 +265,23 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(codec);
     },
 
+    getKID: function (data) {
+        "use strict";
+
+        if (!data || !data.hasOwnProperty("cenc:default_KID")) {
+            return null;
+        }
+        return data["cenc:default_KID"];
+    },
+
+    getContentProtectionData: function (data) {
+        "use strict";
+        if (!data || !data.hasOwnProperty("ContentProtection_asArray") || data.ContentProtection_asArray.length === 0) {
+            return Q.when(null);
+        }
+        return Q.when(data.ContentProtection_asArray);
+    },
+
     getSegmentInfoFor: function (representation) {
         if (representation.hasOwnProperty("SegmentBase")) {
             return representation.SegmentBase;

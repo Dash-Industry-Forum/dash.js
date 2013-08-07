@@ -44,7 +44,6 @@ MediaPlayer = function (aContext) {
         system,
         element,
         source,
-        model,
         stream,
         initialized = false,
         playing = false,
@@ -172,7 +171,6 @@ MediaPlayer = function (aContext) {
             // We'll tell it when to go.
             element.autoplay = true;
 
-            model = new MediaPlayer.models.VideoModel(element);
             this.videoModel.setElement(element);
 
             // TODO : update

@@ -35,6 +35,7 @@ module.exports = function(grunt) {
             "./app/lib/dijon.js",
             "./app/lib/Math.js",
             "./app/lib/long.js",
+            "./app/lib/base64.js",
             "./app/js/streaming/MediaPlayer.js",
             "./app/js/streaming/Context.js",
             "./app/js/dash/Dash.js",
@@ -83,7 +84,8 @@ module.exports = function(grunt) {
             "./test/js/utils/MPDfiles.js",
             "./test/js/utils/Main.js",
             "./app/lib/kendo/kendo.web.min.js",
-            "./app/lib/dijon.js"],
+            "./app/lib/dijon.js",
+            "./app/lib/base64.js"],
           template : require('grunt-template-jasmine-istanbul'),
           templateOptions: {
             coverage: 'reports/coverage.json',
