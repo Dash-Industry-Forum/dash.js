@@ -134,14 +134,6 @@ MediaPlayer.models.VideoModel = function () {
             isLive = value;
         },
 
-        addKey: function (type, key, data, id) {
-            element.webkitAddKey(type, key, data, id);
-        },
-
-        generateKeyRequest: function(type, data) {
-            element.webkitGenerateKeyRequest(type, data);
-        },
-
         stallStream: stallStream,
         isStalled: isStalled
     };

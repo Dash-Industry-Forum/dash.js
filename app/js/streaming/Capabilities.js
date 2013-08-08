@@ -21,10 +21,20 @@ MediaPlayer.utils.Capabilities.prototype = {
     supportsMediaSource: function () {
         "use strict";
 
-        var hasWebKit = (window.WebKitMediaSource !== null && window.WebKitMediaSource !== undefined),
-            hasMediaSource = (window.MediaSource !== null && window.MediaSource !== undefined);
+        var hasWebKit = ("WebKitMediaSource" in window),
+            hasMediaSource = ("MediaSource" in window);
 
         return (hasWebKit || hasMediaSource);
+    },
+
+    supportsMediaKeys: function () {
+        "use strict";
+
+        var hasWebKit = ("WebKitMediaKeys" in window),
+            hasMs = ("MSMediaKeys" in window),
+            hasMediaSource = ("MediaKeys" in window);
+
+        return (hasWebKit || hasMs || hasMediaSource);
     },
 
     supportsCodec: function (element, codec) {

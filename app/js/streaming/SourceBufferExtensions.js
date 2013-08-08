@@ -20,14 +20,24 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
     createSourceBuffer: function (mediaSource, codec) {
         "use strict";
-
-        return Q.when(mediaSource.addSourceBuffer(codec));
+        var deferred = Q.defer();
+        try {
+            deferred.resolve(mediaSource.addSourceBuffer(codec));
+        } catch(ex){
+            deferred.reject(ex.description);
+        }
+        return deferred.promise;
     },
 
     removeSourceBuffer: function (mediaSource, buffer) {
         "use strict";
-
-        return Q.when(mediaSource.removeSourceBuffer(buffer));
+        var deferred = Q.defer();
+        try {
+            deferred.resolve(mediaSource.removeSourceBuffer(buffer));
+        } catch(ex){
+            deferred.reject(ex.description);
+        }
+        return deferred.promise;
     },
 
     getBufferRange: function (buffer, time, tolerance) {
@@ -126,6 +136,12 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
     abort: function (buffer) {
         "use strict";
-        return Q.when(buffer.abort());
+        var deferred = Q.defer();
+        try {
+            deferred.resolve(buffer.abort());
+        } catch(ex){
+            deferred.reject(ex.description);
+        }
+        return deferred.promise;
     }
 };
