@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html data-cast-api-enabled="true" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Dash.js Chromecast Sender</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+
+    <script>
+        var cast_api,
+            cv_activity;
+
+        function initializeApi() {
+            cast_api = new cast.Api();
+            cast_api.addReceiverListener("dash.js", onReceiverList);
+        };
+
+        function onReceiverList(list) {
+            // If the list is non-empty, show a widget with
+            // the friendly names of receivers.
+            // When a receiver is picked, invoke doLaunch with the receiver.
+        };
+
+        function isCastInitMessage(event) {
+            return (event.source == window && event.data &&
+                    event.data.source == "CastApi" &&
+                    event.data.event == "Hello");
+        }
+
+        if (cast && cast.isAvailable) {
+            initializeApi();
+        }
+        else {
+            window.addEventListener("message", function(event) {
+                if (isCastInitMessage(event)) {
+                    initializeApi();
+                }
+            });
+        };
+
+        function doLaunch(receiver) {
+            var request = new cast.LaunchRequest("YouTube", receiver);
+            request.parameters = "v=abcdefg";
+            request.description = new cast.LaunchDescription();
+            request.description.text = "My Cat Video";
+            request.description.url = "...";
+            cast_api.launch(request, onLaunch);
+        };
+    </script>
+
+    <body>
+
+    </body>
+</html>
