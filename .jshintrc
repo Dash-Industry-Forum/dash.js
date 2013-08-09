@@ -8,13 +8,13 @@
     "trailing": true,
     "node": true,
     "jquery" : true,
-    "devel" : true, 
+    "devel" : true,
     "browser": true,
     "loopfunc" : true,
-    "predef" : [ 
-        "dijon", 
-        "Q", 
-        "ObjectIron", 
+    "predef" : [
+        "dijon",
+        "Q",
+        "ObjectIron",
         "X2JS",
         "kendo",
         "BASE64",
@@ -25,5 +25,6 @@
         "MediaSource",
         "WebKitMediaKeys",
         "MSMediaKeys",
-        "MediaKeys"] 
+        "MediaKeys",
+        "Caster"]
 }
