@@ -17,9 +17,13 @@
         "ObjectIron", 
         "X2JS",
         "kendo",
+        "BASE64",
         "utils",
         "MediaPlayer",
         "Dash",
         "WebKitMediaSource",
-        "MediaSource"] 
+        "MediaSource",
+        "WebKitMediaKeys",
+        "MSMediaKeys",
+        "MediaKeys"] 
 }

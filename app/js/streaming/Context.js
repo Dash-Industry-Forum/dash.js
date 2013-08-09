@@ -25,12 +25,15 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('videoModel', MediaPlayer.models.VideoModel);
             this.system.mapSingleton('manifestModel', MediaPlayer.models.ManifestModel);
             this.system.mapSingleton('metricsModel', MediaPlayer.models.MetricsModel);
+            this.system.mapSingleton('protectionModel', MediaPlayer.models.ProtectionModel);
 
             this.system.mapSingleton('mediaSourceExt', MediaPlayer.dependencies.MediaSourceExtensions);
             this.system.mapSingleton('sourceBufferExt', MediaPlayer.dependencies.SourceBufferExtensions);
             this.system.mapSingleton('bufferExt', MediaPlayer.dependencies.BufferExtensions);
             this.system.mapSingleton('abrController', MediaPlayer.dependencies.AbrController);
             this.system.mapSingleton('errHandler', MediaPlayer.dependencies.ErrorHandler);
+            this.system.mapSingleton('protectionExt', MediaPlayer.dependencies.ProtectionExtensions);
+            this.system.mapSingleton('protectionController', MediaPlayer.dependencies.ProtectionController);
 
             this.system.mapClass('metrics', MediaPlayer.models.MetricsList);
             this.system.mapClass('downloadRatioRule', MediaPlayer.rules.DownloadRatioRule);
