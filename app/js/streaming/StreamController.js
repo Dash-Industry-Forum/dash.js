@@ -24,6 +24,7 @@
         //TODO set correct value for threshold
         STREAM_BUFFER_END_THRESHOLD = 4,
         STREAM_END_THRESHOLD = 3,
+        deferredSwitch= null,
 
         play = function () {
             activeStream.play();
@@ -61,6 +62,8 @@
             copyVideoProperties(activeVideoElement, newVideoElement);
             detachVideoEvents(fromVideoModel);
             attachVideoEvents(toVideoModel);
+
+            return Q.when(true);
         },
 
         attachVideoEvents = function (videoModel) {
@@ -183,21 +186,22 @@
         },
 
         switchStream = function(from, to, seekTo) {
-            if (from === to) return;
+            Q.when(deferredSwitch || true).then(
+                function() {
+                    from.pause();
+                    activeStream = to;
 
-            from.pause();
-            activeStream = to;
+                    deferredSwitch = switchVideoModel(from.getVideoModel(), to.getVideoModel());
 
-            switchVideoModel(from.getVideoModel(), to.getVideoModel());
+                    if (seekTo) {
+                        seek(from.getVideoModel().getCurrentTime());
+                    } else {
+                        activeStream.initPlayback();
+                    }
 
-            // If the seeking position is provided than starts playing from that point. Otherwise starts from beginning.
-            if (seekTo) {
-                seek(from.getVideoModel().getCurrentTime());
-            } else {
-                activeStream.initPlayback();
-            }
-
-            play();
+                    play();
+                }
+            );
         };
 
     return {
