@@ -143,7 +143,7 @@
             var seekingTime = activeStream.getVideoModel().getCurrentTime(),
                 seekingStream = getStreamForTime(seekingTime);
 
-            if (seekingStream !== activeStream) {
+            if (seekingStream && seekingStream !== activeStream) {
                 switchStream(activeStream, seekingStream, seekingTime);
             }
         },
@@ -165,7 +165,7 @@
 
         getStreamForTime = function(time) {
             var duration = 0,
-                stream;
+                stream = null;
 
             for (var i = 0, ln = streams.length; i < ln; i++) {
                 stream = streams[i];
@@ -186,6 +186,9 @@
         },
 
         switchStream = function(from, to, seekTo) {
+
+            if(!from || !to || from === to) return;
+
             Q.when(deferredSwitch || true).then(
                 function() {
                     from.pause();
