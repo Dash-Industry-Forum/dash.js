@@ -24,19 +24,21 @@ MediaPlayer.rules.DownloadRatioRule = function () {
      * Be sure to use this rule in conjuction with the InsufficientBufferRule.
      */
 
-    var checkRatio = function (newIdx, currentIdx) {
+    var checkRatio = function (newIdx, currentBandwidth, data) {
             var self = this,
                 deferred = Q.defer();
 
-            self.manifestExt.getBandwidth(newIdx).then(
-                function (newBandwidth) {
-                    self.manifestExt.getBandwidth(currentIdx).then(
-                        function (currentBandwidth) {
+            self.manifestExt.getRepresentationFor(newIdx, data).then(
+                function(rep)
+                {
+                    self.manifestExt.getBandwidth(rep).then(
+                        function (newBandwidth)
+                        {
                             deferred.resolve(newBandwidth / currentBandwidth);
                         }
                     );
                 }
-            );
+            )
 
             return deferred.promise;
         };
@@ -57,7 +59,8 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 deferred,
                 funcs,
                 i,
-                len;
+                len,
+                DOWNLOAD_RATIO_SAFETY_FACTOR = .75;
 
             self.debug.log("Checking download ratio rule...");
 
@@ -93,7 +96,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
             deferred = Q.defer();
 
             totalRatio = lastRequest.mediaduration / totalTime;
-            downloadRatio = lastRequest.mediaduration / downloadTime;
+            downloadRatio = (lastRequest.mediaduration / downloadTime) * DOWNLOAD_RATIO_SAFETY_FACTOR;
 
             if (isNaN(downloadRatio) || isNaN(totalRatio)) {
                 self.debug.log("Total time: " + totalTime + "s");
@@ -108,7 +111,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
 //            if (totalRatio * 2 < downloadRatio) {
                 // don't let data buffering or caching hide the time it 
                 // took to down load the data in the latency bucket
-                downloadRatio = totalRatio;
+                //downloadRatio = (totalRatio * DOWNLOAD_RATIO_SAFETY_FACTOR);
 //            }
 
             self.debug.log("Download ratio: " + downloadRatio);
@@ -182,7 +185,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                                                                     i = -1;
                                                                     funcs = [];
                                                                     while ((i += 1) < max) {
-                                                                        funcs.push(checkRatio.call(self, i, current));
+                                                                        funcs.push(checkRatio.call(self, i, currentBandwidth, data));
                                                                     }
 
                                                                     Q.all(funcs).then(

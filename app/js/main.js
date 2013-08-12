@@ -265,6 +265,8 @@ function populateMetricsFor(type, bitrateValue, bitrateIndex, pendingIndex, numB
         if (series.data.length > maxGraphPoints) {
             series.data = series.data.slice(series.data.length - maxGraphPoints);
         }
+
+        bufferChart.autoScale();
     }
 }
 
@@ -826,7 +828,7 @@ $(document).ready(function() {
         specifiedMpd,
         mpdUrl = $("#custom-source"),
         video = document.querySelector(".dash-video-player video"),
-        context = new Dash.di.DashContext(),
+        context = new Dash.di.AkamaiContext(),
         console = document.getElementById("debug_log"),
         debug,
         lastChild = $("#debug-log-tab");
