@@ -24,7 +24,7 @@ MediaPlayer.utils.Debug = function () {
 
     var htmlConsole = null,
         logToHtmlConsole = false,
-        enableLoggingToBrowser = true,
+        logToBrowserConsole = true,
         filter = "",
 
         updateFilter = function () {
@@ -101,7 +101,7 @@ MediaPlayer.utils.Debug = function () {
         },
 
         log: function (message) {
-            if (enableLoggingToBrowser){
+            if (logToBrowserConsole){
                 console.log(message);
             }
             if (htmlConsole !== null && logToHtmlConsole) {

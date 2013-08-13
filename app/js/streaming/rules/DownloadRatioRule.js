@@ -38,7 +38,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                         }
                     );
                 }
-            )
+            );
 
             return deferred.promise;
         };
