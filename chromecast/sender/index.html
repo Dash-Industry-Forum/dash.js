@@ -23,6 +23,11 @@
             overflow: auto;
         }
 
+        .dropdown-menu li {
+            cursor: pointer;
+            cursor: hand;
+        }
+
         h3 {
             margin-top: 0px;
         }
@@ -46,7 +51,7 @@
                                 </button>
                                 <ul class="dropdown-menu">
                                     <li ng-repeat="item in availableStreams" ng-click="setStream(item)">
-                                        <a href="#">{{item.name}}</a>
+                                        <a>{{item.name}}</a>
                                     </li>
                                 </ul>
                             </div>

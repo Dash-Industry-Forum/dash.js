@@ -1,12 +1,18 @@
 function CasterController($scope) {
     $scope.availableStreams = [
+        {
+            name: "4K",
+            url: "http://dash.edgesuite.net/akamai/test/tears1/tearsofsteel_4096x1714_14Mbps.mpd",
+            isLive: false
+        },
+
         // --------
         // Fraunhofer
         // --------
 
         {
             name: "Fraunhofer - HEACC 2.0 - Dream",
-            url: "http://dash.edgesuite.net/digitalprimates/sony/DISC1651343080050699_TEST_US_12_28_56_DASH/DASH_vod.mpd",
+            url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/ElephantsDream/elephants_dream_480p_heaac2_0.mpd",
             isLive: false
         },
         {
@@ -312,11 +318,7 @@ function CasterController($scope) {
 
     $scope.setReceiver = function (item) {
         $scope.receiver = item;
-
-        var parameters = {
-            manifest: "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd"
-        };
-        Caster.doLaunch($scope.receiver, parameters);
+        Caster.doLaunch($scope.receiver);
     }
 
     $scope.isReceiverSelected = function (item) {
@@ -328,15 +330,8 @@ function CasterController($scope) {
     // -----------------------------------
 
     $scope.doCast = function () {
-        if ($scope.playing) {
+        /*if ($scope.playing) {
             $scope.stopCast();
-        }
-
-        /*var parameters = {
-            src: "http://media.w3.org/2010/05/sintel/trailer.mp4", //$scope.selectedItem.url,
-            autoplay: true,
-            muted: $scope.muted,
-            volume: $scope.volume
         }*/
 
         $scope.state = STATE_CASTING;
@@ -428,7 +423,6 @@ function CasterController($scope) {
         }
         else {
             $scope.castApiReady = true;
-
             $scope.receivers = list;
             $scope.state = STATE_READY;
 

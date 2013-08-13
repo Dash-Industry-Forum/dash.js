@@ -3,6 +3,7 @@ Caster = (function () {
 
     var APP_ID = "75215b49-c8b8-45ae-b0fb-afb39599204e", // "ChromeCast",
         NAMESPACE = "org.dashif.dashjs",
+        CHANNEL = "org.dashif.dashjs.channel",
         delegate,
         cast_api,
         cv_activity,
@@ -14,12 +15,12 @@ Caster = (function () {
         },
 
         onLaunch = function(activity) {
-            if (activity.status == "running") {
+            if (activity.status === "running") {
                 console.log("Activity is running.");
                 cv_activity = activity;
                 cast_api.addMessageListener(activity.activityId, NAMESPACE, onMessageReceived);
             }
-            else if (activity.status == "error") {
+            else if (activity.status === "error") {
                 console.log("Error launching activity.");
                 cv_activity = null;
             }
@@ -30,7 +31,9 @@ Caster = (function () {
         },
 
         sendMessage = function(command, attrs, callback) {
-            cast_api.sendMessage(cv_activity.activityId, NAMESPACE, $.extend({ command: command }, attrs), callback);
+            var msg = $.extend({ command: command }, attrs);
+
+            cast_api.sendMessage(cv_activity.activityId, NAMESPACE, msg, callback);
         },
 
         onMediaPlay = function (s) {
@@ -50,13 +53,13 @@ Caster = (function () {
         },
 
         onMessageSent = function (e) {
-            console.log("Message sent.");
+            console.log("Message sent.  Result...");
+            console.log(e);
         };
 
     return {
-        doLaunch: function(receiver, params) {
+        doLaunch: function(receiver) {
             var request = new cast.LaunchRequest(APP_ID, receiver);
-            request.parameters = params;
             cast_api.launch(request, onLaunch);
         },
 

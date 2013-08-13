@@ -1,14 +1,12 @@
-var cast = window.cast || {};
-
 (function() {
     'use strict';
 
     // Set up namespace.
-    Dash.PROTOCOL = 'org.dashif.dashjs';
+    DashCast.PROTOCOL = "org.dashif.dashjs";
+    DashCast.CHANNEL = "org.dashif.dashjs.channel";
 
     // Application code.
-
-    function Dash() {
+    function DashCast() {
         this.manifest = null;
 
         var startVideo = function(url) {
@@ -28,7 +26,8 @@ var cast = window.cast || {};
                 $("#spinner").hide();
 
                 video = document.querySelector(".dash-video-player video"),
-                player.autoPlay = true;
+                player.setAutoPlay(true);
+                player.setAutoSwitchQuality(false);
                 player.attachView(video);
             },
 
@@ -46,9 +45,9 @@ var cast = window.cast || {};
 
             onDashOpen = function (e) {
                 console.log("Dash channel opened.");
-                broadcast.call(this, {
+                /*broadcast.call(this, {
                    event: "ready"
-                });
+                });*/
             },
 
             onDashClose = function (e) {
@@ -72,18 +71,18 @@ var cast = window.cast || {};
     }
 
     // Expose to public.
-    cast.Dash = Dash;
+    cast.DashCast = DashCast;
 })();
 
 function onLoad() {
     var APP_ID = "75215b49-c8b8-45ae-b0fb-afb39599204e",
-        receiver = new cast.receiver.Receiver(APP_ID, [cast.Dash.PROTOCOL]);
+        receiver = new cast.receiver.Receiver(APP_ID, [cast.DashCast.PROTOCOL], "", 5);
 
-    var dash = new cast.Dash();
+    var dashCast = new cast.DashCast();
 
-    var dashHandler = new cast.receiver.ChannelHandler(cast.Dash.PROTOCOL);
-    dashHandler.addChannelFactory(receiver.createChannelFactory(cast.Dash.PROTOCOL));
-    dash.setDashHandler(dashHandler);
+    var dashHandler = new cast.receiver.ChannelHandler(cast.DashCast.PROTOCOL);
+    dashHandler.addChannelFactory(receiver.createChannelFactory(cast.DashCast.PROTOCOL));
+    dashCast.setDashHandler(dashHandler);
 
     receiver.start();
 }
