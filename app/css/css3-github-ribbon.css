@@ -1,0 +1,33 @@
+/* https://github.com/dciccale/css3-github-ribbon */
+.github-ribbon {
+    background-color:#369ad9;
+    top:3.2em;
+    right:-3.7em;
+    -webkit-transform:rotate(45deg);
+    -moz-transform:rotate(45deg);
+    -ms-transform:rotate(45deg);
+    -o-transform:rotate(45deg);
+    transform:rotate(45deg);
+    -webkit-box-shadow:0 0 0 1px #FFFFFF inset,0 0 2px 1px #fff inset,0 0 1em #888;
+    -moz-box-shadow:0 0 0 1px #FFFFFF inset,0 0 2px 1px #fff inset,0 0 1em #888;
+    -ms-box-shadow:0 0 0 1px #FFFFFF inset,0 0 2px 1px #fff inset,0 0 1em #888;
+    -o-box-shadow:0 0 0 1px #FFFFFF inset,0 0 2px 1px #fff inset,0 0 1em #888;
+    box-shadow:0 0 0 1px #FFFFFF inset,0 0 2px 1px #fff inset,0 0 1em #888;
+    color:rgba(255,255,255,0.9);
+    display:block;
+    position:fixed;
+    font:bold .82em sans-serif;
+    text-align:center;
+    text-decoration:none;
+    text-shadow:1px -1px 8px rgba(255,255,255,0.6);
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    -o-user-select:none;
+    user-select:none;
+    padding:.6em 3.5em;
+}
+
+.github-ribbon:hover {
+    text-decoration:none;
+}

@@ -1,6 +1,6 @@
 // The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
 //
-// Copyright (c) 2013, Microsoft Open Technologies, Inc. 
+// Copyright (c) 2013, Microsoft Open Technologies, Inc.
 //
 // All rights reserved.
 // Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -132,18 +132,17 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 xhr.send(decodedChallenge);
 
                 return deferred.promise;
-            },
-            playreadyGetInitData = function (data) {
-                    /**
-                    * desc@ getInitData
-                    *   generate PSSH data from PROHeader defined in MPD file
-                    *   PSSH format:
-                    *   size (4)
-                    *   box type(PSSH) (8)
-                    *   Protection SystemID (16)
-                    *   protection system data size (4) - length of decoded PROHeader
-                    *   decoded PROHeader data from MPD file  
-                    */
+            };
+
+            /*playreadyGetInitData = function (data) {
+                    // desc@ getInitData
+                    //   generate PSSH data from PROHeader defined in MPD file
+                    //   PSSH format:
+                    //   size (4)
+                    //   box type(PSSH) (8)
+                    //   Protection SystemID (16)
+                    //   protection system data size (4) - length of decoded PROHeader
+                    //   decoded PROHeader data from MPD file
                     var byteCursor = 0,
                         PROSize = 0,
                         PSSHSize = 0,
@@ -188,7 +187,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                     byteCursor += PROSize;
 
                     return PSSHBox;
-            };
+            };*/
 
         //
         // order by priority. if an mpd contains more than one the first match will win.
