@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Baseline Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+
+    <link rel="stylesheet" href="receiver/css/style.css">
+
+    <!-- Chromecast -->
+    <script src="https://www.gstatic.com/cast/js/receiver/1.0/cast_receiver.js"></script>
+
+    <!-- Libraries -->
+    <script src="../app/lib/jquery/js/jquery-1.8.3.min.js"></script>
+    <script src="../app/lib/q.js"></script>
+    <script src="../app/lib/dijon.js"></script>
+    <script src="../app/lib/xml2json.js"></script>
+    <script src="../app/lib/objectiron.js"></script>
+    <script src="../app/lib/long.js"></script>
+    <script src="../app/lib/Math.js"></script>
+
+    <!-- Minified Dash -->
+    <script src="../dash.min.js"></script>
+
+    <script src="receiver/js/main.js"></script>
+
+    <body>
+        <div class="dash-video-player">
+            <div id="spinner" class="spinner"></div>
+            <video id="vid"></video>
+        </div>
+    </body>
+</html>

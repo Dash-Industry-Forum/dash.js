@@ -6,12 +6,13 @@
     <meta name="description" content="" />
     <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
 
-    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap-glyphicons.css">
     <link rel="stylesheet" href="../../app/css/css3-github-ribbon.css">
 
     <script src="http://code.jquery.com/jquery.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
-    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
 
     <script src="js/caster.js"></script>
     <script src="js/CasterController.js"></script>
@@ -73,17 +74,49 @@
                         </div>
                     </div>
 
-                    <div class="panel" ng-show="state == 'ready'">
+                    <div class="panel" ng-show="state == 'casting'">
                         <h3 class="text-primary">Controls</h3>
-                        <span class="glyphicon glyphicon-stop"></span>
 
-                        <span class="glyphicon glyphicon-play"></span>
-                        <span class="glyphicon glyphicon-pause"></span>
+                        <div class="row">
+                            <div class="col-lg-2">
+                                <button type="button" class="btn btn-danger" ng-click="stopCast()">
+                                    <span class="glyphicon glyphicon-stop"></span>
+                                </button>
 
-                        <span class="glyphicon glyphicon-volume-off"></span>
-                        <span class="glyphicon glyphicon-volume-up"></span>
+                                <button type="button" class="btn btn-info" ng-click="togglePlayback()">
+                                    <span class="glyphicon glyphicon-play" ng-show="!playing"></span>
+                                    <span class="glyphicon glyphicon-pause" ng-show="playing"></span>
+                                </button>
+                            </div>
 
-                        <span class="glyphicon glyphicon-music"></span>
+                            <div class="col-lg-5">
+                                <button type="button" class="btn btn-warning" style="float: left" ng-click="toggleMute()">
+                                    <span class="glyphicon glyphicon-music" ng-show="!muted"></span>
+                                    <span class="glyphicon glyphicon-volume-off" ng-show="muted"></span>
+                                </button>
+
+                                <div class="input-group col-lg-3">
+                                    <span class="input-group-btn">
+                                        <button type="button" class="btn btn-warning" ng-click="turnVolumeDown()">
+                                            <span class="glyphicon glyphicon-volume-down"></span>
+                                        </button>
+                                    </span>
+
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        style="width: 65px; text-align: center;"
+                                        disabled
+                                        value="{{volume * 100|number:0}}%">
+
+                                    <span class="input-group-btn">
+                                        <button type="button" class="btn btn-warning" ng-click="turnVolumeUp()">
+                                            <span class="glyphicon glyphicon-volume-up"></span>
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

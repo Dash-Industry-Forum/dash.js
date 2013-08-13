@@ -286,13 +286,25 @@ function CasterController($scope) {
         }
     ];
 
+    // -----------------------------------
+    // Properties
+    // -----------------------------------
+
     var STATE_LOADING = "loading",
         STATE_READY = "ready",
         STATE_CASTING = "casting",
         self = this,
-        castApiReady = false,
-        hasError = false,
         initialized = false;
+
+    $scope.castApiReady = false;
+    $scope.hasError = false;
+    $scope.playing = false;
+    $scope.muted = false;
+    $scope.volume = 1;
+
+    // -----------------------------------
+    // Getters / Setters
+    // -----------------------------------
 
     $scope.setStream = function (item) {
         $scope.selectedItem = item;
@@ -300,11 +312,85 @@ function CasterController($scope) {
 
     $scope.setReceiver = function (item) {
         $scope.receiver = item;
+
+        var parameters = {
+            manifest: "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd"
+        };
+        Caster.doLaunch($scope.receiver, parameters);
     }
 
     $scope.isReceiverSelected = function (item) {
         return ($scope.receiver === item);
     }
+
+    // -----------------------------------
+    // Casting Methods
+    // -----------------------------------
+
+    $scope.doCast = function () {
+        if ($scope.playing) {
+            $scope.stopCast();
+        }
+
+        /*var parameters = {
+            src: "http://media.w3.org/2010/05/sintel/trailer.mp4", //$scope.selectedItem.url,
+            autoplay: true,
+            muted: $scope.muted,
+            volume: $scope.volume
+        }*/
+
+        $scope.state = STATE_CASTING;
+        Caster.loadMedia($scope.selectedItem.url);
+        $scope.playing = true;
+    }
+
+    $scope.stopCast = function () {
+        $scope.state = STATE_READY;
+        Caster.stopPlayback();
+        $scope.playing = false;
+    }
+
+    $scope.togglePlayback = function () {
+        if ($scope.playing) {
+            Caster.pauseMedia();
+            $scope.playing = false;
+        }
+        else {
+            Caster.playMedia();
+            $scope.playing = true;
+        }
+    }
+
+    $scope.toggleMute = function () {
+        if ($scope.muted) {
+            Caster.unmuteMedia();
+            $scope.muted = false;
+        }
+        else {
+            Caster.muteMedia();
+            $scope.muted = true;
+        }
+    }
+
+    $scope.turnVolumeDown = function () {
+        $scope.volume -= 0.1;
+        if ($scope.volume < 0) {
+            $scope.volume = 0;
+        }
+        Caster.setMediaVolume($scope.volume);
+    }
+
+    $scope.turnVolumeUp = function () {
+        $scope.volume += 0.1;
+        if ($scope.volume > 1) {
+            $scope.volume = 1;
+        }
+        Caster.setMediaVolume($scope.volume);
+    }
+
+    // -----------------------------------
+    // Initialization
+    // -----------------------------------
 
     $(window).bind("message", function (e) {
         if (event.source !== window) {
@@ -341,7 +427,7 @@ function CasterController($scope) {
             $scope.hasError = true;
         }
         else {
-            $scope.castApiDetected = true;
+            $scope.castApiReady = true;
 
             $scope.receivers = list;
             $scope.state = STATE_READY;
