@@ -504,6 +504,36 @@ function initStreamData() {
         isLive: false
     };
 
+    streams.DDash1 = {
+        url: "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=2&type=full",
+        isLive: false
+    };
+
+    streams.DDash2 = {
+        url: "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=4&type=full",
+        isLive: false
+    };
+
+    streams.DDash3 = {
+        url: "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=6&type=full",
+        isLive: false
+    };
+
+    streams.DDash4 = {
+        url: "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=8&type=full",
+        isLive: false
+    };
+
+    streams.DDash5 = {
+        url: "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=10&type=full",
+        isLive: false
+    };
+
+    streams.DDash6 = {
+        url: "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=15&type=full",
+        isLive: false
+    };
+
     streams.archive = {
         url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd",
         isLive: false
@@ -565,7 +595,7 @@ function initStreamData() {
     };
 
     streams["1b-thomson"] = {
-        url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/1/manifest.mpd",
+        url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/2/manifest.mpd",
         isLive: false
     };
 
@@ -585,7 +615,7 @@ function initStreamData() {
     };
 
     streams["2a-thomson"] = {
-        url: "http://dash.edgesuite.net/dash264/TestCases/2a/thomson-networks/1/manifest.mpd",
+        url: "http://dash.edgesuite.net/dash264/TestCases/2a/thomson-networks/2/manifest.mpd",
         isLive: false
     };
 
