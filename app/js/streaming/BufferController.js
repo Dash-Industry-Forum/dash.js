@@ -13,7 +13,7 @@
  */
 MediaPlayer.dependencies.BufferController = function () {
     "use strict";
-    var validateInterval = 1000,
+    var validateInterval = 500,
         STALL_THRESHOLD = 0.5,
         WAITING = "WAITING",
         READY = "READY",
@@ -461,6 +461,14 @@ MediaPlayer.dependencies.BufferController = function () {
                         }
                     } else if (state === READY) {
                         setState.call(self, VALIDATING);
+
+
+                        self.bufferExt.decideBufferLength(self.manifestModel.getValue().minBufferTime, waitingForBuffer).then(
+                            function (time) {
+                                 self.setMinBufferTime(time)
+                            }
+                        )
+
                         self.bufferExt.shouldBufferMore(length, validateInterval / 1000.0).then(
                             function (shouldBuffer) {
                                 //self.debug.log("Buffer more " + type + ": " + shouldBuffer);
@@ -665,15 +673,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         setMinBufferTime: function (value) {
-            var self = this;
             minBufferTime = value;
-            validateInterval = (minBufferTime * 1000.0) / 4;
-            validateInterval = Math.max(validateInterval, 1000);
-            if (timer !== null) {
-                self.debug.log("Changing " + type + " validate interval: " + validateInterval);
-                clearInterval(timer);
-                timer = setInterval(onTimer.bind(this), validateInterval, this);
-            }
         },
 
         clearMetrics: function () {
