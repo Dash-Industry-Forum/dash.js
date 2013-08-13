@@ -43,8 +43,7 @@ function buildBufferGraph() {
             shadowSize: 0
         },
         yaxis: {
-            min: 0,
-            max: 15
+            min:0
         },
         xaxis: {
             show: false
