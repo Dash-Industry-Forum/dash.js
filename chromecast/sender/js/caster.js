@@ -63,29 +63,32 @@ Caster = (function () {
             cast_api.launch(request, onLaunch);
         },
 
-        loadMedia: function(url) {
+        loadMedia: function(url, live) {
             console.log("Send load media...");
-            sendMessage("load", {manifest: url}, onMessageSent);
+            sendMessage("load", {
+                manifest: url,
+                isLive: live
+            }, onMessageSent);
         },
 
         playMedia: function() {
-            cast_api.playMedia(cv_activity.activityId, new cast.MediaPlayRequest(), onMediaPlay);
+            sendMessage("play", {}, onMessageSent);
         },
 
         pauseMedia: function () {
-            cast_api.pauseMedia(cv_activity.activityId, onMediaPlay);
+            sendMessage("pause", {}, onMessageSent);
         },
 
         muteMedia: function () {
-            setMediaVolume(0);
+            sendMessage("setMuted", {volume: true}, onMessageSent);
         },
 
         unmuteMedia: function () {
-            setMediaVolume(1);
+            sendMessage("setMuted", {muted: false}, onMessageSent);
         },
 
         setMediaVolume: function (volume) {
-            cast_api.setMediaVolume(cv_activity.activityId, new cast.MediaVolumeRequest(volume, false), onMediaVolumeChanged);
+            sendMessage("setVolume", {volume: volume}, onMessageSent);
         },
 
         stopPlayback: function() {

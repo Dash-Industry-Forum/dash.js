@@ -28,6 +28,11 @@
             cursor: hand;
         }
 
+        .list-group-item {
+            cursor: pointer;
+            cursor: hand;
+        }
+
         h3 {
             margin-top: 0px;
         }
@@ -69,7 +74,6 @@
                         <h3 class="text-success">Receivers</h3>
                         <div class="list-group">
                             <a
-                                href="#"
                                 class="list-group-item"
                                 ng-repeat="rec in receivers"
                                 ng-click="setReceiver(rec)"

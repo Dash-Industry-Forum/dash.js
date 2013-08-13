@@ -17,12 +17,12 @@ function CasterController($scope) {
         },
         {
             name: "Fraunhofer - HEACC 2.0 - Sintel",
-            url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/ElephantsDream/elephants_dream_480p_heaac2_0.mpd",
+            url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/Sintel/sintel_480p_heaac2_0.mpd",
             isLive: false
         },
         {
             name: "Fraunhofer - HEACC 5.1 - 6 CH ID",
-             url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/Sintel/sintel_480p_heaac2_0.mpd",
+             url: "http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_5_1_with_video/6chId/6chId_480p_heaac5_1.mpd",
             isLive: false
         },
         {
@@ -330,12 +330,8 @@ function CasterController($scope) {
     // -----------------------------------
 
     $scope.doCast = function () {
-        /*if ($scope.playing) {
-            $scope.stopCast();
-        }*/
-
         $scope.state = STATE_CASTING;
-        Caster.loadMedia($scope.selectedItem.url);
+        Caster.loadMedia($scope.selectedItem.url, $scope.selectedItem.isLive);
         $scope.playing = true;
     }
 
@@ -425,10 +421,6 @@ function CasterController($scope) {
             $scope.castApiReady = true;
             $scope.receivers = list;
             $scope.state = STATE_READY;
-
-            if (list.length === 1) {
-                $scope.setReceiver(list[0]);
-            }
         }
 
         $scope.$apply();

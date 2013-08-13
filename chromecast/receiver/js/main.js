@@ -9,8 +9,8 @@
     function DashCast() {
         this.manifest = null;
 
-        var startVideo = function(url) {
-                console.log("Loading video: " + url);
+        var startVideo = function(url, isLive) {
+                console.log("Loading video: " + url, " | is live: " + isLive);
 
                 var video,
                     context,
@@ -20,7 +20,7 @@
                 player = new MediaPlayer(context);
                 player.startup();
 
-                player.setIsLive(false);
+                player.setIsLive(isLive);
                 player.attachSource(url);
 
                 $("#spinner").hide();
@@ -32,22 +32,37 @@
             },
 
             onDashMessage = function (e) {
-                var message = e.message;
-                var channel = e.target;
+                var message = e.message,
+                    channel = e.target,
+                    video = document.querySelector(".dash-video-player video");
+
                 console.debug('Message received', JSON.stringify(message));
 
                 switch (message.command) {
                     case "load":
-                        startVideo.call(this, message.manifest);
+                        startVideo.call(this, message.manifest, message.isLive);
+                        break;
+
+                    case "play":
+                        video.play();
+                        break;
+
+                    case "pause":
+                        video.pause();
+                        break;
+
+                    case "setVolume":
+                        video.volume = message.volume;
+                        break;
+
+                    case "setMuted":
+                        video.muted = message.muted;
                         break;
                 }
             },
 
             onDashOpen = function (e) {
                 console.log("Dash channel opened.");
-                /*broadcast.call(this, {
-                   event: "ready"
-                });*/
             },
 
             onDashClose = function (e) {
