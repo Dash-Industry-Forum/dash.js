@@ -24,6 +24,7 @@ MediaPlayer.utils.Debug = function () {
 
     var htmlConsole = null,
         logToHtmlConsole = false,
+        enableLoggingToBrowser = true,
         filter = "",
 
         updateFilter = function () {
@@ -32,14 +33,28 @@ MediaPlayer.utils.Debug = function () {
             }
 
             var children = htmlConsole.children(),
-                matches;
+                matches, filtered;
 
             if (filter === "" || filter === undefined || filter === null) {
                 children.show();
             } else {
-                matches = children.filter(':contains(' + filter + ')');
+                //trim lead/trail whitespace and determine if match || set of words
+                filtered = filter.replace(/(^\s+|\s+$)/g, "");
+                filtered = (filter.indexOf('"') != -1 ) ? filtered.replace(/\"/g,"") : filtered.replace(/\s/g, "|");
+                try
+                {
+                    matches = $.grep(children, function(line)
+                    {
+                        return (new RegExp(filtered, "i")).test(line.innerText);
+                    });
+                }
+                catch (e)
+                {
+                    console.error(e);
+                }
+
+                children.show();
                 children.not(matches).hide();
-                matches.show();
             }
         },
 
@@ -86,8 +101,9 @@ MediaPlayer.utils.Debug = function () {
         },
 
         log: function (message) {
-            console.log(message);
-
+            if (enableLoggingToBrowser){
+                console.log(message);
+            }
             if (htmlConsole !== null && logToHtmlConsole) {
                 var trace = "<dt>" + message + "</dt>";
                 htmlConsole.prepend(trace);
