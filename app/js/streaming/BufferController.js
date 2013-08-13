@@ -460,14 +460,11 @@ MediaPlayer.dependencies.BufferController = function () {
                         }
                     } else if (state === READY) {
                         setState.call(self, VALIDATING);
-
-
                         self.bufferExt.decideBufferLength(self.manifestModel.getValue().minBufferTime, waitingForBuffer).then(
                             function (time) {
                                  self.setMinBufferTime(time)
                             }
-                        )
-
+                        );
                         self.bufferExt.shouldBufferMore(length, validateInterval / 1000.0).then(
                             function (shouldBuffer) {
                                 //self.debug.log("Buffer more " + type + ": " + shouldBuffer);
