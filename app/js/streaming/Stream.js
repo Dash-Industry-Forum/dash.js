@@ -94,7 +94,7 @@ MediaPlayer.dependencies.Stream = function () {
             //this.debug.log("DRM: Generating key request...");
             //this.protectionModel.generateKeyRequest(DEFAULT_KEY_TYPE, event.initData);
             if (!!contentProtection && !!videoCodec && !kid) {
-                try 
+                try
                 {
                     kid = self.protectionController.selectKeySystem(videoCodec, contentProtection);
                 }
@@ -104,7 +104,7 @@ MediaPlayer.dependencies.Stream = function () {
                     self.debug.log(error);
                     self.errHandler.mediaKeySystemSelectionError(error);
                 }
-            } 
+            }
 
             if (!!kid) {
                 self.protectionController.ensureKeySession(kid, type, event.initData);

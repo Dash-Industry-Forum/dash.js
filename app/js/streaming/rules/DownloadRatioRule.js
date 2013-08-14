@@ -60,7 +60,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 funcs,
                 i,
                 len,
-                DOWNLOAD_RATIO_SAFETY_FACTOR = .75;
+                DOWNLOAD_RATIO_SAFETY_FACTOR = 0.75;
 
             self.debug.log("Checking download ratio rule...");
 

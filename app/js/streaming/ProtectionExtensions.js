@@ -132,18 +132,16 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 xhr.send(decodedChallenge);
 
                 return deferred.promise;
-            },
+            }/*,
             playreadyGetInitData = function (data) {
-                    /**
-                    * desc@ getInitData
-                    *   generate PSSH data from PROHeader defined in MPD file
-                    *   PSSH format:
-                    *   size (4)
-                    *   box type(PSSH) (8)
-                    *   Protection SystemID (16)
-                    *   protection system data size (4) - length of decoded PROHeader
-                    *   decoded PROHeader data from MPD file  
-                    */
+                    // * desc@ getInitData
+                    // *   generate PSSH data from PROHeader defined in MPD file
+                    // *   PSSH format:
+                    // *   size (4)
+                    // *   box type(PSSH) (8)
+                    // *   Protection SystemID (16)
+                    // *   protection system data size (4) - length of decoded PROHeader
+                    // *   decoded PROHeader data from MPD file  
                     var byteCursor = 0,
                         PROSize = 0,
                         PSSHSize = 0,
@@ -188,7 +186,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                     byteCursor += PROSize;
 
                     return PSSHBox;
-            };
+            }*/;
 
         //
         // order by priority. if an mpd contains more than one the first match will win.

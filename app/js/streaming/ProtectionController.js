@@ -22,8 +22,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
         },
 
         selectKeySystem = function (codec, contentProtection) {
-            var self = this,
-                msg;
+            var self = this;
 
             for(var ks = 0; ks < keySystems.length; ++ks) {
                 for(var cp = 0; cp < contentProtection.length; ++cp) {
