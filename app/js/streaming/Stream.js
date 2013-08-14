@@ -36,6 +36,7 @@ MediaPlayer.dependencies.Stream = function () {
         loadedListener,
         playListener,
         pauseListener,
+        errorListener,
         seekingListener,
         seekedListener,
         timeupdateListener,
@@ -182,41 +183,7 @@ MediaPlayer.dependencies.Stream = function () {
                 self = this,
 
                 onMediaSourceClose = function (e) {
-                    var error = self.videoModel.getElement().error,
-                        code = (error !== null && error !== undefined) ? error.code : -1,
-                        msg = "";
-
-                    if (code === -1) {
-                        // not an error!
-                        return;
-                    }
-
-                    switch (code) {
-                        case 1:
-                            msg = "MEDIA_ERR_ABORTED";
-                            break;
-                        case 2:
-                            msg = "MEDIA_ERR_NETWORK";
-                            break;
-                        case 3:
-                            msg = "MEDIA_ERR_DECODE";
-                            break;
-                        case 4:
-                            msg = "MEDIA_ERR_SRC_NOT_SUPPORTED";
-                            break;
-                        case 5:
-                            msg = "MEDIA_ERR_ENCRYPTED";
-                            break;
-                    }
-
-                    errored = true;
-
-                    pause.call(self);
-                    self.debug.log("MediaSource Close.");
-                    self.debug.log(e);
-                    self.debug.log("Video Element Error:");
-                    self.debug.log(self.videoModel.getElement().error);
-                    self.errHandler.mediaSourceError(msg);
+                    onError.call(self, e);
                 },
 
                 onMediaSourceOpen = function (e) {
@@ -527,6 +494,43 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
+        onError = function () {
+            var error = this.videoModel.getElement().error,
+                code = (error !== null && error !== undefined) ? error.code : -1,
+                msg = "";
+
+            if (code === -1) {
+                // not an error!
+                return;
+            }
+
+            switch (code) {
+                case 1:
+                    msg = "MEDIA_ERR_ABORTED";
+                    break;
+                case 2:
+                    msg = "MEDIA_ERR_NETWORK";
+                    break;
+                case 3:
+                    msg = "MEDIA_ERR_DECODE";
+                    break;
+                case 4:
+                    msg = "MEDIA_ERR_SRC_NOT_SUPPORTED";
+                    break;
+                case 5:
+                    msg = "MEDIA_ERR_ENCRYPTED";
+                    break;
+            }
+
+            errored = true;
+
+            this.debug.log("Video Element Error: " + msg);
+            this.debug.log(this.videoModel.getElement().error);
+            this.errHandler.mediaSourceError(msg);
+
+            pause.call(this);
+        },
+
         onSeeking = function () {
             this.debug.log("Got seeking event.");
 
@@ -693,6 +697,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             playListener = onPlay.bind(this);
             pauseListener = onPause.bind(this);
+            errorListener = onError.bind(this);
             seekingListener = onSeeking.bind(this);
             seekedListener = onSeeked.bind(this);
             timeupdateListener = onProgress.bind(this);
@@ -706,6 +711,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.videoModel.listen("play", playListener);
             this.videoModel.listen("pause", pauseListener);
             this.videoModel.listen("seeking", seekingListener);
+            this.videoModel.listen("error", errorListener);
             this.videoModel.listen("timeupdate", timeupdateListener);
             this.videoModel.listen("loadedmetadata", loadedListener);
 

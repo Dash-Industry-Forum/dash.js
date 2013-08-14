@@ -228,6 +228,7 @@ MediaPlayer.dependencies.BufferController = function () {
             var self = this;
 
             // remove the failed request from the list
+            /*
             for (var i = fragmentRequests.length - 1; i >= 0 ; --i) {
                 if (fragmentRequests[i].startTime === request.startTime) {
                     if (fragmentRequests[i].url === request.url) {
@@ -236,6 +237,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     break;
                 }
             }
+            */
 
             if (state === LOADING) {
                 setState.call(self, READY);
