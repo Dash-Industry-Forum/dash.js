@@ -13,7 +13,7 @@
  */
 MediaPlayer.dependencies.BufferController = function () {
     "use strict";
-    var validateInterval = 500,
+    var validateInterval = MediaPlayer.dependencies.BufferController.MIN_VALIDATE_INTERVAL,
         STALL_THRESHOLD = 0.5,
         WAITING = "WAITING",
         READY = "READY",
@@ -429,6 +429,28 @@ MediaPlayer.dependencies.BufferController = function () {
             return time;
         },
 
+        adjustValidateInterval = function (currentValidateInterval, length) {
+            var self = this,
+                bufferLengthThreshold =
+                    Math.max(MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME,  self.manifestModel.getValue().minBufferTime);
+
+            if (waitingForBuffer || length >= bufferLengthThreshold) {
+
+                if (waitingForBuffer) {
+                    validateInterval = MediaPlayer.dependencies.BufferController.MIN_VALIDATE_INTERVAL;
+                } else {
+                    var maxInterval = (self.manifestModel.getValue().maxSegmentDuration * 1000) / 4;
+                    validateInterval = !isNaN(maxInterval) ? maxInterval : MediaPlayer.dependencies.BufferController.MAX_VALIDATE_INTERVAL;
+                }
+
+                if (validateInterval !== currentValidateInterval) {
+                    self.debug.log("Changing " + type + " validate interval: " + validateInterval );
+                    clearInterval(timer);
+                    timer = setInterval(onTimer.bind(self), validateInterval, self);
+                }
+            }
+        },
+
         validate = function () {
             var self = this,
                 newQuality,
@@ -463,10 +485,13 @@ MediaPlayer.dependencies.BufferController = function () {
                         setState.call(self, VALIDATING);
                         self.bufferExt.decideBufferLength(self.manifestModel.getValue().minBufferTime, waitingForBuffer).then(
                             function (time) {
-                                 self.setMinBufferTime(time)
+                                self.setMinBufferTime(time);
+                                if (type === "video") {
+                                    adjustValidateInterval.call(self, validateInterval, length);
+                                }
                             }
                         );
-                        self.bufferExt.shouldBufferMore(length, validateInterval / 1000.0).then(
+                        self.bufferExt.shouldBufferMore(length, waitingForBuffer, validateInterval / 1000.0).then(
                             function (shouldBuffer) {
                                 //self.debug.log("Buffer more " + type + ": " + shouldBuffer);
                                 if (shouldBuffer) {
@@ -544,36 +569,35 @@ MediaPlayer.dependencies.BufferController = function () {
 
         initialize: function (type, periodIndex, data, buffer, minBufferTime, videoModel) {
             var self = this,
-                manifest = self.manifestModel.getValue(),
-                isLive = self.manifestExt.getIsLive(manifest);
+                isLive,
+                manifest = self.manifestModel.getValue();
 
             self.setVideoModel(videoModel);
             self.setType(type);
             self.setPeriodIndex(periodIndex);
             self.setData(data);
             self.setBuffer(buffer);
-            self.setMinBufferTime(minBufferTime);
 
             self.indexHandler.setIsLive(isLive);
 
-            self.manifestExt.getTimestampOffsetForPeriod(periodIndex, self.manifestModel.getValue(), isLive).then(
+            self.manifestExt.getTimestampOffsetForPeriod(periodIndex, manifest, isLive).then(
                 function (offset) {
                     self.getBuffer().timestampOffset = offset;
                     timestampOffset = offset;
                 }
             );
 
-            self.manifestExt.getStartOffsetForPeriod(self.manifestModel.getValue(), periodIndex).then(
+            self.manifestExt.getStartOffsetForPeriod(manifest, periodIndex).then(
                 function (liveStartValue) {
                     liveOffset = liveStartValue;
-                    self.manifestExt.getDurationForPeriod(periodIndex, self.manifestModel.getValue(), isLive).then(
+                    self.manifestExt.getDurationForPeriod(periodIndex, manifest, isLive).then(
                         function (duration) {
                             self.indexHandler.setDuration(duration + liveOffset);
+                            self.bufferExt.init(duration + liveOffset, manifest, periodIndex);
                         }
                     );
                 }
             );
-
             ready = true;
             startPlayback.call(this);
         },
@@ -688,6 +712,9 @@ MediaPlayer.dependencies.BufferController = function () {
         stop: doStop
     };
 };
+
+MediaPlayer.dependencies.BufferController.MIN_VALIDATE_INTERVAL = 500;
+MediaPlayer.dependencies.BufferController.MAX_VALIDATE_INTERVAL = 1250;
 
 MediaPlayer.dependencies.BufferController.prototype = {
     constructor: MediaPlayer.dependencies.BufferController
