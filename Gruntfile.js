@@ -106,7 +106,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
 
-   // Define tasks
-    //grunt.registerTask('default', ['jshint','connect','jasmine','uglify']);
-    grunt.registerTask('default', ['jshint','connect','uglify']);
+  // Define tasks
+  grunt.registerTask('default', ['jshint','connect','jasmine','uglify']);
 };
