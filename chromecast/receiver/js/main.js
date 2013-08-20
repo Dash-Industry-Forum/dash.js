@@ -92,7 +92,7 @@ function ReceiverController($scope) {
                 pendingValue = player.getQualityFor(type);
 
                 return {
-                    bandwidthValue: bandwidthValue,
+                    bandwidthValue: bandwidthValue + 1,
                     bitrateIndexValue: bitrateIndexValue,
                     pendingIndex: (pendingValue !== bitrateIndexValue) ? "(-> " + (pendingValue + 1) + ")" : "",
                     numBitratesValue: numBitratesValue,
