@@ -300,7 +300,7 @@ describe("DashMetricsExtensions Test Suite", function () {
 	});
 
 	it("getMaxIndexForBufferType returns correct index with input as empty string", function () {
-		expect(metricExtn.getMaxIndexForBufferType("")).toBe(3);
+		expect(metricExtn.getMaxIndexForBufferType("")).toBe(-1);
 	});
 
 	it("getMaxIndexForBufferType returns correct index with input as video4 string", function () {
