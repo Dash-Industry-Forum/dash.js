@@ -307,6 +307,8 @@ function CasterController($scope) {
     $scope.playing = false;
     $scope.muted = false;
     $scope.volume = 1;
+    $scope.duration = 0;
+    $scope.currentTime = 0;
 
     // -----------------------------------
     // Getters / Setters
@@ -352,6 +354,14 @@ function CasterController($scope) {
         }
     }
 
+    $scope.doSeek = function () {
+        var x = event.layerX,
+            w = $("#scrubber").width(),
+            p = x / w,
+            v = $scope.duration * p;
+        Caster.seekMedia(v);
+    }
+
     $scope.toggleMute = function () {
         if ($scope.muted) {
             Caster.unmuteMedia();
@@ -377,6 +387,10 @@ function CasterController($scope) {
             $scope.volume = 1;
         }
         Caster.setMediaVolume($scope.volume);
+    }
+
+    $scope.toggleStats = function () {
+        Caster.toggleStats();
     }
 
     // -----------------------------------
@@ -424,5 +438,20 @@ function CasterController($scope) {
         }
 
         $scope.$apply();
+    }
+
+    this.onTimeUpdate = function (time) {
+        $scope.currentTime = time;
+        var w = $("#scrubber").width(),
+            p = ($scope.currentTime / $scope.duration) * 100;
+        $("#scrubber-content").width(p + "%");
+    }
+
+    this.onDurationChange = function (duration) {
+        $scope.duration = duration;
+    }
+
+    this.onEnded = function () {
+
     }
 }

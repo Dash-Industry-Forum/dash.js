@@ -49,3 +49,20 @@
     from {transform: rotate(0deg);}
     to {transform: rotate(359deg);}
 }
+
+.stats-holder {
+    width: 220px;
+    position: absolute;
+    top: 20px;
+    bottom: 20px;
+    right: 20px;
+}
+
+.panel-stats {
+    width: 200px;
+    height: 150px;
+}
+
+.panel-stats span {
+    display: block;
+}

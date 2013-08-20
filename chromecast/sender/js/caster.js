@@ -50,6 +50,20 @@ Caster = (function () {
 
         onMessageReceived = function (e) {
             console.log("Message received.");
+            console.log(e);
+            switch (e.event) {
+                case "timeupdate":
+                    delegate.onTimeUpdate(e.value);
+                    break;
+
+                case "durationchange":
+                    delegate.onDurationChange(e.value);
+                    break;
+
+                case "ended":
+                    delegate.onEnded();
+                    break;
+            }
         },
 
         onMessageSent = function (e) {
@@ -79,8 +93,14 @@ Caster = (function () {
             sendMessage("pause", {}, onMessageSent);
         },
 
+        seekMedia: function (time) {
+            sendMessage("seek", {
+                time: time
+            }, onMessageSent);
+        },
+
         muteMedia: function () {
-            sendMessage("setMuted", {volume: true}, onMessageSent);
+            sendMessage("setMuted", {muted: true}, onMessageSent);
         },
 
         unmuteMedia: function () {
@@ -91,10 +111,14 @@ Caster = (function () {
             sendMessage("setVolume", {volume: volume}, onMessageSent);
         },
 
-        stopPlayback: function() {
+        stopPlayback: function () {
             if (cv_activity) {
                 cast_api.stopActivity(cv_activity.activityId);
             }
+        },
+
+        toggleStats: function () {
+            sendMessage("toggleStats", onMessageSent);
         },
 
         isCastInitMessage: function(event) {

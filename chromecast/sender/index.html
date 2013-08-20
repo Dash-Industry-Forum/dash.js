@@ -36,6 +36,11 @@
         h3 {
             margin-top: 0px;
         }
+
+        .controlbar * {
+            display: inline-block;
+            vertical-align: middle;
+        }
     </style>
 
     <body ng-controller="CasterController">
@@ -48,6 +53,11 @@
 
             <div ng-switch-when="true">
                 <div class="container" style="padding: 15px">
+                    <div class="jumbotron">
+                        <h2>DASH IF Reference Client for Chromecast</h2>
+                        <p>This is an implementation of the Dash.JS reference client for Google's Chromecast device.</p>
+                    </div>
+
                     <div class="panel">
                         <div class="input-group">
                             <div class="input-group-btn">
@@ -71,7 +81,7 @@
                     </div>
 
                     <div class="panel" ng-show="state == 'ready' || state == 'casting'">
-                        <h3 class="text-success">Receivers</h3>
+                        <h3 class="text-primary">Receivers</h3>
                         <div class="list-group">
                             <a
                                 class="list-group-item"
@@ -84,47 +94,43 @@
                     </div>
 
                     <div class="panel" ng-show="state == 'casting'">
-                        <h3 class="text-primary">Controls</h3>
+                        <h3 class="text-success">Controls</h3>
+                        <div class="row controlbar" style="padding-left: 10px; padding-right: 10px;">
+                            <button type="button" class="btn btn-success" ng-click="toggleStats()">
+                                Stats
+                            </button>
+                            <!--
+                            <button type="button" class="btn btn-danger" ng-click="stopCast()">
+                                <span class="glyphicon glyphicon-stop"></span>
+                            </button>
+                            -->
+                            <button type="button" class="btn btn-info" ng-click="togglePlayback()">
+                                <span class="glyphicon glyphicon-play" ng-show="!playing"></span>
+                                <span class="glyphicon glyphicon-pause" ng-show="playing"></span>
+                            </button>
 
-                        <div class="row">
-                            <div class="col-lg-2">
-                                <button type="button" class="btn btn-danger" ng-click="stopCast()">
-                                    <span class="glyphicon glyphicon-stop"></span>
-                                </button>
-
-                                <button type="button" class="btn btn-info" ng-click="togglePlayback()">
-                                    <span class="glyphicon glyphicon-play" ng-show="!playing"></span>
-                                    <span class="glyphicon glyphicon-pause" ng-show="playing"></span>
-                                </button>
+                            <div id="scrubber" class="progress" style="width: 200px;" ng-click="doSeek()">
+                                <div id="scrubber-content" class="progress-bar progress-bar-success" role="progressbar"></div>
                             </div>
 
-                            <div class="col-lg-5">
-                                <button type="button" class="btn btn-warning" style="float: left" ng-click="toggleMute()">
-                                    <span class="glyphicon glyphicon-music" ng-show="!muted"></span>
-                                    <span class="glyphicon glyphicon-volume-off" ng-show="muted"></span>
-                                </button>
+                            <button type="button" class="btn btn-warning" ng-click="toggleMute()">
+                                <span class="glyphicon glyphicon-music" ng-show="!muted"></span>
+                                <span class="glyphicon glyphicon-volume-off" ng-show="muted"></span>
+                            </button>
 
-                                <div class="input-group col-lg-3">
-                                    <span class="input-group-btn">
-                                        <button type="button" class="btn btn-warning" ng-click="turnVolumeDown()">
-                                            <span class="glyphicon glyphicon-volume-down"></span>
-                                        </button>
-                                    </span>
+                            <button type="button" class="btn btn-warning" ng-click="turnVolumeDown()">
+                                <span class="glyphicon glyphicon-volume-down"></span>
+                            </button>
 
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        style="width: 65px; text-align: center;"
-                                        disabled
-                                        value="{{volume * 100|number:0}}%">
+                            <input
+                                type="text"
+                                style="width: 65px; height: 40px; text-align: center;"
+                                disabled
+                                value="{{volume * 100|number:0}}%">
 
-                                    <span class="input-group-btn">
-                                        <button type="button" class="btn btn-warning" ng-click="turnVolumeUp()">
-                                            <span class="glyphicon glyphicon-volume-up"></span>
-                                        </button>
-                                    </span>
-                                </div>
-                            </div>
+                            <button type="button" class="btn btn-warning" ng-click="turnVolumeUp()">
+                                <span class="glyphicon glyphicon-volume-up"></span>
+                            </button>
                         </div>
                     </div>
                 </div>
