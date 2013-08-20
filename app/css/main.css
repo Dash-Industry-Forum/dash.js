@@ -6,6 +6,10 @@ body {
     padding-bottom: 0px;
 }
 
+a:hover {
+    color: rgba(42, 100, 150, 1);
+}
+
 h1 {
     font-weight: normal;
     padding-top: 20px;
