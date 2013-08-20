@@ -11,97 +11,75 @@
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.BufferExtensions = function ()
-{
+MediaPlayer.dependencies.BufferExtensions = function () {
     "use strict";
 
-    var baseBufferTime,
+    var minBufferTarget,
+        currentBufferTarget,
         isLongFormContent,
         totalRepresentationCount,
-        manifest,
-        DEFAULT_MIN_BUFFER_TIME = 8,
-        BUFFER_TIME_AT_STARTUP = 1,
-        BUFFER_TIME_AT_TOP_QUALITY = 30,
-        BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 300,
-        LONG_FORM_CONTENT_DURATION_THRESHOLD = 600,
-
-        init = function()
-        {
-            manifest = this.manifestModel.getValue();
-
-            this.manifestExt.getDuration(manifest, this.videoModel.getIsLive()).then(
-                function(duration)
-                {
-                    isLongFormContent = (duration >= LONG_FORM_CONTENT_DURATION_THRESHOLD);
-                }
-            );
-
-            this.manifestExt.getVideoData(manifest).then(
-                function(data)
-                {
-                    totalRepresentationCount = data.Representation_asArray.length - 1;
-                }
-            );
-        },
-        getCurrentIndex = function(metrics)
-        {
+        isLive,
+        getCurrentIndex = function(metrics) {
             var repSwitch = this.metricsExt.getCurrentRepresentationSwitch(metrics);
 
-            if (repSwitch != null)
-            {
+            if (repSwitch != null) {
                 return this.metricsExt.getIndexForRepresentation(repSwitch.to);
             }
             return null;
         };
 
-
     return {
         system:undefined,
         videoModel: undefined,
-        manifestModel: undefined,
         manifestExt: undefined,
         metricsExt: undefined,
-        decideBufferLength: function (minBufferTime, waitingForBuffer)
-        {
-            if (waitingForBuffer || waitingForBuffer == undefined)
-            {
-                baseBufferTime = BUFFER_TIME_AT_STARTUP;
-
-                if (manifest === undefined)
-                {
-                    init.call(this);
+        init: function(duration, manifest) {
+            isLive = this.videoModel.getIsLive();
+            isLongFormContent = (duration >= MediaPlayer.dependencies.BufferExtensions.LONG_FORM_CONTENT_DURATION_THRESHOLD);
+            this.manifestExt.getVideoData(manifest).then(
+                function(data) {
+                    totalRepresentationCount = data.Representation_asArray.length - 1;
                 }
-            }
-            else
-            {
-                baseBufferTime = Math.max(DEFAULT_MIN_BUFFER_TIME, minBufferTime);
-            }
-
-            return Q.when(baseBufferTime);
+            );
         },
-        shouldBufferMore: function (bufferLength, delay)
-        {
+        decideBufferLength: function (minBufferTime, waitingForBuffer) {
+
+            minBufferTarget = (waitingForBuffer || waitingForBuffer === undefined) ?
+                MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_STARTUP :
+                Math.max(MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
+
+            return Q.when(minBufferTarget);
+        },
+        shouldBufferMore: function (bufferLength, waitingForBuffer, delay) {
             var metrics = player.getMetricsFor("video"),
                 isPlayingAtTopQuality = (getCurrentIndex.call(this, metrics) === totalRepresentationCount),
-                bufferTarget,
                 result;
 
-            if (isPlayingAtTopQuality)
-            {
-                bufferTarget =  isLongFormContent ?  BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM : BUFFER_TIME_AT_TOP_QUALITY;
-                result = bufferLength < bufferTarget;
-            }
-            else
-            {
-                result = bufferLength < baseBufferTime;
+            currentBufferTarget = minBufferTarget;
+
+            if (!isLive) {
+                if (!waitingForBuffer && isPlayingAtTopQuality) {
+                    currentBufferTarget = isLongFormContent ?
+                        MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :
+                        MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY;
+                }
             }
 
+            result = (bufferLength - delay) < currentBufferTarget;
             return Q.when(result);
+        },
+        getBufferTarget: function() {
+            return currentBufferTarget === undefined ? minBufferTarget : currentBufferTarget;
         }
     };
 };
 
-MediaPlayer.dependencies.BufferExtensions.prototype =
-{
-    constructor: MediaPlayer.dependencies.BufferExtensions
-};
+MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_STARTUP = 1;
+MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME = 8;
+MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY = 30;
+MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 300;
+MediaPlayer.dependencies.BufferExtensions.LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+MediaPlayer.dependencies.BufferExtensions.prototype.constructor = MediaPlayer.dependencies.BufferExtensions;
+
+
+
