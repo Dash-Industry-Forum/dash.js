@@ -35,6 +35,7 @@ for (var MPDstring in strMpd) {
 
 			beforeEach(function () {
 				baseUrl = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
+                period = 0;
 
 				// Set up DI.
 				system = new dijon.System();
@@ -285,7 +286,7 @@ for (var MPDstring in strMpd) {
 					id = 'audio=148000';
 					break;
 				}
-				manExtn.getDataForId(id, manifestObj).then(function (Data) {
+				manExtn.getDataForId(id, manifestObj, period).then(function (Data) {
 					res = Data ? Data.id : null;
 				}, function (Error) {
 					res = Error;
@@ -321,7 +322,7 @@ for (var MPDstring in strMpd) {
 			it("getDataForIndex", function () {
 				var index = 0,
 				res = '';
-				manExtn.getDataForIndex(index, manifestObj).then(function (Data) {
+				manExtn.getDataForIndex(index, manifestObj, period).then(function (Data) {
 					res = Data;
 				}, function (Error) {
 					res = Error;
@@ -357,7 +358,7 @@ for (var MPDstring in strMpd) {
 			it("getDataIndex", function () {
 				var data = manifestObj.Period.AdaptationSet[1],
 				res = '';
-				manExtn.getDataIndex(data, manifestObj).then(function (Data) {
+				manExtn.getDataIndex(data, manifestObj, period).then(function (Data) {
 					res = Data;
 				}, function (Error) {
 					res = Error;
@@ -445,7 +446,7 @@ for (var MPDstring in strMpd) {
 			 */
 			it("getVideoData", function () {
 				var data = '';
-				manExtn.getVideoData(manifestObj).then(function (Data) {
+				manExtn.getVideoData(manifestObj, period).then(function (Data) {
 					switch (docMpdProto) {
 					case 1:
 						data = Data.ContentComponent.contentType;
@@ -479,7 +480,7 @@ for (var MPDstring in strMpd) {
 			 */
 			it("getAudioData", function () {
 				var data = '';
-				manExtn.getAudioDatas(manifestObj).then(function (Data) {
+				manExtn.getAudioDatas(manifestObj, period).then(function (Data) {
 					switch (docMpdProto) {
 					case 1:
 						data = Data[0].ContentComponent.contentType;
@@ -512,7 +513,7 @@ for (var MPDstring in strMpd) {
 			 */
 			it("getPrimaryAudioData", function () {
 				var data = '';
-				manExtn.getPrimaryAudioData(manifestObj).then(function (Data) {
+				manExtn.getPrimaryAudioData(manifestObj, period).then(function (Data) {
 					switch (docMpdProto) {
 					case 1:
 						data = Data.ContentComponent.contentType;

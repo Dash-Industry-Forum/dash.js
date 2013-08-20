@@ -22,10 +22,10 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('debug', MediaPlayer.utils.Debug);
             this.system.mapSingleton('capabilities', MediaPlayer.utils.Capabilities);
 
-            this.system.mapSingleton('videoModel', MediaPlayer.models.VideoModel);
+            this.system.mapClass('videoModel', MediaPlayer.models.VideoModel);
             this.system.mapSingleton('manifestModel', MediaPlayer.models.ManifestModel);
             this.system.mapSingleton('metricsModel', MediaPlayer.models.MetricsModel);
-            this.system.mapSingleton('protectionModel', MediaPlayer.models.ProtectionModel);
+            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel);
 
             this.system.mapSingleton('mediaSourceExt', MediaPlayer.dependencies.MediaSourceExtensions);
             this.system.mapSingleton('sourceBufferExt', MediaPlayer.dependencies.SourceBufferExtensions);
@@ -33,7 +33,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('abrController', MediaPlayer.dependencies.AbrController);
             this.system.mapSingleton('errHandler', MediaPlayer.dependencies.ErrorHandler);
             this.system.mapSingleton('protectionExt', MediaPlayer.dependencies.ProtectionExtensions);
-            this.system.mapSingleton('protectionController', MediaPlayer.dependencies.ProtectionController);
+            this.system.mapClass('protectionController', MediaPlayer.dependencies.ProtectionController);
 
             this.system.mapClass('metrics', MediaPlayer.models.MetricsList);
             this.system.mapClass('downloadRatioRule', MediaPlayer.rules.DownloadRatioRule);
@@ -46,6 +46,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('manifestUpdater', MediaPlayer.dependencies.ManifestUpdater);
             this.system.mapClass('fragmentController', MediaPlayer.dependencies.FragmentController);
             this.system.mapClass('fragmentLoader', MediaPlayer.dependencies.FragmentLoader);
+            this.system.mapSingleton('streamController', MediaPlayer.dependencies.StreamController);
             this.system.mapClass('stream', MediaPlayer.dependencies.Stream);
         }
     };

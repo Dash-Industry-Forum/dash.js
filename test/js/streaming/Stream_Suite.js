@@ -12,10 +12,11 @@
  
 
 describe("Stream test Suite", function () {
-	var ManifestLoader,metricsModel,parser,manifestObj,manifestExt,debug,player,videoDataObj,videotag,codec,mediaSource,primaryAudioDataObj,url,server;
+	var ManifestLoader,metricsModel,parser,manifestObj,period,manifestExt,debug,player,videoDataObj,videotag,codec,mediaSource,primaryAudioDataObj,url,server;
 
 	beforeEach(function () {
-     
+     	period = 0;
+
 		system = new dijon.System();
 		system.mapValue("system", system);
 		system.mapOutlet("system");
@@ -65,7 +66,7 @@ describe("Stream test Suite", function () {
 					if (manifestObj) return true;
 				}, "data is null", 100);
 				runs(function () {
-					manifestExt.getAudioDatas(manifestObj).then(function (audioDatas) {
+					manifestExt.getAudioDatas(manifestObj, period).then(function (audioDatas) {
 				    expect(audioDatas[0].mimeType).toContain('audio');
 				 });
 			});
@@ -79,7 +80,7 @@ describe("Stream test Suite", function () {
 					if (manifestObj) return true;
 				}, "data is null", 100);
 				runs(function () {
-					manifestExt.getPrimaryAudioData(manifestObj).then( function (primaryAudioData) {
+					manifestExt.getPrimaryAudioData(manifestObj, period).then( function (primaryAudioData) {
                     primaryAudioDataObj = primaryAudioData;
                     manifestExt.getDataIndex(primaryAudioDataObj,manifestObj).then(
                         function (index) {
@@ -97,7 +98,7 @@ describe("Stream test Suite", function () {
 					if (manifestObj) return true;
 				}, "data is null", 100);
 				runs(function () {
-					manifestExt.getPrimaryAudioData(manifestObj).then( function (primaryAudioData) {
+					manifestExt.getPrimaryAudioData(manifestObj, period).then( function (primaryAudioData) {
                     canRunBool = '';
                     manifestExt.getCodec(primaryAudioDataObj).then(
                         function (codec) {
@@ -141,6 +142,7 @@ describe("Stream test Suite", function () {
 			stream = system.getObject("stream");
 			spyOn(video, 'play').andCallThrough();
 			spyOn(video, 'pause').andCallThrough();
+			stream.setPeriodIndex(period);
 			stream.load(url);
 			
 			setTimeout(function(){

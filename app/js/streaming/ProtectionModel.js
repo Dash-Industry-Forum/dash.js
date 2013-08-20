@@ -29,6 +29,11 @@ MediaPlayer.models.ProtectionModel = function () {
             element = this.videoModel.getElement();
         },
 
+        init: function (videoModel) {
+            this.videoModel = videoModel;
+            element = this.videoModel.getElement();
+        },
+
         addKeySession: function (kid, mediaCodec, initData) {
             var session = null;
 
@@ -74,6 +79,12 @@ MediaPlayer.models.ProtectionModel = function () {
 
                 keySystems[kid] = undefined;
             }
+        },
+
+        needToAddKeySession: function (kid) {
+            var keySystem = null;
+            keySystem = keySystems[kid];
+            return keySystem.keySystem.needToAddKeySession(keySystem.initData, keySystem.keySessions);
         },
 
         getInitData: function (kid) {
