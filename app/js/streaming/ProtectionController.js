@@ -50,6 +50,10 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 session = null,
                 initData = null;
 
+            if (!self.protectionModel.needToAddKeySession(kid)) {
+                return;
+            }
+
             initData = self.protectionModel.getInitData(kid);
 
             if (!initData && !!eventInitData) {

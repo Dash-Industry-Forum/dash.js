@@ -132,6 +132,9 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 xhr.send(decodedChallenge);
 
                 return deferred.promise;
+            },
+            playReadyNeedToAddKeySession = function (initData, keySessions) {
+                return initData === null && keySessions.length === 0;
             }/*,
             playreadyGetInitData = function (data) {
                     // * desc@ getInitData
@@ -198,6 +201,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 keysTypeString: "com.microsoft.playready",
                 isSupported: function (data) {
                     return this.schemeIdUri === data.schemeIdUri.toLowerCase();},
+                needToAddKeySession: playReadyNeedToAddKeySession,
                 getInitData: /*playreadyGetInitData*/ function (/*data*/) {
                     // TODO: should be using playreadyGetInitData. Use the content initdata for now
                     return null;},
@@ -208,6 +212,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 keysTypeString: "com.microsoft.playready",
                 isSupported: function (data) {
                     return this.schemeIdUri === data.schemeIdUri.toLowerCase() && data.value.toLowerCase() === "cenc";},
+                needToAddKeySession: playReadyNeedToAddKeySession,
                 getInitData: function (/*data*/) {
                     // the cenc element in mpd does not contain initdata
                     return null;},
@@ -218,6 +223,8 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 keysTypeString: "webkit-org.w3.clearkey",
                 isSupported: function (data) {
                     return this.schemeIdUri === data.schemeIdUri.toLowerCase();},
+                needToAddKeySession: function (/*initData, keySessions*/) {
+                    return true;},
                 getInitData: function (/*data*/) {
                     return null;},
                 getUpdate: function (msg/*, laURL*/) {

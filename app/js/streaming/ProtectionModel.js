@@ -81,6 +81,12 @@ MediaPlayer.models.ProtectionModel = function () {
             }
         },
 
+        needToAddKeySession: function (kid) {
+            var keySystem = null;
+            keySystem = keySystems[kid];
+            return keySystem.keySystem.needToAddKeySession(keySystem.initData, keySystem.keySessions);
+        },
+
         getInitData: function (kid) {
             var keySystem = null;
             keySystem = keySystems[kid];
