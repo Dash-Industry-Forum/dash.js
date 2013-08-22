@@ -135,7 +135,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
             },
             playReadyNeedToAddKeySession = function (initData, keySessions) {
                 return initData === null && keySessions.length === 0;
-            }/*,
+            },
             playreadyGetInitData = function (data) {
                     // * desc@ getInitData
                     // *   generate PSSH data from PROHeader defined in MPD file
@@ -189,7 +189,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                     byteCursor += PROSize;
 
                     return PSSHBox;
-            }*/;
+            };
 
         //
         // order by priority. if an mpd contains more than one the first match will win.
@@ -202,9 +202,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 isSupported: function (data) {
                     return this.schemeIdUri === data.schemeIdUri.toLowerCase();},
                 needToAddKeySession: playReadyNeedToAddKeySession,
-                getInitData: /*playreadyGetInitData*/ function (/*data*/) {
-                    // TODO: should be using playreadyGetInitData. Use the content initdata for now
-                    return null;},
+                getInitData: playreadyGetInitData,
                 getUpdate: playreadyGetUpdate
             },
             {
