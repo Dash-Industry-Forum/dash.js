@@ -85,7 +85,6 @@ MediaPlayer = function (aContext) {
         };
 
     // Set up DI.
-    console.log("remove me");
     system = new dijon.System();
     system.mapValue("system", system);
     system.mapOutlet("system");
@@ -93,12 +92,21 @@ MediaPlayer = function (aContext) {
 
     return {
         debug: undefined,
+        eventBus: undefined,
         capabilities: undefined,
         videoModel: undefined,
         abrController: undefined,
         metricsModel: undefined,
         metricsConverter: undefined,
         metricsExt: undefined,
+
+        addEventListener: function (type, listener, useCapture) {
+            this.eventBus.addEventListener(type, listener, useCapture);
+        },
+
+        removeEventListener: function (type, listener, useCapture) {
+            this.eventBus.removeEventListener(type, listener, useCapture);
+        },
 
         getVersion: function () {
             return VERSION;

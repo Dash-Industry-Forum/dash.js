@@ -28,7 +28,6 @@ module.exports = function(grunt) {
       all : {
         files: {
           "dash.all.js" : [
-            "./app/lib/jquery/js/jquery-1.8.3.min.js",
             "./app/lib/q.min.js",
             "./app/lib/xml2json.js",
             "./app/lib/objectiron.js",
