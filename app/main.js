@@ -996,23 +996,23 @@ function onLogMessage(e) {
 function onError(e) {
     switch (e.error) {
         case "download":
-            dashErrorHandler.downloadError();
+            dashErrorHandler.downloadError(e.event);
             break;
 
         case "mediasource":
-            dashErrorHandler.mediaSourceError();
+            dashErrorHandler.mediaSourceError(e.event);
             break;
 
         case "key_session":
-            dashErrorHandler.mediaKeySessionError();
+            dashErrorHandler.mediaKeySessionError(e.event);
             break;
 
         case "key_message":
-            dashErrorHandler.mediaKeyMessageError();
+            dashErrorHandler.mediaKeyMessageError(e.event);
             break;
 
         case "key_system_selection":
-            dashErrorHandler.mediaKeySystemSelectionError();
+            dashErrorHandler.mediaKeySystemSelectionError(e.event);
             break;
     }
 }
