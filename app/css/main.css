@@ -30,7 +30,7 @@ p {
 
 /* This is to get around a sizing issue with dropkick */
 .dk_options {
-    width: 460px;
+    width: 600px;
 }
 
 .demo-panel-title-header {

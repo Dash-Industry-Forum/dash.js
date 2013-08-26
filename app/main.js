@@ -105,6 +105,20 @@ function init() {
                         $("#debug-header").removeClass("tooltip-box-bottom");
                     }
                 );
+            $("#hide-test")
+                .click(
+                    function (event) {
+                        $("#test-body").hide();
+                        $("#test-header").addClass("tooltip-box-bottom");
+                    }
+                );
+            $("#show-test")
+                .click(
+                    function (event) {
+                        $("#test-body").show();
+                        $("#test-header").removeClass("tooltip-box-bottom");
+                    }
+                );
             $("#hide-graph")
                 .click(
                     function (event) {
@@ -166,6 +180,8 @@ function init() {
     );
 
     buildBufferGraph();
+
+    $("#test-body").show();
 
     $("#graph-body").hide();
     $("#graph-header").addClass("tooltip-box-bottom");
