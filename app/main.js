@@ -707,22 +707,19 @@ function initDebugControls() {
 
     $("#debug-enabled-toggle").change(
         function() {
-            debug = player.getDebug();
-            debug.setLogToHtmlConsole($("#debug-enabled-toggle").attr("checked"));
+            dashDebugger.setLogToHtmlConsole($("#debug-enabled-toggle").attr("checked"));
         }
     );
 
     $("#debug-clear").click(
         function() {
-            debug = player.getDebug();
-            debug.clear();
+            dashDebugger.clear();
         }
     );
 
     $("#filter-source").on("input",
         function() {
-            debug = player.getDebug();
-            debug.setFilter($("#filter-source").attr("value"));
+            dashDebugger.setFilter($("#filter-source").attr("value"));
         }
     );
 }
@@ -797,7 +794,6 @@ function load() {
     "use strict";
     var input = $("#custom-source"),
         liveBox = $("#live-checkbox"),
-        debug = player.getDebug(),
         url,
         isLive = false;
 
@@ -806,7 +802,7 @@ function load() {
 
     player.setIsLive(isLive);
     player.attachSource(url);
-    debug.log("manifest = " + url + " | isLive = " + isLive);
+    dashDebugger.log("manifest = " + url + " | isLive = " + isLive);
 
     playing = true;
 
@@ -819,6 +815,208 @@ function load() {
     }
 }
 
+// make jquery :contains case insensitive
+$.expr[":"].contains = $.expr.createPseudo(function(arg) {
+    return function( elem ) {
+        return $(elem).text().toUpperCase().indexOf(arg.toUpperCase()) >= 0;
+    };
+});
+
+DebugOptions = function () {
+    var htmlConsole = null,
+        logToHtmlConsole = false,
+        filter = "",
+
+        updateFilter = function () {
+            if (htmlConsole === null) {
+                return;
+            }
+
+            var children = htmlConsole.children(),
+                matches,
+                filtered;
+
+            if (filter === "" || filter === undefined || filter === null) {
+                children.show();
+            } else {
+                //trim lead/trail whitespace and determine if match || set of words
+                filtered = filter.replace(/(^\s+|\s+$)/g, "");
+                filtered = (filter.indexOf('"') != -1 ) ? filtered.replace(/\"/g,"") : filtered.replace(/\s/g, "|");
+                try
+                {
+                    matches = $.grep(children, function(line)
+                    {
+                        return (new RegExp(filtered, "i")).test(line.innerText);
+                    });
+                }
+                catch (e)
+                {
+                    console.error(e);
+                }
+
+                children.show();
+                children.not(matches).hide();
+            }
+        },
+
+        filterLatest = function () {
+            var item = htmlConsole.children()[0];
+
+            if (filter === "" || filter === undefined || filter === null) {
+                $(item).show();
+            } else {
+                if ($(item).text().toUpperCase().indexOf(filter.toUpperCase()) === -1) {
+                    $(item).hide();
+                }
+            }
+        };
+
+    return {
+        init: function (hc) {
+            htmlConsole = hc;
+        },
+
+        clear: function () {
+            htmlConsole.empty();
+        },
+
+        getFilter: function () {
+            return filter;
+        },
+
+        setFilter: function (value) {
+            if (value === filter) {
+                return;
+            }
+
+            filter = value;
+            updateFilter();
+        },
+
+        getLogToHtmlConsole: function () {
+            return logToHtmlConsole;
+        },
+
+        setLogToHtmlConsole: function (value) {
+            logToHtmlConsole = value;
+        },
+
+        log: function (message) {
+            if (htmlConsole !== null && logToHtmlConsole) {
+                var trace = "<dt>" + message + "</dt>";
+
+                htmlConsole.prepend(trace);
+                filterLatest();
+            }
+        }
+    }
+};
+
+ErrorOptions = function () {
+    "use strict";
+
+    return {
+        downloadError: function (err) {
+            //var msg = "<span>If you see the message 'XMLHttpRequest cannot load URL Origin URL is not allowed by Access-Control-Allow-Origin.' in the console, try turning off Chrome's web security.<br/>-Right click the Chrome icon and select 'properties'.<br/>-In the 'target' field add '--disable-web-security'.<br/>-After launching Chrome you will see the message 'You are using an unsupported command-line flag: --disable-web-security. Stability and security will suffer.'</span>",
+            //    div = "<div id='message' class='message' style='display: none'><p><span style='text-align: center; width: 100%; font-weight: bold;'>" + err + "</span><br/><br/>" + msg + "</p><a href='#' class='close-notify'>X</a></div>";
+
+            var msg = "<span>File loading error.  This is most likely caused by the Cross Origin Resource Sharing (CORS) headers not being present in the response from the server which is hosting the file. Please check your server implementation to ensure that CORS headers are in place, as the JavaScript will not be able to request the manifest or segments without them.</span>",
+                div = "<div id='message' class='message' style='display: none'><p><span style='text-align: center; width: 100%; font-weight: bold;'>" + err + "</span><br/><br/>" + msg + "</p><a href='#' class='close-notify'>X</a></div>";
+
+            $("#message").remove();
+            $("body").append(div);
+            $("#message").fadeIn("slow");
+            $("#message a.close-notify").click(function() {
+                $("#message").fadeOut("slow");
+                return false;
+            });
+        },
+
+        mediaSourceError: function (err) {
+            var msg = "<span>MediaSource has encountered an error.</span>",
+                div = "<div id='message' class='message' style='display: none'><p><span style='text-align: center; width: 100%; font-weight: bold;'>" + err + "</span><br/><br/>" + msg + "</p><a href='#' class='close-notify'>X</a></div>";
+
+            $("#message").remove();
+            $("body").append(div);
+            $("#message").fadeIn("slow");
+            $("#message a.close-notify").click(function() {
+                $("#message").fadeOut("slow");
+                return false;
+            });
+        },
+
+        mediaKeySessionError: function (err) {
+            var msg = "<span>MediaKeySession has encountered an error.</span>",
+                div = "<div id='message' class='message' style='display: none'><p><span style='text-align: center; width: 100%; font-weight: bold;'>" + err + "</span><br/><br/>" + msg + "</p><a href='#' class='close-notify'>X</a></div>";
+
+            $("#message").remove();
+            $("body").append(div);
+            $("#message").fadeIn("slow");
+            $("#message a.close-notify").click(function() {
+                $("#message").fadeOut("slow");
+                return false;
+            });
+        },
+
+        mediaKeyMessageError: function (err) {
+            var msg = "<span>MediaKeyMessage has encountered an error.</span>",
+                div = "<div id='message' class='message' style='display: none'><p><span style='text-align: center; width: 100%; font-weight: bold;'>" + err + "</span><br/><br/>" + msg + "</p><a href='#' class='close-notify'>X</a></div>";
+
+            $("#message").remove();
+            $("body").append(div);
+            $("#message").fadeIn("slow");
+            $("#message a.close-notify").click(function() {
+                $("#message").fadeOut("slow");
+                return false;
+            });
+        },
+
+        mediaKeySystemSelectionError: function (err) {
+            var msg = "<span>MediaKeySystem selection has encountered an error.</span>",
+                div = "<div id='message' class='message' style='display: none'><p><span style='text-align: center; width: 100%; font-weight: bold;'>" + err + "</span><br/><br/>" + msg + "</p><a href='#' class='close-notify'>X</a></div>";
+
+            $("#message").remove();
+            $("body").append(div);
+            $("#message").fadeIn("slow");
+            $("#message a.close-notify").click(function() {
+                $("#message").fadeOut("slow");
+                return false;
+            });
+        }
+    };
+};
+
+var dashDebugger = new DebugOptions();
+var dashErrorHandler = new ErrorOptions();
+
+function onLogMessage(e) {
+    dashDebugger.log(e.message);
+}
+
+function onError(e) {
+    switch (e.error) {
+        case "download":
+            dashErrorHandler.downloadError(e.event);
+            break;
+
+        case "mediasource":
+            dashErrorHandler.mediaSourceError(e.event);
+            break;
+
+        case "key_session":
+            dashErrorHandler.mediaKeySessionError(e.event);
+            break;
+
+        case "key_message":
+            dashErrorHandler.mediaKeyMessageError(e.event);
+            break;
+
+        case "key_system_selection":
+            dashErrorHandler.mediaKeySystemSelectionError(e.event);
+            break;
+    }
+}
+
 $(document).ready(function() {
     "use strict";
     var defaultDataSource,
@@ -827,7 +1025,6 @@ $(document).ready(function() {
         mpdUrl = $("#custom-source"),
         video = document.querySelector(".dash-video-player video"),
         context = new Dash.di.DashContext(),
-        console = document.getElementById("debug_log"),
         debug,
         lastChild = $("#debug-log-tab");
 
@@ -902,14 +1099,14 @@ $(document).ready(function() {
     });
 
     setTimeout(update, graphUpdateInterval);
+    dashDebugger.init($("#debug_log"));
 
     player = new MediaPlayer(context);
     $("#version-number").text("version " + player.getVersion());
 
     player.startup();
-
-    debug = player.debug;
-    debug.init(console);
+    player.addEventListener("log", onLogMessage.bind(this));
+    player.addEventListener("error", onError.bind(this));
 
     player.autoPlay = true;
     player.attachView(video);
