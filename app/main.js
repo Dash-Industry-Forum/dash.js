@@ -1108,7 +1108,7 @@ $(document).ready(function() {
     player.addEventListener("log", onLogMessage.bind(this));
     player.addEventListener("error", onError.bind(this));
 
-    player.autoPlay = true;
+    player.setAutoPlay(true);
     player.attachView(video);
 
     if (specifiedMpd !== null) {
