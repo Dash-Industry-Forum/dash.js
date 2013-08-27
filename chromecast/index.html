@@ -23,34 +23,38 @@
 
     <body ng-controller="ReceiverController">
         <div class="dash-video-player">
-            <div id="spinner" class="spinner" ng-show="showSpinner"></div>
+            <div id="loading_spinner" class="loading_spinner" ng-show="showSpinner"></div>
 
             <video id="vid" ng-show="showVideo"></video>
+        </div>
 
-            <div class="stats-holder" ng-show="showStats">
-                <div class="panel panel-info panel-stats">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Video</h3>
-                    </div>
-                    <div class="panel-body">
-                        <span>{{videoBitrate}} kbps</span>
-                        <span>Rep Index: {{videoIndex}}{{videoPendingIndex}}/{{videoMaxIndex}}</span>
-                        <span>Buffer Length: {{videoBufferLength}}</span>
-                        <span>Dropped Frames: {{videoDroppedFrames}}</span>
-                    </div>
+        <div class="stats-holder" ng-show="showStats">
+            <div class="panel panel-info panel-stats">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Video</h3>
                 </div>
-                <div class="panel panel-success panel-stats">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Audio</h3>
-                    </div>
-                    <div class="panel-body">
-                        <span>{{audioBitrate}} kbps</span>
-                        <span>Rep Index: {{audioIndex}}{{audioPendingIndex}}/{{audioMaxIndex}}</span>
-                        <span>Buffer Length: {{audioBufferLength}}</span>
-                        <span>Dropped Frames: {{audioDroppedFrames}}</span>
-                    </div>
+                <div class="panel-body">
+                    <span>{{videoBitrate}} kbps</span>
+                    <span>Rep Index: {{videoIndex}}{{videoPendingIndex}}/{{videoMaxIndex}}</span>
+                    <span>Buffer Length: {{videoBufferLength}}</span>
+                    <span>Dropped Frames: {{videoDroppedFrames}}</span>
                 </div>
             </div>
+            <div class="panel panel-success panel-stats">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Audio</h3>
+                </div>
+                <div class="panel-body">
+                    <span>{{audioBitrate}} kbps</span>
+                    <span>Rep Index: {{audioIndex}}{{audioPendingIndex}}/{{audioMaxIndex}}</span>
+                    <span>Buffer Length: {{audioBufferLength}}</span>
+                    <span>Dropped Frames: {{audioDroppedFrames}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="scrubber" class="progress scrubber">
+            <div id="scrubber-content" class="progress-bar progress-bar-success" role="progressbar"></div>
         </div>
     </body>
 </html>

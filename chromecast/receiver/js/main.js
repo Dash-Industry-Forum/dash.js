@@ -163,7 +163,6 @@ function ReceiverController($scope) {
 
                     video = document.querySelector(".dash-video-player video"),
                     player.setAutoPlay(true);
-                    //player.setAutoSwitchQuality(false);
                     player.attachView(video);
 
                     setTimeout(update, graphUpdateInterval);
@@ -179,7 +178,14 @@ function ReceiverController($scope) {
                 },
 
                 onVideoTime = function (e) {
-                    var video = document.querySelector(".dash-video-player video");
+                    var video = document.querySelector(".dash-video-player video"),
+                        scrubber = document.querySelector("scrubber");
+
+                    var w = $("#scrubber").width(),
+                        p = (video.currentTime / video.duration) * 100;
+                    $("#scrubber-content").width(p + "%");
+                    console.log("Set current progress: " + video.currentTime + " / " + video.duration + "(" + p + "%)");
+
                     console.log("Dispatching time updated: " + video.currentTime);
                     broadcast.call(this, {
                         event: 'timeupdate',

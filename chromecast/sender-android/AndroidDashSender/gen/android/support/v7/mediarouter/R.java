@@ -301,11 +301,11 @@ public final class R {
 		public static final int left_icon = 0x7f050031;
 		public static final int listMode = 0x7f050001;
 		public static final int list_item = 0x7f050027;
-		public static final int media_route_control_frame = 0x7f050046;
-		public static final int media_route_disconnect_button = 0x7f050047;
-		public static final int media_route_list = 0x7f050043;
-		public static final int media_route_volume_layout = 0x7f050044;
-		public static final int media_route_volume_slider = 0x7f050045;
+		public static final int media_route_control_frame = 0x7f05004b;
+		public static final int media_route_disconnect_button = 0x7f05004c;
+		public static final int media_route_list = 0x7f050048;
+		public static final int media_route_volume_layout = 0x7f050049;
+		public static final int media_route_volume_slider = 0x7f05004a;
 		public static final int middle = 0x7f050012;
 		public static final int never = 0x7f050009;
 		public static final int none = 0x7f050010;

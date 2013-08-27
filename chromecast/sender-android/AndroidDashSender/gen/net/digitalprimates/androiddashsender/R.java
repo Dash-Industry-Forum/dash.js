@@ -1024,6 +1024,10 @@ containing a value of this type.
         public static final int mr_ic_media_route_on_2_holo_light=0x7f020066;
         public static final int mr_ic_media_route_on_holo_dark=0x7f020067;
         public static final int mr_ic_media_route_on_holo_light=0x7f020068;
+        public static final int muted_button=0x7f020069;
+        public static final int pause_button=0x7f02006a;
+        public static final int play_button=0x7f02006b;
+        public static final int unmuted_button=0x7f02006c;
     }
     public static final class id {
         public static final int action_bar=0x7f05001a;
@@ -1060,21 +1064,23 @@ containing a value of this type.
         public static final int left_icon=0x7f050031;
         public static final int listMode=0x7f050001;
         public static final int list_item=0x7f050027;
-        public static final int media_route_button=0x7f050048;
-        public static final int media_route_control_frame=0x7f050046;
-        public static final int media_route_disconnect_button=0x7f050047;
-        public static final int media_route_list=0x7f050043;
-        public static final int media_route_volume_layout=0x7f050044;
-        public static final int media_route_volume_slider=0x7f050045;
+        public static final int media_route_button=0x7f050043;
+        public static final int media_route_control_frame=0x7f05004b;
+        public static final int media_route_disconnect_button=0x7f05004c;
+        public static final int media_route_list=0x7f050048;
+        public static final int media_route_volume_layout=0x7f050049;
+        public static final int media_route_volume_slider=0x7f05004a;
         public static final int middle=0x7f050012;
         public static final int never=0x7f050009;
         public static final int none=0x7f050010;
         public static final int normal=0x7f050000;
+        public static final int play_pause_toggle=0x7f050044;
         public static final int progress_circular=0x7f050034;
         public static final int progress_horizontal=0x7f050035;
         public static final int radio=0x7f05002d;
         public static final int right_container=0x7f050032;
         public static final int right_icon=0x7f050033;
+        public static final int scrub_bar=0x7f050047;
         public static final int search_badge=0x7f050038;
         public static final int search_bar=0x7f050037;
         public static final int search_button=0x7f050039;
@@ -1089,15 +1095,17 @@ containing a value of this type.
         public static final int showCustom=0x7f050007;
         public static final int showHome=0x7f050004;
         public static final int showTitle=0x7f050006;
+        public static final int sound_toggle=0x7f050045;
         public static final int split_action_bar=0x7f05001c;
+        public static final int streamOptions=0x7f050042;
         public static final int submit_area=0x7f05003f;
         public static final int tabMode=0x7f050002;
         public static final int title=0x7f050029;
-        public static final int title_bar=0x7f050042;
         public static final int title_container=0x7f050030;
         public static final int top_action_bar=0x7f05001e;
         public static final int up=0x7f05001f;
         public static final int useLogo=0x7f050003;
+        public static final int volume_bar=0x7f050046;
         public static final int withText=0x7f05000c;
     }
     public static final class integer {
