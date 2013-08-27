@@ -22,6 +22,9 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('debug', MediaPlayer.utils.Debug);
             this.system.mapSingleton('eventBus', MediaPlayer.utils.EventBus);
             this.system.mapSingleton('capabilities', MediaPlayer.utils.Capabilities);
+            this.system.mapSingleton('textTrackHandler', MediaPlayer.utils.TextTrackHandler);
+            this.system.mapSingleton('vttParser', MediaPlayer.utils.VTTParser);
+            this.system.mapClass('captionFileLoader', MediaPlayer.utils.CaptionFileLoader)
 
             this.system.mapClass('videoModel', MediaPlayer.models.VideoModel);
             this.system.mapSingleton('manifestModel', MediaPlayer.models.ManifestModel);
