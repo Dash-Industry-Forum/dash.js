@@ -339,6 +339,11 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(codec);
     },
 
+    getMimeType: function (data) {
+        "use strict";
+        return Q.when(data.Representation_asArray[0].mimeType);
+    },
+
     getKID: function (data) {
         "use strict";
 

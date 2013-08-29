@@ -16,6 +16,7 @@ MediaPlayer.dependencies.SourceBufferExtensions = function () {
 };
 
 MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
+
     constructor: MediaPlayer.dependencies.SourceBufferExtensions,
 
     createSourceBuffer: function (mediaSource, codec) {
@@ -23,8 +24,14 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         var deferred = Q.defer();
         try {
             deferred.resolve(mediaSource.addSourceBuffer(codec));
-        } catch(ex){
-            deferred.reject(ex.description);
+        } catch(ex) {
+            // text is for vtt and application is for smpte-tt/ttml
+            if (codec.indexOf("text") === -1 && codec.indexOf("application") === -1) {
+                deferred.reject(ex.description);
+            } else {
+                deferred.resolve(new TrackSourceBuffer());
+            }
+
         }
         return deferred.promise;
     },

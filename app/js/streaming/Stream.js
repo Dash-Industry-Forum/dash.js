@@ -429,76 +429,32 @@ MediaPlayer.dependencies.Stream = function () {
                                 checkIfInitialized.call(self, videoReady, audioReady,textTrackReady,  initialize);
                             }
 
-
                             return self.manifestExt.getTextData(manifest, periodIndex);
                         }
                     ).then(
-
                         function (textData) {
+                            var mimeType;
                             if (textData !== null ) {
-
                                 self.manifestExt.getDataIndex(textData, manifest, periodIndex).then(
                                     function (index) {
                                         textTrackIndex = index;
                                         self.debug.log("Save text track: " + textTrackIndex);
                                     }
                                 );
-                                self.manifestExt.getCodec(textData).then(
-                                    function (codec)
+                                self.manifestExt.getMimeType(textData).then(
+                                    function (type)
                                     {
-                                        var deferred;
-                                        textCodec = 'text/vtt'; // Need to figure out why this type is being denied when creating a source buffer.
-                                        //TODO need a way to determine if caption type is supported or not.
-                                        var captionTypeSupported = false
-                                        if(!captionTypeSupported)
-                                        {
-                                            deferred = Q.when(null)
-                                        }
-                                        else
-                                        {
-                                            deferred = self.sourceBufferExt.createSourceBuffer(mediaSource, textCodec);
-                                        }
-                                        return deferred;
+                                        mimeType = type;
+                                        return self.sourceBufferExt.createSourceBuffer(mediaSource, mimeType, system);
                                     }
                                 ).then(
                                     function (buffer) {
                                         if (buffer === null) {
-                                            self.debug.log("Source buffer was not created for text track, manually creating since text track was detected.");
-
-                                            //TODO: Ability to load multiple caption files
-                                            var captionURL = textData.Representation_asArray[0].BaseURL;
-
-                                            self.system.getObject("captionFileLoader").load(captionURL).then(
-                                                function(response) {
-                                                    //TODO: Ability to have different TTML parsers.
-                                                    self.system.getObject("vttParser").parse(response).then(
-                                                        function(result)
-                                                        {
-                                                            var video = self.videoModel.getElement(),
-                                                                label = textData.Representation_asArray[0].id,
-                                                                lang = textData.lang;
-
-                                                            self.system.getObject("textTrackHandler").addTextTrack(video, result, label, lang, true).then(
-                                                                function(track)
-                                                                {
-                                                                    textTrackReady = true;
-                                                                    checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
-                                                                }
-                                                            );
-                                                        }
-                                                    );
-                                                },
-                                                function(error)
-                                                {
-                                                    self.debug.log(error);
-                                                    textTrackReady = true;
-                                                    checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
-                                                }
-                                            );
+                                            self.debug.log("Source buffer was not created for text track");
                                         } else {
-
                                             textController = self.system.getObject("bufferController");
                                             textController.initialize("text", periodIndex, textData, buffer, minBufferTime, self.videoModel);
+                                            buffer.initialize(mimeType, textController, self.system.getObject('eventBus'));
                                             self.debug.log("Text is ready!");
                                             textTrackReady = true;
                                             checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
@@ -571,6 +527,10 @@ MediaPlayer.dependencies.Stream = function () {
             }
             if (audioController) {
                 audioController.start();
+            }
+
+            if (textController) {
+                textController.start();
             }
         },
 

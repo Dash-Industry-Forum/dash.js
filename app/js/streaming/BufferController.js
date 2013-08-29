@@ -441,78 +441,91 @@ MediaPlayer.dependencies.BufferController = function () {
             self.debug.log(type + " Working time: " + currentTime);
             self.debug.log(type + " Video time: " + currentVideoTime);
 
-            self.sourceBufferExt.getBufferLength(buffer, currentTime).then(
-                function (length) {
-                    self.debug.log("Current " + type + " buffer length: " + length);
-                    self.metricsModel.addBufferLevel(type, new Date(), length);
+            if (type !== "text") {
+                self.sourceBufferExt.getBufferLength(buffer, currentTime).then(
+                    function (length) {
+                        self.debug.log("Current " + type + " buffer length: " + length);
+                        self.metricsModel.addBufferLevel(type, new Date(), length);
 
-                    checkIfSufficientBuffer.call(self, length);
-                    //mseSetTimeIfPossible.call(self);
+                        checkIfSufficientBuffer.call(self, length);
+                        //mseSetTimeIfPossible.call(self);
 
-                    if (state === LOADING && length < STALL_THRESHOLD) {
-                        if (!stalled) {
-                            self.debug.log("Stalling " + type + " Buffer: " + type);
-                            clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
-                            stalled = true;
-                            waitingForBuffer = true;
-                            self.videoModel.stallStream(type, stalled);
-                        }
-                    } else if (state === READY) {
-                        setState.call(self, VALIDATING);
-                        self.bufferExt.shouldBufferMore(length, validateInterval / 1000.0).then(
-                            function (shouldBuffer) {
-                                //self.debug.log("Buffer more " + type + ": " + shouldBuffer);
-                                if (shouldBuffer) {
-                                    self.abrController.getPlaybackQuality(type, data).then(
-                                        function (quality) {
-                                            self.debug.log(type + " Playback quality: " + quality);
-                                            self.debug.log("Populate " + type + " buffers.");
+                        if (state === LOADING && length < STALL_THRESHOLD) {
+                            if (!stalled) {
+                                self.debug.log("Stalling " + type + " Buffer: " + type);
+                                clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
+                                stalled = true;
+                                waitingForBuffer = true;
+                                self.videoModel.stallStream(type, stalled);
+                            }
+                        } else if (state === READY) {
+                            setState.call(self, VALIDATING);
+                            self.bufferExt.shouldBufferMore(length, validateInterval / 1000.0).then(
+                                function (shouldBuffer) {
+                                    //self.debug.log("Buffer more " + type + ": " + shouldBuffer);
+                                    if (shouldBuffer) {
+                                        self.abrController.getPlaybackQuality(type, data).then(
+                                            function (quality) {
+                                                self.debug.log(type + " Playback quality: " + quality);
+                                                self.debug.log("Populate " + type + " buffers.");
 
-                                            if (quality !== undefined) {
-                                                newQuality = quality;
-                                            }
-
-                                            qualityChanged = (quality !== lastQuality);
-
-                                            if (qualityChanged === true) {
-                                                representation = getRepresentationForQuality(newQuality, self.getData());
-
-                                                if (representation === null || representation === undefined) {
-                                                    throw "Unexpected error!";
+                                                if (quality !== undefined) {
+                                                    newQuality = quality;
                                                 }
 
-                                                clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
-                                                self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, representation.id);
-                                            }
+                                                qualityChanged = (quality !== lastQuality);
 
-                                            self.debug.log(qualityChanged ? (type + " Quality changed to: " + quality) : "Quality didn't change.");
-                                            return loadInitialization.call(self, qualityChanged, quality);
-                                        }
-                                    ).then(
-                                        function (request) {
-                                            if (request !== null) {
-                                                self.debug.log("Loading " + type + " initialization: " + request.url);
-                                                self.debug.log(request);
-                                                setState.call(self, LOADING);
-                                                self.fragmentLoader.load(request).then(onBytesLoaded.bind(self, request), onBytesError.bind(self, request));
-                                                lastQuality = newQuality;
-                                            } else {
-                                                loadNextFragment.call(self, newQuality).then(onFragmentRequest.bind(self));
-                                            }
-                                        }
-                                    );
-                                } else {
-                                    seeking = false;
+                                                if (qualityChanged === true) {
+                                                    representation = getRepresentationForQuality(newQuality, self.getData());
 
-                                    if (state === VALIDATING) {
-                                        setState.call(self, READY);
+                                                    if (representation === null || representation === undefined) {
+                                                        throw "Unexpected error!";
+                                                    }
+
+                                                    clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
+                                                    self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, representation.id);
+                                                }
+
+                                                self.debug.log(qualityChanged ? (type + " Quality changed to: " + quality) : "Quality didn't change.");
+                                                return loadInitialization.call(self, qualityChanged, quality);
+                                            }
+                                        ).then(
+                                            function (request) {
+                                                if (request !== null) {
+                                                    self.debug.log("Loading " + type + " initialization: " + request.url);
+                                                    self.debug.log(request);
+                                                    setState.call(self, LOADING);
+                                                    self.fragmentLoader.load(request).then(onBytesLoaded.bind(self, request), onBytesError.bind(self, request));
+                                                    lastQuality = newQuality;
+                                                } else {
+                                                    loadNextFragment.call(self, newQuality).then(onFragmentRequest.bind(self));
+                                                }
+                                            }
+                                        );
+                                    } else {
+                                        seeking = false;
+
+                                        if (state === VALIDATING) {
+                                            setState.call(self, READY);
+                                        }
                                     }
                                 }
-                            }
-                        );
+                            );
+                        }
                     }
-                }
-            );
+                );
+            } else {
+                clearInterval(timer);
+                // TODO Multiple tracks can be handled here by passing in quality level.
+                this.indexHandler.getInitRequest(0, data).then(
+                    function (request) {
+                        self.debug.log("Loading " + type + " initialization: " + request.url);
+                        self.debug.log(request);
+                        self.fragmentLoader.load(request).then(onBytesLoaded.bind(self, request), onBytesError.bind(self, request));
+
+                    }
+                );
+            }
         };
 
     onTimer = function () {

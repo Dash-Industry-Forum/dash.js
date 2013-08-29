@@ -88,6 +88,11 @@ Dash.dependencies.DashHandler = function () {
                        representation.SegmentBase.Initialization.hasOwnProperty("range")) {
                 initialization = representation.BaseURL;
                 range = representation.SegmentBase.Initialization.range;
+            } else if (representation.hasOwnProperty("mimeType") &&
+                       (representation.mimeType === "text/vtt" ||
+                        representation.mimeType === "application/ttml+xml")) {
+                initialization = representation.BaseURL;
+                range = 0;
             } else {
                 // Go out and find the initialization.
                 url = representation.BaseURL;
