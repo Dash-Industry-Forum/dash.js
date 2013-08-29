@@ -70,33 +70,16 @@ Dash.dependencies.DashMetricsExtensions = function () {
         },
 
         adaptationIsType = function (adaptation, bufferType) {
-            var contentType,
-                contentComponent,
-                hasContentType = false,
-                hasBufferType = false,
+            var found = false;
+
+            if (bufferType === "video") {
+                found = this.manifestExt.getIsVideo(adaptation);
+            }
+            else if (bufferType === "audio") {
+                found = this.manifestExt.getIsAudio(adaptation); // TODO : Have to be sure it's the *active* audio track.
+            }
+            else {
                 found = false;
-
-            if (adaptation.hasOwnProperty("mimeType")) {
-                contentType = adaptation.mimeType;
-            } else if (adaptation.hasOwnProperty("ContentComponent")) {
-                contentComponent = adaptation.ContentComponent;
-                contentType = contentComponent.contentType;
-            }
-
-            if (contentType !== undefined && contentType !== null) {
-                contentType = contentType.toLowerCase();
-                hasContentType = true;
-            }
-
-            if (bufferType !== undefined && bufferType !== null) {
-                bufferType = bufferType.toLowerCase();
-                hasBufferType = true;
-            }
-
-            if (hasContentType && hasBufferType) {
-                if (contentType.indexOf(bufferType) !== -1) {
-                    found = true;
-                }
             }
 
             return found;
@@ -116,7 +99,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
                 for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
                     adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
                     representationArray = adaptationSet.Representation_asArray;
-                    if (adaptationIsType(adaptationSet, bufferType)) {
+                    if (adaptationIsType.call(this, adaptationSet, bufferType)) {
                         return representationArray.length;
                     }
                 }
@@ -156,7 +139,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
                 maxIndex,
                 periodArray = manifest.Period_asArray;
 
-            maxIndex = findMaxBufferIndex(periodArray, bufferType);
+            maxIndex = findMaxBufferIndex.call(this, periodArray, bufferType);
             return maxIndex;
         },
 
@@ -243,6 +226,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
     return {
         manifestModel: undefined,
+        manifestExt: undefined,
         getBandwidthForRepresentation : getBandwidthForRepresentation,
         getIndexForRepresentation : getIndexForRepresentation,
         getMaxIndexForBufferType : getMaxIndexForBufferType,

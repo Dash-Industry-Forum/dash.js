@@ -42,12 +42,6 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     req.setRequestHeader("Range", "bytes=" + lastRequest.range);
                 }
 
-                req.onloadend = function () {
-                    if (!loaded) {
-                        lastRequest.deferred.reject("Error loading fragment.");
-                    }
-                };
-
                 req.onprogress = function (event) {
                     if (firstProgress) {
                         firstProgress = false;
@@ -58,6 +52,10 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 };
 
                 req.onload = function () {
+                    if (req.status < 200 || req.status > 299)
+                    {
+                      return;
+                    }
                     loaded = true;
                     lastRequest.requestEndDate = new Date();
 
@@ -99,7 +97,12 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     loadNext.call(self);
                 };
 
-                req.onerror = function () {
+                req.onloadend = req.onerror = function () {
+                    if (loaded)
+                    {
+                      return;
+                    }
+
                     lastRequest.requestEndDate = new Date();
 
                     var latency = (lastRequest.firstByteDate.getTime() - lastRequest.requestStartDate.getTime()),
@@ -121,6 +124,8 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                                           null,
                                                                           lastRequest.duration);
                     lastRequest.deferred.reject("Error loading fragment.");
+
+                    loadNext.call(self);
                 };
 
                 req.send();

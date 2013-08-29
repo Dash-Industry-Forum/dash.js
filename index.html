@@ -29,6 +29,7 @@
 
     <!-- Application -->
     <link href="app/css/main.css" rel="stylesheet">
+    <link href="app/css/css3-github-ribbon.css" rel="stylesheet">
 
     <!-- Libraries -->
 
@@ -56,6 +57,9 @@
     <!-- https://github.com/creynders/dijon-framework -->
     <script src="app/lib/dijon.js"></script>
 
+    <!-- http://bannister.us/weblog/2007/06/09/simple-base64-encodedecode-javascript/ -->
+    <script src="app/lib/base64.js"></script>
+
     <!-- Misc Libs -->
     <script src="app/lib/xml2json.js"></script>
     <script src="app/lib/objectiron.js"></script>
@@ -67,6 +71,7 @@
     <script src="app/js/streaming/Context.js"></script>
     <script src="app/js/streaming/ErrorHandler.js"></script>
     <script src="app/js/streaming/Capabilities.js"></script>
+    <script src="app/js/streaming/EventBus.js"></script>
     <script src="app/js/streaming/Debug.js"></script>
     <script src="app/js/streaming/VideoModel.js"></script>
     <script src="app/js/streaming/vo/SegmentRequest.js"></script>
@@ -80,8 +85,12 @@
     <script src="app/js/streaming/FragmentController.js"></script>
     <script src="app/js/streaming/AbrController.js"></script>
     <script src="app/js/streaming/FragmentLoader.js"></script>
+    <script src="app/js/streaming/StreamController.js"></script>
     <script src="app/js/streaming/Stream.js"></script>
     <script src="app/js/streaming/BufferController.js"></script>
+    <script src="app/js/streaming/ProtectionModel.js"></script>
+    <script src="app/js/streaming/ProtectionController.js"></script>
+    <script src="app/js/streaming/ProtectionExtensions.js"></script>
     <script src="app/js/streaming/rules/SwitchRequest.js"></script>
     <script src="app/js/streaming/rules/DownloadRatioRule.js"></script>
     <script src="app/js/streaming/rules/InsufficientBufferRule.js"></script>
@@ -111,13 +120,17 @@
     <script src="app/js/dash/DashMetricsConverter.js"></script>
 
     <!-- App -->
-    <script src="app/js/main.js"></script>
+    <script src="app/main.js"></script>
 </head>
 
 <body onload="init()">
+    <a href="https://github.com/Dash-Industry-Forum/dash.js" class="github-ribbon" style="zoom:125%">Fork me on GitHub</a>
+
     <div class="container">
         <div class="row title-header">
             <h3 class="demo-panel-title-header">DASH IF Reference Client</h3>
+            <h3 class="demo-panel-title-header" style="padding-left: 10px; padding-right: 10px;">|</h3>
+            <h3 class="demo-panel-title-header" id="version-number"></h3>
             <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
         </div>
 
@@ -132,21 +145,24 @@
                         c -> Canary
                         d -> Development
                         s -> Stable
+
+                        Internet Explorer is a valid option as of version 11.
+                        i -> Internet Explorer 11
                     -->
 <!--
                     <option data-channels="" value="sony_dp">Sony DP</option>
 -->
-                    <option data-channels="" value="fraunhofer_480p_heacc2_0_dream">Fraunhofer - HEACC 2.0 - Dream</option>
-                    <option data-channels="" value="fraunhofer_480p_heacc2_0_sintel">Fraunhofer - HEACC 2.0 - Sintel</option>
-                    <option data-channels="" value="fraunhofer_480p_heacc5_1_6chId">Fraunhofer - HEACC 5.1 - 6 CH ID</option>
-                    <option data-channels="" value="fraunhofer_480p_heacc5_1_dream">Fraunhofer - HEACC 5.1 - Dream</option>
-                    <option data-channels="" value="fraunhofer_480p_heacc5_1_sintel">Fraunhofer - HEACC 5.1 - Sintel</option>
+                    <option data-channels="cdb" value="fraunhofer_480p_heacc2_0_dream">Fraunhofer - HEACC 2.0 - Dream</option>
+                    <option data-channels="cdb" value="fraunhofer_480p_heacc2_0_sintel">Fraunhofer - HEACC 2.0 - Sintel</option>
+                    <option data-channels="cdb" value="fraunhofer_480p_heacc5_1_6chId">Fraunhofer - HEACC 5.1 - 6 CH ID</option>
+                    <option data-channels="cdb" value="fraunhofer_480p_heacc5_1_dream">Fraunhofer - HEACC 5.1 - Dream</option>
+                    <option data-channels="cdb" value="fraunhofer_480p_heacc5_1_sintel">Fraunhofer - HEACC 5.1 - Sintel</option>
                     <option data-channels="" value="fraunhofer_480p_heacc7_1_8chId">Fraunhofer - HEACC 7.1 - 8 CH ID</option>
                     <option data-channels="" value="fraunhofer_480p_mps5_0_6chId">Fraunhofer - MPS 5.0 - 6 CH ID</option>
                     <option data-channels="" value="fraunhofer_480p_mps5_0_dream">Fraunhofer - MPS 5.0 - Dream</option>
                     <option data-channels="" value="fraunhofer_480p_mps5_0_sintel">Fraunhofer - MPS 5.0 - Sintel</option>
-                    <option data-channels="" value="fraunhofer_audio_only_dream">Fraunhofer - Audio Only - Dream</option>
-                    <option data-channels="" value="fraunhofer_audio_only_sintel">Fraunhofer - Audio Only - Sintel</option>
+                    <option data-channels="cdb" value="fraunhofer_audio_only_dream">Fraunhofer - Audio Only - Dream</option>
+                    <option data-channels="cdb" value="fraunhofer_audio_only_sintel">Fraunhofer - Audio Only - Sintel</option>
 
                     <option data-channels="" value="ipvidnetLive">Path 1 Live</option>
                     <option data-channels="" value="uspLive">Unified Streaming Live</option>
@@ -158,40 +174,47 @@
                     <option data-channels="" value="mediaExcelLive2">Media Excel Live 2</option>
                     <!--<option data-channels="" value="live">Live</option>-->
 
-                    <option data-channels="cd" value="archive">Live Archive</option>
-                    <option data-channels="cdsb" value="envivio" selected="selected">Envivio</option>
-                    <option data-channels="cdsb" value="list">Segment List</option>
-                    <option data-channels="cdsb" value="template">Segment Template</option>
-                    <option data-channels="cdsb" value="timeline">Unified Streaming - Timeline</option>
+                    <option data-channels="" value="archive">Live Archive</option>
+                    <option data-channels="cdsbi" value="envivio" selected="selected">Envivio</option>
+                    <option data-channels="cdsbi" value="list">Segment List</option>
+                    <option data-channels="cdsbi" value="template">Segment Template</option>
+                    <option data-channels="cdsbi" value="timeline">Unified Streaming - Timeline</option>
                     <!--<option data-channels="" value="youtube">YouTube SegmentBase</option>--> <!-- Invalid manifest, wrong audio codec.  Should be mp4a.40.2. -->
 
-                    <option data-channels="cd" value="microsoft1">Microsoft #1</option>
-                    <option data-channels="cd" value="microsoft2">Microsoft #2</option>
-                    <option data-channels="cd" value="microsoft3">Microsoft #3</option>
-                    <option data-channels="cd" value="microsoft4">Microsoft #4</option>
-                    <option data-channels="cd" value="microsoft5">Microsoft #5</option>
+                    <option data-channels="cdsbi" value="microsoft1">Microsoft #1</option>
+                    <option data-channels="cdsbi" value="microsoft2">Microsoft #2</option>
+                    <option data-channels="cdsbi" value="microsoft3">Microsoft #3</option>
+                    <option data-channels="cdsbi" value="microsoft4">Microsoft #4</option>
+                    <option data-channels="cdsbi" value="microsoft5">Microsoft #5</option>
 
-                    <option data-channels="" value="microsoftCenc1">Microsoft Cenc #1</option>
-                    <option data-channels="" value="microsoftCenc2">Microsoft Cenc #2</option>
-                    <option data-channels="" value="microsoftCenc3">Microsoft Cenc #3</option>
-                    <option data-channels="" value="microsoftCenc4">Microsoft Cenc #4</option>
-                    <option data-channels="" value="microsoftCenc5">Microsoft Cenc #5</option>
-                    <option data-channels="" value="microsoftCenc6">Microsoft Cenc #6</option>
+                    <option data-channels="i" value="microsoftCenc1">Microsoft Cenc #1</option>
+                    <option data-channels="i" value="microsoftCenc2">Microsoft Cenc #2</option>
+                    <option data-channels="i" value="microsoftCenc3">Microsoft Cenc #3</option>
+                    <option data-channels="i" value="microsoftCenc4">Microsoft Cenc #4</option>
+                    <option data-channels="i" value="microsoftCenc5">Microsoft Cenc #5</option>
+                    <option data-channels="i" value="microsoftCenc6">Microsoft Cenc #6</option>
 
-                    <option data-channels="cdsb" value="1a-netflix">DASH-AVC/264 – test vector 1a - Netflix</option>
-                    <option data-channels="cd" value="1a-sony">DASH-AVC/264 – test vector 1a - Sony</option>
-                    <option data-channels="cd" value="1b-envivio">DASH-AVC/264 – test vector 1b - Envivio</option>
-                    <option data-channels="cd" value="1b-thomson">DASH-AVC/264 – test vector 1b - Thomson</option>
+                    <option data-channels="" value="DDash1">D-Dash #1</option>
+                    <option data-channels="" value="DDash2">D-Dash #2</option>
+                    <option data-channels="" value="DDash3">D-Dash #3</option>
+                    <option data-channels="" value="DDash4">D-Dash #4</option>
+                    <option data-channels="" value="DDash5">D-Dash #5</option>
+                    <option data-channels="" value="DDash6">D-Dash #6</option>
+
+                    <option data-channels="cdsbi" value="1a-netflix">DASH-AVC/264 – test vector 1a - Netflix</option>
+                    <option data-channels="cdsbi" value="1a-sony">DASH-AVC/264 – test vector 1a - Sony</option>
+                    <option data-channels="cdsbi" value="1b-envivio">DASH-AVC/264 – test vector 1b - Envivio</option>
+                    <option data-channels="" value="1b-thomson">DASH-AVC/264 – test vector 1b - Thomson</option>
                     <option data-channels="" value="1c-envivio">DASH-AVC/264 – test vector 1c - Envivio</option>
-                    <option data-channels="cd" value="2a-envivio">DASH-AVC/264 – test vector 2a - Envivio</option>
-                    <option data-channels="cd" value="2a-sony">DASH-AVC/264 – test vector 2a - Sony</option>
+                    <option data-channels="cdsbi" value="2a-envivio">DASH-AVC/264 – test vector 2a - Envivio</option>
+                    <option data-channels="cdsbi" value="2a-sony">DASH-AVC/264 – test vector 2a - Sony</option>
                     <option data-channels="" value="2a-thomson">DASH-AVC/264 – test vector 2a - Thomson</option>
                     <option data-channels="" value="3a-fraunhofer">DASH-AVC/264 – test vector 3a - Fraunhofer</option>
                     <option data-channels="" value="3b-fraunhofer">DASH-AVC/264 – test vector 3b - Fraunhofer</option>
-                    <option data-channels="cd" value="3b-sony">DASH-AVC/264 – test vector 3b - Sony</option>
-                    <option data-channels="cd" value="4b-sony">DASH-AVC/264 – test vector 4b - Sony</option>
-                    <option data-channels="cd" value="5a-thomson/envivio">DASH-AVC/264 – test vector 5a - Thomson/Envivio</option>
-                    <option data-channels="cd" value="5b-thomson/envivio">DASH-AVC/264 – test vector 5b - Thomson/Envivio</option>
+                    <option data-channels="cdsbi" value="3b-sony">DASH-AVC/264 – test vector 3b - Sony</option>
+                    <option data-channels="cdsbi" value="4b-sony">DASH-AVC/264 – test vector 4b - Sony</option>
+                    <option data-channels="" value="5a-thomson/envivio">DASH-AVC/264 – test vector 5a - Thomson/Envivio</option>
+                    <option data-channels="" value="5b-thomson/envivio">DASH-AVC/264 – test vector 5b - Thomson/Envivio</option>
                     <option data-channels="" value="6c-envivio1">DASH-AVC/264 – test vector 6c - Envivio Manifest 1</option>
                     <option data-channels="" value="6c-envivio2">DASH-AVC/264 – test vector 6c - Envivio Manifest 2</option>
                 </select>
@@ -362,6 +385,16 @@
                     </div>
 
                     <div>
+                        <b>Release Notes v0.2.5</b><br/>
+                        Update test vectors.<br/>
+                        Update stream availability for Chrome versions and IE 11.<br/>
+                        Revert BaseURLExtensions to fix issues with SIDX parsing.<br/>
+                        Fix a bug when calculating stream end with SegmentTemplate.<br/>
+                        Short circuit logic on unexpected pauses.<br/>
+                        Various fixes to SourceBufferExtensions.
+                    </div>
+
+                    <div>
                         <b>Release Notes v0.2.4</b><br/>
                         Added support for updateend event.<br/>
                         Added support for mpd url parameter (index.html?mpd=&lt;mpd url&gt;).<br/>
@@ -513,13 +546,14 @@
                         <h3 class="footer-title">Compatibility Notes:</h3>
                         <ul>
                             <li>A browser that supports MSE (Media Source Extensions) is required.</li>
-                            <li>As of 5/13/13, Chrome is the only browser supported.</li>
+                            <li>As of 7/11/13, Chrome and Internet Explorer 11 are the only browsers supported.</li>
                             <li>Use the most up-to-date version of Chrome for the best compatibility.</li>
                             <li>Many of the streams in the dropdown box only work in the developer channel or Canary version of Chrome.</li>
                             <li><a href="index.html?version=stable">Stable Chrome Streams</a></li>
                             <li><a href="index.html?version=beta">Beta Chrome Streams</a></li>
                             <li><a href="index.html?version=dev">Dev Chrome Streams</a></li>
                             <li><a href="index.html?version=canary">Canary Chrome Streams</a></li>
+                            <li><a href="index.html?version=explorer">Internet Explorer 11 Streams</a></li>
                         </ul>
                     </div>
                 </div>
@@ -553,7 +587,7 @@
                       <img src="app/img/dp.png" alt="www.digitalprimates.net"/>
                     </a>
                     <a class="footer-brand" href="http://msopentech.com" target="_blank">
-                      <img src="app/img/msopentech.jpg" alt="msopentech.com"/>
+                      <img src="app/img/MSOpenTech.jpg" alt="msopentech.com"/>
                     </a>
                     <a class="footer-brand" href="http://www.youtube.com" target="_blank">
                       <img src="app/img/youtube.png" alt="www.youtube.com"/>

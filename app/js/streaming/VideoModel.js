@@ -98,6 +98,11 @@ MediaPlayer.models.VideoModel = function () {
 
         setCurrentTime: function (currentTime) {
             //_currentTime = currentTime;
+
+            // We don't set the same currentTime because it can cause firing unexpected Pause event in IE11
+            // providing playbackRate property equals to zero.
+            if (element.currentTime == currentTime) return;
+
             element.currentTime = currentTime;
         },
 
@@ -127,14 +132,6 @@ MediaPlayer.models.VideoModel = function () {
 
         setIsLive: function (value) {
             isLive = value;
-        },
-
-        addKey: function (type, key, data, id) {
-            element.webkitAddKey(type, key, data, id);
-        },
-
-        generateKeyRequest: function(type, data) {
-            element.webkitGenerateKeyRequest(type, data);
         },
 
         stallStream: stallStream,
