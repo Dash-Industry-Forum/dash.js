@@ -18,7 +18,6 @@ MediaPlayer.dependencies.Stream = function () {
         mediaSource,
         videoCodec = null,
         audioCodec = null,
-        textCodec = null,
         contentProtection = null,
         videoController = null,
         videoTrackIndex = -1,
@@ -226,13 +225,18 @@ MediaPlayer.dependencies.Stream = function () {
         tearDownMediaSource = function () {
             var self = this,
                 videoBuffer,
-                audioBuffer;
+                audioBuffer,
+                textBuffer;
 
             if (!!videoController) {
                 videoController.stop();
             }
             if (!!audioController) {
                 audioController.stop();
+            }
+
+            if (!!textController) {
+                textController.stop();
             }
 
             clearMetrics.call(this);
@@ -249,10 +253,17 @@ MediaPlayer.dependencies.Stream = function () {
                     self.sourceBufferExt.abort(audioBuffer);
                     self.sourceBufferExt.removeSourceBuffer(mediaSource, audioBuffer);
                 }
+
+                if (!!textController) {
+                    textBuffer = textController.getBuffer();
+                    self.sourceBufferExt.abort(textController);
+                    self.sourceBufferExt.removeSourceBuffer(mediaSource, textBuffer);
+                }
             }
 
             videoController = null;
             audioController = null;
+            textController = null;
 
             videoCodec = null;
             audioCodec = null;
@@ -445,7 +456,7 @@ MediaPlayer.dependencies.Stream = function () {
                                     function (type)
                                     {
                                         mimeType = type;
-                                        return self.sourceBufferExt.createSourceBuffer(mediaSource, mimeType, system);
+                                        return self.sourceBufferExt.createSourceBuffer(mediaSource, mimeType);
                                     }
                                 ).then(
                                     function (buffer) {
@@ -454,7 +465,7 @@ MediaPlayer.dependencies.Stream = function () {
                                         } else {
                                             textController = self.system.getObject("bufferController");
                                             textController.initialize("text", periodIndex, textData, buffer, minBufferTime, self.videoModel);
-                                            buffer.initialize(mimeType, textController, self.system.getObject('eventBus'));
+                                            buffer.initialize(mimeType, textController);
                                             self.debug.log("Text is ready!");
                                             textTrackReady = true;
                                             checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
@@ -542,6 +553,9 @@ MediaPlayer.dependencies.Stream = function () {
             }
             if (audioController) {
                 audioController.stop();
+            }
+            if (textController) {
+                textController.stop();
             }
         },
 

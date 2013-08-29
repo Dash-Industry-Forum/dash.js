@@ -144,6 +144,10 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(result);
     },
 
+    getIsTextTrack:function(type) {
+        return type === "text/vtt" || type === "application/ttml+xml"
+    },
+
     getIsMain: function (/*adaptation*/) {
         "use strict";
         // TODO : Check "Role" node.

@@ -50,6 +50,7 @@ MediaPlayer.dependencies.BufferController = function () {
         playListMetrics = null,
         playListTraceMetrics = null,
         playListTraceMetricsClosed = true,
+        textTrackFileDownloadScheduled = false,
 
         setState = function (value) {
             var self = this;
@@ -515,16 +516,21 @@ MediaPlayer.dependencies.BufferController = function () {
                     }
                 );
             } else {
+                //This needs to happen otherwise we will continue to download the text track file and add tracks.
                 clearInterval(timer);
-                // TODO Multiple tracks can be handled here by passing in quality level.
-                this.indexHandler.getInitRequest(0, data).then(
-                    function (request) {
-                        self.debug.log("Loading " + type + " initialization: " + request.url);
-                        self.debug.log(request);
-                        self.fragmentLoader.load(request).then(onBytesLoaded.bind(self, request), onBytesError.bind(self, request));
+                // On pause and resume there is the need to check if we have already downloaded the file since those methods start the timer again.
+                if (!textTrackFileDownloadScheduled) {
+                    textTrackFileDownloadScheduled = true;
+                    // TODO Multiple tracks can be handled here by passing in quality level.
+                    this.indexHandler.getInitRequest(0, data).then(
+                        function (request) {
+                            self.debug.log("Loading " + type + " initialization: " + request.url);
+                            self.debug.log(request);
+                            self.fragmentLoader.load(request).then(onBytesLoaded.bind(self, request), onBytesError.bind(self, request));
 
-                    }
-                );
+                        }
+                    );
+                }
             }
         };
 

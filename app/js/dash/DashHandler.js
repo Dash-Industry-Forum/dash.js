@@ -89,8 +89,7 @@ Dash.dependencies.DashHandler = function () {
                 initialization = representation.BaseURL;
                 range = representation.SegmentBase.Initialization.range;
             } else if (representation.hasOwnProperty("mimeType") &&
-                       (representation.mimeType === "text/vtt" ||
-                        representation.mimeType === "application/ttml+xml")) {
+                       self.manifestExt.getIsTextTrack(representation.mimeType)) {
                 initialization = representation.BaseURL;
                 range = 0;
             } else {
@@ -629,6 +628,7 @@ Dash.dependencies.DashHandler = function () {
         debug: undefined,
         baseURLExt: undefined,
         manifestModel: undefined,
+        manifestExt:undefined,
         errHandler: undefined,
 
         getType: function () {

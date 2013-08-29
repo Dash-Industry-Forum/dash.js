@@ -13,6 +13,8 @@
  */
 MediaPlayer.dependencies.SourceBufferExtensions = function () {
     "use strict";
+    this.system = undefined;
+    this.manifestExt = undefined;
 };
 
 MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
@@ -21,15 +23,15 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
     createSourceBuffer: function (mediaSource, codec) {
         "use strict";
-        var deferred = Q.defer();
+        var deferred = Q.defer(),
+            self = this;
         try {
             deferred.resolve(mediaSource.addSourceBuffer(codec));
         } catch(ex) {
-            // text is for vtt and application is for smpte-tt/ttml
-            if (codec.indexOf("text") === -1 && codec.indexOf("application") === -1) {
+            if (!self.manifestExt.getIsTextTrack(codec)) {
                 deferred.reject(ex.description);
             } else {
-                deferred.resolve(new TrackSourceBuffer());
+                deferred.resolve(self.system.getObject("textVTTSourceBuffer"));
             }
 
         }

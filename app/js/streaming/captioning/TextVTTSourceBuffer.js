@@ -11,23 +11,64 @@
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-var TextTrackHandler = function () {
-    "use strict";
+MediaPlayer.dependencies.TextVTTSourceBuffer = function () {
+
+    var video,
+        data,
+        mimeType;
+
+
+
     return {
-        addTextTrack : function(video, captionData,  label, scrlang, isDefaultTrack) {
+        system:undefined,
+        eventBus:undefined,
+        initialize: function (type, bufferController) {
+            mimeType = type;
+            video = bufferController.getVideoModel().getElement();
+            data = bufferController.getData();
+        },
+        append: function (bytes) {
+            var self = this;
 
-            //TODO: Ability to define the KIND in the MPD - ie subtitle vs caption....
-            var track = video.addTextTrack("captions", label, scrlang);
-            track.default = isDefaultTrack;
-            track.mode = "showing";
+            self.getParser().parse(String.fromCharCode.apply(null, new Uint16Array(bytes))).then(
+                function(result)
+                {
+                    var label = data.Representation_asArray[0].id,
+                        lang = data.lang;
 
-            for(var item in captionData)
-            {
-                var currentItem = captionData[item];
-                track.addCue(new TextTrackCue(currentItem.start, currentItem.end, currentItem.data));
+                    self.getTrackHandler().addTextTrack(video, result, label, lang, true).then(
+                        function(track)
+                        {
+                            eventBus.dispatchEvent({type:"updateend"});
+                        }
+                    );
+                }
+            );
+        },
+        getParser:function() {
+            var parser;
+
+            if (mimeType === "text/vtt") {
+                parser = this.system.getObject("vttParser");
             }
 
-            return Q.when(track);
+            return parser;
+        },
+        getTrackHandler:function() {
+            return this.system.getObject("textTrackExtensions");
+        },
+
+        addEventListener: function (type, listener, useCapture) {
+            eventBus.addEventListener(type, listener, useCapture);
+        },
+
+        removeEventListener: function (type, listener, useCapture) {
+            eventBus.removeEventListener(type, listener, useCapture);
         }
     };
+};
+
+
+MediaPlayer.dependencies.TextVTTSourceBuffer.prototype = {
+    constructor: MediaPlayer.dependencies.TextVTTSourceBuffer
 };
