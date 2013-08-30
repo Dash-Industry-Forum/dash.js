@@ -235,10 +235,6 @@ MediaPlayer.dependencies.Stream = function () {
                 audioController.stop();
             }
 
-            if (!!textController) {
-                textController.stop();
-            }
-
             clearMetrics.call(this);
 
             if (!errored) {
