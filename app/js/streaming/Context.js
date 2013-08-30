@@ -46,6 +46,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('limitSwitchesRule', MediaPlayer.rules.LimitSwitchesRule);
             this.system.mapClass('abrRulesCollection', MediaPlayer.rules.BaseRulesCollection);
 
+            this.system.mapClass('textController', MediaPlayer.dependencies.TextController);
             this.system.mapClass('bufferController', MediaPlayer.dependencies.BufferController);
             this.system.mapClass('manifestLoader', MediaPlayer.dependencies.ManifestLoader);
             this.system.mapClass('manifestUpdater', MediaPlayer.dependencies.ManifestUpdater);

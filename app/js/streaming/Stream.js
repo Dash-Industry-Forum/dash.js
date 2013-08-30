@@ -256,12 +256,8 @@ MediaPlayer.dependencies.Stream = function () {
 
                 if (!!textController) {
                     textBuffer = textController.getBuffer();
-                    if (textBuffer.hasOwnProperty("getTextTrackExtensions")) {
-                        textBuffer.getTextTrackExtensions().deleteCues(textController.getVideoModel().getElement());
-                    } else {
-                        self.sourceBufferExt.abort(textBuffer);
-                        self.sourceBufferExt.removeSourceBuffer(mediaSource, textBuffer)
-                    }
+                    self.sourceBufferExt.abort(textBuffer);
+                    self.sourceBufferExt.removeSourceBuffer(mediaSource, textBuffer);
                 }
             }
 
@@ -467,9 +463,11 @@ MediaPlayer.dependencies.Stream = function () {
                                         if (buffer === null) {
                                             self.debug.log("Source buffer was not created for text track");
                                         } else {
-                                            textController = self.system.getObject("bufferController");
-                                            textController.initialize("text", periodIndex, textData, buffer, minBufferTime, self.videoModel);
-                                            buffer.initialize(mimeType, textController);
+                                            textController = self.system.getObject("textController");
+                                            textController.initialize(periodIndex, textData, buffer, self.videoModel);
+                                            if (buffer.hasOwnProperty('initialize')) {
+                                                buffer.initialize(mimeType, textController);
+                                            }
                                             self.debug.log("Text is ready!");
                                             textTrackReady = true;
                                             checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
@@ -543,7 +541,6 @@ MediaPlayer.dependencies.Stream = function () {
             if (audioController) {
                 audioController.start();
             }
-
             if (textController) {
                 textController.start();
             }
@@ -557,9 +554,6 @@ MediaPlayer.dependencies.Stream = function () {
             }
             if (audioController) {
                 audioController.stop();
-            }
-            if (textController) {
-                textController.stop();
             }
         },
 

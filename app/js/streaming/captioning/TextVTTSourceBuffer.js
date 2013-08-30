@@ -43,6 +43,9 @@ MediaPlayer.dependencies.TextVTTSourceBuffer = function () {
                 }
             );
         },
+        abort:function() {
+            this.getTextTrackExtensions().deleteCues(video);
+        },
         getParser:function() {
             var parser;
 
