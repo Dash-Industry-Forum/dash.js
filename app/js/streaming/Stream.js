@@ -256,8 +256,12 @@ MediaPlayer.dependencies.Stream = function () {
 
                 if (!!textController) {
                     textBuffer = textController.getBuffer();
-                    self.sourceBufferExt.abort(textController);
-                    self.sourceBufferExt.removeSourceBuffer(mediaSource, textBuffer);
+                    if (textBuffer.hasOwnProperty("getTextTrackExtensions")) {
+                        textBuffer.getTextTrackExtensions().deleteCues(textController.getVideoModel().getElement());
+                    } else {
+                        self.sourceBufferExt.abort(textBuffer);
+                        self.sourceBufferExt.removeSourceBuffer(mediaSource, textBuffer)
+                    }
                 }
             }
 

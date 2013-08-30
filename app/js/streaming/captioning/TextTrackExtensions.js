@@ -14,20 +14,31 @@
 MediaPlayer.utils.TextTrackExtensions = function () {
     "use strict";
     return {
-        addTextTrack : function(video, captionData,  label, scrlang, isDefaultTrack) {
+        addTextTrack: function(video, captionData,  label, scrlang, isDefaultTrack) {
 
             //TODO: Ability to define the KIND in the MPD - ie subtitle vs caption....
             var track = video.addTextTrack("captions", label, scrlang);
             track.default = isDefaultTrack;
             track.mode = "showing";
 
-            for(var item in captionData)
-            {
+            for(var item in captionData) {
                 var currentItem = captionData[item];
                 track.addCue(new TextTrackCue(currentItem.start, currentItem.end, currentItem.data));
             }
 
             return Q.when(track);
+        },
+        deleteCues: function(video) {
+            //when multiple tracks are supported - iterate through and delete all cues from all tracks.
+            var track = video.textTracks[0];
+            var cues = track.cues;
+
+            for (var i=cues.length;i>=0;i--) {
+                track.removeCue(cues[i]);
+            }
+
+            track.mode = "disabled";
         }
+
     };
 };
