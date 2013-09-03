@@ -41,7 +41,7 @@ MediaPlayer = function (aContext) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    var VERSION = "0.2.5",
+    var VERSION = "0.2.7",
         context = aContext,
         system,
         element,
@@ -97,7 +97,6 @@ MediaPlayer = function (aContext) {
         videoModel: undefined,
         abrController: undefined,
         metricsModel: undefined,
-        metricsConverter: undefined,
         metricsExt: undefined,
 
         addEventListener: function (type, listener, useCapture) {
@@ -119,10 +118,6 @@ MediaPlayer = function (aContext) {
             }
         },
 
-        getMetricsConverter: function () {
-            return this.metricsConverter;
-        },
-
         getDebug: function () {
             return this.debug;
         },
@@ -137,14 +132,6 @@ MediaPlayer = function (aContext) {
 
         getAutoPlay: function () {
             return autoPlay;
-        },
-
-        getIsLive: function () {
-            return this.videoModel.getIsLive();
-        },
-
-        setIsLive: function (value) {
-            this.videoModel.setIsLive(value);
         },
 
         getMetricsExt: function () {

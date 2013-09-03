@@ -21,11 +21,24 @@
     <!--<script src="dash.all.js"></script>-->
 
     <script>
+        function getUrlVars() {
+            var vars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                vars[key] = value;
+            });
+            return vars;
+        }
+
         function startVideo() {
-            var url = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd",
+            var vars = getUrlVars(),
+                url = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd",
                 video,
                 context,
                 player;
+
+            if (vars && vars.hasOwnProperty("url")) {
+                url = vars.url;
+            }
 
             context = new Dash.di.DashContext();
             player = new MediaPlayer(context);
@@ -40,9 +53,16 @@
         }
     </script>
 
+    <style>
+        video {
+            width: 640px;
+            height: 480px;
+        }
+    </style>
+
     <body onload="startVideo()">
         <div class="dash-video-player">
-            <video controls="true" style="width: 640px; height: 480px;"></video>
+            <video controls="true"></video>
         </div>
     </body>
 </html>

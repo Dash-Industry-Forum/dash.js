@@ -428,6 +428,18 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(time);
     },
 
+    getIsLive: function (manifest) {
+        "use strict";
+        var isLive = false,
+            LIVE_TYPE = "dynamic";
+
+        if (manifest.hasOwnProperty("type")) {
+            isLive = (manifest.type === LIVE_TYPE);
+        }
+
+        return isLive;
+    },
+
     getIsDVR: function (manifest, isLive) {
         "use strict";
         var containsDVR,
