@@ -44,7 +44,7 @@ var app = angular.module('DashPlayer', [
     'angularTreeview'
 ]);
 
-app.directive('chart', function(){
+app.directive('chart', function() {
     return {
         restrict: 'E',
         link: function (scope, elem, attrs) {
@@ -203,8 +203,8 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             pendingValue = player.getQualityFor(type);
 
             return {
-                bandwidthValue: bandwidthValue + 1,
-                bitrateIndexValue: bitrateIndexValue,
+                bandwidthValue: bandwidthValue,
+                bitrateIndexValue: bitrateIndexValue + 1,
                 pendingIndex: (pendingValue !== bitrateIndexValue) ? "(-> " + (pendingValue + 1) + ")" : "",
                 numBitratesValue: numBitratesValue,
                 bufferLengthValue: bufferLengthValue,
