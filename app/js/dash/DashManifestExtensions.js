@@ -57,6 +57,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             }
         }
 
+        if (result) {
+            adaptation.type = "audio";
+        }
         return Q.when(result);
     },
 
@@ -99,6 +102,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             }
         }
 
+        if (result) {
+            adaptation.type = "video";
+        }
         return Q.when(result);
     },
 
