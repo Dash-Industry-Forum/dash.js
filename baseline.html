@@ -42,15 +42,16 @@
                 url = vars.url;
             }
 
+            video = document.querySelector(".dash-video-player video");
             context = new Dash.di.DashContext();
             player = new MediaPlayer(context);
+
             player.startup();
 
-            player.attachSource(url);
-
-            video = document.querySelector(".dash-video-player video"),
-            player.autoPlay = true;
             player.attachView(video);
+            player.setAutoPlay(false);
+
+            player.attachSource(url);
         }
     </script>
 

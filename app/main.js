@@ -94,8 +94,8 @@ app.directive('chart', function() {
 
 app.controller('DashController', function($scope, Sources, Notes, Contributors, PlayerLibraries, ShowcaseLibraries) {
     var player,
-        video = document.querySelector(".dash-video-player video"),
-        context = new Dash.di.DashContext(),
+        video,
+        context,
         videoSeries = [],
         audioSeries = [],
         maxGraphPoints = 50,
@@ -312,14 +312,16 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     //
     ////////////////////////////////////////
 
+    video = document.querySelector(".dash-video-player video");
+    context = new Dash.di.DashContext();
     player = new MediaPlayer(context);
     $scope.version = player.getVersion();
 
     player.startup();
     player.addEventListener("error", onError.bind(this));
 
-    player.autoPlay = true;
     player.attachView(video);
+    player.setAutoPlay(true);
 
     ////////////////////////////////////////
     //

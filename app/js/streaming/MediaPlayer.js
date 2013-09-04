@@ -75,11 +75,12 @@ MediaPlayer = function (aContext) {
             this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
             streamController.setVideoModel(this.videoModel);
+            streamController.setAutoPlay(autoPlay);
             streamController.load(source);
         },
 
         doAutoPlay = function () {
-            if (autoPlay && isReady()) {
+            if (isReady()) {
                 play.call(this);
             }
         };
@@ -165,10 +166,6 @@ MediaPlayer = function (aContext) {
             }
 
             element = view;
-
-            // Set the video to autoplay.
-            // We'll tell it when to go.
-            element.autoplay = true;
 
             model = new MediaPlayer.models.VideoModel(element);
             this.videoModel.setElement(element);
