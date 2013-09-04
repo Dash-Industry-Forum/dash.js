@@ -20,11 +20,13 @@ MediaPlayer.dependencies.TextVTTSourceBuffer = function () {
     return {
         system:undefined,
         eventBus:undefined,
+
         initialize: function (type, bufferController) {
             mimeType = type;
             video = bufferController.getVideoModel().getElement();
             data = bufferController.getData();
         },
+
         append: function (bytes) {
             var self = this;
 
@@ -35,17 +37,19 @@ MediaPlayer.dependencies.TextVTTSourceBuffer = function () {
                         lang = data.lang;
 
                     self.getTextTrackExtensions().addTextTrack(video, result, label, lang, true).then(
-                        function(track)
+                        function(/*track*/)
                         {
-                            eventBus.dispatchEvent({type:"updateend"});
+                            self.eventBus.dispatchEvent({type:"updateend"});
                         }
                     );
                 }
             );
         },
+
         abort:function() {
             this.getTextTrackExtensions().deleteCues(video);
         },
+
         getParser:function() {
             var parser;
 
@@ -55,16 +59,17 @@ MediaPlayer.dependencies.TextVTTSourceBuffer = function () {
 
             return parser;
         },
+
         getTextTrackExtensions:function() {
             return this.system.getObject("textTrackExtensions");
         },
 
         addEventListener: function (type, listener, useCapture) {
-            eventBus.addEventListener(type, listener, useCapture);
+            this.eventBus.addEventListener(type, listener, useCapture);
         },
 
         removeEventListener: function (type, listener, useCapture) {
-            eventBus.removeEventListener(type, listener, useCapture);
+            this.eventBus.removeEventListener(type, listener, useCapture);
         }
     };
 };

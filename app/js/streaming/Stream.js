@@ -470,6 +470,8 @@ MediaPlayer.dependencies.Stream = function () {
                                         }
                                     },
                                     function (error) {
+                                        self.debug.log("Error creating text buffer:");
+                                        self.debug.log(error);
                                         alert("Error creating source buffer.");
                                         textTrackReady = true;
                                         checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);

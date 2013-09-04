@@ -50,7 +50,6 @@ MediaPlayer.dependencies.BufferController = function () {
         playListMetrics = null,
         playListTraceMetrics = null,
         playListTraceMetricsClosed = true,
-        textTrackFileDownloadScheduled = false,
 
         setState = function (value) {
             var self = this;
