@@ -22,7 +22,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         getCurrentIndex = function(metrics) {
             var repSwitch = this.metricsExt.getCurrentRepresentationSwitch(metrics);
 
-            if (repSwitch != null) {
+            if (repSwitch !== null) {
                 return this.metricsExt.getIndexForRepresentation(repSwitch.to);
             }
             return null;
