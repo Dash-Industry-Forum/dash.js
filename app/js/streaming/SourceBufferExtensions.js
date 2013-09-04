@@ -13,18 +13,27 @@
  */
 MediaPlayer.dependencies.SourceBufferExtensions = function () {
     "use strict";
+    this.system = undefined;
+    this.manifestExt = undefined;
 };
 
 MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
+
     constructor: MediaPlayer.dependencies.SourceBufferExtensions,
 
     createSourceBuffer: function (mediaSource, codec) {
         "use strict";
-        var deferred = Q.defer();
+        var deferred = Q.defer(),
+            self = this;
         try {
             deferred.resolve(mediaSource.addSourceBuffer(codec));
-        } catch(ex){
-            deferred.reject(ex.description);
+        } catch(ex) {
+            if (!self.manifestExt.getIsTextTrack(codec)) {
+                deferred.reject(ex.description);
+            } else {
+                deferred.resolve(self.system.getObject("textVTTSourceBuffer"));
+            }
+
         }
         return deferred.promise;
     },

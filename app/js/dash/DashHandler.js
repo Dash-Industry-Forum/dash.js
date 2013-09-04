@@ -88,6 +88,10 @@ Dash.dependencies.DashHandler = function () {
                        representation.SegmentBase.Initialization.hasOwnProperty("range")) {
                 initialization = representation.BaseURL;
                 range = representation.SegmentBase.Initialization.range;
+            } else if (representation.hasOwnProperty("mimeType") &&
+                       self.manifestExt.getIsTextTrack(representation.mimeType)) {
+                initialization = representation.BaseURL;
+                range = 0;
             } else {
                 // Go out and find the initialization.
                 url = representation.BaseURL;
@@ -624,6 +628,7 @@ Dash.dependencies.DashHandler = function () {
         debug: undefined,
         baseURLExt: undefined,
         manifestModel: undefined,
+        manifestExt:undefined,
         errHandler: undefined,
 
         getType: function () {
