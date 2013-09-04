@@ -73,10 +73,23 @@ Dash.dependencies.DashMetricsExtensions = function () {
             var found = false;
 
             if (bufferType === "video") {
-                found = this.manifestExt.getIsVideo(adaptation);
+                if (adaptation.hasOwnProperty("type")) {
+                    if (adaptation.type === "video") {
+                        found = true;    
+                    }
+                } else {
+                    this.manifestExt.getIsVideo(adaptation);
+                }
             }
             else if (bufferType === "audio") {
-                found = this.manifestExt.getIsAudio(adaptation); // TODO : Have to be sure it's the *active* audio track.
+                // TODO : Have to be sure it's the *active* audio track.
+                if (adaptation.hasOwnProperty("type")) {
+                    if (adaptation.type === "audio") {
+                        found = true;    
+                    }
+                } else {
+                    this.manifestExt.getIsAudio(adaptation);
+                }
             }
             else {
                 found = false;
