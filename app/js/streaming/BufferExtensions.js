@@ -33,8 +33,9 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         videoModel: undefined,
         manifestExt: undefined,
         metricsExt: undefined,
+        metricsModel: undefined,
         init: function(duration, manifest, periodIndex) {
-            isLive = this.videoModel.getIsLive();
+            isLive = this.manifestExt.getIsLive(manifest);
             isLongFormContent = (duration >= MediaPlayer.dependencies.BufferExtensions.LONG_FORM_CONTENT_DURATION_THRESHOLD);
             this.manifestExt.getVideoData(manifest, periodIndex).then(
                 function(data) {
@@ -50,8 +51,9 @@ MediaPlayer.dependencies.BufferExtensions = function () {
 
             return Q.when(minBufferTarget);
         },
-        shouldBufferMore: function (bufferLength, waitingForBuffer, delay, type) {
-            var metrics = player.getMetricsFor(type),
+        shouldBufferMore: function (bufferLength, waitingForBuffer, delay) {
+
+            var metrics = this.metricsModel.getReadOnlyMetricsFor("video"),
                 isPlayingAtTopQuality = (getCurrentIndex.call(this, metrics) === totalRepresentationCount),
                 result;
 

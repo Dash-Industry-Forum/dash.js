@@ -483,7 +483,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                 adjustValidateInterval.call(self, manifestMinBufferTime);
                             }
                         );
-                        self.bufferExt.shouldBufferMore(length, waitingForBuffer, validateInterval / 1000.0, type).then(
+                        self.bufferExt.shouldBufferMore(length, waitingForBuffer, validateInterval / 1000.0).then(
                             function (shouldBuffer) {
                                 //self.debug.log("Buffer more " + type + ": " + shouldBuffer);
                                 if (shouldBuffer) {
