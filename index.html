@@ -134,8 +134,111 @@
         </div>
 
         <div class="row">
-            <div class="span6">
-                <select id="sources" class="span6">
+            <div class="span9">
+                <input class="span9" type="text" id="custom-source" placeholder="MPD Location"/>
+            </div>
+            <div class="span1">
+                <label class="checkbox" for="live-checkbox" style="margin-top: 10px;">
+                    <input type="checkbox" value="" id="live-checkbox"/>
+                    Live
+                </label>
+            </div>
+            <div class="span2"></div>
+            <div class="span2">
+                <button type="button" class="btn btn-large" style="width: 100%;" onclick="load()">Load</button>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 10px;">
+            <div class="span9" style="float: left;">
+                <div class="dash-video-player">
+                    <video controls="true"></video>
+                </div>
+            </div>
+            <div class="span3">
+                <div class="statsbox" style="height: 28px;">
+                    <span class="stats-label" style="line-height: 28px;">ABR</span>
+                    <div class="toggle" style="float: right;">
+                        <label class="toggle-radio" for="abr-auto-on">ON</label>
+                        <input type="radio" name="abr-auto" id="abr-auto-on" value="true" checked="true">
+                        <label class="toggle-radio" for="abr-auto-off">OFF</label>
+                        <input type="radio" name="abr-auto" id="abr-auto-off" value="false">
+                    </div>
+                </div>
+            </div>
+            <div class="span3">
+                <div class="statsbox">
+                    <i class="fui-video-16 btn btn-primary"></i>
+                    <div class="btn-group" style="float: right;">
+                        <div id="video-abr-down" class="btn small-btn btn-primary">
+                            <div class="minus-symbol"></div>
+                        </div>
+                        <div id="video-abr-up" class="btn small-btn btn-primary">
+                            <div class="plus-symbol"></div>
+                        </div>
+                    </div>
+                    <br style="clear: both;"/>
+                    <div style="padding-right: 13px;">
+                        <span class="stats-label palette-text-pumpkin" style="float: left;" id="video-value">0 kbps</span>
+                    </div>
+                    <br style="clear: both;"/>
+                    <span class="stats-label">Rep Index: </span>
+                    <span class="stats-label palette-text-firm-dark" id="video-index">0</span>
+                    <span class="stats-label palette-text-wisteria" id="video-pending-index"></span>
+                    <span class="stats-label">/</span>
+                    <span class="stats-label palette-text-firm-dark" id="num-video-bitrates">0</span>
+                    <br style="clear: both;"/>
+                    <span class="stats-label">Buffer Length: </span>
+                    <span class="stats-label palette-text-info-dark" id="video-buffer">0</span>
+                    <br style="clear: both;"/>
+                    <span class="stats-label">Dropped Frames: </span>
+                    <span class="stats-label palette-text-night" id="video-dropped-frames">0</span>
+                </div>
+                <div class="statsbox">
+                    <i class="fui-volume-16 btn btn-primary"></i>
+                    <div class="btn-group" style="float: right;">
+                        <div id="audio-abr-down" class="btn small-btn btn-primary">
+                            <div class="minus-symbol"></div>
+                        </div>
+                        <div id="audio-abr-up" class="btn small-btn btn-primary">
+                            <div class="plus-symbol"></div>
+                        </div>
+                    </div>
+                    <br style="clear: both;"/>
+                    <div style="padding-right: 13px;">
+                        <span class="stats-label palette-text-pumpkin" style="float: left;" id="audio-value">0 kbps</span>
+                    </div>
+                    <br style="clear: both;"/>
+                    <span class="stats-label">Rep Index: </span>
+                    <span class="stats-label palette-text-firm-dark" id="audio-index">0</span>
+                    <span class="stats-label palette-text-wisteria" id="audio-pending-index"></span>
+                    <span class="stats-label">/</span>
+                    <span class="stats-label palette-text-firm-dark" id="num-audio-bitrates">0</span>
+                    <br style="clear: both;"/>
+                    <span class="stats-label">Buffer Length: </span>
+                    <span class="stats-label palette-text-alizarin" id="audio-buffer">0</span>
+                    <br style="clear: both;"/>
+                    <span class="stats-label">Dropped Frames: </span>
+                    <span class="stats-label palette-text-night" id="audio-dropped-frames">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 10px;">
+            <div id="test-header" class="span12 tooltip-box tooltip-box-top">
+               <h3 class="tooltip-box-header" style="margin-left: 10px;">Test Content</h3>
+               <div style="padding-top: 10px; padding-right: 10px;">
+                   <div class="toggle" style="float: right; ">
+                        <label class="toggle-radio" for="hide-test">HIDE</label>
+                        <input type="radio" name="test-toggle" id="hide-test" value="true" checked="true">
+                        <label class="toggle-radio" for="show-test">SHOW</label>
+                        <input type="radio" name="test-toggle" id="show-test" value="false">
+                    </div>
+               </div>
+            </div>
+            <div id="test-body" class="span12 tooltip-box tooltip-box-bottom" >
+                <div class="span1"></div>
+                <select id="sources" class="span8">
                     <!--
                         NOTE:
                         The data-channels attribute corresponds to the Chrome Browser release in which the feed
@@ -218,98 +321,8 @@
                     <option data-channels="" value="6c-envivio2">DASH-AVC/264 – test vector 6c - Envivio Manifest 2</option>
                 </select>
             </div>
-            <div class="span4"></div>
-            <div class="span2">
-                <button type="button" class="btn btn-large" style="width: 100%;" onclick="load()">Load</button>
-            </div>
         </div>
 
-        <div class="row">
-            <div class="span11">
-                <input class="span11" type="text" id="custom-source" placeholder="MPD Location"/>
-            </div>
-            <div class="span1">
-                <label class="checkbox" for="live-checkbox" style="margin-top: 10px;">
-                    <input type="checkbox" value="" id="live-checkbox"/>
-                    Live
-                </label>
-            </div>
-        </div>
-
-        <div class="row" style="margin-top: 10px;">
-            <div class="span9" style="float: left;">
-                <div class="dash-video-player">
-                    <video controls="true"></video>
-                </div>
-            </div>
-            <div class="span3">
-                <div class="statsbox" style="height: 28px;">
-                    <span class="stats-label" style="line-height: 28px;">ABR</span>
-                    <div class="toggle" style="float: right;">
-                        <label class="toggle-radio" for="abr-auto-on">ON</label>
-                        <input type="radio" name="abr-auto" id="abr-auto-on" value="true" checked="true">
-                        <label class="toggle-radio" for="abr-auto-off">OFF</label>
-                        <input type="radio" name="abr-auto" id="abr-auto-off" value="false">
-                    </div>
-                </div>
-            </div>
-            <div class="span3">
-                <div class="statsbox">
-                    <i class="fui-video-16 btn btn-primary"></i>
-                    <div class="btn-group" style="float: right;">
-                        <div id="video-abr-down" class="btn small-btn btn-primary">
-                            <div class="minus-symbol"></div>
-                        </div>
-                        <div id="video-abr-up" class="btn small-btn btn-primary">
-                            <div class="plus-symbol"></div>
-                        </div>
-                    </div>
-                    <br style="clear: both;"/>
-                    <div style="padding-right: 13px;">
-                        <span class="stats-label palette-text-pumpkin" style="float: left;" id="video-value">0 kbps</span>
-                    </div>
-                    <br style="clear: both;"/>
-                    <span class="stats-label">Rep Index: </span>
-                    <span class="stats-label palette-text-firm-dark" id="video-index">0</span>
-                    <span class="stats-label palette-text-wisteria" id="video-pending-index"></span>
-                    <span class="stats-label">/</span>
-                    <span class="stats-label palette-text-firm-dark" id="num-video-bitrates">0</span>
-                    <br style="clear: both;"/>
-                    <span class="stats-label">Buffer Length: </span>
-                    <span class="stats-label palette-text-info-dark" id="video-buffer">0</span>
-                    <br style="clear: both;"/>
-                    <span class="stats-label">Dropped Frames: </span>
-                    <span class="stats-label palette-text-night" id="video-dropped-frames">0</span>
-                </div>
-                <div class="statsbox">
-                    <i class="fui-volume-16 btn btn-primary"></i>
-                    <div class="btn-group" style="float: right;">
-                        <div id="audio-abr-down" class="btn small-btn btn-primary">
-                            <div class="minus-symbol"></div>
-                        </div>
-                        <div id="audio-abr-up" class="btn small-btn btn-primary">
-                            <div class="plus-symbol"></div>
-                        </div>
-                    </div>
-                    <br style="clear: both;"/>
-                    <div style="padding-right: 13px;">
-                        <span class="stats-label palette-text-pumpkin" style="float: left;" id="audio-value">0 kbps</span>
-                    </div>
-                    <br style="clear: both;"/>
-                    <span class="stats-label">Rep Index: </span>
-                    <span class="stats-label palette-text-firm-dark" id="audio-index">0</span>
-                    <span class="stats-label palette-text-wisteria" id="audio-pending-index"></span>
-                    <span class="stats-label">/</span>
-                    <span class="stats-label palette-text-firm-dark" id="num-audio-bitrates">0</span>
-                    <br style="clear: both;"/>
-                    <span class="stats-label">Buffer Length: </span>
-                    <span class="stats-label palette-text-alizarin" id="audio-buffer">0</span>
-                    <br style="clear: both;"/>
-                    <span class="stats-label">Dropped Frames: </span>
-                    <span class="stats-label palette-text-night" id="audio-dropped-frames">0</span>
-                </div>
-            </div>
-        </div>
 
         <div class="row" style="margin-top: 10px;">
             <div id="graph-header" class="span12 tooltip-box tooltip-box-top">
