@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Error message from Cast MediaRouteProvider that indicates that the provider was not
+         able to connect to the selected Cast device. [CHAR LIMIT=NONE] -->
+    <string name="error_start_session_failed">Unable to start a session with the Chromecast device.</string>
+    <!-- Error message from Cast MediaRouteProvider that indicates that the provider has lost
+         its connection to the selected Cast device. [CHAR LIMIT=NONE] -->
+    <string name="error_session_ended">Lost connectivity with the Chromecast device.</string>
+    <!-- Error message from Cast MediaRouteProvider that indicates that the provider got an
+         error when sending a media command (e.g., load media, pause, etc.) to the selected
+         Cast device. [CHAR LIMIT=NONE] -->
+    <string name="error_ramp_command_failed">Failed to control the media.</string>
+    <string name="error_no_session">Not currently connected to the Chromecast device.</string>
+</resources>
