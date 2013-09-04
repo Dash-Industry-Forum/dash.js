@@ -12,19 +12,23 @@
         {
             "title": "Release Notes v1.0.0",
             "items": [
+                "Updated README.",
                 "Create responsive showcase page.",
                 "Clean up showcase page and javascript.",
                 "Add 'Fork me on GitHub' banner.",
+                "Externalize a bunch of showcase data to JSON files.",
                 "Remove jquery from baseline requirements.",
                 "Update baseline player page.",
-                "",
+                "Fix a bug where the displayed rendition indexes were incorrect.",
+                "Fix a bug where autoPlay did not work as expected.",
+                "Fix a bug where multiple BaseURL nodes broke playback.",
+                "Changed live stream detection to use the MPD.@type property (with value 'dynamic').",
+                "First pass at closed captioning.",
+                "First pass at EME.",
+                "First pass at multi-period support.",
+                "Respond to fragment loading errors.",
+                "Added new test vectors.",
                 "Add a ChromeCast sample."
-            ]
-        },
-        {
-            "title": "Release Notes v0.2.6",
-            "items": [
-                "New UI that works on mobile."
             ]
         },
         {
