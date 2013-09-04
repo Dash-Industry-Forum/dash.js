@@ -7,18 +7,20 @@
     <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
 
     <!-- Libraries -->
+    <!--
     <script src="app/lib/q.js"></script>
     <script src="app/lib/dijon.js"></script>
     <script src="app/lib/xml2json.js"></script>
     <script src="app/lib/objectiron.js"></script>
     <script src="app/lib/long.js"></script>
     <script src="app/lib/Math.js"></script>
+    -->
 
     <!-- Minified Dash -->
-    <script src="dash.min.js"></script>
+    <!--<script src="dash.min.js"></script>-->
 
     <!-- Minified Dash & Libraries -->
-    <!--<script src="dash.all.js"></script>-->
+    <script src="dash.all.js"></script>
 
     <script>
         function getUrlVars() {
@@ -44,7 +46,6 @@
             player = new MediaPlayer(context);
             player.startup();
 
-            player.setIsLive(false);
             player.attachSource(url);
 
             video = document.querySelector(".dash-video-player video"),

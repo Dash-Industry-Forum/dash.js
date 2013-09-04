@@ -36,32 +36,32 @@ describe("Media Player Test Suite", function () {
         player = new MediaPlayer(context);
         manifestLoader = system.getObject("manifestLoader");
         source = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
-        
+
     });
-    
+
     it("check whether initialized variable is initailised or not while attaching source", function () {
         expect(function() {player.attachSource(source)}).toThrow();
     });
 
     it("check whether initialized variable is initailised or not while attaching video", function () {
         var element = document.createElement('video');
-        $(element).autoplay = true;
+        element.autoplay = true;
         player.setAutoPlay(true);
-        expect(function() {player.attachView($(element))}).toThrow();
+        expect(function() {player.attachView(element)}).toThrow();
     });
 
     it("check whether initialized variable is initialized or not while playing", function () {
         var element = document.createElement('video');
-        $(element).autoplay = true;
+        element.autoplay = true;
         player.setAutoPlay(true);
-        expect(function() {player.attachView($(element))}).toThrow();
+        expect(function() {player.attachView(element)}).toThrow();
     });
 
-    
+
     if(window.location.href.indexOf("runner.html")>0){
-    
+
       describe("Media Player test Suite", function () {
-            
+
           beforeEach(function () {
                 // Set up DI.
                 system = new dijon.System();
@@ -70,30 +70,30 @@ describe("Media Player Test Suite", function () {
                 context = new Dash.di.DashContext();
                 system.injectInto(context);
                 player = new MediaPlayer(context);
-                
+
         });
-          
+
         it("check whether initialized variable is initialized or not while playing", function () {
-		    var result=false;
+            var result=false;
             var festResult;
-            
+
             element = document.createElement('video');
             player.startup();
             player.autoPlay = true;
             player.attachView($(element));
-     
+
             manifestLoader = system.getObject('manifestLoader');
-            
+
             manifestLoader.load(source).then( function (manifestResult) {
               festResult=manifestResult;
               result=true;
             });
-     
+
             waitsFor(function () {
                if(result)
                    return true;
              }, "data is null", 1000);
-             
+
              runs(function () {
                   expect(festResult.xmlns).toEqual("urn:mpeg:DASH:schema:MPD:2011");
                   expect(festResult.type).toEqual("static");
@@ -103,7 +103,7 @@ describe("Media Player Test Suite", function () {
                   expect(festResult.profiles).toEqual("urn:mpeg:dash:profile:isoff-live:2011");
 
                   //AdaptationSet set1
-                 
+
                   expect(festResult.Period.AdaptationSet[0].mimeType).toEqual("video/mp4");
                   expect(festResult.Period.AdaptationSet[0].segmentAlignment).toBeTruthy();
                   expect(festResult.Period.AdaptationSet[0].startWithSAP).toEqual(1);
@@ -131,28 +131,28 @@ describe("Media Player Test Suite", function () {
                   expect(festResult.Period.AdaptationSet[1].Representation.bandwidth).toEqual(56000);
 
             });
-	    });
-        
+        });
+
          it("check whether initialized variable is initialized or not while playing with invalid source", function () {
-		    var result=false;
+            var result=false;
             var festResult;
-            
+
             element = document.createElement('video');
             player.startup();
             player.autoPlay = true;
             player.attachView($(element));
-     
+
             manifestLoader = system.getObject('manifestLoader');
             source="http://dashdemo.edgesuite.net/envivio/dashpr/clear/Manifestdd.mpd";
             manifestLoader.load(source).then( function (manifestResult) {
               expect(festResult).toEqual(undefined);
-              
+
             });
 
-	    });
-        
-        
+        });
+
+
      });
-   } 
+   }
 
 });
