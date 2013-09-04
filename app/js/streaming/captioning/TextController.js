@@ -14,7 +14,7 @@
 MediaPlayer.dependencies.TextController = function () {
 
      var LOADING = "LOADING",
-         LOADED = "LOADED",
+         //LOADED = "LOADED",
          READY = "READY",
          initialized = false,
          periodIndex = -1,
@@ -114,8 +114,8 @@ MediaPlayer.dependencies.TextController = function () {
             buffer = value;
         },
         start: doStart
-    }
-}
+    };
+};
 
 MediaPlayer.dependencies.TextController.prototype = {
     constructor: MediaPlayer.dependencies.TextController

@@ -11,7 +11,7 @@
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 var player,
     playing = false,
     time = -1,
@@ -21,7 +21,7 @@ var player,
     bufferChart,
     streams,
     videoSeries,
-    
+
     audioSeries,
     maxGraphPoints = 50,
     graphUpdateInterval = 333;
@@ -93,34 +93,34 @@ function init() {
     "use strict";
     $(document).ready(
         function () {
-        	$("#hide-debug")
-        		.click(
-					function (event) {
-						$("#debug-body").hide();
-						$("#debug-header").addClass("tooltip-box-bottom");
-					}
-				);
-        	$("#show-debug")
-        		.click(
-    				function (event) {
-    					$("#debug-body").show();
-    					$("#debug-header").removeClass("tooltip-box-bottom");
-    				}
-				);
-        	$("#hide-graph")
-    			.click(
-					function (event) {
-						$("#graph-body").hide();
-						$("#graph-header").addClass("tooltip-box-bottom");
-					}
-    			);
-    		$("#show-graph")
-    			.click(
-					function (event) {
-						$("#graph-body").show();
-						$("#graph-header").removeClass("tooltip-box-bottom");
-					}
-				);
+            $("#hide-debug")
+                .click(
+                    function (event) {
+                        $("#debug-body").hide();
+                        $("#debug-header").addClass("tooltip-box-bottom");
+                    }
+                );
+            $("#show-debug")
+                .click(
+                    function (event) {
+                        $("#debug-body").show();
+                        $("#debug-header").removeClass("tooltip-box-bottom");
+                    }
+                );
+            $("#hide-graph")
+                .click(
+                    function (event) {
+                        $("#graph-body").hide();
+                        $("#graph-header").addClass("tooltip-box-bottom");
+                    }
+                );
+            $("#show-graph")
+                .click(
+                    function (event) {
+                        $("#graph-body").show();
+                        $("#graph-header").removeClass("tooltip-box-bottom");
+                    }
+                );
             $("#video-abr-up")
                 .click(
                     function (event) {
@@ -170,10 +170,10 @@ function init() {
     buildBufferGraph();
 
     $("#graph-body").hide();
-	$("#graph-header").addClass("tooltip-box-bottom");
+    $("#graph-header").addClass("tooltip-box-bottom");
 
-	$("#debug-body").hide();
-	$("#debug-header").addClass("tooltip-box-bottom");
+    $("#debug-body").hide();
+    $("#debug-header").addClass("tooltip-box-bottom");
 
     Q.longStackJumpLimit = 0;
 }
@@ -364,81 +364,78 @@ function initStreamData() {
 }
 
 function initStreamSources( browserVersion ) {
-	"use strict";
-	var sourceOptions = $("#sources > option"),
-		testChannel = false,
-		filterValue;
+    "use strict";
+    var sourceOptions = $("#sources > option"),
+        testChannel = false,
+        filterValue;
 
-	browserVersion = browserVersion.toLowerCase();
+    browserVersion = browserVersion.toLowerCase();
 
-	switch( browserVersion )
-	{
-		case "beta":
-			filterValue = "b";
-			break;
-		case "canary":
-			filterValue = "c";
-			break;
-		case "dev":
-			filterValue = "d";
-			break;
-		case "all":
-			testChannel = true;
-			break;
-		case "stable":
-		default:
-			filterValue = "s";
-			break;
-	}
+    switch( browserVersion )
+    {
+        case "beta":
+            filterValue = "b";
+            break;
+        case "canary":
+            filterValue = "c";
+            break;
+        case "dev":
+            filterValue = "d";
+            break;
+        case "all":
+            testChannel = true;
+            break;
+        case "stable":
+        default:
+            filterValue = "s";
+            break;
+    }
 
-	if (testChannel === false) {
-		sourceOptions.each(function (index, item) {
-			var feeds = $(item).attr("data-channels");
-			if (feeds.indexOf(filterValue) === -1) {
-				$(item).remove();
-			}
-		});
-	}
+    if (testChannel === false) {
+        sourceOptions.each(function (index, item) {
+            var feeds = $(item).attr("data-channels");
+            if (feeds.indexOf(filterValue) === -1) {
+                $(item).remove();
+            }
+        });
+    }
 }
 
 
 function parseBrowserVersion( searchStr ) {
-	var versionIndex,
-		subSearchStr,
-		ampIndex,
-		equalIndex,
-		result;
+    var versionIndex,
+        subSearchStr,
+        ampIndex,
+        equalIndex,
+        result;
 
-	if ( searchStr === null || searchStr.length === 0) {
-		return "stable";
-	}
+    if ( searchStr === null || searchStr.length === 0) {
+        return "stable";
+    }
 
-	searchStr = searchStr.toLowerCase();
-	versionIndex = searchStr.indexOf("version=");
+    searchStr = searchStr.toLowerCase();
+    versionIndex = searchStr.indexOf("version=");
 
-	if (versionIndex === -1) {
-		return "stable"
-	}
+    if (versionIndex === -1) {
+        return "stable"
+    }
 
-	subSearchStr = searchStr.substr( versionIndex, searchStr.length );
-	ampIndex = subSearchStr.indexOf("&");
-	equalIndex = subSearchStr.indexOf("=");
+    subSearchStr = searchStr.substr( versionIndex, searchStr.length );
+    ampIndex = subSearchStr.indexOf("&");
+    equalIndex = subSearchStr.indexOf("=");
 
-	if (ampIndex === -1) {
-		result = subSearchStr.substr((equalIndex + 1), subSearchStr.length);
-	} else {
-		result = subSearchStr.substr((equalIndex + 1), (ampIndex - equalIndex - 1));
-	}
+    if (ampIndex === -1) {
+        result = subSearchStr.substr((equalIndex + 1), subSearchStr.length);
+    } else {
+        result = subSearchStr.substr((equalIndex + 1), (ampIndex - equalIndex - 1));
+    }
 
-	return result;
+    return result;
 }
 
-$(document).ready(function() {
+document.onload = function() {
     var browserVersion = parseBrowserVersion( location.search );
     initStreamData();
     initStreamSources( browserVersion );
     handleSourcesChange();
- 
-
-});
-
+}

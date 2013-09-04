@@ -57,9 +57,13 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             }
         }
 
+        // TODO : Add the type here so that somebody who has access to the adapatation set can check it.
+        // THIS IS A HACK for a bug in DashMetricsExtensions.
+        // See the note in DashMetricsExtensions.adaptationIsType().
         if (result) {
             adaptation.type = "audio";
         }
+
         return Q.when(result);
     },
 
@@ -102,9 +106,13 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             }
         }
 
+        // TODO : Add the type here so that somebody who has access to the adapatation set can check it.
+        // THIS IS A HACK for a bug in DashMetricsExtensions.
+        // See the note in DashMetricsExtensions.adaptationIsType().
         if (result) {
             adaptation.type = "video";
         }
+
         return Q.when(result);
     },
 
@@ -150,8 +158,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(result);
     },
 
-    getIsTextTrack:function(type) {
-        return type === "text/vtt" || type === "application/ttml+xml"
+    getIsTextTrack: function(type) {
+        return (type === "text/vtt" || type === "application/ttml+xml");
     },
 
     getIsMain: function (/*adaptation*/) {
@@ -515,6 +523,18 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         }
 
         return Q.when(time);
+    },
+
+    getIsLive: function (manifest) {
+        "use strict";
+        var isLive = false,
+            LIVE_TYPE = "dynamic";
+
+        if (manifest.hasOwnProperty("type")) {
+            isLive = (manifest.type === LIVE_TYPE);
+        }
+
+        return isLive;
     },
 
     getIsDVR: function (manifest, isLive) {

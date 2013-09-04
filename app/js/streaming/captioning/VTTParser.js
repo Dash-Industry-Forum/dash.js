@@ -48,7 +48,7 @@ MediaPlayer.utils.VTTParser = function () {
                 {
                     if (item.match(regExToken))
                     {
-                        var cuePoints = item.split(regExToken)
+                        var cuePoints = item.split(regExToken);
                         //vtt has sublines so more will need to be done here
                         var sublines = data[i+1];
 
