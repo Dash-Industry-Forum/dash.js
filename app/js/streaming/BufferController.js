@@ -13,7 +13,7 @@
  */
 MediaPlayer.dependencies.BufferController = function () {
     "use strict";
-    var validateInterval = MediaPlayer.dependencies.BufferController.MIN_VALIDATE_INTERVAL,
+    var validateInterval = 1000,
         STALL_THRESHOLD = 0.5,
         WAITING = "WAITING",
         READY = "READY",
@@ -429,22 +429,15 @@ MediaPlayer.dependencies.BufferController = function () {
             return time;
         },
 
-        adjustValidateInterval = function (currentValidateInterval, length) {
+        adjustValidateInterval = function (manifestMinBufferTime) {
+
             var self = this,
-                bufferLengthThreshold =
-                    Math.max(MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME,  self.manifestModel.getValue().minBufferTime);
+                newInterval = Math.max((manifestMinBufferTime * 1000.0) / 4, 1000);
 
-            if (waitingForBuffer || length >= bufferLengthThreshold) {
-
-                if (waitingForBuffer) {
-                    validateInterval = MediaPlayer.dependencies.BufferController.MIN_VALIDATE_INTERVAL;
-                } else {
-                    var maxInterval = (self.manifestModel.getValue().maxSegmentDuration * 1000) / 4;
-                    validateInterval = !isNaN(maxInterval) ? maxInterval : MediaPlayer.dependencies.BufferController.MAX_VALIDATE_INTERVAL;
-                }
-
-                if (validateInterval !== currentValidateInterval) {
-                    self.debug.log("Changing " + type + " validate interval: " + validateInterval );
+            if (newInterval !== validateInterval) {
+                validateInterval = newInterval;
+                if (timer !== null) {
+                    self.debug.log("Changing " + type + " validate interval: " + validateInterval);
                     clearInterval(timer);
                     timer = setInterval(onTimer.bind(self), validateInterval, self);
                 }
@@ -483,15 +476,14 @@ MediaPlayer.dependencies.BufferController = function () {
                         }
                     } else if (state === READY) {
                         setState.call(self, VALIDATING);
-                        self.bufferExt.decideBufferLength(self.manifestModel.getValue().minBufferTime, waitingForBuffer).then(
+                        var manifestMinBufferTime = self.manifestModel.getValue().minBufferTime;
+                        self.bufferExt.decideBufferLength(manifestMinBufferTime, waitingForBuffer).then(
                             function (time) {
                                 self.setMinBufferTime(time);
-                                if (type === "video") {
-                                    adjustValidateInterval.call(self, validateInterval, length);
-                                }
+                                adjustValidateInterval.call(self, manifestMinBufferTime);
                             }
                         );
-                        self.bufferExt.shouldBufferMore(length, waitingForBuffer, validateInterval / 1000.0).then(
+                        self.bufferExt.shouldBufferMore(length, waitingForBuffer, validateInterval / 1000.0, type).then(
                             function (shouldBuffer) {
                                 //self.debug.log("Buffer more " + type + ": " + shouldBuffer);
                                 if (shouldBuffer) {
@@ -713,8 +705,7 @@ MediaPlayer.dependencies.BufferController = function () {
     };
 };
 
-MediaPlayer.dependencies.BufferController.MIN_VALIDATE_INTERVAL = 500;
-MediaPlayer.dependencies.BufferController.MAX_VALIDATE_INTERVAL = 1250;
+
 
 MediaPlayer.dependencies.BufferController.prototype = {
     constructor: MediaPlayer.dependencies.BufferController

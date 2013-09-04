@@ -45,19 +45,19 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         decideBufferLength: function (minBufferTime, waitingForBuffer) {
 
             minBufferTarget = (waitingForBuffer || waitingForBuffer === undefined) ?
-                MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_STARTUP :
+                Math.max(MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_STARTUP, minBufferTime / 4 ) :
                 Math.max(MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
 
             return Q.when(minBufferTarget);
         },
-        shouldBufferMore: function (bufferLength, waitingForBuffer, delay) {
-            var metrics = player.getMetricsFor("video"),
+        shouldBufferMore: function (bufferLength, waitingForBuffer, delay, type) {
+            var metrics = player.getMetricsFor(type),
                 isPlayingAtTopQuality = (getCurrentIndex.call(this, metrics) === totalRepresentationCount),
                 result;
 
             currentBufferTarget = minBufferTarget;
 
-            if (!isLive) {
+            if (!isLive ) {
                 if (!waitingForBuffer && isPlayingAtTopQuality) {
                     currentBufferTarget = isLongFormContent ?
                         MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :
@@ -68,6 +68,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
             result = (bufferLength - delay) < currentBufferTarget;
             return Q.when(result);
         },
+        //TODO: need to add this info to MediaPlayer.vo.metrics.BufferLevel or create new metric?
         getBufferTarget: function() {
             return currentBufferTarget === undefined ? minBufferTarget : currentBufferTarget;
         }
