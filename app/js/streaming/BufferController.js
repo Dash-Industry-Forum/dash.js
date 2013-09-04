@@ -50,6 +50,7 @@ MediaPlayer.dependencies.BufferController = function () {
         playListMetrics = null,
         playListTraceMetrics = null,
         playListTraceMetricsClosed = true,
+        textTrackFileDownloadScheduled = false,
 
         setState = function (value) {
             var self = this;
@@ -440,6 +441,7 @@ MediaPlayer.dependencies.BufferController = function () {
             self.debug.log(type + " Playback rate: " + self.videoModel.getElement().playbackRate);
             self.debug.log(type + " Working time: " + currentTime);
             self.debug.log(type + " Video time: " + currentVideoTime);
+
 
             self.sourceBufferExt.getBufferLength(buffer, currentTime).then(
                 function (length) {
