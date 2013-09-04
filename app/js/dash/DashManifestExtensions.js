@@ -158,8 +158,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(result);
     },
 
-    getIsTextTrack:function(type) {
-        return type === "text/vtt" || type === "application/ttml+xml"
+    getIsTextTrack: function(type) {
+        return (type === "text/vtt" || type === "application/ttml+xml");
     },
 
     getIsMain: function (/*adaptation*/) {
