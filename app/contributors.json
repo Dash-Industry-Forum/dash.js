@@ -1,0 +1,19 @@
+{
+    "items": [
+        {
+            "name": "Digital Primates",
+            "logo": "app/img/dp.png",
+            "link": "http://www.digitalprimates.net"
+        },
+        {
+            "name": "Microsoft Open Technologies",
+            "logo": "app/img/MSOpenTech.jpg",
+            "link": "http://msopentech.com"
+        },
+        {
+            "name": "YouTube",
+            "logo": "app/img/youtube.png",
+            "link": "http://www.youtube.com"
+        }
+    ]
+}

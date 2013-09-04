@@ -1,0 +1,24 @@
+{
+    "items": [
+        {
+            "name": "jquery",
+            "link": "http://jquery.com/"
+        },
+        {
+            "name": "angular",
+            "link": "http://angularjs.org/"
+        },
+        {
+            "name": "bootstrap",
+            "link": "http://getbootstrap.com/"
+        },
+        {
+            "name": "flot",
+            "link": "http://www.flotcharts.org/"
+        },
+        {
+            "name": "angular treeview",
+            "link": "https://github.com/eu81273/angular.treeview"
+        }
+    ]
+}

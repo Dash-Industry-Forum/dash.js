@@ -26,5 +26,6 @@
         "WebKitMediaKeys",
         "MSMediaKeys",
         "MediaKeys",
-        "Caster"]
+        "Caster",
+        "TextTrackCue"]
 }
