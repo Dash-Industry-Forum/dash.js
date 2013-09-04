@@ -24,6 +24,7 @@
         //TODO set correct value for threshold
         STREAM_BUFFER_END_THRESHOLD = 4,
         STREAM_END_THRESHOLD = 3,
+        autoPlay = true,
         deferredSwitch= null,
 
         play = function () {
@@ -230,11 +231,11 @@
         },
 
         setAutoPlay: function (value) {
-            activeStream.setAutoPlay(value);
+            autoPlay = value;
         },
 
         getAutoPlay: function () {
-            return activeStream.getAutoPlay();
+            return autoPlay;
         },
 
         getVideoModel: function () {
@@ -258,6 +259,7 @@
                                 stream = self.system.getObject("stream");
                                 stream.setVideoModel(i === 0 ? self.videoModel : createVideoModel.call(self));
                                 stream.initProtection();
+                                stream.setAutoPlay(autoPlay);
                                 stream.load(manifest, i);
                                 streams.push(stream);
                             }
