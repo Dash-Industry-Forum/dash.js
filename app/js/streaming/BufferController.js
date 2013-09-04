@@ -429,6 +429,21 @@ MediaPlayer.dependencies.BufferController = function () {
             return time;
         },
 
+        adjustValidateInterval = function (manifestMinBufferTime) {
+
+            var self = this,
+                newInterval = Math.max((manifestMinBufferTime * 1000.0) / 4, 1000);
+
+            if (newInterval !== validateInterval) {
+                validateInterval = newInterval;
+                if (timer !== null) {
+                    self.debug.log("Changing " + type + " validate interval: " + validateInterval);
+                    clearInterval(timer);
+                    timer = setInterval(onTimer.bind(self), validateInterval, self);
+                }
+            }
+        },
+
         validate = function () {
             var self = this,
                 newQuality,
@@ -461,7 +476,14 @@ MediaPlayer.dependencies.BufferController = function () {
                         }
                     } else if (state === READY) {
                         setState.call(self, VALIDATING);
-                        self.bufferExt.shouldBufferMore(length, validateInterval / 1000.0).then(
+                        var manifestMinBufferTime = self.manifestModel.getValue().minBufferTime;
+                        self.bufferExt.decideBufferLength(manifestMinBufferTime, waitingForBuffer).then(
+                            function (time) {
+                                self.setMinBufferTime(time);
+                                adjustValidateInterval.call(self, manifestMinBufferTime);
+                            }
+                        );
+                        self.bufferExt.shouldBufferMore(length, waitingForBuffer, validateInterval / 1000.0).then(
                             function (shouldBuffer) {
                                 //self.debug.log("Buffer more " + type + ": " + shouldBuffer);
                                 if (shouldBuffer) {
@@ -539,36 +561,35 @@ MediaPlayer.dependencies.BufferController = function () {
 
         initialize: function (type, periodIndex, data, buffer, minBufferTime, videoModel) {
             var self = this,
-                manifest = self.manifestModel.getValue(),
-                isLive = self.manifestExt.getIsLive(manifest);
+                isLive,
+                manifest = self.manifestModel.getValue();
 
             self.setVideoModel(videoModel);
             self.setType(type);
             self.setPeriodIndex(periodIndex);
             self.setData(data);
             self.setBuffer(buffer);
-            self.setMinBufferTime(minBufferTime);
 
             self.indexHandler.setIsLive(isLive);
 
-            self.manifestExt.getTimestampOffsetForPeriod(periodIndex, self.manifestModel.getValue(), isLive).then(
+            self.manifestExt.getTimestampOffsetForPeriod(periodIndex, manifest, isLive).then(
                 function (offset) {
                     self.getBuffer().timestampOffset = offset;
                     timestampOffset = offset;
                 }
             );
 
-            self.manifestExt.getStartOffsetForPeriod(self.manifestModel.getValue(), periodIndex).then(
+            self.manifestExt.getStartOffsetForPeriod(manifest, periodIndex).then(
                 function (liveStartValue) {
                     liveOffset = liveStartValue;
-                    self.manifestExt.getDurationForPeriod(periodIndex, self.manifestModel.getValue(), isLive).then(
+                    self.manifestExt.getDurationForPeriod(periodIndex, manifest, isLive).then(
                         function (duration) {
                             self.indexHandler.setDuration(duration + liveOffset);
+                            self.bufferExt.init(duration + liveOffset, manifest, periodIndex);
                         }
                     );
                 }
             );
-
             ready = true;
             startPlayback.call(this);
         },
@@ -665,15 +686,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         setMinBufferTime: function (value) {
-            var self = this;
             minBufferTime = value;
-            validateInterval = (minBufferTime * 1000.0) / 4;
-            validateInterval = Math.max(validateInterval, 1000);
-            if (timer !== null) {
-                self.debug.log("Changing " + type + " validate interval: " + validateInterval);
-                clearInterval(timer);
-                timer = setInterval(onTimer.bind(this), validateInterval, this);
-            }
         },
 
         clearMetrics: function () {
@@ -691,6 +704,8 @@ MediaPlayer.dependencies.BufferController = function () {
         stop: doStop
     };
 };
+
+
 
 MediaPlayer.dependencies.BufferController.prototype = {
     constructor: MediaPlayer.dependencies.BufferController

@@ -14,29 +14,75 @@
 MediaPlayer.dependencies.BufferExtensions = function () {
     "use strict";
 
-    var bufferTime;
+    var minBufferTarget,
+        currentBufferTarget,
+        isLongFormContent,
+        totalRepresentationCount,
+        isLive,
+        getCurrentIndex = function(metrics) {
+            var repSwitch = this.metricsExt.getCurrentRepresentationSwitch(metrics);
+
+            if (repSwitch !== null) {
+                return this.metricsExt.getIndexForRepresentation(repSwitch.to);
+            }
+            return null;
+        };
 
     return {
-        decideBufferLength: function (minBufferTime) {
-            bufferTime = 4;
+        system:undefined,
+        videoModel: undefined,
+        manifestExt: undefined,
+        metricsExt: undefined,
+        metricsModel: undefined,
+        init: function(duration, manifest, periodIndex) {
+            isLive = this.manifestExt.getIsLive(manifest);
+            isLongFormContent = (duration >= MediaPlayer.dependencies.BufferExtensions.LONG_FORM_CONTENT_DURATION_THRESHOLD);
+            this.manifestExt.getVideoData(manifest, periodIndex).then(
+                function(data) {
+                    totalRepresentationCount = data.Representation_asArray.length - 1;
+                }
+            );
+        },
+        decideBufferLength: function (minBufferTime, waitingForBuffer) {
 
-            if (isNaN(minBufferTime) || minBufferTime <= 0) {
-                bufferTime = 4;
-            } else {
-                bufferTime = minBufferTime;
+            minBufferTarget = (waitingForBuffer || waitingForBuffer === undefined) ?
+                Math.max(MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_STARTUP, minBufferTime / 4 ) :
+                Math.max(MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
+
+            return Q.when(minBufferTarget);
+        },
+        shouldBufferMore: function (bufferLength, waitingForBuffer, delay) {
+
+            var metrics = this.metricsModel.getReadOnlyMetricsFor("video"),
+                isPlayingAtTopQuality = (getCurrentIndex.call(this, metrics) === totalRepresentationCount),
+                result;
+
+            currentBufferTarget = minBufferTarget;
+
+            if (!isLive ) {
+                if (!waitingForBuffer && isPlayingAtTopQuality) {
+                    currentBufferTarget = isLongFormContent ?
+                        MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :
+                        MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY;
+                }
             }
 
-            return Q.when(bufferTime);
-        },
-
-        shouldBufferMore: function (bufferLength, delay) {
-            // Is more data needed in the next 'delay' seconds?
-            var result = ((bufferLength - delay) < (bufferTime * 1.5));
+            result = (bufferLength - delay) < currentBufferTarget;
             return Q.when(result);
+        },
+        //TODO: need to add this info to MediaPlayer.vo.metrics.BufferLevel or create new metric?
+        getBufferTarget: function() {
+            return currentBufferTarget === undefined ? minBufferTarget : currentBufferTarget;
         }
     };
 };
 
-MediaPlayer.dependencies.BufferExtensions.prototype = {
-    constructor: MediaPlayer.dependencies.BufferExtensions
-};
+MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_STARTUP = 1;
+MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME = 8;
+MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY = 30;
+MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 300;
+MediaPlayer.dependencies.BufferExtensions.LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+MediaPlayer.dependencies.BufferExtensions.prototype.constructor = MediaPlayer.dependencies.BufferExtensions;
+
+
+
