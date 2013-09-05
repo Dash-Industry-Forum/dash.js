@@ -18,7 +18,12 @@ MediaPlayer.utils.Debug = function () {
 
     return {
         eventBus: undefined,
-
+        setLogToBrowserConsole: function(value) {
+            logToBrowserConsole = value;
+        },
+        getLogToBrowserConsole: function() {
+            return logToBrowserConsole;
+        },
         log: function (message) {
             if (logToBrowserConsole){
                 console.log(message);
