@@ -296,13 +296,14 @@ public class MainActivity extends FragmentActivity implements MediaRouteAdapter 
 				String value = obj.getString("value");
 				double d = Double.parseDouble(value);
 				int num = (int) Math.floor(d);
-				if (event == "timeupdate") {
+				
+				if (event.equals("timeupdate")) {
 					scrubBar.setProgress(num);
 				}
-				else if (event == "durationchange") {
+				else if (event.equals("durationchange")) {
 					scrubBar.setMax(num);
 				}
-				else if (event == "ended") {
+				else if (event.equals("ended")) {
 					// TODO
 				}
 			}
@@ -463,12 +464,12 @@ public class MainActivity extends FragmentActivity implements MediaRouteAdapter 
 		
 		volumeBar = (SeekBar) this.findViewById(R.id.volume_bar);
 		volumeBar.setMax(100);
-		volumeBar.setProgress(1);
+		volumeBar.setProgress(100);
 		volumeBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 			@Override
 			public void onStopTrackingTouch(SeekBar seekBar) {
 				int percent = seekBar.getProgress();
-				double value = percent / 100;
+				double value = (double)percent / 100;
 				JSONObject payload = new JSONObject();
 		    	try {
 		    		payload.put("command", "setVolume");
