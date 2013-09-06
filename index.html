@@ -386,7 +386,8 @@
                         class="footer-text"
                         href="{{item.link}}"
                         target="_blank">
-                        <img src="{{item.logo}}" alt="{{item.link}}"/>
+                        <img ng-show="hasLogo(item)" ng-src="{{item.logo}}" alt="{{item.link}}"/>
+                        <span class="contributor" ng-show="!hasLogo(item)">{{item.name}}</span>
                     </a>
                 </div>
             </div>
