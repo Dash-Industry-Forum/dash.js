@@ -14,6 +14,15 @@
             "name": "YouTube",
             "logo": "app/img/youtube.png",
             "link": "http://www.youtube.com"
+        },
+        {
+            "name": "Akamai",
+            "logo": "app/img/akamai_ff.png",
+            "link": "http://www.akamai.com"
+        },
+        {
+            "name": "Senthil",
+            "link": "https://github.com/senthil-codr"
         }
     ]
 }

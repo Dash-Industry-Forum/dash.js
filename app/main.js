@@ -448,4 +448,11 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         player.attachSource($scope.selectedItem.url);
         setTimeout(update, updateInterval);
     }
+
+    $scope.hasLogo = function (item) {
+        return (item.hasOwnProperty("logo")
+                && item.logo !== null
+                && item.logo !== undefined
+                && item.logo !== "");
+    }
 });

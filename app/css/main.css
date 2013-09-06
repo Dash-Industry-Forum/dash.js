@@ -149,3 +149,8 @@ chart {
 .footer-text img {
     height: 40px;
 }
+
+.contributor {
+    font-size: 22px;
+    color: #555;
+}
