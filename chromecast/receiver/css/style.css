@@ -14,7 +14,7 @@
 
 /** SPINNER **/
 
-.spinner {
+.loading_spinner {
     height:60px;
     width:60px;
     position:absolute;
@@ -65,4 +65,13 @@
 
 .panel-stats span {
     display: block;
+}
+
+.scrubber {
+    background-color: rgba(0, 0, 0, 0);
+    width: 100%;
+    height: 10px;
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
 }
