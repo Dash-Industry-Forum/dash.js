@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html ng-app lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Baseline Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="receiver/css/style.css">
+
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
+
+    <!-- Chromecast -->
+    <script src="https://www.gstatic.com/cast/js/receiver/1.0/cast_receiver.js"></script>
+
+    <!-- Minified Dash -->
+    <script src="../dash.all.js"></script>
+
+    <script src="receiver/js/main.js"></script>
+
+    <body ng-controller="ReceiverController">
+        <div class="dash-video-player">
+            <div id="loading_spinner" class="loading_spinner" ng-show="showSpinner"></div>
+
+            <video id="vid" ng-show="showVideo"></video>
+        </div>
+
+        <div class="stats-holder" ng-show="showStats">
+            <div class="panel panel-info panel-stats">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Video</h3>
+                </div>
+                <div class="panel-body">
+                    <span>{{videoBitrate}} kbps</span>
+                    <span>Rep Index: {{videoIndex}}{{videoPendingIndex}}/{{videoMaxIndex}}</span>
+                    <span>Buffer Length: {{videoBufferLength}}</span>
+                    <span>Dropped Frames: {{videoDroppedFrames}}</span>
+                </div>
+            </div>
+            <div class="panel panel-success panel-stats">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Audio</h3>
+                </div>
+                <div class="panel-body">
+                    <span>{{audioBitrate}} kbps</span>
+                    <span>Rep Index: {{audioIndex}}{{audioPendingIndex}}/{{audioMaxIndex}}</span>
+                    <span>Buffer Length: {{audioBufferLength}}</span>
+                    <span>Dropped Frames: {{audioDroppedFrames}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="scrubber" class="progress scrubber">
+            <div id="scrubber-content" class="progress-bar progress-bar-success" role="progressbar"></div>
+        </div>
+    </body>
+</html>

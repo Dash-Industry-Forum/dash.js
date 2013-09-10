@@ -28,13 +28,13 @@ module.exports = function(grunt) {
       all : {
         files: {
           "dash.all.js" : [
-            "./app/lib/jquery/js/jquery-1.8.3.min.js",
             "./app/lib/q.min.js",
             "./app/lib/xml2json.js",
             "./app/lib/objectiron.js",
             "./app/lib/dijon.js",
             "./app/lib/Math.js",
             "./app/lib/long.js",
+            "./app/lib/base64.js",
             "./app/js/streaming/MediaPlayer.js",
             "./app/js/streaming/Context.js",
             "./app/js/dash/Dash.js",
@@ -83,7 +83,8 @@ module.exports = function(grunt) {
             "./test/js/utils/MPDfiles.js",
             "./test/js/utils/Main.js",
             "./app/lib/kendo/kendo.web.min.js",
-            "./app/lib/dijon.js"],
+            "./app/lib/dijon.js",
+            "./app/lib/base64.js"],
           template : require('grunt-template-jasmine-istanbul'),
           templateOptions: {
             coverage: 'reports/coverage.json',
@@ -104,6 +105,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
 
-   // Define tasks
-    grunt.registerTask('default', ['jshint','connect','jasmine','uglify']);
+  // Define tasks
+  grunt.registerTask('default', ['jshint','connect','jasmine','uglify']);
 };

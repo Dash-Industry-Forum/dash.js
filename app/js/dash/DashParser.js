@@ -302,6 +302,9 @@ Dash.dependencies.DashParser = function () {
             if (!manifest.hasOwnProperty("BaseURL")) {
                 this.debug.log("Setting baseURL: " + baseUrl);
                 manifest.BaseURL = baseUrl;
+            } else {
+                // Setting manifest's BaseURL to the first BaseURL
+                manifest.BaseURL = manifest.BaseURL_asArray[0];
             }
             if (manifest.BaseURL.indexOf("http") !== 0) {
                 manifest.BaseURL = baseUrl + manifest.BaseURL;

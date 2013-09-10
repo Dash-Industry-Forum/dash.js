@@ -70,33 +70,31 @@ Dash.dependencies.DashMetricsExtensions = function () {
         },
 
         adaptationIsType = function (adaptation, bufferType) {
-            var contentType,
-                contentComponent,
-                hasContentType = false,
-                hasBufferType = false,
-                found = false;
+            var found = false;
 
-            if (adaptation.hasOwnProperty("mimeType")) {
-                contentType = adaptation.mimeType;
-            } else if (adaptation.hasOwnProperty("ContentComponent")) {
-                contentComponent = adaptation.ContentComponent;
-                contentType = contentComponent.contentType;
-            }
+            // TODO : HACK ATTACK
+            // Below we call getIsVideo and getIsAudio and then check the adaptation set for a 'type' property.
+            // getIsVideo and getIsAudio are adding this 'type' property and SHOULD NOT BE.
+            // This method expects getIsVideo and getIsAudio to be sync, but they are async (returns a promise).
+            // This is a bad workaround!
+            // The metrics extensions should have every method use promises.
 
-            if (contentType !== undefined && contentType !== null) {
-                contentType = contentType.toLowerCase();
-                hasContentType = true;
-            }
-
-            if (bufferType !== undefined && bufferType !== null) {
-                bufferType = bufferType.toLowerCase();
-                hasBufferType = true;
-            }
-
-            if (hasContentType && hasBufferType) {
-                if (contentType.indexOf(bufferType) !== -1) {
+            if (bufferType === "video") {
+                //found = this.manifestExt.getIsVideo(adaptation);
+                this.manifestExt.getIsVideo(adaptation);
+                if (adaptation.type === "video") {
                     found = true;
                 }
+            }
+            else if (bufferType === "audio") {
+                //found = this.manifestExt.getIsAudio(adaptation); // TODO : Have to be sure it's the *active* audio track.
+                this.manifestExt.getIsAudio(adaptation);
+                if (adaptation.type === "audio") {
+                    found = true;
+                }
+            }
+            else {
+                found = false;
             }
 
             return found;
@@ -116,7 +114,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
                 for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
                     adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
                     representationArray = adaptationSet.Representation_asArray;
-                    if (adaptationIsType(adaptationSet, bufferType)) {
+                    if (adaptationIsType.call(this, adaptationSet, bufferType)) {
                         return representationArray.length;
                     }
                 }
@@ -156,7 +154,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
                 maxIndex,
                 periodArray = manifest.Period_asArray;
 
-            maxIndex = findMaxBufferIndex(periodArray, bufferType);
+            maxIndex = findMaxBufferIndex.call(this, periodArray, bufferType);
             return maxIndex;
         },
 
@@ -243,6 +241,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
     return {
         manifestModel: undefined,
+        manifestExt: undefined,
         getBandwidthForRepresentation : getBandwidthForRepresentation,
         getIndexForRepresentation : getIndexForRepresentation,
         getMaxIndexForBufferType : getMaxIndexForBufferType,

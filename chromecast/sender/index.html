@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html ng-app data-cast-api-enabled="true">
+<head>
+    <meta charset="utf-8"/>
+    <title>Dash.js Chromecast Sender</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap-glyphicons.css">
+
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
+
+    <script src="js/caster.js"></script>
+    <script src="js/CasterController.js"></script>
+
+    <style>
+        .dropdown-menu {
+            max-height: 250px;
+            overflow: auto;
+        }
+
+        .dropdown-menu li {
+            cursor: pointer;
+            cursor: hand;
+        }
+
+        .list-group-item {
+            cursor: pointer;
+            cursor: hand;
+        }
+
+        h3 {
+            margin-top: 0px;
+        }
+
+        .controlbar * {
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+
+    <body ng-controller="CasterController">
+        <a href="https://github.com/Dash-Industry-Forum/dash.js">
+            <img
+                style="position: absolute; top: 0; right: 0; border: 0; width: 149px; height: 149px;"
+                src="http://aral.github.com/fork-me-on-github-retina-ribbons/right-cerulean@2x.png"
+                alt="Fork me on GitHub">
+        </a>
+
+        <div ng-switch on="castApiReady">
+            <div class="alert alert-danger" ng-switch-default>
+                {{errorMessage}}
+            </div>
+
+            <div ng-switch-when="true">
+                <div class="container" style="padding: 15px">
+                    <div class="jumbotron">
+                        <h2>DASH IF Reference Client for Chromecast</h2>
+                        <p>This is an implementation of the Dash.JS reference client for Google's Chromecast device.</p>
+                    </div>
+
+                    <div class="panel">
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                                    Stream <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li ng-repeat="item in availableStreams" ng-click="setStream(item)">
+                                        <a>{{item.name}}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <input type="text" class="form-control" placeholder="manifest" ng-model="selectedItem.url">
+                            <span class="input-group-addon">
+                                live <input type="checkbox" ng-model="selectedItem.isLive">
+                            </span>
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary" type="button" ng-click="doCast()">Cast</button>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="panel" ng-show="state == 'ready' || state == 'casting'">
+                        <h3 class="text-primary">Receivers</h3>
+                        <div class="list-group">
+                            <a
+                                class="list-group-item"
+                                ng-repeat="rec in receivers"
+                                ng-click="setReceiver(rec)"
+                                ng-class="{active:isReceiverSelected(rec)}">
+                                {{rec.name}}
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="panel" ng-show="state == 'casting'">
+                        <h3 class="text-success">Controls</h3>
+                        <div class="row controlbar" style="padding-left: 10px; padding-right: 10px;">
+                            <button type="button" class="btn btn-success" ng-click="toggleStats()">
+                                Stats
+                            </button>
+                            <!--
+                            <button type="button" class="btn btn-danger" ng-click="stopCast()">
+                                <span class="glyphicon glyphicon-stop"></span>
+                            </button>
+                            -->
+                            <button type="button" class="btn btn-info" ng-click="togglePlayback()">
+                                <span class="glyphicon glyphicon-play" ng-show="!playing"></span>
+                                <span class="glyphicon glyphicon-pause" ng-show="playing"></span>
+                            </button>
+
+                            <div id="scrubber" class="progress" style="width: 200px;" ng-click="doSeek()">
+                                <div id="scrubber-content" class="progress-bar progress-bar-success" role="progressbar"></div>
+                            </div>
+
+                            <button type="button" class="btn btn-warning" ng-click="toggleMute()">
+                                <span class="glyphicon glyphicon-music" ng-show="!muted"></span>
+                                <span class="glyphicon glyphicon-volume-off" ng-show="muted"></span>
+                            </button>
+
+                            <button type="button" class="btn btn-warning" ng-click="turnVolumeDown()">
+                                <span class="glyphicon glyphicon-volume-down"></span>
+                            </button>
+
+                            <input
+                                type="text"
+                                style="width: 65px; height: 40px; text-align: center;"
+                                disabled
+                                value="{{volume * 100|number:0}}%">
+
+                            <button type="button" class="btn btn-warning" ng-click="turnVolumeUp()">
+                                <span class="glyphicon glyphicon-volume-up"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

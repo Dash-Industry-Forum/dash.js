@@ -1,53 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html ng-app="DashPlayer" lang="en">
 <head>
     <meta charset="utf-8"/>
     <title>Dash JavaScript Player</title>
     <meta name="description" content="" />
     <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
 
-    <!--
-        JSLint
-
-        Directive:
-        /*jslint bitwise: true, continue: false, nomen: true, regexp: true, todo: true */
-
-        Allowed Globals:
-        (javascript) $ alert console setInterval clearInterval
-        (libraries)  Q dijon ObjectIron X2JS
-        (player)     MediaPlayer Dash
-    -->
-
-    <!-- http://designmodo.com/flat-free/ -->
-    <link href="app/lib/flat/css/bootstrap.css" rel="stylesheet">
-    <link href="app/lib/flat/css/flat-ui.css" rel="stylesheet">
-
-    <!-- http://www.kendoui.com/web.aspx -->
-    <link href="app/lib/kendo/kendo.common.min.css" rel="stylesheet">
-    <link href="app/lib/kendo/kendo.default.min.css" rel="stylesheet">
-
-    <!-- Application -->
-    <link href="app/css/main.css" rel="stylesheet">
-
-    <!-- Libraries -->
+    <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-glyphicons.css">
+    <link rel="stylesheet" href="app/lib/angular.treeview/css/angular.treeview.css">
+    <link rel="stylesheet" href="app/css/main.css">
 
     <!-- http://jquery.com/ -->
-    <script src="app/lib/jquery/js/jquery-1.8.3.min.js"></script>
-    <script src="app/lib/jquery/js/jquery-ui-1.9.2.custom.min.js"></script>
+    <script src="app/lib/jquery/jquery-1.10.2.min.js"></script>
 
-    <!-- http://www.kendoui.com/web.aspx -->
-    <script src="app/lib/kendo/kendo.web.min.js"></script>
+    <!-- http://angularjs.org/ -->
+    <script src="app/lib/angular/angular.min.js"></script>
+    <script src="app/lib/angular/angular-resource.min.js"></script>
 
-    <!-- http://www.flotcharts.org/ -->
-    <script src="app/lib/flot/jquery.flot.js"></script>
-
-    <!-- http://designmodo.com/flat-free/ -->
-    <script src="app/lib/flat/js/jquery.dropkick-1.0.0.js"></script>
-    <script src="app/lib/flat/js/custom_checkbox_and_radio.js"></script>
-    <script src="app/lib/flat/js/custom_radio.js"></script>
-    <script src="app/lib/flat/js/jquery.tagsinput.js"></script>
-    <script src="app/lib/flat/js/bootstrap-tooltip.js"></script>
-    <script src="app/lib/flat/js/jquery.placeholder.js"></script>
+    <!-- http://getbootstrap.com/ -->
+    <script src="app/lib/bootstrap/js/bootstrap.min.js"></script>
 
     <!-- https://github.com/kriskowal/q -->
     <script src="app/lib/q.js"></script>
@@ -55,17 +28,27 @@
     <!-- https://github.com/creynders/dijon-framework -->
     <script src="app/lib/dijon.js"></script>
 
+    <!-- http://bannister.us/weblog/2007/06/09/simple-base64-encodedecode-javascript/ -->
+    <script src="app/lib/base64.js"></script>
+
     <!-- Misc Libs -->
     <script src="app/lib/xml2json.js"></script>
     <script src="app/lib/objectiron.js"></script>
     <script src="app/lib/long.js"></script>
     <script src="app/lib/Math.js"></script>
 
+    <!-- http://www.flotcharts.org/ -->
+    <script src="app/lib/flot/jquery.flot.js"></script>
+
+    <!-- https://github.com/eu81273/angular.treeview -->
+    <script src="app/lib/angular.treeview/angular.treeview.min.js"></script>
+
     <!-- Player -->
     <script src="app/js/streaming/MediaPlayer.js"></script>
     <script src="app/js/streaming/Context.js"></script>
     <script src="app/js/streaming/ErrorHandler.js"></script>
     <script src="app/js/streaming/Capabilities.js"></script>
+    <script src="app/js/streaming/EventBus.js"></script>
     <script src="app/js/streaming/Debug.js"></script>
     <script src="app/js/streaming/VideoModel.js"></script>
     <script src="app/js/streaming/vo/SegmentRequest.js"></script>
@@ -79,13 +62,23 @@
     <script src="app/js/streaming/FragmentController.js"></script>
     <script src="app/js/streaming/AbrController.js"></script>
     <script src="app/js/streaming/FragmentLoader.js"></script>
+    <script src="app/js/streaming/StreamController.js"></script>
     <script src="app/js/streaming/Stream.js"></script>
     <script src="app/js/streaming/BufferController.js"></script>
+    <script src="app/js/streaming/ProtectionModel.js"></script>
+    <script src="app/js/streaming/ProtectionController.js"></script>
+    <script src="app/js/streaming/ProtectionExtensions.js"></script>
     <script src="app/js/streaming/rules/SwitchRequest.js"></script>
     <script src="app/js/streaming/rules/DownloadRatioRule.js"></script>
     <script src="app/js/streaming/rules/InsufficientBufferRule.js"></script>
     <script src="app/js/streaming/rules/LimitSwitchesRule.js"></script>
     <script src="app/js/streaming/rules/BaseRulesCollection.js"></script>
+
+    <!--Captioning-->
+    <script src="app/js/streaming/captioning/VTTParser.js"></script>
+    <script src="app/js/streaming/captioning/TextTrackExtensions.js"></script>
+    <script src="app/js/streaming/captioning/TextVTTSourceBuffer.js"></script>
+    <script src="app/js/streaming/captioning/TextController.js"></script>
 
     <!-- Metrics -->
     <script src="app/js/streaming/vo/MetricsList.js"></script>
@@ -107,474 +100,307 @@
     <script src="app/js/dash/FragmentExtensions.js"></script>
     <script src="app/js/dash/DashManifestExtensions.js"></script>
     <script src="app/js/dash/DashMetricsExtensions.js"></script>
-    <script src="app/js/dash/DashMetricsConverter.js"></script>
 
     <!-- App -->
-    <script src="app/js/main.js"></script>
+    <script src="app/metrics.js"></script>
+    <script src="app/main.js"></script>
 </head>
-
-<body onload="init()">
-    <div class="container">
-        <div class="row title-header">
-            <h3 class="demo-panel-title-header">DASH IF Reference Client</h3>
-            <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
-        </div>
-
-        <div class="row">
-            <div class="span6">
-                <select id="sources" class="span6">
-                    <!--
-                        NOTE:
-                        The data-channels attribute corresponds to the Chrome Browser release in which the feed
-                        will play in.
-                        b -> Beta
-                        c -> Canary
-                        d -> Development
-                        s -> Stable
-
-                        Internet Explorer is a valid option as of version 11.
-                        i -> Internet Explorer 11
-                    -->
-<!--
-                    <option data-channels="" value="sony_dp">Sony DP</option>
--->
-                    <option data-channels="cdb" value="fraunhofer_480p_heacc2_0_dream">Fraunhofer - HEACC 2.0 - Dream</option>
-                    <option data-channels="cdb" value="fraunhofer_480p_heacc2_0_sintel">Fraunhofer - HEACC 2.0 - Sintel</option>
-                    <option data-channels="cdb" value="fraunhofer_480p_heacc5_1_6chId">Fraunhofer - HEACC 5.1 - 6 CH ID</option>
-                    <option data-channels="cdb" value="fraunhofer_480p_heacc5_1_dream">Fraunhofer - HEACC 5.1 - Dream</option>
-                    <option data-channels="cdb" value="fraunhofer_480p_heacc5_1_sintel">Fraunhofer - HEACC 5.1 - Sintel</option>
-                    <option data-channels="" value="fraunhofer_480p_heacc7_1_8chId">Fraunhofer - HEACC 7.1 - 8 CH ID</option>
-                    <option data-channels="" value="fraunhofer_480p_mps5_0_6chId">Fraunhofer - MPS 5.0 - 6 CH ID</option>
-                    <option data-channels="" value="fraunhofer_480p_mps5_0_dream">Fraunhofer - MPS 5.0 - Dream</option>
-                    <option data-channels="" value="fraunhofer_480p_mps5_0_sintel">Fraunhofer - MPS 5.0 - Sintel</option>
-                    <option data-channels="cdb" value="fraunhofer_audio_only_dream">Fraunhofer - Audio Only - Dream</option>
-                    <option data-channels="cdb" value="fraunhofer_audio_only_sintel">Fraunhofer - Audio Only - Sintel</option>
-
-                    <option data-channels="" value="ipvidnetLive">Path 1 Live</option>
-                    <option data-channels="" value="uspLive">Unified Streaming Live</option>
-                    <option data-channels="" value="wowzaList">Wowza SegmentList</option>
-                    <option data-channels="" value="wowzaTemplate">Wowza SegmentTemplate</option>
-                    <option data-channels="" value="wowzaTimeline">Wowza SegmentTimeline</option>
-                    <option data-channels="" value="thomsonLive">Thomson Live</option>
-                    <option data-channels="" value="mediaExcelLive1">Media Excel Live 1</option>
-                    <option data-channels="" value="mediaExcelLive2">Media Excel Live 2</option>
-                    <!--<option data-channels="" value="live">Live</option>-->
-
-                    <option data-channels="" value="archive">Live Archive</option>
-                    <option data-channels="cdsbi" value="envivio" selected="selected">Envivio</option>
-                    <option data-channels="cdsbi" value="list">Segment List</option>
-                    <option data-channels="cdsbi" value="template">Segment Template</option>
-                    <option data-channels="cdsbi" value="timeline">Unified Streaming - Timeline</option>
-                    <!--<option data-channels="" value="youtube">YouTube SegmentBase</option>--> <!-- Invalid manifest, wrong audio codec.  Should be mp4a.40.2. -->
-
-                    <option data-channels="cdsbi" value="microsoft1">Microsoft #1</option>
-                    <option data-channels="cdsbi" value="microsoft2">Microsoft #2</option>
-                    <option data-channels="cdsbi" value="microsoft3">Microsoft #3</option>
-                    <option data-channels="cdsbi" value="microsoft4">Microsoft #4</option>
-                    <option data-channels="cdsbi" value="microsoft5">Microsoft #5</option>
-
-                    <option data-channels="" value="microsoftCenc1">Microsoft Cenc #1</option>
-                    <option data-channels="" value="microsoftCenc2">Microsoft Cenc #2</option>
-                    <option data-channels="" value="microsoftCenc3">Microsoft Cenc #3</option>
-                    <option data-channels="" value="microsoftCenc4">Microsoft Cenc #4</option>
-                    <option data-channels="" value="microsoftCenc5">Microsoft Cenc #5</option>
-                    <option data-channels="" value="microsoftCenc6">Microsoft Cenc #6</option>
-
-                    <option data-channels="cdsbi" value="1a-netflix">DASH-AVC/264 – test vector 1a - Netflix</option>
-                    <option data-channels="cdsbi" value="1a-sony">DASH-AVC/264 – test vector 1a - Sony</option>
-                    <option data-channels="cdsbi" value="1b-envivio">DASH-AVC/264 – test vector 1b - Envivio</option>
-                    <option data-channels="" value="1b-thomson">DASH-AVC/264 – test vector 1b - Thomson</option>
-                    <option data-channels="" value="1c-envivio">DASH-AVC/264 – test vector 1c - Envivio</option>
-                    <option data-channels="cdsbi" value="2a-envivio">DASH-AVC/264 – test vector 2a - Envivio</option>
-                    <option data-channels="cdsbi" value="2a-sony">DASH-AVC/264 – test vector 2a - Sony</option>
-                    <option data-channels="" value="2a-thomson">DASH-AVC/264 – test vector 2a - Thomson</option>
-                    <option data-channels="" value="3a-fraunhofer">DASH-AVC/264 – test vector 3a - Fraunhofer</option>
-                    <option data-channels="" value="3b-fraunhofer">DASH-AVC/264 – test vector 3b - Fraunhofer</option>
-                    <option data-channels="cdsbi" value="3b-sony">DASH-AVC/264 – test vector 3b - Sony</option>
-                    <option data-channels="cdsbi" value="4b-sony">DASH-AVC/264 – test vector 4b - Sony</option>
-                    <option data-channels="" value="5a-thomson/envivio">DASH-AVC/264 – test vector 5a - Thomson/Envivio</option>
-                    <option data-channels="" value="5b-thomson/envivio">DASH-AVC/264 – test vector 5b - Thomson/Envivio</option>
-                    <option data-channels="" value="6c-envivio1">DASH-AVC/264 – test vector 6c - Envivio Manifest 1</option>
-                    <option data-channels="" value="6c-envivio2">DASH-AVC/264 – test vector 6c - Envivio Manifest 2</option>
-                </select>
-            </div>
-            <div class="span4"></div>
-            <div class="span2">
-                <button type="button" class="btn btn-large" style="width: 100%;" onclick="load()">Load</button>
+<body ng-controller="DashController">
+    <div class="modal fade" id="streamModal">
+        <div class="modal-dialog">
+            <div class="list-group modal-list">
+                <a
+                   ng-repeat="item in availableStreams"
+                   href="#"
+                   class="list-group-item"
+                   ng-click="setStream(item)"
+                   data-dismiss="modal"
+                   ng-show="isStreamAvailable(item.browsers)">
+                    {{item.name}}
+                </a>
             </div>
         </div>
-
-        <div class="row">
-            <div class="span11">
-                <input class="span11" type="text" id="custom-source" placeholder="MPD Location"/>
-            </div>
-            <div class="span1">
-                <label class="checkbox" for="live-checkbox" style="margin-top: 10px;">
-                    <input type="checkbox" value="" id="live-checkbox"/>
-                    Live
-                </label>
-            </div>
-        </div>
-
-        <div class="row" style="margin-top: 10px;">
-            <div class="span9" style="float: left;">
-                <div class="dash-video-player">
-                    <video controls="true"></video>
-                </div>
-            </div>
-            <div class="span3">
-                <div class="statsbox" style="height: 28px;">
-                    <span class="stats-label" style="line-height: 28px;">ABR</span>
-                    <div class="toggle" style="float: right;">
-                        <label class="toggle-radio" for="abr-auto-on">ON</label>
-                        <input type="radio" name="abr-auto" id="abr-auto-on" value="true" checked="true">
-                        <label class="toggle-radio" for="abr-auto-off">OFF</label>
-                        <input type="radio" name="abr-auto" id="abr-auto-off" value="false">
-                    </div>
-                </div>
-            </div>
-            <div class="span3">
-                <div class="statsbox">
-                    <i class="fui-video-16 btn btn-primary"></i>
-                    <div class="btn-group" style="float: right;">
-                        <div id="video-abr-down" class="btn small-btn btn-primary">
-                            <div class="minus-symbol"></div>
-                        </div>
-                        <div id="video-abr-up" class="btn small-btn btn-primary">
-                            <div class="plus-symbol"></div>
-                        </div>
-                    </div>
-                    <br style="clear: both;"/>
-                    <div style="padding-right: 13px;">
-                        <span class="stats-label palette-text-pumpkin" style="float: left;" id="video-value">0 kbps</span>
-                    </div>
-                    <br style="clear: both;"/>
-                    <span class="stats-label">Rep Index: </span>
-                    <span class="stats-label palette-text-firm-dark" id="video-index">0</span>
-                    <span class="stats-label palette-text-wisteria" id="video-pending-index"></span>
-                    <span class="stats-label">/</span>
-                    <span class="stats-label palette-text-firm-dark" id="num-video-bitrates">0</span>
-                    <br style="clear: both;"/>
-                    <span class="stats-label">Buffer Length: </span>
-                    <span class="stats-label palette-text-info-dark" id="video-buffer">0</span>
-                    <br style="clear: both;"/>
-                    <span class="stats-label">Dropped Frames: </span>
-                    <span class="stats-label palette-text-night" id="video-dropped-frames">0</span>
-                </div>
-                <div class="statsbox">
-                    <i class="fui-volume-16 btn btn-primary"></i>
-                    <div class="btn-group" style="float: right;">
-                        <div id="audio-abr-down" class="btn small-btn btn-primary">
-                            <div class="minus-symbol"></div>
-                        </div>
-                        <div id="audio-abr-up" class="btn small-btn btn-primary">
-                            <div class="plus-symbol"></div>
-                        </div>
-                    </div>
-                    <br style="clear: both;"/>
-                    <div style="padding-right: 13px;">
-                        <span class="stats-label palette-text-pumpkin" style="float: left;" id="audio-value">0 kbps</span>
-                    </div>
-                    <br style="clear: both;"/>
-                    <span class="stats-label">Rep Index: </span>
-                    <span class="stats-label palette-text-firm-dark" id="audio-index">0</span>
-                    <span class="stats-label palette-text-wisteria" id="audio-pending-index"></span>
-                    <span class="stats-label">/</span>
-                    <span class="stats-label palette-text-firm-dark" id="num-audio-bitrates">0</span>
-                    <br style="clear: both;"/>
-                    <span class="stats-label">Buffer Length: </span>
-                    <span class="stats-label palette-text-alizarin" id="audio-buffer">0</span>
-                    <br style="clear: both;"/>
-                    <span class="stats-label">Dropped Frames: </span>
-                    <span class="stats-label palette-text-night" id="audio-dropped-frames">0</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="row" style="margin-top: 10px;">
-            <div id="graph-header" class="span12 tooltip-box tooltip-box-top">
-               <h3 class="tooltip-box-header" style="margin-left: 10px;">Buffer</h3>
-               <div style="padding-top: 10px; padding-right: 10px;">
-                   <div class="toggle" style="float: right; ">
-                        <label class="toggle-radio" for="hide-graph">HIDE</label>
-                        <input type="radio" name="graph-toggle" id="hide-graph" value="true">
-                        <label class="toggle-radio" for="show-graph">SHOW</label>
-                        <input type="radio" name="graph-toggle" id="show-graph" value="false" checked="true">
-                    </div>
-               </div>
-            </div>
-            <div id="graph-body" class="span12 tooltip-box tooltip-box-bottom" style="height:185px;">
-                <div id="buffer-placeholder" class="graph-placeholder">
-                    <div id="buffer-container" class="display-graph"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row" style="margin-top: 10px;">
-            <div id="debug-header" class="span12 tooltip-box tooltip-box-top">
-                <h3 class="tooltip-box-header" style="margin-left: 10px;">Debug</h3>
-                <div style="padding-top: 10px; padding-right: 10px;">
-                    <div class="toggle" style="float: right; ">
-                        <label class="toggle-radio" for="hide-debug">HIDE</label>
-                        <input type="radio" name="debug-toggle" id="hide-debug" value="true">
-                        <label class="toggle-radio" for="show-debug">SHOW</label>
-                        <input type="radio" name="graph-toggle" id="show-debug" value="false" checked="true">
-                    </div>
-               </div>
-            </div>
-            <div id="debug-body" class="span12 tooltip-debug-box tooltip-box-bottom">
-                <div class="btn-toolbar" style="float: left; padding-left: 10px;">
-                    <div class="btn-group">
-                        <a id="debug-log-btn" class="btn btn-primary active" href="#">Debug Console</a>
-                        <a id="video-metrics-btn" class="btn btn-primary" href="#">Video Metrics</a>
-                        <a id="audio-metrics-btn" class="btn btn-primary" href="#">Audio Metrics</i></a>
-                        <a id="release-notes-btn" class="btn btn-primary" href="#">Release Notes</a>
-                    </div>
-                </div>
-            <div style="width: 900px;">
-                <div id="debug-log-tab" class="tab-content">
-                    <div class="btn btn-primary" id="debug-clear" style="float: left; margin-right: 10px;">Clear</div>
-
-                    <label class="checkbox" for="debug-enabled-toggle" style="float: left;">
-                        <input type="checkbox" id="debug-enabled-toggle">
-                        Enabled
-                    </label>
-
-                    <input type="text" id="filter-source" placeholder="filter" style="float: right; margin-right: 20px;"/>
-
-                    <div id="debug_log" style="height: 425px; width: 900px; overflow: auto; clear: both;">
-                        <dt>Waiting...</dt>
-                    </div>
-                </div>
-                <div id="video-metrics-tree-tab" class="tab-content">
-                    <div class="btn btn-primary" id="videoMetricsUpdateButton">Update</div>
-                    <div id="videoMetricsTree" style="height: 425px; width: 900px;"></div>
-                </div>
-                <div id="audio-metrics-tree-tab" class="tab-content">
-                    <div class="btn btn-primary" id="audioMetricsUpdateButton">Update</div>
-                    <div id="audioMetricsTree" style="height: 425px; width: 900px;"></div>
-                </div>
-                <div id="release-notes-tab" class="tab-content" style="height: 500px">
-                    <div>
-                        <b>Known Issues</b><br/>
-                        Erratic playback at higher bitrates.<br/>
-                        Streams using high profile codecs may not play properly.<br/>
-                        You may get the error "Media Source Close" when attempting to switch bitrates.<br/>
-                        Only streams with segmentAlignment="true" will work with abr.
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.2.5</b><br/>
-                        Update test vectors.<br/>
-                        Update stream availability for Chrome versions and IE 11.<br/>
-                        Revert BaseURLExtensions to fix issues with SIDX parsing.<br/>
-                        Fix a bug when calculating stream end with SegmentTemplate.<br/>
-                        Short circuit logic on unexpected pauses.<br/>
-                        Various fixes to SourceBufferExtensions.
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.2.4</b><br/>
-                        Added support for updateend event.<br/>
-                        Added support for mpd url parameter (index.html?mpd=&lt;mpd url&gt;).<br/>
-                        Added dash.min.js and dash.all.js<br/>
-                        Extended logging in BufferController.<br/>
-                        Improved shouldBufferMore calulation.<br/>
-                        Improved getBufferLength calulation.<br/>
-                        Improved validateInterval calulation.<br/>
-                        Default in-page degbug logging to off.<br/>
-                        Update the buffer length metrics even when shouldBufferMore is false.<br/>
-                        Fix timescale defaults for SegmentTemplate.<br/>
-                        Fix some seek bugs.<br/>
-                        Fix some SIDX parse bugs.<br/>
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.2.3</b><br/>
-                        Change license header.<br/>
-                        Add footer.<br/>
-                        Add more live support.  Still a work in progress.<br/>
-                        Fix some bugs with the timeline.
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.2.1</b><br/>
-                        Add support for SegmentBase manifests with reference_type = 1.  (Multi-level SIDX.)<br/>
-                        Finish externalizing live toggle.  The player no longer attempts to discover liveness from the manifest.<br/>
-                        Add a live toggle to the main UI.<br/>
-                        Fix an issue where a custom value in the text input was ignored.<br/>
-                        Fixed some bugs and clean up the SIDX loading.<br/>
-                        Clean up some of the UI.<br/>
-                        Added some new MediaSource test pages.<br/>
-                        Expanded test.html to work with byte ranges.<br/>
-                        Redid how live works again to support particular streams.  Live still needs more work.
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.2.0</b><br/>
-                        Live pass #3.  More bugs fixed.  More remain, but live streams should play.<br/>
-                        Fix lots of bugs.<br/>
-                        Clean up UI; condense information into a more usable format.<br/>
-                        Add some UI bits to make things more clear.<br/>
-                        Added test vectors to sources dropdown.<br/>
-                        Clean up the filtering so that it doesn't bog down the stream as much.<br/>
-                        Add test application to verify that fragments work with MediaSource.<br/>
-                        Added ability to change streams without refreshing the page.<br/>
-                        Better error messaging.
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.1.2</b><br/>
-                        Live pass #2.  Working better, but still not done.<br/>
-                        Live w/ SegmentTemplate is working pretty good.<br/>
-                        Live support for other methods is spotty.<br/>
-                        Implement manifest refreshing.<br/>
-                        Add filter to debug window.  **WARNING** Filtering has performance issues that still need to be sorted out.<br/>
-                        Add trees to view metrics. **Must manually populate due to performance issues.**<br/>
-                        Band-aid some VOD seeking bugs.<br/>
-                        Implement use of presentation delay.</br>
-                        Fix some bugs.
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.1.1</b><br/>
-                        Metrics first pass.<br/>
-                        Live first pass (still not working).<br/>
-                        ABR first pass.<br/>
-                        If a buffer runs dry playback stalls until more data is loaded.<br/>
-                        Fix some (maybe not all) performance issues.<br/>
-                        Change copyright information.
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.1.0</b><br/>
-                        Major architecture changes.<br/>
-                        Moved a lot of code around to make smaller overall objects.<br/>
-                        Implemented Promises to make everything async.<br/>
-                        Implemented DI for easy overriding of objects.<br/>
-                        Added more logging.<br/>
-                        <b>Metrics are not currently implemented.</b><br/>
-                        <b>Auto ABR is not yet working due to metrics dependancy.</b>
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.0.7</b><br/>
-                        Changes for structure and contents of JavaScript files.</br>
-                        <i>-Scope is now better isolated.</i></br>
-                        <i>-Better patterns for object creation.</i></br>
-                        <i>-Overall cleaner code.</i>
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.0.6</b><br/>
-                        UI changes.
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.0.5</b><br/>
-                        Flesh out abr support.<br/>
-                        Add architecture for rule checking.<br/>
-                        Add basic bandwidth rule.<br/>
-                        <b>Introduced a limitation: only streams with segmentAlignment="true" will work with abr.</b>
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.0.4</b><br/>
-                        Add metrics bling.<br/>
-                        Expose methods to change audio bitrate.<br/>
-                        Play video automatically after loading completes.<br/>
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.0.3</b><br/>
-                        Handle BaseURL with no SegmentTemplate, SegmentList, or SegmentBase.<br/>
-                        Handle SegmentBase nodes without an indexRange or initializationRange.<br/>
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.0.2</b><br/>
-                        Rearchitect the application for better extensibility.<br/>
-                        Properly signal end of stream.<br/>
-                        Add metrics tracking.<br/>
-                        Add charts and tables with metrics info.<br/>
-                    </div>
-
-                    <div>
-                        <b>Release Notes v0.0.1</b><br/>
-                        Requires Chrome 24 or later.<br/>
-                        Basic implements for the four fragment description types work.<br/>
-                        <i>SegmentList</i><br/>
-                        <i>SegmentTemplate</i><br/>
-                        <i>SegmentTemplate with SegmentTimeline</i><br/>
-                        <i>SegmentBase</i><br/>
-                    </div>
-                </div>
-            </div>
-            </div>
-
-        </div>
-
-        <div class="row" style="height: 15px;"></div>
     </div>
 
-    <footer>
-        <div class="container">
-            <div class="row">
-                <div class="span6">
-                    <div class="footer-banner">
-                        <h3 class="footer-title">Compatibility Notes:</h3>
-                        <ul>
-                            <li>A browser that supports MSE (Media Source Extensions) is required.</li>
-                            <li>As of 7/11/13, Chrome and Internet Explorer 11 are the only browsers supported.</li>
-                            <li>Use the most up-to-date version of Chrome for the best compatibility.</li>
-                            <li>Many of the streams in the dropdown box only work in the developer channel or Canary version of Chrome.</li>
-                            <li><a href="index.html?version=stable">Stable Chrome Streams</a></li>
-                            <li><a href="index.html?version=beta">Beta Chrome Streams</a></li>
-                            <li><a href="index.html?version=dev">Dev Chrome Streams</a></li>
-                            <li><a href="index.html?version=canary">Canary Chrome Streams</a></li>
-                            <li><a href="index.html?version=explorer">Internet Explorer 11 Streams</a></li>
-                        </ul>
+    <div class="container">
+        <div class="row title-header">
+            <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
+            <span id="big-title">Reference Client</span>
+            <span>{{version}}</span>
+        </div>
+
+        <div class="row">
+            <div class="input-group">
+                <div id="desktop-streams" class="input-group-btn">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                        Stream <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li
+                            ng-repeat="item in availableStreams"
+                            ng-click="setStream(item)"
+                            ng-show="isStreamAvailable(item.browsers)">
+                            <a>{{item.name}}</a>
+                        </li>
+                    </ul>
+                </div>
+                <div id="mobile-streams" class="input-group-btn">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" href="#streamModal">
+                        Stream <span class="caret"></span>
+                    </button>
+                </div>
+                <input type="text" class="form-control" placeholder="manifest" ng-model="selectedItem.url">
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="dash-video-player col-md-9">
+                <video controls="true"></video>
+            </div>
+            <div class="col-md-3">
+                <div class="panel">
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">ABR</span>
+                        <div class="btn-group">
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-class="{active:abrEnabled == false}"
+                                ng-click="setAbrEnabled(false)">
+                                <span>Off</span>
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-default active"
+                                ng-class="{active:abrEnabled == true}"
+                                ng-click="setAbrEnabled(true)">
+                                <span>On</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="span3">
-                    <h3 class="footer-title">Libraries:</h3>
-                    <a class="footer-brand" href="http://jquery.com/" target="_blank">
-                      jquery
+                <div class="panel">
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">Video</span>
+                        <div class="btn-group">
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-click="abrDown('video')">
+                                <span class="glyphicon glyphicon-minus"></span>
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-click="abrUp('video')">
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-body panel-stats">
+                        <p class="text-warning">{{videoBitrate}} kbps</p>
+                        <p class="text-primary">Rep Index: <span class="text-success">{{videoIndex}}</span><span class="text-warning">{{videoPendingIndex}}</span>/<span class="text-success">{{videoMaxIndex}}</span></p>
+                        <p class="text-primary">Buffer Length: <span class="text-success">{{videoBufferLength}}</span></p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">Audio</span>
+                        <div class="btn-group">
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-click="abrDown('audio')">
+                                <span class="glyphicon glyphicon-minus"></span>
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-click="abrUp('audio')">
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-body panel-stats">
+                        <p class="text-warning">{{audioBitrate}} kbps</p>
+                        <p class="text-primary">Rep Index: <span class="text-success">{{audioIndex}}</span><span class="text-warning">{{audioPendingIndex}}</span>/<span class="text-success">{{audioMaxIndex}}</span></p>
+                        <p class="text-primary">Buffer Length: <span class="text-success">{{audioBufferLength}}</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="panel">
+                <div class="panel-heading panel-top">
+                    <span class="panel-title">Charts</span>
+                    <div class="btn-group">
+                        <button
+                            type="button"
+                            class="btn btn-default"
+                            ng-class="{active:showCharts == false}"
+                            ng-click="setCharts(false)">
+                            Hide
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-default"
+                            ng-class="{active:showCharts == true}"
+                            ng-click="setCharts(true)">
+                            Show
+                        </button>
+                    </div>
+                </div>
+                <div ng-switch on="showCharts">
+                    <div class="panel-body panel-stats" ng-switch-when="true">
+                        <chart ng-model="bufferData"></chart>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="panel">
+                <div class="panel-heading panel-top">
+                    <span class="panel-title">Debug</span>
+                    <div class="btn-group">
+                        <button
+                            type="button"
+                            class="btn btn-default"
+                            ng-class="{active:showDebug == false}"
+                            ng-click="setDebug(false)">
+                            Hide
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-default"
+                            ng-class="{active:showDebug == true}"
+                            ng-click="setDebug(true)">
+                            Show
+                        </button>
+                    </div>
+                </div>
+                <div ng-switch on="showDebug">
+                    <div class="panel-body panel-stats" ng-switch-when="true">
+                        <ul class="nav nav-tabs">
+                            <li class="dropdown">
+                                <a href="#" id="metricsDropdown" class="dropdown-toggle" data-toggle="dropdown">Metrics <b class="caret"></b></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="metricsDropdown">
+                                    <li><a href="#video-metrics" tabindex="-1" data-toggle="tab">Video</a></li>
+                                    <li><a href="#audio-metrics" tabindex="-1" data-toggle="tab">Audio</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#notes" data-toggle="tab">Release Notes</a></li>
+                        </ul>
+                        <div id="debugTabContent" class="tab-content">
+                            <div class="tab-pane" id="video-metrics">
+                                <button
+                                    type="button"
+                                    class="btn btn-default"
+                                    ng-click="getVideoTreeMetrics()">
+                                    Video - Update
+                                </button>
+                                <div
+                                    class="tree"
+                                    data-angular-treeview="true"
+                                    data-tree-model="videoMetrics"
+                                    data-node-label="text"
+                                    data-node-children="items">
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="audio-metrics">
+                                <button
+                                    type="button"
+                                    class="btn btn-default"
+                                    ng-click="getAudioTreeMetrics()">
+                                    Audio - Update
+                                </button>
+                                <div
+                                    class="tree"
+                                    data-angular-treeview="true"
+                                    data-tree-model="audioMetrics"
+                                    data-node-label="text"
+                                    data-node-children="items">
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="notes">
+                                <div ng-repeat="note in releaseNotes" class="note-box">
+                                    <span><b>{{note.title}}</b></span><br/>
+                                    <span ng-repeat="text in note.items">
+                                        {{text}}<br/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-area">
+        <div class="container">
+            <div class="row">
+                <div class="compat-box col-md-5">
+                    <h3>Compatibility Notes:</h3>
+                    <ul class="list-group">
+                        <li class="list-group-item"><a href="https://github.com/Dash-Industry-Forum/dash.js">This project can be forked on GitHub.</a></li>
+                        <li class="list-group-item">Use your browser's JavaScript console to view detailed information about stream playback.</li>
+                        <li class="list-group-item"><a href="baseline.html">See a base implementation here.</a></li>
+                        <li class="list-group-item">A browser that supports MSE (Media Source Extensions) is required.</li>
+                        <li class="list-group-item">As of 8/30/13, Desktop Chrome, Desktop Internet Explorer 11, and Mobile Chrome Beta for Android are the only browsers supported.</li>
+                        <li class="list-group-item">Use the most up-to-date version of your browser for the best compatibility.</li>
+                        <li class="list-group-item">Many of the streams in the dropdown box (with ?version=all) only work in the developer channel or Canary version of Chrome.</li>
+                        <li class="list-group-item"><a href="index.html?version=stable">Stable Chrome Streams</a></li>
+                        <li class="list-group-item"><a href="index.html?version=beta">Beta Chrome Streams</a></li>
+                        <li class="list-group-item"><a href="index.html?version=dev">Dev Chrome Streams</a></li>
+                        <li class="list-group-item"><a href="index.html?version=canary">Canary Chrome Streams</a></li>
+                        <li class="list-group-item"><a href="index.html?version=explorer">Internet Explorer 11 Streams</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="footer-text">Player Libraries:</h3>
+                    <a
+                        ng-repeat="item in playerLibraries"
+                        class="footer-text"
+                        href="{{item.link}}"
+                        target="_blank">
+                        {{item.name}}
                     </a>
-                    <a class="footer-brand" href="https://github.com/kriskowal/q" target="_blank">
-                      q
-                    </a>
-                    <a class="footer-brand" href="https://github.com/creynders/dijon-framework" target="_blank">
-                      dijon
-                    </a>
-                    <a class="footer-brand" href="http://pivotal.github.io/jasmine/" target="_blank">
-                      jasmine
-                    </a>
-                    <a class="footer-brand" href="https://github.com/designmodo/Flat-UI" target="_blank">
-                      flat ui
-                    </a>
-                    <a class="footer-brand" href="http://www.flotcharts.org/" target="_blank">
-                      flot
-                    </a>
-                    <a class="footer-brand" href="http://www.kendoui.com/web.aspx" target="_blank">
-                      kendo
+                    <h3 class="footer-text">Showcase Libraries:</h3>
+                    <a
+                        ng-repeat="item in showcaseLibraries"
+                        class="footer-text"
+                        href="{{item.link}}"
+                        target="_blank">
+                        {{item.name}}
                     </a>
                 </div>
-                <div class="span3">
-                    <h3 class="footer-title">Contributors:</h3>
-                    <a class="footer-brand" href="http://www.digitalprimates.net" target="_blank">
-                      <img src="app/img/dp.png" alt="www.digitalprimates.net"/>
-                    </a>
-                    <a class="footer-brand" href="http://msopentech.com" target="_blank">
-                      <img src="app/img/MSOpenTech.jpg" alt="msopentech.com"/>
-                    </a>
-                    <a class="footer-brand" href="http://www.youtube.com" target="_blank">
-                      <img src="app/img/youtube.png" alt="www.youtube.com"/>
+                <div class="col-md-4">
+                    <h3 class="footer-text">Contributors:</h3>
+                    <a
+                        ng-repeat="item in contributors"
+                        class="footer-text"
+                        href="{{item.link}}"
+                        target="_blank">
+                        <img ng-show="hasLogo(item)" ng-src="{{item.logo}}" alt="{{item.link}}"/>
+                        <span class="contributor" ng-show="!hasLogo(item)">{{item.name}}</span>
                     </a>
                 </div>
             </div>
         </div>
-    </footer>
+    </div>
+
+    <a href="https://github.com/Dash-Industry-Forum/dash.js">
+        <img
+            id="ribbon"
+            style="position: absolute; top: 0; right: 0; border: 0; width: 149px; height: 149px;"
+            src="http://aral.github.com/fork-me-on-github-retina-ribbons/right-cerulean@2x.png"
+            alt="Fork me on GitHub">
+    </a>
 
 </body>
 </html>

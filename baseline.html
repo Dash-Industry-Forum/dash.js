@@ -7,40 +7,64 @@
     <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
 
     <!-- Libraries -->
-    <script src="app/lib/jquery/js/jquery-1.8.3.min.js"></script>
+    <!--
     <script src="app/lib/q.js"></script>
     <script src="app/lib/dijon.js"></script>
     <script src="app/lib/xml2json.js"></script>
     <script src="app/lib/objectiron.js"></script>
     <script src="app/lib/long.js"></script>
     <script src="app/lib/Math.js"></script>
+    -->
 
     <!-- Minified Dash -->
-    <script src="dash.min.js"></script>
+    <!--<script src="dash.min.js"></script>-->
+
+    <!-- Minified Dash & Libraries -->
+    <script src="dash.all.js"></script>
 
     <script>
+        function getUrlVars() {
+            var vars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                vars[key] = value;
+            });
+            return vars;
+        }
+
         function startVideo() {
-            var url = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd",
+            var vars = getUrlVars(),
+                url = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd",
                 video,
                 context,
                 player;
 
+            if (vars && vars.hasOwnProperty("url")) {
+                url = vars.url;
+            }
+
+            video = document.querySelector(".dash-video-player video");
             context = new Dash.di.DashContext();
             player = new MediaPlayer(context);
+
             player.startup();
 
-            player.setIsLive(false);
-            player.attachSource(url);
-
-            video = document.querySelector(".dash-video-player video"),
-            player.autoPlay = true;
             player.attachView(video);
+            player.setAutoPlay(false);
+
+            player.attachSource(url);
         }
     </script>
 
+    <style>
+        video {
+            width: 640px;
+            height: 480px;
+        }
+    </style>
+
     <body onload="startVideo()">
         <div class="dash-video-player">
-            <video controls="true" style="width: 640px; height: 480px;"></video>
+            <video controls="true"></video>
         </div>
     </body>
 </html>

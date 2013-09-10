@@ -1,14 +1,14 @@
 /*
  * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
- * 
+ *
  * Copyright (c) 2013, Digital Primates
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
  * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
  * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 MediaPlayer.dependencies.BufferController = function () {
@@ -34,11 +34,13 @@ MediaPlayer.dependencies.BufferController = function () {
         timer = null,
         onTimer = null,
         stalled = false,
-        liveOffset = -1,
+        liveOffset = 0,
         isLiveStream = false,
         liveInitialization = false,
         deferredAppend = null,
         fragmentRequests = [],
+        periodIndex = -1,
+        timestampOffset = 0,
 
         type,
         data,
@@ -72,7 +74,8 @@ MediaPlayer.dependencies.BufferController = function () {
 
         // TODO : Remove?
         initializeLive = function () {
-            var isLive = this.videoModel.getIsLive();
+            var manifest = this.manifestModel.getValue(),
+                isLive = this.manifestExt.getIsLive(manifest);
 
             liveInitialization = true;
 
@@ -134,12 +137,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             this.debug.log("BufferController " + type + " seek: " + time);
             seeking = true;
-            seekTarget = time;
-
-            if (liveOffset !== -1) {
-                seekTarget -= liveOffset;
-            }
-
+            seekTarget = time - liveOffset - timestampOffset;
             currentTime = new Date();
             clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
             playListMetrics = this.metricsModel.addPlayList(type, currentTime, seekTarget, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
@@ -228,6 +226,7 @@ MediaPlayer.dependencies.BufferController = function () {
             var self = this;
 
             // remove the failed request from the list
+            /*
             for (var i = fragmentRequests.length - 1; i >= 0 ; --i) {
                 if (fragmentRequests[i].startTime === request.startTime) {
                     if (fragmentRequests[i].url === request.url) {
@@ -236,6 +235,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     break;
                 }
             }
+            */
 
             if (state === LOADING) {
                 setState.call(self, READY);
@@ -279,7 +279,7 @@ MediaPlayer.dependencies.BufferController = function () {
             if (dataChanged && !seeking) {
                 //time = self.videoModel.getCurrentTime();
                 self.debug.log("Data changed - loading the " + type + " fragment for time: " + playingTime);
-                promise = self.indexHandler.getSegmentRequestForTime(playingTime, quality, data);
+                promise = self.indexHandler.getSegmentRequestForTime(playingTime - timestampOffset - liveOffset, quality, data);
             } else {
                 var deferred = Q.defer(),
                     segmentTime = self.videoModel.getCurrentTime();
@@ -293,7 +293,7 @@ MediaPlayer.dependencies.BufferController = function () {
                             segmentTime = range.end;
                         }
                         self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
-                        self.indexHandler.getSegmentRequestForTime(segmentTime, quality, data).then(
+                        self.indexHandler.getSegmentRequestForTime(segmentTime - timestampOffset - liveOffset, quality, data).then(
                             function (request) {
                                 deferred.resolve(request);
                             }
@@ -442,6 +442,7 @@ MediaPlayer.dependencies.BufferController = function () {
             self.debug.log(type + " Working time: " + currentTime);
             self.debug.log(type + " Video time: " + currentVideoTime);
 
+
             self.sourceBufferExt.getBufferLength(buffer, currentTime).then(
                 function (length) {
                     self.debug.log("Current " + type + " buffer length: " + length);
@@ -536,19 +537,37 @@ MediaPlayer.dependencies.BufferController = function () {
         system: undefined,
         errHandler: undefined,
 
-        setup: function () {
+        initialize: function (type, periodIndex, data, buffer, minBufferTime, videoModel) {
             var self = this,
-                isLive = self.videoModel.getIsLive();
+                manifest = self.manifestModel.getValue(),
+                isLive = self.manifestExt.getIsLive(manifest);
+
+            self.setVideoModel(videoModel);
+            self.setType(type);
+            self.setPeriodIndex(periodIndex);
+            self.setData(data);
+            self.setBuffer(buffer);
+            self.setMinBufferTime(minBufferTime);
 
             self.indexHandler.setIsLive(isLive);
 
-            self.manifestExt.getDuration(self.manifestModel.getValue(), isLive).then(
-                function (duration) {
-                    self.indexHandler.setDuration(duration);
+            self.manifestExt.getTimestampOffsetForPeriod(periodIndex, self.manifestModel.getValue(), isLive).then(
+                function (offset) {
+                    self.getBuffer().timestampOffset = offset;
+                    timestampOffset = offset;
                 }
             );
 
-            self.indexHandler.setType(type);
+            self.manifestExt.getStartOffsetForPeriod(self.manifestModel.getValue(), periodIndex).then(
+                function (liveStartValue) {
+                    liveOffset = liveStartValue;
+                    self.manifestExt.getDurationForPeriod(periodIndex, self.manifestModel.getValue(), isLive).then(
+                        function (duration) {
+                            self.indexHandler.setDuration(duration + liveOffset);
+                        }
+                    );
+                }
+            );
 
             ready = true;
             startPlayback.call(this);
@@ -557,12 +576,46 @@ MediaPlayer.dependencies.BufferController = function () {
         getType: function () {
             return type;
         },
+
         setType: function (value) {
             type = value;
 
             if (this.indexHandler !== undefined) {
                 this.indexHandler.setType(value);
             }
+        },
+
+        getPeriodIndex: function () {
+            return periodIndex;
+        },
+
+        setPeriodIndex: function (value) {
+            periodIndex = value;
+        },
+
+        getVideoModel: function () {
+            return this.videoModel;
+        },
+
+        setVideoModel: function (value) {
+            this.videoModel = value;
+        },
+
+        getTimestampOffset: function() {
+            return timestampOffset;
+        },
+
+        setTimestampOffset: function(value) {
+            this.getBuffer().timestampOffset = timestampOffset;
+            timestampOffset = value;
+        },
+
+        getLiveOffset: function() {
+            return liveOffset;
+        },
+
+        setLiveStart: function(value) {
+            liveOffset = value;
         },
 
         getAutoSwitchBitrate : function () {

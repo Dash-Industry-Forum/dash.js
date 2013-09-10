@@ -13,21 +13,40 @@
  */
 MediaPlayer.dependencies.SourceBufferExtensions = function () {
     "use strict";
+    this.system = undefined;
+    this.manifestExt = undefined;
 };
 
 MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
+
     constructor: MediaPlayer.dependencies.SourceBufferExtensions,
 
     createSourceBuffer: function (mediaSource, codec) {
         "use strict";
+        var deferred = Q.defer(),
+            self = this;
+        try {
+            deferred.resolve(mediaSource.addSourceBuffer(codec));
+        } catch(ex) {
+            if (!self.manifestExt.getIsTextTrack(codec)) {
+                deferred.reject(ex.description);
+            } else {
+                deferred.resolve(self.system.getObject("textVTTSourceBuffer"));
+            }
 
-        return Q.when(mediaSource.addSourceBuffer(codec));
+        }
+        return deferred.promise;
     },
 
     removeSourceBuffer: function (mediaSource, buffer) {
         "use strict";
-
-        return Q.when(mediaSource.removeSourceBuffer(buffer));
+        var deferred = Q.defer();
+        try {
+            deferred.resolve(mediaSource.removeSourceBuffer(buffer));
+        } catch(ex){
+            deferred.reject(ex.description);
+        }
+        return deferred.promise;
     },
 
     getBufferRange: function (buffer, time, tolerance) {
@@ -39,7 +58,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             firstStart = null,
             lastEnd = null,
             gap = 0,
-            toler = (tolerance || 0.1),
+            toler = (tolerance || 0.15),
             len,
             i;
 
@@ -69,7 +88,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                         lastEnd = end;
                     } else {
                         break;
-                    } 
+                    }
                 }
             }
 
@@ -126,6 +145,12 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
     abort: function (buffer) {
         "use strict";
-        return Q.when(buffer.abort());
+        var deferred = Q.defer();
+        try {
+            deferred.resolve(buffer.abort());
+        } catch(ex){
+            deferred.reject(ex.description);
+        }
+        return deferred.promise;
     }
 };
