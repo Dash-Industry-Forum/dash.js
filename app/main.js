@@ -451,16 +451,28 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     }
 
     // Get initial stream if it was passed in.
+	var paramUrl = null;
 
     if (vars && vars.hasOwnProperty("url")) {
-        $scope.selectedItem = {};
-        $scope.selectedItem.url = vars.url;
-		$scope.doLoad();
+    	paramUrl = vars.url;
     }
 
     if (vars && vars.hasOwnProperty("mpd")) {
-        $scope.selectedItem = {};
-        $scope.selectedItem.url = vars.mpd;
-		$scope.doLoad();
+    	paramUrl = vars.mpd;
+    }
+
+    if (paramUrl !== null) {
+    	var startPlayback = true;
+    
+    	$scope.selectedItem = {};
+        $scope.selectedItem.url = vars.url;
+
+        if (vars.hasOwnProperty("autoplay")) {
+        	startPlayback = (vars.autoplay === 'true');
+        }
+
+    	if (startPlayback) {
+	    	$scope.doLoad();
+		}
     }
 });
