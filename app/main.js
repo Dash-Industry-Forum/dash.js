@@ -465,7 +465,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     	var startPlayback = true;
     
     	$scope.selectedItem = {};
-        $scope.selectedItem.url = vars.url;
+        $scope.selectedItem.url = paramUrl;
 
         if (vars.hasOwnProperty("autoplay")) {
         	startPlayback = (vars.autoplay === 'true');
