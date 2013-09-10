@@ -405,12 +405,6 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             break;
     }
 
-    // Get initial stream if it was passed in.
-    if (vars && vars.hasOwnProperty("url")) {
-        $scope.selectedItem = {};
-        $scope.selectedItem.url = vars.url;
-    }
-
     $scope.isStreamAvailable = function (str) {
         if (filterValue === "a") {
             return true;
@@ -454,5 +448,19 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 && item.logo !== null
                 && item.logo !== undefined
                 && item.logo !== "");
+    }
+
+    // Get initial stream if it was passed in.
+
+    if (vars && vars.hasOwnProperty("url")) {
+        $scope.selectedItem = {};
+        $scope.selectedItem.url = vars.url;
+		$scope.doLoad();
+    }
+
+    if (vars && vars.hasOwnProperty("mpd")) {
+        $scope.selectedItem = {};
+        $scope.selectedItem.url = vars.mpd;
+		$scope.doLoad();
     }
 });
