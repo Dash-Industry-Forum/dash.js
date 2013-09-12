@@ -57,6 +57,13 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             }
         }
 
+        // TODO : Add the type here so that somebody who has access to the adapatation set can check it.
+        // THIS IS A HACK for a bug in DashMetricsExtensions.
+        // See the note in DashMetricsExtensions.adaptationIsType().
+        if (result) {
+            adaptation.type = "audio";
+        }
+
         return Q.when(result);
     },
 
@@ -99,7 +106,60 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             }
         }
 
+        // TODO : Add the type here so that somebody who has access to the adapatation set can check it.
+        // THIS IS A HACK for a bug in DashMetricsExtensions.
+        // See the note in DashMetricsExtensions.adaptationIsType().
+        if (result) {
+            adaptation.type = "video";
+        }
+
         return Q.when(result);
+    },
+
+    getIsText: function (adaptation) {
+        "use strict";
+        var i,
+            len,
+            col = adaptation.ContentComponent_asArray,
+            representation,
+            result = false,
+            found = false;
+
+        if (col) {
+            for (i = 0, len = col.length; i < len; i += 1) {
+                if (col[i].contentType === "text") {
+                    result = true;
+                    found = true;
+                }
+            }
+        }
+
+        if (adaptation.hasOwnProperty("mimeType")) {
+            result = adaptation.mimeType.indexOf("text") !== -1;
+            found = true;
+        }
+
+        // couldn't find on adaptationset, so check a representation
+        if (!found) {
+            i = 0;
+            len = adaptation.Representation_asArray.length;
+            while (!found && i < len) {
+                representation = adaptation.Representation_asArray[i];
+
+                if (representation.hasOwnProperty("mimeType")) {
+                    result = representation.mimeType.indexOf("text") !== -1;
+                    found = true;
+                }
+
+                i += 1;
+            }
+        }
+
+        return Q.when(result);
+    },
+
+    getIsTextTrack: function(type) {
+        return (type === "text/vtt" || type === "application/ttml+xml");
     },
 
     getIsMain: function (/*adaptation*/) {
@@ -171,6 +231,38 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
         for (i = 0, len = adaptations.length; i < len; i += 1) {
             funcs.push(this.getIsVideo(adaptations[i]));
+        }
+        Q.all(funcs).then(
+            function (results) {
+                var found = false;
+                for (i = 0, len = results.length; i < len; i += 1) {
+                    if (results[i] === true) {
+                        found = true;
+                        deferred.resolve(self.processAdaptation(adaptations[i]));
+                    }
+                }
+                if (!found) {
+                    deferred.resolve(null);
+                }
+            }
+        );
+
+        return deferred.promise;
+    },
+
+    getTextData: function (manifest, periodIndex) {
+        "use strict";
+        //return Q.when(null);
+        //------------------------------------
+        var self = this,
+            adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
+            i,
+            len,
+            deferred = Q.defer(),
+            funcs = [];
+
+        for (i = 0, len = adaptations.length; i < len; i += 1) {
+            funcs.push(this.getIsText(adaptations[i]));
         }
         Q.all(funcs).then(
             function (results) {
@@ -263,6 +355,11 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         var representation = data.Representation_asArray[0],
             codec = (representation.mimeType + ';codecs="' + representation.codecs + '"');
         return Q.when(codec);
+    },
+
+    getMimeType: function (data) {
+        "use strict";
+        return Q.when(data.Representation_asArray[0].mimeType);
     },
 
     getKID: function (data) {
@@ -426,6 +523,18 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         }
 
         return Q.when(time);
+    },
+
+    getIsLive: function (manifest) {
+        "use strict";
+        var isLive = false,
+            LIVE_TYPE = "dynamic";
+
+        if (manifest.hasOwnProperty("type")) {
+            isLive = (manifest.type === LIVE_TYPE);
+        }
+
+        return isLive;
     },
 
     getIsDVR: function (manifest, isLive) {

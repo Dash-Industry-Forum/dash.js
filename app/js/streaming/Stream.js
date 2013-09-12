@@ -1,14 +1,14 @@
 /*
  * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
- * 
+ *
  * Copyright (c) 2013, Digital Primates
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
  * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
  * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 MediaPlayer.dependencies.Stream = function () {
@@ -23,6 +23,8 @@ MediaPlayer.dependencies.Stream = function () {
         videoTrackIndex = -1,
         audioController = null,
         audioTrackIndex = -1,
+        textController = null,
+        textTrackIndex = -1,
         autoPlay = true,
         initialized = false,
         load,
@@ -223,7 +225,8 @@ MediaPlayer.dependencies.Stream = function () {
         tearDownMediaSource = function () {
             var self = this,
                 videoBuffer,
-                audioBuffer;
+                audioBuffer,
+                textBuffer;
 
             if (!!videoController) {
                 videoController.stop();
@@ -246,10 +249,17 @@ MediaPlayer.dependencies.Stream = function () {
                     self.sourceBufferExt.abort(audioBuffer);
                     self.sourceBufferExt.removeSourceBuffer(mediaSource, audioBuffer);
                 }
+
+                if (!!textController) {
+                    textBuffer = textController.getBuffer();
+                    self.sourceBufferExt.abort(textBuffer);
+                    self.sourceBufferExt.removeSourceBuffer(mediaSource, textBuffer);
+                }
             }
 
             videoController = null;
             audioController = null;
+            textController = null;
 
             videoCodec = null;
             audioCodec = null;
@@ -262,9 +272,9 @@ MediaPlayer.dependencies.Stream = function () {
             self.videoModel.setSource(null);
         },
 
-        checkIfInitialized = function (videoReady, audioReady, deferred) {
-            if (videoReady && audioReady) {
-                if (videoController === null && audioController === null) {
+        checkIfInitialized = function (videoReady, audioReady, textTrackReady, deferred) {
+            if (videoReady && audioReady && textTrackReady) {
+                if (videoController === null && audioController === null && textController === null) {
                     var msg = "No streams to play.";
                     alert(msg);
                     this.debug.log(msg);
@@ -282,10 +292,11 @@ MediaPlayer.dependencies.Stream = function () {
             var initialize = Q.defer(),
                 videoReady = false,
                 audioReady = false,
+                textTrackReady = false,
                 minBufferTime,
                 self = this,
                 manifest = self.manifestModel.getValue(),
-                isLive = self.videoModel.getIsLive();
+                isLive = self.manifestExt.getIsLive(manifest);
 
             // Figure out some bits about the stream before building anything.
             self.debug.log("Gathering information for buffers. (1)");
@@ -353,18 +364,18 @@ MediaPlayer.dependencies.Stream = function () {
                                         }
 
                                         videoReady = true;
-                                        checkIfInitialized.call(self, videoReady, audioReady, initialize);
+                                        checkIfInitialized.call(self, videoReady, audioReady, textTrackReady,  initialize);
                                     },
                                     function (/*error*/) {
                                         alert("Error creating source buffer.");
                                         videoReady = true;
-                                        checkIfInitialized.call(self, videoReady, audioReady, initialize);
+                                        checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
                                     }
                                 );
                             } else {
                                 self.debug.log("No video data.");
                                 videoReady = true;
-                                checkIfInitialized.call(self, videoReady, audioReady, initialize);
+                                checkIfInitialized.call(self, videoReady, audioReady, textTrackReady,  initialize);
                             }
 
                             return self.manifestExt.getAudioDatas(manifest, periodIndex);
@@ -409,12 +420,12 @@ MediaPlayer.dependencies.Stream = function () {
                                                 }
 
                                                 audioReady = true;
-                                                checkIfInitialized.call(self, videoReady, audioReady, initialize);
+                                                checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
                                             },
                                             function (/*error*/) {
                                                 alert("Error creating source buffer.");
                                                 audioReady = true;
-                                                checkIfInitialized.call(self, videoReady, audioReady, initialize);
+                                                checkIfInitialized.call(self, videoReady, audioReady,textTrackReady,  initialize);
                                             }
                                         );
                                     }
@@ -422,7 +433,54 @@ MediaPlayer.dependencies.Stream = function () {
                             } else {
                                 self.debug.log("No audio streams.");
                                 audioReady = true;
-                                checkIfInitialized.call(self, videoReady, audioReady, initialize);
+                                checkIfInitialized.call(self, videoReady, audioReady,textTrackReady,  initialize);
+                            }
+
+                            return self.manifestExt.getTextData(manifest, periodIndex);
+                        }
+                    ).then(
+                        function (textData) {
+                            var mimeType;
+                            if (textData !== null ) {
+                                self.manifestExt.getDataIndex(textData, manifest, periodIndex).then(
+                                    function (index) {
+                                        textTrackIndex = index;
+                                        self.debug.log("Save text track: " + textTrackIndex);
+                                    }
+                                );
+                                self.manifestExt.getMimeType(textData).then(
+                                    function (type)
+                                    {
+                                        mimeType = type;
+                                        return self.sourceBufferExt.createSourceBuffer(mediaSource, mimeType);
+                                    }
+                                ).then(
+                                    function (buffer) {
+                                        if (buffer === null) {
+                                            self.debug.log("Source buffer was not created for text track");
+                                        } else {
+                                            textController = self.system.getObject("textController");
+                                            textController.initialize(periodIndex, textData, buffer, self.videoModel);
+                                            if (buffer.hasOwnProperty('initialize')) {
+                                                buffer.initialize(mimeType, textController);
+                                            }
+                                            self.debug.log("Text is ready!");
+                                            textTrackReady = true;
+                                            checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
+                                        }
+                                    },
+                                    function (error) {
+                                        self.debug.log("Error creating text buffer:");
+                                        self.debug.log(error);
+                                        alert("Error creating source buffer.");
+                                        textTrackReady = true;
+                                        checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
+                                    }
+                                );
+                            }else {
+                                self.debug.log("No text tracks.");
+                                textTrackReady = true;
+                                checkIfInitialized.call(self, videoReady, audioReady,textTrackReady,  initialize);
                             }
                         }
                     );
@@ -435,7 +493,8 @@ MediaPlayer.dependencies.Stream = function () {
         initializePlayback = function () {
             var self = this,
                 initialize = Q.defer(),
-                isLive = self.videoModel.getIsLive();
+                manifest = self.manifestModel.getValue(),
+                isLive = self.manifestExt.getIsLive(manifest);
 
             self.debug.log("Getting ready for playback...");
 
@@ -480,6 +539,9 @@ MediaPlayer.dependencies.Stream = function () {
             }
             if (audioController) {
                 audioController.start();
+            }
+            if (textController) {
+                textController.start();
             }
         },
 
@@ -582,29 +644,28 @@ MediaPlayer.dependencies.Stream = function () {
                     return initializePlayback.call(self);
                 }
             ).then(
-                function (/*done*/) {
-                    self.debug.log("Playback initialized!");
-                    play.call(self);
-                    return load.promise;
-                }
-            ).then(
                 function () {
                     self.debug.log("element loaded!");
                     // only first period stream must be played automatically during playback initialization
                     if (periodIndex > 0) {
-						// required to stop unnecessary buffering
+                        // required to stop unnecessary buffering
                         pause.call(self);
                         return;
                     }
                     initPlayback.call(self);
 
+                    if (autoPlay) {
+                        self.debug.log("Playback initialized!");
+                        play.call(self);
+                    }
                 }
             );
         },
 
         initPlayback = function() {
             var self = this,
-                isLive = self.videoModel.getIsLive();
+                manifest = self.manifestModel.getValue(),
+                isLive = self.manifestExt.getIsLive(manifest);
 
             if (isLive) {
                 self.manifestExt.getLiveEdge(self.manifestModel.getValue(), periodIndex).then(

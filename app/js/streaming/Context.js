@@ -22,12 +22,15 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('debug', MediaPlayer.utils.Debug);
             this.system.mapSingleton('eventBus', MediaPlayer.utils.EventBus);
             this.system.mapSingleton('capabilities', MediaPlayer.utils.Capabilities);
+            this.system.mapSingleton('textTrackExtensions', MediaPlayer.utils.TextTrackExtensions);
+            this.system.mapSingleton('vttParser', MediaPlayer.utils.VTTParser);
 
             this.system.mapClass('videoModel', MediaPlayer.models.VideoModel);
             this.system.mapSingleton('manifestModel', MediaPlayer.models.ManifestModel);
             this.system.mapSingleton('metricsModel', MediaPlayer.models.MetricsModel);
             this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel);
 
+            this.system.mapSingleton('textVTTSourceBuffer', MediaPlayer.dependencies.TextVTTSourceBuffer);
             this.system.mapSingleton('mediaSourceExt', MediaPlayer.dependencies.MediaSourceExtensions);
             this.system.mapSingleton('sourceBufferExt', MediaPlayer.dependencies.SourceBufferExtensions);
             this.system.mapSingleton('bufferExt', MediaPlayer.dependencies.BufferExtensions);
@@ -36,12 +39,14 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('protectionExt', MediaPlayer.dependencies.ProtectionExtensions);
             this.system.mapClass('protectionController', MediaPlayer.dependencies.ProtectionController);
 
+
             this.system.mapClass('metrics', MediaPlayer.models.MetricsList);
             this.system.mapClass('downloadRatioRule', MediaPlayer.rules.DownloadRatioRule);
             this.system.mapClass('insufficientBufferRule', MediaPlayer.rules.InsufficientBufferRule);
             this.system.mapClass('limitSwitchesRule', MediaPlayer.rules.LimitSwitchesRule);
             this.system.mapClass('abrRulesCollection', MediaPlayer.rules.BaseRulesCollection);
 
+            this.system.mapClass('textController', MediaPlayer.dependencies.TextController);
             this.system.mapClass('bufferController', MediaPlayer.dependencies.BufferController);
             this.system.mapClass('manifestLoader', MediaPlayer.dependencies.ManifestLoader);
             this.system.mapClass('manifestUpdater', MediaPlayer.dependencies.ManifestUpdater);

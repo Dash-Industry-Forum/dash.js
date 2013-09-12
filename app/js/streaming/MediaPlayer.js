@@ -41,7 +41,7 @@ MediaPlayer = function (aContext) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    var VERSION = "0.2.5",
+    var VERSION = "1.0.0",
         context = aContext,
         system,
         element,
@@ -75,11 +75,12 @@ MediaPlayer = function (aContext) {
             this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
             streamController.setVideoModel(this.videoModel);
+            streamController.setAutoPlay(autoPlay);
             streamController.load(source);
         },
 
         doAutoPlay = function () {
-            if (autoPlay && isReady()) {
+            if (isReady()) {
                 play.call(this);
             }
         };
@@ -97,7 +98,6 @@ MediaPlayer = function (aContext) {
         videoModel: undefined,
         abrController: undefined,
         metricsModel: undefined,
-        metricsConverter: undefined,
         metricsExt: undefined,
 
         addEventListener: function (type, listener, useCapture) {
@@ -119,10 +119,6 @@ MediaPlayer = function (aContext) {
             }
         },
 
-        getMetricsConverter: function () {
-            return this.metricsConverter;
-        },
-
         getDebug: function () {
             return this.debug;
         },
@@ -137,14 +133,6 @@ MediaPlayer = function (aContext) {
 
         getAutoPlay: function () {
             return autoPlay;
-        },
-
-        getIsLive: function () {
-            return this.videoModel.getIsLive();
-        },
-
-        setIsLive: function (value) {
-            this.videoModel.setIsLive(value);
         },
 
         getMetricsExt: function () {
@@ -178,10 +166,6 @@ MediaPlayer = function (aContext) {
             }
 
             element = view;
-
-            // Set the video to autoplay.
-            // We'll tell it when to go.
-            element.autoplay = true;
 
             model = new MediaPlayer.models.VideoModel(element);
             this.videoModel.setElement(element);
