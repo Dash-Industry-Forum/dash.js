@@ -28,27 +28,54 @@ Dash.dependencies.DashHandler = function () {
         },
 
         replaceNumberForTemplate = function (url, value) {
+
             var startI=url.indexOf("$Number");
+
+            if (startI<0)
+                return url;
+
             var endI=url.indexOf("$", startI+7);
             var per=url.indexOf("%", startI+7);
 
             if (per>startI && per<endI) {
-                var d=url.indexOf("d", per+1);
-                var c=url.substring(per+1, d);
-                value=addZeros(value, c);
+
+                var type=url.charAt(endI-1);
+                var padding=url.substring(per+1, endI-1);
+
+                switch (type) {
+                    case 'd':
+                        value=addZeros(value, padding);
+                        break;
+                    case 'h':
+                        value=decimalToHex(value, padding);
+                        break;
+                    default:
+                        self.debug.log("Unrecognised numeric identifier in URL.");
+                }
             }
 
             var v = value.toString();
             return url.substring(0, startI)+v+url.substring(endI+1);
         },
 
-        addZeros = function (s, count) {
-            if (s.length==count)
+        addZeros = function (s, padding) {
+            if (s.length==padding)
                 return s;
             else {
                 s="0"+s;
-                return addZeros(s, count);
+                return addZeros(s, padding);
            }
+        },
+
+        decimalToHex = function (d, padding) {
+            var hex = Number(d).toString(16);
+            padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+
+            while (hex.length < padding) {
+                hex = "0" + hex;
+            }
+
+            return hex;
         },
 
         replaceTimeForTemplate = function (url, value) {
