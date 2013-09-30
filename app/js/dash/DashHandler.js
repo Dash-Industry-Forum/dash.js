@@ -249,7 +249,7 @@ Dash.dependencies.DashHandler = function () {
                     seg = new Dash.vo.Segment();
 
                     seg.timescale = fTimescale;
-                    if (frag.hasOwnProperty("t")) {
+                    if (frag.hasOwnProperty("t") && j==0) {
                         seg.startTime = frag.t;
                         time = frag.t;
                     } else {
