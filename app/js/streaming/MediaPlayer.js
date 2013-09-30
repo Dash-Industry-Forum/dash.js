@@ -183,6 +183,8 @@ MediaPlayer = function (aContext) {
             }
 
             source = url;
+            this.setQualityFor('video', 0);
+            this.setQualityFor('audio', 0);
 
             // TODO : update
 
