@@ -29,53 +29,49 @@ Dash.dependencies.DashHandler = function () {
 
         replaceNumberForTemplate = function (url, value) {
 
-            var startI=url.indexOf("$Number");
+            var startI = url.indexOf("$Number");
 
-            if (startI<0)
+            if (startI < 0) {
                 return url;
+            }
 
-            var endI=url.indexOf("$", startI+7);
-            var per=url.indexOf("%", startI+7);
+            var endI = url.indexOf("$", startI + 7);
+            var per = url.indexOf("%", startI + 7);
 
-            if (per>startI && per<endI) {
+            if (per > startI && per < endI) {
 
-                var type=url.charAt(endI-1);
-                var padding=url.substring(per+1, endI-1);
+                var type = url.charAt(endI - 1);
+                var padding = url.substring(per + 1, endI - 1);
 
                 switch (type) {
                     case 'd':
-                        value=addZeros(value, padding);
+                        value = addZeros(value, padding);
                         break;
                     case 'h':
-                        value=decimalToHex(value, padding);
+                        value = decimalToHex(value, padding);
                         break;
                     default:
-                        self.debug.log("Unrecognised numeric identifier in URL.");
+                        this.debug.log("Unrecognised numeric identifier in URL.");
                 }
             }
 
             var v = value.toString();
-            return url.substring(0, startI)+v+url.substring(endI+1);
+            return url.substring(0, startI) + v + url.substring(endI + 1);
         },
 
         addZeros = function (s, padding) {
-            if (s.length==padding)
+            if (s.length == padding)
                 return s;
             else {
-                s="0"+s;
+                s = "0" + s;
                 return addZeros(s, padding);
            }
         },
 
         decimalToHex = function (d, padding) {
             var hex = Number(d).toString(16);
-            padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-
-            while (hex.length < padding) {
-                hex = "0" + hex;
-            }
-
-            return hex;
+            padding = (padding == null) ? 2 : padding;
+            return addZeros(hex, padding);
         },
 
         replaceTimeForTemplate = function (url, value) {
