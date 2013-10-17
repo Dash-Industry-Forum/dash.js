@@ -20,7 +20,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         decideBufferLength: function (minBufferTime) {
             bufferTime = 4;
 
-            if (isNaN(minBufferTime) || minBufferTime <= 0) {
+            if (isNaN(minBufferTime) || minBufferTime <= bufferTime) {
                 bufferTime = 4;
             } else {
                 bufferTime = minBufferTime;
