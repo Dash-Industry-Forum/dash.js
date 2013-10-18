@@ -199,11 +199,18 @@ Dash.dependencies.DashHandler = function () {
                     repeat = frag.r;
                 }
 
+                //This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the 
+                // next MPD update."
+                if(repeat < 0)
+                    repeat = (duration - time/fTimescale)/(frag.d/fTimescale) - 1;
+
                 for (j = 0; j <= repeat; j += 1) {
                     seg = new Dash.vo.Segment();
 
                     seg.timescale = fTimescale;
-                    if (frag.hasOwnProperty("t")) {
+                    
+                    //For a repeated S element, t belongs only to the first segment
+                    if (j == 0 && frag.hasOwnProperty("t")) {
                         seg.startTime = frag.t;
                         time = frag.t;
                     } else {
