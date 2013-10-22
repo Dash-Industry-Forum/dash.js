@@ -11,34 +11,21 @@
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.BufferExtensions = function () {
+MediaPlayer.dependencies.SchedulerExtensions = function () {
     "use strict";
-
-    var bufferTime;
-
-    return {
-        decideBufferLength: function (minBufferTime) {
-            bufferTime = 4;
-
-            if (isNaN(minBufferTime) || minBufferTime <= bufferTime) {
-                bufferTime = 4;
-            } else {
-                bufferTime = minBufferTime;
-            }
-
-            return Q.when(bufferTime);
-        },
-
-        getRequiredBufferLength: function (bufferLength, delay, playbackRate) {
-            // Is more data needed in the next 'delay' seconds?
-            var actualDuration = bufferLength / Math.max(playbackRate, 1),
-                requiredBufferLength = (bufferTime - (actualDuration - delay));
-            requiredBufferLength = Math.max(requiredBufferLength, 0);
-            return Q.when(requiredBufferLength);
-        }
-    };
 };
 
-MediaPlayer.dependencies.BufferExtensions.prototype = {
-    constructor: MediaPlayer.dependencies.BufferExtensions
+MediaPlayer.dependencies.SchedulerExtensions.prototype = {
+    constructor: MediaPlayer.dependencies.SchedulerExtensions,
+
+    getExecuteInterval: function(context) {
+        var interval = 1000;
+
+        if (typeof(context.getMinBufferTime) !== "undefined") {
+            interval = (context.getMinBufferTime() * 1000.0) / 4;
+            interval = Math.max(interval, 1000);
+        }
+
+        return interval;
+    }
 };

@@ -586,6 +586,52 @@ Dash.dependencies.DashHandler = function () {
             return deferred.promise;
         },
 
+        getSegmentCountForDuration = function (quality, data, requiredDuration) {
+            var self = this,
+                representation = getRepresentationForQuality(quality, data),
+                deferred = Q.defer(),
+                segmentDuration,
+                segmentCount = 0,
+                segment,
+                ft = 1,
+                fd;
+
+            if (requiredDuration <= 0) {
+                return Q.when(segmentCount);
+            }
+
+            getSegments.call(self, representation).then(
+                function (segments) {
+                    if (segments === null || segments === undefined) {
+                        if (!representation.hasOwnProperty("SegmentTemplate")) {
+                            throw "Expected SegmentTemplate!";
+                        }
+
+                        if (representation.SegmentTemplate.hasOwnProperty("timescale")) {
+                            ft = representation.SegmentTemplate.timescale;
+                        }
+
+                        fd = representation.SegmentTemplate.duration;
+                        segmentDuration = fd / ft;
+                    } else {
+                        // The duration of the segments is supposed to be the same for all segments, so we just grab the first one
+                        segment = segments[0];
+                        if (segment.hasOwnProperty("timescale")) {
+                            ft = segment.timescale;
+                        }
+
+                        fd = segment.duration;
+                        segmentDuration = fd / ft;
+                    }
+
+                    segmentCount = Math.ceil((requiredDuration + (segmentDuration / 2)) / segmentDuration);
+                    deferred.resolve(segmentCount);
+                }
+            );
+
+            return deferred.promise;
+        },
+
         getCurrentTime = function (quality, data) {
             if (index === -1) {
                 return Q.when(0);
@@ -673,7 +719,8 @@ Dash.dependencies.DashHandler = function () {
         getInitRequest: getInit,
         getSegmentRequestForTime: getForTime,
         getNextSegmentRequest: getNext,
-        getCurrentTime: getCurrentTime
+        getCurrentTime: getCurrentTime,
+        getSegmentCountForDuration: getSegmentCountForDuration
     };
 };
 
