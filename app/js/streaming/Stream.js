@@ -293,7 +293,6 @@ MediaPlayer.dependencies.Stream = function () {
                 videoReady = false,
                 audioReady = false,
                 textTrackReady = false,
-                minBufferTime,
                 self = this,
                 manifest = self.manifestModel.getValue(),
                 isLive = self.manifestExt.getIsLive(manifest);
@@ -302,16 +301,7 @@ MediaPlayer.dependencies.Stream = function () {
             self.debug.log("Gathering information for buffers. (1)");
             self.manifestExt.getDuration(manifest, isLive).then(
                 function (/*duration*/) {
-
-                    self.debug.log("Gathering information for buffers. (2)");
-                    self.bufferExt.decideBufferLength(manifest.minBufferTime).then(
-                        function (time) {
-                            self.debug.log("Gathering information for buffers. (3)");
-                            self.debug.log("Buffer time: " + time);
-                            minBufferTime = time;
-                            return self.manifestExt.getVideoData(manifest, periodIndex);
-                        }
-                    ).then(
+                    self.manifestExt.getVideoData(manifest, periodIndex).then(
                         function (videoData) {
                             if (videoData !== null) {
                                 self.debug.log("Create video buffer.");
@@ -359,7 +349,7 @@ MediaPlayer.dependencies.Stream = function () {
                                             // TODO : Pass to controller and then pass to each method on handler?
 
                                             videoController = self.system.getObject("bufferController");
-                                            videoController.initialize("video", periodIndex, videoData, buffer, minBufferTime, self.videoModel, self.requestScheduler, self.fragmentController);
+                                            videoController.initialize("video", periodIndex, videoData, buffer, self.videoModel, self.requestScheduler, self.fragmentController);
                                             self.debug.log("Video is ready!");
                                         }
 
@@ -415,7 +405,7 @@ MediaPlayer.dependencies.Stream = function () {
                                                     // TODO : How to tell index handler live/duration?
                                                     // TODO : Pass to controller and then pass to each method on handler?
                                                     audioController = self.system.getObject("bufferController");
-                                                    audioController.initialize("audio", periodIndex, primaryAudioData, buffer, minBufferTime, self.videoModel, self.requestScheduler, self.fragmentController);
+                                                    audioController.initialize("audio", periodIndex, primaryAudioData, buffer, self.videoModel, self.requestScheduler, self.fragmentController);
                                                     self.debug.log("Audio is ready!");
                                                 }
 

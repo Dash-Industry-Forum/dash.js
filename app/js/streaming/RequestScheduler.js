@@ -115,10 +115,7 @@
         startPeriodicScheduleListener = function() {
             if (executeId !== null) return;
 
-            if (executeInterval === null) {
-                executeInterval = this.schedulerExt.getExecuteInterval(schedulerModels[0].getContext());
-            }
-
+            this.adjustExecuteInterval();
             executeId = setInterval(onScheduledTimeOccurred.bind(this), executeInterval);
         },
 
@@ -173,6 +170,19 @@
          */
         getExecuteInterval: function () {
             return executeInterval;
+        },
+
+        adjustExecuteInterval: function() {
+            var newExecuteInterval = this.schedulerExt.getExecuteInterval(schedulerModels[0].getContext());
+
+            if (executeInterval !== newExecuteInterval) {
+                executeInterval = newExecuteInterval;
+                if (executeId !== null) {
+                    this.debug.log("Changing execute interval: " + executeInterval);
+                    clearInterval(executeId);
+                    executeId = setInterval(onScheduledTimeOccurred.bind(this), executeInterval);
+                }
+            }
         },
 
         startScheduling: startScheduling,

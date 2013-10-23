@@ -14,31 +14,81 @@
 MediaPlayer.dependencies.BufferExtensions = function () {
     "use strict";
 
-    var bufferTime;
+    var minBufferTarget,
+        currentBufferTarget,
+        isLongFormContent,
+        totalRepresentationCount,
+        isLive,
+
+        getCurrentIndex = function(metrics) {
+            var repSwitch = this.metricsExt.getCurrentRepresentationSwitch(metrics);
+
+            if (repSwitch !== null) {
+                return this.metricsExt.getIndexForRepresentation(repSwitch.to);
+            }
+            return null;
+        };
 
     return {
-        decideBufferLength: function (minBufferTime) {
-            bufferTime = 4;
+        system:undefined,
+        videoModel: undefined,
+        manifestExt: undefined,
+        metricsExt: undefined,
+        metricsModel: undefined,
 
-            if (isNaN(minBufferTime) || minBufferTime <= bufferTime) {
-                bufferTime = 4;
-            } else {
-                bufferTime = minBufferTime;
-            }
-
-            return Q.when(bufferTime);
+        init: function(duration, manifest, periodIndex) {
+            isLive = this.manifestExt.getIsLive(manifest);
+            isLongFormContent = (duration >= MediaPlayer.dependencies.BufferExtensions.LONG_FORM_CONTENT_DURATION_THRESHOLD);
+            this.manifestExt.getVideoData(manifest, periodIndex).then(
+                function(data) {
+                    totalRepresentationCount = data.Representation_asArray.length - 1;
+                }
+            );
         },
 
-        getRequiredBufferLength: function (bufferLength, delay, playbackRate) {
-            // Is more data needed in the next 'delay' seconds?
-            var actualDuration = bufferLength / Math.max(playbackRate, 1),
-                requiredBufferLength = (bufferTime - (actualDuration - delay));
+        decideBufferLength: function (minBufferTime, waitingForBuffer) {
+            minBufferTarget = (waitingForBuffer || waitingForBuffer === undefined) ?
+                Math.max(MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_STARTUP, minBufferTime / 4 ) :
+                Math.max(MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
+
+            return Q.when(minBufferTarget);
+        },
+
+        getRequiredBufferLength: function (bufferLength, waitingForBuffer, delay, playbackRate) {
+            var metrics = this.metricsModel.getReadOnlyMetricsFor("video"),
+                isPlayingAtTopQuality = (getCurrentIndex.call(this, metrics) === totalRepresentationCount),
+                actualDuration,
+                requiredBufferLength;
+
+            currentBufferTarget = minBufferTarget;
+
+            if (!isLive) {
+                if (!waitingForBuffer && isPlayingAtTopQuality) {
+                    currentBufferTarget = isLongFormContent ?
+                        MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :
+                        MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY;
+                }
+            }
+
+            actualDuration = bufferLength / Math.max(playbackRate, 1);
+            requiredBufferLength = (currentBufferTarget - (actualDuration - delay));
             requiredBufferLength = Math.max(requiredBufferLength, 0);
+
             return Q.when(requiredBufferLength);
+        },
+
+        //TODO: need to add this info to MediaPlayer.vo.metrics.BufferLevel or create new metric?
+        getBufferTarget: function() {
+            return currentBufferTarget === undefined ? minBufferTarget : currentBufferTarget;
         }
     };
 };
 
-MediaPlayer.dependencies.BufferExtensions.prototype = {
-    constructor: MediaPlayer.dependencies.BufferExtensions
-};
+MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_STARTUP = 1;
+MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME = 8;
+MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY = 30;
+MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 300;
+MediaPlayer.dependencies.BufferExtensions.LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+MediaPlayer.dependencies.BufferExtensions.prototype.constructor = MediaPlayer.dependencies.BufferExtensions;
+
+
