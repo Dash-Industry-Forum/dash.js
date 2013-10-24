@@ -31,12 +31,10 @@ MediaPlayer.dependencies.BufferController = function () {
         playingTime,
         lastQuality = -1,
         stalled = false,
-        liveOffset = 0,
         isLiveStream = false,
         liveInitialization = false,
         deferredAppend = null,
         periodIndex = -1,
-        timestampOffset = 0,
         fragmentsToLoad = 0,
 
         type,
@@ -137,7 +135,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             this.debug.log("BufferController " + type + " seek: " + time);
             seeking = true;
-            seekTarget = time - liveOffset - timestampOffset;
+            seekTarget = time;
             currentTime = new Date();
             clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
             playListMetrics = this.metricsModel.addPlayList(type, currentTime, seekTarget, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
@@ -285,7 +283,7 @@ MediaPlayer.dependencies.BufferController = function () {
             if (dataChanged && !seeking) {
                 //time = self.videoModel.getCurrentTime();
                 self.debug.log("Data changed - loading the " + type + " fragment for time: " + playingTime);
-                promise = self.indexHandler.getSegmentRequestForTime(playingTime - timestampOffset - liveOffset, quality, data);
+                promise = self.indexHandler.getSegmentRequestForTime(playingTime, quality, data);
             } else {
                 var deferred = Q.defer(),
                     segmentTime = self.videoModel.getCurrentTime();
@@ -299,7 +297,7 @@ MediaPlayer.dependencies.BufferController = function () {
                             segmentTime = range.end;
                         }
                         self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
-                        self.indexHandler.getSegmentRequestForTime(segmentTime - timestampOffset - liveOffset, quality, data).then(
+                        self.indexHandler.getSegmentRequestForTime(segmentTime, quality, data).then(
                             function (request) {
                                 deferred.resolve(request);
                             }
@@ -566,10 +564,9 @@ MediaPlayer.dependencies.BufferController = function () {
 
             self.indexHandler.setIsLive(isLive);
 
-            self.manifestExt.getTimestampOffsetForPeriod(periodIndex, self.manifestModel.getValue(), isLive).then(
+            self.manifestExt.getTimestampOffsetForPeriod(periodIndex, self.manifestModel.getValue()).then(
                 function (offset) {
                     self.getBuffer().timestampOffset = offset;
-                    timestampOffset = offset;
                 }
             );
 
@@ -579,15 +576,9 @@ MediaPlayer.dependencies.BufferController = function () {
                 }
             );
 
-            self.manifestExt.getStartOffsetForPeriod(self.manifestModel.getValue(), periodIndex).then(
-                function (liveStartValue) {
-                    liveOffset = liveStartValue;
-                    self.manifestExt.getDurationForPeriod(periodIndex, self.manifestModel.getValue(), isLive).then(
-                        function (duration) {
-                            self.indexHandler.setDuration(duration + liveOffset);
-                            self.bufferExt.init(duration + liveOffset, manifest, periodIndex);
-                        }
-                    );
+            self.manifestExt.getDurationForPeriod(periodIndex, self.manifestModel.getValue()).then(
+                function (duration) {
+                    self.indexHandler.setDuration(duration);
                 }
             );
 
@@ -637,23 +628,6 @@ MediaPlayer.dependencies.BufferController = function () {
 
         setFragmentController: function (value) {
             this.fragmentController = value;
-        },
-
-        getTimestampOffset: function() {
-            return timestampOffset;
-        },
-
-        setTimestampOffset: function(value) {
-            this.getBuffer().timestampOffset = timestampOffset;
-            timestampOffset = value;
-        },
-
-        getLiveOffset: function() {
-            return liveOffset;
-        },
-
-        setLiveStart: function(value) {
-            liveOffset = value;
         },
 
         getAutoSwitchBitrate : function () {

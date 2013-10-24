@@ -108,8 +108,8 @@
             }
 
             var lastRange = ranges.length -1,
-                bufferEndTime = ranges.end(lastRange) - activeStream.getTimestampOffset(),
-                remainingBufferDuration = activeStream.getDuration() - bufferEndTime;
+                bufferEndTime = ranges.end(lastRange),
+                remainingBufferDuration = activeStream.getStartTime() + activeStream.getDuration() - bufferEndTime;
 
             if (remainingBufferDuration < STREAM_BUFFER_END_THRESHOLD) {
                 activeStream.getVideoModel().unlisten("progress", progressHandler);
@@ -127,7 +127,7 @@
             // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
             if (activeStream.getVideoModel().getElement().seeking) return;
 
-            var streamEndTime  = activeStream.getDuration() + activeStream.getTimestampOffset() + activeStream.getLiveOffset(),
+            var streamEndTime  = activeStream.getStartTime() + activeStream.getDuration(),
                 currentTime = activeStream.getVideoModel().getCurrentTime();
 
             // check if stream end is reached

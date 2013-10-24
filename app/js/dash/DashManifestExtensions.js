@@ -628,65 +628,67 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(manifest.Period_asArray.length);
     },
 
-    getTimestampOffsetForPeriod: function (periodIndex, manifest, isLive) {
-        var self = this;
-        return self.getStartOffsetForPeriod(manifest, periodIndex).then(
-            function (time) {
-                var startTime = manifest.Period_asArray[periodIndex].start;
-                if (typeof(startTime) !== "undefined") {
-                    return Q.when(manifest.Period_asArray[periodIndex].start - time);
-                } else {
-                    var deferredDurations = [],
-                        defferedOffset = Q.defer();
-
-                    for(var i = 0; i < periodIndex; i++) {
-                        deferredDurations.push(self.getDurationForPeriod(i, manifest, isLive));
-                    }
-
-                    Q.all(deferredDurations).then(
-                        function(durationResult) {
-                            if(durationResult) {
-                                var offset = 0;
-                                for (var j = 0, ln = durationResult.length; j < ln; j++) {
-                                    offset += durationResult[j];
-                                }
-                                defferedOffset.resolve(offset - time);
-                            } else {
-                                defferedOffset.reject("Error calculating timestamp offset for period");
-                            }
-                        }
-                    );
-
-                    return defferedOffset.promise;
-                }
-            }
-        );
-    },
-
-    getStartOffsetForPeriod: function (manifest, periodIndex) {
+    getTimestampOffsetForPeriod: function (periodIndex, manifest) {
         var self = this,
-            periodArray = manifest.Period_asArray,
-            period = periodArray[periodIndex],
-            time = 0,
-            defer,
-            idx;
+            timestampOffset,
+            deferred = Q.defer();
 
-        for (idx = 0; idx < periodIndex; idx++) {
-            if (period.hasOwnProperty("BaseURL") && (periodArray[idx].BaseURL == period.BaseURL)) {
-                defer = Q.defer();
-                Q.all([self.getLiveStart(manifest, idx), self.getLiveStart(manifest, periodIndex)]).then(
-                    function (liveStartResults) {
-                        if (typeof(liveStartResults) !== "undefined" && !isNaN(liveStartResults[0] && !isNaN(liveStartResults[0]))) {
-                            time = Math.abs(liveStartResults[0] - liveStartResults[1]);
-                        }
-
-                        defer.resolve(time);
+        self.getPresentationOffset(manifest, periodIndex).then(
+            function(presentationOffset) {
+                self.getPeriodStart(manifest, periodIndex).then(
+                    function(periodStart) {
+                        timestampOffset = periodStart - presentationOffset;
+                        deferred.resolve(timestampOffset);
                     }
                 );
-                break;
             }
+        );
+
+        return deferred.promise;
+    },
+
+    getPeriodStart: function (manifest, periodIndex) {
+        var self = this,
+            isLive = self.getIsLive(manifest),
+            i,
+            p = null,
+            prevStart = null,
+            prevDuration = null,
+            periodStart;
+
+        for (i = 0; i <= periodIndex; i += 1) {
+            p = manifest.Period_asArray[i];
+
+            // If the attribute @start is present in the Period, then the
+            // Period is a regular Period and the PeriodStart is equal
+            // to the value of this attribute.
+            if (p.hasOwnProperty("start")) {
+                periodStart = p.start;
+            }
+
+            // If the @start attribute is absent, but the previous Period
+            // element contains a @duration attribute then then this new
+            // Period is also a regular Period. The start time of the new
+            // Period PeriodStart is the sum of the start time of the previous
+            // Period PeriodStart and the value of the attribute @duration
+            // of the previous Period.
+            else if (prevStart !== null && prevDuration !== null) {
+                periodStart = prevStart + prevDuration;
+            }
+            // If (i) @start attribute is absent, and (ii) the Period element
+            // is the first in the MPD, and (iii) the MPD@type is 'static',
+            // then the PeriodStart time shall be set to zero.
+            else if (i === 0 && !isLive) {
+                periodStart = 0;
+            }
+
+            if (p.hasOwnProperty("duration")) {
+                prevDuration = p.duration;
+            }
+
+            prevStart = periodStart;
         }
 
-        return Q.when(defer ? defer.promise : time);
+        return Q.when(periodStart);
     }
 };
