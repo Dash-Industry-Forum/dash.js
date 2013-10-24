@@ -41,6 +41,7 @@ MediaPlayer.dependencies.Stream = function () {
         timeupdateListener,
         duration,
         periodIndex = -1,
+        startTime,
 
         needKeyListener,
         keyMessageListener,
@@ -653,26 +654,15 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         initPlayback = function() {
-            var self = this,
-                manifest = self.manifestModel.getValue(),
-                isLive = self.manifestExt.getIsLive(manifest);
+            var self = this;
 
-            if (isLive) {
-                self.manifestExt.getLiveEdge(self.manifestModel.getValue(), periodIndex).then(
-                    function (edge) {
-                        self.debug.log("Got live content.  Starting playback at offset: " + edge);
-                        seek.call(self, edge + self.getTimestampOffset() + self.getLiveOffset());
-                    }
-                );
-            } else {
-                self.manifestExt.getPresentationOffset(self.manifestModel.getValue(), periodIndex).then(
-                    function (offset) {
-                        self.debug.log("Got VOD content.  Starting playback at offset: " + offset);
-                        seek.call(self, offset + self.getTimestampOffset() + self.getLiveOffset());
-                    }
-                );
-            }
-
+            self.manifestExt.getPeriodStart(self.manifestModel.getValue(), periodIndex).then(
+                function (start) {
+                    startTime = start;
+                    self.debug.log("Got content.  Starting playback at offset: " + start);
+                    seek.call(self, start);
+                }
+            );
         },
 
         currentTimeChanged = function () {
@@ -835,14 +825,8 @@ MediaPlayer.dependencies.Stream = function () {
             return periodIndex;
         },
 
-        getTimestampOffset: function() {
-            return videoController ? videoController.getTimestampOffset() :
-                (audioController ? audioController.getTimestampOffset() : 0);
-        },
-
-        getLiveOffset: function() {
-            return videoController ? videoController.getLiveOffset() :
-                (audioController ? audioController.getLiveOffset() : 0);
+        getStartTime: function() {
+            return startTime;
         },
 
         initPlayback: initPlayback,
