@@ -35,7 +35,9 @@ MediaPlayer.dependencies.BufferController = function () {
         liveInitialization = false,
         deferredAppend = null,
         periodIndex = -1,
+        duration = 0,
         fragmentsToLoad = 0,
+        fragmentModel = null,
 
         type,
         data,
@@ -51,7 +53,9 @@ MediaPlayer.dependencies.BufferController = function () {
             self.debug.log("BufferController " + type + " setState to:" + value);
             state = value;
             // Notify the FragmentController about any state change to track the loading process of each active BufferController
-            self.fragmentController.onBufferControllerStateChange();
+            if (fragmentModel !== null) {
+                self.fragmentController.onBufferControllerStateChange();
+            }
         },
 
         clearPlayListTraceMetrics = function (endTime, stopreason) {
@@ -104,7 +108,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     setState.call(self, READY);
 
                     self.requestScheduler.startScheduling(self, validate);
-                    self.fragmentController.attachBufferController(self);
+                    fragmentModel = self.fragmentController.attachBufferController(self);
                 }
             );
         },
@@ -147,7 +151,7 @@ MediaPlayer.dependencies.BufferController = function () {
             this.debug.log("BufferController " + type + " stop.");
             setState.call(this, WAITING);
             this.requestScheduler.stopScheduling(this);
-            this.fragmentController.detachBufferController(this);
+            this.fragmentController.detachBufferController(fragmentModel);
 
             started = false;
             waitingForBuffer = false;
@@ -415,7 +419,7 @@ MediaPlayer.dependencies.BufferController = function () {
             var self =this,
                 playbackRate = self.videoModel.getPlaybackRate(),
                 deferred = Q.defer();
-                self.bufferExt.getRequiredBufferLength(currentBufferLength, waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, playbackRate).then(
+                self.bufferExt.getRequiredBufferLength(currentBufferLength, waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, playbackRate, isLiveStream, duration, data).then(
                     function (requiredBufferLength) {
                         self.indexHandler.getSegmentCountForDuration(quality, data, requiredBufferLength).then(
                             function(count) {
@@ -577,8 +581,9 @@ MediaPlayer.dependencies.BufferController = function () {
             );
 
             self.manifestExt.getDurationForPeriod(periodIndex, self.manifestModel.getValue()).then(
-                function (duration) {
-                    self.indexHandler.setDuration(duration);
+                function (durationValue) {
+                    duration = durationValue;
+                    self.indexHandler.setDuration(durationValue);
                 }
             );
 

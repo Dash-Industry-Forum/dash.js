@@ -16,9 +16,14 @@ MediaPlayer.dependencies.BufferExtensions = function () {
 
     var minBufferTarget,
         currentBufferTarget,
-        isLongFormContent,
-        totalRepresentationCount,
-        isLive,
+
+        getCurrentHttpRequestLatency = function(metrics) {
+            var httpRequest = this.metricsExt.getCurrentHttpRequest(metrics);
+            if (httpRequest !== null) {
+                return (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) / 1000;
+            }
+            return 0;
+        },
 
         getCurrentIndex = function(metrics) {
             var repSwitch = this.metricsExt.getCurrentRepresentationSwitch(metrics);
@@ -36,27 +41,19 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         metricsExt: undefined,
         metricsModel: undefined,
 
-        init: function(duration, manifest, periodIndex) {
-            isLive = this.manifestExt.getIsLive(manifest);
-            isLongFormContent = (duration >= MediaPlayer.dependencies.BufferExtensions.LONG_FORM_CONTENT_DURATION_THRESHOLD);
-            this.manifestExt.getVideoData(manifest, periodIndex).then(
-                function(data) {
-                    totalRepresentationCount = data.Representation_asArray.length - 1;
-                }
-            );
-        },
-
-        decideBufferLength: function (minBufferTime, waitingForBuffer) {
-            minBufferTarget = (waitingForBuffer || waitingForBuffer === undefined) ?
-                Math.max(MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_STARTUP, minBufferTime / 4 ) :
-                Math.max(MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
+        decideBufferLength: function (minBufferTime/*, waitingForBuffer*/) {
+            minBufferTarget = Math.max(MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
 
             return Q.when(minBufferTarget);
         },
 
-        getRequiredBufferLength: function (bufferLength, waitingForBuffer, delay, playbackRate) {
-            var metrics = this.metricsModel.getReadOnlyMetricsFor("video"),
-                isPlayingAtTopQuality = (getCurrentIndex.call(this, metrics) === totalRepresentationCount),
+        getRequiredBufferLength: function (bufferLength, waitingForBuffer, delay, playbackRate, isLive, duration, data) {
+            var vmetrics = this.metricsModel.getReadOnlyMetricsFor("video"),
+                ametrics = this.metricsModel.getReadOnlyMetricsFor("audio"),
+                isLongFormContent = (duration >= MediaPlayer.dependencies.BufferExtensions.LONG_FORM_CONTENT_DURATION_THRESHOLD),
+                totalRepresentationCount = data.Representation_asArray.length - 1,
+                isPlayingAtTopQuality = (getCurrentIndex.call(this, vmetrics) === totalRepresentationCount &&
+                    getCurrentIndex.call(this, ametrics) === totalRepresentationCount),
                 actualDuration,
                 requiredBufferLength;
 
@@ -72,7 +69,10 @@ MediaPlayer.dependencies.BufferExtensions = function () {
 
             actualDuration = bufferLength / Math.max(playbackRate, 1);
             requiredBufferLength = (currentBufferTarget - (actualDuration - delay));
+            requiredBufferLength += Math.max(getCurrentHttpRequestLatency.call(this, vmetrics),
+                getCurrentHttpRequestLatency.call(this, ametrics));
             requiredBufferLength = Math.max(requiredBufferLength, 0);
+
 
             return Q.when(requiredBufferLength);
         },
