@@ -483,7 +483,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                 self.setMinBufferTime(time);
                                 self.requestScheduler.adjustExecuteInterval();
                             }
-                        );                        
+                        );
                         self.abrController.getPlaybackQuality(type, data).then(
                             function (quality) {
                                 self.debug.log(type + " Playback quality: " + quality);
