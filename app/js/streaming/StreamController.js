@@ -186,6 +186,12 @@
             return model;
         },
 
+        removeVideoElement = function(element) {
+            if (element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+        },
+
         switchStream = function(from, to, seekTo) {
 
             if(!from || !to || from === to) return;
@@ -253,6 +259,10 @@
 
             self.manifestLoader.load(url).then(
                 function(manifest) {
+                    self.manifestModel.setValue(manifest);
+                    self.debug.log("Manifest has loaded.");
+                    self.debug.log(self.manifestModel.getValue());
+                    self.manifestUpdater.init();
                     self.manifestExt.getPeriodCount(manifest).then(
                         function(length) {
                             for (var i = 0; i < length; i++) {
@@ -281,9 +291,17 @@
             for (var i = 0, ln = streams.length; i < ln; i++) {
                 var stream = streams[i];
                 stream.reset();
+                // we should not remove the video element for the active stream since it is the element users see at the page
+                if (stream !== activeStream) {
+                    removeVideoElement(stream.getVideoModel().getElement());
+                }
             }
 
             streams = [];
+            this.manifestUpdater.stop();
+            this.manifestModel.setValue(null);
+            deferredSwitch = null;
+            activeStream = null;
         },
 
         play: play,

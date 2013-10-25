@@ -269,6 +269,8 @@ MediaPlayer.dependencies.Stream = function () {
             kid = null;
             initData = [];
             contentProtection = null;
+            mediaSource = null;
+            manifest = null;
 
             self.videoModel.setSource(null);
         },
@@ -624,10 +626,6 @@ MediaPlayer.dependencies.Stream = function () {
             self.debug.log("Stream start loading.");
 
             manifest = manifestResult;
-            self.manifestModel.setValue(manifest);
-            self.debug.log("Manifest has loaded.");
-            self.debug.log(self.manifestModel.getValue());
-            self.manifestUpdater.init();
             return self.mediaSourceExt.createMediaSource().then(
                 function (mediaSourceResult) {
                     mediaSource = mediaSourceResult;
@@ -721,7 +719,6 @@ MediaPlayer.dependencies.Stream = function () {
         system: undefined,
         videoModel: undefined,
         manifestLoader: undefined,
-        manifestUpdater: undefined,
         manifestModel: undefined,
         mediaSourceExt: undefined,
         sourceBufferExt: undefined,
