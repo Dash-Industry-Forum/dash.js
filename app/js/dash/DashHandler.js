@@ -155,7 +155,7 @@ Dash.dependencies.DashHandler = function () {
             } else if (representation.hasOwnProperty("SegmentTemplate") && !representation.SegmentTemplate.hasOwnProperty("SegmentTimeline")) {
                 fTimescale = 1;
                 startNumber = 1;
-                sDuration = Math.floor(duration); // Disregard fractional seconds.  TODO : Is this ok?  The logic breaks if we don't do this...
+                sDuration = duration;
 
                 if (representation.SegmentTemplate.hasOwnProperty("duration")) {
                     fDuration = representation.SegmentTemplate.duration;
