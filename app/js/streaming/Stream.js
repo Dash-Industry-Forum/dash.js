@@ -512,8 +512,18 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         onLoad = function () {
-            this.debug.log("Got loadmetadata event.");
-            load.resolve(null);
+            var self = this;
+            self.debug.log("Got loadmetadata event.");
+
+            self.manifestExt.getPeriodStart(self.manifestModel.getValue(), periodIndex).then(
+                function (start) {
+                    startTime = start;
+                    self.debug.log("Got content.  Starting playback at offset: " + start);
+                    self.system.notify("setCurrentTime");
+                    self.videoModel.setCurrentTime(startTime);
+                    load.resolve(null);
+                }
+            );
         },
 
         onPlay = function () {
@@ -523,16 +533,16 @@ MediaPlayer.dependencies.Stream = function () {
                 return;
             }
 
-            this.debug.log("Starting playback.");
+            this.debug.log("Starting segment loading at offset: " + startTime);
 
             if (videoController) {
-                videoController.start();
+                videoController.seek(startTime);
             }
             if (audioController) {
-                audioController.start();
+                audioController.seek(startTime);
             }
             if (textController) {
-                textController.start();
+                textController.seek(startTime);
             }
         },
 
@@ -635,6 +645,14 @@ MediaPlayer.dependencies.Stream = function () {
                     return initializePlayback.call(self);
                 }
             ).then(
+                function (/*done*/) {
+                    if (autoPlay) {
+                        self.debug.log("Playback initialized!");
+                        play.call(self);
+                        return load.promise;
+                    }
+                }
+            ).then(
                 function () {
                     self.debug.log("element loaded!");
                     // only first period stream must be played automatically during playback initialization
@@ -643,24 +661,6 @@ MediaPlayer.dependencies.Stream = function () {
                         pause.call(self);
                         return;
                     }
-                    initPlayback.call(self);
-
-                    if (autoPlay) {
-                        self.debug.log("Playback initialized!");
-                        play.call(self);
-                    }
-                }
-            );
-        },
-
-        initPlayback = function() {
-            var self = this;
-
-            self.manifestExt.getPeriodStart(self.manifestModel.getValue(), periodIndex).then(
-                function (start) {
-                    startTime = start;
-                    self.debug.log("Got content.  Starting playback at offset: " + start);
-                    seek.call(self, start);
                 }
             );
         },
@@ -829,7 +829,6 @@ MediaPlayer.dependencies.Stream = function () {
             return startTime;
         },
 
-        initPlayback: initPlayback,
         play: play,
         seek: seek,
         pause: pause
