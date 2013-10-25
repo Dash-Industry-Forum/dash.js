@@ -330,6 +330,9 @@ Dash.dependencies.DashHandler = function () {
                     if (time >= ft && time <= (ft + fd)) {
                         idx = i;
                         break;
+                    } else if (idx === -1 && time > (ft + fd)) {
+                        // time is past the end
+                        idx  = i + 1;
                     }
                 }
             }
