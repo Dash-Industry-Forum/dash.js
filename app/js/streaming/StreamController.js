@@ -155,7 +155,7 @@
         onStreamBufferingEnd = function() {
             var nextStream = getNextStream();
             if (nextStream) {
-                nextStream.initPlayback();
+                nextStream.seek(nextStream.getStartTime());
             }
         },
 
@@ -200,7 +200,7 @@
                     if (seekTo) {
                         seek(from.getVideoModel().getCurrentTime());
                     } else {
-                        activeStream.initPlayback();
+                        seek(to.getStartTime());
                     }
 
                     play();
