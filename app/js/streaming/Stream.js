@@ -41,7 +41,7 @@ MediaPlayer.dependencies.Stream = function () {
         timeupdateListener,
         duration,
         periodIndex = -1,
-        startTime,
+        startTime = null,
 
         needKeyListener,
         keyMessageListener,
@@ -279,9 +279,9 @@ MediaPlayer.dependencies.Stream = function () {
             if (videoReady && audioReady && textTrackReady) {
                 if (videoController === null && audioController === null && textController === null) {
                     var msg = "No streams to play.";
-                    alert(msg);
+                    self.errHandler.manifestError({message: msg, id: "nostreams", manifest: manifest});
                     this.debug.log(msg);
-                    deferred.reject(msg);
+                    deferred.reject();
                 } else {
                     this.debug.log("MediaSource initialized!");
                     deferred.resolve(true);
@@ -326,14 +326,21 @@ MediaPlayer.dependencies.Stream = function () {
 
                                                 self.debug.log("Video contentProtection");
 
+                                                if (!!contentProtectionData && !self.capabilities.supportsMediaKeys()) {
+                                                    self.errHandler.capabilityError("mediakeys");
+                                                    deferred.reject();
+                                                    return deferred;
+                                                }
+
                                                 contentProtection = contentProtectionData;
 
                                                 //kid = self.protectionController.selectKeySystem(videoCodec, contentProtection);
                                                 //self.protectionController.ensureKeySession(kid, videoCodec, null);
 
                                                 if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
-                                                    self.debug.log("Codec (" + codec + ") is not supported.");
-                                                    alert("Codec (" + codec + ") is not supported.");
+                                                    var msg = "Video Codec (" + codec + ") is not supported.";
+                                                    self.errHandler.manifestError({message: msg, id: "codec", manifest: manifest});
+                                                    self.debug.log(msg);
                                                     deferred = Q.when(null);
                                                 } else {
                                                     deferred = self.sourceBufferExt.createSourceBuffer(mediaSource, codec);
@@ -360,7 +367,7 @@ MediaPlayer.dependencies.Stream = function () {
                                         checkIfInitialized.call(self, videoReady, audioReady, textTrackReady,  initialize);
                                     },
                                     function (/*error*/) {
-                                        alert("Error creating source buffer.");
+                                        self.errHandler.mediaSourceError("Error creating video source buffer.");
                                         videoReady = true;
                                         checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
                                     }
@@ -391,14 +398,35 @@ MediaPlayer.dependencies.Stream = function () {
                                                 var deferred;
                                                 self.debug.log("Audio codec: " + codec);
                                                 audioCodec = codec;
-                                                if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
-                                                    self.debug.log("Codec (" + codec + ") is not supported.");
-                                                    alert("Codec (" + codec + ") is not supported.");
-                                                    deferred = Q.when(null);
-                                                } else {
-                                                    deferred = self.sourceBufferExt.createSourceBuffer(mediaSource, codec);
-                                                }
-                                                return deferred;
+
+                                                return self.manifestExt.getContentProtectionData(primaryAudioData).then(
+                                                    function (contentProtectionData) {
+                                                        var deferred = Q.defer();
+
+                                                        self.debug.log("Audio contentProtection");
+
+                                                        if (!!contentProtectionData && !self.capabilities.supportsMediaKeys()) {
+                                                            self.errHandler.capabilityError("mediakeys");
+                                                            deferred.reject();
+                                                            return deferred;
+                                                        }
+
+                                                        contentProtection = contentProtectionData;
+
+                                                        //kid = self.protectionController.selectKeySystem(videoCodec, contentProtection);
+                                                        //self.protectionController.ensureKeySession(kid, videoCodec, null);
+
+                                                        if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
+                                                            var msg = "Audio Codec (" + codec + ") is not supported.";
+                                                            self.errHandler.manifestError({message: msg, id: "codec", manifest: manifest});
+                                                            self.debug.log(msg);
+                                                            deferred = Q.when(null);
+                                                        } else {
+                                                            deferred = self.sourceBufferExt.createSourceBuffer(mediaSource, codec);
+                                                        }
+                                                        return deferred;
+                                                    }
+                                                );
                                             }
                                         ).then(
                                             function (buffer) {
@@ -415,8 +443,8 @@ MediaPlayer.dependencies.Stream = function () {
                                                 audioReady = true;
                                                 checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
                                             },
-                                            function (/*error*/) {
-                                                alert("Error creating source buffer.");
+                                            function () {
+                                                self.errHandler.mediaSourceError("Error creating audio source buffer.");
                                                 audioReady = true;
                                                 checkIfInitialized.call(self, videoReady, audioReady,textTrackReady,  initialize);
                                             }
@@ -463,9 +491,9 @@ MediaPlayer.dependencies.Stream = function () {
                                         }
                                     },
                                     function (error) {
-                                        self.debug.log("Error creating text buffer:");
+                                        self.debug.log("Error creating text source buffer:");
                                         self.debug.log(error);
-                                        alert("Error creating source buffer.");
+                                        self.errHandler.mediaSourceError("Error creating text source buffer.");
                                         textTrackReady = true;
                                         checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
                                     }
@@ -517,15 +545,7 @@ MediaPlayer.dependencies.Stream = function () {
             var self = this;
             self.debug.log("Got loadmetadata event.");
 
-            self.manifestExt.getPeriodStart(self.manifestModel.getValue(), periodIndex).then(
-                function (start) {
-                    startTime = start;
-                    self.debug.log("Got content.  Starting playback at offset: " + start);
-                    self.system.notify("setCurrentTime");
-                    self.videoModel.setCurrentTime(startTime);
-                    load.resolve(null);
-                }
-            );
+            load.resolve(null);
         },
 
         onPlay = function () {
@@ -535,16 +555,29 @@ MediaPlayer.dependencies.Stream = function () {
                 return;
             }
 
-            this.debug.log("Starting segment loading at offset: " + startTime);
+            if (startTime === null) {
+                this.debug.log("Starting segment loading at offset: " + startTime);
 
-            if (videoController) {
-                videoController.seek(startTime);
+                if (videoController) {
+                    videoController.seek(startTime);
+                }
+                if (audioController) {
+                    audioController.seek(startTime);
+                }
+                if (textController) {
+                    textController.seek(startTime);
+                }
             }
-            if (audioController) {
-                audioController.seek(startTime);
-            }
-            if (textController) {
-                textController.seek(startTime);
+            else {
+                if (videoController) {
+                    videoController.start();
+                }
+                if (audioController) {
+                    audioController.start();
+                }
+                if (textController) {
+                    textController.start();
+                }
             }
         },
 
@@ -681,7 +714,7 @@ MediaPlayer.dependencies.Stream = function () {
             if (videoController) {
                 videoData = videoController.getData();
 
-                if (videoData.hasOwnProperty("id")) {
+                if (!!videoData && videoData.hasOwnProperty("id")) {
                     self.manifestExt.getDataForId(videoData.id, manifest, periodIndex).then(
                         function (data) {
                             videoController.setData(data);
@@ -699,7 +732,7 @@ MediaPlayer.dependencies.Stream = function () {
             if (audioController) {
                 audioData = audioController.getData();
 
-                if (audioData.hasOwnProperty("id")) {
+                if (!!audioData && audioData.hasOwnProperty("id")) {
                     self.manifestExt.getDataForId(audioData.id, manifest, periodIndex).then(
                         function (data) {
                             audioController.setData(data);

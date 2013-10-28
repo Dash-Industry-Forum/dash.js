@@ -249,7 +249,8 @@ Dash.dependencies.BaseURLExtensions = function () {
 
             request.onloadend = function () {
                 if (!loaded) {
-                    deferred.reject("Error finding initialization.");
+                    self.errHandler.downloadError({type: "initialization", request: request});
+                    deferred.reject(request);
                 }
             };
 
@@ -264,7 +265,8 @@ Dash.dependencies.BaseURLExtensions = function () {
             };
 
             request.onerror = function () {
-                deferred.reject("Error finding initialization.");
+                self.errHandler.downloadError({type: "initialization", request: request});
+                deferred.reject(request);
             };
 
             request.open("GET", info.url);
@@ -323,7 +325,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 //        Be sure to detect EOF.
                 //        Throw error is no sidx is found in the entire file.
                 //        Protection from loading the entire file?
-                throw ("Could not find SIDX box!");
+                deferred.reject();
             } else if (bytesAvailable < (size - 8)) {
                 // Case 2
                 // We don't have the entire box.
@@ -335,7 +337,8 @@ Dash.dependencies.BaseURLExtensions = function () {
 
                 request.onloadend = function () {
                     if (!loaded) {
-                        deferred.reject("Error loading sidx.");
+                        self.errHandler.downloadError({type: "SIDX", request: request});
+                        deferred.reject(request);
                     }
                 };
 
@@ -350,7 +353,8 @@ Dash.dependencies.BaseURLExtensions = function () {
                 };
 
                 request.onerror = function () {
-                    deferred.reject("Error loading sidx.");
+                    self.errHandler.downloadError({type: "SIDX", request: request});
+                    deferred.reject(request);
                 };
 
                 request.open("GET", info.url);
@@ -402,6 +406,9 @@ Dash.dependencies.BaseURLExtensions = function () {
                                 segs = segs.concat(results[j]);
                             }
                             deferred.resolve(segs);
+                        },
+                        function (httprequest) {
+                            deferred.reject(httprequest);
                         }
                     );
 
@@ -448,7 +455,8 @@ Dash.dependencies.BaseURLExtensions = function () {
 
             request.onloadend = function () {
                 if (!loaded) {
-                    deferred.reject("Error loading sidx.");
+                    self.errHandler.downloadError({type: "SIDX", request: request});
+                    deferred.reject(request);
                 }
             };
 
@@ -474,7 +482,8 @@ Dash.dependencies.BaseURLExtensions = function () {
             };
 
             request.onerror = function () {
-                deferred.reject("Error loading sidx.");
+                self.errHandler.downloadError({type: "SIDX", request: request});
+                deferred.reject(request);
             };
 
             request.open("GET", info.url);
@@ -488,6 +497,7 @@ Dash.dependencies.BaseURLExtensions = function () {
 
     return {
         debug: undefined,
+        errHandler: undefined,
 
         loadSegments: loadSegments,
         loadInitialization: loadInit,

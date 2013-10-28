@@ -18,10 +18,29 @@ MediaPlayer.dependencies.ErrorHandler = function () {
     return {
         eventBus: undefined,
 
+        // "mediasource"|"mediakeys"
+        capabilityError: function (err) {
+            this.eventBus.dispatchEvent({
+                type: "error",
+                error: "capability",
+                event: err
+            });
+        },
+
+        // {type: "manifest"|"SIDX"|"content"|"initialization", request: {XMLHttpRequest instance}}
         downloadError: function (err) {
             this.eventBus.dispatchEvent({
                 type: "error",
                 error: "download",
+                event: err
+            });
+        },
+
+        // {message: "", id: "codec"|"parse"|"nostreams", manifest: {parsed manifest}}
+        manifestError: function (err) {
+            this.eventBus.dispatchEvent({
+                type: "error",
+                error: "manifestError",
                 event: err
             });
         },
