@@ -115,9 +115,8 @@ Dash.dependencies.DashHandler = function () {
                         request.range = theRange;
                         deferred.resolve(request);
                     },
-                    function () {
-                        //alert("Error loading initialization.");
-                        self.errHandler.downloadError("Error loading initialization.");
+                    function (httprequest) {
+                        deferred.reject(httprequest);
                     }
                 );
             }
@@ -486,6 +485,9 @@ Dash.dependencies.DashHandler = function () {
                         segmentsPromise = getIndexForSegments.call(self, time, segments);
                     }
                     return segmentsPromise;
+                },
+                function () {
+                    deferred.reject();
                 }
             ).then(
                 function (newIndex) {
@@ -574,6 +576,9 @@ Dash.dependencies.DashHandler = function () {
                                     segmentsPromise = getRequestForSegment.call(self, index, segment, representation);
                                 }
                                 return segmentsPromise;
+                            },
+                            function () {
+                                deferred.reject();
                             }
                         ).then(
                             function (request) {
@@ -629,6 +634,9 @@ Dash.dependencies.DashHandler = function () {
 
                     segmentCount = Math.ceil((requiredDuration + (segmentDuration / 2)) / segmentDuration);
                     deferred.resolve(segmentCount);
+                },
+                function () {
+                    deferred.resolve(0);
                 }
             );
 
@@ -636,22 +644,19 @@ Dash.dependencies.DashHandler = function () {
         },
 
         getCurrentTime = function (quality, data) {
-            if (index === -1) {
-                return Q.when(0);
-            }
-
             var self,
                 representation = getRepresentationForQuality(quality, data),
                 time,
                 bufferedIndex,
+                useLast = false,
                 fs,
                 fd,
                 ft = 1,
                 deferred = Q.defer();
 
-            // get the last time again to be safe
-            bufferedIndex = index; // - 1;
+            bufferedIndex = index;
             if (bufferedIndex < 0) {
+                useLast = isLive;
                 bufferedIndex = 0;
             }
 
@@ -668,9 +673,9 @@ Dash.dependencies.DashHandler = function () {
                             ft = representation.SegmentTemplate.timescale;
                         }
 
-                        time = (fd / ft) * (bufferedIndex); // + 1);
+                        time = (fd / ft) * (bufferedIndex);
                     } else {
-                        if (bufferedIndex >= segments.length) {
+                        if (useLast || bufferedIndex >= segments.length) {
                             bufferedIndex = segments.length - 1;
                         }
 
@@ -680,10 +685,13 @@ Dash.dependencies.DashHandler = function () {
                             ft = segments[bufferedIndex].timescale;
                         }
 
-                        time = (fs / ft); // + (fd / ft);
+                        time = (fs / ft);
                     }
 
                     deferred.resolve(time);
+                },
+                function () {
+                    deferred.reject();
                 }
             );
 

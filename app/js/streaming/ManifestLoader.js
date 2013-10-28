@@ -38,7 +38,8 @@ MediaPlayer.dependencies.ManifestLoader = function () {
 
             request.onloadend = function () {
                 if (!loaded) {
-                    deferred.reject("Error loading manifest.");
+                    self.errHandler.downloadError({type: "manifest", request: request});
+                    deferred.reject(request);
                 }
             };
 
@@ -61,6 +62,9 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                     function (manifest) {
                         manifest.mpdUrl = url;
                         deferred.resolve(manifest);
+                    },
+                    function () {
+                        deferred.reject(request);
                     }
                 );
             };
@@ -78,7 +82,8 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  null,
                                                  null);
 
-                deferred.reject("Error loading manifest.");
+                self.errHandler.downloadError({type: "manifest", request: request});
+                deferred.reject(request);
             };
 
             request.send();
@@ -89,6 +94,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
     return {
         debug: undefined,
         parser: undefined,
+        errHandler: undefined,
         metricsModel: undefined,
         load: load
     };

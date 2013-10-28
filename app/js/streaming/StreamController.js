@@ -278,6 +278,9 @@
                             attachVideoEvents(activeStream.getVideoModel());
                         }
                     );
+                },
+                function () {
+                    self.reset();
                 }
             );
         },

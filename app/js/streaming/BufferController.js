@@ -249,8 +249,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 setState.call(self, READY);
             }
 
-            //alert("Error loading fragment.");
-            this.errHandler.downloadError("Error loading " + type + " fragment: " + request.url);
+            self.errHandler.downloadError({type: "content", request: request});
 
             // for static mpds the buffer controller should stop after a request has failed.
             if (!isLive) {
@@ -304,15 +303,32 @@ MediaPlayer.dependencies.BufferController = function () {
 
                 self.sourceBufferExt.getBufferRange(buffer, segmentTime).then(
                     function (range) {
-                        if (range !== null) {
-                            segmentTime = range.end;
-                        }
-                        self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
-                        self.indexHandler.getSegmentRequestForTime(segmentTime, quality, data).then(
-                            function (request) {
-                                deferred.resolve(request);
+                        return self.indexHandler.getCurrentTime(quality, data).then(
+                            function (time) {
+
+                                segmentTime = time;
+
+                                if (range !== null) {
+                                    segmentTime = range.end;
+                                }
+
+                                self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
+                                self.indexHandler.getSegmentRequestForTime(segmentTime, quality, data).then(
+                                    function (request) {
+                                        deferred.resolve(request);
+                                    },
+                                    function () {
+                                        deferred.reject();
+                                    }
+                                );
+                            },
+                            function () {
+                                deferred.reject();
                             }
                         );
+                    },
+                    function () {
+                        deferred.reject();
                     }
                 );
             }
@@ -657,23 +673,25 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         setData: function (value) {
-            var self = this;
+            var self = this,
+                from = data;
 
-            if (data !== null && data !== undefined) {
-                self.abrController.getPlaybackQuality(type, data).then(
-                    function (quality) {
-                        self.indexHandler.getCurrentTime(quality, data).then(
-                            function (time) {
-                                dataChanged = true;
-                                playingTime = time;
-                                data = value;
-                            }
-                        );
-                    }
-                );
-            } else {
-                data = value;
+            if (!from) {
+                from = value;
             }
+
+            self.abrController.getPlaybackQuality(type, from).then(
+                function (quality) {
+                    self.indexHandler.getCurrentTime(quality, from).then(
+                        function (time) {
+                            dataChanged = true;
+                            playingTime = time;
+                            data = value;
+                            self.seek(time);
+                        }
+                    );
+                }
+            );
         },
 
         getBuffer: function () {

@@ -61,7 +61,7 @@ MediaPlayer.dependencies.TextController = function () {
          },
 
          onBytesError = function (request) {
-             this.errHandler.downloadError("Error loading text track" + request.url);
+             this.errHandler.downloadError({type: "content", request: request});
          };
 
     return {
