@@ -229,7 +229,9 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         onBytesError = function (request) {
-            var self = this;
+            var self = this,
+                manifest = self.manifestModel.getValue(),
+                isLive = self.manifestExt.getIsLive(manifest);
 
             // remove the failed request from the list
             /*
@@ -249,6 +251,11 @@ MediaPlayer.dependencies.BufferController = function () {
 
             //alert("Error loading fragment.");
             this.errHandler.downloadError("Error loading " + type + " fragment: " + request.url);
+
+            // for static mpds the buffer controller should stop after a request has failed.
+            if (!isLive) {
+                doStop.call(self);
+            }
         },
 
         signalStreamComplete = function () {
