@@ -16,6 +16,8 @@ MediaPlayer.dependencies.BufferExtensions = function () {
 
     var minBufferTarget,
         currentBufferTarget,
+        topAudioQualityIndex = 0,
+        topVideoQualityIndex = 0,
 
         getCurrentHttpRequestLatency = function(metrics) {
             var httpRequest = this.metricsExt.getCurrentHttpRequest(metrics);
@@ -41,19 +43,28 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         metricsExt: undefined,
         metricsModel: undefined,
 
+        updateTopQualityIndex: function(data, type) {
+            var topIndex = data.Representation_asArray.length - 1;
+
+            if (type === "audio") {
+                topAudioQualityIndex = topIndex;
+            } else if (type === "video") {
+                topVideoQualityIndex = topIndex;
+            }
+        },
+
         decideBufferLength: function (minBufferTime/*, waitingForBuffer*/) {
             minBufferTarget = Math.max(MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
 
             return Q.when(minBufferTarget);
         },
 
-        getRequiredBufferLength: function (bufferLength, waitingForBuffer, delay, playbackRate, isLive, duration, data) {
+        getRequiredBufferLength: function (bufferLength, waitingForBuffer, delay, playbackRate, isLive, duration) {
             var vmetrics = this.metricsModel.getReadOnlyMetricsFor("video"),
                 ametrics = this.metricsModel.getReadOnlyMetricsFor("audio"),
                 isLongFormContent = (duration >= MediaPlayer.dependencies.BufferExtensions.LONG_FORM_CONTENT_DURATION_THRESHOLD),
-                totalRepresentationCount = data.Representation_asArray.length - 1,
-                isPlayingAtTopQuality = (getCurrentIndex.call(this, vmetrics) === totalRepresentationCount &&
-                    getCurrentIndex.call(this, ametrics) === totalRepresentationCount),
+                isPlayingAtTopQuality = (getCurrentIndex.call(this, vmetrics) === topVideoQualityIndex &&
+                    getCurrentIndex.call(this, ametrics) === topAudioQualityIndex),
                 actualDuration,
                 requiredBufferLength;
 

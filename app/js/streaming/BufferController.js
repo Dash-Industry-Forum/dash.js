@@ -442,7 +442,7 @@ MediaPlayer.dependencies.BufferController = function () {
             var self =this,
                 playbackRate = self.videoModel.getPlaybackRate(),
                 deferred = Q.defer();
-                self.bufferExt.getRequiredBufferLength(currentBufferLength, waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, playbackRate, isLiveStream, duration, data).then(
+                self.bufferExt.getRequiredBufferLength(currentBufferLength, waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, playbackRate, isLiveStream, duration).then(
                     function (requiredBufferLength) {
                         self.indexHandler.getSegmentCountForDuration(quality, data, requiredBufferLength).then(
                             function(count) {
@@ -688,6 +688,7 @@ MediaPlayer.dependencies.BufferController = function () {
                             playingTime = time;
                             data = value;
                             self.seek(time);
+                            self.bufferExt.updateTopQualityIndex(data, type);
                         }
                     );
                 }
