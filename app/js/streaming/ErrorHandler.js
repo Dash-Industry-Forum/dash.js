@@ -27,17 +27,17 @@ MediaPlayer.dependencies.ErrorHandler = function () {
             });
         },
 
-        // {type: "manifest"|"SIDX"|"content"|"initialization", request: {XMLHttpRequest instance}}
-        downloadError: function (err) {
+        // {id: "manifest"|"SIDX"|"content"|"initialization", url: "", request: {XMLHttpRequest instance}}
+        downloadError: function (id, url, request) {
             this.eventBus.dispatchEvent({
                 type: "error",
                 error: "download",
-                event: err
+                event: {id: id, url: url, request: request}
             });
         },
 
         // {message: "", id: "codec"|"parse"|"nostreams", manifest: {parsed manifest}}
-        manifestError: function (err) {
+        manifestError: function (message, id, manifest) {
             this.eventBus.dispatchEvent({
                 type: "error",
                 error: "manifestError",

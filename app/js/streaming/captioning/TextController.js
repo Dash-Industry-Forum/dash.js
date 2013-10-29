@@ -61,7 +61,6 @@ MediaPlayer.dependencies.TextController = function () {
          },
 
          onBytesError = function (request) {
-             this.errHandler.downloadError({type: "content", request: request});
          };
 
     return {
