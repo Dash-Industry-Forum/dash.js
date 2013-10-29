@@ -81,6 +81,16 @@ Dash.dependencies.DashHandler = function () {
                 }
             } else if (representation.hasOwnProperty("SegmentList") &&
                        representation.SegmentList.hasOwnProperty("Initialization") &&
+                       representation.SegmentList.Initialization.hasOwnProperty("range")) {
+                if (representation.SegmentList.Initialization.hasOwnProperty("sourceURL")) {
+                    initialization = representation.SegmentList.Initialization.sourceURL;
+                } else {
+                    initialization = representation.BaseURL;
+                }
+
+                range = representation.SegmentList.Initialization.range;
+            } else if (representation.hasOwnProperty("SegmentList") &&
+                       representation.SegmentList.hasOwnProperty("Initialization") &&
                        representation.SegmentList.Initialization.hasOwnProperty("sourceURL")) {
                 initialization = representation.SegmentList.Initialization.sourceURL;
             } else if (representation.hasOwnProperty("SegmentBase") &&
