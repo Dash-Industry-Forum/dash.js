@@ -533,6 +533,11 @@ MediaPlayer.dependencies.Stream = function () {
             ).then(
                 function (/*value*/) {
                     self.debug.log("Duration successfully set.");
+                    return self.manifestExt.getPeriodStart(self.manifestModel.getValue(), periodIndex);
+                }
+            ).then(
+                function (start) {
+                    startTime = start;
                     initialized = true;
                     initialize.resolve(true);
                 }
@@ -555,7 +560,7 @@ MediaPlayer.dependencies.Stream = function () {
                 return;
             }
 
-            if (startTime === null) {
+            if (startTime !== null) {
                 this.debug.log("Starting segment loading at offset: " + startTime);
 
                 if (videoController) {
