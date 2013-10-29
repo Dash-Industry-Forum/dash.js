@@ -29,22 +29,19 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 deferred = Q.defer(),
                 request = new XMLHttpRequest(),
                 requestTime = new Date(),
-                loaded = false,
+                needFailureReport = true,
                 self = this;
 
             this.debug.log("Start loading manifest: " + url);
 
             request.open("GET", url, true);
 
-            request.onloadend = function () {
-                if (!loaded) {
-                    self.errHandler.downloadError({type: "manifest", request: request});
-                    deferred.reject(request);
-                }
-            };
-
             request.onload = function () {
-                loaded = true;
+                if (request.status < 200 || request.status > 299)
+                {
+                  return;
+                }
+                needFailureReport = false;
 
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
@@ -69,7 +66,13 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 );
             };
 
-            request.onerror = function () {
+            request.onloadend = request.onerror = function () {
+                if (!needFailureReport)
+                {
+                  return;
+                }
+                needFailureReport = false;
+
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
                                                  "MPD",
@@ -82,7 +85,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  null,
                                                  null);
 
-                self.errHandler.downloadError({type: "manifest", request: request});
+                self.errHandler.downloadError("manifest", url, request);
                 deferred.reject(request);
             };
 

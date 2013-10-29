@@ -22,7 +22,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
             var req = new XMLHttpRequest(),
                 httpRequestMetrics = null,
                 firstProgress = true,
-                loaded = false,
+                needFailureReport = true,
                 self = this;
 
             if (requests.length > 0) {
@@ -56,7 +56,8 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     {
                       return;
                     }
-                    loaded = true;
+                    needFailureReport = false;
+
                     lastRequest.requestEndDate = new Date();
 
                     var currentTime = lastRequest.requestEndDate,
@@ -98,10 +99,11 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 };
 
                 req.onloadend = req.onerror = function () {
-                    if (loaded)
+                    if (!needFailureReport)
                     {
                       return;
                     }
+                    needFailureReport = false;
 
                     lastRequest.requestEndDate = new Date();
 
@@ -123,7 +125,14 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                                           req.status,
                                                                           null,
                                                                           lastRequest.duration);
-                    lastRequest.deferred.reject("Error loading fragment.");
+
+                    self.errHandler.downloadError("content", lastRequest.url, req);
+
+                    lastRequest.deferred.reject(req);
+
+                    lastRequest.deferred = null;
+                    lastRequest = null;
+                    req = null;
 
                     loadNext.call(self);
                 };
@@ -150,6 +159,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
     return {
         metricsModel: undefined,
+        errHandler: undefined,
         debug: undefined,
 
         getLoading: function () {

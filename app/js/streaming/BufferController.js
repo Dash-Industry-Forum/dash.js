@@ -249,8 +249,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 setState.call(self, READY);
             }
 
-            self.errHandler.downloadError({type: "content", request: request});
-
             // for static mpds the buffer controller should stop after a request has failed.
             if (!isLive) {
                 doStop.call(self);
