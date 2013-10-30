@@ -294,17 +294,16 @@ MediaPlayer.dependencies.BufferController = function () {
                 promise = self.indexHandler.getSegmentRequestForTime(playingTime, quality, data);
             } else {
                 var deferred = Q.defer(),
-                    segmentTime = self.videoModel.getCurrentTime();
-
+                    segmentTime;
                 promise = deferred.promise;
-                seeking = false;
 
                 self.sourceBufferExt.getBufferRange(buffer, segmentTime).then(
                     function (range) {
-                        return self.indexHandler.getCurrentTime(quality, data).then(
+                        return Q.when(seeking ? seekTarget : self.indexHandler.getCurrentTime(quality, data)).then(
                             function (time) {
 
                                 segmentTime = time;
+                                seeking = false;
 
                                 if (range !== null) {
                                     segmentTime = range.end;
