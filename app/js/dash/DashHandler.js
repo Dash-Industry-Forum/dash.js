@@ -644,7 +644,7 @@ Dash.dependencies.DashHandler = function () {
         },
 
         getCurrentTime = function (quality, data) {
-            var self,
+            var self = this,
                 representation = getRepresentationForQuality(quality, data),
                 time,
                 bufferedIndex,
