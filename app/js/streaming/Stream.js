@@ -245,7 +245,7 @@ MediaPlayer.dependencies.Stream = function () {
             if (videoReady && audioReady && textTrackReady) {
                 if (videoController === null && audioController === null && textController === null) {
                     var msg = "No streams to play.";
-                    self.errHandler.manifestError({message: msg, id: "nostreams", manifest: manifest});
+                    this.errHandler.manifestError({message: msg, id: "nostreams", manifest: manifest});
                     this.debug.log(msg);
                     deferred.reject();
                 } else {
@@ -361,7 +361,6 @@ MediaPlayer.dependencies.Stream = function () {
 
                                         self.manifestExt.getCodec(primaryAudioData).then(
                                             function (codec) {
-                                                var deferred;
                                                 self.debug.log("Audio codec: " + codec);
                                                 audioCodec = codec;
 

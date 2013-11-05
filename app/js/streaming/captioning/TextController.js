@@ -60,7 +60,7 @@ MediaPlayer.dependencies.TextController = function () {
              );
          },
 
-         onBytesError = function (request) {
+         onBytesError = function (/*request*/) {
          };
 
     return {
