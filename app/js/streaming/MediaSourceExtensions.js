@@ -45,5 +45,12 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
 
         source.duration = value;
         return Q.when(source.duration);
+    },
+
+    signalEndOfStream: function(source) {
+        "use strict";
+
+        source.endOfStream();
+        return Q.when(true);
     }
 };

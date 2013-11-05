@@ -102,11 +102,6 @@
                 return;
             }
 
-            // In case a real buffered value exceeds current position move it to be able to start playback after period switching
-            if (activeStream.getVideoModel().getCurrentTime() < ranges.start(0)) {
-                activeStream.getVideoModel().setCurrentTime(ranges.start(0));
-            }
-
             var lastRange = ranges.length -1,
                 bufferEndTime = ranges.end(lastRange),
                 remainingBufferDuration = activeStream.getStartTime() + activeStream.getDuration() - bufferEndTime;

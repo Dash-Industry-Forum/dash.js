@@ -113,6 +113,7 @@ Dash.dependencies.DashHandler = function () {
                         request.type = "Initialization Segment";
                         request.url = getRequestUrl(url, representation.BaseURL);
                         request.range = theRange;
+                        request.quality = quality;
                         deferred.resolve(request);
                     },
                     function (httprequest) {
@@ -128,6 +129,7 @@ Dash.dependencies.DashHandler = function () {
                 request.type = "Initialization Segment";
                 request.url = getRequestUrl(initialization, representation.BaseURL);
                 request.range = range;
+                request.quality = quality;
                 deferred.resolve(request);
             }
 
@@ -396,7 +398,7 @@ Dash.dependencies.DashHandler = function () {
             return Q.when(idx);
         },
 
-        getRequestForTemplate = function (index, template, representation) {
+        getRequestForTemplate = function (index, template, representation, quality) {
             var request = new MediaPlayer.vo.SegmentRequest(),
                 url,
                 fTimescale = 1,
@@ -423,11 +425,13 @@ Dash.dependencies.DashHandler = function () {
             request.duration = template.duration / fTimescale;
             request.timescale = fTimescale;
             request.startTime = (index * template.duration) / fTimescale;
+            request.quality = quality;
+            request.index = index;
 
             return Q.when(request);
         },
 
-        getRequestForSegment = function (index, segment, representation) {
+        getRequestForSegment = function (index, segment, representation, quality) {
             if (segment === null || segment === undefined) {
                 return Q.when(null);
             }
@@ -448,6 +452,8 @@ Dash.dependencies.DashHandler = function () {
             request.startTime = segment.startTime / segment.timescale;
             request.duration = segment.duration / segment.timescale;
             request.timescale = segment.timescale;
+            request.quality = quality;
+            request.index = index;
 
             return Q.when(request);
         },
@@ -504,15 +510,16 @@ Dash.dependencies.DashHandler = function () {
                     if (finished) {
                         request = new MediaPlayer.vo.SegmentRequest();
                         request.action = request.ACTION_COMPLETE;
+                        request.index = index;
                         self.debug.log("Signal complete.");
                         self.debug.log(request);
                         deferred.resolve(request);
                     } else {
                         if (usingTemplate) {
-                            requestPromise = getRequestForTemplate.call(self, index, representation.SegmentTemplate, representation);
+                            requestPromise = getRequestForTemplate.call(self, index, representation.SegmentTemplate, representation, quality);
                         } else {
                             segment = representation.segments[index];
-                            requestPromise = getRequestForSegment.call(self, index, segment, representation);
+                            requestPromise = getRequestForSegment.call(self, index, segment, representation, quality);
                         }
                     }
 
@@ -553,6 +560,7 @@ Dash.dependencies.DashHandler = function () {
                     if (finished) {
                         request = new MediaPlayer.vo.SegmentRequest();
                         request.action = request.ACTION_COMPLETE;
+                        request.index = index;
                         self.debug.log("Signal complete.");
                         self.debug.log(request);
                         deferred.resolve(request);
@@ -569,11 +577,11 @@ Dash.dependencies.DashHandler = function () {
                                         throw "Expected SegmentTemplate!";
                                     }
                                     self.debug.log("No segments found, so we must be using a SegmentTemplate.");
-                                    segmentsPromise = getRequestForTemplate.call(self, index, representation.SegmentTemplate, representation);
+                                    segmentsPromise = getRequestForTemplate.call(self, index, representation.SegmentTemplate, representation, quality);
                                 } else {
                                     representation.segments = segments;
                                     segment = representation.segments[index];
-                                    segmentsPromise = getRequestForSegment.call(self, index, segment, representation);
+                                    segmentsPromise = getRequestForSegment.call(self, index, segment, representation, quality);
                                 }
                                 return segmentsPromise;
                             },

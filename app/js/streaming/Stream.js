@@ -214,48 +214,14 @@ MediaPlayer.dependencies.Stream = function () {
             //return Q.when(mediaSource);
         },
 
-        clearMetrics = function () {
-            if (!!videoController) {
-                videoController.clearMetrics();
-            }
-            if (!!audioController) {
-                audioController.clearMetrics();
-            }
-        },
-
         tearDownMediaSource = function () {
-            var self = this,
-                videoBuffer,
-                audioBuffer,
-                textBuffer;
+            var self = this;
 
             if (!!videoController) {
-                videoController.stop();
+                videoController.reset(errored, mediaSource);
             }
             if (!!audioController) {
-                audioController.stop();
-            }
-
-            clearMetrics.call(this);
-
-            if (!errored) {
-                if (!!videoController) {
-                    videoBuffer = videoController.getBuffer();
-                    self.sourceBufferExt.abort(videoBuffer);
-                    self.sourceBufferExt.removeSourceBuffer(mediaSource, videoBuffer);
-                }
-
-                if (!!audioController) {
-                    audioBuffer = audioController.getBuffer();
-                    self.sourceBufferExt.abort(audioBuffer);
-                    self.sourceBufferExt.removeSourceBuffer(mediaSource, audioBuffer);
-                }
-
-                if (!!textController) {
-                    textBuffer = textController.getBuffer();
-                    self.sourceBufferExt.abort(textBuffer);
-                    self.sourceBufferExt.removeSourceBuffer(mediaSource, textBuffer);
-                }
+                audioController.reset(errored, mediaSource);
             }
 
             videoController = null;
@@ -708,6 +674,16 @@ MediaPlayer.dependencies.Stream = function () {
             this.videoModel.listen("seeked", seekedListener);
         },
 
+        bufferingCompleted = function() {
+            // if there is at least one buffer controller that has not completed buffering yet do nothing
+            if ((videoController && !videoController.isBufferingCompleted()) || (audioController && !audioController.isBufferingCompleted())) {
+                return;
+            }
+
+            // buffering has been complted, now we can signal end of stream
+            this.mediaSourceExt.signalEndOfStream(mediaSource);
+        },
+
         manifestHasUpdated = function () {
             var self = this,
                 videoData,
@@ -777,6 +753,7 @@ MediaPlayer.dependencies.Stream = function () {
         setup: function () {
             this.system.mapHandler("manifestUpdated", undefined, manifestHasUpdated.bind(this));
             this.system.mapHandler("setCurrentTime", undefined, currentTimeChanged.bind(this));
+            this.system.mapHandler("bufferingCompleted", undefined, bufferingCompleted.bind(this));
 
             load = Q.defer();
 
