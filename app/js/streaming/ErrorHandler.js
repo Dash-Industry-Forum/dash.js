@@ -41,7 +41,7 @@ MediaPlayer.dependencies.ErrorHandler = function () {
             this.eventBus.dispatchEvent({
                 type: "error",
                 error: "manifestError",
-                event: err
+                event: {message: message, id: id, manifest: manifest}
             });
         },
 
