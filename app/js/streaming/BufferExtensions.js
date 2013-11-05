@@ -18,6 +18,8 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         currentBufferTarget,
         topAudioQualityIndex = 0,
         topVideoQualityIndex = 0,
+        audioData = null,
+        videoData = null,
 
         getCurrentHttpRequestLatency = function(metrics) {
             var httpRequest = this.metricsExt.getCurrentHttpRequest(metrics);
@@ -27,13 +29,23 @@ MediaPlayer.dependencies.BufferExtensions = function () {
             return 0;
         },
 
-        getCurrentIndex = function(metrics) {
-            var repSwitch = this.metricsExt.getCurrentRepresentationSwitch(metrics);
+        isPlayingAtTopQuality = function() {
+            var self = this,
+                deferred = Q.defer(),
+                isAtTop;
 
-            if (repSwitch !== null) {
-                return this.metricsExt.getIndexForRepresentation(repSwitch.to);
-            }
-            return null;
+            self.abrController.getPlaybackQuality("audio", audioData).then(
+                function(audioQuality) {
+                    self.abrController.getPlaybackQuality("video", videoData).then(
+                        function(videoQuality) {
+                            isAtTop = (audioQuality === topAudioQualityIndex) && (videoQuality === topVideoQualityIndex);
+                            deferred.resolve(isAtTop);
+                        }
+                    );
+                }
+            );
+
+            return deferred.promise;
         };
 
     return {
@@ -42,15 +54,30 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         manifestExt: undefined,
         metricsExt: undefined,
         metricsModel: undefined,
+        abrController: undefined,
 
-        updateTopQualityIndex: function(data, type) {
+        updateData: function(data, type) {
             var topIndex = data.Representation_asArray.length - 1;
 
             if (type === "audio") {
                 topAudioQualityIndex = topIndex;
+                audioData = data;
             } else if (type === "video") {
                 topVideoQualityIndex = topIndex;
+                videoData = data;
             }
+        },
+
+        getTopQualityIndex: function(type) {
+            var topQualityIndex = null;
+
+            if (type === "audio") {
+                topQualityIndex = topAudioQualityIndex;
+            } else if (type === "video") {
+                topQualityIndex = topVideoQualityIndex;
+            }
+
+            return topQualityIndex;
         },
 
         decideBufferLength: function (minBufferTime/*, waitingForBuffer*/) {
@@ -60,32 +87,41 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         },
 
         getRequiredBufferLength: function (bufferLength, waitingForBuffer, delay, playbackRate, isLive, duration) {
-            var vmetrics = this.metricsModel.getReadOnlyMetricsFor("video"),
-                ametrics = this.metricsModel.getReadOnlyMetricsFor("audio"),
+            var self = this,
+                vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
+                ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"),
                 isLongFormContent = (duration >= MediaPlayer.dependencies.BufferExtensions.LONG_FORM_CONTENT_DURATION_THRESHOLD),
-                isPlayingAtTopQuality = (getCurrentIndex.call(this, vmetrics) === topVideoQualityIndex &&
-                    getCurrentIndex.call(this, ametrics) === topAudioQualityIndex),
+                deferred = Q.defer(),
+                deferredIsAtTop = null,
                 actualDuration,
                 requiredBufferLength;
 
             currentBufferTarget = minBufferTarget;
 
             if (!isLive) {
-                if (!waitingForBuffer && isPlayingAtTopQuality) {
-                    currentBufferTarget = isLongFormContent ?
-                        MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :
-                        MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY;
+                if (!waitingForBuffer) {
+                    deferredIsAtTop = isPlayingAtTopQuality.call(self);
                 }
             }
 
-            actualDuration = bufferLength / Math.max(playbackRate, 1);
-            requiredBufferLength = (currentBufferTarget - (actualDuration - delay));
-            requiredBufferLength += Math.max(getCurrentHttpRequestLatency.call(this, vmetrics),
-                getCurrentHttpRequestLatency.call(this, ametrics));
-            requiredBufferLength = Math.max(requiredBufferLength, 0);
+            Q.when(deferredIsAtTop).then(
+                function(isAtTop) {
 
+                    if (isAtTop) {
+                        currentBufferTarget = isLongFormContent ?
+                            MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :
+                            MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY;
+                    }
 
-            return Q.when(requiredBufferLength);
+                    actualDuration = bufferLength / Math.max(playbackRate, 1);
+                    requiredBufferLength = (currentBufferTarget - (actualDuration - delay));
+                    requiredBufferLength += Math.max(getCurrentHttpRequestLatency.call(self, vmetrics),
+                        getCurrentHttpRequestLatency.call(self, ametrics));
+                    requiredBufferLength = Math.max(requiredBufferLength, 0);
+                    deferred.resolve(requiredBufferLength);
+                }
+            );
+            return deferred.promise;
         },
 
         //TODO: need to add this info to MediaPlayer.vo.metrics.BufferLevel or create new metric?

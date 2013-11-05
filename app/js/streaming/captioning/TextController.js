@@ -112,6 +112,14 @@ MediaPlayer.dependencies.TextController = function () {
         setBuffer: function (value) {
             buffer = value;
         },
+
+        reset: function (errored, source) {
+            if (!errored) {
+                this.sourceBufferExt.abort(buffer);
+                this.sourceBufferExt.removeSourceBuffer(source, buffer);
+            }
+        },
+
         start: doStart
     };
 };

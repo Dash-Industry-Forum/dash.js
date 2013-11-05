@@ -66,9 +66,13 @@ MediaPlayer.dependencies.FragmentController = function () {
         attachBufferController: function(bufferController) {
             if (!bufferController) return null;
             // Wrap the buffer controller into model and store it to track the loading state and execute the requests
-            var model = this.system.getObject("fragmentModel");
-            model.setContext(bufferController);
-            fragmentModels.push(model);
+            var model = findModel(bufferController);
+
+            if (!model){
+                model = this.system.getObject("fragmentModel");
+                model.setContext(bufferController);
+                fragmentModels.push(model);
+            }
 
             return model;
         },
@@ -88,7 +92,7 @@ MediaPlayer.dependencies.FragmentController = function () {
             }
         },
 
-        isFragmentLoaded: function(bufferController, request) {
+        isFragmentLoadedOrPending: function(bufferController, request) {
             var fragmentModel = findModel(bufferController),
                 isLoaded;
 
@@ -96,19 +100,23 @@ MediaPlayer.dependencies.FragmentController = function () {
                 return false;
             }
 
-            isLoaded = fragmentModel.isFragmentLoaded(request);
+            isLoaded = fragmentModel.isFragmentLoadedOrPending(request);
 
             return isLoaded;
         },
+
+		isInitializationRequest: function(request){
+			return (request && request.type && request.type.toLowerCase() === "initialization segment");
+		},
 
         prepareFragmentForLoading: function(bufferController, request, startLoadingCallback, successLoadingCallback, errorLoadingCallback, streamEndCallback) {
             var fragmentModel = findModel(bufferController);
 
             if (!fragmentModel || !request) {
-                return;
+                return Q.when(null);
             }
             // Store the request and all the necessary callbacks in the model for deferred execution
-            fragmentModel.setCurrentRequest(request);
+            fragmentModel.addRequest(request);
             fragmentModel.setCallbacks(startLoadingCallback, successLoadingCallback, errorLoadingCallback, streamEndCallback);
 
             return Q.when(true);

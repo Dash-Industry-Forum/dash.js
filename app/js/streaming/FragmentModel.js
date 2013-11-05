@@ -17,18 +17,25 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
     var context,
         executedRequests = [],
-        currentRequest,
+        pendingRequests = [],
         startLoadingCallback,
         successLoadingCallback,
         errorLoadingCallback,
-        deferredExecute,
         streamEndCallback,
 
-        loadCurrentFragment = function() {
+        loadCurrentFragment = function(request) {
+            var onSuccess,self = this;
+
             // We are about to start loading the fragment, so execute the corresponding callback
-            startLoadingCallback.call(context);
-            this.fragmentLoader.load(currentRequest).then(successLoadingCallback.bind(context, currentRequest),
-                errorLoadingCallback.bind(context, currentRequest));
+            startLoadingCallback.call(context, request);
+
+            onSuccess = function(request, response) {
+                executedRequests.push(request);
+                successLoadingCallback.call(context, request, response);
+            };
+
+            self.fragmentLoader.load(request).then(onSuccess.bind(context, request),
+                errorLoadingCallback.bind(context, request));
         },
 
         removeExecutedRequest = function(request) {
@@ -52,39 +59,29 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return context;
         },
 
-        setCurrentRequest: function(value) {
-            currentRequest = value;
+        addRequest: function(value) {
+            if (value) {
+                pendingRequests.push(value);
+            }
         },
 
         setCallbacks: function(onLoadingStart, onLoadingSuccess, onLoadingError, onStreamEnd) {
             startLoadingCallback = onLoadingStart;
             streamEndCallback = onStreamEnd;
-
-            successLoadingCallback = function(request, response) {
-                if (currentRequest.type.toLowerCase() !== "initialization segment") {
-                    executedRequests.push(currentRequest);
-                }
-                currentRequest = null;
-                onLoadingSuccess.call(context, request, response);
-                deferredExecute.resolve();
-            };
-
-            errorLoadingCallback = function(response) {
-                currentRequest = null;
-                onLoadingError.call(context, response);
-                deferredExecute.resolve();
-            };
+            errorLoadingCallback = onLoadingError;
+            successLoadingCallback = onLoadingSuccess;
         },
 
-        isFragmentLoaded: function(request) {
+        isFragmentLoadedOrPending: function(request) {
             var self = this,
                 isLoaded = false,
                 ln = executedRequests.length,
                 req;
 
+            // First, check if the fragment has already been loaded
             for (var i = 0; i < ln; i++) {
                 req = executedRequests[i];
-                if (request.startTime === req.startTime) {
+                if (request.startTime === req.startTime || ((req.action === "complete") && request.action === req.action)) {
                     self.debug.log(request.streamType + " Fragment already loaded for time: " + request.startTime);
                     if (request.url === req.url) {
                         self.debug.log(request.streamType + " Fragment url already loaded: " + request.url);
@@ -97,6 +94,15 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 }
             }
 
+            // if it has not been loaded check if it is going to be loaded
+            if (!isLoaded) {
+                for (i = 0, ln = pendingRequests.length; i < ln; i += 1) {
+                    if (request.url === pendingRequests[i].url) {
+                        isLoaded = true;
+                    }
+                }
+            }
+
             return isLoaded;
         },
 
@@ -105,28 +111,26 @@ MediaPlayer.dependencies.FragmentModel = function () {
         },
 
         executeCurrentRequest: function() {
-            var self = this;
-            Q.when(deferredExecute ? deferredExecute.promise : true).then(
-                function() {
-                    if (!currentRequest) return;
-                    deferredExecute = Q.defer();
-                    switch (currentRequest.action) {
-                        case "complete":
-                            // Stream has completed, execute the correspoinding callback
-                            executedRequests.push(currentRequest);
-                            currentRequest = null;
-                            streamEndCallback.call(context);
-                            deferredExecute.resolve();
-                            break;
-                        case "download":
-                            loadCurrentFragment.call(self);
-                            break;
-                        default:
-                            this.debug.log("Unknown request action.");
-                            deferredExecute.reject("Unknown request action.");
-                    }
-                }
-            );
+            var self = this,
+                currentRequest;
+
+            if (pendingRequests.length === 0) return;
+            // take the next request to execute and remove it from the list of pending requests
+            currentRequest = pendingRequests.shift();
+
+            switch (currentRequest.action) {
+                case "complete":
+                    // Stream has completed, execute the correspoinding callback
+                    executedRequests.push(currentRequest);
+                    console.log("execute complete for: " + currentRequest.streamType);
+                    streamEndCallback.call(context, currentRequest);
+                    break;
+                case "download":
+                    loadCurrentFragment.call(self, currentRequest);
+                    break;
+                default:
+                    this.debug.log("Unknown request action.");
+            }
         }
     };
 };
