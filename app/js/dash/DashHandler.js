@@ -602,19 +602,18 @@ Dash.dependencies.DashHandler = function () {
             return deferred.promise;
         },
 
-        getSegmentCountForDuration = function (quality, data, requiredDuration) {
+        getSegmentCountForDuration = function (quality, data, requiredDuration, bufferedDuration) {
             var self = this,
                 representation = getRepresentationForQuality(quality, data),
+                DEFAULT_RATE = 2,
+                rate = Math.max(bufferedDuration / requiredDuration, DEFAULT_RATE),
+                remainingDuration = Math.max(requiredDuration - bufferedDuration, 0),
                 deferred = Q.defer(),
                 segmentDuration,
                 segmentCount = 0,
                 segment,
                 ft = 1,
                 fd;
-
-            if (requiredDuration <= 0) {
-                return Q.when(segmentCount);
-            }
 
             getSegments.call(self, representation).then(
                 function (segments) {
@@ -640,7 +639,7 @@ Dash.dependencies.DashHandler = function () {
                         segmentDuration = fd / ft;
                     }
 
-                    segmentCount = Math.ceil((requiredDuration + (segmentDuration / 2)) / segmentDuration);
+                    segmentCount = Math.ceil((remainingDuration / segmentDuration) + (requiredDuration/segmentDuration)/rate);
                     deferred.resolve(segmentCount);
                 },
                 function () {

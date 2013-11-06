@@ -537,10 +537,11 @@ MediaPlayer.dependencies.BufferController = function () {
         getRequiredFragmentCount = function(quality, currentBufferLength) {
             var self =this,
                 playbackRate = self.videoModel.getPlaybackRate(),
+                actualBufferedDuration = currentBufferLength / Math.max(playbackRate, 1),
                 deferred = Q.defer();
-                self.bufferExt.getRequiredBufferLength(currentBufferLength, waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, playbackRate, isLiveStream, duration).then(
+                self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isLiveStream, duration).then(
                     function (requiredBufferLength) {
-                        self.indexHandler.getSegmentCountForDuration(quality, data, requiredBufferLength).then(
+                        self.indexHandler.getSegmentCountForDuration(quality, data, requiredBufferLength, actualBufferedDuration).then(
                             function(count) {
                                 deferred.resolve(count);
                             }
