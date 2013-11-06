@@ -185,6 +185,12 @@ MediaPlayer.dependencies.BufferController = function () {
 				setState.call(this, READY);
 			} else {
 				setState.call(this, LOADING);
+                var self = this,
+                    time = self.fragmentController.getLoadingTime(self);
+                setTimeout(function(){
+                    setState.call(self, READY);
+                    requestNewFragment.call(self);
+                }, time);
 			}
         },
 
@@ -206,9 +212,6 @@ MediaPlayer.dependencies.BufferController = function () {
 					if (data !== null) {
                         appendToBuffer.call(self, data, false, request.index).then(
                             function() {
-                                // We have gotten the fragment, now we are ready to get the next one
-                                requestNewFragment.call(self);
-
                                 deferredStreamComplete.promise.then(
                                     function(lastRequest) {
                                         if ((lastRequest.index - 1) === request.index && !isBufferingCompleted) {
@@ -549,8 +552,12 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         requestNewFragment = function() {
-            var self = this;
-            if (fragmentsToLoad > 0) {
+            var self = this,
+                pendingRequests = self.fragmentController.getPendingRequests(self),
+                loadingRequests = self.fragmentController.getLoadingRequests(self),
+                ln = (pendingRequests ? pendingRequests.length : 0) + (loadingRequests ? loadingRequests.length : 0);
+
+            if ((fragmentsToLoad - ln) > 0) {
                 fragmentsToLoad--;
                 loadNextFragment.call(self, lastQuality).then(onFragmentRequest.bind(self));
             } else {
