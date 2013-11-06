@@ -18,6 +18,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
     var context,
         executedRequests = [],
         pendingRequests = [],
+        loadingRequests = [],
         startLoadingCallback,
         successLoadingCallback,
         errorLoadingCallback,
@@ -30,6 +31,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             startLoadingCallback.call(context, request);
 
             onSuccess = function(request, response) {
+                loadingRequests.splice(loadingRequests.indexOf(request), 1);
                 executedRequests.push(request);
                 successLoadingCallback.call(context, request, response);
             };
@@ -103,11 +105,39 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 }
             }
 
+            if (!isLoaded) {
+                for (i = 0, ln = loadingRequests.length; i < ln; i += 1) {
+                    if (request.url === loadingRequests[i].url) {
+                        isLoaded = true;
+                    }
+                }
+            }
+
             return isLoaded;
         },
 
         isReady: function() {
             return context.isReady();
+        },
+
+        getPendingRequests: function() {
+            return pendingRequests;
+        },
+
+        getLoadingRequests: function() {
+            return loadingRequests;
+        },
+
+        getLoadingTime: function() {
+            var req;
+
+            if (executedRequests.length < 1) {
+                return null;
+            }
+
+            req = executedRequests[executedRequests.length - 1];
+
+            return (req.requestEndDate.getTime() - req.firstByteDate.getTime());
         },
 
         executeCurrentRequest: function() {
@@ -126,6 +156,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     streamEndCallback.call(context, currentRequest);
                     break;
                 case "download":
+                    loadingRequests.push(currentRequest);
                     loadCurrentFragment.call(self, currentRequest);
                     break;
                 default:

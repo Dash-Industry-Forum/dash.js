@@ -105,9 +105,39 @@ MediaPlayer.dependencies.FragmentController = function () {
             return isLoaded;
         },
 
+        getPendingRequests: function(bufferController) {
+            var fragmentModel = findModel(bufferController);
+
+            if (!fragmentModel) {
+                return null;
+            }
+
+            return fragmentModel.getPendingRequests();
+        },
+
+        getLoadingRequests: function(bufferController) {
+            var fragmentModel = findModel(bufferController);
+
+            if (!fragmentModel) {
+                return null;
+            }
+
+            return fragmentModel.getLoadingRequests();
+        },
+
 		isInitializationRequest: function(request){
 			return (request && request.type && request.type.toLowerCase() === "initialization segment");
 		},
+
+        getLoadingTime: function(bufferController) {
+            var fragmentModel = findModel(bufferController);
+
+            if (!fragmentModel) {
+                return null;
+            }
+
+            return fragmentModel.getLoadingTime();
+        },
 
         prepareFragmentForLoading: function(bufferController, request, startLoadingCallback, successLoadingCallback, errorLoadingCallback, streamEndCallback) {
             var fragmentModel = findModel(bufferController);
