@@ -152,7 +152,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 case "complete":
                     // Stream has completed, execute the correspoinding callback
                     executedRequests.push(currentRequest);
-                    console.log("execute complete for: " + currentRequest.streamType);
                     streamEndCallback.call(context, currentRequest);
                     break;
                 case "download":

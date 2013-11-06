@@ -86,14 +86,13 @@ MediaPlayer.dependencies.BufferExtensions = function () {
             return Q.when(minBufferTarget);
         },
 
-        getRequiredBufferLength: function (bufferLength, waitingForBuffer, delay, playbackRate, isLive, duration) {
+        getRequiredBufferLength: function (waitingForBuffer, delay, isLive, duration) {
             var self = this,
                 vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
                 ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"),
                 isLongFormContent = (duration >= MediaPlayer.dependencies.BufferExtensions.LONG_FORM_CONTENT_DURATION_THRESHOLD),
                 deferred = Q.defer(),
                 deferredIsAtTop = null,
-                actualDuration,
                 requiredBufferLength;
 
             currentBufferTarget = minBufferTarget;
@@ -113,11 +112,9 @@ MediaPlayer.dependencies.BufferExtensions = function () {
                             MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY;
                     }
 
-                    actualDuration = bufferLength / Math.max(playbackRate, 1);
-                    requiredBufferLength = (currentBufferTarget - (actualDuration - delay));
-                    requiredBufferLength += Math.max(getCurrentHttpRequestLatency.call(self, vmetrics),
+                    requiredBufferLength = currentBufferTarget + delay + Math.max(getCurrentHttpRequestLatency.call(self, vmetrics),
                         getCurrentHttpRequestLatency.call(self, ametrics));
-                    requiredBufferLength = Math.max(requiredBufferLength, 0);
+
                     deferred.resolve(requiredBufferLength);
                 }
             );
