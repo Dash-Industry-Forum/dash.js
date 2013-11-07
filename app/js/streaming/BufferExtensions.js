@@ -34,9 +34,9 @@ MediaPlayer.dependencies.BufferExtensions = function () {
                 deferred = Q.defer(),
                 isAtTop;
 
-            self.abrController.getPlaybackQuality("audio", audioData).then(
+            Q.when(audioData ? self.abrController.getPlaybackQuality("audio", audioData) : topAudioQualityIndex).then(
                 function(audioQuality) {
-                    self.abrController.getPlaybackQuality("video", videoData).then(
+                    Q.when(videoData ? self.abrController.getPlaybackQuality("video", videoData) : topVideoQualityIndex).then(
                         function(videoQuality) {
                             isAtTop = (audioQuality === topAudioQualityIndex) && (videoQuality === topVideoQualityIndex);
                             deferred.resolve(isAtTop);
