@@ -692,7 +692,12 @@ MediaPlayer.dependencies.BufferController = function () {
             self.setVideoModel(videoModel);
             self.setType(type);
             self.setPeriodIndex(periodIndex);
-            self.setData(data);
+            self.setData(data).then(
+                function(){
+                    ready = true;
+                    startPlayback.call(self);
+                }
+            );
             self.setBuffer(buffer);
             self.setScheduler(scheduler);
             self.setFragmentController(fragmentController);
@@ -717,9 +722,6 @@ MediaPlayer.dependencies.BufferController = function () {
                     self.indexHandler.setDuration(durationValue);
                 }
             );
-
-            ready = true;
-            startPlayback.call(this);
         },
 
         getType: function () {
@@ -782,6 +784,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
         setData: function (value) {
             var self = this,
+                deferred = Q.defer(),
                 from = data;
 
             if (!from) {
@@ -797,10 +800,13 @@ MediaPlayer.dependencies.BufferController = function () {
                             data = value;
                             self.seek(time);
                             self.bufferExt.updateData(data, type);
+                            deferred.resolve();
                         }
                     );
                 }
             );
+
+            return deferred.promise;
         },
 
         getBuffer: function () {
