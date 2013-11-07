@@ -129,15 +129,22 @@ MediaPlayer.dependencies.FragmentModel = function () {
         },
 
         getLoadingTime: function() {
-            var req;
+            var loadingTime = 0,
+                req,
+                i;
 
-            if (executedRequests.length < 1) {
-                return null;
+            // get the latest loaded request and calculate its loading time. In case requestEndDate/firstByteDate properties
+            // have not been set (e.g. for a request with action='complete') we should get the previous request.
+            for (i = executedRequests.length - 1; i >= 0; i -= 1) {
+                req = executedRequests[i];
+
+                if ((req.requestEndDate instanceof Date) && (req.firstByteDate instanceof Date)) {
+                    loadingTime = req.requestEndDate.getTime() - req.firstByteDate.getTime();
+                    break;
+                }
             }
 
-            req = executedRequests[executedRequests.length - 1];
-
-            return (req.requestEndDate.getTime() - req.firstByteDate.getTime());
+            return loadingTime;
         },
 
         executeCurrentRequest: function() {
