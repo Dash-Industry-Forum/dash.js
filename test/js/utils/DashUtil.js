@@ -149,10 +149,8 @@ function createRow(i) {
 
 }
 
-/** Initialise the variables*/
-function initialisation(rowID) {
+function teardown() {
 	$('#Video'+counter).hide();
-	$('#Video'+rowID).show();
 	seekCounter = 0;
 	endCheckCount = 0;
 	playbackCounter = 0;
@@ -163,13 +161,20 @@ function initialisation(rowID) {
 	isPaused = false;
 	isSeeking = false;
 
+	$('#Video' + counter).children().eq(0).remove();
+}
+
+/** Initialise the variables*/
+function initialisation(rowID) {
+	teardown(rowID);
+	$('#Video'+rowID).show();
+
 	system = new dijon.System();
 	system.mapValue('system', system);
 	system.mapOutlet('system');
 	context = new Dash.di.DashContext();
 	system.injectInto(context);
 	element = document.createElement('video');
-	$('#Video' + counter).children().eq(0).remove();
 
 	var videoDiv = document.querySelector('.ClassVideo' + (rowID));
 	videoDiv.appendChild(element);
@@ -207,21 +212,6 @@ function initialisation(rowID) {
 	$(element).css('width', '100%');
 	$(element).css('height', '100%');
 
-	var source = mpd[rowID];
-	var request = new XMLHttpRequest();
-	request.url = source;
-	request.open("GET", source, false);
-	request.send();
-
-	if (request.readyState == 4 && request.status == 200) {
-		$(element).src = source;
-	} else {
-		tdID = '#MPDUrl' + rowID;
-		$(tdID).html("MPD URL not valid. Response Code is: " + request.status);
-		if (runTestFlag === false)
-			loadNextMPD();
-	}
-
 	video = system.getObject('videoModel');
 	video.setElement($(element)[0]);
 	stream = system.getObject('stream');
@@ -234,6 +224,29 @@ function initialisation(rowID) {
 		player.autoPlay = true;
 		player.attachView(element);
 		player.attachSource(mpd[rowID]);
+
+		var mpdID = '#MPDUrl' + rowID,
+			onError = function (e) {
+				var message = "null";
+				if (e) {
+					message = "source=" + e.error;
+					if ("id" in e.event) {
+						message += ", id=" + e.event.id;
+					}
+					if ("request" in e.event) {
+						message += ", status=" + e.event.request.status;
+					}
+					if ("message" in e.event) {
+						message += ", " + e.event.message;
+					}
+					if (typeof e.event === "string") {
+						message += ", " + e.event;
+					}
+				}
+				$(mpdID).text($(mpdID).text() + "\nError: " + message);
+			};
+
+		player.addEventListener("error", onError.bind(this));
 
 		intervalID = setInterval(time, 1000);
 
@@ -302,11 +315,11 @@ function time() {
 				count++;
 				tdID = '#pause' + counter;
 				if ((element).paused) {
-					$(tdID).html('Paused event success at: ' + (element).currentTime);
-					gridData.rows[counter].cell[1].td2[1].Events[1].Pause = 'Paused event success at: ' + (element).currentTime;
+					$(tdID).html('Paused event success, at: ' + (element).currentTime);
+					gridData.rows[counter].cell[1].td2[1].Events[1].Pause = 'Paused event success, at: ' + (element).currentTime;
 				} else {
-					$(tdID).html('Paused event failed at: ' + (element).currentTime);
-					gridData.rows[counter].cell[1].td2[1].Events[1].Pause = 'Paused event failed at: ' + (element).currentTime;
+					$(tdID).html('Paused event failed, at: ' + (element).currentTime);
+					gridData.rows[counter].cell[1].td2[1].Events[1].Pause = 'Paused event failed, at: ' + (element).currentTime;
 				}
 				(element).play();
 			}
@@ -326,8 +339,8 @@ function time() {
 				checkSeek();
 				if ((element).ended) {
 					tdID = '#play' + counter;
-					$(tdID).html('Play event success');
-					gridData.rows[counter].cell[1].td2[1].Events[0].Play = 'Play event success';
+					$(tdID).html('Play event success, at: ' + (element).currentTime);
+					gridData.rows[counter].cell[1].td2[1].Events[0].Play = 'Play event success, at: ' + (element).currentTime;
 					tdID = '#stall' + counter;
 					if (video.isStalled) {
 						stalled = true;
@@ -340,6 +353,10 @@ function time() {
 					}
 					if (runTestFlag === false)
 						loadNextMPD();
+					else {
+						teardown();
+						clearInterval(intervalID);
+					}
 				}
 			}
 			if ((element).error) {
@@ -348,6 +365,10 @@ function time() {
 				gridData.rows[counter].cell[1].td2[1].Events[0].Play = 'Media Souce Error at: ' + (element).currentTime;
 				if (runTestFlag === false)
 					loadNextMPD();
+				else {
+					teardown();
+					clearInterval(intervalID);
+				}
 			} else {
 				var msg = $('#message').text();
 				if (msg) {
@@ -355,10 +376,12 @@ function time() {
 					gridData.rows[counter].cell[1].td2[1].Events[0].Play = msg;
 					if (runTestFlag === false)
 						loadNextMPD();
+					else {
+						teardown();
+						clearInterval(intervalID);
+					}
 				} else {
 
-					tdID = '#MPDUrl' + counter;
-					$(tdID).html("Playing:" + mpd[counter] + "\n Duration: " + (element).duration);
 					tdID = '#play' + counter;
 					$(tdID).html('Playing video at ' + (element).currentTime);
 					gridData.rows[counter].cell[1].td2[0].MPDURL = mpd[counter];
@@ -367,6 +390,8 @@ function time() {
 					gridData.rows[counter].cell[1].td2[1].Events[0].Play = 'Playing video at ' + (element).currentTime;
 					if (count == 0) {
 						if ((element).currentTime >= testPhaseDuration) {
+							tdID = '#MPDUrl' + counter;
+							$(tdID).text($(tdID).text() + "\n Duration: " + (element).duration);
 							(element).pause();
 							isPaused = true;
 						}
@@ -376,13 +401,34 @@ function time() {
 						isSeeking = true;
 					}
 
-					if (lastTime === (element).currentTime && (element).duration - (element).currentTime < 3) {
+					if ((element).ended) {
+						tdID = '#play' + counter;
+						$(tdID).html('Play event success, at: ' + (element).currentTime);
+						gridData.rows[counter].cell[1].td2[1].Events[0].Play = 'Play event success, at: ' + (element).currentTime;
+						tdID = '#stall' + counter;
+						if (video.isStalled) {
+							stalled = true;
+							$(tdID).html('Video was stalled');
+							gridData.rows[counter].cell[1].td2[1].Events[3].Stall = 'Video was stalled';
+						}
+						if (stalled == false) {
+							$(tdID).html('Video was not stalled');
+							gridData.rows[counter].cell[1].td2[1].Events[3].Stall = 'Video was not stalled';
+						}
+						if (runTestFlag === false)
+							loadNextMPD();
+						else {
+							teardown();
+							clearInterval(intervalID);
+						}
+					}
+					else if (lastTime === (element).currentTime && (element).duration - (element).currentTime < 3) {
 						++endCheckCount;
 						if (endCheckCount > 10) {
 							tdID = '#play' + counter;
-							$(tdID).html('Play event did not end');
+							$(tdID).html('Play event did not end, play stopped: ' + (element).currentTime);
 
-							gridData.rows[counter].cell[1].td2[1].Events[0].Play = 'Play event did not end';
+							gridData.rows[counter].cell[1].td2[1].Events[0].Play = 'Play event did not end, play stopped: ' + (element).currentTime;
 							tdID = '#stall' + counter;
 							if (video.isStalled) {
 								stalled = true;
@@ -395,6 +441,10 @@ function time() {
 							}
 							if (runTestFlag === false)
 								loadNextMPD();
+							else {
+								teardown();
+								clearInterval(intervalID);
+							}
 						}
 
 					} else {
@@ -407,10 +457,10 @@ function time() {
 
 			if ((element).paused) {
 				tdID = '#pause' + counter;
-				$(tdID).html('Paused event success at: ' + (element).currentTime);
+				$(tdID).html('Paused event success, at: ' + (element).currentTime);
 			} else if ((element).seeking) {
 				tdID = '#seek' + counter;
-				$(tdID).html('Seek event success at: ' + (element).currentTime);
+				$(tdID).html('Seek event success, at: ' + (element).currentTime);
 
 			} else if ((element).error) {
 				//do something
@@ -436,8 +486,8 @@ function time() {
 function checkSeek() {
 	tdID = '#seek' + counter;
 	if ((element).currentTime >= (element).duration - (testPhaseDuration * 2)) {
-		$(tdID).html('Seeking event success');
-		gridData.rows[counter].cell[1].td2[1].Events[2].Seek = 'Seeking event success';
+		$(tdID).html('Seeking event success, at: ' + (element).currentTime);
+		gridData.rows[counter].cell[1].td2[1].Events[2].Seek = 'Seeking event success, at: ' + (element).currentTime;
 
 		isSeeking = false;
 		count++;
@@ -446,7 +496,7 @@ function checkSeek() {
 		if (seekCounter > 10) {
 			seekCounter = 0;
 			$(tdID).html('Seeking timed out');
-			gridData.rows[counter].cell[1].td2[1].Events[2].Seek = 'Seeking event failed';
+			gridData.rows[counter].cell[1].td2[1].Events[2].Seek = 'Seeking event failed, at: ' + (element).currentTime;
 			isSeeking = false;
 			tdID = '#stall' + counter;
 			if (video.isStalled)
@@ -454,6 +504,10 @@ function checkSeek() {
 			gridData.rows[counter].cell[1].td2[1].Events[3].Stall = 'Video was stalled';
 			if (runTestFlag === false)
 				loadNextMPD();
+			else {
+				teardown();
+				clearInterval(intervalID);
+			}
 		}
 
 	}
@@ -467,16 +521,18 @@ function checkPlayBackRate() {
 		}
 		playbackCounter++;
 		if (lastTimeDuplicate === lastTime) {
-			if (playbackCounter > 10) {
+			if (playbackCounter > 30) {
 				playbackCounter = 0;
-				$("#play" + counter).html("Play event timed out beyond 10 seconds");
+				$("#play" + counter).html("Play event timed out beyond 30 seconds, play stopped: " + (element).currentTime);
 				if (video.isStalled)
 					$("#stall" + counter).html('Video was stalled');
 				gridData.rows[counter].cell[1].td2[1].Events[3].Stall = 'Video was stalled';
 				if (runTestFlag === false)
 					loadNextMPD();
-				else
+				else {
+					teardown();
 					clearInterval(intervalID);
+				}
 			}
 		} else {
 			playbackCounter = 0;
@@ -488,6 +544,8 @@ function checkPlayBackRate() {
 		// loadNextMPD();
 		// }
 		// }
+	} else {
+		playbackCounter = 0;
 	}
 }
 
