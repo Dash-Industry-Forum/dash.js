@@ -40,6 +40,13 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
         return Q.when(true);
     },
 
+    detachMediaSource: function (videoModel) {
+        "use strict";
+
+        videoModel.setSource(null);
+        return Q.when(true);
+    },
+
     setDuration: function (source, value) {
         "use strict";
 
