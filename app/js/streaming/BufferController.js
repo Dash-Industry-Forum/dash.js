@@ -43,8 +43,8 @@ MediaPlayer.dependencies.BufferController = function () {
         fragmentModel = null,
 
         type,
-        data,
-        buffer,
+        data = null,
+        buffer = null,
         minBufferTime,
 
         playListMetrics = null,
@@ -854,6 +854,8 @@ MediaPlayer.dependencies.BufferController = function () {
                 self.sourceBufferExt.abort(buffer);
                 self.sourceBufferExt.removeSourceBuffer(source, buffer);
             }
+            data = null;
+            buffer = null;
         },
 
         start: doStart,

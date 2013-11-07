@@ -180,38 +180,47 @@ MediaPlayer.dependencies.Stream = function () {
 
         // Media Source
 
-        setUpMediaSource = function () {
+        setUpMediaSource = function (mediaSourceArg) {
             var deferred = Q.defer(),
                 self = this,
-
-                onMediaSourceClose = function (e) {
-                    onError.call(self, e);
-                },
 
                 onMediaSourceOpen = function (e) {
                     self.debug.log("MediaSource is open!");
                     self.debug.log(e);
 
-                    mediaSource.removeEventListener("sourceopen", onMediaSourceOpen);
-                    mediaSource.removeEventListener("webkitsourceopen", onMediaSourceOpen);
+                    mediaSourceArg.removeEventListener("sourceopen", onMediaSourceOpen);
+                    mediaSourceArg.removeEventListener("webkitsourceopen", onMediaSourceOpen);
 
-                    deferred.resolve(mediaSource);
+                    deferred.resolve(mediaSourceArg);
+                },
+
+                onMediaSourceClose = function (e) {
+                    mediaSourceArg.removeEventListener("sourceopen", onMediaSourceOpen);
+                    mediaSourceArg.removeEventListener("webkitsourceopen", onMediaSourceOpen);
+
+                    mediaSourceArg.removeEventListener("sourceclose", onMediaSourceClose);
+                    mediaSourceArg.removeEventListener("webkitsourceclose", onMediaSourceClose);
+
+                    onError.call(self, e);
+
+                    deferred.reject(e);
+
+                    self.mediaSourceExt.detachMediaSource(self.videoModel);
                 };
 
-            self.debug.log("MediaSource should be closed. (" + mediaSource.readyState + ")");
+            self.debug.log("MediaSource should be closed. (" + mediaSourceArg.readyState + ")");
 
-            mediaSource.addEventListener("sourceclose", onMediaSourceClose, false);
-            mediaSource.addEventListener("webkitsourceclose", onMediaSourceClose, false);
+            mediaSourceArg.addEventListener("sourceclose", onMediaSourceClose, false);
+            mediaSourceArg.addEventListener("webkitsourceclose", onMediaSourceClose, false);
 
-            mediaSource.addEventListener("sourceopen", onMediaSourceOpen, false);
-            mediaSource.addEventListener("webkitsourceopen", onMediaSourceOpen, false);
+            mediaSourceArg.addEventListener("sourceopen", onMediaSourceOpen, false);
+            mediaSourceArg.addEventListener("webkitsourceopen", onMediaSourceOpen, false);
 
-            self.mediaSourceExt.attachMediaSource(mediaSource, self.videoModel);
+            self.mediaSourceExt.attachMediaSource(mediaSourceArg, self.videoModel);
 
             self.debug.log("MediaSource attached to video.  Waiting on open...");
 
             return deferred.promise;
-            //return Q.when(mediaSource);
         },
 
         tearDownMediaSource = function () {
@@ -223,6 +232,15 @@ MediaPlayer.dependencies.Stream = function () {
             if (!!audioController) {
                 audioController.reset(errored, mediaSource);
             }
+            if (!!mediaSource) {
+                self.mediaSourceExt.detachMediaSource(self.videoModel);
+            }
+
+            initialized = false;
+
+            kid = null;
+            initData = [];
+            contentProtection = null;
 
             videoController = null;
             audioController = null;
@@ -231,14 +249,8 @@ MediaPlayer.dependencies.Stream = function () {
             videoCodec = null;
             audioCodec = null;
 
-            self.protectionController.teardownKeySystem(kid);
-            kid = null;
-            initData = [];
-            contentProtection = null;
             mediaSource = null;
             manifest = null;
-
-            self.videoModel.setSource(null);
         },
 
         checkIfInitialized = function (videoReady, audioReady, textTrackReady, deferred) {
@@ -631,12 +643,12 @@ MediaPlayer.dependencies.Stream = function () {
             manifest = manifestResult;
             return self.mediaSourceExt.createMediaSource().then(
                 function (mediaSourceResult) {
-                    mediaSource = mediaSourceResult;
                     self.debug.log("MediaSource created.");
-                    return setUpMediaSource.call(self);
+                    return setUpMediaSource.call(self, mediaSourceResult);
                 }
             ).then(
-                function (/*result*/) {
+                function (mediaSourceResult) {
+                    mediaSource = mediaSourceResult;
                     self.debug.log("MediaSource set up.");
                     return initializeMediaSource.call(self);
                 }
@@ -680,7 +692,9 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             // buffering has been complted, now we can signal end of stream
-            this.mediaSourceExt.signalEndOfStream(mediaSource);
+            if (mediaSource) {
+                this.mediaSourceExt.signalEndOfStream(mediaSource);
+            }
         },
 
         manifestHasUpdated = function () {
@@ -816,12 +830,21 @@ MediaPlayer.dependencies.Stream = function () {
 
         reset: function () {
             pause.call(this);
-            tearDownMediaSource.call(this);
-        },
 
-        attacheToVideoElement: function() {
-            var self = this;
-            self.mediaSourceExt.attachMediaSource(mediaSource, self.videoModel);
+            this.videoModel.unlisten("play", playListener);
+            this.videoModel.unlisten("pause", pauseListener);
+            this.videoModel.unlisten("error", errorListener);
+            this.videoModel.unlisten("seeking", seekingListener);
+            this.videoModel.unlisten("timeupdate", timeupdateListener);
+            this.videoModel.unlisten("loadedmetadata", loadedListener);
+
+            tearDownMediaSource.call(this);
+
+            this.protectionController.teardownKeySystem(kid);
+            this.protectionController = undefined;
+            this.protectionModel = undefined;
+
+            load = Q.defer();
         },
 
         getDuration: function () {
