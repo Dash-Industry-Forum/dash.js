@@ -562,7 +562,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 fragmentsToLoad--;
                 loadNextFragment.call(self, lastQuality).then(onFragmentRequest.bind(self));
             } else {
-                seeking = false;
 
                 if (state === VALIDATING) {
                     setState.call(self, READY);
