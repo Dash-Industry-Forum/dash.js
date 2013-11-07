@@ -99,7 +99,8 @@ MediaPlayer.dependencies.FragmentModel = function () {
             // if it has not been loaded check if it is going to be loaded
             if (!isLoaded) {
                 for (i = 0, ln = pendingRequests.length; i < ln; i += 1) {
-                    if (request.url === pendingRequests[i].url) {
+                    req = pendingRequests[i];
+                    if ((request.url === req.url) && (request.startTime === req.startTime)) {
                         isLoaded = true;
                     }
                 }
@@ -107,7 +108,8 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
             if (!isLoaded) {
                 for (i = 0, ln = loadingRequests.length; i < ln; i += 1) {
-                    if (request.url === loadingRequests[i].url) {
+                    req = loadingRequests[i];
+                    if ((request.url === req.url) && (request.startTime === req.startTime)) {
                         isLoaded = true;
                     }
                 }
