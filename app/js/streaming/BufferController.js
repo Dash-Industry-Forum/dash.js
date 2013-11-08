@@ -211,15 +211,19 @@ MediaPlayer.dependencies.BufferController = function () {
 			self.fragmentController.process(response.data).then(
 				function (data) {
 					if (data !== null) {
-                        appendToBuffer.call(self, data, false, request.index).then(
+                        Q.when(deferredInitAppend.promise).then(
                             function() {
-                                deferredStreamComplete.promise.then(
-                                    function(lastRequest) {
-                                        if ((lastRequest.index - 1) === request.index && !isBufferingCompleted) {
-                                            isBufferingCompleted = true;
-                                            setState.call(self, READY);
-                                            self.system.notify("bufferingCompleted");
-                                        }
+                                appendToBuffer.call(self, data).then(
+                                    function() {
+                                        deferredStreamComplete.promise.then(
+                                            function(lastRequest) {
+                                                if ((lastRequest.index - 1) === request.index && !isBufferingCompleted) {
+                                                    isBufferingCompleted = true;
+                                                    setState.call(self, READY);
+                                                    self.system.notify("bufferingCompleted");
+                                                }
+                                            }
+                                        );
                                     }
                                 );
                             }
@@ -231,9 +235,10 @@ MediaPlayer.dependencies.BufferController = function () {
 			);
 		},
 
-        appendToBuffer = function(data, isInitFragment) {
+        appendToBuffer = function(data) {
             var self = this,
                 deferred = Q.defer(),
+                ln = deferredAppends.push(deferred),
                 representation = getRepresentationForQuality(lastQuality, self.getData()),
                 currentVideoTime = self.videoModel.getCurrentTime(),
                 currentTime = new Date();
@@ -245,9 +250,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, representation.id, null, currentTime, currentVideoTime, null, 1.0, null);
             }
 
-            deferredAppends.push(deferred);
-
-            Q.when(isInitFragment || deferredInitAppend.promise, deferredAppends.length < 2 || deferredAppends[deferredAppends.length - 2].promise).then(
+            Q.when(ln < 2 || deferredAppends[ln - 2].promise).then(
                 function() {
                     self.sourceBufferExt.append(buffer, data, self.videoModel).then(
                         function (/*appended*/) {
@@ -286,7 +289,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
                         // if this is the initialization data for current quality we need to push it to the buffer
                         if (quality === lastQuality) {
-                            appendToBuffer.call(self, data, true).then(
+                            appendToBuffer.call(self, data).then(
                                 function() {
                                     deferredInitAppend.resolve();
                                 }
@@ -368,7 +371,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     deferredInitAppend = Q.defer();
                     lastQuality = currentQuality;
                     if (initializationData[currentQuality]) {
-                        appendToBuffer.call(this, initializationData[currentQuality], true).then(
+                        appendToBuffer.call(this, initializationData[currentQuality]).then(
                             function() {
                                 deferredInitAppend.resolve();
                             }
