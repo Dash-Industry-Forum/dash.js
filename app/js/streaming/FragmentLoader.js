@@ -14,9 +14,11 @@
 MediaPlayer.dependencies.FragmentLoader = function () {
     "use strict";
 
-    var doLoad = function (request) {
+    var retryAttempts = 3,
+        RETRY_INTERVAL = 500,
+
+        doLoad = function (request) {
             var req = new XMLHttpRequest(),
-                deferred = Q.defer(),
                 httpRequestMetrics = null,
                 firstProgress = true,
                 needFailureReport = true,
@@ -80,7 +82,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                       new Date().getTime() - currentTime.getTime(),
                                                       [bytes.byteLength]);
 
-                    deferred.resolve({
+                    request.deferred.resolve({
                         data: bytes,
                         request: request
                     });
@@ -114,14 +116,20 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                                           null,
                                                                           request.duration);
 
-                    self.errHandler.downloadError("content", request.url, req);
-
-                    deferred.reject(req);
+                    if (retryAttempts > 0) {
+                        self.debug.log("Failed loading segment: " + request.url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + retryAttempts);
+                        retryAttempts--;
+                        setTimeout(function() {
+                            doLoad.call(self, request);
+                        }, RETRY_INTERVAL);
+                    } else {
+                        self.debug.log("Failed loading segment: " + request.url + " no retry attempts left");
+                        self.errHandler.downloadError("content", request.url, req);
+                        request.deferred.reject(req);
+                    }
                 };
 
                 req.send();
-
-                return deferred.promise;
         };
 
     return {
@@ -135,7 +143,10 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 return Q.when(null);
             }
 
-            return doLoad.call(this, req);
+            req.deferred = Q.defer();
+            doLoad.call(this, req);
+
+            return req.deferred.promise;
         }
     };
 };

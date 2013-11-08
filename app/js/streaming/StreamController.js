@@ -227,6 +227,10 @@
         metricsExt: undefined,
         errHandler: undefined,
 
+        setup: function() {
+            this.system.mapHandler("segmentLoadingFailed", undefined, this.reset.bind(this));
+        },
+
         getManifestExt: function () {
             return activeStream.getManifestExt();
         },

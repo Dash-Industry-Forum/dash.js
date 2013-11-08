@@ -14,7 +14,10 @@
 MediaPlayer.dependencies.ManifestLoader = function () {
     "use strict";
 
-    var parseBaseUrl = function (url) {
+    var retryAttempts = 3,
+        RETRY_INTERVAL = 500,
+        deferred = null,
+        parseBaseUrl = function (url) {
             var base = null;
 
             if (url.indexOf("/") !== -1) {
@@ -24,9 +27,8 @@ MediaPlayer.dependencies.ManifestLoader = function () {
             return base;
         },
 
-        load = function (url) {
+        doLoad = function (url) {
             var baseUrl = parseBaseUrl(url),
-                deferred = Q.defer(),
                 request = new XMLHttpRequest(),
                 requestTime = new Date(),
                 needFailureReport = true,
@@ -84,14 +86,20 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  request.status,
                                                  null,
                                                  null);
-
-                self.errHandler.downloadError("manifest", url, request);
-                deferred.reject(request);
+                if (retryAttempts > 0) {
+                    self.debug.log("Failed loading manifest: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + retryAttempts);
+                    retryAttempts--;
+                    setTimeout(function() {
+                        doLoad.call(self, url);
+                    }, RETRY_INTERVAL);
+                } else {
+                    self.debug.log("Failed loading manifest: " + url + " no retry attempts left");
+                    self.errHandler.downloadError("manifest", url, request);
+                    deferred.reject(request);
+                }
             };
 
             request.send();
-
-            return deferred.promise;
         };
 
     return {
@@ -99,7 +107,12 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         parser: undefined,
         errHandler: undefined,
         metricsModel: undefined,
-        load: load
+        load: function(url) {
+            deferred = Q.defer();
+            doLoad.call(this, url);
+
+            return deferred.promise;
+        }
     };
 };
 
