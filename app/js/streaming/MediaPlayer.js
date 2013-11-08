@@ -48,12 +48,13 @@ MediaPlayer = function (aContext) {
         source,
         model,
         streamController,
+        videoModel,
         initialized = false,
         playing = false,
         autoPlay = true,
 
         isReady = function () {
-            return (element !== undefined && source !== undefined);
+            return (!!element && !!source);
         },
 
         play = function () {
@@ -94,7 +95,6 @@ MediaPlayer = function (aContext) {
         debug: undefined,
         eventBus: undefined,
         capabilities: undefined,
-        videoModel: undefined,
         abrController: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
@@ -166,12 +166,21 @@ MediaPlayer = function (aContext) {
 
             element = view;
 
-            model = new MediaPlayer.models.VideoModel(element);
-            this.videoModel.setElement(element);
+            this.videoModel = null;
+            if (element) {
+                this.videoModel = system.getObject("videoModel");
+                this.videoModel.setElement(element);
+            }
 
             // TODO : update
 
-            if (!playing) {
+            if (playing && streamController) {
+                streamController.reset();
+                streamController = null;
+                playing = false;
+            }
+
+            if (isReady.call(this)) {
                 doAutoPlay.call(this);
             }
         },
@@ -193,10 +202,18 @@ MediaPlayer = function (aContext) {
                 playing = false;
             }
 
-            doAutoPlay.call(this);
+            if (isReady.call(this)) {
+                doAutoPlay.call(this);
+            }
         },
 
-        play: play
+        reset: function() {
+            this.attachSource(null);
+            this.attachView(null);
+        },
+
+        play: play,
+        isReady: isReady
     };
 };
 
