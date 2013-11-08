@@ -192,26 +192,9 @@ MediaPlayer.dependencies.Stream = function () {
                     mediaSourceArg.removeEventListener("webkitsourceopen", onMediaSourceOpen);
 
                     deferred.resolve(mediaSourceArg);
-                },
-
-                onMediaSourceClose = function (e) {
-                    mediaSourceArg.removeEventListener("sourceopen", onMediaSourceOpen);
-                    mediaSourceArg.removeEventListener("webkitsourceopen", onMediaSourceOpen);
-
-                    mediaSourceArg.removeEventListener("sourceclose", onMediaSourceClose);
-                    mediaSourceArg.removeEventListener("webkitsourceclose", onMediaSourceClose);
-
-                    onError.call(self, e);
-
-                    deferred.reject(e);
-
-                    self.mediaSourceExt.detachMediaSource(self.videoModel);
                 };
 
-            self.debug.log("MediaSource should be closed. (" + mediaSourceArg.readyState + ")");
-
-            mediaSourceArg.addEventListener("sourceclose", onMediaSourceClose, false);
-            mediaSourceArg.addEventListener("webkitsourceclose", onMediaSourceClose, false);
+            self.debug.log("MediaSource should be closed. The actual readyState is: " + mediaSourceArg.readyState);
 
             mediaSourceArg.addEventListener("sourceopen", onMediaSourceOpen, false);
             mediaSourceArg.addEventListener("webkitsourceopen", onMediaSourceOpen, false);
@@ -574,9 +557,9 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
-        onError = function () {
-            var error = this.videoModel.getElement().error,
-                code = (error !== null && error !== undefined) ? error.code : -1,
+        onError = function (event) {
+            var error = event.srcElement.error,
+                code = error.code,
                 msg = "";
 
             if (code === -1) {
@@ -605,7 +588,7 @@ MediaPlayer.dependencies.Stream = function () {
             errored = true;
 
             this.debug.log("Video Element Error: " + msg);
-            this.debug.log(this.videoModel.getElement().error);
+            this.debug.log(error);
             this.errHandler.mediaSourceError(msg);
 
             pause.call(this);
@@ -850,6 +833,8 @@ MediaPlayer.dependencies.Stream = function () {
             this.protectionController.teardownKeySystem(kid);
             this.protectionController = undefined;
             this.protectionModel = undefined;
+
+            this.videoModel = null;
 
             load = Q.defer();
         },
