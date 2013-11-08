@@ -320,9 +320,8 @@ MediaPlayer.dependencies.BufferController = function () {
                 setState.call(self, READY);
             }
 
-            // for static mpds the buffer controller should stop after a request has failed.
             if (!isLive) {
-                doStop.call(self);
+                self.system.notify("segmentLoadingFailed");
             }
         },
 
