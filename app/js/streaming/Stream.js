@@ -632,6 +632,13 @@ MediaPlayer.dependencies.Stream = function () {
 
         onProgress = function () {
             //this.debug.log("Got timeupdate event.");
+            if (videoController) {
+                videoController.updateBufferLevel();
+            }
+
+            if (audioController) {
+               audioController.updateBufferLevel();
+            }
         },
 
         doLoad = function (manifestResult) {
