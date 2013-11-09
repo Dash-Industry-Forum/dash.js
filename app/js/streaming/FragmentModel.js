@@ -34,6 +34,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 loadingRequests.splice(loadingRequests.indexOf(request), 1);
                 executedRequests.push(request);
                 successLoadingCallback.call(context, request, response);
+                request.deferred = null;
             };
 
             self.fragmentLoader.load(request).then(onSuccess.bind(context, request),
