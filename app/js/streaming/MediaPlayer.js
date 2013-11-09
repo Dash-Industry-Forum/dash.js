@@ -46,7 +46,6 @@ MediaPlayer = function (aContext) {
         system,
         element,
         source,
-        model,
         streamController,
         videoModel,
         initialized = false,
@@ -74,7 +73,7 @@ MediaPlayer = function (aContext) {
             playing = true;
             this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
-            streamController.setVideoModel(this.videoModel);
+            streamController.setvideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.load(source);
         },
@@ -123,7 +122,7 @@ MediaPlayer = function (aContext) {
         },
 
         getVideoModel: function () {
-            return this.videoModel;
+            return videoModel;
         },
 
         setAutoPlay: function (value) {
@@ -166,10 +165,10 @@ MediaPlayer = function (aContext) {
 
             element = view;
 
-            this.videoModel = null;
+            videoModel = null;
             if (element) {
-                this.videoModel = system.getObject("videoModel");
-                this.videoModel.setElement(element);
+                videoModel = system.getObject("videoModel");
+                videoModel.setElement(element);
             }
 
             // TODO : update
