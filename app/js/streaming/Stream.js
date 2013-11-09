@@ -548,13 +548,14 @@ MediaPlayer.dependencies.Stream = function () {
 
         onPause = function () {
             this.debug.log("Got pause event.");
-
+            /*
             if (videoController) {
                 videoController.stop();
             }
             if (audioController) {
                 audioController.stop();
             }
+            */
         },
 
         onError = function (event) {
