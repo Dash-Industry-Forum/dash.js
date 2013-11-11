@@ -210,7 +210,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
 			self.fragmentController.process(response.data).then(
 				function (data) {
-					if (data !== null) {
+					if (data !== null && deferredInitAppend !== null) {
                         Q.when(deferredInitAppend.promise).then(
                             function() {
                                 appendToBuffer.call(self, data).then(
@@ -255,17 +255,22 @@ MediaPlayer.dependencies.BufferController = function () {
                     self.sourceBufferExt.append(buffer, data, self.videoModel).then(
                         function (/*appended*/) {
                             deferred.resolve();
-                            self.debug.log("Append " + type + " complete: " + buffer.buffered.length);
-                            if (buffer.buffered.length > 0) {
-                                var ranges = buffer.buffered,
-                                    i,
-                                    len;
+                            self.sourceBufferExt.getAllRanges(buffer).then(
+                                function(ranges) {
+                                    if (ranges) {
+                                        self.debug.log("Append " + type + " complete: " + ranges.length);
+                                        if (ranges.length > 0) {
+                                            var i,
+                                                len;
 
-                                self.debug.log("Number of buffered " + type + " ranges: " + ranges.length);
-                                for (i = 0, len = ranges.length; i < len; i += 1) {
-                                    self.debug.log("Buffered " + type + " Range: " + ranges.start(i) + " - " + ranges.end(i));
+                                            self.debug.log("Number of buffered " + type + " ranges: " + ranges.length);
+                                            for (i = 0, len = ranges.length; i < len; i += 1) {
+                                                self.debug.log("Buffered " + type + " Range: " + ranges.start(i) + " - " + ranges.end(i));
+                                            }
+                                        }
+                                    }
                                 }
-                            }
+                            );
                         }
                     );
                 }
@@ -856,7 +861,11 @@ MediaPlayer.dependencies.BufferController = function () {
 
             doStop.call(self);
             self.clearMetrics();
-            self.fragmentController.detachBufferController(self);
+            self.fragmentController.detachBufferController(fragmentModel);
+            fragmentModel = null;
+            deferredAppends = [];
+            deferredInitAppend = null;
+            initializationData = [];
 
             if (!errored) {
                 self.sourceBufferExt.abort(buffer);

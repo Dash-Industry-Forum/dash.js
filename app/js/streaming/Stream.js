@@ -594,6 +594,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.errHandler.mediaSourceError(msg);
 
             pause.call(this);
+            this.reset();
         },
 
         onSeeking = function () {
