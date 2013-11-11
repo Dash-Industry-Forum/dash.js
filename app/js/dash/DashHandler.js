@@ -71,6 +71,10 @@ Dash.dependencies.DashHandler = function () {
                 range = null,
                 self = this;
 
+            if (!representation) {
+                return Q.reject("no represenation");
+            }
+
             self.debug.log("Getting the initialization request.");
 
             if (representation.hasOwnProperty("SegmentTemplate")) {
@@ -466,6 +470,10 @@ Dash.dependencies.DashHandler = function () {
                 usingTemplate = false,
                 self = this;
 
+            if (!representation) {
+                return Q.reject("no represenation");
+            }
+
             self.debug.log("Getting the request for time: " + time);
 
             deferred = Q.defer();
@@ -543,6 +551,10 @@ Dash.dependencies.DashHandler = function () {
                 segment,
                 self = this;
 
+            if (!representation) {
+                return Q.reject("no represenation");
+            }
+
             self.debug.log("Getting the next request.");
 
             if (index === -1) {
@@ -615,6 +627,10 @@ Dash.dependencies.DashHandler = function () {
                 ft = 1,
                 fd;
 
+            if (!representation) {
+                return Q.reject("no represenation");
+            }
+
             getSegments.call(self, representation).then(
                 function (segments) {
                     if (segments === null || segments === undefined) {
@@ -660,6 +676,10 @@ Dash.dependencies.DashHandler = function () {
                 fd,
                 ft = 1,
                 deferred = Q.defer();
+
+            if (!representation) {
+                return Q.reject("no represenation");
+            }
 
             bufferedIndex = index;
             if (bufferedIndex < 0) {
