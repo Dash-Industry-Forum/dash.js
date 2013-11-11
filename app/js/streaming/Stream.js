@@ -39,6 +39,7 @@ MediaPlayer.dependencies.Stream = function () {
         seekingListener,
         seekedListener,
         timeupdateListener,
+        progressListener,
         duration,
         periodIndex = -1,
         startTime = null,
@@ -616,6 +617,14 @@ MediaPlayer.dependencies.Stream = function () {
 
         onProgress = function () {
             //this.debug.log("Got timeupdate event.");
+            updateBuffer.call(this);
+        },
+
+        onTimeupdate = function () {
+            updateBuffer.call(this);
+        },
+
+        updateBuffer = function() {
             if (videoController) {
                 videoController.updateBufferLevel();
             }
@@ -766,7 +775,8 @@ MediaPlayer.dependencies.Stream = function () {
             errorListener = onError.bind(this);
             seekingListener = onSeeking.bind(this);
             seekedListener = onSeeked.bind(this);
-            timeupdateListener = onProgress.bind(this);
+            progressListener = onProgress.bind(this);
+            timeupdateListener = onTimeupdate.bind(this);
             loadedListener = onLoad.bind(this);
         },
 
@@ -782,6 +792,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.videoModel.listen("error", errorListener);
             this.videoModel.listen("seeking", seekingListener);
             this.videoModel.listen("timeupdate", timeupdateListener);
+            this.videoModel.listen("progress", progressListener);
             this.videoModel.listen("loadedmetadata", loadedListener);
         },
 
@@ -827,6 +838,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.videoModel.unlisten("error", errorListener);
             this.videoModel.unlisten("seeking", seekingListener);
             this.videoModel.unlisten("timeupdate", timeupdateListener);
+            this.videoModel.unlisten("progress", progressListener);
             this.videoModel.unlisten("loadedmetadata", loadedListener);
 
             tearDownMediaSource.call(this);

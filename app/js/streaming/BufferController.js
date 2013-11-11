@@ -457,9 +457,9 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
-        checkIfSufficientBuffer = function (length) {
+        checkIfSufficientBuffer = function () {
             if (waitingForBuffer) {
-                if (length < minBufferTime) {
+                if (bufferLevel < minBufferTime) {
                     if (!stalled) {
                         this.debug.log("Waiting for more " + type + " buffer before starting playback.");
                         stalled = true;
@@ -589,7 +589,7 @@ MediaPlayer.dependencies.BufferController = function () {
             self.debug.log(type + " Video time: " + currentVideoTime);
             self.debug.log("Current " + type + " buffer length: " + bufferLevel);
 
-            checkIfSufficientBuffer.call(self, bufferLevel);
+            checkIfSufficientBuffer.call(self);
             //mseSetTimeIfPossible.call(self);
 
             if (state === LOADING && bufferLevel < STALL_THRESHOLD) {
