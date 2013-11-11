@@ -843,12 +843,14 @@ MediaPlayer.dependencies.Stream = function () {
             this.videoModel.unlisten("loadedmetadata", loadedListener);
 
             tearDownMediaSource.call(this);
-
-            this.protectionController.teardownKeySystem(kid);
+            if (!!this.protectionController) {
+                this.protectionController.teardownKeySystem(kid);
+            }
             this.protectionController = undefined;
             this.protectionModel = undefined;
 
-            this.videoModel = null;
+            // streamcontroller expects this to be valid
+            //this.videoModel = null;
 
             load = Q.defer();
         },
