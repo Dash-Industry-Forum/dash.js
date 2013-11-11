@@ -62,7 +62,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             len,
             i;
 
-        ranges = buffer.buffered;
+        try {
+            ranges = buffer.buffered;
+        } catch(ex) {
+            return Q.when(null);
+        }
 
         if (ranges !== null) {
             for (i = 0, len = ranges.length; i < len; i += 1) {
@@ -98,6 +102,17 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         }
 
         return Q.when(null);
+    },
+
+    getAllRanges: function(buffer) {
+        var ranges = null;
+
+        try{
+            ranges = buffer.buffered;
+            return Q.when(ranges);
+        } catch (ex) {
+            return Q.when(null);
+        }
     },
 
     getBufferLength: function (buffer, time, tolerance) {
