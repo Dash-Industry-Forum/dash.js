@@ -35,12 +35,8 @@ function setMPD(mpd) {
 	mpd[20] = "http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME_720p_Main_Profile/sintel_trailer-720p.ism/manifest(format=mpd-time-csf)";
 	mpd[21] = "http://wams.edgesuite.net/media/MPTExpressionData01/ElephantsDream_1080p24_IYUV_2ch.ism/manifest(format=mpd-time-csf)";
 	mpd[22] = "http://wams.edgesuite.net/media/MPTExpressionData02/BigBuckBunny_1080p24_IYUV_2ch.ism/manifest(format=mpd-time-csf)";
-	mpd[23] = "https://storage.live-int.com/Items/8E33131995F1EC24%213844:VideoMain?psid=1&videoplayer=skysl&videoformat=dash&part=index&cachedisable=1";
-	mpd[24] = "https://storage.live-int.com/Items/8E33131995F1EC24%213847:VideoMain?psid=1&videoplayer=skysl&videoformat=dash&part=index&cachedisable=1";
-	mpd[25] = "https://storage.live-int.com/Items/8E33131995F1EC24%213848:VideoMain?psid=1&videoplayer=skysl&videoformat=dash&part=index&cachedisable=1";
-	mpd[26] = "https://storage.live-int.com/Items/8E33131995F1EC24%213849:VideoMain?psid=1&videoplayer=skysl&videoformat=dash&part=index&cachedisable=1";
-	mpd[27] = "http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME_720p_Main_Profile_CENC/CENC/sintel_trailer-720p.ism/manifest(format=mpd-time-csf)";
-	mpd[28] = "http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME_CENC/CENC/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)";
+	mpd[23] = "http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME_720p_Main_Profile_CENC/CENC/sintel_trailer-720p.ism/manifest(format=mpd-time-csf)";
+	mpd[24] = "http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME_CENC/CENC/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)";
 	//Add MPDs here
 
 	return mpd;
