@@ -210,7 +210,7 @@ Dash.dependencies.DashHandler = function () {
                     seg.timescale = fTimescale;
                     
                     //For a repeated S element, t belongs only to the first segment
-                    if (j == 0 && frag.hasOwnProperty("t")) {
+                    if (j === 0 && frag.hasOwnProperty("t")) {
                         seg.startTime = frag.t;
                         time = frag.t;
                     } else {
