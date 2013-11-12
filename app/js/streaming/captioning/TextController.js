@@ -115,7 +115,7 @@ MediaPlayer.dependencies.TextController = function () {
 
         reset: function (errored, source) {
             if (!errored) {
-                this.sourceBufferExt.abort(buffer);
+                this.sourceBufferExt.abort(source, buffer);
                 this.sourceBufferExt.removeSourceBuffer(source, buffer);
             }
         },
