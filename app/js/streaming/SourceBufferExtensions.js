@@ -137,6 +137,13 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
     append: function (buffer, bytes /*, videoModel*/) {
         "use strict";
         var defer = Q.defer(),
+            intervalId,
+            CHECK_INTERVAL = 50,
+            checkIsUpdateEnded = function() {
+                if (buffer.updating) return;
+                clearInterval(intervalId);
+                defer.resolve(true);
+            },
             updateEndHandler = function() {
                 buffer.removeEventListener("updateend", updateEndHandler, false);
                 defer.resolve(true);
@@ -145,10 +152,10 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             try {
                 buffer.addEventListener("updateend", updateEndHandler, false);
             } catch (err) {
-                defer.resolve(true);
+                intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
             }
         } else {
-            defer.resolve(true);
+            intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
         }
         try {
             if ("append" in buffer) {
