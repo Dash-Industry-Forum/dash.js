@@ -316,7 +316,7 @@ Dash.dependencies.DashParser = function () {
 
                 this.debug.log("Parsing complete.");
             } catch (err) {
-                this.errHandler.manifestError({message: "parsing the manifest failed", id: "parse", manifest: data});
+                this.errHandler.manifestError("parsing the manifest failed", "parse", data);
                 return Q.reject(err);
             }
             return Q.when(manifest);
