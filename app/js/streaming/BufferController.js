@@ -189,6 +189,8 @@ MediaPlayer.dependencies.BufferController = function () {
                 var self = this,
                     time = self.fragmentController.getLoadingTime(self);
                 setTimeout(function(){
+                    if (!data && !buffer) return;
+
                     setState.call(self, READY);
                     requestNewFragment.call(self);
                 }, time);
@@ -252,9 +254,11 @@ MediaPlayer.dependencies.BufferController = function () {
 
             Q.when(ln < 2 || deferredAppends[ln - 2].promise).then(
                 function() {
+                    if (!buffer) return;
                     self.sourceBufferExt.append(buffer, data, self.videoModel).then(
                         function (/*appended*/) {
                             deferred.resolve();
+                            if (!buffer) return;
                             self.sourceBufferExt.getAllRanges(buffer).then(
                                 function(ranges) {
                                     if (ranges) {
@@ -866,6 +870,7 @@ MediaPlayer.dependencies.BufferController = function () {
             deferredAppends = [];
             deferredInitAppend = null;
             initializationData = [];
+            deferredStreamComplete = Q.defer();
 
             if (!errored) {
                 self.sourceBufferExt.abort(buffer);
