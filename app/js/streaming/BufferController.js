@@ -873,7 +873,7 @@ MediaPlayer.dependencies.BufferController = function () {
             deferredStreamComplete = Q.defer();
 
             if (!errored) {
-                self.sourceBufferExt.abort(buffer);
+                self.sourceBufferExt.abort(source, buffer);
                 self.sourceBufferExt.removeSourceBuffer(source, buffer);
             }
             data = null;

@@ -169,11 +169,14 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         return defer.promise;
     },
 
-    abort: function (buffer) {
+    abort: function (mediaSource, buffer) {
         "use strict";
         var deferred = Q.defer();
         try {
-            deferred.resolve(buffer.abort());
+            if (mediaSource.readyState === "open") {
+                buffer.abort();
+            }
+            deferred.resolve();
         } catch(ex){
             deferred.reject(ex.description);
         }
