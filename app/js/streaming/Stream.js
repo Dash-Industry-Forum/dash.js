@@ -592,8 +592,6 @@ MediaPlayer.dependencies.Stream = function () {
             this.debug.log("Video Element Error: " + msg);
             this.debug.log(error);
             this.errHandler.mediaSourceError(msg);
-
-            pause.call(this);
             this.reset();
         },
 
@@ -848,6 +846,8 @@ MediaPlayer.dependencies.Stream = function () {
             }
             this.protectionController = undefined;
             this.protectionModel = undefined;
+            this.fragmentController = undefined;
+            this.requestScheduler = undefined;
 
             // streamcontroller expects this to be valid
             //this.videoModel = null;
