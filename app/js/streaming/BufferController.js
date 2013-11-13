@@ -152,6 +152,8 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         doStop = function () {
+            if (state === WAITING) return;
+
             this.debug.log("BufferController " + type + " stop.");
             setState.call(this, WAITING);
             this.requestScheduler.stopScheduling(this);
