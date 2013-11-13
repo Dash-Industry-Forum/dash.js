@@ -675,6 +675,7 @@ Dash.dependencies.DashHandler = function () {
                 fs,
                 fd,
                 ft = 1,
+                startNumber = 1,
                 deferred = Q.defer();
 
             if (!representation) {
@@ -700,7 +701,13 @@ Dash.dependencies.DashHandler = function () {
                             ft = representation.SegmentTemplate.timescale;
                         }
 
-                        time = (fd / ft) * (bufferedIndex);
+                        // bufferedIndex includes startNumber value which must not be taken into account when
+                        // calculating current time, so we should subtract it.
+                        if (representation.SegmentTemplate.hasOwnProperty("startNumber")) {
+                            startNumber = representation.SegmentTemplate.startNumber;
+                        }
+
+                        time = (fd / ft) * Math.max(bufferedIndex - startNumber, 0);
                     } else {
                         if (useLast || bufferedIndex >= segments.length) {
                             bufferedIndex = segments.length - 1;
