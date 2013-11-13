@@ -540,14 +540,7 @@ MediaPlayer.dependencies.Stream = function () {
 
         onPause = function () {
             this.debug.log("Got pause event.");
-            /*
-            if (videoController) {
-                videoController.stop();
-            }
-            if (audioController) {
-                audioController.stop();
-            }
-            */
+            //stopBuffering.call(this);
         },
 
         onError = function (event) {
@@ -624,6 +617,15 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
+        stopBuffering = function() {
+            if (videoController) {
+                videoController.stop();
+            }
+            if (audioController) {
+                audioController.stop();
+            }
+        },
+
         doLoad = function (manifestResult) {
 
             var self = this;
@@ -685,6 +687,10 @@ MediaPlayer.dependencies.Stream = function () {
             if (mediaSource) {
                 this.mediaSourceExt.signalEndOfStream(mediaSource);
             }
+        },
+
+        segmentLoadingFailed = function() {
+            stopBuffering.call(this);
         },
 
         manifestHasUpdated = function () {
@@ -757,6 +763,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.system.mapHandler("manifestUpdated", undefined, manifestHasUpdated.bind(this));
             this.system.mapHandler("setCurrentTime", undefined, currentTimeChanged.bind(this));
             this.system.mapHandler("bufferingCompleted", undefined, bufferingCompleted.bind(this));
+            this.system.mapHandler("segmentLoadingFailed", undefined, segmentLoadingFailed.bind(this));
 
             load = Q.defer();
 
