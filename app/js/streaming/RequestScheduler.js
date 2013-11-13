@@ -173,6 +173,8 @@
         },
 
         adjustExecuteInterval: function() {
+            if (schedulerModels.length < 1) return;
+
             var newExecuteInterval = this.schedulerExt.getExecuteInterval(schedulerModels[0].getContext());
 
             if (executeInterval !== newExecuteInterval) {
