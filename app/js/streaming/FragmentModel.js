@@ -150,6 +150,10 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return loadingTime;
         },
 
+        abortRequests: function() {
+            this.fragmentLoader.abort();
+        },
+
         executeCurrentRequest: function() {
             var self = this,
                 currentRequest;

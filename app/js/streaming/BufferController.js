@@ -851,6 +851,8 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         updateBufferLevel: function() {
+            if (!data && !buffer) return;
+
             var self = this,
                 currentTime = getWorkingTime.call(self);
 
@@ -867,6 +869,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             doStop.call(self);
             self.clearMetrics();
+            self.fragmentController.abortRequestsForModel(fragmentModel);
             self.fragmentController.detachBufferController(fragmentModel);
             fragmentModel = null;
             deferredAppends = [];

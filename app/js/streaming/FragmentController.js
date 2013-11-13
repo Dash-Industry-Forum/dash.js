@@ -139,6 +139,12 @@ MediaPlayer.dependencies.FragmentController = function () {
             return fragmentModel.getLoadingTime();
         },
 
+        abortRequestsForModel: function(model) {
+            if (model) {
+                model.abortRequests();
+            }
+        },
+
         prepareFragmentForLoading: function(bufferController, request, startLoadingCallback, successLoadingCallback, errorLoadingCallback, streamEndCallback) {
             var fragmentModel = findModel(bufferController);
 
