@@ -16,6 +16,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
     var retryAttempts = 3,
         RETRY_INTERVAL = 500,
+        xhrs = [],
 
         doLoad = function (request) {
             var req = new XMLHttpRequest(),
@@ -24,6 +25,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 needFailureReport = true,
                 self = this;
 
+                xhrs.push(req);
                 request.requestStartDate = new Date();
                 request.firstByteDate = request.requestStartDate;
 
@@ -89,6 +91,12 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 };
 
                 req.onloadend = req.onerror = function () {
+                    if (xhrs.indexOf(req) === -1) {
+                        return;
+                    } else {
+                        xhrs.splice(xhrs.indexOf(req), 1);
+                    }
+
                     if (!needFailureReport)
                     {
                       return;
@@ -147,6 +155,19 @@ MediaPlayer.dependencies.FragmentLoader = function () {
             doLoad.call(this, req);
 
             return req.deferred.promise;
+        },
+
+        abort: function() {
+            var i,
+                req,
+                ln = xhrs.length;
+
+            for (i = 0; i < ln; i +=1) {
+                req = xhrs[i];
+                xhrs[i] = null;
+                req.abort();
+                req = null;
+            }
         }
     };
 };
