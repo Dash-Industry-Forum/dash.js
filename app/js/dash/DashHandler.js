@@ -406,11 +406,17 @@ Dash.dependencies.DashHandler = function () {
             var request = new MediaPlayer.vo.SegmentRequest(),
                 url,
                 fTimescale = 1,
+                startNumber = 1,
                 time;
 
             // default to 1 if not present
             if (template.hasOwnProperty("timescale")) {
                 fTimescale = template.timescale;
+            }
+
+            // default to 1 if not present
+            if (template.hasOwnProperty("startNumber")) {
+                startNumber = template.startNumber;
             }
 
             time = (template.duration * index) / fTimescale;
@@ -428,7 +434,7 @@ Dash.dependencies.DashHandler = function () {
             request.url = getRequestUrl(url, representation.BaseURL);
             request.duration = template.duration / fTimescale;
             request.timescale = fTimescale;
-            request.startTime = (index * template.duration) / fTimescale;
+            request.startTime = ((index - startNumber) * template.duration) / fTimescale;
             request.quality = quality;
             request.index = index;
 
