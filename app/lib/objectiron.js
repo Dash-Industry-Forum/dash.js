@@ -181,28 +181,31 @@ function ObjectIron(map) {
             }
 
             // iterate over the objects and look for any of the items we care about
-            for (pp in source) {
-                if (source.hasOwnProperty(pp)) {
-                    pi = lookup.indexOf(pp);
-                    if (pi !== -1) {
-                        item = map[pi];
+            if ( pp != 'SegmentList') {
+                for (pp in source) {
+                    if (source.hasOwnProperty(pp)) {
+                        pi = lookup.indexOf(pp);
+                        if (pi !== -1) {
+                            item = map[pi];
 
-                        if (item.isArray) {
-                            array = source[pp + "_asArray"];
-                            for (i = 0, len = array.length; i < len; i += 1) {
-                                node = array[i];
+                            if (item.isArray) {
+                                array = source[pp + "_asArray"];
+                                for (i = 0, len = array.length; i < len; i += 1) {
+                                    node = array[i];
+                                    mapItem(item, node);
+                                }
+                            } else {
+                                node = source[pp];
                                 mapItem(item, node);
                             }
-                        } else {
-                            node = source[pp];
-                            mapItem(item, node);
+                        }
+                        if (pp != "__cnt" && pp != 'media' && pp != 'SegmentURL' && pp != 'SegmentURL_asArray' && pp != '__text') {
+                            // now check this to see if he has any of the properties we care about
+                            performMapping(source[pp]);
                         }
                     }
-                    // now check this to see if he has any of the properties we care about
-                    performMapping(source[pp]);
                 }
             }
-
             return source;
         };
 
