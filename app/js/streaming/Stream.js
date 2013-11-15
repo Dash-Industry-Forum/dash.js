@@ -540,7 +540,7 @@ MediaPlayer.dependencies.Stream = function () {
 
         onPause = function () {
             this.debug.log("Got pause event.");
-            //stopBuffering.call(this);
+            stopBuffering.call(this);
         },
 
         onError = function (event) {
