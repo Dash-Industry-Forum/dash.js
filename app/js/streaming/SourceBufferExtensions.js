@@ -134,13 +134,15 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         return deferred.promise;
     },
 
-    append: function (buffer, bytes /*, videoModel*/) {
+    waitForUpdateEnd: function(buffer) {
         "use strict";
         var defer = Q.defer(),
             intervalId,
             CHECK_INTERVAL = 50,
             checkIsUpdateEnded = function() {
+                // if undating is still in progress do nothing and wait for the next check again.
                 if (buffer.updating) return;
+                // updating is completed, now we can stop checking and resolve the promise
                 clearInterval(intervalId);
                 defer.resolve(true);
             },
@@ -148,25 +150,63 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 buffer.removeEventListener("updateend", updateEndHandler, false);
                 defer.resolve(true);
             };
+        // use updateend event if possible
         if (buffer.hasOwnProperty("addEventListener")) {
             try {
                 buffer.addEventListener("updateend", updateEndHandler, false);
             } catch (err) {
+                // use setInterval to periodically check if updating has been completed
                 intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
             }
         } else {
+            // use setInterval to periodically check if updating has been completed
             intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
         }
+
+        return defer.promise;
+    },
+
+    append: function (buffer, bytes /*, videoModel*/) {
+        var deferred = Q.defer();
+
         try {
             if ("append" in buffer) {
                 buffer.append(bytes);
             } else if ("appendBuffer" in buffer) {
                 buffer.appendBuffer(bytes);
             }
+            // updating is in progress, we should wait for it to complete before signaling that this operation is done
+            this.waitForUpdateEnd(buffer).then(
+                function() {
+                    deferred.resolve();
+                }
+            );
         } catch (err) {
-            return Q.when(false);
+            deferred.reject({err: err, data: bytes});
         }
-        return defer.promise;
+
+        return deferred.promise;
+    },
+
+    remove: function (buffer, start, end, duration) {
+        var deferred = Q.defer();
+
+        try {
+            // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
+            if (start >= 0 && start < duration && end > start) {
+                buffer.remove(start, end);
+            }
+            // updating is in progress, we should wait for it to complete before signaling that this operation is done
+            this.waitForUpdateEnd(buffer).then(
+                function() {
+                    deferred.resolve();
+                }
+            );
+        } catch (err) {
+            deferred.reject(err);
+        }
+
+        return deferred.promise;
     },
 
     abort: function (mediaSource, buffer) {
