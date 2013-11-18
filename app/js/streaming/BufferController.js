@@ -351,10 +351,10 @@ MediaPlayer.dependencies.BufferController = function () {
 
             // we need to remove data that is more than one segment before the video currentTime
             req = self.fragmentController.getExecutedRequestForTime(fragmentModel, currentTime);
-            removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : currentTime;
+            removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
             fragmentDuration = (req && !isNaN(req.duration)) ? req.duration : 1;
 
-            self.sourceBufferExt.getBufferRange(buffer, seekTarget).then(
+            self.sourceBufferExt.getBufferRange(buffer, currentTime).then(
                 function(range) {
                     if ((range === null) && (seekTarget === currentTime) && (buffer.buffered.length > 0)) {
                         removeEnd = buffer.buffered.end(buffer.buffered.length -1 );
