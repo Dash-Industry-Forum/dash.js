@@ -211,10 +211,10 @@ MediaPlayer.dependencies.Stream = function () {
             var self = this;
 
             if (!!videoController) {
-                videoController.reset(errored, mediaSource);
+                videoController.reset(errored);
             }
             if (!!audioController) {
-                audioController.reset(errored, mediaSource);
+                audioController.reset(errored);
             }
             if (!!mediaSource) {
                 self.mediaSourceExt.detachMediaSource(self.videoModel);
@@ -316,7 +316,7 @@ MediaPlayer.dependencies.Stream = function () {
                                             // TODO : Pass to controller and then pass to each method on handler?
 
                                             videoController = self.system.getObject("bufferController");
-                                            videoController.initialize("video", periodIndex, videoData, buffer, self.videoModel, self.requestScheduler, self.fragmentController);
+                                            videoController.initialize("video", periodIndex, videoData, buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource);
                                             self.debug.log("Video is ready!");
                                         }
 
@@ -388,7 +388,7 @@ MediaPlayer.dependencies.Stream = function () {
                                                     // TODO : How to tell index handler live/duration?
                                                     // TODO : Pass to controller and then pass to each method on handler?
                                                     audioController = self.system.getObject("bufferController");
-                                                    audioController.initialize("audio", periodIndex, primaryAudioData, buffer, self.videoModel, self.requestScheduler, self.fragmentController);
+                                                    audioController.initialize("audio", periodIndex, primaryAudioData, buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource);
                                                     self.debug.log("Audio is ready!");
                                                 }
 

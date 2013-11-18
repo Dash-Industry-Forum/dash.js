@@ -48,6 +48,7 @@ MediaPlayer.dependencies.BufferController = function () {
         rejectedBytes = null,
         fragmentDuration = 1,
         rejectTime = null,
+        mediaSource,
 
         type,
         data = null,
@@ -360,7 +361,7 @@ MediaPlayer.dependencies.BufferController = function () {
                         removeEnd = buffer.buffered.end(buffer.buffered.length -1 );
                     }
 
-                    self.sourceBufferExt.remove(buffer, removeStart, removeEnd, duration).then(
+                    self.sourceBufferExt.remove(buffer, removeStart, removeEnd, duration, mediaSource).then(
                         function() {
                             // after the data has been removed from the buffer we should remove the requests from the list of
                             // the executed requests for which playback time is inside the time interval that has been removed from the buffer
@@ -780,11 +781,12 @@ MediaPlayer.dependencies.BufferController = function () {
         system: undefined,
         errHandler: undefined,
 
-        initialize: function (type, periodIndex, data, buffer, videoModel, scheduler, fragmentController) {
+        initialize: function (type, periodIndex, data, buffer, videoModel, scheduler, fragmentController, source) {
             var self = this,
                 manifest = self.manifestModel.getValue(),
                 isLive = self.manifestExt.getIsLive(manifest);
 
+            self.setMediaSource(source);
             self.setVideoModel(videoModel);
             self.setType(type);
             self.setPeriodIndex(periodIndex);
@@ -921,6 +923,10 @@ MediaPlayer.dependencies.BufferController = function () {
             minBufferTime = value;
         },
 
+        setMediaSource: function(value) {
+            mediaSource = value;
+        },
+
         isReady: function() {
             return state === READY;
         },
@@ -956,7 +962,7 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
-        reset: function(errored, source) {
+        reset: function(errored) {
             var self = this;
 
             doStop.call(self);
@@ -970,8 +976,8 @@ MediaPlayer.dependencies.BufferController = function () {
             deferredStreamComplete = Q.defer();
 
             if (!errored) {
-                self.sourceBufferExt.abort(source, buffer);
-                self.sourceBufferExt.removeSourceBuffer(source, buffer);
+                self.sourceBufferExt.abort(mediaSource, buffer);
+                self.sourceBufferExt.removeSourceBuffer(mediaSource, buffer);
             }
             data = null;
             buffer = null;
