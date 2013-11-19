@@ -170,6 +170,10 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return null;
         },
 
+        removeExecutedRequest: function(request) {
+            removeExecutedRequest.call(this, request);
+        },
+
         removeExecutedRequestsBeforeTime: function(time) {
             var lastIdx = executedRequests.length - 1,
                 start = NaN,

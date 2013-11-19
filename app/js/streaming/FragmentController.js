@@ -147,6 +147,12 @@ MediaPlayer.dependencies.FragmentController = function () {
             return null;
         },
 
+        removeExecutedRequest: function(model, request) {
+            if (model) {
+                model.removeExecutedRequest(request);
+            }
+        },
+
         removeExecutedRequestsBeforeTime: function(model, time) {
             if (model) {
                 model.removeExecutedRequestsBeforeTime(time);

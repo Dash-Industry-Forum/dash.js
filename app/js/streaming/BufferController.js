@@ -223,9 +223,15 @@ MediaPlayer.dependencies.BufferController = function () {
 			self.fragmentController.process(response.data).then(
 				function (data) {
 					if (data !== null && deferredInitAppend !== null) {
+
+                        if (request.quality !== lastQuality) {
+                            self.fragmentController.removeExecutedRequest(fragmentModel, request);
+                            return;
+                        }
+
                         Q.when(deferredInitAppend.promise).then(
                             function() {
-                                appendToBuffer.call(self, data).then(
+                                appendToBuffer.call(self, data, request.quality).then(
                                     function() {
                                         deferredStreamComplete.promise.then(
                                             function(lastRequest) {
@@ -247,7 +253,7 @@ MediaPlayer.dependencies.BufferController = function () {
 			);
 		},
 
-        appendToBuffer = function(data) {
+        appendToBuffer = function(data, quality) {
             var self = this,
                 isAppendingRejectedData = (data == rejectedBytes),
                 // if we append the rejected data we should use the stored promise instead of creating a new one
@@ -270,6 +276,15 @@ MediaPlayer.dependencies.BufferController = function () {
                     if (!buffer) return;
                     clearBuffer.call(self).then(
                         function() {
+                            if (quality !== lastQuality) {
+                                deferred.resolve();
+                                if (isAppendingRejectedData) {
+                                    deferredRejectedDataAppend = null;
+                                    rejectedBytes = null;
+                                }
+                                return;
+                            }
+
                             self.sourceBufferExt.append(buffer, data, self.videoModel).then(
                                 function (/*appended*/) {
                                     if (isAppendingRejectedData) {
@@ -390,7 +405,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
                         // if this is the initialization data for current quality we need to push it to the buffer
                         if (quality === lastQuality) {
-                            appendToBuffer.call(self, data).then(
+                            appendToBuffer.call(self, data, request.quality).then(
                                 function() {
                                     deferredInitAppend.resolve();
                                 }
@@ -472,7 +487,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     deferredInitAppend = Q.defer();
                     lastQuality = currentQuality;
                     if (initializationData[currentQuality]) {
-                        appendToBuffer.call(this, initializationData[currentQuality]).then(
+                        appendToBuffer.call(this, initializationData[currentQuality], currentQuality).then(
                             function() {
                                 deferredInitAppend.resolve();
                             }
