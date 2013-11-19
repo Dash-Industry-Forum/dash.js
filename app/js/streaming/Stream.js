@@ -27,6 +27,7 @@ MediaPlayer.dependencies.Stream = function () {
         textTrackIndex = -1,
         autoPlay = true,
         initialized = false,
+        scheduleWhilePaused = true,
         load,
         errored = false,
         kid = null,
@@ -540,7 +541,10 @@ MediaPlayer.dependencies.Stream = function () {
 
         onPause = function () {
             this.debug.log("Got pause event.");
-            //stopBuffering.call(this);
+
+            if (!scheduleWhilePaused) {
+                stopBuffering.call(this);
+            }
         },
 
         onError = function (event) {
@@ -825,6 +829,14 @@ MediaPlayer.dependencies.Stream = function () {
 
         getAutoPlay: function () {
             return autoPlay;
+        },
+
+        setScheduleWhilePaused: function(value) {
+            scheduleWhilePaused = value;
+        },
+
+        getScheduleWhilePaused: function() {
+            return scheduleWhilePaused;
         },
 
         reset: function () {
