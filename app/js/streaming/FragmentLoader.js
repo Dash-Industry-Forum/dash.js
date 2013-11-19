@@ -14,11 +14,11 @@
 MediaPlayer.dependencies.FragmentLoader = function () {
     "use strict";
 
-    var retryAttempts = 3,
+    var RETRY_ATTEMPTS = 3,
         RETRY_INTERVAL = 500,
         xhrs = [],
 
-        doLoad = function (request) {
+        doLoad = function (request, remainingAttempts) {
             var req = new XMLHttpRequest(),
                 httpRequestMetrics = null,
                 firstProgress = true,
@@ -124,11 +124,11 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                                           null,
                                                                           request.duration);
 
-                    if (retryAttempts > 0) {
-                        self.debug.log("Failed loading segment: " + request.url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + retryAttempts);
-                        retryAttempts--;
+                    if (remainingAttempts > 0) {
+                        self.debug.log("Failed loading segment: " + request.url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                        remainingAttempts--;
                         setTimeout(function() {
-                            doLoad.call(self, request);
+                            doLoad.call(self, request, remainingAttempts);
                         }, RETRY_INTERVAL);
                     } else {
                         self.debug.log("Failed loading segment: " + request.url + " no retry attempts left");
@@ -152,7 +152,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
             }
 
             req.deferred = Q.defer();
-            doLoad.call(this, req);
+            doLoad.call(this, req, RETRY_ATTEMPTS);
 
             return req.deferred.promise;
         },
