@@ -70,13 +70,19 @@ body
 	text-align: left;
 }
 
+#divtable
+{
+	overflow-y:scroll;
+	height:500px;
+}
+
 #tbMPD
 {
 	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
 	font-size: 12px;	
-	width: 700px;
+	width: 350px;
 	text-align: left;
-	border-collapse: collapse;
+	border:1px solid grey;
 }
 #tbMPD th
 {
@@ -84,7 +90,7 @@ body
 	font-weight: bold;
 	padding: 10px 8px;
 	color: white;
-    background: #4F4F4F;
+    background: #5D8AA8;
 }
 #tbMPD td
 {
