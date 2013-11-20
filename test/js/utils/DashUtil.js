@@ -15,16 +15,7 @@ $(document).ready(function testLoad() {
 
 	csvContent = 'data:text/csv;charset=utf-8,';
 	document.getElementById('files').addEventListener('change', handleFileSelect, false);
-
-	var isChrome = !!window.chrome;
-	var isIE = false || document.documentMode;
-	if (isIE) {
-		document.getElementById('txtfileUploader').style.visibility = "visible";
-		document.getElementById('btnImport').style.visibility = "visible";
-	} else if (isChrome) {
-		document.getElementById('files').style.visibility = "visible";
-	} else {}
-
+	document.getElementById('files').style.visibility = "visible";
 	testModeList = document.getElementById('myList');
 	testMode = testModeList.options[testModeList.selectedIndex].text;
 	runTestFlag = false;
@@ -94,7 +85,7 @@ function createRow(i) {
 
 function teardown() {
 	if (!!player) {
-		$('#MPDUrl' + counter).text($('#MPDUrl' + counter).text() + "\n Duration: " + (element).duration);
+		$('#MPDUrl' + counter).text($('#MPDUrl' + counter).text() +  "Duration: " + (element).duration);
 		
 		if (stalled === true) {
 			$('#stall' + counter).html('Video was stalled');
@@ -141,12 +132,14 @@ function initialisation(rowID) {
 		$('#seek' + rowID).html("");
 		$('#stall' + rowID).html("");
 		$('#pause' + rowID).html("");
+		$('#error' + rowID).html("");
 	} else {
 		if ($('#Video' + rowID).children().length > 1) {
 			$('#Video' + rowID).children().eq(0).remove();
 			$('#play' + rowID).html("");
 			$('#seek' + rowID).html("");
 			$('#stall' + rowID).html("");
+			$('#error' + rowID).html("");
 			$('#pause' + rowID).html("");
 		}
 		if (counter == rowID) {
@@ -157,6 +150,7 @@ function initialisation(rowID) {
 				$('#seek' + rowID).html("");
 				$('#stall' + rowID).html("");
 				$('#pause' + rowID).html("");
+				$('#error' + rowID).html("");
 			}
 
 		}
@@ -197,11 +191,7 @@ function initialisation(rowID) {
 				$("#error"+rowID).html("Error: " + message);
 				$('#ClassVideo' + rowID).hide();
 				$('#Video' + rowID).hide();
-				$('#play' + rowID).html("");
-				$('#stall' + rowID).html("");
-				loadNextMPD();
-			};
-
+		};
 		$(mpdID).text(mpd[rowID]);
 
 		player.addEventListener("error", onError.bind(this));
@@ -435,34 +425,15 @@ function exportToJSON() {
 function importToTable(contents) {
 	//For IE
 	if (!!window.MSStream) {
-		var filePath = document.getElementById('txtfileUploader').value;
-		if (filePath == null || filePath === "Enter the path here" || filePath === "") {
-			alert('Please enter a valid path');
-		} else {
-			contentXML = readFileInIE(filePath);
-		}
+			contentXML = new window.ActiveXObject("Microsoft.XMLDOM");
+			contentXML.async = "false";
+			contentXML.loadXML(contents);
 	}
 	//For Chrome
 	else {
 		contentXML = (new DOMParser()).parseFromString(contents, "text/xml");
 	}
 	populateTable(contentXML);	
-}
-
-function readFileInIE(filename) {
-	try {
-		var fso = new ActiveXObject("Scripting.FileSystemObject");
-		var fh = fso.OpenTextFile(filename, 1, true, false);
-		var contents = fh.ReadAll();
-		fh.Close();		
-		contents=contents.substr(3);
-        var xmlDoc = new window.ActiveXObject("Microsoft.XMLDOM");
-        xmlDoc.async = "false";
-        xmlDoc.loadXML(contents);
-        return xmlDoc;
-	} catch (exception) {
-		return exception.message;
-	}
 }
 
 function handleFileSelect(evt) {
@@ -479,14 +450,6 @@ function handleFileSelect(evt) {
 	reader.readAsText(files[0]);
 }
 
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds) {
-			break;
-		}
-	}
-}
 /** Populate table wit imported contents */
 function populateTable(contentXML) {
 	var mpdTable = document.getElementById('tbMPD');
@@ -538,6 +501,7 @@ debugger;
 		appendLogMsg('#pause' + i);
 		appendLogMsg('#seek' + i);
 		appendLogMsg('#stall' + i);
+		appendLogMsg('#error' + i);
 	}
 	csvContent += '====================================================================================';
 	csvContent += '====================================================================================';
