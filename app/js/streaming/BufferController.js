@@ -365,6 +365,11 @@ MediaPlayer.dependencies.BufferController = function () {
                 removeEnd,
                 req;
 
+            // do not remove any data until the quota is exceeded
+            if (!isQuotaExceeded) {
+                return Q.when(true);
+            }
+
             // we need to remove data that is more than one segment before the video currentTime
             req = self.fragmentController.getExecutedRequestForTime(fragmentModel, currentTime);
             removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
@@ -967,8 +972,7 @@ MediaPlayer.dependencies.BufferController = function () {
             // if the buffer controller is stopped and the buffer is full we should try to clear the buffer
             // before that we should make sure that we will have enough space to append the data, so we wait
             // until the video time moves forward for a value greater than rejected data duration since the last reject event or since the last seek.
-            if (isQuotaExceeded && (Math.abs(currentTime - (seeking ? seekTarget : rejectTime)) > fragmentDuration)) {
-                //isQuotaExceeded = false;
+            if (isQuotaExceeded && rejectedBytes && (Math.abs(currentTime - (seeking ? seekTarget : rejectTime)) > fragmentDuration)) {
                 //try to append the data that was previosly rejected
                 rejectTime = self.videoModel.getCurrentTime();
                 appendToBuffer.call(self, rejectedBytes);
