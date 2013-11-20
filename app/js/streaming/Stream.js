@@ -27,7 +27,7 @@ MediaPlayer.dependencies.Stream = function () {
         textTrackIndex = -1,
         autoPlay = true,
         initialized = false,
-        scheduleWhilePaused = true,
+        scheduleWhilePaused = false,
         load,
         errored = false,
         kid = null,
