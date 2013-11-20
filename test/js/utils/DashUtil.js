@@ -188,7 +188,7 @@ function initialisation(rowID) {
 						message += ", " + e.event;
 					}
 				}
-				$("#error"+rowID).html("Error: " + message);
+				$("#error"+rowID).html($("#error"+rowID).html() + "Error: " + message + "<br/>");
 				$('#ClassVideo' + rowID).hide();
 				$('#Video' + rowID).hide();
 		};
@@ -457,18 +457,20 @@ function populateTable(contentXML) {
 	for (var i = 1; i = mpdRows.length - 1; i++) {
 		mpdTable.deleteRow(i);
 	}
+	mpd = [];
+	
 	var contentTag = contentXML.getElementsByTagName("content");
 	for (var rowId = 0; rowId < contentTag.length; rowId++) {		
 		if (!!window.MSStream)
 			mpd[rowId] = contentTag[rowId].childNodes[1].text;
 		else
-			mpd[rowId] = contentTag[rowId].children[1].innerHTML;
+			mpd[rowId] = contentTag[rowId].children[1].textContent;
 		
 		createRow(rowId);
 if (!!window.MSStream)
 		$('#MPDUrl' + rowId).html(contentTag[rowId].childNodes[1].text);
 	else		
-		$('#MPDUrl' + rowId).html(contentTag[rowId].children[1].innerHTML);
+		$('#MPDUrl' + rowId).html(contentTag[rowId].children[1].textContent);
 		$('#play' + rowId).html("");
 		$('#pause' + rowId).html("");
 		$('#seek' + rowId).html("");
