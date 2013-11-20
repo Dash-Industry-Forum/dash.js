@@ -35,6 +35,12 @@ body
     margin-left:5px;
 	text-align: left;
 }
+
+#divCenter
+{
+    -moz-box-shadow: 0 0 5px #C7C7C7;
+    -webkit-box-shadow: 0 0 5px #C7C7C7;
+}
 #txtfileUploader
 {
    font-family: "Verdana";
@@ -114,7 +120,7 @@ body
     background:#ffffff;  
     left: 375px;
     top: 200px;
-    z-index:50; /* Layering ( on-top of others), if you have lots of layers: I just maximized, you can change it yourself */
+    z-index:50; 
     margin-left: 15px;  
     
     /* additional features, can be omitted */
