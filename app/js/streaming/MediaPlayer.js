@@ -51,6 +51,7 @@ MediaPlayer = function (aContext) {
         initialized = false,
         playing = false,
         autoPlay = true,
+        scheduleWhilePaused = false,
 
         isReady = function () {
             return (!!element && !!source);
@@ -76,6 +77,8 @@ MediaPlayer = function (aContext) {
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.load(source);
+            system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
+            system.mapOutlet("scheduleWhilePaused", "stream");
         },
 
         doAutoPlay = function () {
@@ -131,6 +134,14 @@ MediaPlayer = function (aContext) {
 
         getAutoPlay: function () {
             return autoPlay;
+        },
+
+        setScheduleWhilePaused: function(value) {
+            scheduleWhilePaused = value;
+        },
+
+        getScheduleWhilePaused: function() {
+            return scheduleWhilePaused;
         },
 
         getMetricsExt: function () {

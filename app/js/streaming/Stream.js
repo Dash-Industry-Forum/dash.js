@@ -27,7 +27,6 @@ MediaPlayer.dependencies.Stream = function () {
         textTrackIndex = -1,
         autoPlay = true,
         initialized = false,
-        scheduleWhilePaused = false,
         load,
         errored = false,
         kid = null,
@@ -542,7 +541,7 @@ MediaPlayer.dependencies.Stream = function () {
         onPause = function () {
             this.debug.log("Got pause event.");
 
-            if (!scheduleWhilePaused) {
+            if (!this.scheduleWhilePaused) {
                 stopBuffering.call(this);
             }
         },
@@ -762,6 +761,7 @@ MediaPlayer.dependencies.Stream = function () {
         metricsExt: undefined,
         errHandler: undefined,
         requestScheduler: undefined,
+        scheduleWhilePaused: undefined,
 
         setup: function () {
             this.system.mapHandler("manifestUpdated", undefined, manifestHasUpdated.bind(this));
@@ -829,14 +829,6 @@ MediaPlayer.dependencies.Stream = function () {
 
         getAutoPlay: function () {
             return autoPlay;
-        },
-
-        setScheduleWhilePaused: function(value) {
-            scheduleWhilePaused = value;
-        },
-
-        getScheduleWhilePaused: function() {
-            return scheduleWhilePaused;
         },
 
         reset: function () {
