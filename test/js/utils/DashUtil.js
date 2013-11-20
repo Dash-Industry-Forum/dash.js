@@ -176,11 +176,10 @@ function initialisation(rowID) {
 
 		player = new MediaPlayer(context);
 		player.startup();
-
 		var mpdID = '#MPDUrl' + rowID,
 			onError = function (e) {
 				var message = "null";
-				if (e) {
+				if (e) {	
 					message = "source=" + e.error;
 					if (e.event.hasOwnProperty("id")) {
 						message += ", id=" + e.event.id;
@@ -195,7 +194,12 @@ function initialisation(rowID) {
 						message += ", " + e.event;
 					}
 				}
-				$("error"+rowID).text("Error: " + message);
+				$("#error"+rowID).html("Error: " + message);
+				$('#ClassVideo' + rowID).hide();
+				$('#Video' + rowID).hide();
+				$('#play' + rowID).html("");
+				$('#stall' + rowID).html("");
+				loadNextMPD();
 			};
 
 		$(mpdID).text(mpd[rowID]);
