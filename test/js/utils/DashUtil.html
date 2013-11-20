@@ -110,9 +110,9 @@
 	<script src="MPDfiles.js"></script>     
 	
 </head>
-<body style="background-color: #4F4F4F">
+<body background="blueGradientBackground.jpg" width="100%" height="100%" style="background-repeat:no-repeat;background-size:100% 100%">
     <center>
-        <div style="width: 100%; background-color: #FFFFFF;margin-top:0px">
+        <div style="width: 95%; background-color: #FFFFFF;margin-top:0px" height="100%">
             <center>
                 <div id="divHeader" >DASH PLAYER TEST APP                    			
 					<img src = "MSOpenTech.png" alt = "MSOpenTech" width="150px" style="margin-top:10px"/>
@@ -139,23 +139,20 @@
                 <div width="50px" align="center">
              <label id="lbTestMode" style="font-weight:bold">Select Test Mode</label>
              <select id = "myList">
-               <option value = "1">Automation</option>
-               <!-- <option value = "2">Manual</option> -->
+               <option value = "1">Manual</option>
+               <option value = "2">Automation</option>
              </select>
        <div>
        </br>
-       </br>
                 <div width="500px" height="100px" style="overflow-y: 50px">
-                    <div cellpadding="5px">				
-						<input type="button" class="ExportToJSON" value="Export to JSON" style="width: 13%;" onclick="exportToJSON()" id="btnExportToJSON" />
-						<input type="button" class="AddMPD" value="Add MPD" style="width:90px;" onclick="addMPD()" />		
-						<input type="button" class="Reset" value="Reset" style="width: 10%;" onclick="window.location.reload()">
-						<div id="divChomeUpload" style="visibility:hidden">
-						<input type="file" id="files" name="files[]"  /></div><div id="fileContents" value="" style="visibility:hidden"></div>						
-							<div id="divIEUpload" style="visibility:hidden">
-						<input type="text" class="UploadFile" value="Enter the path here" style="width: 200px;visibility:hidden" id="txtfileUploader" onclick="textClick()"  />
-						<input type="button" class="ImportToTable" style="width: 13%;visibility:hidden" value="Import to table" onclick="importToTable()" id="btnImport" ></div>
-					
+                    <div cellpadding="5px">										
+						<input type="button" class="AddMPD" value="Add MPD" style="width:80px;" onclick="addMPD()" />		
+						<input type="button" class="Reset" value="Reset" style="width:80px;" onclick="window.location.reload()">
+						<input type="button" class="StopTests" value="Stop" style="width:80px;" onclick="stopTest()" id="btnStopTest" />
+						<input type="button" class="ResumeTests" value="Resume" style="width:80px;" onclick="resumeTest()" id="btnResumeTest" />
+						<input type="button" class="ExportLog" value="Export Log" style="width:80px;" onclick="logging()" id="btnExportLog" />
+						<input type="button" class="ExportToJSON" value="Export to JSON" style="width: 110px;" onclick="exportToJSON()" id="btnExportToJSON" />						
+						<input type="file" id="files" name="files[]"  /><div id="fileContents" value="" style="visibility:hidden">	</div>																	
                     </div>
 
                     <div id = "popup_box" >
@@ -175,14 +172,14 @@
                 </br>
             </center>
             <center>
-                <div id="table" >
-                    <table height="100%" style="border: 1px solid black; overflow-y: 500px;" id="tbMPD">
+                <div id="divtable" >
+                    <table height="100%" style="border: 1px solid black;" id="tbMPD">
                         <thead>
                             <tr  align="center" style="border: 1px solid black;">
                                 <th width="150px">
                                     MPD
                                 </th>
-                                <th>
+                                <th width="250px">
                                     Events
                                 </th>
 								<th width="150px">
@@ -192,22 +189,22 @@
                             </tr>
                             <thead>
                                 <tbody>
-                                    <tr  style="border: 1px solid black;" align="center" height="100%" id="0">
-                                        <td>
-                                            MPD1
+                                    <tr  style="border: 1px solid black;" align="center" height="100%" id="template">
+                                        <td style="border: 1px solid black;">
+                                            MPD template
                                         </td>
-                                        <td id="VideoPlayer0" height="100%" width="80%" style="border: 1px solid black; margin:2; padding:2">
+                                        <td id="VideoPlayer0" height="100%" style="border: 1px solid black; margin:2; padding:2" width="250px">
 											
-											<div id="Video0" class="ClassVideo0" style="display: block; width:350px;height:200px;margin:5px;padding:5px;visibility:visible;">
+											<div id="Video0" class="ClassVideo0" style="display: block; width:250px; height:200px; margin:5px;padding:5px;visibility:visible;">
 												<!-- <video style="width: 90%"  controls></video> -->
 											</div>
-											<div id="MPDUrl0" style="margin:2; padding:2" height="100%" width="80%"></div>
+											<div id="MPDUrl0" style="margin:2; padding:2" height="100%" ></div>
 											<div style="margin:2px; padding:2px">
-											<div id="play0" ></div><div id="pause0" ></div><div id="seek0" ></div><div id="stall0" ><div id="error0"></div></div>
+											<div id="play0" ></div><div id="pause0" ></div><div id="seek0" ></div><div id="stall0" ></div><div id="error0"></div>
 											</div>
 											
 										</td>
-										<td>
+										<td style="border: 1px solid black;">
 										<div>
 											<input type="button" class="btn-large" value="Run Test" style="width: 70px;" id="RunTest0" onclick="runTest(this.id)"/>																			
 										</div>
@@ -217,31 +214,6 @@
 										</div>
 										</td>
 									</tr>
-									<!--
-									<tr  style="border: 1px solid black;" align="center" height="100%" id="MPDURL0">
-                                        <td>
-                                            MPD1 Url
-                                        </td>
-                                        <td id="MPDUrl0" style="border: 1px solid black; margin:0; padding:0" height="100%" width="100%" >										
-											
-										</td>
-										<td>
-											<input type="button" class="btn-large" value="Delete" id="Delete1" style="width: 70px;" 
-											  onclick="deleteRow('MPDURL0')">
-										</td>
-									</tr>
-									<tr  style="border: 1px solid black;" align="center" height="100%" id="MPDEvents0">
-                                        <td>
-                                            MPD1 Events
-                                        </td>
-                                        <td id="Events0" style="border: 1px solid black; margin:0; padding:0" height="100%" width="100%" >
-											<div id="play0" ></div><div id="pause0" ></div><div id="seek0" ></div><div id="stall0" ></div>
-										</td>
-										<td>
-											<input type="button" class="btn-large" id="Delete2" value="Delete" style="width: 70px;" 
-											onclick="deleteRow('MPDEvents0')">
-										</td>
-									</tr>-->
                                 </tbody>
                                 <table>
                     </br> </br>

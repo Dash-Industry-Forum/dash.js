@@ -14,7 +14,7 @@
 MediaPlayer.dependencies.ManifestLoader = function () {
     "use strict";
 
-    var retryAttempts = 3,
+    var RETRY_ATTEMPTS = 3,
         RETRY_INTERVAL = 500,
         deferred = null,
         parseBaseUrl = function (url) {
@@ -27,7 +27,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
             return base;
         },
 
-        doLoad = function (url) {
+        doLoad = function (url, remainingAttempts) {
             var baseUrl = parseBaseUrl(url),
                 request = new XMLHttpRequest(),
                 requestTime = new Date(),
@@ -86,11 +86,11 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  request.status,
                                                  null,
                                                  null);
-                if (retryAttempts > 0) {
-                    self.debug.log("Failed loading manifest: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + retryAttempts);
-                    retryAttempts--;
+                if (remainingAttempts > 0) {
+                    self.debug.log("Failed loading manifest: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                    remainingAttempts--;
                     setTimeout(function() {
-                        doLoad.call(self, url);
+                        doLoad.call(self, url, remainingAttempts);
                     }, RETRY_INTERVAL);
                 } else {
                     self.debug.log("Failed loading manifest: " + url + " no retry attempts left");
@@ -109,7 +109,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         metricsModel: undefined,
         load: function(url) {
             deferred = Q.defer();
-            doLoad.call(this, url);
+            doLoad.call(this, url, RETRY_ATTEMPTS);
 
             return deferred.promise;
         }

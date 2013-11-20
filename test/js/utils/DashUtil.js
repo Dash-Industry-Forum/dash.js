@@ -10,79 +10,50 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-var element, player, video, stream, system, context, mpd, counter, seekCounter, count, tdID, stalled, isPaused, isSeeking, chkTimeout, currentDate, intervalID, refreshId, testMode, testModeList, csvContent, playbackCounter, gridData, RowElems, runTestFlag, lastTime, endCheckCount, testPhaseDuration, lastTimeDuplicate;
+var element, player, video, stream, system, context, mpd, counter, seekCounter, count, tdID, stalled, isPaused, isSeeking, chkTimeout, currentDate, intervalID, refreshId, testMode, testModeList, csvContent, playbackCounter, runTestFlag, lastTime, endCheckCount, testPhaseDuration, lastTimeDuplicate,isIE;
 $(document).ready(function testLoad() {
 
 	csvContent = 'data:text/csv;charset=utf-8,';
 	document.getElementById('files').addEventListener('change', handleFileSelect, false);
-
-	var isChrome = !!window.chrome;
-	var isIE = false || document.documentMode;
-	if (isIE) {
-		document.getElementById('txtfileUploader').style.visibility = "visible";
-		document.getElementById('btnImport').style.visibility = "visible";
-	} else if (isChrome) {
-		document.getElementById('files').style.visibility = "visible";
-	} else {}
-
+	document.getElementById('files').style.visibility = "visible";
 	testModeList = document.getElementById('myList');
-	testMode = testModeList.options[testModeList.selectedIndex].text;
+	testModeList.onchange = function(e){
+		modeChanged(e);
+	};
 	runTestFlag = false;
-	counter = 0;
+	counter = 1;
 	intervalID = 0;
 	mpd = new Array();
 	mpd = setMPD(mpd);
-	RowElems = $('#tbMPD tbody tr').clone();
-	Rows = $(RowElems).clone();
-
-	/**JSON object to export the table data*/
-	gridData = {
-		"rows" : [{
-				"id" : 0,
-				"cell" : [{
-						"td1" : "MPD1"
-					}, {
-						"td2" : [{
-								"MPDURL" : ""
-							}, {
-								"Events" : [{
-										"Play" : ""
-									}, {
-										"Pause" : ""
-									}, {
-										"Seek" : ""
-									}, {
-										"Stall" : ""
-									}, {
-										"Error" : ""
-									}
-								]
-							}
-						]
-					}
-				]
-			}
-		]
-	};
+	templateRow = $('#template').clone();
+	$('#template').remove();
 
 	createRowsForMPD();
 
-	initialisation(0);
+	modeChanged();
 });
+
+function modeChanged() {
+	testMode = testModeList.options[testModeList.selectedIndex].text;
+	runTestFlag = false;
+	if (testMode == 'Automation') {
+		initialisation(1);
+	}
+}
 
 /**Create dynamic rows for table*/
 function createRowsForMPD() {
 
-	for (var i = Rows.length; i < mpd.length; i++) {
-		createRow(i);
+	for (var i = 0; i < mpd.length; i++) {
+		createRow(i + 1);
 	}
 }
 
 function createRow(i) {
-	var RowItem = Rows.eq(0);
+	var RowItem = templateRow.clone();
 	RowItem.attr('id', i);
 	RowItem.find('td').eq(1).attr('id', 'VideoPlayer' + i);
-	RowItem.find('td').eq(0).text('MPD' + (i + 1));
+	RowItem.find('td').eq(0).text('MPD' + i);
 	RowItem.find('td:nth-child(2) div:nth-child(1)').attr('id', 'Video' + i);
 	RowItem.find('td:nth-child(2) div:nth-child(1)').attr('class', 'ClassVideo' + i);
 	RowItem.find('td:nth-child(2) div:nth-child(2)').attr('id', 'MPDUrl' + i);
@@ -116,49 +87,20 @@ function createRow(i) {
 	});
 
 	RowItem.appendTo('#tbMPD tbody');
-	Rows = $(RowElems).clone();
 	$('#ClassVideo' + i).hide();
 
 	$('#Video' + i).hide();
-	$('#MPDUrl' + i).html(mpd[i]);
-
-	var temp = {
-		"id" : i,
-		"cell" : [{
-				"td1" : "MPD" + (i + 1)
-			}, {
-				"td2" : [{
-						"MPDURL" : ""
-					}, {
-						"Events" : [{
-								"Play" : ""
-							}, {
-								"Pause" : ""
-							}, {
-								"Seek" : ""
-							}, {
-								"Stall" : ""
-							}
-						]
-					}
-				]
-			}
-		]
-	}
-	gridData.rows.push(temp);
-
+	$('#MPDUrl' + i).html(mpd[i - 1]);
 }
 
 function teardown() {
 	if (!!player) {
-		$('#MPDUrl' + counter).text($('#MPDUrl' + counter).text() + "\n Duration: " + (element).duration);
-
+		$('#MPDUrl' + counter).text($('#MPDUrl' + counter).text() +  "Duration: " + (element).duration);
+		
 		if (stalled === true) {
 			$('#stall' + counter).html('Video was stalled');
-			gridData.rows[counter].cell[1].td2[1].Events[3].Stall = 'Video was stalled';
 		} else {
 			$('#stall' + counter).html('Video was not stalled');
-			gridData.rows[counter].cell[1].td2[1].Events[3].Stall = 'Video was not stalled';
 		}
 
 		$('#Video'+counter).hide();
@@ -191,6 +133,12 @@ function initialisation(rowID) {
 	system.injectInto(context);
 	element = document.createElement('video');
 
+	if (testMode == 'Automation') {
+		(element).removeAttribute('controls');
+	} else {
+		(element).setAttribute("controls");
+	}
+
 	var videoDiv = document.querySelector('.ClassVideo' + (rowID));
 	videoDiv.appendChild(element);
 	if (counter != rowID) {
@@ -200,12 +148,14 @@ function initialisation(rowID) {
 		$('#seek' + rowID).html("");
 		$('#stall' + rowID).html("");
 		$('#pause' + rowID).html("");
+		$('#error' + rowID).html("");
 	} else {
 		if ($('#Video' + rowID).children().length > 1) {
 			$('#Video' + rowID).children().eq(0).remove();
 			$('#play' + rowID).html("");
 			$('#seek' + rowID).html("");
 			$('#stall' + rowID).html("");
+			$('#error' + rowID).html("");
 			$('#pause' + rowID).html("");
 		}
 		if (counter == rowID) {
@@ -216,6 +166,7 @@ function initialisation(rowID) {
 				$('#seek' + rowID).html("");
 				$('#stall' + rowID).html("");
 				$('#pause' + rowID).html("");
+				$('#error' + rowID).html("");
 			}
 
 		}
@@ -235,11 +186,10 @@ function initialisation(rowID) {
 
 		player = new MediaPlayer(context);
 		player.startup();
-
 		var mpdID = '#MPDUrl' + rowID,
 			onError = function (e) {
 				var message = "null";
-				if (e) {
+				if (e) {	
 					message = "source=" + e.error;
 					if (e.event.hasOwnProperty("id")) {
 						message += ", id=" + e.event.id;
@@ -254,16 +204,17 @@ function initialisation(rowID) {
 						message += ", " + e.event;
 					}
 				}
-				$(mpdID).text($(mpdID).text() + "\nError: " + message);
+				$("#error"+rowID).html($("#error"+rowID).html() + "Error: " + message + "<br/>");
+				$('#ClassVideo' + rowID).hide();
+				$('#Video' + rowID).hide();
 			};
-
-		$(mpdID).text(mpd[rowID]);
+		$(mpdID).text(mpd[rowID - 1]);
 
 		player.addEventListener("error", onError.bind(this));
 
 		player.autoPlay = true;
 		player.attachView(element);
-		player.attachSource(mpd[rowID]);
+		player.attachSource(mpd[rowID - 1]);
 
 		intervalID = setInterval(time, 1000);
 
@@ -299,15 +250,13 @@ function loadNextMPD() {
 	teardown();
 	if (runTestFlag === false) {
 		var prevRow = $('#' + counter);
-		var intCounter = parseInt(counter);
-		if ((intCounter + 1) != mpd.length) {
+		var intCounter = counter + 1;
+		if (intCounter < (mpd.length + 1)) {
 			var nextRowID = prevRow.next().attr('id');
-			initialisation(nextRowID);
-		}
-		if ((intCounter + 1) === mpd.length) {
-			$('#Video'+counter).remove();
+			initialisation(parseInt(nextRowID));
+		} else {
+			teardown();
 			document.getElementById('btnExportToJSON').disabled = false;
-			return;
 		}
 	}
 }
@@ -319,29 +268,24 @@ function time() {
 	try {
 		tdID = '#play' + counter;
 		$(tdID).html('Playing video at ' + (element).currentTime);
-		gridData.rows[counter].cell[1].td2[1].Events[0].Play = 'Playing video at ' + (element).currentTime;
 
 		tdID = '#stall' + counter;
 		if (video.isStalled && !isSeeking && !isPaused && count > 0) {
 			stalled = true;
 			$(tdID).html('Video is stalled');
-			gridData.rows[counter].cell[1].td2[1].Events[3].Stall = 'Video is stalled';
 		} else {
 			$(tdID).html('');
-			gridData.rows[counter].cell[1].td2[1].Events[3].Stall = '';
 		}
 
 		if ((element).ended) {
 			tdID = '#play' + counter;
 			$(tdID).html('Play event success, at: ' + (element).currentTime);
-			gridData.rows[counter].cell[1].td2[1].Events[0].Play = 'Play event success, at: ' + (element).currentTime;
 			loadNextMPD();
 			return;
 		}
 
 		if (testMode == 'Automation') {
 
-			(element).removeAttribute('controls');
 			testPhaseDuration = Math.min((element).duration / 4, 10);
 
 			if (count == 0 && !isPaused && (element).currentTime >= testPhaseDuration) {
@@ -359,10 +303,8 @@ function time() {
 					tdID = '#pause' + counter;
 					if ((element).paused) {
 						$(tdID).html('Paused event success, at: ' + (element).currentTime);
-						gridData.rows[counter].cell[1].td2[1].Events[1].Pause = 'Paused event success, at: ' + (element).currentTime;
 					} else {
 						$(tdID).html('Paused event failed, at: ' + (element).currentTime);
-						gridData.rows[counter].cell[1].td2[1].Events[1].Pause = 'Paused event failed, at: ' + (element).currentTime;
 					}
 					(element).play();
 				}
@@ -371,7 +313,6 @@ function time() {
 					count++;
 					if ((element).seeking) {
 						$(tdID).html('Seeking event called');
-						gridData.rows[counter].cell[1].td2[1].Events[2].Seek = 'Waiting to seek...';
 					}
 					checkSeek();
 				}
@@ -401,7 +342,6 @@ function checkSeek() {
 	tdID = '#seek' + counter;
 	if ((element).duration - (element).currentTime < (testPhaseDuration * 1.5)) {
 		$(tdID).html('Seeking event success, at: ' + (element).currentTime);
-		gridData.rows[counter].cell[1].td2[1].Events[2].Seek = 'Seeking event success, at: ' + (element).currentTime;
 		isSeeking = false;
 	}
 }
@@ -418,7 +358,11 @@ function checkPlayBackRate() {
 			if (playbackCounter > 30) {
 				playbackCounter = 0;
 				$("#play" + counter).html("Play event timed out beyond 30 seconds, play stopped: " + (element).currentTime);
-				loadNextMPD();
+				if (testMode == 'Automation') {
+					loadNextMPD();
+				} else {
+					teardown();
+				}
 				return;
 			}
 		} else {
@@ -429,6 +373,19 @@ function checkPlayBackRate() {
 	}
 }
 
+function stopTest() {
+	(element).pause();
+	clearInterval(intervalID);
+}
+
+function resumeTest() {
+	(element).play();
+	intervalID = setInterval(time, 1000);
+}
+
+function clearTest(){
+
+}
 function appendLogMsg(tableDivId) {
 	var msg = $(tableDivId).html();
 	if (msg.trim().length != 0)
@@ -475,34 +432,25 @@ function addMPDData() {
 
 /** Export data to file*/
 function exportToJSON() {
-	var blob = new Blob([JSON.stringify(gridData)], {
+	var blob = new Blob([JSON.stringify(mpd)], {
 			type : "text/plain;charset=utf-8"
 		});
 	saveAs(blob, "DashLog.json");
 }
 
 /** Import file data */
-function importToTable() {
-	var filePath = document.getElementById('txtfileUploader').value;
-	if (filePath == null || filePath === "Enter the path here" || filePath === "") {
-		alert('Please enter a valid path');
-	} else {
-		contents = readFileInIE(filePath);
-		jsonString = JSON.parse(contents);
-		populateTable(jsonString);
+function importToTable(contents) {
+	//For IE
+	if (!!window.MSStream) {
+			contentXML = new window.ActiveXObject("Microsoft.XMLDOM");
+			contentXML.async = "false";
+			contentXML.loadXML(contents);
 	}
-}
-
-function readFileInIE(filename) {
-	try {
-		var fso = new ActiveXObject("Scripting.FileSystemObject");
-		var fh = fso.OpenTextFile(filename, 1);
-		var contents = fh.ReadAll();
-		fh.Close();
-		return contents;
-	} catch (exception) {
-		return exception.message;
+	//For Chrome
+	else {
+		contentXML = (new DOMParser()).parseFromString(contents, "text/xml");
 	}
+	populateTable(contentXML);	
 }
 
 function handleFileSelect(evt) {
@@ -513,53 +461,37 @@ function handleFileSelect(evt) {
 	var reader = new FileReader();
 	reader.onload = (function (theFile) {
 		return function (e) {
-			jsonString = JSON.parse(e.target.result);
-			populateTable(jsonString);
+			importToTable(e.target.result); 
 		};
 	})(files[0]);
 	reader.readAsText(files[0]);
 }
 
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds) {
-			break;
-		}
-	}
-}
 /** Populate table wit imported contents */
-function populateTable(jsonData) {
+function populateTable(contentXML) {
 	var mpdTable = document.getElementById('tbMPD');
 	var mpdRows = mpdTable.getElementsByTagName('tr');
-	for (var i = mpdRows.length - 1; i > 1; i--) {
+	for (var i = 1; i = mpdRows.length - 1; i++) {
 		mpdTable.deleteRow(i);
-		if (i == 2) {
-			$('#ClassVideo0').remove();
-			$('#Video0').remove();
-			$('#MPDUrl0').hide();
-			$('#play0').hide();
-			$('#pause0').hide();
-			$('#seek0').hide();
-			$('#stall0').hide();
-			$('#RunTest0').remove();
-			$('#Delete0').remove();
-
-		}
 	}
-	for (var rowId = 0; rowId < jsonData.rows.length; rowId++) {
-
-		if (rowId > 0)
-			createRow(rowId);
-
-		$('#MPDUrl' + rowId).html(jsonData.rows[rowId].cell[1].td2[0].MPDURL);
-		$('#play' + rowId).html(jsonData.rows[rowId].cell[1].td2[1].Events[0].Play);
-		$('#pause' + rowId).html(jsonData.rows[rowId].cell[1].td2[1].Events[1].Pause);
-		$('#seek' + rowId).html(jsonData.rows[rowId].cell[1].td2[1].Events[2].Seek);
-		$('#stall' + rowId).html(jsonData.rows[rowId].cell[1].td2[1].Events[3].Stall);
-
-		$('#RunTest' + rowId).remove();
-		$('#Delete' + rowId).remove();
+	mpd = new Array()
+	
+	var contentTag = contentXML.getElementsByTagName("content");
+	for (var rowId = 0; rowId < contentTag.length; rowId++) {		
+		if (!!window.MSStream)
+			mpd[rowId] = contentTag[rowId].childNodes[1].text;
+		else
+			mpd[rowId] = contentTag[rowId].children[1].textContent;
+		
+		createRow(rowId + 1);
+if (!!window.MSStream)
+		$('#MPDUrl' + rowId).html(contentTag[rowId].childNodes[1].text);
+	else		
+		$('#MPDUrl' + rowId).html(contentTag[rowId].children[1].textContent);
+		$('#play' + rowId).html("");
+		$('#pause' + rowId).html("");
+		$('#seek' + rowId).html("");
+		$('#stall' + rowId).html("");
 	}
 	$('#MPDUrl0').show();
 	$('#play0').show();
@@ -567,8 +499,39 @@ function populateTable(jsonData) {
 	$('#seek0').show();
 	$('#stall0').show();
 
+	initialisation(1);
 }
 
 function textClick() {
 	document.getElementById('txtfileUploader').value = "";
+}
+
+/** Error logging*/
+function logging() {
+debugger;
+	for (var i = 0; i < mpd.length; i++) {
+		csvContent += '=================================================================================';
+		csvContent += 'Info';
+		csvContent += '=================================================================================';
+		csvContent += '\nURL: ' + mpd[i] + '\n';
+		tdID = '#MPD' + i + '\n';
+		csvContent += 'Status Description: ';
+		appendLogMsg('#play' + i);
+		appendLogMsg('#pause' + i);
+		appendLogMsg('#seek' + i);
+		appendLogMsg('#stall' + i);
+		appendLogMsg('#error' + i);
+	}
+	csvContent += '====================================================================================';
+	csvContent += '====================================================================================';
+	var blob = new Blob([csvContent], {
+			type : "text/plain;charset=utf-8"
+		});
+	saveAs(blob, "DashLog.txt");
+}
+
+function appendLogMsg(tableDivId) {
+	var msg = $(tableDivId).html();
+	if (msg.trim().length != 0)
+		csvContent += msg + ' \n';
 }

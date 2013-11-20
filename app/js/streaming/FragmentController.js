@@ -139,6 +139,32 @@ MediaPlayer.dependencies.FragmentController = function () {
             return fragmentModel.getLoadingTime();
         },
 
+        getExecutedRequestForTime: function(model, time) {
+            if (model) {
+                return model.getExecutedRequestForTime(time);
+            }
+
+            return null;
+        },
+
+        removeExecutedRequest: function(model, request) {
+            if (model) {
+                model.removeExecutedRequest(request);
+            }
+        },
+
+        removeExecutedRequestsBeforeTime: function(model, time) {
+            if (model) {
+                model.removeExecutedRequestsBeforeTime(time);
+            }
+        },
+
+        cancelPendingRequestsForModel: function(model) {
+            if (model) {
+                model.cancelPendingRequests();
+            }
+        },
+
         abortRequestsForModel: function(model) {
             if (model) {
                 model.abortRequests();

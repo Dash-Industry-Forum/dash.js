@@ -150,6 +150,50 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return loadingTime;
         },
 
+        getExecutedRequestForTime: function(time) {
+            var lastIdx = executedRequests.length - 1,
+                start = NaN,
+                end = NaN,
+                req = null,
+                i;
+
+            // loop through the executed requests and pick the one for which the playback interval matches the given time
+            for (i = lastIdx; i >= 0; i -=1) {
+                req = executedRequests[i];
+                start = req.startTime;
+                end = start + req.duration;
+                if (!isNaN(start) && !isNaN(end) && (time > start) && (time < end)) {
+                    return req;
+                }
+            }
+
+            return null;
+        },
+
+        removeExecutedRequest: function(request) {
+            removeExecutedRequest.call(this, request);
+        },
+
+        removeExecutedRequestsBeforeTime: function(time) {
+            var lastIdx = executedRequests.length - 1,
+                start = NaN,
+                req = null,
+                i;
+
+            // loop through the executed requests and remove the ones for which startTime is less than the given time
+            for (i = lastIdx; i >= 0; i -=1) {
+                req = executedRequests[i];
+                start = req.startTime;
+                if (!isNaN(start) && (start < time)) {
+                    removeExecutedRequest.call(this, req);
+                }
+            }
+        },
+
+        cancelPendingRequests: function() {
+            pendingRequests = [];
+        },
+
         abortRequests: function() {
             this.fragmentLoader.abort();
         },
