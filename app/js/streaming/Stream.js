@@ -523,6 +523,13 @@ MediaPlayer.dependencies.Stream = function () {
         onLoad = function () {
             this.debug.log("Got loadmetadata event.");
             load.resolve(null);
+
+            initPlayback.call(this);
+
+            if (autoPlay) {
+                this.debug.log("playback initialized!");
+                play.call(this);
+            }
         },
 
         onPlay = function () {
@@ -651,12 +658,6 @@ MediaPlayer.dependencies.Stream = function () {
                         // required to stop unnecessary buffering
                         pause.call(self);
                         return;
-                    }
-                    initPlayback.call(self);
-
-                    if (autoPlay) {
-                        self.debug.log("Playback initialized!");
-                        play.call(self);
                     }
                 }
             );
