@@ -228,9 +228,10 @@ function initialisation(rowID) {
 /** Onclick of RunTest button*/
 function runTest(id) {
 	runTestFlag = true;
+	playbackCounter = 0;
 	$('#Video'+counter).hide();
 	$('#' + id).live('click', function () {
-		initialisation($(this).closest('tr').attr('id'));
+		initialisation(parseInt($(this).closest('tr').attr('id')));
 	});
 }
 
