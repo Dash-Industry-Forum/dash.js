@@ -55,6 +55,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         metricsExt: undefined,
         metricsModel: undefined,
         abrController: undefined,
+        bufferMax: undefined,
 
         updateData: function(data, type) {
             var topIndex = data.Representation_asArray.length - 1;
@@ -95,29 +96,40 @@ MediaPlayer.dependencies.BufferExtensions = function () {
                 deferredIsAtTop = null,
                 requiredBufferLength;
 
-            currentBufferTarget = minBufferTarget;
+            if (self.bufferMax === MediaPlayer.dependencies.BufferExtensions.BUFFER_SIZE_MIN) {
+                requiredBufferLength = minBufferTarget;
+                deferred.resolve(requiredBufferLength);
+            } else if (self.bufferMax === MediaPlayer.dependencies.BufferExtensions.BUFFER_SIZE_INFINITY) {
+                requiredBufferLength = duration;
+                deferred.resolve(requiredBufferLength);
+            } else if (self.bufferMax === MediaPlayer.dependencies.BufferExtensions.BUFFER_SIZE_REQUIRED) {
+                currentBufferTarget = minBufferTarget;
 
-            if (!isLive) {
-                if (!waitingForBuffer) {
-                    deferredIsAtTop = isPlayingAtTopQuality.call(self);
+                if (!isLive) {
+                    if (!waitingForBuffer) {
+                        deferredIsAtTop = isPlayingAtTopQuality.call(self);
+                    }
                 }
+
+                Q.when(deferredIsAtTop).then(
+                    function(isAtTop) {
+
+                        if (isAtTop) {
+                            currentBufferTarget = isLongFormContent ?
+                                MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :
+                                MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY;
+                        }
+
+                        requiredBufferLength = currentBufferTarget + delay + Math.max(getCurrentHttpRequestLatency.call(self, vmetrics),
+                            getCurrentHttpRequestLatency.call(self, ametrics));
+
+                        deferred.resolve(requiredBufferLength);
+                    }
+                );
+            } else {
+                deferred.reject("invalid bufferMax value: " + self.bufferMax);
             }
 
-            Q.when(deferredIsAtTop).then(
-                function(isAtTop) {
-
-                    if (isAtTop) {
-                        currentBufferTarget = isLongFormContent ?
-                            MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :
-                            MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY;
-                    }
-
-                    requiredBufferLength = currentBufferTarget + delay + Math.max(getCurrentHttpRequestLatency.call(self, vmetrics),
-                        getCurrentHttpRequestLatency.call(self, ametrics));
-
-                    deferred.resolve(requiredBufferLength);
-                }
-            );
             return deferred.promise;
         },
 
@@ -128,6 +140,9 @@ MediaPlayer.dependencies.BufferExtensions = function () {
     };
 };
 
+MediaPlayer.dependencies.BufferExtensions.BUFFER_SIZE_REQUIRED = "required";
+MediaPlayer.dependencies.BufferExtensions.BUFFER_SIZE_MIN = "min";
+MediaPlayer.dependencies.BufferExtensions.BUFFER_SIZE_INFINITY = "infinity";
 MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_STARTUP = 1;
 MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME = 8;
 MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY = 30;

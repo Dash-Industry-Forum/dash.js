@@ -623,8 +623,6 @@ Dash.dependencies.DashHandler = function () {
         getSegmentCountForDuration = function (quality, data, requiredDuration, bufferedDuration) {
             var self = this,
                 representation = getRepresentationForQuality(quality, data),
-                DEFAULT_RATE = 2,
-                rate = Math.max(bufferedDuration / requiredDuration, DEFAULT_RATE),
                 remainingDuration = Math.max(requiredDuration - bufferedDuration, 0),
                 deferred = Q.defer(),
                 segmentDuration,
@@ -661,7 +659,7 @@ Dash.dependencies.DashHandler = function () {
                         segmentDuration = fd / ft;
                     }
 
-                    segmentCount = Math.ceil((remainingDuration / segmentDuration) + (requiredDuration/segmentDuration)/rate);
+                    segmentCount = Math.ceil(remainingDuration/segmentDuration);
                     deferred.resolve(segmentCount);
                 },
                 function () {
