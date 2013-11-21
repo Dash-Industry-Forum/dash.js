@@ -660,7 +660,7 @@ MediaPlayer.dependencies.Stream = function () {
                         return;
                     }
                     if (autoPlay) {
-                      seek.call(self, 0);
+                        seek.call(self, 0);
                     }
                 }
             );
