@@ -14,7 +14,10 @@
 MediaPlayer.dependencies.ManifestLoader = function () {
     "use strict";
 
-    var parseBaseUrl = function (url) {
+    var RETRY_ATTEMPTS = 3,
+        RETRY_INTERVAL = 500,
+        deferred = null,
+        parseBaseUrl = function (url) {
             var base = null;
 
             if (url.indexOf("/") !== -1) {
@@ -24,26 +27,23 @@ MediaPlayer.dependencies.ManifestLoader = function () {
             return base;
         },
 
-        load = function (url) {
+        doLoad = function (url, remainingAttempts) {
             var baseUrl = parseBaseUrl(url),
-                deferred = Q.defer(),
                 request = new XMLHttpRequest(),
                 requestTime = new Date(),
-                loaded = false,
+                needFailureReport = true,
                 self = this;
 
             this.debug.log("Start loading manifest: " + url);
 
             request.open("GET", url, true);
 
-            request.onloadend = function () {
-                if (!loaded) {
-                    deferred.reject("Error loading manifest.");
-                }
-            };
-
             request.onload = function () {
-                loaded = true;
+                if (request.status < 200 || request.status > 299)
+                {
+                  return;
+                }
+                needFailureReport = false;
 
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
@@ -61,11 +61,20 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                     function (manifest) {
                         manifest.mpdUrl = url;
                         deferred.resolve(manifest);
+                    },
+                    function () {
+                        deferred.reject(request);
                     }
                 );
             };
 
-            request.onerror = function () {
+            request.onloadend = request.onerror = function () {
+                if (!needFailureReport)
+                {
+                  return;
+                }
+                needFailureReport = false;
+
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
                                                  "MPD",
@@ -77,20 +86,33 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  request.status,
                                                  null,
                                                  null);
-
-                deferred.reject("Error loading manifest.");
+                if (remainingAttempts > 0) {
+                    self.debug.log("Failed loading manifest: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                    remainingAttempts--;
+                    setTimeout(function() {
+                        doLoad.call(self, url, remainingAttempts);
+                    }, RETRY_INTERVAL);
+                } else {
+                    self.debug.log("Failed loading manifest: " + url + " no retry attempts left");
+                    self.errHandler.downloadError("manifest", url, request);
+                    deferred.reject(request);
+                }
             };
 
             request.send();
-
-            return deferred.promise;
         };
 
     return {
         debug: undefined,
         parser: undefined,
+        errHandler: undefined,
         metricsModel: undefined,
-        load: load
+        load: function(url) {
+            deferred = Q.defer();
+            doLoad.call(this, url, RETRY_ATTEMPTS);
+
+            return deferred.promise;
+        }
     };
 };
 

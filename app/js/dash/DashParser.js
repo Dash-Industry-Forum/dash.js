@@ -296,30 +296,35 @@ Dash.dependencies.DashParser = function () {
                 converter = new X2JS(matchers, '', true),
                 iron = new ObjectIron(getDashMap());
 
-            this.debug.log("Converting from XML.");
-            manifest = converter.xml_str2json(data);
+            try {
+                this.debug.log("Converting from XML.");
+                manifest = converter.xml_str2json(data);
 
-            if (!manifest.hasOwnProperty("BaseURL")) {
-                this.debug.log("Setting baseURL: " + baseUrl);
-                manifest.BaseURL = baseUrl;
-            } else {
-                // Setting manifest's BaseURL to the first BaseURL
-                manifest.BaseURL = manifest.BaseURL_asArray[0];
-
+                if (!manifest.hasOwnProperty("BaseURL")) {
+                    this.debug.log("Setting baseURL: " + baseUrl);
+                    manifest.BaseURL = baseUrl;
+                } else {
+                    // Setting manifest's BaseURL to the first BaseURL
+                    manifest.BaseURL = manifest.BaseURL_asArray[0];
+                }
                 if (manifest.BaseURL.indexOf("http") !== 0) {
                     manifest.BaseURL = baseUrl + manifest.BaseURL;
                 }
+
+                this.debug.log("Flatten manifest properties.");
+                iron.run(manifest);
+
+                this.debug.log("Parsing complete.");
+            } catch (err) {
+                this.errHandler.manifestError("parsing the manifest failed", "parse", data);
+                return Q.reject(err);
             }
-
-            this.debug.log("Flatten manifest properties.");
-            iron.run(manifest);
-
-            this.debug.log("Parsing complete.");
             return Q.when(manifest);
         };
 
     return {
         debug: undefined,
+        errHandler: undefined,
         parse: internalParse
     };
 };

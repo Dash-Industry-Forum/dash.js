@@ -102,14 +102,9 @@
                 return;
             }
 
-            // In case a real buffered value exceeds current position move it to be able to start playback after period switching
-            if (activeStream.getVideoModel().getCurrentTime() < ranges.start(0)) {
-                activeStream.getVideoModel().setCurrentTime(ranges.start(0));
-            }
-
             var lastRange = ranges.length -1,
-                bufferEndTime = ranges.end(lastRange) - activeStream.getTimestampOffset(),
-                remainingBufferDuration = activeStream.getDuration() - bufferEndTime;
+                bufferEndTime = ranges.end(lastRange),
+                remainingBufferDuration = activeStream.getStartTime() + activeStream.getDuration() - bufferEndTime;
 
             if (remainingBufferDuration < STREAM_BUFFER_END_THRESHOLD) {
                 activeStream.getVideoModel().unlisten("progress", progressHandler);
@@ -127,7 +122,7 @@
             // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
             if (activeStream.getVideoModel().getElement().seeking) return;
 
-            var streamEndTime  = activeStream.getDuration() + activeStream.getTimestampOffset() + activeStream.getLiveOffset(),
+            var streamEndTime  = activeStream.getStartTime() + activeStream.getDuration(),
                 currentTime = activeStream.getVideoModel().getCurrentTime();
 
             // check if stream end is reached
@@ -155,7 +150,7 @@
         onStreamBufferingEnd = function() {
             var nextStream = getNextStream();
             if (nextStream) {
-                nextStream.initPlayback();
+                nextStream.seek(nextStream.getStartTime());
             }
         },
 
@@ -186,6 +181,12 @@
             return model;
         },
 
+        removeVideoElement = function(element) {
+            if (element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+        },
+
         switchStream = function(from, to, seekTo) {
 
             if(!from || !to || from === to) return;
@@ -200,7 +201,7 @@
                     if (seekTo) {
                         seek(from.getVideoModel().getCurrentTime());
                     } else {
-                        activeStream.initPlayback();
+                        seek(to.getStartTime());
                     }
 
                     play();
@@ -253,6 +254,10 @@
 
             self.manifestLoader.load(url).then(
                 function(manifest) {
+                    self.manifestModel.setValue(manifest);
+                    self.debug.log("Manifest has loaded.");
+                    self.debug.log(self.manifestModel.getValue());
+                    self.manifestUpdater.init();
                     self.manifestExt.getPeriodCount(manifest).then(
                         function(length) {
                             for (var i = 0; i < length; i++) {
@@ -268,6 +273,9 @@
                             attachVideoEvents(activeStream.getVideoModel());
                         }
                     );
+                },
+                function () {
+                    self.reset();
                 }
             );
         },
@@ -281,9 +289,17 @@
             for (var i = 0, ln = streams.length; i < ln; i++) {
                 var stream = streams[i];
                 stream.reset();
+                // we should not remove the video element for the active stream since it is the element users see at the page
+                if (stream !== activeStream) {
+                    removeVideoElement(stream.getVideoModel().getElement());
+                }
             }
 
             streams = [];
+            this.manifestUpdater.stop();
+            this.manifestModel.setValue(null);
+            deferredSwitch = null;
+            activeStream = null;
         },
 
         play: play,

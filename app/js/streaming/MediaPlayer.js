@@ -46,14 +46,15 @@ MediaPlayer = function (aContext) {
         system,
         element,
         source,
-        model,
         streamController,
+        videoModel,
         initialized = false,
         playing = false,
         autoPlay = true,
+        scheduleWhilePaused = false,
 
         isReady = function () {
-            return (element !== undefined && source !== undefined);
+            return (!!element && !!source);
         },
 
         play = function () {
@@ -62,8 +63,7 @@ MediaPlayer = function (aContext) {
             }
 
             if (!this.capabilities.supportsMediaSource()) {
-                alert("Your browser does not support the MediaSource API.  Please try another browser, such as Chrome.");
-                //throw "Media Source not supported.";
+                this.errHandler.capabilityError("mediasource");
                 return;
             }
 
@@ -74,9 +74,11 @@ MediaPlayer = function (aContext) {
             playing = true;
             this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
-            streamController.setVideoModel(this.videoModel);
+            streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.load(source);
+            system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
+            system.mapOutlet("scheduleWhilePaused", "stream");
         },
 
         doAutoPlay = function () {
@@ -95,7 +97,6 @@ MediaPlayer = function (aContext) {
         debug: undefined,
         eventBus: undefined,
         capabilities: undefined,
-        videoModel: undefined,
         abrController: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
@@ -124,7 +125,7 @@ MediaPlayer = function (aContext) {
         },
 
         getVideoModel: function () {
-            return this.videoModel;
+            return videoModel;
         },
 
         setAutoPlay: function (value) {
@@ -133,6 +134,14 @@ MediaPlayer = function (aContext) {
 
         getAutoPlay: function () {
             return autoPlay;
+        },
+
+        setScheduleWhilePaused: function(value) {
+            scheduleWhilePaused = value;
+        },
+
+        getScheduleWhilePaused: function() {
+            return scheduleWhilePaused;
         },
 
         getMetricsExt: function () {
@@ -167,12 +176,21 @@ MediaPlayer = function (aContext) {
 
             element = view;
 
-            model = new MediaPlayer.models.VideoModel(element);
-            this.videoModel.setElement(element);
+            videoModel = null;
+            if (element) {
+                videoModel = system.getObject("videoModel");
+                videoModel.setElement(element);
+            }
 
             // TODO : update
 
-            if (!playing) {
+            if (playing && streamController) {
+                streamController.reset();
+                streamController = null;
+                playing = false;
+            }
+
+            if (isReady.call(this)) {
                 doAutoPlay.call(this);
             }
         },
@@ -188,15 +206,24 @@ MediaPlayer = function (aContext) {
 
             // TODO : update
 
-            if (playing) {
+            if (playing && streamController) {
                 streamController.reset();
                 streamController = null;
+                playing = false;
             }
 
-            doAutoPlay.call(this);
+            if (isReady.call(this)) {
+                doAutoPlay.call(this);
+            }
         },
 
-        play: play
+        reset: function() {
+            this.attachSource(null);
+            this.attachView(null);
+        },
+
+        play: play,
+        isReady: isReady
     };
 };
 

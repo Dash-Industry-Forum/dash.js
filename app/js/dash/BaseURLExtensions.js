@@ -232,7 +232,7 @@ Dash.dependencies.BaseURLExtensions = function () {
         loadInit = function (media) {
             var deferred = Q.defer(),
                 request = new XMLHttpRequest(),
-                loaded = false,
+                needFailureReport = true,
                 self = this,
                 info = {
                     url: media,
@@ -247,14 +247,13 @@ Dash.dependencies.BaseURLExtensions = function () {
             info.range.start = 0;
             info.range.end = info.bytesToLoad;
 
-            request.onloadend = function () {
-                if (!loaded) {
-                    deferred.reject("Error finding initialization.");
-                }
-            };
-
             request.onload = function () {
-                loaded = true;
+                if (request.status < 200 || request.status > 299)
+                {
+                  return;
+                }
+                needFailureReport = false;
+
                 info.bytesLoaded = info.range.end;
                 findInit.call(self, request.response, info).then(
                     function (range) {
@@ -263,8 +262,15 @@ Dash.dependencies.BaseURLExtensions = function () {
                 );
             };
 
-            request.onerror = function () {
-                deferred.reject("Error finding initialization.");
+            request.onloadend = request.onerror = function () {
+                if (!needFailureReport)
+                {
+                  return;
+                }
+                needFailureReport = false;
+
+                self.errHandler.downloadError("initialization", info.url, request);
+                deferred.reject(request);
             };
 
             request.open("GET", info.url);
@@ -289,7 +295,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 sidxOut,
                 i,
                 c,
-                loaded = false,
+                needFailureReport = true,
                 parsed,
                 ref,
                 loadMultiSidx = false,
@@ -323,7 +329,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 //        Be sure to detect EOF.
                 //        Throw error is no sidx is found in the entire file.
                 //        Protection from loading the entire file?
-                throw ("Could not find SIDX box!");
+                deferred.reject();
             } else if (bytesAvailable < (size - 8)) {
                 // Case 2
                 // We don't have the entire box.
@@ -333,14 +339,13 @@ Dash.dependencies.BaseURLExtensions = function () {
                 info.range.start = 0;
                 info.range.end = info.bytesLoaded + (size - bytesAvailable);
 
-                request.onloadend = function () {
-                    if (!loaded) {
-                        deferred.reject("Error loading sidx.");
-                    }
-                };
-
                 request.onload = function () {
-                    loaded = true;
+                    if (request.status < 200 || request.status > 299)
+                    {
+                      return;
+                    }
+                    needFailureReport = false;
+
                     info.bytesLoaded = info.range.end;
                     findSIDX.call(self, request.response, info).then(
                         function (segments) {
@@ -349,8 +354,15 @@ Dash.dependencies.BaseURLExtensions = function () {
                     );
                 };
 
-                request.onerror = function () {
-                    deferred.reject("Error loading sidx.");
+                request.onloadend = request.onerror = function () {
+                    if (!needFailureReport)
+                    {
+                      return;
+                    }
+                    needFailureReport = false;
+
+                    self.errHandler.downloadError("SIDX", info.url, request);
+                    deferred.reject(request);
                 };
 
                 request.open("GET", info.url);
@@ -402,6 +414,9 @@ Dash.dependencies.BaseURLExtensions = function () {
                                 segs = segs.concat(results[j]);
                             }
                             deferred.resolve(segs);
+                        },
+                        function (httprequest) {
+                            deferred.reject(httprequest);
                         }
                     );
 
@@ -422,7 +437,7 @@ Dash.dependencies.BaseURLExtensions = function () {
             var deferred = Q.defer(),
                 request = new XMLHttpRequest(),
                 parts,
-                loaded = false,
+                needFailureReport = true,
                 self = this,
                 info = {
                     url: media,
@@ -446,14 +461,13 @@ Dash.dependencies.BaseURLExtensions = function () {
                 info.range.end = parseFloat(parts[1]);
             }
 
-            request.onloadend = function () {
-                if (!loaded) {
-                    deferred.reject("Error loading sidx.");
-                }
-            };
-
             request.onload = function () {
-                loaded = true;
+                if (request.status < 200 || request.status > 299)
+                {
+                  return;
+                }
+                needFailureReport = false;
+
 
                 // If we didn't know where the SIDX box was, we have to look for it.
                 // Iterate over the data checking out the boxes to find it.
@@ -473,8 +487,15 @@ Dash.dependencies.BaseURLExtensions = function () {
                 }
             };
 
-            request.onerror = function () {
-                deferred.reject("Error loading sidx.");
+            request.onloadend = request.onerror = function () {
+                if (!needFailureReport)
+                {
+                  return;
+                }
+                needFailureReport = false;
+
+                self.errHandler.downloadError("SIDX", info.url, request);
+                deferred.reject(request);
             };
 
             request.open("GET", info.url);
@@ -488,6 +509,7 @@ Dash.dependencies.BaseURLExtensions = function () {
 
     return {
         debug: undefined,
+        errHandler: undefined,
 
         loadSegments: loadSegments,
         loadInitialization: loadInit,
