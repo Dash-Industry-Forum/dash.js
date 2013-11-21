@@ -771,7 +771,8 @@ MediaPlayer.dependencies.BufferController = function () {
                     }
                 );
                 self.abrController.getPlaybackQuality(type, data).then(
-                    function (quality) {
+                    function (result) {
+                        var quality = result.quality;
                         self.debug.log(type + " Playback quality: " + quality);
                         self.debug.log("Populate " + type + " buffers.");
 
@@ -951,8 +952,8 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             self.abrController.getPlaybackQuality(type, from).then(
-                function (quality) {
-                    self.indexHandler.getCurrentTime(quality, from).then(
+                function (result) {
+                    self.indexHandler.getCurrentTime(result.quality, from).then(
                         function (time) {
                             dataChanged = true;
                             playingTime = time;

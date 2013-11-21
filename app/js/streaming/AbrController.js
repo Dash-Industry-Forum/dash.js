@@ -16,6 +16,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
     var autoSwitchBitrate = true,
         qualityDict = {},
+        confidenceDict = {},
 
         getInternalQuality = function (type) {
             var quality;
@@ -31,6 +32,22 @@ MediaPlayer.dependencies.AbrController = function () {
 
         setInternalQuality = function (type, value) {
             qualityDict[type] = value;
+        },
+
+        getInternalConfidence = function (type) {
+            var confidence;
+
+            if (!confidenceDict.hasOwnProperty(type)) {
+                confidenceDict[type] = 0;
+            }
+
+            confidence = confidenceDict[type];
+
+            return confidence;
+        },
+
+        setInternalConfidence = function (type, value) {
+            confidenceDict[type] = value;
         };
 
     return {
@@ -75,15 +92,19 @@ MediaPlayer.dependencies.AbrController = function () {
         getPlaybackQuality: function (type, data) {
             var self = this,
                 deferred = Q.defer(),
-                newQuality = 999,
+                newQuality = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE,
+                newConfidence = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE,
                 i,
                 len,
                 funcs = [],
                 req,
                 values,
-                quality;
+                quality,
+                confidence;
 
             quality = getInternalQuality(type);
+
+            confidence = getInternalConfidence(type);
 
             self.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
 
@@ -101,9 +122,9 @@ MediaPlayer.dependencies.AbrController = function () {
                                     function (results) {
                                         self.debug.log(results);
                                         values = {};
-                                        values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = 999;
-                                        values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = 999;
-                                        values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = 999;
+                                        values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
+                                        values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
+                                        values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
 
                                         for (i = 0, len = results.length; i < len; i += 1) {
                                             req = results[i];
@@ -112,20 +133,27 @@ MediaPlayer.dependencies.AbrController = function () {
                                             }
                                         }
 
-                                        if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== 999) {
+                                        if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                                            newConfidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
                                             newQuality = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
                                         }
 
-                                        if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== 999) {
+                                        if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                                            newConfidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
                                             newQuality = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
                                         }
 
-                                        if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== 999) {
+                                        if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                                            newConfidence = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
                                             newQuality = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
                                         }
 
-                                        if (newQuality !== 999 && newQuality !== undefined) {
+                                        if (newQuality !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && newQuality !== undefined) {
                                             quality = newQuality;
+                                        }
+
+                                        if (newConfidence !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && newConfidence !== undefined) {
+                                            confidence = newConfidence;
                                         }
 
                                         self.manifestExt.getRepresentationCount(data).then(
@@ -139,10 +167,18 @@ MediaPlayer.dependencies.AbrController = function () {
                                                     quality = max - 1;
                                                 }
 
+                                                if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
+                                                    confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
+                                                    confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+                                                }
+
                                                 setInternalQuality(type, quality);
                                                 self.debug.log("New quality of " + quality);
 
-                                                deferred.resolve(quality);
+                                                setInternalConfidence(type, confidence);
+                                                self.debug.log("New confidence of " + confidence);
+
+                                                deferred.resolve({quality: quality, confidence: confidence});
                                             }
                                         );
                                     }
