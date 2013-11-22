@@ -87,6 +87,22 @@ MediaPlayer.dependencies.BufferExtensions = function () {
             return Q.when(minBufferTarget);
         },
 
+        getLeastBufferLevel: function() {
+            var videoMetrics = this.metricsModel.getReadOnlyMetricsFor("video"),
+                videoBufferLevel = this.metricsExt.getCurrentBufferLevel(videoMetrics),
+                audioMetrics = this.metricsModel.getReadOnlyMetricsFor("audio"),
+                audioBufferLevel = this.metricsExt.getCurrentBufferLevel(audioMetrics),
+                leastLevel = null;
+
+            if (videoBufferLevel === null || audioBufferLevel === null) {
+                leastLevel = (audioBufferLevel !== null) ? audioBufferLevel.level : ((videoBufferLevel !== null) ? videoBufferLevel.level : null);
+            } else {
+                leastLevel = Math.min(audioBufferLevel.level, videoBufferLevel.level);
+            }
+
+            return leastLevel;
+        },
+
         getRequiredBufferLength: function (waitingForBuffer, delay, isLive, duration) {
             var self = this,
                 vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
