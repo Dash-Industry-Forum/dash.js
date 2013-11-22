@@ -823,6 +823,8 @@ MediaPlayer.dependencies.BufferController = function () {
                         requestNewFragment.call(self);
                     }
                 );
+            } else if (state === VALIDATING) {
+                setState.call(self, READY);
             }
         };
 
