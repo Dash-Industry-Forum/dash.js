@@ -168,6 +168,8 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 req.abort();
                 req = null;
             }
+
+            xhrs = [];
         }
     };
 };

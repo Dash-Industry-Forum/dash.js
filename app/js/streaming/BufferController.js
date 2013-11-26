@@ -783,6 +783,8 @@ MediaPlayer.dependencies.BufferController = function () {
                         qualityChanged = (quality !== lastQuality);
 
                         if (qualityChanged === true) {
+                            // The quality has beeen changed so we should abort the requests that has not been loaded yet
+                            self.fragmentController.abortRequestsForModel(fragmentModel);
                             representation = getRepresentationForQuality(newQuality, self.getData());
 
                             if (representation === null || representation === undefined) {
