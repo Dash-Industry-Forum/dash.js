@@ -789,6 +789,16 @@ MediaPlayer.dependencies.BufferController = function () {
                                 throw "Unexpected error!";
                             }
 
+                            // each representation can have its own @presentationTimeOffset, so we should set the offset
+                            // if it has changed after switching the quality
+                            self.manifestExt.getTimestampOffsetForPeriod(periodIndex, self.manifestModel.getValue(), quality, data).then(
+                                function (offset) {
+                                    if (buffer.timestampOffset !== offset) {
+                                        buffer.timestampOffset = offset;
+                                    }
+                                }
+                            );
+
                             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
                             self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, representation.id);
                         }
@@ -863,12 +873,6 @@ MediaPlayer.dependencies.BufferController = function () {
             self.setFragmentController(fragmentController);
 
             self.indexHandler.setIsLive(isLive);
-
-            self.manifestExt.getTimestampOffsetForPeriod(periodIndex, self.manifestModel.getValue()).then(
-                function (offset) {
-                    self.getBuffer().timestampOffset = offset;
-                }
-            );
 
             self.bufferExt.decideBufferLength(manifest.minBufferTime, waitingForBuffer).then(
                 function (time) {

@@ -493,36 +493,33 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return deferred.promise;
     },
 
-    getPresentationOffset: function (manifest, periodIndex) {
-        var time = 0,
+    getPresentationOffset: function (quality, data) {
+        var self = this,
+            deferred = Q.defer(),
+            time = 0,
             offset,
             timescale = 1,
-            representation,
             segmentInfo;
 
-        // We don't really care what representation we use; they should all start at the same time.
-        // Just grab the first representation; if this isn't there, we have bigger problems.
-        // TODO : The presentationTimeOffset can be described in each representation...
-        // Can it vary (be different times) between audio/video streams in the same Period?
-        // If it can we're probably ok, there just won't be any content for the difference in time.
-        // THIS WON'T WORK IN THE CURRENT PLAYER THOUGH!
-        // The stream without content will force the player to stall because it thinks it's waiting
-        // for data.  This will have to be fixed on the BufferController.
-        // For now let's assume that the presentationTimeOffset is the same between all representations.
-        representation = manifest.Period_asArray[periodIndex].AdaptationSet_asArray[0].Representation_asArray[0];
-        segmentInfo = this.getSegmentInfoFor(representation);
+        self.getRepresentationFor(quality, data).then(
+            function(representation) {
+                segmentInfo = self.getSegmentInfoFor(representation);
 
-        if (segmentInfo !== null && segmentInfo !== undefined && segmentInfo.hasOwnProperty("presentationTimeOffset")) {
-            offset = segmentInfo.presentationTimeOffset;
+                if (segmentInfo !== null && segmentInfo !== undefined && segmentInfo.hasOwnProperty("presentationTimeOffset")) {
+                    offset = segmentInfo.presentationTimeOffset;
 
-            if (segmentInfo.hasOwnProperty("timescale")) {
-                timescale = segmentInfo.timescale;
+                    if (segmentInfo.hasOwnProperty("timescale")) {
+                        timescale = segmentInfo.timescale;
+                    }
+
+                    time = offset / timescale;
+                }
+
+                deferred.resolve(time);
             }
+        );
 
-            time = offset / timescale;
-        }
-
-        return Q.when(time);
+        return deferred.promise;
     },
 
     getIsLive: function (manifest) {
@@ -628,12 +625,12 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(manifest.Period_asArray.length);
     },
 
-    getTimestampOffsetForPeriod: function (periodIndex, manifest) {
+    getTimestampOffsetForPeriod: function (periodIndex, manifest, quality, data) {
         var self = this,
             timestampOffset,
             deferred = Q.defer();
 
-        self.getPresentationOffset(manifest, periodIndex).then(
+        self.getPresentationOffset(quality, data).then(
             function(presentationOffset) {
                 self.getPeriodStart(manifest, periodIndex).then(
                     function(periodStart) {
