@@ -307,7 +307,7 @@ Dash.dependencies.DashParser = function () {
                     // Setting manifest's BaseURL to the first BaseURL
                     manifest.BaseURL = manifest.BaseURL_asArray[0];
                 }
-                if (manifest.BaseURL.indexOf("http") !== 0) {
+                if (manifest.BaseURL.toString().indexOf("http") !== 0) {
                     manifest.BaseURL = baseUrl + manifest.BaseURL;
                 }
 
