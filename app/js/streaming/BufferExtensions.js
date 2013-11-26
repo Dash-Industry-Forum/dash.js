@@ -82,8 +82,14 @@ MediaPlayer.dependencies.BufferExtensions = function () {
             return topQualityIndex;
         },
 
-        decideBufferLength: function (minBufferTime/*, waitingForBuffer*/) {
-            minBufferTarget = Math.max(MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
+        decideBufferLength: function (minBufferTime, duration/*, waitingForBuffer*/) {
+            if (MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
+                minBufferTarget = Math.max(MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
+            } else if (minBufferTime >= duration) {
+                minBufferTarget = Math.min(duration, MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME);
+            } else {
+                minBufferTarget = Math.min(duration, minBufferTime);
+            }
 
             return Q.when(minBufferTarget);
         },

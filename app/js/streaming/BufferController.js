@@ -763,7 +763,7 @@ MediaPlayer.dependencies.BufferController = function () {
             } else if (state === READY) {
                 setState.call(self, VALIDATING);
                 var manifestMinBufferTime = self.manifestModel.getValue().minBufferTime;
-                self.bufferExt.decideBufferLength(manifestMinBufferTime, waitingForBuffer).then(
+                self.bufferExt.decideBufferLength(manifestMinBufferTime, duration, waitingForBuffer).then(
                     function (time) {
                         self.debug.log("Buffer time: " + time);
                         self.setMinBufferTime(time);
@@ -874,16 +874,16 @@ MediaPlayer.dependencies.BufferController = function () {
 
             self.indexHandler.setIsLive(isLive);
 
-            self.bufferExt.decideBufferLength(manifest.minBufferTime, waitingForBuffer).then(
-                function (time) {
-                    self.setMinBufferTime(time);
-                }
-            );
-
             self.manifestExt.getDurationForPeriod(periodIndex, self.manifestModel.getValue()).then(
                 function (durationValue) {
                     duration = durationValue;
                     self.indexHandler.setDuration(durationValue);
+
+                    self.bufferExt.decideBufferLength(manifest.minBufferTime, duration, waitingForBuffer).then(
+                        function (time) {
+                            self.setMinBufferTime(time);
+                        }
+                    );
                 }
             );
         },
