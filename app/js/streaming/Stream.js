@@ -656,7 +656,6 @@ MediaPlayer.dependencies.Stream = function () {
                 function (/*done*/) {
                     if (autoPlay) {
                         self.debug.log("Playback initialized!");
-                        play.call(self);
                         return load.promise;
                     }
                 }
@@ -664,10 +663,8 @@ MediaPlayer.dependencies.Stream = function () {
                 function () {
                     self.debug.log("element loaded!");
                     // only first period stream must be played automatically during playback initialization
-                    if (periodIndex > 0) {
-                        // required to stop unnecessary buffering
-                        pause.call(self);
-                        return;
+                    if (periodIndex === 0) {
+                        play.call(self);
                     }
                 }
             );
