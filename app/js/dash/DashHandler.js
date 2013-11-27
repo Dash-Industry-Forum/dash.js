@@ -332,10 +332,11 @@ Dash.dependencies.DashHandler = function () {
                     frag = segments[i];
                     ft = frag.startTime / frag.timescale;
                     fd = frag.duration / frag.timescale;
-                    if (time >= ft && time <= (ft + fd)) {
+                    if ((time + Dash.dependencies.DashHandler.EPSILON) >= ft && 
+                        (time - Dash.dependencies.DashHandler.EPSILON) <= (ft + fd)) {
                         idx = i;
                         break;
-                    } else if (idx === -1 && time > (ft + fd)) {
+                    } else if (idx === -1 && (time - Dash.dependencies.DashHandler.EPSILON) > (ft + fd)) {
                         // time is past the end
                         idx  = i + 1;
                     }
@@ -772,6 +773,8 @@ Dash.dependencies.DashHandler = function () {
         getSegmentCountForDuration: getSegmentCountForDuration
     };
 };
+
+Dash.dependencies.DashHandler.EPSILON = 0.003;
 
 Dash.dependencies.DashHandler.prototype = {
     constructor: Dash.dependencies.DashHandler
