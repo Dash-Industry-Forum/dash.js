@@ -332,7 +332,7 @@ Dash.dependencies.DashHandler = function () {
                     frag = segments[i];
                     ft = frag.startTime / frag.timescale;
                     fd = frag.duration / frag.timescale;
-                    if ((time + Dash.dependencies.DashHandler.EPSILON) >= ft && 
+                    if ((time + Dash.dependencies.DashHandler.EPSILON) >= ft &&
                         (time - Dash.dependencies.DashHandler.EPSILON) <= (ft + fd)) {
                         idx = i;
                         break;

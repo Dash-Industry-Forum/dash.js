@@ -38,8 +38,11 @@ MediaPlayer.dependencies.BufferExtensions = function () {
                 function(audioQuality) {
                     Q.when(videoData ? self.abrController.getPlaybackQuality("video", videoData) : topVideoQualityIndex).then(
                         function(videoQuality) {
-                            isAtTop = (audioQuality.quality === topAudioQualityIndex) && (videoQuality.quality === topVideoQualityIndex);
-                            isAtTop = isAtTop || ((audioQuality.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) && (videoQuality.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG))
+                            isAtTop = (audioQuality.quality === topAudioQualityIndex) &&
+                                (videoQuality.quality === topVideoQualityIndex);
+                            isAtTop = isAtTop ||
+                                ((audioQuality.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) &&
+                                    (videoQuality.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG));
                             deferred.resolve(isAtTop);
                         }
                     );
