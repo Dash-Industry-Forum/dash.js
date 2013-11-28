@@ -474,19 +474,21 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 } else {
                     liveOffset = ((now.getTime() - start.getTime()) / 1000);
                 }
-
+/*
                 // Find out the between stream start and available start time.
                 self.getLiveStart(manifest, periodIndex).then(
                     function (start) {
                         // get the full time, relative to stream start
                         liveOffset += start;
-
+*/
                         // peel off our reserved time
                         liveOffset -= delay;
 
                         deferred.resolve(liveOffset);
+/*                        
                     }
                 );
+*/
             }
         );
 
