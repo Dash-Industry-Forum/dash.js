@@ -485,6 +485,9 @@ MediaPlayer.dependencies.Stream = function () {
             ).then(
                 function (/*value*/) {
                     self.debug.log("Duration successfully set.");
+                    if (isLive) {
+                        return self.manifestExt.getLiveEdge(self.manifestModel.getValue(), periodIndex);
+                    }
                     return self.manifestExt.getPeriodStart(self.manifestModel.getValue(), periodIndex);
                 }
             ).then(
@@ -514,6 +517,9 @@ MediaPlayer.dependencies.Stream = function () {
 
             if (startTime !== null) {
                 this.debug.log("Starting segment loading at offset: " + startTime);
+
+                this.system.notify("setCurrentTime");
+                this.videoModel.setCurrentTime(startTime);
 
                 if (videoController) {
                     videoController.seek(startTime);
@@ -654,17 +660,17 @@ MediaPlayer.dependencies.Stream = function () {
                 }
             ).then(
                 function (/*done*/) {
-                    if (autoPlay) {
-                        self.debug.log("Playback initialized!");
-                        return load.promise;
-                    }
+                    self.debug.log("Playback initialized!");
+                    return load.promise;
                 }
             ).then(
                 function () {
                     self.debug.log("element loaded!");
                     // only first period stream must be played automatically during playback initialization
                     if (periodIndex === 0) {
-                        play.call(self);
+                        if (autoPlay) {
+                            play.call(self);
+                        }
                     }
                 }
             );
