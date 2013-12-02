@@ -394,107 +394,6 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         }
     },
 
-    getLiveOffset: function (manifest) {
-        "use strict";
-        var delay = 15;
-
-        if (manifest.hasOwnProperty("suggestedPresentationDelay")) {
-            delay = manifest.suggestedPresentationDelay;
-        }
-
-        return Q.when(delay);
-    },
-
-    getLiveStart: function (manifest, periodIndex) {
-        var time = 0,
-            fStart = 1,
-            fDuration,
-            fTimescale = 1,
-            representation,
-            list = null,
-            template = null;
-
-        // We don't really care what representation we use; they should all start at the same time.
-        // Just grab the first representation; if this isn't there, we have bigger problems.
-        representation = manifest.Period_asArray[periodIndex].AdaptationSet_asArray[1].Representation_asArray[0];
-
-        if (representation.hasOwnProperty("SegmentList")) {
-            list = representation.SegmentList;
-
-            if (list.hasOwnProperty("startNumber")) {
-                fStart = Math.max(list.startNumber, 1);
-            }
-            if (list.hasOwnProperty("timescale")) {
-                fTimescale = list.timescale;
-            }
-            fDuration = list.duration;
-
-            time = (((fStart - 1) * fDuration) / fTimescale);
-        }
-        else if (representation.hasOwnProperty("SegmentTemplate")) {
-            template = representation.SegmentTemplate;
-
-            if (template.hasOwnProperty("startNumber")) {
-                fStart = Math.max(template.startNumber, 1);
-            }
-            if (template.hasOwnProperty("timescale")) {
-                fTimescale = template.timescale;
-            }
-            fDuration = template.duration;
-
-            if (template.hasOwnProperty("SegmentTimeline")) {
-                // This had better exist, or there's bigger problems.
-                // First one must have a time value!
-                time = (template.SegmentTimeline.S_asArray[0].t / fTimescale);
-            }
-            else {
-                time = (((fStart - 1) * fDuration) / fTimescale);
-            }
-        }
-
-        return Q.when(time);
-    },
-
-    getLiveEdge: function (manifest, periodIndex) {
-        "use strict";
-        var self = this,
-            deferred = Q.defer(),
-            liveOffset = 0,
-            now = new Date(),
-            start = manifest.availabilityStartTime,
-            end;
-
-        self.getLiveOffset(manifest).then(
-            function (delay) {
-                // Figure out the time between now and available start time.
-
-                if (manifest.hasOwnProperty("availabilityEndTime")) {
-                    end = manifest.availabilityEndTime;
-                    liveOffset = ((end.getTime() - start.getTime()) / 1000);
-                } else {
-                    liveOffset = ((now.getTime() - start.getTime()) / 1000);
-                }
-/*
-                // Find out the between stream start and available start time.
-                self.getLiveStart(manifest, periodIndex).then(
-                    function (start) {
-                        // get the full time, relative to stream start
-                        liveOffset += start;
-*/
-                        // peel off our reserved time
-                        liveOffset -= delay;
-
-                        deferred.resolve(liveOffset);
-/*                        
-                    }
-                );
-*/
-            }
-        );
-
-        return deferred.promise;
-    },
-
     getPresentationOffset: function (quality, data) {
         var self = this,
             deferred = Q.defer(),
@@ -524,25 +423,26 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return deferred.promise;
     },
 
-    getIsLive: function (manifest) {
+    getIsDynamic: function (manifest) {
         "use strict";
-        var isLive = false,
+        var isDynamic = false,
             LIVE_TYPE = "dynamic";
 
         if (manifest.hasOwnProperty("type")) {
-            isLive = (manifest.type === LIVE_TYPE);
+            isDynamic = (manifest.type === LIVE_TYPE);
         }
 
-        return isLive;
+        return isDynamic;
     },
 
-    getIsDVR: function (manifest, isLive) {
+    getIsDVR: function (manifest) {
         "use strict";
-        var containsDVR,
+        var isDynamic = this.getIsDynamic(manifest),
+            containsDVR,
             isDVR;
 
         containsDVR = !isNaN(manifest.timeShiftBufferDepth);
-        isDVR = (isLive && containsDVR);
+        isDVR = (isDynamic && containsDVR);
 
         return Q.when(isDVR);
     },
@@ -558,11 +458,12 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(isOnDemand);
     },
 
-    getDuration: function (manifest, isLive) {
+    getDuration: function (manifest) {
         "use strict";
-        var dur = NaN;
+        var dur = NaN,
+            isDynamic = this.getIsDynamic(manifest);
 
-        if (isLive) {
+        if (isDynamic) {
             dur = Number.POSITIVE_INFINITY;
         } else {
             if (manifest.mediaPresentationDuration) {
@@ -575,11 +476,12 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(dur);
     },
 
-    getDurationForPeriod: function (periodIndex, manifest, isLive) {
+    getDurationForPeriod: function (periodIndex, manifest) {
         "use strict";
-        var dur = NaN;
+        var dur = NaN,
+            isDynamic = this.getIsDynamic(manifest);
 
-        if (isLive) {
+        if (isDynamic) {
             dur = Number.POSITIVE_INFINITY;
         } else {
 
@@ -648,7 +550,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
     getPeriodStart: function (manifest, periodIndex) {
         var self = this,
-            isLive = self.getIsLive(manifest),
+            isDynamic = self.getIsDynamic(manifest),
             i,
             p = null,
             prevStart = null,
@@ -677,7 +579,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             // If (i) @start attribute is absent, and (ii) the Period element
             // is the first in the MPD, and (iii) the MPD@type is 'static',
             // then the PeriodStart time shall be set to zero.
-            else if (i === 0 && !isLive) {
+            else if (i === 0 && !isDynamic) {
                 periodStart = 0;
             }
 

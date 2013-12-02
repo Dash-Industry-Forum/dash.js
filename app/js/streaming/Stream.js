@@ -259,12 +259,11 @@ MediaPlayer.dependencies.Stream = function () {
                 audioReady = false,
                 textTrackReady = false,
                 self = this,
-                manifest = self.manifestModel.getValue(),
-                isLive = self.manifestExt.getIsLive(manifest);
+                manifest = self.manifestModel.getValue();
 
             // Figure out some bits about the stream before building anything.
             self.debug.log("Gathering information for buffers. (1)");
-            self.manifestExt.getDuration(manifest, isLive).then(
+            self.manifestExt.getDuration(manifest).then(
                 function (/*duration*/) {
                     self.manifestExt.getVideoData(manifest, periodIndex).then(
                         function (videoData) {
@@ -465,19 +464,17 @@ MediaPlayer.dependencies.Stream = function () {
 
         initializePlayback = function () {
             var self = this,
-                initialize = Q.defer(),
-                manifest = self.manifestModel.getValue(),
-                isLive = self.manifestExt.getIsLive(manifest);
+                initialize = Q.defer();
 
             self.debug.log("Getting ready for playback...");
 
-            self.manifestExt.getDurationForPeriod(periodIndex, self.manifestModel.getValue(), isLive).then(
+            self.manifestExt.getDurationForPeriod(periodIndex, self.manifestModel.getValue()).then(
                 function(periodDuration) {
                     duration = periodDuration;
                 }
             );
 
-            self.manifestExt.getDuration(self.manifestModel.getValue(), isLive).then(
+            self.manifestExt.getDuration(self.manifestModel.getValue()).then(
                 function (duration) {
                     self.debug.log("Setting duration: " + duration);
                     return self.mediaSourceExt.setDuration(mediaSource, duration);
@@ -485,9 +482,6 @@ MediaPlayer.dependencies.Stream = function () {
             ).then(
                 function (/*value*/) {
                     self.debug.log("Duration successfully set.");
-                    if (isLive) {
-                        return self.manifestExt.getLiveEdge(self.manifestModel.getValue(), periodIndex);
-                    }
                     return self.manifestExt.getPeriodStart(self.manifestModel.getValue(), periodIndex);
                 }
             ).then(

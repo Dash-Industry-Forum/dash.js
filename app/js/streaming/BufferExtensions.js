@@ -113,7 +113,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
             return leastLevel;
         },
 
-        getRequiredBufferLength: function (waitingForBuffer, delay, isLive, duration) {
+        getRequiredBufferLength: function (waitingForBuffer, delay, isDynamic, duration) {
             var self = this,
                 vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
                 ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"),
@@ -131,7 +131,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
             } else if (self.bufferMax === MediaPlayer.dependencies.BufferExtensions.BUFFER_SIZE_REQUIRED) {
                 currentBufferTarget = minBufferTarget;
 
-                if (!isLive) {
+                if (!isDynamic) {
                     if (!waitingForBuffer) {
                         deferredIsAtTop = isPlayingAtTopQuality.call(self);
                     }

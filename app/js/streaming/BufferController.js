@@ -32,8 +32,7 @@ MediaPlayer.dependencies.BufferController = function () {
         playingTime,
         lastQuality = -1,
         stalled = false,
-        isLiveStream = false,
-        liveInitialization = false,
+        isDynamic = false,
         isBufferingCompleted = false,
         deferredAppends = [],
         deferredInitAppend = null,
@@ -84,16 +83,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 playListTraceMetricsClosed = true;
             }
         },
-
-        // TODO : Remove?
-        initializeLive = function () {
-            var manifest = this.manifestModel.getValue(),
-                isLive = this.manifestExt.getIsLive(manifest);
-
-            liveInitialization = true;
-
-            return Q.when(isLive);
-        },
 /*
         setCurrentTimeOnVideo = function (time) {
             var ct = this.videoModel.getCurrentTime();
@@ -111,18 +100,11 @@ MediaPlayer.dependencies.BufferController = function () {
                 return;
             }
 
-            var self = this;
+            this.debug.log("BufferController begin " + type + " validation");
+            setState.call(this, READY);
 
-            initializeLive.call(this).then(
-                function (isLive) {
-                    isLiveStream = isLive;
-                    self.debug.log("BufferController begin " + type + " validation");
-                    setState.call(self, READY);
-
-                    self.requestScheduler.startScheduling(self, validate);
-                    fragmentModel = self.fragmentController.attachBufferController(self);
-                }
-            );
+            this.requestScheduler.startScheduling(this, validate);
+            fragmentModel = this.fragmentController.attachBufferController(this);
         },
 
         doStart = function () {
@@ -459,10 +441,6 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         onBytesError = function () {
-            var self = this,
-                manifest = self.manifestModel.getValue(),
-                isLive = self.manifestExt.getIsLive(manifest);
-
             // remove the failed request from the list
             /*
             for (var i = fragmentRequests.length - 1; i >= 0 ; --i) {
@@ -476,11 +454,11 @@ MediaPlayer.dependencies.BufferController = function () {
             */
 
             if (state === LOADING) {
-                setState.call(self, READY);
+                setState.call(this, READY);
             }
 
-            if (!isLive) {
-                self.system.notify("segmentLoadingFailed");
+            if (!isDynamic) {
+                this.system.notify("segmentLoadingFailed");
             }
         },
 
@@ -670,7 +648,6 @@ MediaPlayer.dependencies.BufferController = function () {
             time = mseGetDesiredTime();
             setCurrentTimeOnVideo.call(this, time);
 
-            liveInitialization = false;
             mseSetTime = false;
             seekTarget = -1;
         },
@@ -702,7 +679,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 playbackRate = self.videoModel.getPlaybackRate(),
                 actualBufferedDuration = bufferLevel / Math.max(playbackRate, 1),
                 deferred = Q.defer();
-                self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isLiveStream, duration).then(
+                self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, duration).then(
                     function (requiredBufferLength) {
                         self.indexHandler.getSegmentCountForDuration(quality, data, requiredBufferLength, actualBufferedDuration).then(
                             function(count) {
@@ -858,7 +835,7 @@ MediaPlayer.dependencies.BufferController = function () {
         initialize: function (type, periodIndex, data, buffer, videoModel, scheduler, fragmentController, source) {
             var self = this,
                 manifest = self.manifestModel.getValue(),
-                isLive = self.manifestExt.getIsLive(manifest);
+                isDynamic = self.manifestExt.getIsDynamic(manifest);
 
             self.setMediaSource(source);
             self.setVideoModel(videoModel);
@@ -874,7 +851,7 @@ MediaPlayer.dependencies.BufferController = function () {
             self.setScheduler(scheduler);
             self.setFragmentController(fragmentController);
 
-            self.indexHandler.setIsLive(isLive);
+            self.indexHandler.setIsDynamic(isDynamic);
 
             self.manifestExt.getDurationForPeriod(periodIndex, self.manifestModel.getValue()).then(
                 function (durationValue) {
