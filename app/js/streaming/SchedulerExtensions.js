@@ -27,5 +27,21 @@ MediaPlayer.dependencies.SchedulerExtensions.prototype = {
         }
 
         return interval;
+    },
+
+    attachScheduleListener: function(element, scheduleListener) {
+        element.addEventListener("timeupdate", scheduleListener);
+    },
+
+    detachScheduleListener: function(element, scheduleListener) {
+        element.removeEventListener("timeupdate", scheduleListener);
+    },
+
+    attachUpdateScheduleListener: function(element, updateScheduleListener) {
+        element.addEventListener("seeking", updateScheduleListener);
+    },
+
+    detachUpdateScheduleListener: function(element, updateScheduleListener) {
+        element.removeEventListener("seeking", updateScheduleListener);
     }
 };

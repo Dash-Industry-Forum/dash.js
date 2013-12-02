@@ -792,6 +792,8 @@ MediaPlayer.dependencies.Stream = function () {
             this.videoModel.listen("timeupdate", timeupdateListener);
             this.videoModel.listen("progress", progressListener);
             this.videoModel.listen("loadedmetadata", loadedListener);
+
+            this.requestScheduler.videoModel = value;
         },
 
         initProtection: function() {
