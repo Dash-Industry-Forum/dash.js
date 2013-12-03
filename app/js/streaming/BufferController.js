@@ -509,7 +509,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 initializationData = [];
                 // get initialization requests for all the qualities of this buffer type
                 for (quality = 0; quality <= topQuality; quality += 1) {
-                    funcs.push(this.indexHandler.getInitRequest(quality, data));
+                    funcs.push(this.indexHandler.getInitRequest(availableRepresentations[quality]));
                 }
 
                 lastQuality = currentQuality;
@@ -533,14 +533,14 @@ MediaPlayer.dependencies.BufferController = function () {
             return initializationPromise;
         },
 
-        loadNextFragment = function (quality) {
+        loadNextFragment = function () {
             var promise,
                 self = this;
 
             if (dataChanged && !seeking) {
                 //time = self.videoModel.getCurrentTime();
                 self.debug.log("Data changed - loading the " + type + " fragment for time: " + playingTime);
-                promise = self.indexHandler.getSegmentRequestForTime(playingTime, quality, data);
+                promise = self.indexHandler.getSegmentRequestForTime(currentRepresentation, playingTime);
             } else {
                 var deferred = Q.defer(),
                     segmentTime = self.videoModel.getCurrentTime();
@@ -548,7 +548,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
                 self.sourceBufferExt.getBufferRange(buffer, segmentTime).then(
                     function (range) {
-                        return Q.when(seeking ? seekTarget : self.indexHandler.getCurrentTime(quality, data)).then(
+                        return Q.when(seeking ? seekTarget : self.indexHandler.getCurrentTime(currentRepresentation)).then(
                             function (time) {
                                 segmentTime = time;
                                 seeking = false;
@@ -558,7 +558,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                 }
 
                                 self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
-                                self.indexHandler.getSegmentRequestForTime(segmentTime, quality, data).then(
+                                self.indexHandler.getSegmentRequestForTime(currentRepresentation, segmentTime).then(
                                     function (request) {
                                         deferred.resolve(request);
                                     },
@@ -590,7 +590,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 // If we have already loaded the given fragment ask for the next one. Otherwise prepare it to get loaded
                 if (self.fragmentController.isFragmentLoadedOrPending(self, request)) {
                     if (request.action !== "complete") {
-                        self.indexHandler.getNextSegmentRequest(lastQuality, data).then(onFragmentRequest.bind(self));
+                        self.indexHandler.getNextSegmentRequest(currentRepresentation).then(onFragmentRequest.bind(self));
                     } else {
                         doStop.call(self);
                         setState.call(self, READY);
@@ -691,14 +691,14 @@ MediaPlayer.dependencies.BufferController = function () {
             return time;
         },
 
-        getRequiredFragmentCount = function(quality) {
+        getRequiredFragmentCount = function() {
             var self =this,
                 playbackRate = self.videoModel.getPlaybackRate(),
                 actualBufferedDuration = bufferLevel / Math.max(playbackRate, 1),
                 deferred = Q.defer();
                 self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, periodInfo.duration).then(
                     function (requiredBufferLength) {
-                        self.indexHandler.getSegmentCountForDuration(quality, data, requiredBufferLength, actualBufferedDuration).then(
+                        self.indexHandler.getSegmentCountForDuration(currentRepresentation, requiredBufferLength, actualBufferedDuration).then(
                             function(count) {
                                 deferred.resolve(count);
                             }
@@ -717,7 +717,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             if ((fragmentsToLoad - ln) > 0) {
                 fragmentsToLoad--;
-                loadNextFragment.call(self, lastQuality).then(onFragmentRequest.bind(self));
+                loadNextFragment.call(self).then(onFragmentRequest.bind(self));
             } else {
 
                 if (state === VALIDATING) {
@@ -862,9 +862,6 @@ MediaPlayer.dependencies.BufferController = function () {
             self.setFragmentController(fragmentController);
 
             self.indexHandler.setIsDynamic(isDynamic);
-
-            self.indexHandler.setDuration(periodInfo.duration);
-
             self.bufferExt.decideBufferLength(manifest.minBufferTime, periodInfo, waitingForBuffer).then(
                 function (time) {
                     self.setMinBufferTime(time);
@@ -940,22 +937,25 @@ MediaPlayer.dependencies.BufferController = function () {
                 function(representations) {
                     availableRepresentations = representations;
                     periodInfo = periodInfoValue;
-            self.abrController.getPlaybackQuality(type, from).then(
-                function (result) {
-                    self.indexHandler.getCurrentTime(result.quality, from).then(
-                        function (time) {
-                            dataChanged = true;
-                            playingTime = time;
-                            currentRepresentation = getRepresentationForQuality.call(self, result.quality);
-                            data = dataValue;
-                            self.seek(time);
-                            self.bufferExt.updateData(data, type);
-                            startPlayback.call(self);
-                            deferred.resolve();
+                    self.abrController.getPlaybackQuality(type, from).then(
+                        function (result) {
+                            if (!currentRepresentation) {
+                                currentRepresentation = getRepresentationForQuality.call(self, result.quality);
+                            }
+                            self.indexHandler.getCurrentTime(currentRepresentation).then(
+                                function (time) {
+                                    dataChanged = true;
+                                    playingTime = time;
+                                    currentRepresentation = getRepresentationForQuality.call(self, result.quality);
+                                    data = dataValue;
+                                    self.seek(time);
+                                    self.bufferExt.updateData(data, type);
+                                    startPlayback.call(self);
+                                    deferred.resolve();
+                                }
+                            );
                         }
                     );
-                }
-            );
                 }
             );
 
