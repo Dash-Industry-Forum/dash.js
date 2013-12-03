@@ -26,6 +26,9 @@
         STREAM_END_THRESHOLD = 3,
         autoPlay = true,
         deferredSwitch= null,
+        timeupdateListener,
+        seekingListener,
+        progressListener,
 
         play = function () {
             activeStream.play();
@@ -61,25 +64,25 @@
             newVideoElement.style.width = "100%";
 
             copyVideoProperties(activeVideoElement, newVideoElement);
-            detachVideoEvents(fromVideoModel);
-            attachVideoEvents(toVideoModel);
+            detachVideoEvents.call(this, fromVideoModel);
+            attachVideoEvents.call(this, toVideoModel);
 
             return Q.when(true);
         },
 
         attachVideoEvents = function (videoModel) {
-            videoModel.listen("seeking", seekingHandler);
-            videoModel.listen("progress", progressHandler);
+            videoModel.listen("seeking", seekingListener);
+            videoModel.listen("progress", progressListener);
 
             if (getNextStream()) {
-                videoModel.listen("timeupdate", timeUpdateHandler);
+                videoModel.listen("timeupdate", timeupdateListener);
             }
         },
 
         detachVideoEvents = function (videoModel) {
-            videoModel.unlisten("seeking", seekingHandler);
-            videoModel.unlisten("progress", progressHandler);
-            videoModel.unlisten("timeupdate", timeUpdateHandler);
+            videoModel.unlisten("seeking", seekingListener);
+            videoModel.unlisten("progress", progressListener);
+            videoModel.unlisten("timeupdate", timeupdateListener);
         },
 
         copyVideoProperties = function (fromVideoElement, toVideoElement) {
@@ -93,7 +96,7 @@
          * Used to determine the time current stream is almost buffered and we can start buffering of the next stream.
          * TODO move to ???Extensions class
          */
-        progressHandler = function() {
+        onProgress = function() {
 
             var ranges = activeStream.getVideoModel().getElement().buffered;
 
@@ -107,7 +110,7 @@
                 remainingBufferDuration = activeStream.getStartTime() + activeStream.getDuration() - bufferEndTime;
 
             if (remainingBufferDuration < STREAM_BUFFER_END_THRESHOLD) {
-                activeStream.getVideoModel().unlisten("progress", progressHandler);
+                activeStream.getVideoModel().unlisten("progress", progressListener);
                 onStreamBufferingEnd();
             }
         },
@@ -117,7 +120,7 @@
          * Used to determine the time current stream is finished and we should switch to the next stream.
          * TODO move to ???Extensions class
          */
-        timeUpdateHandler = function() {
+        onTimeupdate = function() {
             // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new period starts
             // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
             if (activeStream.getVideoModel().getElement().seeking) return;
@@ -127,7 +130,7 @@
 
             // check if stream end is reached
             if (streamEndTime - currentTime < STREAM_END_THRESHOLD) {
-                switchStream(activeStream, getNextStream());
+                switchStream.call(this, activeStream, getNextStream());
             }
         },
 
@@ -135,12 +138,12 @@
          * Called when Seeking event is occured.
          * TODO move to ???Extensions class
          */
-        seekingHandler = function() {
+        onSeeking = function() {
             var seekingTime = activeStream.getVideoModel().getCurrentTime(),
                 seekingStream = getStreamForTime(seekingTime);
 
             if (seekingStream && seekingStream !== activeStream) {
-                switchStream(activeStream, seekingStream, seekingTime);
+                switchStream.call(this, activeStream, seekingStream, seekingTime);
             }
         },
 
@@ -191,12 +194,14 @@
 
             if(!from || !to || from === to) return;
 
+            var self = this;
+
             Q.when(deferredSwitch || true).then(
                 function() {
                     from.pause();
                     activeStream = to;
 
-                    deferredSwitch = switchVideoModel(from.getVideoModel(), to.getVideoModel());
+                    deferredSwitch = switchVideoModel.call(self, from.getVideoModel(), to.getVideoModel());
 
                     if (seekTo) {
                         seek(from.getVideoModel().getCurrentTime());
@@ -226,6 +231,12 @@
         debug: undefined,
         metricsExt: undefined,
         errHandler: undefined,
+
+        setup: function() {
+            timeupdateListener = onTimeupdate.bind(this);
+            progressListener = onProgress.bind(this);
+            seekingListener = onSeeking.bind(this);
+        },
 
         getManifestExt: function () {
             return activeStream.getManifestExt();
@@ -270,7 +281,7 @@
                             }
 
                             activeStream = streams[0];
-                            attachVideoEvents(activeStream.getVideoModel());
+                            attachVideoEvents.call(this, activeStream.getVideoModel());
                         }
                     );
                 },
@@ -283,7 +294,7 @@
         reset: function () {
 
             if (!!activeStream) {
-                detachVideoEvents(activeStream.getVideoModel());
+                detachVideoEvents.call(this, activeStream.getVideoModel());
             }
 
             for (var i = 0, ln = streams.length; i < ln; i++) {
