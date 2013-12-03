@@ -13,6 +13,7 @@
  */
 Dash.dependencies.DashManifestExtensions = function () {
     "use strict";
+    this.timelineConverter = undefined;
 };
 
 Dash.dependencies.DashManifestExtensions.prototype = {
@@ -379,50 +380,6 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(data.ContentProtection_asArray);
     },
 
-    getSegmentInfoFor: function (representation) {
-        if (representation.hasOwnProperty("SegmentBase")) {
-            return representation.SegmentBase;
-        }
-        else if (representation.hasOwnProperty("SegmentList")) {
-            return representation.SegmentList;
-        }
-        else if (representation.hasOwnProperty("SegmentTemplate")) {
-            return representation.SegmentTemplate;
-        }
-        else {
-            return null;
-        }
-    },
-
-    getPresentationOffset: function (quality, data) {
-        var self = this,
-            deferred = Q.defer(),
-            time = 0,
-            offset,
-            timescale = 1,
-            segmentInfo;
-
-        self.getRepresentationFor(quality, data).then(
-            function(representation) {
-                segmentInfo = self.getSegmentInfoFor(representation);
-
-                if (segmentInfo !== null && segmentInfo !== undefined && segmentInfo.hasOwnProperty("presentationTimeOffset")) {
-                    offset = segmentInfo.presentationTimeOffset;
-
-                    if (segmentInfo.hasOwnProperty("timescale")) {
-                        timescale = segmentInfo.timescale;
-                    }
-
-                    time = offset / timescale;
-                }
-
-                deferred.resolve(time);
-            }
-        );
-
-        return deferred.promise;
-    },
-
     getIsDynamic: function (manifest) {
         "use strict";
         var isDynamic = false,
@@ -458,44 +415,24 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(isOnDemand);
     },
 
-    getDuration: function (manifest) {
-        "use strict";
-        var dur = NaN,
-            isDynamic = this.getIsDynamic(manifest);
+    getDuration: function (manifest, period) {
+        var mpdDuration,
+            self = this,
+            isDynamic = self.getIsDynamic(manifest),
+            deferred = Q.defer();
 
         if (isDynamic) {
-            dur = Number.POSITIVE_INFINITY;
-        } else {
-            if (manifest.mediaPresentationDuration) {
-                dur = manifest.mediaPresentationDuration;
-            } else if (manifest.availabilityEndTime && manifest.availabilityStartTime) {
-                dur = (manifest.availabilityEndTime.getTime() - manifest.availabilityStartTime.getTime());
+            mpdDuration = self.timelineConverter.calcPresentationTimeFromWallTime(manifest.mpdLoadedTime, period, isDynamic);
+
+            if (manifest.hasOwnProperty("minimumUpdatePeriod")) {
+                mpdDuration += manifest.minimumUpdatePeriod;
             }
-        }
-
-        return Q.when(dur);
-    },
-
-    getDurationForPeriod: function (periodIndex, manifest) {
-        "use strict";
-        var dur = NaN,
-            isDynamic = this.getIsDynamic(manifest);
-
-        if (isDynamic) {
-            dur = Number.POSITIVE_INFINITY;
         } else {
-
-            if(manifest.Period_asArray.length > 1 && manifest.Period_asArray[periodIndex].duration !== undefined)
-            {
-                dur = manifest.Period_asArray[periodIndex].duration;
-            } else if (manifest.mediaPresentationDuration) {
-                dur = manifest.mediaPresentationDuration;
-            } else if (manifest.availabilityEndTime && manifest.availabilityStartTime) {
-                dur = (manifest.availabilityEndTime.getTime() - manifest.availabilityStartTime.getTime());
-            }
+            mpdDuration = manifest.mediaPresentationDuration;
         }
+        deferred.resolve(mpdDuration);
 
-        return Q.when(dur);
+        return deferred.promise;
     },
 
     getBandwidth: function (representation) {
@@ -524,72 +461,209 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(data.Representation_asArray[index]);
     },
 
-    getPeriodCount: function (manifest) {
-        "use strict";
-        return Q.when(manifest.Period_asArray.length);
-    },
+    getRepresentationsForAdaptation: function(manifest, adaptation) {
+        var a = manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index],
+            self = this,
+            representations = [],
+            deferred = Q.defer(),
+            representation,
+            initialization,
+            segmentInfo,
+            r;
 
-    getTimestampOffsetForPeriod: function (periodIndex, manifest, quality, data) {
-        var self = this,
-            timestampOffset,
-            deferred = Q.defer();
+        for (var i = 0; i < a.Representation_asArray.length; i += 1) {
+            r = a.Representation_asArray[i];
+            representation = new Dash.vo.Representation();
+            representation.index = i;
+            representation.adaptation = adaptation;
 
-        self.getPresentationOffset(quality, data).then(
-            function(presentationOffset) {
-                self.getPeriodStart(manifest, periodIndex).then(
-                    function(periodStart) {
-                        timestampOffset = periodStart - presentationOffset;
-                        deferred.resolve(timestampOffset);
-                    }
-                );
+            if (r.hasOwnProperty("id")) {
+                representation.id = r.id;
             }
-        );
+
+            if (r.hasOwnProperty("SegmentBase")) {
+                segmentInfo = r.SegmentBase;
+                representation.segmentInfoType = "SegmentBase";
+            }
+            else if (r.hasOwnProperty("SegmentList")) {
+                segmentInfo = r.SegmentList;
+                representation.segmentInfoType = "SegmentList";
+            }
+            else if (r.hasOwnProperty("SegmentTemplate")) {
+                segmentInfo = r.SegmentTemplate;
+
+                if (segmentInfo.hasOwnProperty("SegmentTimeline")) {
+                    representation.segmentInfoType = "SegmentTimeline";
+                } else {
+                    representation.segmentInfoType = "SegmentTemplate";
+                }
+
+                if (segmentInfo.hasOwnProperty("initialization")) {
+                    representation.initialization = segmentInfo.initialization.split("$Bandwidth$")
+                        .join(r.bandwidth).split("$RepresentationID$").join(r.id);
+                }
+            } else {
+                segmentInfo = r.BaseURL;
+                representation.segmentInfoType = "BaseURL";
+            }
+
+            if (segmentInfo.hasOwnProperty("Initialization")) {
+                initialization = segmentInfo.Initialization;
+                if (initialization.hasOwnProperty("sourceURL")) {
+                    representation.initialization = initialization.sourceURL;
+                } else if (initialization.hasOwnProperty("range")) {
+                    representation.initialization = r.BaseURL;
+                    representation.range = initialization.range;
+                }
+            } else if (r.hasOwnProperty("mimeType") && self.getIsTextTrack(r.mimeType)) {
+                representation.initialization = r.BaseURL;
+                representation.range = 0;
+            }
+
+            if (segmentInfo.hasOwnProperty("timescale")) {
+                representation.timescale = segmentInfo.timescale;
+            }
+            if (segmentInfo.hasOwnProperty("duration")) {
+                representation.segmentDuration = segmentInfo.duration / representation.timescale;
+            }
+            if (segmentInfo.hasOwnProperty("startNumber")) {
+                representation.startNumber = segmentInfo.startNumber;
+            }
+            if (segmentInfo.hasOwnProperty("indexRange")) {
+                representation.indexRange = segmentInfo.indexRange;
+            }
+            if (segmentInfo.hasOwnProperty("presentationTimeOffset")) {
+                representation.presentationTimeOffset = segmentInfo.presentationTimeOffset / representation.timescale;
+            }
+
+            representation.MSETimeOffset = self.timelineConverter.calcMSETimeOffset(representation);
+            representations.push(representation);
+        }
+
+        deferred.resolve(representations);
 
         return deferred.promise;
     },
 
-    getPeriodStart: function (manifest, periodIndex) {
+    getAdaptationsForPeriod: function(manifest, period) {
+        var p = manifest.Period_asArray[period.index],
+            adaptations = [],
+            adaptationSet;
+
+        for (var i = 0; i < p.AdaptationSet_asArray.length; i += 1) {
+            adaptationSet = new Dash.vo.AdaptationSet();
+            adaptationSet.index = i;
+            adaptationSet.period = period;
+            adaptations.push(adaptationSet);
+        }
+
+        return Q.when(adaptations);
+    },
+
+    getRegularPeriods: function (manifest, mpd) {
         var self = this,
+            deferred = Q.defer(),
+            periods = [],
             isDynamic = self.getIsDynamic(manifest),
             i,
+            len,
+            p1 = null,
             p = null,
-            prevStart = null,
-            prevDuration = null,
-            periodStart;
+            vo1 = null,
+            vo = null;
 
-        for (i = 0; i <= periodIndex; i += 1) {
+        for (i = 0, len = manifest.Period_asArray.length; i < len; i += 1) {
             p = manifest.Period_asArray[i];
 
             // If the attribute @start is present in the Period, then the
             // Period is a regular Period and the PeriodStart is equal
             // to the value of this attribute.
-            if (p.hasOwnProperty("start")) {
-                periodStart = p.start;
+            if (p.hasOwnProperty("start")){
+                vo = new Dash.vo.Period();
+                vo.start = p.start;
             }
-
             // If the @start attribute is absent, but the previous Period
             // element contains a @duration attribute then then this new
             // Period is also a regular Period. The start time of the new
             // Period PeriodStart is the sum of the start time of the previous
             // Period PeriodStart and the value of the attribute @duration
             // of the previous Period.
-            else if (prevStart !== null && prevDuration !== null) {
-                periodStart = prevStart + prevDuration;
+            else if (p1 !== null && p.hasOwnProperty("duration")){
+                vo = new Dash.vo.Period();
+                vo.start = vo1.start + vo1.duration;
+                vo.duration = p.duration;
             }
             // If (i) @start attribute is absent, and (ii) the Period element
             // is the first in the MPD, and (iii) the MPD@type is 'static',
             // then the PeriodStart time shall be set to zero.
             else if (i === 0 && !isDynamic) {
-                periodStart = 0;
+                vo = new Dash.vo.Period();
+                vo.start = 0;
             }
 
-            if (p.hasOwnProperty("duration")) {
-                prevDuration = p.duration;
+            // The Period extends until the PeriodStart of the next Period.
+            // The difference between the PeriodStart time of a Period and
+            // the PeriodStart time of the following Period.
+            if (vo1 !== null && isNaN(vo1.duration))
+            {
+                vo1.duration = vo.start - vo1.start;
             }
 
-            prevStart = periodStart;
+            if (vo !== null && p.hasOwnProperty("id")){
+                vo.id = p.id;
+            }
+
+            if (vo !== null){
+                vo.index = i;
+                vo.mpd = mpd;
+                periods.push(vo);
+            }
+
+            p1 = p;
+            p = null;
+            vo1 = vo;
+            vo = null;
+        }
+        // The last Period extends until the end of the Media Presentation.
+        // The difference between the PeriodStart time of the last Period
+        // and the mpd duration
+        if (vo1 !== null && isNaN(vo1.duration)) {
+            self.getDuration(manifest, vo1).then(
+                function(mpdDuration) {
+                    vo1.duration = mpdDuration - vo1.start;
+                    deferred.resolve(periods);
+                }
+            );
+        } else {
+            deferred.resolve(periods);
         }
 
-        return Q.when(periodStart);
+        return Q.when(deferred.promise);
+    },
+
+    getMpd: function(manifest) {
+        var mpd = new Dash.vo.Mpd();
+
+        mpd.manifest = manifest;
+
+        if (manifest.hasOwnProperty("availabilityStartTime")) {
+            mpd.availabilityStartTime = new Date(manifest.availabilityStartTime.getTime());
+        } else {
+            mpd.availabilityStartTime = new Date(manifest.mpdLoadedTime.getTime());
+        }
+
+        if (manifest.hasOwnProperty("availabilityEndTime")) {
+            mpd.availabilityEndTime = new Date(manifest.availabilityEndTime.getTime());
+        }
+
+        if (manifest.hasOwnProperty("suggestedPresentationDelay")) {
+            mpd.suggestedPresentationDelay = manifest.suggestedPresentationDelay;
+        }
+
+        if (manifest.hasOwnProperty("timeShiftBufferDepth")) {
+            mpd.timeShiftBufferDepth = manifest.timeShiftBufferDepth;
+        }
+
+        return Q.when(mpd);
     }
 };

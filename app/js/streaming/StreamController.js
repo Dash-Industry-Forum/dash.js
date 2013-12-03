@@ -217,6 +217,76 @@
                     play();
                 }
             );
+        },
+
+        composeStreams = function() {
+            var self = this,
+                manifest = self.manifestModel.getValue(),
+                deferred = Q.defer(),
+                updatedStreams = [],
+                pLen,
+                sLen,
+                pIdx,
+                sIdx,
+                period,
+                stream;
+
+            if (!manifest) {
+                return Q.when(false);
+            }
+
+            self.manifestExt.getMpd(manifest).then(
+                function(mpd) {
+                    self.manifestExt.getRegularPeriods(manifest, mpd).then(
+                        function(periods) {
+                            for (pIdx = 0, pLen = periods.length; pIdx < pLen; pIdx += 1) {
+                                period = periods[pIdx];
+                                for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx += 1) {
+                                    // If the stream already exists we just need to update the values we got from the updated manifest
+                                    if (streams[sIdx].getId() === period.id) {
+                                        stream = streams[sIdx];
+                                        updatedStreams.push(stream.updateData(period));
+                                    }
+                                }
+                                // If the Stream object does not exist we probably loaded the manifest the first time or it was
+                                // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
+                                if (!stream) {
+                                    stream = self.system.getObject("stream");
+                                    stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
+                                    stream.initProtection();
+                                    stream.setAutoPlay(autoPlay);
+                                    stream.load(manifest, period);
+                                    streams.push(stream);
+                                }
+                                stream = null;
+                            }
+
+                            // If the active stream has not been set up yet, let it be the first Stream in the list
+                            if (!activeStream) {
+                                activeStream = streams[0];
+                                attachVideoEvents.call(self, activeStream.getVideoModel());
+                            }
+
+                            Q.all(updatedStreams).then(
+                                function() {
+                                    deferred.resolve();
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+
+            return deferred.promise;
+        },
+
+        manifestHasUpdated = function() {
+            var self = this;
+            composeStreams.call(self).then(
+                function() {
+                    self.system.notify("streamsComposed");
+                }
+            );
         };
 
     return {
@@ -238,6 +308,7 @@
         errHandler: undefined,
 
         setup: function() {
+            this.system.mapHandler("manifestUpdated", undefined, manifestHasUpdated.bind(this));
             timeupdateListener = onTimeupdate.bind(this);
             progressListener = onProgress.bind(this);
             seekingListener = onSeeking.bind(this);
@@ -264,9 +335,7 @@
         },
 
         load: function (url) {
-
-            var self = this,
-                stream;
+            var self = this;
 
             self.manifestLoader.load(url).then(
                 function(manifest) {
@@ -274,21 +343,6 @@
                     self.debug.log("Manifest has loaded.");
                     self.debug.log(self.manifestModel.getValue());
                     self.manifestUpdater.init();
-                    self.manifestExt.getPeriodCount(manifest).then(
-                        function(length) {
-                            for (var i = 0; i < length; i++) {
-                                stream = self.system.getObject("stream");
-                                stream.setVideoModel(i === 0 ? self.videoModel : createVideoModel.call(self));
-                                stream.initProtection();
-                                stream.setAutoPlay(autoPlay);
-                                stream.load(manifest, i);
-                                streams.push(stream);
-                            }
-
-                            activeStream = streams[0];
-                            attachVideoEvents.call(this, activeStream.getVideoModel());
-                        }
-                    );
                 },
                 function () {
                     self.reset();

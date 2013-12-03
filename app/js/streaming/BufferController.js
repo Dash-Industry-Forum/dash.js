@@ -29,6 +29,8 @@ MediaPlayer.dependencies.BufferController = function () {
         //mseSetTime = false,
         seekTarget = -1,
         dataChanged = true,
+        availableRepresentations,
+        currentRepresentation,
         playingTime,
         lastQuality = -1,
         stalled = false,
@@ -39,8 +41,7 @@ MediaPlayer.dependencies.BufferController = function () {
         deferredStreamComplete = Q.defer(),
         deferredRejectedDataAppend = null,
         deferredBuffersFlatten = null,
-        periodIndex = -1,
-        duration = 0,
+        periodInfo = null,
         fragmentsToLoad = 0,
         fragmentModel = null,
         bufferLevel = 0,
@@ -155,12 +156,29 @@ MediaPlayer.dependencies.BufferController = function () {
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
         },
 
-        getRepresentationForQuality = function (quality, data) {
-            var representation = null;
-            if (data && data.Representation_asArray && data.Representation_asArray.length > 0) {
-                representation = data.Representation_asArray[quality];
+        updateRepresentations = function (data, periodInfo) {
+            var self = this,
+                deferred = Q.defer(),
+                manifest = self.manifestModel.getValue();
+            self.manifestExt.getDataIndex(data, manifest, periodInfo.index).then(
+                function(idx) {
+                    self.manifestExt.getAdaptationsForPeriod(manifest, periodInfo).then(
+                        function(adaptations) {
+                            self.manifestExt.getRepresentationsForAdaptation(manifest, adaptations[idx]).then(
+                                function(representations) {
+                                    deferred.resolve(representations);
+                                }
+                            );
+                        }
+                    );
             }
-            return representation;
+            );
+
+            return deferred.promise;
+        },
+
+        getRepresentationForQuality = function (quality) {
+            return availableRepresentations[quality];
         },
 
         finishValidation = function () {
@@ -247,7 +265,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 deferred = isAppendingRejectedData ? deferredRejectedDataAppend : Q.defer(),
                 ln = isAppendingRejectedData ? deferredAppends.length : deferredAppends.push(deferred),
                 idx = deferredAppends.indexOf(deferred),
-                representation = getRepresentationForQuality(lastQuality, self.getData()),
                 currentVideoTime = self.videoModel.getCurrentTime(),
                 currentTime = new Date();
 
@@ -255,7 +272,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             if (playListTraceMetricsClosed === true && state !== WAITING && lastQuality !== -1) {
                 playListTraceMetricsClosed = false;
-                playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, representation.id, null, currentTime, currentVideoTime, null, 1.0, null);
+                playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, currentRepresentation.id, null, currentTime, currentVideoTime, null, 1.0, null);
             }
 
             Q.when((isAppendingRejectedData) || ln < 2 || deferredAppends[ln - 2].promise).then(
@@ -398,7 +415,7 @@ MediaPlayer.dependencies.BufferController = function () {
                         removeEnd = buffer.buffered.end(buffer.buffered.length -1 );
                     }
 
-                    self.sourceBufferExt.remove(buffer, removeStart, removeEnd, duration, mediaSource).then(
+                    self.sourceBufferExt.remove(buffer, removeStart, removeEnd, periodInfo.duration, mediaSource).then(
                         function() {
                             // after the data has been removed from the buffer we should remove the requests from the list of
                             // the executed requests for which playback time is inside the time interval that has been removed from the buffer
@@ -679,7 +696,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 playbackRate = self.videoModel.getPlaybackRate(),
                 actualBufferedDuration = bufferLevel / Math.max(playbackRate, 1),
                 deferred = Q.defer();
-                self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, duration).then(
+                self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, periodInfo.duration).then(
                     function (requiredBufferLength) {
                         self.indexHandler.getSegmentCountForDuration(quality, data, requiredBufferLength, actualBufferedDuration).then(
                             function(count) {
@@ -715,7 +732,6 @@ MediaPlayer.dependencies.BufferController = function () {
             var self = this,
                 newQuality,
                 qualityChanged = false,
-                representation = null,
                 now = new Date(),
                 currentVideoTime = self.videoModel.getCurrentTime(),
                 currentTime = getWorkingTime.call(self);
@@ -740,7 +756,7 @@ MediaPlayer.dependencies.BufferController = function () {
             } else if (state === READY) {
                 setState.call(self, VALIDATING);
                 var manifestMinBufferTime = self.manifestModel.getValue().minBufferTime;
-                self.bufferExt.decideBufferLength(manifestMinBufferTime, duration, waitingForBuffer).then(
+                self.bufferExt.decideBufferLength(manifestMinBufferTime, periodInfo.duration, waitingForBuffer).then(
                     function (time) {
                         self.debug.log("Buffer time: " + time);
                         self.setMinBufferTime(time);
@@ -762,24 +778,19 @@ MediaPlayer.dependencies.BufferController = function () {
                         if (qualityChanged === true) {
                             // The quality has beeen changed so we should abort the requests that has not been loaded yet
                             self.fragmentController.abortRequestsForModel(fragmentModel);
-                            representation = getRepresentationForQuality(newQuality, self.getData());
-
-                            if (representation === null || representation === undefined) {
+                            currentRepresentation = getRepresentationForQuality.call(self, newQuality);
+                            if (currentRepresentation === null || currentRepresentation === undefined) {
                                 throw "Unexpected error!";
                             }
 
                             // each representation can have its own @presentationTimeOffset, so we should set the offset
                             // if it has changed after switching the quality
-                            self.manifestExt.getTimestampOffsetForPeriod(periodIndex, self.manifestModel.getValue(), quality, data).then(
-                                function (offset) {
-                                    if (buffer.timestampOffset !== offset) {
-                                        buffer.timestampOffset = offset;
-                                    }
-                                }
-                            );
+                            if (buffer.timestampOffset !== currentRepresentation.MSETimeOffset) {
+                                buffer.timestampOffset = currentRepresentation.MSETimeOffset;
+                            }
 
                             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
-                            self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, representation.id);
+                            self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, currentRepresentation.id);
                         }
 
                         self.debug.log(qualityChanged ? (type + " Quality changed to: " + quality) : "Quality didn't change.");
@@ -832,7 +843,7 @@ MediaPlayer.dependencies.BufferController = function () {
         system: undefined,
         errHandler: undefined,
 
-        initialize: function (type, periodIndex, data, buffer, videoModel, scheduler, fragmentController, source) {
+        initialize: function (type, periodInfo, data, buffer, videoModel, scheduler, fragmentController, source) {
             var self = this,
                 manifest = self.manifestModel.getValue(),
                 isDynamic = self.manifestExt.getIsDynamic(manifest);
@@ -840,8 +851,7 @@ MediaPlayer.dependencies.BufferController = function () {
             self.setMediaSource(source);
             self.setVideoModel(videoModel);
             self.setType(type);
-            self.setPeriodIndex(periodIndex);
-            self.setData(data).then(
+            self.updateData(data, periodInfo).then(
                 function(){
                     ready = true;
                     startPlayback.call(self);
@@ -853,16 +863,11 @@ MediaPlayer.dependencies.BufferController = function () {
 
             self.indexHandler.setIsDynamic(isDynamic);
 
-            self.manifestExt.getDurationForPeriod(periodIndex, self.manifestModel.getValue()).then(
-                function (durationValue) {
-                    duration = durationValue;
-                    self.indexHandler.setDuration(durationValue);
+            self.indexHandler.setDuration(periodInfo.duration);
 
-                    self.bufferExt.decideBufferLength(manifest.minBufferTime, duration, waitingForBuffer).then(
-                        function (time) {
-                            self.setMinBufferTime(time);
-                        }
-                    );
+            self.bufferExt.decideBufferLength(manifest.minBufferTime, periodInfo, waitingForBuffer).then(
+                function (time) {
+                    self.setMinBufferTime(time);
                 }
             );
         },
@@ -879,12 +884,8 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
-        getPeriodIndex: function () {
-            return periodIndex;
-        },
-
-        setPeriodIndex: function (value) {
-            periodIndex = value;
+        getPeriodInfo: function () {
+            return periodInfo;
         },
 
         getVideoModel: function () {
@@ -925,27 +926,36 @@ MediaPlayer.dependencies.BufferController = function () {
             return data;
         },
 
-        setData: function (value) {
+        updateData: function(dataValue, periodInfoValue) {
             var self = this,
                 deferred = Q.defer(),
                 from = data;
 
             if (!from) {
-                from = value;
+                from = dataValue;
             }
+            doStop.call(self);
 
+            updateRepresentations.call(self, dataValue, periodInfoValue).then(
+                function(representations) {
+                    availableRepresentations = representations;
+                    periodInfo = periodInfoValue;
             self.abrController.getPlaybackQuality(type, from).then(
                 function (result) {
                     self.indexHandler.getCurrentTime(result.quality, from).then(
                         function (time) {
                             dataChanged = true;
                             playingTime = time;
-                            data = value;
+                            currentRepresentation = getRepresentationForQuality.call(self, result.quality);
+                            data = dataValue;
                             self.seek(time);
                             self.bufferExt.updateData(data, type);
+                            startPlayback.call(self);
                             deferred.resolve();
                         }
                     );
+                }
+            );
                 }
             );
 
