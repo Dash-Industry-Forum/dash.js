@@ -164,9 +164,14 @@
 
         getStreamForTime = function(time) {
             var duration = 0,
-                stream = null;
+                stream = null,
+                ln = streams.length;
 
-            for (var i = 0, ln = streams.length; i < ln; i++) {
+            if (ln > 0) {
+                duration += streams[0].getStartTime();
+            }
+
+            for (var i = 0; i < ln; i++) {
                 stream = streams[i];
                 duration += stream.getDuration();
 
