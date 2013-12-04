@@ -415,18 +415,14 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(isOnDemand);
     },
 
-    getDuration: function (manifest, period) {
+    getDuration: function (manifest) {
         var mpdDuration,
             self = this,
             isDynamic = self.getIsDynamic(manifest),
             deferred = Q.defer();
 
         if (isDynamic) {
-            mpdDuration = self.timelineConverter.calcPresentationTimeFromWallTime(manifest.mpdLoadedTime, period, isDynamic);
-
-            if (manifest.hasOwnProperty("minimumUpdatePeriod")) {
-                mpdDuration += manifest.minimumUpdatePeriod;
-            }
+            mpdDuration = Number.POSITIVE_INFINITY;
         } else {
             mpdDuration = manifest.mediaPresentationDuration;
         }

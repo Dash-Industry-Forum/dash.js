@@ -232,6 +232,11 @@ Dash.dependencies.DashHandler = function () {
                 }
             }
 
+            if (isDynamic && isNaN(representation.adaptation.period.liveEdge)) {
+                //For SegmentTimeline the last segment in the timeline is always the live edge
+                representation.adaptation.period.liveEdge = segments[count-1].presentationStartTime + segments[count-1].duration;
+            }
+
             return Q.when(segments);
         },
 
@@ -378,6 +383,11 @@ getTimeBasedSegment = function(representation, time, duration, fTimescale, url, 
                     deferred.resolve(segments);
                 }
             );
+
+            if (isDynamic && isNaN(representation.adaptation.period.liveEdge)) {
+                //For SegmentTimeline the last segment in the timeline is always the live edge
+                representation.adaptation.period.liveEdge = segments[count-1].presentationStartTime + segments[count-1].duration;
+            }
 
             return deferred.promise;
         },

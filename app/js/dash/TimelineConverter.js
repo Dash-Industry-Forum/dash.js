@@ -53,7 +53,7 @@ Dash.dependencies.TimelineConverter = function () {
             isDynamic = period.mpd.manifest.type === "dynamic";
 
             if (isDynamic) {
-                presentationStartTime = calcPresentationTimeFromWallTime.call(this, period.mpd.manifest.mpdLoadedTime, period, isDynamic);
+                presentationStartTime = period.liveEdge + period.mpd.suggestedPresentationDelay;
             } else {
                 presentationStartTime = period.start;
             }
