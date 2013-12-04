@@ -132,7 +132,7 @@ Dash.dependencies.DashHandler = function () {
                 if (index < representation.segments.length) {
                     seg = representation.segments[index];
                     fTime = seg.presentationStartTime - period.start;
-                    sDuration = Math.floor(representation.adaptation.period.duration); // Disregard fractional seconds.  TODO : Is this ok?  The logic breaks if we don't do this...
+                    sDuration = representation.adaptation.period.duration;
                     this.debug.log(representation.segmentInfoType + ": " + fTime + " / " + sDuration);
                     isFinished = (fTime >= sDuration);
                 } else {
