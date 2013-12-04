@@ -368,6 +368,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     bufferLevel = bufferLength;
                     self.metricsModel.addBufferLevel(type, new Date(), bufferLevel);
                     checkGapBetweenBuffers.call(self);
+                    checkIfSufficientBuffer.call(self);
                     deferred.resolve();
                 }
             );
@@ -1015,6 +1016,11 @@ MediaPlayer.dependencies.BufferController = function () {
             } else {
                 updateBufferLevel.call(self);
             }
+        },
+
+        updateStalledState: function() {
+            stalled = this.videoModel.isStalled();
+            checkIfSufficientBuffer.call(this);
         },
 
         reset: function(errored) {

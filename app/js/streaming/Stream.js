@@ -40,6 +40,7 @@ MediaPlayer.dependencies.Stream = function () {
         seekedListener,
         timeupdateListener,
         progressListener,
+        ratechangeListener,
         periodInfo = null,
 
         needKeyListener,
@@ -587,6 +588,15 @@ MediaPlayer.dependencies.Stream = function () {
             updateBuffer.call(this);
         },
 
+        onRatechange = function() {
+            if (videoController) {
+                videoController.updateStalledState();
+            }
+            if (audioController) {
+                audioController.updateStalledState();
+            }
+        },
+
         updateBuffer = function() {
             if (videoController) {
                 videoController.updateBufferState();
@@ -766,6 +776,7 @@ MediaPlayer.dependencies.Stream = function () {
             seekingListener = onSeeking.bind(this);
             seekedListener = onSeeked.bind(this);
             progressListener = onProgress.bind(this);
+            ratechangeListener = onRatechange.bind(this);
             timeupdateListener = onTimeupdate.bind(this);
             loadedListener = onLoad.bind(this);
         },
@@ -783,6 +794,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.videoModel.listen("seeking", seekingListener);
             this.videoModel.listen("timeupdate", timeupdateListener);
             this.videoModel.listen("progress", progressListener);
+            this.videoModel.listen("ratechange", ratechangeListener);
             this.videoModel.listen("loadedmetadata", loadedListener);
 
             this.requestScheduler.videoModel = value;
