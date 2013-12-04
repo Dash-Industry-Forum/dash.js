@@ -504,13 +504,13 @@ MediaPlayer.dependencies.Stream = function () {
             var initialSeekTime = this.timelineConverter.calcPresentationStartTime(periodInfo);
             this.debug.log("Starting segment loading at offset: " + initialSeekTime);
 
-                if (videoController) {
+            if (videoController) {
                 videoController.seek(initialSeekTime);
-                }
-                if (audioController) {
+            }
+            if (audioController) {
                 audioController.seek(initialSeekTime);
-                }
-                if (textController) {
+            }
+            if (textController) {
                 textController.seek(initialSeekTime);
             }
         },

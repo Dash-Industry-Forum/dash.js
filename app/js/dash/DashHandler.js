@@ -210,9 +210,6 @@ Dash.dependencies.DashHandler = function () {
                     //For a repeated S element, t belongs only to the first segment
                     if (j === 0 && frag.hasOwnProperty("t")) {
                         time = frag.t;
-                        time = frag.t;
-                    } else {
-                        time = time;
                     }
 
                     seg = getTimeBasedSegment.call(
@@ -274,7 +271,7 @@ Dash.dependencies.DashHandler = function () {
             return Q.when(segments);
         },
 
-getTimeBasedSegment = function(representation, time, duration, fTimescale, url, range, index) {
+        getTimeBasedSegment = function(representation, time, duration, fTimescale, url, range, index) {
             var self = this,
                 scaledTime = time / fTimescale,
                 scaledDuration = duration / fTimescale,
@@ -398,15 +395,15 @@ getTimeBasedSegment = function(representation, time, duration, fTimescale, url, 
 
                 // Already figure out the segments.
             if (representation.segments) {
-                    segmentPromise = Q.when(representation.segments);
-                } else {
+                segmentPromise = Q.when(representation.segments);
+            } else {
                 if (representation.segmentInfoType === "SegmentTimeline") {
                     segmentPromise = getSegmentsFromTimeline.call(self, representation);
                 } else if (representation.segmentInfoType === "SegmentTemplate") {
                     segmentPromise = getSegmentsFromTemplate.call(self, representation);
                 } else if (representation.segmentInfoType === "SegmentList") {
                     segmentPromise = getSegmentsFromList.call(self, representation);
-                    } else {
+                } else {
                     segmentPromise = getSegmentsFromSource.call(self, representation);
                 }
             }

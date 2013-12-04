@@ -696,15 +696,16 @@ MediaPlayer.dependencies.BufferController = function () {
                 playbackRate = self.videoModel.getPlaybackRate(),
                 actualBufferedDuration = bufferLevel / Math.max(playbackRate, 1),
                 deferred = Q.defer();
-                self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, periodInfo.duration).then(
-                    function (requiredBufferLength) {
-                        self.indexHandler.getSegmentCountForDuration(currentRepresentation, requiredBufferLength, actualBufferedDuration).then(
-                            function(count) {
-                                deferred.resolve(count);
-                            }
-                        );
-                    }
-                );
+
+            self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, periodInfo.duration).then(
+                function (requiredBufferLength) {
+                    self.indexHandler.getSegmentCountForDuration(currentRepresentation, requiredBufferLength, actualBufferedDuration).then(
+                        function(count) {
+                            deferred.resolve(count);
+                        }
+                    );
+                }
+            );
 
             return deferred.promise;
         },
