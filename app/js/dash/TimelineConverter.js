@@ -53,7 +53,7 @@ Dash.dependencies.TimelineConverter = function () {
             isDynamic = period.mpd.manifest.type === "dynamic";
 
             if (isDynamic) {
-                presentationStartTime = period.liveEdge + period.mpd.suggestedPresentationDelay;
+                presentationStartTime = period.liveEdge - period.mpd.suggestedPresentationDelay;
             } else {
                 presentationStartTime = period.start;
             }
@@ -62,10 +62,9 @@ Dash.dependencies.TimelineConverter = function () {
         },
 
         calcPresentationTimeFromWallTime = function (wallTime, period, isDynamic) {
-            var periodAvailabilityStartTime = calcAvailabilityStartTimeFromPresentationTime.call(this, period.start, period.mpd, isDynamic),
-                suggestedPresentationDelay = period.mpd.suggestedPresentationDelay * 1000;
+            var periodAvailabilityStartTime = calcAvailabilityStartTimeFromPresentationTime.call(this, period.start, period.mpd, isDynamic);
 
-            return ((wallTime.getTime() - periodAvailabilityStartTime.getTime() - suggestedPresentationDelay) / 1000);
+            return ((wallTime.getTime() - periodAvailabilityStartTime.getTime()) / 1000);
         },
 
         calcPresentationTimeFromMediaTime = function (mediaTime, representation) {

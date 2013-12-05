@@ -484,6 +484,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             else if (r.hasOwnProperty("SegmentList")) {
                 segmentInfo = r.SegmentList;
                 representation.segmentInfoType = "SegmentList";
+                if (isNaN(adaptation.period.liveEdge)) {
+                    adaptation.period.liveEdge = this.timelineConverter.calcPresentationTimeFromWallTime.call(this, manifest.mpdLoadedTime, adaptation.period, true);
+                }
             }
             else if (r.hasOwnProperty("SegmentTemplate")) {
                 segmentInfo = r.SegmentTemplate;
@@ -492,6 +495,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                     representation.segmentInfoType = "SegmentTimeline";
                 } else {
                     representation.segmentInfoType = "SegmentTemplate";
+                    if (isNaN(adaptation.period.liveEdge)) {
+                        adaptation.period.liveEdge = this.timelineConverter.calcPresentationTimeFromWallTime.call(this, manifest.mpdLoadedTime, adaptation.period, true);
+                    }
                 }
 
                 if (segmentInfo.hasOwnProperty("initialization")) {
@@ -624,9 +630,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         // The difference between the PeriodStart time of the last Period
         // and the mpd duration
         if (vo1 !== null && isNaN(vo1.duration)) {
-            self.getDuration(manifest, vo1).then(
-                function(mpdDuration) {
-                    vo1.duration = mpdDuration - vo1.start;
+            self.getEndTimeForLastPeriod(manifest, vo1).then(
+                function(periodEndTime) {
+                    vo1.duration = periodEndTime - vo1.start;
                     deferred.resolve(periods);
                 }
             );
@@ -661,5 +667,20 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         }
 
         return Q.when(mpd);
+    },
+
+    getEndTimeForLastPeriod: function(manifest, lastPeriod) {
+        var periodEnd;
+
+        //if the MPD@mediaPresentationDuration attribute is present, then PeriodEndTime is defined as the end time of the Media Presentation.
+        // if the MPD@mediaPresentationDuration attribute is not present, then PeriodEndTime is defined as FetchTime + MPD@minimumUpdatePeriod
+
+        if (manifest.mediaPresentationDuration) {
+            periodEnd = manifest.mediaPresentationDuration;
+        } else {
+            periodEnd = this.timelineConverter.calcPresentationTimeFromWallTime(manifest.mpdLoadedTime, lastPeriod, true) + manifest.minimumUpdatePeriod;
+        }
+
+        return Q.when(periodEnd);
     }
 };
