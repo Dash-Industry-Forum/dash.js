@@ -489,7 +489,6 @@ MediaPlayer.dependencies.Stream = function () {
             var initialSeekTime = this.timelineConverter.calcPresentationStartTime(periodInfo);
             this.debug.log("Starting playback at offset: " + initialSeekTime);
 
-            this.system.notify("setCurrentTime");
             this.videoModel.setCurrentTime(initialSeekTime);
 
             load.resolve(null);
