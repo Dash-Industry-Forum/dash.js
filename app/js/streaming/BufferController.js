@@ -579,8 +579,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 );
             }
 
-            dataChanged = false;
-
             return promise;
         },
 
@@ -818,6 +816,8 @@ MediaPlayer.dependencies.BufferController = function () {
                                             }
                                         );
                                     }
+
+                                    dataChanged = false;
                                 }
                             }
                         );
