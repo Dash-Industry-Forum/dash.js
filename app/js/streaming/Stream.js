@@ -496,23 +496,6 @@ MediaPlayer.dependencies.Stream = function () {
 
         onPlay = function () {
             this.debug.log("Got play event.");
-
-            if (!initialized) {
-                return;
-            }
-
-            var initialSeekTime = this.timelineConverter.calcPresentationStartTime(periodInfo);
-            this.debug.log("Starting segment loading at offset: " + initialSeekTime);
-
-            if (videoController) {
-                videoController.seek(initialSeekTime);
-            }
-            if (audioController) {
-                audioController.seek(initialSeekTime);
-            }
-            if (textController) {
-                textController.seek(initialSeekTime);
-            }
         },
 
         onPause = function () {

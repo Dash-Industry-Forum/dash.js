@@ -646,7 +646,6 @@ Dash.dependencies.DashHandler = function () {
             var self = this,
                 time,
                 bufferedIndex,
-                useLast,
                 deferred = Q.defer();
 
             if (!representation) {
@@ -654,18 +653,15 @@ Dash.dependencies.DashHandler = function () {
             }
 
             bufferedIndex = index;
-            if (bufferedIndex < 0) {
-                useLast = isDynamic;
-                bufferedIndex = 0;
-            }
 
             getSegments.call(self, representation).then(
                 function (segments) {
-                    if (useLast || bufferedIndex >= segments.length) {
-                        bufferedIndex = segments.length - 1;
+                    if (bufferedIndex < 0) {
+                        time = self.timelineConverter.calcPresentationStartTime(representation.adaptation.period);
+                    } else {
+                        bufferedIndex = Math.min(segments.length - 1, bufferedIndex);
+                        time = segments[bufferedIndex].presentationStartTime;
                     }
-
-                    time = segments[bufferedIndex].presentationStartTime;
 
                     deferred.resolve(time);
                 },
