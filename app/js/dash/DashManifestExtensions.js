@@ -416,19 +416,17 @@ Dash.dependencies.DashManifestExtensions.prototype = {
     },
 
     getDuration: function (manifest) {
-        var mpdDuration,
-            self = this,
-            isDynamic = self.getIsDynamic(manifest),
-            deferred = Q.defer();
+        var mpdDuration;
 
-        if (isDynamic) {
-            mpdDuration = Number.POSITIVE_INFINITY;
-        } else {
+        //@mediaPresentationDuration specifies the duration of the entire Media Presentation.
+        //If the attribute is not present, the duration of the Media Presentation is unknown.
+        if (manifest.hasOwnProperty("mediaPresentationDuration")) {
             mpdDuration = manifest.mediaPresentationDuration;
+        } else {
+            mpdDuration = Number.POSITIVE_INFINITY;
         }
-        deferred.resolve(mpdDuration);
 
-        return deferred.promise;
+        return Q.when(mpdDuration);
     },
 
     getBandwidth: function (representation) {
