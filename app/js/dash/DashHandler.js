@@ -274,7 +274,7 @@ Dash.dependencies.DashHandler = function () {
         getTimeBasedSegment = function(representation, time, duration, fTimescale, url, range, index) {
             var self = this,
                 scaledTime = time / fTimescale,
-                scaledDuration = duration / fTimescale,
+                scaledDuration = Math.min(duration / fTimescale, representation.adaptation.period.mpd.maxSegmentDuration),
                 presentationStartTime,
                 presentationEndTime,
                 seg;

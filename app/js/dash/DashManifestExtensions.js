@@ -524,7 +524,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 representation.timescale = segmentInfo.timescale;
             }
             if (segmentInfo.hasOwnProperty("duration")) {
-                representation.segmentDuration = segmentInfo.duration / representation.timescale;
+                representation.segmentDuration = Math.min(segmentInfo.duration / representation.timescale, adaptation.period.mpd.maxSegmentDuration);
             }
             if (segmentInfo.hasOwnProperty("startNumber")) {
                 representation.startNumber = segmentInfo.startNumber;
@@ -662,6 +662,10 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
         if (manifest.hasOwnProperty("timeShiftBufferDepth")) {
             mpd.timeShiftBufferDepth = manifest.timeShiftBufferDepth;
+        }
+
+        if (manifest.hasOwnProperty("maxSegmentDuration")) {
+            mpd.maxSegmentDuration = manifest.maxSegmentDuration;
         }
 
         return Q.when(mpd);
