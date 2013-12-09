@@ -185,6 +185,8 @@ Dash.dependencies.DashHandler = function () {
                 len,
                 j,
                 repeat,
+                repeatEndTime,
+                nextFrag,
                 seg,
                 time = 0,
                 count = 0,
@@ -200,17 +202,20 @@ Dash.dependencies.DashHandler = function () {
                     repeat = frag.r;
                 }
 
+                //For a repeated S element, t belongs only to the first segment
+                if (frag.hasOwnProperty("t")) {
+                    time = frag.t;
+                }
+
                 //This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the 
                 // next MPD update."
-                if(repeat < 0)
-                    repeat = (representation.adaptation.period.duration - time/fTimescale)/(frag.d/fTimescale) - 1;
+                if (repeat < 0) {
+                    nextFrag = fragments[i+1];
+                    repeatEndTime = (nextFrag && nextFrag.hasOwnProperty("t")) ? (nextFrag.t / fTimescale) : representation.adaptation.period.duration;
+                    repeat = (repeatEndTime - time/fTimescale)/(frag.d/fTimescale) - 1;
+                }
 
                 for (j = 0; j <= repeat; j += 1) {
-
-                    //For a repeated S element, t belongs only to the first segment
-                    if (j === 0 && frag.hasOwnProperty("t")) {
-                        time = frag.t;
-                    }
 
                     seg = getTimeBasedSegment.call(
                         self,
