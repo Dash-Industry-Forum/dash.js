@@ -396,11 +396,12 @@ Dash.dependencies.DashHandler = function () {
 
         getSegments = function (representation) {
             var segmentPromise,
+                deferred = Q.defer(),
                 self = this;
 
                 // Already figure out the segments.
             if (representation.segments) {
-                segmentPromise = Q.when(representation.segments);
+                return Q.when(representation.segments);
             } else {
                 if (representation.segmentInfoType === "SegmentTimeline") {
                     segmentPromise = getSegmentsFromTimeline.call(self, representation);
@@ -411,9 +412,16 @@ Dash.dependencies.DashHandler = function () {
                 } else {
                     segmentPromise = getSegmentsFromSource.call(self, representation);
                 }
+
+                Q.when(segmentPromise).then(
+                    function (segments) {
+                        representation.segments = segments;
+                        deferred.resolve(segments);
+                    }
+                );
             }
 
-            return segmentPromise;
+            return deferred.promise;
         },
 
         getIndexForSegments = function (time, segments) {
@@ -524,7 +532,6 @@ Dash.dependencies.DashHandler = function () {
                     self.debug.log("Got segments.");
                     self.debug.log(segments);
                         self.debug.log("Got a list of segments, so dig deeper.");
-                        representation.segments = segments;
                         segmentsPromise = getIndexForSegments.call(self, time, segments);
                     return segmentsPromise;
                 }
@@ -603,7 +610,6 @@ Dash.dependencies.DashHandler = function () {
 
                                 self.debug.log("Got segments.");
                                 self.debug.log(segments);
-                                    representation.segments = segments;
                                     segment = representation.segments[index];
                                 segmentsPromise = getRequestForSegment.call(self, segment);
                                 return segmentsPromise;
