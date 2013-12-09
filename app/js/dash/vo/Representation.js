@@ -26,6 +26,7 @@ Dash.vo.Representation = function () {
     this.presentationTimeOffset = 0;
     // Set the source buffer timeOffset to this
     this.MSETimeOffset = NaN;
+    this.segmentAvailabilityRange = null;
 };
 
 Dash.vo.Representation.prototype = {

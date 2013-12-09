@@ -247,16 +247,26 @@ Dash.dependencies.DashHandler = function () {
                 template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate,
                 i,
-                len,
+                startIdx = 0,
+                endIdx = representation.adaptation.period.duration / representation.segmentDuration,
+                periodStart,
+                duration,
+                range,
                 seg = null,
                 start,
                 url = null;
 
             start = representation.startNumber;
 
-            len = representation.adaptation.period.duration / representation.segmentDuration;
+            if (representation.segmentAvailabilityRange) {
+                range = representation.segmentAvailabilityRange;
+                periodStart = representation.adaptation.period.start;
+                duration = representation.segmentDuration;
+                startIdx = Math.floor((range.start - periodStart) / duration);
+                endIdx = Math.round((range.end - periodStart) / duration);
+            }
 
-            for (i = 0;i < len; i += 1) {
+            for (i = startIdx;i < endIdx; i += 1) {
 
                 seg = getIndexBasedSegment.call(
                     this,

@@ -21,7 +21,7 @@ Dash.dependencies.TimelineConverter = function () {
                 //@timeShiftBufferDepth specifies the duration of the time shifting buffer that is guaranteed
                 // to be available for a Media Presentation with type 'dynamic'.
                 // When not present, the value is infinite.
-                if (isDynamic && mpd.timeShiftBufferDepth) {
+                if (isDynamic && (mpd.timeShiftBufferDepth != Number.POSITIVE_INFINITY)) {
                     availabilityTime = new Date(mpd.availabilityStartTime.getTime() + ((presentationTime + mpd.timeShiftBufferDepth) * 1000));
                 } else {
                     availabilityTime = mpd.availabilityEndTime;
@@ -95,6 +95,27 @@ Dash.dependencies.TimelineConverter = function () {
             return wallTime;
         },
 
+        calcSegmentAvailabilityRange = function(representation, duration, isDynamic) {
+            var range = null,
+                checkTime,
+                now,
+                start,
+                end;
+
+            if (isDynamic) {
+                checkTime = representation.adaptation.period.mpd.checkTime;
+                now = calcPresentationTimeFromWallTime(new Date(), representation.adaptation.period, isDynamic);
+                //the Media Segment list is further restricted by the CheckTime together with the MPD attribute
+                // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
+                // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.
+                start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth - duration), 0);
+                end = Math.min(checkTime, now);
+                range = {start: start, end: end};
+            }
+
+            return range;
+        },
+
         calcMSETimeOffset = function (representation) {
             var periodStart = representation.adaptation.period.start,
                 presentationOffset = representation.presentationTimeOffset;
@@ -112,6 +133,7 @@ Dash.dependencies.TimelineConverter = function () {
         calcPresentationTimeFromMediaTime: calcPresentationTimeFromMediaTime,
         calcPresentationStartTime: calcPresentationStartTime,
         calcMediaTimeFromPresentationTime: calcMediaTimeFromPresentationTime,
+        calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
         calcWallTimeForSegment: calcWallTimeForSegment,
         calcMSETimeOffset: calcMSETimeOffset
     };

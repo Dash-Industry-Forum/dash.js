@@ -17,8 +17,9 @@ Dash.vo.Mpd = function () {
     this.suggestedPresentationDelay = 0;
     this.availabilityStartTime = null;
     this.availabilityEndTime = Number.POSITIVE_INFINITY;
-    this.timeShiftBufferDepth = NaN;
+    this.timeShiftBufferDepth = Number.POSITIVE_INFINITY;
     this.maxSegmentDuration = Number.POSITIVE_INFINITY;
+    this.checkTime = NaN;
 };
 
 Dash.vo.Mpd.prototype = {

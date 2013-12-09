@@ -461,6 +461,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             representations = [],
             deferred = Q.defer(),
             representation,
+            isDynamic = self.getIsDynamic(manifest),
             initialization,
             segmentInfo,
             r;
@@ -537,6 +538,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             }
 
             representation.MSETimeOffset = self.timelineConverter.calcMSETimeOffset(representation);
+            representation.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, representation.segmentDuration, isDynamic);
             representations.push(representation);
         }
 
@@ -624,19 +626,26 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             vo1 = vo;
             vo = null;
         }
-        // The last Period extends until the end of the Media Presentation.
-        // The difference between the PeriodStart time of the last Period
-        // and the mpd duration
-        if (vo1 !== null && isNaN(vo1.duration)) {
-            self.getEndTimeForLastPeriod(manifest, vo1).then(
-                function(periodEndTime) {
-                    vo1.duration = periodEndTime - vo1.start;
+
+        self.getCheckTime(manifest, periods[0]).then(
+            function(checkTime) {
+                mpd.checkTime = checkTime;
+
+                // The last Period extends until the end of the Media Presentation.
+                // The difference between the PeriodStart time of the last Period
+                // and the mpd duration
+                if (vo1 !== null && isNaN(vo1.duration)) {
+                    self.getEndTimeForLastPeriod(mpd).then(
+                        function(periodEndTime) {
+                            vo1.duration = periodEndTime - vo1.start;
+                            deferred.resolve(periods);
+                        }
+                    );
+                } else {
                     deferred.resolve(periods);
                 }
-            );
-        } else {
-            deferred.resolve(periods);
-        }
+            }
+        );
 
         return Q.when(deferred.promise);
     },
@@ -671,16 +680,51 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(mpd);
     },
 
-    getEndTimeForLastPeriod: function(manifest, lastPeriod) {
+    getFetchTime: function(manifest, period) {
+        // FetchTime is defined as the time at which the server processes the request for the MPD from the client.
+        // TODO The client typically should not use the time at which it actually successfully received the MPD, but should
+        // take into account delay due to MPD delivery and processing. The fetch is considered successful fetching
+        // either if the client obtains an updated MPD or the client verifies that the MPD has not been updated since the previous fetching.
+        var fetchTime = this.timelineConverter.calcPresentationTimeFromWallTime(manifest.mpdLoadedTime, period, true);
+
+        return Q.when(fetchTime);
+    },
+
+    getCheckTime: function(manifest, period) {
+        var self = this,
+            deferred = Q.defer(),
+            checkTime = NaN;
+
+        // If the MPD@minimumUpdatePeriod attribute in the client is provided, then the check time is defined as the
+        // sum of the fetch time of this operating MPD and the value of this attribute,
+        // i.e. CheckTime = FetchTime + MPD@minimumUpdatePeriod.
+        if (manifest.hasOwnProperty("minimumUpdatePeriod")) {
+            self.getFetchTime(manifest, period).then(
+                function (fetchTime) {
+                    checkTime = fetchTime + manifest.minimumUpdatePeriod;
+                    deferred.resolve(checkTime);
+                }
+            );
+        } else {
+            // TODO If the MPD@minimumUpdatePeriod attribute in the client is not provided, external means are used to
+            // determine CheckTime, such as a priori knowledge, or HTTP cache headers, etc.
+            deferred.resolve(checkTime);
+        }
+
+        return deferred.promise;
+    },
+
+    getEndTimeForLastPeriod: function(mpd) {
         var periodEnd;
 
-        //if the MPD@mediaPresentationDuration attribute is present, then PeriodEndTime is defined as the end time of the Media Presentation.
+        // if the MPD@mediaPresentationDuration attribute is present, then PeriodEndTime is defined as the end time of the Media Presentation.
         // if the MPD@mediaPresentationDuration attribute is not present, then PeriodEndTime is defined as FetchTime + MPD@minimumUpdatePeriod
 
-        if (manifest.mediaPresentationDuration) {
-            periodEnd = manifest.mediaPresentationDuration;
+        if (mpd.manifest.mediaPresentationDuration) {
+            periodEnd = mpd.manifest.mediaPresentationDuration;
         } else {
-            periodEnd = this.timelineConverter.calcPresentationTimeFromWallTime(manifest.mpdLoadedTime, lastPeriod, true) + manifest.minimumUpdatePeriod;
+            // in this case the Period End Time should match CheckTime
+            periodEnd = mpd.checkTime;
         }
 
         return Q.when(periodEnd);
