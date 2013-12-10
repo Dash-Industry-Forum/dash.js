@@ -847,9 +847,9 @@ MediaPlayer.dependencies.BufferController = function () {
 
         initialize: function (type, periodInfo, data, buffer, videoModel, scheduler, fragmentController, source) {
             var self = this,
-                manifest = self.manifestModel.getValue(),
-                isDynamic = self.manifestExt.getIsDynamic(manifest);
+                manifest = self.manifestModel.getValue();
 
+            isDynamic = self.manifestExt.getIsDynamic(manifest);
             self.setMediaSource(source);
             self.setVideoModel(videoModel);
             self.setType(type);
