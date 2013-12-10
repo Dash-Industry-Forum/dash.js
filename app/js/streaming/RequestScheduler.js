@@ -42,6 +42,9 @@
             schedulerModel.setIsScheduled(true);
             schedulerModel.setScheduledTask(executeFunction);
             startPeriodicScheduleListener.call(this);
+            // For the first time call the executeFunction from here because we should start requesting segments
+            // as soon as possible
+            executeFunction.call(executeContext);
         },
 
         /*
