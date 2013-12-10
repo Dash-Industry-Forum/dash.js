@@ -305,7 +305,8 @@ Dash.dependencies.DashHandler = function () {
 
             seg.presentationStartTime = presentationStartTime;
 
-            seg.availabilityStartTime = self.timelineConverter.calcAvailabilityStartTimeFromPresentationTime(seg.presentationStartTime, representation.adaptation.period.mpd, isDynamic);
+            // For SegmentTimeline every segment is available at mpdLoadedTime
+            seg.availabilityStartTime = representation.adaptation.period.mpd.manifest.mpdLoadedTime;
             seg.availabilityEndTime = self.timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation.adaptation.period.mpd, isDynamic);
 
             // at this wall clock time, the video element currentTime should be seg.presentationStartTime
