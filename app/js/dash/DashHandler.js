@@ -253,7 +253,7 @@ Dash.dependencies.DashHandler = function () {
 
             start = representation.startNumber;
 
-            range = this.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
+            range = representation.segmentAvailabilityRange || this.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
             if (range) {
                 periodStart = representation.adaptation.period.start;
