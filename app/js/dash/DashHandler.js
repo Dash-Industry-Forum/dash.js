@@ -253,8 +253,9 @@ Dash.dependencies.DashHandler = function () {
 
             start = representation.startNumber;
 
-            if (representation.segmentAvailabilityRange) {
-                range = representation.segmentAvailabilityRange;
+            range = this.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
+
+            if (range) {
                 periodStart = representation.adaptation.period.start;
                 duration = representation.segmentDuration;
                 startIdx = Math.floor((range.start - periodStart) / duration);
@@ -418,11 +419,13 @@ Dash.dependencies.DashHandler = function () {
                 Q.when(segmentPromise).then(
                     function (segments) {
                         representation.segments = segments;
+                        lastIdx = segments.length - 1;
                         if (isDynamic && isNaN(representation.adaptation.period.liveEdge)) {
                             // the last segment is supposed to be a live edge
-                            lastIdx = segments.length - 1;
-                            representation.adaptation.period.liveEdge = segments[lastIdx].presentationStartTime + segments[lastIdx].duration;
+                            representation.adaptation.period.liveEdge = segments[lastIdx].presentationStartTime;
                         }
+                        
+                        representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[lastIdx].presentationStartTime};
                         deferred.resolve(segments);
                     }
                 );

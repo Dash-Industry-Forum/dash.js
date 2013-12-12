@@ -532,7 +532,6 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             }
 
             representation.MSETimeOffset = self.timelineConverter.calcMSETimeOffset(representation);
-            representation.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, representation.segmentDuration, isDynamic);
             representations.push(representation);
         }
 
