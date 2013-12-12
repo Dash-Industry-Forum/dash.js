@@ -461,7 +461,6 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             representations = [],
             deferred = Q.defer(),
             representation,
-            isDynamic = self.getIsDynamic(manifest),
             initialization,
             segmentInfo,
             r;

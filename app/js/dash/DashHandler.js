@@ -424,7 +424,7 @@ Dash.dependencies.DashHandler = function () {
                             // the last segment is supposed to be a live edge
                             representation.adaptation.period.liveEdge = segments[lastIdx].presentationStartTime;
                         }
-                        
+
                         representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[lastIdx].presentationStartTime};
                         deferred.resolve(segments);
                     }
