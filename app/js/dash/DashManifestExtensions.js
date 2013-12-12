@@ -483,9 +483,6 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             else if (r.hasOwnProperty("SegmentList")) {
                 segmentInfo = r.SegmentList;
                 representation.segmentInfoType = "SegmentList";
-                if (isNaN(adaptation.period.liveEdge)) {
-                    adaptation.period.liveEdge = this.timelineConverter.calcPresentationTimeFromWallTime.call(this, manifest.mpdLoadedTime, adaptation.period, true);
-                }
             }
             else if (r.hasOwnProperty("SegmentTemplate")) {
                 segmentInfo = r.SegmentTemplate;
@@ -494,9 +491,6 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                     representation.segmentInfoType = "SegmentTimeline";
                 } else {
                     representation.segmentInfoType = "SegmentTemplate";
-                    if (isNaN(adaptation.period.liveEdge)) {
-                        adaptation.period.liveEdge = this.timelineConverter.calcPresentationTimeFromWallTime.call(this, manifest.mpdLoadedTime, adaptation.period, true);
-                    }
                 }
 
                 if (segmentInfo.hasOwnProperty("initialization")) {

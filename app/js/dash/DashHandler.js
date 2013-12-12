@@ -234,11 +234,6 @@ Dash.dependencies.DashHandler = function () {
                 }
             }
 
-            if (isDynamic && isNaN(representation.adaptation.period.liveEdge)) {
-                //For SegmentTimeline the last segment in the timeline is always the live edge
-                representation.adaptation.period.liveEdge = segments[count-1].presentationStartTime + segments[count-1].duration;
-            }
-
             return Q.when(segments);
         },
 
@@ -397,18 +392,14 @@ Dash.dependencies.DashHandler = function () {
                 }
             );
 
-            if (isDynamic && isNaN(representation.adaptation.period.liveEdge)) {
-                //For SegmentTimeline the last segment in the timeline is always the live edge
-                representation.adaptation.period.liveEdge = segments[count-1].presentationStartTime + segments[count-1].duration;
-            }
-
             return deferred.promise;
         },
 
         getSegments = function (representation) {
             var segmentPromise,
                 deferred = Q.defer(),
-                self = this;
+                self = this,
+                lastIdx;
 
                 // Already figure out the segments.
             if (representation.segments) {
@@ -427,6 +418,11 @@ Dash.dependencies.DashHandler = function () {
                 Q.when(segmentPromise).then(
                     function (segments) {
                         representation.segments = segments;
+                        if (isDynamic && isNaN(representation.adaptation.period.liveEdge)) {
+                            // the last segment is supposed to be a live edge
+                            lastIdx = segments.length - 1;
+                            representation.adaptation.period.liveEdge = segments[lastIdx].presentationStartTime + segments[lastIdx].duration;
+                        }
                         deferred.resolve(segments);
                     }
                 );
