@@ -129,7 +129,10 @@ Dash.dependencies.DashHandler = function () {
                 // TODO : Check the contents of the last box to signal end.
                 isFinished = false;
             } else {
-                if (index < representation.segments.length) {
+                if (index < 0) {
+                    isFinished = false;
+                }
+                else if (index < representation.segments.length) {
                     seg = representation.segments[index];
                     fTime = seg.presentationStartTime - period.start;
                     sDuration = representation.adaptation.period.duration;
