@@ -518,7 +518,12 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 representation.timescale = segmentInfo.timescale;
             }
             if (segmentInfo.hasOwnProperty("duration")) {
-                representation.segmentDuration = Math.min(segmentInfo.duration / representation.timescale, adaptation.period.mpd.maxSegmentDuration);
+                // TODO according to the spec @maxSegmentDuration specifies the maximum duration of any Segment in any Representation in the Media Presentation
+                // It is also said that for a SegmentTimeline any @d value shall not exceed the value of MPD@maxSegmentDuration, but nothing is said about
+                // SegmentTemplate @duration attribute. We need to find out if @maxSegmentDuration should be used instead of calculated duration if the the duration
+                // exceeds @maxSegmentDuration
+                //representation.segmentDuration = Math.min(segmentInfo.duration / representation.timescale, adaptation.period.mpd.maxSegmentDuration);
+                representation.segmentDuration = segmentInfo.duration / representation.timescale;
             }
             if (segmentInfo.hasOwnProperty("startNumber")) {
                 representation.startNumber = segmentInfo.startNumber;
