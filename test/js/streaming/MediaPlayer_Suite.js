@@ -19,8 +19,7 @@ describe("Media Player Test Suite", function () {
     debug,
     capabilities,
     context,
-    player,
-    source;
+    player;
 
 
     /**
@@ -35,65 +34,57 @@ describe("Media Player Test Suite", function () {
         system.injectInto(context);
         player = new MediaPlayer(context);
         manifestLoader = system.getObject("manifestLoader");
-        source = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
-
+        
     });
-
+    
     it("check whether initialized variable is initailised or not while attaching source", function () {
-        expect(function() {player.attachSource(source)}).toThrow();
+        expect(function() {player.attachSource(testUrl)}).toThrow();
     });
-
-    it("check whether initialized variable is initailised or not while attaching video", function () {
-        var element = document.createElement('video');
-        element.autoplay = true;
-        player.setAutoPlay(true);
-        expect(function() {player.attachView(element)}).toThrow();
-    });
-
-    it("check whether initialized variable is initialized or not while playing", function () {
-        var element = document.createElement('video');
-        element.autoplay = true;
-        player.setAutoPlay(true);
-        expect(function() {player.attachView(element)}).toThrow();
-    });
-
-
-    if(window.location.href.indexOf("runner.html")>0){
-
-      describe("Media Player test Suite", function () {
-
-          beforeEach(function () {
-                // Set up DI.
-                system = new dijon.System();
-                system.mapValue("system", system);
-                system.mapOutlet("system");
-                context = new Dash.di.DashContext();
-                system.injectInto(context);
-                player = new MediaPlayer(context);
-
-        });
-
+     
+     it("play with initialise false ", function () {
+            expect(function() {player.play()}).toThrow();
+     });
+     
+	 /**
+     it("getMetricsConverter", function () {
+            expect(player.getMetricsConverter()).not.toBe(null);
+     }); */
+     
+     it("getDebug", function () {
+            expect(player.getDebug()).not.toBe(null);
+     });
+     
+     it("getVideoModel", function () {
+            expect(player.getVideoModel()).not.toBe(null);
+     });
+     
+      it("getAutoPlay", function () {
+            expect(player.getAutoPlay()).not.toBe(null);
+     });
+	
+	if(window.location.href.indexOf("runner.html")>0){
+	 
+      describe("Media Player Negative Test Suite", function () {
+        
         it("check whether initialized variable is initialized or not while playing", function () {
-            var result=false;
+		    var result=false;
             var festResult;
-
+            
             element = document.createElement('video');
             player.startup();
             player.autoPlay = true;
             player.attachView($(element));
-
-            manifestLoader = system.getObject('manifestLoader');
-
-            manifestLoader.load(source).then( function (manifestResult) {
-              festResult=manifestResult;
-              result=true;
-            });
-
+            if(manifestRes != undefined)
+			{
+				festResult = manifestRes; 
+				result = true;
+			}
+     
             waitsFor(function () {
                if(result)
                    return true;
              }, "data is null", 1000);
-
+             
              runs(function () {
                   expect(festResult.xmlns).toEqual("urn:mpeg:DASH:schema:MPD:2011");
                   expect(festResult.type).toEqual("static");
@@ -103,7 +94,7 @@ describe("Media Player Test Suite", function () {
                   expect(festResult.profiles).toEqual("urn:mpeg:dash:profile:isoff-live:2011");
 
                   //AdaptationSet set1
-
+                 
                   expect(festResult.Period.AdaptationSet[0].mimeType).toEqual("video/mp4");
                   expect(festResult.Period.AdaptationSet[0].segmentAlignment).toBeTruthy();
                   expect(festResult.Period.AdaptationSet[0].startWithSAP).toEqual(1);
@@ -131,28 +122,106 @@ describe("Media Player Test Suite", function () {
                   expect(festResult.Period.AdaptationSet[1].Representation.bandwidth).toEqual(56000);
 
             });
-        });
+	    });
+		
+		 it("check whether initialized variable is initailised or not while attaching video", function () {
+			var element = document.createElement('video');
+			$(element).autoplay = true;
+			player.setAutoPlay(true);
+			expect(function() {player.attachView($(element))}).toThrow();
+		});
 
+		it("check whether initialized variable is initialized or not while playing", function () {
+			var element = document.createElement('video');
+			$(element).autoplay = true;
+			player.setAutoPlay(true);
+			expect(function() {player.attachView($(element))}).toThrow();
+		});
+        
          it("check whether initialized variable is initialized or not while playing with invalid source", function () {
-            var result=false;
+		    var result=false;
             var festResult;
-
+            
             element = document.createElement('video');
             player.startup();
             player.autoPlay = true;
             player.attachView($(element));
 
-            manifestLoader = system.getObject('manifestLoader');
-            source="http://dashdemo.edgesuite.net/envivio/dashpr/clear/Manifestdd.mpd";
-            manifestLoader.load(source).then( function (manifestResult) {
-              expect(festResult).toEqual(undefined);
-
+           
+            manifestLoader.load(invalidSource).then( function (manifestResult) {
+              expect(festResult.xmlns).toEqual("urn:mpeg:DASH:schema:MPD:2011");              
             });
 
+	    });
+        it("calling attach source", function () {
+            result=false;
+
+            player.startup();
+            player.attachSource(testUrl);
+			if(manifestRes != undefined)
+			{
+				result = true;
+			}
+			
+			expect(manifestRes._cnt).toEqual(undefined);           
         });
-
-
-     });
-   }
-
+        
+        it("play the source ", function () {
+            var result=false;
+            var element = document.createElement('video');
+            player.startup();
+            player.autoPlay = true;
+            player.attachSource(testUrl);
+			
+            if(window.navigator.userAgent.indexOf ( "MSIE " )<0)
+            {
+              player.attachView($(element)[0]);
+              player.play();
+            }
+			
+			if(manifestRes != undefined)
+			{
+				result = true;
+			}
+			
+			expect(manifestRes.xmlns).toEqual("urn:mpeg:DASH:schema:MPD:2011"); 
+        });
+        
+        it("play with source and element empty ", function () {
+            player.startup();
+            if(window.navigator.userAgent.indexOf ( "MSIE " )<0)
+              expect(function() {player.play()}).toThrow();
+            else
+              expect(player).not.toBe(null);
+         });
+        
+		/**
+         it("setIsLive and getIsLive", function () {
+            element = document.createElement('video');
+            player.startup();
+            player.autoPlay = true;
+            player.attachView($(element));
+            player.setIsLive(false);
+            expect(player.getIsLive()).toBe(false);
+         }); */
+         
+        it("getMetricsFor", function () {
+            player.startup();
+            expect(player.getMetricsFor("audio")).toBe(null);
+        });
+     
+        it("getQualityFor && setQualityFor", function () {
+			player.startup();
+			player.setQualityFor("audio",5);
+			expect(player.getQualityFor("audio")).toBe(5);
+        });
+     
+        it("setAutoSwitchQuality  && getAutoSwitchQuality ", function () {
+			player.startup();
+			player.setAutoSwitchQuality(5);
+			expect(player.getAutoSwitchQuality()).toBe(5);
+        });
+	});
+	}
 });
+ 

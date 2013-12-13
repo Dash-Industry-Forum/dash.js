@@ -15,7 +15,7 @@
     var baseUrl, system, fragmentExtn;
     
     beforeEach(function(){
-        baseUrl = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
+      
         
         // Set up DI.
         system = new dijon.System();
@@ -47,4 +47,67 @@
         expect(result).toEqual('function');
     });
     
+     if(window.location.href.indexOf("runner.html")==0)
+        {
+            describe("Fragment Extension Negative Test Suite", function(){
+             it("loadFragment", function(){
+               var promise = null,
+                      success,
+                      successResult,
+                      failure;
+     
+                    flag=false; 
+                    success = function(result) {
+                       successResult = result;
+                       flag = true;
+                      },
+                      failure = function(error) {
+                        flag = false;
+                      };
+                     runs(function(){
+                      promise =   fragmentExtn.loadFragment(source); 
+                      promise.then(success, failure);
+                     });
+                     
+                     waitsFor(function(){
+                      return flag;
+                     });
+                     
+                     runs(function(){
+                        expect(successResult).toEqual(null);
+                    });
+            
+              });
+            
+             it("parseSIDX", function(){
+              var buffer = new ArrayBuffer(0);
+               var promise = null,
+                      success,
+                      successResult,
+                      failure;
+     
+                    flag=false; 
+                    success = function(result) {
+                       successResult = result;
+                       flag = true;
+                      },
+                      failure = function(error) {
+                        flag = false;
+                      };
+                     runs(function(){
+                      promise =   fragmentExtn.parseSIDX(buffer); 
+                      promise.then(success, failure);
+                     });
+                     
+                     waitsFor(function(){
+                      return flag;
+                     });
+                     
+                     runs(function(){
+                        expect(successResult).toEqual(null);
+                    });
+            
+              });
+       });
+    } 
  });

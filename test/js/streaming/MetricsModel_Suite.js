@@ -27,6 +27,7 @@ describe("Metrics Model Suite", function () {
                 system.injectInto(context);
                 metricsModel=system.getObject('metricsModel');           
             });
+			
            
              it("addHttpRequest function", function(){
                  var outPutVo = new MediaPlayer.vo.metrics.HTTPRequest();
@@ -131,7 +132,7 @@ describe("Metrics Model Suite", function () {
                      interval=null,
                      mediaduration=null;
                
-                   outPutVo=metricsModel.addHttpRequest(null,tcpid,type,url,actualurl,range,trequest,tresponse,responsecode,interval,mediaduration);
+                   outPutVo=metricsModel.addHttpRequest(null,tcpid,type,null,actualurl,range,trequest,tresponse,responsecode,interval,mediaduration);
                    expect(outPutVo.stream).toEqual(null);
              });
              
@@ -141,6 +142,7 @@ describe("Metrics Model Suite", function () {
                    expect(outPutVo.type).toEqual(null);
              });
              
+			 			 
              it("appendHttpTrace function with one of the field in reqOutPut as null", function(){
                  var outPutVo = new MediaPlayer.vo.metrics.HTTPRequest.Trace();
                  var reqOutPut=new MediaPlayer.vo.metrics.HTTPRequest();
@@ -176,7 +178,7 @@ describe("Metrics Model Suite", function () {
                     outPutVo=metricsModel.addRepresentationSwitch(null, t, mt, to, lto);
                     expect(outPutVo.streamType).toEqual(null);
              });
-             
+/*
              it("addRepresentationSwitch function with all parameters as null", function(){
                     var outPutVo = new MediaPlayer.vo.metrics.RepresentationSwitch();
                     t=new Date();
@@ -186,7 +188,7 @@ describe("Metrics Model Suite", function () {
                     outPutVo=metricsModel.addRepresentationSwitch(null, null, null, null, null);
                     expect(outPutVo.streamType).toEqual(null);
              });
-             
+*/
               it("addBufferLevel function with streamType as null", function(){
                     var outPutVo =new MediaPlayer.vo.metrics.BufferLevel();
                     t=new Date();
@@ -221,7 +223,18 @@ describe("Metrics Model Suite", function () {
                     expect(outPutVo.streamType).toEqual(null);
              });
              
-             
+             it("clearCurrentMetricsForType", function(){
+                   metricsModel.streamMetrics.audio=2;
+                   metricsModel.clearCurrentMetricsForType("audio");
+                   expect(metricsModel.streamMetrics.length).toEqual(undefined);
+             });
+			 
+			 it("clearAllCurrentMetrics", function(){
+                   metricsModel.streamMetrics.audio=2;
+                   metricsModel.clearAllCurrentMetrics();
+                   expect(metricsModel.streamMetrics).toEqual({});
+             });			 
+			 
               it("appendPlayListTrace function with playlist.start as null", function(){
                     var outPutVo = new MediaPlayer.vo.metrics.PlayList.Trace();
                     var playlist=new  MediaPlayer.vo.metrics.PlayList();
@@ -248,4 +261,52 @@ describe("Metrics Model Suite", function () {
                     outPutVo=metricsModel.appendPlayListTrace(playlist, null, null, null, null, null, null, null);
                     expect(outPutVo.representationid).toEqual(null);
              });
+			 
+			 it("getReadOnlyMetricsFor function without streamMetrics",function(){
+				var metricsValue = metricsModel.getReadOnlyMetricsFor("video");
+				expect(metricsValue).toBe(null);
+			 });	 
+			 
+			 
+			 it("addTcpConnection function", function(){
+                    var outPutVo =new MediaPlayer.vo.metrics.TCPConnection();
+                    streamType="video";
+                    tcpid="";
+                    dest=0;
+                    topen="";
+                    tclose="";
+                    tconnect="";
+                    outPutVo=metricsModel.addTcpConnection(streamType,tcpid, dest,topen, tclose, tconnect);
+                    expect(outPutVo.dest).toEqual(0);
+             });
+
+			 it("Check getMetrics Structure",function(){
+				var metricsValue = metricsModel.getMetricsFor("video");
+				expect(metricsValue).not.toBe(null);
+			 });
+			 
+			 it("Check PlayList Size before Initializing",function(){
+				var metricsValue = metricsModel.getMetricsFor("");
+				expect(metricsValue.PlayList.length).toBe(0);
+			 });
+			 
+			 it("Check BufferLevel Size before Initializing",function(){
+				var metricsValue = metricsModel.getMetricsFor("");
+				expect(metricsValue.BufferLevel.length).toBe(0);
+			 });
+			 
+			 it("Check HTTPRequest Size before Initializing",function(){
+				var metricsValue = metricsModel.getMetricsFor("");
+				expect(metricsValue.HttpList.length).toBe(0);
+			 });
+			 
+			 it("Check RepresentationSwitch Size before Initializing",function(){
+				var metricsValue = metricsModel.getMetricsFor("");
+				expect(metricsValue.RepSwitchList.length).toBe(0);
+			 });
+			 
+			 it("Check TCPConnection Size before Initializing",function(){
+				var metricsValue = metricsModel.getMetricsFor("");
+				expect(metricsValue.TcpList.length).toBe(0);
+			 });
     });

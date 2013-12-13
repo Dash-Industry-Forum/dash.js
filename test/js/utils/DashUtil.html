@@ -73,10 +73,6 @@
     <!-- Dash -->
     <script src="../../../app/js/dash/Dash.js"></script>
     <script src="../../../app/js/dash/DashContext.js"></script>
-    <script src="../../../app/js/dash/vo/Mpd.js"></script>
-    <script src="../../../app/js/dash/vo/Period.js"></script>
-    <script src="../../../app/js/dash/vo/AdaptationSet.js"></script>
-    <script src="../../../app/js/dash/vo/Representation.js"></script>
     <script src="../../../app/js/dash/vo/Segment.js"></script>
     <script src="../../../app/js/dash/DashParser.js"></script>
     <script src="../../../app/js/dash/DashHandler.js"></script>
@@ -84,8 +80,6 @@
     <script src="../../../app/js/dash/FragmentExtensions.js"></script>
     <script src="../../../app/js/dash/DashManifestExtensions.js"></script>
     <script src="../../../app/js/dash/DashMetricsExtensions.js"></script>
-    <script src="../../../app/js/dash/TimelineConverter.js"></script>
-	
 	
 	<!-- Captioning-->	
 	 <script src="../../../app/js/streaming/captioning/TextTrackExtensions.js"></script>	 
@@ -145,8 +139,8 @@
                 <div width="50px" align="center">
              <label id="lbTestMode" style="font-weight:bold">Select Test Mode</label>
              <select id = "myList">
-               <option value = "1">Manual</option>
-               <option value = "2">Automation</option>
+               <option value = "1">Automation</option>
+               <!-- <option value = "2">Manual</option> -->
              </select>
        <div>
        </br>
@@ -195,9 +189,9 @@
                             </tr>
                             <thead>
                                 <tbody>
-                                    <tr  style="border: 1px solid black;" align="center" height="100%" id="template">
+                                    <tr  style="border: 1px solid black;" align="center" height="100%" id="0">
                                         <td style="border: 1px solid black;">
-                                            MPD template
+                                            MPD1
                                         </td>
                                         <td id="VideoPlayer0" height="100%" style="border: 1px solid black; margin:2; padding:2" width="250px">
 											

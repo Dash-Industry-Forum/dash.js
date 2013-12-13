@@ -10,50 +10,39 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-var element, player, video, stream, system, context, mpd, counter, seekCounter, count, tdID, stalled, isPaused, isSeeking, chkTimeout, currentDate, intervalID, refreshId, testMode, testModeList, csvContent, playbackCounter, runTestFlag, lastTime, endCheckCount, testPhaseDuration, lastTimeDuplicate,isIE;
+var element, player, video, stream, system, context, mpd, counter, seekCounter, count, tdID, stalled, isPaused, isSeeking, chkTimeout, currentDate, intervalID, refreshId, testMode, testModeList, csvContent, playbackCounter, RowElems, runTestFlag, lastTime, endCheckCount, testPhaseDuration, lastTimeDuplicate,isIE;
 $(document).ready(function testLoad() {
 
 	csvContent = 'data:text/csv;charset=utf-8,';
 	document.getElementById('files').addEventListener('change', handleFileSelect, false);
 	document.getElementById('files').style.visibility = "visible";
 	testModeList = document.getElementById('myList');
-	testModeList.onchange = function(e){
-		modeChanged(e);
-	};
+	testMode = testModeList.options[testModeList.selectedIndex].text;
 	runTestFlag = false;
-	counter = 1;
+	counter = 0;
 	intervalID = 0;
 	mpd = new Array();
 	mpd = setMPD(mpd);
-	templateRow = $('#template').clone();
-	$('#template').remove();
+	RowElems = $('#tbMPD tbody tr').clone();
+	Rows = $(RowElems).clone();
 
 	createRowsForMPD();
-
-	modeChanged();
+	initialisation(0);
 });
-
-function modeChanged() {
-	testMode = testModeList.options[testModeList.selectedIndex].text;
-	runTestFlag = false;
-	if (testMode == 'Automation') {
-		initialisation(1);
-	}
-}
 
 /**Create dynamic rows for table*/
 function createRowsForMPD() {
 
-	for (var i = 0; i < mpd.length; i++) {
-		createRow(i + 1);
+	for (var i = Rows.length; i < mpd.length; i++) {
+		createRow(i);
 	}
 }
 
 function createRow(i) {
-	var RowItem = templateRow.clone();
+	var RowItem = Rows.eq(0);
 	RowItem.attr('id', i);
 	RowItem.find('td').eq(1).attr('id', 'VideoPlayer' + i);
-	RowItem.find('td').eq(0).text('MPD' + i);
+	RowItem.find('td').eq(0).text('MPD' + (i + 1));
 	RowItem.find('td:nth-child(2) div:nth-child(1)').attr('id', 'Video' + i);
 	RowItem.find('td:nth-child(2) div:nth-child(1)').attr('class', 'ClassVideo' + i);
 	RowItem.find('td:nth-child(2) div:nth-child(2)').attr('id', 'MPDUrl' + i);
@@ -87,10 +76,11 @@ function createRow(i) {
 	});
 
 	RowItem.appendTo('#tbMPD tbody');
+	Rows = $(RowElems).clone();
 	$('#ClassVideo' + i).hide();
 
 	$('#Video' + i).hide();
-	$('#MPDUrl' + i).html(mpd[i - 1]);
+	$('#MPDUrl' + i).html(mpd[i]);
 }
 
 function teardown() {
@@ -132,12 +122,6 @@ function initialisation(rowID) {
 	context = new Dash.di.DashContext();
 	system.injectInto(context);
 	element = document.createElement('video');
-
-	if (testMode == 'Automation') {
-		(element).removeAttribute('controls');
-	} else {
-		(element).setAttribute("controls");
-	}
 
 	var videoDiv = document.querySelector('.ClassVideo' + (rowID));
 	videoDiv.appendChild(element);
@@ -204,17 +188,17 @@ function initialisation(rowID) {
 						message += ", " + e.event;
 					}
 				}
-				$("#error"+rowID).html($("#error"+rowID).html() + "Error: " + message + "<br/>");
+				$("#error"+rowID).html("Error: " + message);
 				$('#ClassVideo' + rowID).hide();
 				$('#Video' + rowID).hide();
-			};
-		$(mpdID).text(mpd[rowID - 1]);
+		};
+		$(mpdID).text(mpd[rowID]);
 
 		player.addEventListener("error", onError.bind(this));
 
 		player.autoPlay = true;
 		player.attachView(element);
-		player.attachSource(mpd[rowID - 1]);
+		player.attachSource(mpd[rowID]);
 
 		intervalID = setInterval(time, 1000);
 
@@ -228,10 +212,9 @@ function initialisation(rowID) {
 /** Onclick of RunTest button*/
 function runTest(id) {
 	runTestFlag = true;
-	playbackCounter = 0;
 	$('#Video'+counter).hide();
 	$('#' + id).live('click', function () {
-		initialisation(parseInt($(this).closest('tr').attr('id')));
+		initialisation($(this).closest('tr').attr('id'));
 	});
 }
 
@@ -251,13 +234,15 @@ function loadNextMPD() {
 	teardown();
 	if (runTestFlag === false) {
 		var prevRow = $('#' + counter);
-		var intCounter = counter + 1;
-		if (intCounter < (mpd.length + 1)) {
+		var intCounter = parseInt(counter);
+		if ((intCounter + 1) != mpd.length) {
 			var nextRowID = prevRow.next().attr('id');
-			initialisation(parseInt(nextRowID));
-		} else {
-			teardown();
+			initialisation(nextRowID);
+		}
+		if ((intCounter + 1) === mpd.length) {
+			$('#Video'+counter).remove();
 			document.getElementById('btnExportToJSON').disabled = false;
+			return;
 		}
 	}
 }
@@ -287,6 +272,7 @@ function time() {
 
 		if (testMode == 'Automation') {
 
+			(element).removeAttribute('controls');
 			testPhaseDuration = Math.min((element).duration / 4, 10);
 
 			if (count == 0 && !isPaused && (element).currentTime >= testPhaseDuration) {
@@ -359,11 +345,7 @@ function checkPlayBackRate() {
 			if (playbackCounter > 30) {
 				playbackCounter = 0;
 				$("#play" + counter).html("Play event timed out beyond 30 seconds, play stopped: " + (element).currentTime);
-				if (testMode == 'Automation') {
-					loadNextMPD();
-				} else {
-					teardown();
-				}
+				loadNextMPD();
 				return;
 			}
 		} else {
@@ -475,20 +457,18 @@ function populateTable(contentXML) {
 	for (var i = 1; i = mpdRows.length - 1; i++) {
 		mpdTable.deleteRow(i);
 	}
-	mpd = new Array()
-	
 	var contentTag = contentXML.getElementsByTagName("content");
 	for (var rowId = 0; rowId < contentTag.length; rowId++) {		
 		if (!!window.MSStream)
 			mpd[rowId] = contentTag[rowId].childNodes[1].text;
 		else
-			mpd[rowId] = contentTag[rowId].children[1].textContent;
+			mpd[rowId] = contentTag[rowId].children[1].innerHTML;
 		
-		createRow(rowId + 1);
+		createRow(rowId);
 if (!!window.MSStream)
 		$('#MPDUrl' + rowId).html(contentTag[rowId].childNodes[1].text);
 	else		
-		$('#MPDUrl' + rowId).html(contentTag[rowId].children[1].textContent);
+		$('#MPDUrl' + rowId).html(contentTag[rowId].children[1].innerHTML);
 		$('#play' + rowId).html("");
 		$('#pause' + rowId).html("");
 		$('#seek' + rowId).html("");
@@ -500,7 +480,7 @@ if (!!window.MSStream)
 	$('#seek0').show();
 	$('#stall0').show();
 
-	initialisation(1);
+	initialisation(0);
 }
 
 function textClick() {

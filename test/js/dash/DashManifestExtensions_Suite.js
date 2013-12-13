@@ -31,12 +31,11 @@ for (var MPDstring in strMpd) {
 			period,
 			stub,
 			manifestObj,
+			periodIndex = 0,
 			docMpdProto;
 
 			beforeEach(function () {
-				baseUrl = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
-                period = 0;
-
+                 baseUrl = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
 				// Set up DI.
 				system = new dijon.System();
 				system.mapValue("system", system);
@@ -286,7 +285,7 @@ for (var MPDstring in strMpd) {
 					id = 'audio=148000';
 					break;
 				}
-				manExtn.getDataForId(id, manifestObj, period).then(function (Data) {
+				manExtn.getDataForId(id, manifestObj,periodIndex).then(function (Data) {
 					res = Data ? Data.id : null;
 				}, function (Error) {
 					res = Error;
@@ -316,13 +315,63 @@ for (var MPDstring in strMpd) {
 				});
 			});
 
+            it("getDataForId with id=0", function () {
+				var res = '';
+				var id = 0;
+				
+				manExtn.getDataForId(id, manifestObj,periodIndex).then(function (Data) {
+					res = Data ? Data.id : null;
+				}, function (Error) {
+					res = Error;
+				});
+				waitsFor(function () {
+					if (res != '')
+						return true;
+				}, "data is null", 1000);
+				runs(function () {
+					switch (docMpdProto) {
+					case 1:
+						expect(res).toBeNull();
+						break;
+					case 2:
+						expect(res).toBeNull();
+						break;
+					case 3:
+						expect(res).toBeNull();
+						break;
+					case 4:
+						expect(res).toBeNull();
+						break;
+					default:
+						expect(res).not.toBeNull();
+					}
+
+				});
+			});
 			/**
 			 * The method returns the data for the given index of Adaptation set
 			 */
-			it("getDataForIndex", function () {
+			it("getDataIndex with data null", function () {
+				var data ="",
+				res = '';
+				manExtn.getDataIndex(data, manifestObj,periodIndex).then(function (Data) {
+					res = Data;
+				}, function (Error) {
+					res = Error;
+				});
+				waitsFor(function () {
+					if (res != '')
+						return true;
+				}, "data is null", 3000);
+				runs(function () {
+					expect(res).not.toBeNull();
+				});
+			});
+            
+            it("getDataForIndex", function () {
 				var index = 0,
 				res = '';
-				manExtn.getDataForIndex(index, manifestObj, period).then(function (Data) {
+				manExtn.getDataForIndex(index, manifestObj,periodIndex).then(function (Data) {
 					res = Data;
 				}, function (Error) {
 					res = Error;
@@ -358,7 +407,7 @@ for (var MPDstring in strMpd) {
 			it("getDataIndex", function () {
 				var data = manifestObj.Period.AdaptationSet[1],
 				res = '';
-				manExtn.getDataIndex(data, manifestObj, period).then(function (Data) {
+				manExtn.getDataIndex(data, manifestObj,periodIndex).then(function (Data) {
 					res = Data;
 				}, function (Error) {
 					res = Error;
@@ -446,7 +495,7 @@ for (var MPDstring in strMpd) {
 			 */
 			it("getVideoData", function () {
 				var data = '';
-				manExtn.getVideoData(manifestObj, period).then(function (Data) {
+				manExtn.getVideoData(manifestObj,periodIndex).then(function (Data) {
 					switch (docMpdProto) {
 					case 1:
 						data = Data.ContentComponent.contentType;
@@ -480,7 +529,7 @@ for (var MPDstring in strMpd) {
 			 */
 			it("getAudioData", function () {
 				var data = '';
-				manExtn.getAudioDatas(manifestObj, period).then(function (Data) {
+				manExtn.getAudioDatas(manifestObj,periodIndex).then(function (Data) {
 					switch (docMpdProto) {
 					case 1:
 						data = Data[0].ContentComponent.contentType;
@@ -506,14 +555,15 @@ for (var MPDstring in strMpd) {
 					expect(data).toMatch("audio");
 				});
 
-			});
+			});		
+			
 
 			/**
 			 * The method returns audio data from the mpd file
 			 */
 			it("getPrimaryAudioData", function () {
 				var data = '';
-				manExtn.getPrimaryAudioData(manifestObj, period).then(function (Data) {
+				manExtn.getPrimaryAudioData(manifestObj,periodIndex).then(function (Data) {
 					switch (docMpdProto) {
 					case 1:
 						data = Data.ContentComponent.contentType;
@@ -614,6 +664,7 @@ for (var MPDstring in strMpd) {
 			/**
 			 * The method returns suggestedPresentationDelay(Live offset) fo the manifest
 			 */
+/*
 			it("getLiveOffset", function () {
 				var data = '';
 				manExtn.getLiveOffset(manifestObj).then(function (Data) {
@@ -645,6 +696,7 @@ for (var MPDstring in strMpd) {
 				});
 
 			});
+*/
 
 			/**
 			 * Check if the mpd file has timeShiftBufferDepth for Live stream data
@@ -852,7 +904,191 @@ for (var MPDstring in strMpd) {
 					}
 				});
 			});
+            
+			
+            it("getKID without data", function () {
+				var data = null;
+				var res = '';
+				res=manExtn.getKID(data);
+                expect(res).toEqual(null);
+			});
+            
+            it("getKID with data", function () {
+                var data = { "cenc:default_KID" :2 },
+			    res = '';
+				res=manExtn.getKID(data);
+                expect(res).toEqual(2);
+			});
+            
+            it("getContentProtectionData with data", function () {
+				debugger;
+                var data = { "ContentProtection_asArray" :2 },
+			    res = '';
+				res=manExtn.getContentProtectionData(data);
+                expect(res).not.toBeNull();
+			});            
+/*			
+            it("getLiveStart", function () {
+                res = '';
+                manExtn.getLiveStart(manifestObj,periodIndex).then(function (Data) {
+					res = Data;
+				}, function (Error) {
+					res = Error;
+				});
 
+				waitsFor(function () {
+					if (res == 0)
+						return true;
+				}, "data is null", 100);
+				runs(function () {
+						expect(res).toBe("");
+				});
+			});
+			
+			
+            it("getLiveEdge", function () {
+                res = '';
+                manExtn.getLiveEdge(manifestObj).then(function (Data) {
+					res = Data;
+				}, function (Error) {
+					res = Error;
+				});
+
+				waitsFor(function () {
+					if (res == 0)
+						return true;
+				}, "data is null", 100);
+				runs(function () {
+						expect(res).toBe("");
+				});
+			});
+ 
+            it("getSegmentInfoFor with SegmentBase", function () {
+                var representation={ "SegmentBase" :2 },
+                res = '';
+                res =manExtn.getSegmentInfoFor(representation);
+                expect(res).toBe(2);
+			});
+            
+             it("getSegmentInfoFor with SegmentList", function () {
+                var representation={ "SegmentList" :2 },
+                res = '';
+                res =manExtn.getSegmentInfoFor(representation);
+                expect(res).toBe(2);
+			});
+            
+            it("getSegmentInfoFor", function () {
+                var representation={ "empty" :2 },
+                res = '';
+                res =manExtn.getSegmentInfoFor(representation);
+                expect(res).toBe(null);
+			}); 
+*/			
+			it("Is Text Track - text/vtt", function () {
+				debugger;
+                var type="text/vtt",
+                res = '';
+                res =manExtn.getIsTextTrack(type);
+                expect(res).toBeTruthy();
+			}); 
+			
+			it("Is Text Track - application type", function () {
+                var type="application/ttml+xml",
+                res = '';
+                res =manExtn.getIsTextTrack(type);
+                expect(res).toBeTruthy();
+			});
+			
+			it("getIsText", function () {
+                var objContentComponent=[],
+					objCont=[],
+					data=[],
+                res = '';
+				
+				objContentComponent.mimeType="text/vtt";
+				objContentComponent.lang = "en";				
+				objContentComponent.segmentAlignment = "true";
+				objContentComponent.startWithSAP = "1";
+				objContentComponent.contentType="text";
+				objCont.push(objContentComponent);
+				data.ContentComponent=objCont;
+				data.ContentComponent_asArray=objCont;
+				
+                manExtn.getIsText(data).then(function(res){
+					expect(res).toBeTruthy();
+				});
+                
+			});
+			
+			it("get Mime type - Video", function () {
+				debugger;
+				var data = '';
+				manExtn.getMimeType(adaptationSetVideo).then(function (Data) {
+					debugger;
+					data = Data;
+				}, function (Error) {
+					data = null;
+				});
+				waitsFor(function () {
+					if (data != '')
+						return true;
+				}, "data is null", 100);
+				runs(function () {
+					debugger;
+					switch (docMpdProto) {
+					case 1:
+						expect(data).toEqual('video/mp4');
+						break;
+					case 2:
+						expect(data).toEqual('video/mp4');
+						break;
+					case 3:
+						expect(data).toEqual('video/mp4');
+						break;
+					case 4:
+						expect(data).toEqual('video/mp4');
+						break;
+					default:
+						expect(data).not.toBeNull();
+					}
+				});
+
+			});
+			
+			it("get Mime type - Audio", function () {
+				debugger;
+				var data = '';
+				manExtn.getMimeType(adaptationSetAudio).then(function (Data) {
+					debugger;
+					data = Data;
+				}, function (Error) {
+					data = null;
+				});
+				waitsFor(function () {
+					if (data != '')
+						return true;
+				}, "data is null", 100);
+				runs(function () {
+					debugger;
+					switch (docMpdProto) {
+					case 1:
+						expect(data).toEqual('audio/mp4');
+						break;
+					case 2:
+						expect(data).toEqual('audio/mp4');
+						break;
+					case 3:
+						expect(data).toEqual('audio/mp4');
+						break;
+					case 4:
+						expect(data).toEqual('audio/mp4');
+						break;
+					default:
+						expect(data).not.toBeNull();
+					}
+				});
+
+			});
 		});
 	})(MPDstring);
 }
