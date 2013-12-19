@@ -57,17 +57,17 @@
         },
         {
             "name": "Wowza SegmentList",
-            "url": "http://174.129.39.107:1935/live/myStream/manifest_mpm4sav_mvlist.mpd",
+            "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mpm4sav_mvlist.mpd",
             "browsers": ""
         },
         {
             "name": "Wowza SegmentTemplate",
-            "url": "http://174.129.39.107:1935/live/myStream/manifest_mpm4sav_mvnumber.mpd",
+            "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mpm4sav_mvnumber.mpd",
             "browsers": ""
         },
         {
             "name": "Wowza SegmentTimeline",
-            "url": "http://174.129.39.107:1935/live/myStream/manifest_mpm4sav_mvtime.mpd",
+            "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mpm4sav_mvtime.mpd",
             "browsers": ""
         },
         {

@@ -29,19 +29,19 @@ MediaPlayer.dependencies.BufferController = function () {
         //mseSetTime = false,
         seekTarget = -1,
         dataChanged = true,
+        availableRepresentations,
+        currentRepresentation,
         playingTime,
         lastQuality = -1,
         stalled = false,
-        isLiveStream = false,
-        liveInitialization = false,
+        isDynamic = false,
         isBufferingCompleted = false,
         deferredAppends = [],
         deferredInitAppend = null,
         deferredStreamComplete = Q.defer(),
         deferredRejectedDataAppend = null,
         deferredBuffersFlatten = null,
-        periodIndex = -1,
-        duration = 0,
+        periodInfo = null,
         fragmentsToLoad = 0,
         fragmentModel = null,
         bufferLevel = 0,
@@ -50,6 +50,12 @@ MediaPlayer.dependencies.BufferController = function () {
         fragmentDuration = 0,
         rejectTime = null,
         mediaSource,
+
+        liveEdgeSearchRange = null,
+        liveEdgeInitialSearchPosition = null,
+        liveEdgeSearchStep = null,
+        deferredLiveEdge,
+        useBinarySearch = false,
 
         type,
         data = null,
@@ -84,16 +90,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 playListTraceMetricsClosed = true;
             }
         },
-
-        // TODO : Remove?
-        initializeLive = function () {
-            var manifest = this.manifestModel.getValue(),
-                isLive = this.manifestExt.getIsLive(manifest);
-
-            liveInitialization = true;
-
-            return Q.when(isLive);
-        },
 /*
         setCurrentTimeOnVideo = function (time) {
             var ct = this.videoModel.getCurrentTime();
@@ -111,18 +107,11 @@ MediaPlayer.dependencies.BufferController = function () {
                 return;
             }
 
-            var self = this;
+            this.debug.log("BufferController begin " + type + " validation");
+            setState.call(this, READY);
 
-            initializeLive.call(this).then(
-                function (isLive) {
-                    isLiveStream = isLive;
-                    self.debug.log("BufferController begin " + type + " validation");
-                    setState.call(self, READY);
-
-                    self.requestScheduler.startScheduling(self, validate);
-                    fragmentModel = self.fragmentController.attachBufferController(self);
-                }
-            );
+            this.requestScheduler.startScheduling(this, validate);
+            fragmentModel = this.fragmentController.attachBufferController(this);
         },
 
         doStart = function () {
@@ -173,12 +162,29 @@ MediaPlayer.dependencies.BufferController = function () {
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
         },
 
-        getRepresentationForQuality = function (quality, data) {
-            var representation = null;
-            if (data && data.Representation_asArray && data.Representation_asArray.length > 0) {
-                representation = data.Representation_asArray[quality];
+        updateRepresentations = function (data, periodInfo) {
+            var self = this,
+                deferred = Q.defer(),
+                manifest = self.manifestModel.getValue();
+            self.manifestExt.getDataIndex(data, manifest, periodInfo.index).then(
+                function(idx) {
+                    self.manifestExt.getAdaptationsForPeriod(manifest, periodInfo).then(
+                        function(adaptations) {
+                            self.manifestExt.getRepresentationsForAdaptation(manifest, adaptations[idx]).then(
+                                function(representations) {
+                                    deferred.resolve(representations);
+                                }
+                            );
+                        }
+                    );
             }
-            return representation;
+            );
+
+            return deferred.promise;
+        },
+
+        getRepresentationForQuality = function (quality) {
+            return availableRepresentations[quality];
         },
 
         finishValidation = function () {
@@ -265,7 +271,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 deferred = isAppendingRejectedData ? deferredRejectedDataAppend : Q.defer(),
                 ln = isAppendingRejectedData ? deferredAppends.length : deferredAppends.push(deferred),
                 idx = deferredAppends.indexOf(deferred),
-                representation = getRepresentationForQuality(lastQuality, self.getData()),
                 currentVideoTime = self.videoModel.getCurrentTime(),
                 currentTime = new Date();
 
@@ -273,7 +278,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             if (playListTraceMetricsClosed === true && state !== WAITING && lastQuality !== -1) {
                 playListTraceMetricsClosed = false;
-                playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, representation.id, null, currentTime, currentVideoTime, null, 1.0, null);
+                playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, currentRepresentation.id, null, currentTime, currentVideoTime, null, 1.0, null);
             }
 
             Q.when((isAppendingRejectedData) || ln < 2 || deferredAppends[ln - 2].promise).then(
@@ -369,6 +374,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     bufferLevel = bufferLength;
                     self.metricsModel.addBufferLevel(type, new Date(), bufferLevel);
                     checkGapBetweenBuffers.call(self);
+                    checkIfSufficientBuffer.call(self);
                     deferred.resolve();
                 }
             );
@@ -416,7 +422,7 @@ MediaPlayer.dependencies.BufferController = function () {
                         removeEnd = buffer.buffered.end(buffer.buffered.length -1 );
                     }
 
-                    self.sourceBufferExt.remove(buffer, removeStart, removeEnd, duration, mediaSource).then(
+                    self.sourceBufferExt.remove(buffer, removeStart, removeEnd, periodInfo.duration, mediaSource).then(
                         function() {
                             // after the data has been removed from the buffer we should remove the requests from the list of
                             // the executed requests for which playback time is inside the time interval that has been removed from the buffer
@@ -459,10 +465,6 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         onBytesError = function () {
-            var self = this,
-                manifest = self.manifestModel.getValue(),
-                isLive = self.manifestExt.getIsLive(manifest);
-
             // remove the failed request from the list
             /*
             for (var i = fragmentRequests.length - 1; i >= 0 ; --i) {
@@ -476,11 +478,115 @@ MediaPlayer.dependencies.BufferController = function () {
             */
 
             if (state === LOADING) {
-                setState.call(self, READY);
+                setState.call(this, READY);
             }
 
-            if (!isLive) {
-                self.system.notify("segmentLoadingFailed");
+            this.system.notify("segmentLoadingFailed");
+        },
+
+        searchForLiveEdge = function() {
+            var self = this,
+                availabilityRange = currentRepresentation.segmentAvailabilityRange, // all segments are supposed to be available in this interval
+                searchTimeSpan = 12 * 60 * 60; // set the time span that limits our search range to a 12 hours in seconds
+
+            // start position of the search, it is supposed to be a live edge - the last available segment for the current mpd
+            liveEdgeInitialSearchPosition = availabilityRange.end;
+            // we should search for a live edge in a time range which is limited by searchTimeSpan.
+            liveEdgeSearchRange = {start: Math.max(0, (liveEdgeInitialSearchPosition - searchTimeSpan)), end: liveEdgeInitialSearchPosition + searchTimeSpan};
+            // we have to use half of the availability interval (window) as a search step to ensure that we find a segment in the window
+            liveEdgeSearchStep = Math.floor((availabilityRange.end - availabilityRange.start) / 2);
+            // start search from finding a request for the initial search time
+            self.indexHandler.getSegmentRequestForTime(currentRepresentation, liveEdgeInitialSearchPosition).then(findLiveEdge.bind(self, liveEdgeInitialSearchPosition));
+
+            deferredLiveEdge = Q.defer();
+
+            return deferredLiveEdge.promise;
+        },
+
+        findLiveEdge = function (searchTime, request) {
+            var self = this;
+            if (request === null) {
+                // request can be null because it is out of the generated list of request. In this case we need to
+                // update the list and the segmentAvailabilityRange
+                currentRepresentation.segments = null;
+                currentRepresentation.segmentAvailabilityRange = {start: searchTime - liveEdgeSearchStep, end: searchTime + liveEdgeSearchStep};
+                // try to get request object again
+                self.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime).then(findLiveEdge.bind(self, searchTime));
+            } else {
+                self.fragmentController.isFragmentExists(request).then(
+                    function(isExist) {
+                        if (isExist) {
+                            onSearchForSegmentSucceeded.call(self, request);
+                        } else {
+                            onSearchForSegmentFailed.call(self, request);
+                        }
+                    }
+                );
+            }
+        },
+
+        onSearchForSegmentFailed = function(request) {
+            var startTime = request.startTime,
+                searchTime,
+                searchInterval;
+
+            if (useBinarySearch) {
+                binarySearch.call(this, false, startTime);
+                return;
+            }
+
+            // we have not found any available segments yet, update the search interval
+            searchInterval = startTime - liveEdgeInitialSearchPosition;
+            // we search forward and backward from the start position, increasing the search interval by the value of the half of the availability interavl - liveEdgeSearchStep
+            searchTime = searchInterval > 0 ? (liveEdgeInitialSearchPosition - searchInterval) : (liveEdgeInitialSearchPosition + Math.abs(searchInterval) + liveEdgeSearchStep);
+
+            // if the search time is out of the range bounds we have not be able to find live edge, stop trying
+            if (searchTime < liveEdgeSearchRange.start && searchTime > liveEdgeSearchRange.end) {
+                this.system.notify("segmentLoadingFailed");
+            } else {
+                // continue searching for a first available segment
+                setState.call(this, READY);
+                this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime).then(findLiveEdge.bind(this, searchTime));
+            }
+        },
+
+        onSearchForSegmentSucceeded = function (request) {
+            var startTime = request.startTime;
+
+            if (!useBinarySearch) {
+                // if the fragment duration is unknown we cannot use binary search because we will not be able to
+                // decide when to stop the search, so let the start time of the current segment be a liveEdge
+                if (fragmentDuration === 0) {
+                    deferredLiveEdge.resolve(startTime);
+                    return;
+                }
+                useBinarySearch = true;
+                liveEdgeSearchRange.end = startTime + (2 * liveEdgeSearchStep);
+            }
+
+            binarySearch.call(this, true, startTime);
+        },
+
+        binarySearch = function(lastSearchSucceeded, lastSearchTime) {
+            var isSearchCompleted,
+                searchTime;
+
+            if (lastSearchSucceeded) {
+                liveEdgeSearchRange.start = lastSearchTime;
+            } else {
+                liveEdgeSearchRange.end = lastSearchTime;
+            }
+
+            isSearchCompleted = (Math.floor(liveEdgeSearchRange.end - liveEdgeSearchRange.start)) <= fragmentDuration;
+
+            if (isSearchCompleted) {
+                // search completed, we should take the time of the last found segment. If the last search succeded we
+                // take this time. Otherwise, we should subtract the time of the search step which is equal to fragment duaration
+                deferredLiveEdge.resolve(lastSearchSucceeded ? lastSearchTime : (lastSearchTime - fragmentDuration));
+            } else {
+                // update the search time and continue searching
+                searchTime = ((liveEdgeSearchRange.start + liveEdgeSearchRange.end) / 2);
+                this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime).then(findLiveEdge.bind(this, searchTime));
             }
         },
 
@@ -514,7 +620,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 initializationData = [];
                 // get initialization requests for all the qualities of this buffer type
                 for (quality = 0; quality <= topQuality; quality += 1) {
-                    funcs.push(this.indexHandler.getInitRequest(quality, data));
+                    funcs.push(this.indexHandler.getInitRequest(availableRepresentations[quality]));
                 }
 
                 lastQuality = currentQuality;
@@ -538,14 +644,14 @@ MediaPlayer.dependencies.BufferController = function () {
             return initializationPromise;
         },
 
-        loadNextFragment = function (quality) {
+        loadNextFragment = function () {
             var promise,
                 self = this;
 
             if (dataChanged && !seeking) {
                 //time = self.videoModel.getCurrentTime();
                 self.debug.log("Data changed - loading the " + type + " fragment for time: " + playingTime);
-                promise = self.indexHandler.getSegmentRequestForTime(playingTime, quality, data);
+                promise = self.indexHandler.getSegmentRequestForTime(currentRepresentation, playingTime);
             } else {
                 var deferred = Q.defer(),
                     segmentTime = self.videoModel.getCurrentTime();
@@ -553,7 +659,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
                 self.sourceBufferExt.getBufferRange(buffer, segmentTime).then(
                     function (range) {
-                        return Q.when(seeking ? seekTarget : self.indexHandler.getCurrentTime(quality, data)).then(
+                        return Q.when(seeking ? seekTarget : self.indexHandler.getCurrentTime(currentRepresentation)).then(
                             function (time) {
                                 segmentTime = time;
                                 seeking = false;
@@ -563,7 +669,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                 }
 
                                 self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
-                                self.indexHandler.getSegmentRequestForTime(segmentTime, quality, data).then(
+                                self.indexHandler.getSegmentRequestForTime(currentRepresentation, segmentTime).then(
                                     function (request) {
                                         deferred.resolve(request);
                                     },
@@ -583,8 +689,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 );
             }
 
-            dataChanged = false;
-
             return promise;
         },
 
@@ -595,7 +699,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 // If we have already loaded the given fragment ask for the next one. Otherwise prepare it to get loaded
                 if (self.fragmentController.isFragmentLoadedOrPending(self, request)) {
                     if (request.action !== "complete") {
-                        self.indexHandler.getNextSegmentRequest(lastQuality, data).then(onFragmentRequest.bind(self));
+                        self.indexHandler.getNextSegmentRequest(currentRepresentation).then(onFragmentRequest.bind(self));
                     } else {
                         doStop.call(self);
                         setState.call(self, READY);
@@ -670,7 +774,6 @@ MediaPlayer.dependencies.BufferController = function () {
             time = mseGetDesiredTime();
             setCurrentTimeOnVideo.call(this, time);
 
-            liveInitialization = false;
             mseSetTime = false;
             seekTarget = -1;
         },
@@ -697,20 +800,21 @@ MediaPlayer.dependencies.BufferController = function () {
             return time;
         },
 
-        getRequiredFragmentCount = function(quality) {
+        getRequiredFragmentCount = function() {
             var self =this,
                 playbackRate = self.videoModel.getPlaybackRate(),
                 actualBufferedDuration = bufferLevel / Math.max(playbackRate, 1),
                 deferred = Q.defer();
-                self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isLiveStream, duration).then(
-                    function (requiredBufferLength) {
-                        self.indexHandler.getSegmentCountForDuration(quality, data, requiredBufferLength, actualBufferedDuration).then(
-                            function(count) {
-                                deferred.resolve(count);
-                            }
-                        );
-                    }
-                );
+
+            self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, periodInfo.duration).then(
+                function (requiredBufferLength) {
+                    self.indexHandler.getSegmentCountForDuration(currentRepresentation, requiredBufferLength, actualBufferedDuration).then(
+                        function(count) {
+                            deferred.resolve(count);
+                        }
+                    );
+                }
+            );
 
             return deferred.promise;
         },
@@ -723,7 +827,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             if ((fragmentsToLoad - ln) > 0) {
                 fragmentsToLoad--;
-                loadNextFragment.call(self, lastQuality).then(onFragmentRequest.bind(self));
+                loadNextFragment.call(self).then(onFragmentRequest.bind(self));
             } else {
 
                 if (state === VALIDATING) {
@@ -738,7 +842,6 @@ MediaPlayer.dependencies.BufferController = function () {
             var self = this,
                 newQuality,
                 qualityChanged = false,
-                representation = null,
                 now = new Date(),
                 currentVideoTime = self.videoModel.getCurrentTime(),
                 currentTime = getWorkingTime.call(self);
@@ -763,7 +866,7 @@ MediaPlayer.dependencies.BufferController = function () {
             } else if (state === READY) {
                 setState.call(self, VALIDATING);
                 var manifestMinBufferTime = self.manifestModel.getValue().minBufferTime;
-                self.bufferExt.decideBufferLength(manifestMinBufferTime, duration, waitingForBuffer).then(
+                self.bufferExt.decideBufferLength(manifestMinBufferTime, periodInfo.duration, waitingForBuffer).then(
                     function (time) {
                         self.debug.log("Buffer time: " + time);
                         self.setMinBufferTime(time);
@@ -785,24 +888,19 @@ MediaPlayer.dependencies.BufferController = function () {
                         if (qualityChanged === true) {
                             // The quality has beeen changed so we should abort the requests that has not been loaded yet
                             self.fragmentController.abortRequestsForModel(fragmentModel);
-                            representation = getRepresentationForQuality(newQuality, self.getData());
-
-                            if (representation === null || representation === undefined) {
+                            currentRepresentation = getRepresentationForQuality.call(self, newQuality);
+                            if (currentRepresentation === null || currentRepresentation === undefined) {
                                 throw "Unexpected error!";
                             }
 
                             // each representation can have its own @presentationTimeOffset, so we should set the offset
                             // if it has changed after switching the quality
-                            self.manifestExt.getTimestampOffsetForPeriod(periodIndex, self.manifestModel.getValue(), quality, data).then(
-                                function (offset) {
-                                    if (buffer.timestampOffset !== offset) {
-                                        buffer.timestampOffset = offset;
-                                    }
-                                }
-                            );
+                            if (buffer.timestampOffset !== currentRepresentation.MSETimeOffset) {
+                                buffer.timestampOffset = currentRepresentation.MSETimeOffset;
+                            }
 
                             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
-                            self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, representation.id);
+                            self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, currentRepresentation.id);
                         }
 
                         self.debug.log(qualityChanged ? (type + " Quality changed to: " + quality) : "Quality didn't change.");
@@ -828,6 +926,8 @@ MediaPlayer.dependencies.BufferController = function () {
                                             }
                                         );
                                     }
+
+                                    dataChanged = false;
                                 }
                             }
                         );
@@ -855,37 +955,41 @@ MediaPlayer.dependencies.BufferController = function () {
         system: undefined,
         errHandler: undefined,
 
-        initialize: function (type, periodIndex, data, buffer, videoModel, scheduler, fragmentController, source) {
+        initialize: function (type, periodInfo, data, buffer, videoModel, scheduler, fragmentController, source) {
             var self = this,
-                manifest = self.manifestModel.getValue(),
-                isLive = self.manifestExt.getIsLive(manifest);
+                manifest = self.manifestModel.getValue();
 
+            isDynamic = self.manifestExt.getIsDynamic(manifest);
             self.setMediaSource(source);
             self.setVideoModel(videoModel);
             self.setType(type);
-            self.setPeriodIndex(periodIndex);
-            self.setData(data).then(
+            self.updateData(data, periodInfo).then(
                 function(){
-                    ready = true;
-                    startPlayback.call(self);
+                    if (!isDynamic) {
+                        ready = true;
+                        startPlayback.call(self);
+                        return;
+                    }
+
+                    searchForLiveEdge.call(self).then(
+                        function(liveEdgeTime) {
+                            // step back from a found live edge time to be able to buffer some data
+                            periodInfo.liveEdge = liveEdgeTime - minBufferTime;
+                            ready = true;
+                            startPlayback.call(self);
+                            doSeek.call(self, periodInfo.liveEdge);
+                        }
+                    );
                 }
             );
             self.setBuffer(buffer);
             self.setScheduler(scheduler);
             self.setFragmentController(fragmentController);
 
-            self.indexHandler.setIsLive(isLive);
-
-            self.manifestExt.getDurationForPeriod(periodIndex, self.manifestModel.getValue()).then(
-                function (durationValue) {
-                    duration = durationValue;
-                    self.indexHandler.setDuration(durationValue);
-
-                    self.bufferExt.decideBufferLength(manifest.minBufferTime, duration, waitingForBuffer).then(
-                        function (time) {
-                            self.setMinBufferTime(time);
-                        }
-                    );
+            self.indexHandler.setIsDynamic(isDynamic);
+            self.bufferExt.decideBufferLength(manifest.minBufferTime, periodInfo, waitingForBuffer).then(
+                function (time) {
+                    self.setMinBufferTime(time);
                 }
             );
         },
@@ -902,12 +1006,8 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
-        getPeriodIndex: function () {
-            return periodIndex;
-        },
-
-        setPeriodIndex: function (value) {
-            periodIndex = value;
+        getPeriodInfo: function () {
+            return periodInfo;
         },
 
         getVideoModel: function () {
@@ -948,25 +1048,40 @@ MediaPlayer.dependencies.BufferController = function () {
             return data;
         },
 
-        setData: function (value) {
+        updateData: function(dataValue, periodInfoValue) {
             var self = this,
                 deferred = Q.defer(),
                 from = data;
 
             if (!from) {
-                from = value;
+                from = dataValue;
             }
+            doStop.call(self);
 
-            self.abrController.getPlaybackQuality(type, from).then(
-                function (result) {
-                    self.indexHandler.getCurrentTime(result.quality, from).then(
-                        function (time) {
-                            dataChanged = true;
-                            playingTime = time;
-                            data = value;
-                            self.seek(time);
-                            self.bufferExt.updateData(data, type);
-                            deferred.resolve();
+            updateRepresentations.call(self, dataValue, periodInfoValue).then(
+                function(representations) {
+                    availableRepresentations = representations;
+                    periodInfo = periodInfoValue;
+                    self.abrController.getPlaybackQuality(type, from).then(
+                        function (result) {
+                            if (!currentRepresentation) {
+                                currentRepresentation = getRepresentationForQuality.call(self, result.quality);
+                            }
+                            self.indexHandler.getCurrentTime(currentRepresentation).then(
+                                function (time) {
+                                    dataChanged = true;
+                                    playingTime = time;
+                                    currentRepresentation = getRepresentationForQuality.call(self, result.quality);
+                                    if (currentRepresentation.segmentDuration) {
+                                        fragmentDuration = currentRepresentation.segmentDuration;
+                                    }
+                                    data = dataValue;
+                                    self.seek(time);
+                                    self.bufferExt.updateData(data, type);
+                                    startPlayback.call(self);
+                                    deferred.resolve();
+                                }
+                            );
                         }
                     );
                 }
@@ -1029,6 +1144,11 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
+        updateStalledState: function() {
+            stalled = this.videoModel.isStalled();
+            checkIfSufficientBuffer.call(this);
+        },
+
         reset: function(errored) {
             var self = this;
 
@@ -1041,6 +1161,11 @@ MediaPlayer.dependencies.BufferController = function () {
             deferredInitAppend = null;
             initializationData = [];
             deferredStreamComplete = Q.defer();
+            liveEdgeSearchRange = null;
+            liveEdgeInitialSearchPosition = null;
+            useBinarySearch = false;
+            liveEdgeSearchStep = null;
+            deferredLiveEdge = null;
 
             if (!errored) {
                 self.sourceBufferExt.abort(mediaSource, buffer);

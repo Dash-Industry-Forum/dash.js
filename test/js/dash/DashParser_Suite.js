@@ -22,8 +22,8 @@ describe("Parser Test Suite", function () {
 	 * Method to be run before each test method runs
 	 */
 	beforeEach(function () {
-		baseUrl = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
-
+	
+        baseUrl = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
 		// Set up DI.
 		system = new dijon.System();
 		system.mapValue("system", system);

@@ -41,7 +41,7 @@ MediaPlayer = function (aContext) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    var VERSION = "1.0.0",
+    var VERSION = "1.1.0",
         context = aContext,
         system,
         element,

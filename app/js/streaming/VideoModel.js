@@ -23,15 +23,19 @@ MediaPlayer.models.VideoModel = function () {
         },
 
         addStalledStream = function (type) {
-            if (type === null || stalledStreams[type] === true) {
+            if (type === null) {
+                return;
+            }
+
+            // Halt playback until nothing is stalled.
+            element.playbackRate = 0;
+
+            if (stalledStreams[type] === true) {
                 return;
             }
 
             stalledStreams.push(type);
             stalledStreams[type] = true;
-
-            // Halt playback until nothing is stalled.
-            element.playbackRate = 0;
         },
 
         removeStalledStream = function (type) {
@@ -125,8 +129,11 @@ MediaPlayer.models.VideoModel = function () {
             element.src = source;
         },
 
-        stallStream: stallStream,
-        isStalled: isStalled
+        isStalled: function () {
+            return element.playbackRate === 0;
+        },
+
+        stallStream: stallStream
     };
 };
 

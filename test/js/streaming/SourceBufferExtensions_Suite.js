@@ -13,25 +13,48 @@
  */
  
  describe("SourceBufferExtensions Test Suite", function() {
- 	var codec = null, 
+ 	var codec = null,
+		bufferController,
+		system,
+		context,
+		mediaSource,
+		video,
+		element,
+		buffer,
+		bufferTime = "PT5.001S";
+		minBufferTime = 0, 
+		mediaSourceExt = null,
+		bufferExt = null,
  		sourceBufferExtension = null;
  	
  	beforeEach(function(){
+		debugger;
+		system = new dijon.System();
+		system.mapValue("system", system);
+		system.mapOutlet("system");
+		context = new Dash.di.DashContext();
+		system.injectInto(context);	
+		
  		codec = 'video/mp4; codecs="avc1.4D400D"';
  		sourceBufferExtension = new MediaPlayer.dependencies.SourceBufferExtensions();
+		bufferController = system.getObject('bufferController');
+		mediaSourceExt = system.getObject('mediaSourceExt');
+		bufferExt = system.getObject('bufferExt');	
+	
  	});
  	
- 	it("createSourceBuffer", function(){
- 		var mediaSource = jasmine.createSpyObj('mediaSource', ['addSourceBuffer']),
-			flag = false,
+	
+ 	 it("createSourceBuffer - check if its called with actual input", function(){
+ 		 var mediaSource = jasmine.createSpyObj('mediaSource', ['addSourceBuffer']),
+			 flag = false,
 			success = function(result) {
+				 flag = true;
+			 },
+			 failure = function(error) {
 				flag = true;
-			},
-			failure = function(error) {
-				flag = true;
-			};
+			 };
  		
- 		runs(function(){
+ 		runs(function(){			
  			promise = sourceBufferExtension.createSourceBuffer(mediaSource, codec);
  			promise.then(success, failure);
  		});
@@ -43,22 +66,131 @@
  		runs(function(){
  			expect(mediaSource.addSourceBuffer).toHaveBeenCalledWith(codec);
  		});
- 	});
- 	
- 	xit("getBufferLength", function(){
+ 	 });
+	
+	if(window.location.href.indexOf("runner.html")>0)
+	{
+	
+		 it("createSourceBuffer", function(){
+			debugger;
+
+				var flag = false,
+				success = function(result) {
+					flag = true;
+				},
+				failure = function(error) {
+					flag = true;
+				};
+				 
+			mediaSource = InitMediaSource();
+			
+			waits(1000);			
+			waitsFor(function () {
+			if(mediaSource != undefined)
+				return true;		
+			}, "data is null", 100);
+				 
+			runs(function(){
+				promise = sourceBufferExtension.createSourceBuffer(mediaSource, codec);
+				promise.then(success, failure);
+			});
+			
+			waitsFor(function(){
+				return flag;
+			});
+			
+			runs(function(){
+				expect(flag).toBeTruthy();
+			});
+		 }); 
+		 
+		 it("check buffer Range", function(){
+			debugger;
+			
+			mediaSource = InitMediaSource();
+			
+			waits(1000);			
+			waitsFor(function () {
+			if(mediaSource != undefined)
+				return true;		
+			}, "data is null", 100);
+			
+			runs(function(){
+				debugger;
+				sourceBufferExtension.createSourceBuffer(mediaSource, codec).then(function(result){				
+					buffer = result;										
+				});
+				waitsFor(function(){
+					if(buffer != undefined) return true;
+				},"data null",100);
+				runs(function(){
+					debugger;
+					var res = sourceBufferExtension.getBufferRange(buffer,0);
+					expect(res).not.toBe(null);
+				});
+			});	
+		}); 
+	}
+	 
+	/**
+ 	it("getBufferLength", function(){
+		debugger;
  		var buffer = null,
  			time = null,
- 			result = sourceBufferExtension.getBufferLength(buffer, time);
- 		
- 		expect(result).not.toBeNull();
- 	});
+ 			result;
+			
+		mediaSource = InitMediaSource();
+		
+		waits(1000);			
+		waitsFor(function () {
+		if(mediaSource != undefined)
+			return true;		
+		}, "data is null", 100);
+		
+		sourceBufferExtension.createSourceBuffer(mediaSource, codec).then(function(result){				
+			buffer = result;										
+		});
+		waitsFor(function(){
+			if(buffer != undefined) return true;
+		},"data null",100);
+		runs(function(){
+			result = sourceBufferExtension.getBufferLength(buffer, time);
+			expect(result).not.toBeNull();
+		});
+ 	}); 
  	
- 	xit("append", function(){
+ 	it("append", function(){
+		debugger;
  		var buffer = null,
  			expectedBuffer = null,
  			bytes = null;
  			
  		sourceBufferExtension.append(buffer, bytes);
+ 		expect(buffer).toContains(expectedBuffer);
+ 	}); */
+	
+	it("abort", function(){
+ 		var buffer = null,
+ 			expectedBuffer = null,
+ 			bytes = null;
+ 			
+ 		sourceBufferExtension.abort(buffer);
  		expect(buffer).toEqual(expectedBuffer);
- 	});
+ 	}); 
+	
+	function InitMediaSource()
+	{
+		element = document.createElement('video');
+		$(element).autoplay = true;
+		video = system.getObject("videoModel");
+		video.setElement($(element)[0]);	
+		
+		mediaSourceExt.createMediaSource().then(function(source){
+			mediaSource = source;	
+			mediaSourceExt.attachMediaSource(mediaSource, video);
+		});
+		return mediaSource;
+	
+	}
+	
  });

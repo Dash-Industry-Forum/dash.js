@@ -138,6 +138,37 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 };
 
                 req.send();
+        },
+
+        checkForExistence = function(request, remainingAttempts) {
+            var req = new XMLHttpRequest(),
+                isSuccessful = false,
+                self = this;
+
+            req.open("HEAD", request.url, true);
+
+            req.onload = function () {
+                if (req.status < 200 || req.status > 299) return;
+
+                isSuccessful = true;
+
+                request.deferred.resolve(request);
+            };
+
+            req.onloadend = req.onerror = function () {
+                if (isSuccessful) return;
+
+                if (remainingAttempts > 0) {
+                    remainingAttempts--;
+                    setTimeout(function() {
+                        checkForExistence.call(self, request, remainingAttempts);
+                    }, RETRY_INTERVAL);
+                } else {
+                    request.deferred.reject(req);
+                }
+            };
+
+            req.send();
         };
 
     return {
@@ -153,6 +184,17 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
             req.deferred = Q.defer();
             doLoad.call(this, req, RETRY_ATTEMPTS);
+
+            return req.deferred.promise;
+        },
+
+        checkForExistence: function(req) {
+            if (!req) {
+                return Q.when(null);
+            }
+
+            req.deferred = Q.defer();
+            checkForExistence.call(this, req, RETRY_ATTEMPTS);
 
             return req.deferred.promise;
         },

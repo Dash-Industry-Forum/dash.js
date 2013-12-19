@@ -86,7 +86,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         },
 
         decideBufferLength: function (minBufferTime, duration/*, waitingForBuffer*/) {
-            if (MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
+            if (isNaN(duration) || MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
                 minBufferTarget = Math.max(MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
             } else if (minBufferTime >= duration) {
                 minBufferTarget = Math.min(duration, MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME);
@@ -113,7 +113,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
             return leastLevel;
         },
 
-        getRequiredBufferLength: function (waitingForBuffer, delay, isLive, duration) {
+        getRequiredBufferLength: function (waitingForBuffer, delay, isDynamic, duration) {
             var self = this,
                 vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
                 ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"),
@@ -131,7 +131,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
             } else if (self.bufferMax === MediaPlayer.dependencies.BufferExtensions.BUFFER_SIZE_REQUIRED) {
                 currentBufferTarget = minBufferTarget;
 
-                if (!isLive) {
+                if (!isDynamic) {
                     if (!waitingForBuffer) {
                         deferredIsAtTop = isPlayingAtTopQuality.call(self);
                     }

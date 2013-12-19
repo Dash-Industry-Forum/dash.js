@@ -17,6 +17,9 @@ MediaPlayer.dependencies.SchedulerModel = function () {
 
     var context,
         scheduledTask,
+        type,
+        executeTime,
+        executeId,
         isScheduled = false;
 
     return {
@@ -38,6 +41,30 @@ MediaPlayer.dependencies.SchedulerModel = function () {
 
         executeScheduledTask: function() {
             scheduledTask.call(context);
+        },
+
+        setExecuteTime: function(value) {
+            executeTime = value;
+        },
+
+        getExecuteTime: function() {
+            return executeTime;
+        },
+
+        setExecuteId: function(value) {
+            executeId = value;
+        },
+
+        getExecuteId: function() {
+            return executeId;
+        },
+
+        setType: function(value) {
+            type = value;
+        },
+
+        getType: function() {
+            return type;
         },
 
         setIsScheduled: function(value) {

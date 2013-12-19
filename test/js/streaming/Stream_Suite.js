@@ -1,135 +1,188 @@
-// The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
-//
-// Copyright (c) 2013, Microsoft Open Technologies, Inc.
-//
-// All rights reserved.
-// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-//     -             Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-//     -             Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-//     -             Neither the name of the Microsoft Open Technologies, Inc. nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
+if(window.location.href.indexOf("runner.html")>0){
 describe("Stream test Suite", function () {
-    var ManifestLoader,metricsModel,parser,manifestObj,period,manifestExt,debug,player,videoDataObj,videotag,codec,mediaSource,primaryAudioDataObj,url,server;
+	var ManifestLoader,metricsModel,parser,manifestExt,debug,player,videoDataObj,videotag,codec,mediaSource,primaryAudioDataObj,url,server,streams,periodIndex;
 
-    beforeEach(function () {
-         period = 0;
-
-        system = new dijon.System();
-        system.mapValue("system", system);
-        system.mapOutlet("system");
-        context = new Dash.di.DashContext();
-        system.injectInto(context);
+	beforeEach(function () {
+		system = new dijon.System();
+		system.mapValue("system", system);
+		system.mapOutlet("system");
+		context = new Dash.di.DashContext();
+		system.injectInto(context);	
+		player = initMediaPlayer();
         ManifestLoader = system.getObject('manifestLoader');
-
-        url = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd"; //streams["envivio"].url;
-
+		streams = system.getObject("stream");
+		
+		streams.setPeriodIndex(0);
+		periodIndex = streams.getPeriodIndex();
+      
         manifestObj = null;
         manifestExt =  system.getObject("manifestExt");
+	});
+	
+    
+	it("Prerequisites for Main Function Initilaised",function(){
+		var browserVersion = parseBrowserVersion( location.search );	
+		expect(browserVersion.toLowerCase()).toEqual("stable");
+	}); 
+	
+	it("ManifestObj Initilaised",function(){
+		expect(manifestRes.Period.BaseURL).toEqual(testBaseUrl);			
+	});
+	
+	it("Audio-Data Initilaised",function(){
+		debugger;
+		manifestExt.getAudioDatas(manifestRes,periodIndex).then(function (audioDatas) {
+			expect(audioDatas[0].mimeType).toContain('audio');
+		});
+		
+	}); 
+	
+	it("Audio-Track Index Set",function(){
+		debugger;
+		manifestExt.getPrimaryAudioData(manifestRes,periodIndex).then( function (primaryAudioData) {
+			primaryAudioDataObj = primaryAudioData;
+			manifestExt.getDataIndex(primaryAudioDataObj,manifestRes).then(
+				function (index) {
+					expect(isNaN(index)).not.toBeTruthy();
+			}); 
+		});      
+	}); 
+		
+	it("Audio-Codec Initilaised",function(){
+		 manifestExt.getPrimaryAudioData(manifestRes,periodIndex).then(function (primaryAudioData) {
+			canRunBool = '';
+			manifestExt.getCodec(primaryAudioData).then(
+				function (codec) {
+				   expect(codec).toContain('audio');
+				});
+			});
+	});
+	
+	it("Check Live Start",function(){
+		if(manifestRes != undefined)
+		{
+			manifestExt.getLiveStart(manifestRes, periodIndex).then(function (dataLiveStart) {
+				debugger;
+				expect(isNaN(dataLiveStart)).not.toBeTruthy();
+			});       
+		}
+	});	
+	
+	it("Duration initilaised",function(){
+		manifestExt.getDuration(manifestRes, false).then(function (duration) {
+			expect(isNaN(duration)).not.toBeTruthy();
+		});      
+	});
+	
+	it("Check Stream Duration",function(){	
+		debugger;
+		streams = initStreamData(manifestRes);
+		waits(1000);
+		waitsFor(function(){
+			if(streams.getDuration() != undefined) return true;
+		}, "stream is not initialized", 100);
+		runs(function () {
+			debugger;
+			var duration = streams.getDuration();
+			expect(isNaN(duration)).not.toBeTruthy();
+		});				          
+	});	
 
-        ManifestLoader.load(url).then(
-        function (manifestResult) {
-            manifestObj = manifestResult;
-        });
-    });
+	it("Check Auto-Play",function(){
+		debugger;		
+		streams = initStreamData(manifestRes);
+		waitsFor(function(){
+			if(streams.getAutoPlay() != undefined) 
+				return true;
+		}, "stream is not initialized", 100);
+		runs(function () {
+			var autoPlay = streams.getAutoPlay();
+			expect(autoPlay).not.toBe(null);
+			expect(autoPlay).toBeTruthy();
+		});		          
+	});	
 
+	
+	
+	function parseBrowserVersion( searchStr ) {
+		var versionIndex,
+			subSearchStr,
+			ampIndex,
+			equalIndex,
+			result;
 
-    it("Prerequisites for Main Function Initilaised",function(){
-        var browserVersion = parseBrowserVersion( location.search );
-        initStreamData();
-        expect(browserVersion.toLowerCase()).toEqual("stable");
-        for (first in streams) break;
-        /*if(window.location.href.indexOf("runner.html")>0)
-         expect(streams[first].isLive).toEqual(false);
-        else
-          expect(streams[first].isLive).toEqual(true);*/
-    });
+		if ( searchStr === null || searchStr.length === 0) {
+			return "stable";
+		}
 
-    it("ManifestObj Initilaised",function(){
-        ManifestLoader.load(url).then(
-            function (manifestResult) {
-                waitsFor(function () {
-                    if (manifestObj) return true;
-                }, "data is null", 100);
-                runs(function () {
-                    expect(manifestObj.Period.BaseURL).toEqual("http://dash.edgesuite.net/envivio/dashpr/clear/");
-                });
-            });
-    });
-    it("Audio-Data Initilaised",function(){
-       ManifestLoader.load(url).then(
-            function (manifestResult) {
-                waitsFor(function () {
-                    if (manifestObj) return true;
-                }, "data is null", 100);
-                runs(function () {
-                    manifestExt.getAudioDatas(manifestObj, period).then(function (audioDatas) {
-                    expect(audioDatas[0].mimeType).toContain('audio');
-                 });
-            });
-        });
-    });
+		searchStr = searchStr.toLowerCase();
+		versionIndex = searchStr.indexOf("version=");
 
-    it("Audio-Track Index Set",function(){
-        ManifestLoader.load(url).then(
-            function (manifestResult) {
-                waitsFor(function () {
-                    if (manifestObj) return true;
-                }, "data is null", 100);
-                runs(function () {
-                    manifestExt.getPrimaryAudioData(manifestObj, period).then( function (primaryAudioData) {
-                    primaryAudioDataObj = primaryAudioData;
-                    manifestExt.getDataIndex(primaryAudioDataObj,manifestObj).then(
-                        function (index) {
-                            expect(isNaN(index)).not.toBeTruthy();
-                    });
-                });
-            });
-        });
-    });
+		if (versionIndex === -1) {
+			return "stable"
+		}
 
-    it("Audio-Codec Initilaised",function(){
-        ManifestLoader.load(url).then(
-            function (manifestResult) {
-                waitsFor(function () {
-                    if (manifestObj) return true;
-                }, "data is null", 100);
-                runs(function () {
-                    manifestExt.getPrimaryAudioData(manifestObj, period).then( function (primaryAudioData) {
-                    canRunBool = '';
-                    manifestExt.getCodec(primaryAudioDataObj).then(
-                        function (codec) {
-                            return codec;
-                    }).then(function(codec){;
-                        canRunBool = player.capabilities.supportsCodec(videotag[0],codec);
-                        return codec;
-                    }).then(function(codec){
-                        if(canRunBool){
-                            expect(codec).toContain('audio');
-                        }
-                    });
-                });
-            });
-        });
-    });
+		subSearchStr = searchStr.substr( versionIndex, searchStr.length );
+		ampIndex = subSearchStr.indexOf("&");
+		equalIndex = subSearchStr.indexOf("=");
 
-    it("Duration initilaised",function(){
-        ManifestLoader.load(url).then(
-            function (manifestResult) {
-                waitsFor(function () {
-                    if (manifestObj) return true;
-                }, "data is null", 100);
-                runs(function () {
-                    manifestExt.getDuration(manifestObj, false).then(function (duration) {
-                    expect(isNaN(duration)).not.toBeTruthy();
-                    });
-                });
-            });
-    });
+		if (ampIndex === -1) {
+			result = subSearchStr.substr((equalIndex + 1), subSearchStr.length);
+		} else {
+			result = subSearchStr.substr((equalIndex + 1), (ampIndex - equalIndex - 1));
+		}
 
-  describe("Stream test Suite for Events", function () {
+		return result;
+	}
+	
+	function initStreamData(manifestObj)
+	{		
+		debugger;
+		var element,video;
+		if (manifestObj != undefined)
+		{		
+			element = document.createElement('video');
+			$(element).autoplay = true;
+			video = system.getObject("videoModel");
+			video.setElement($(element)[0]);
+			streams.setVideoModel(video);
+			streams.load(manifestObj,periodIndex);	
+			return streams;
+		}
+		return streams;		
+	}
+	
+	function initMediaPlayer()
+	{
+		player = new MediaPlayer(context);
+		//$("#version-number").text("version " + player.getVersion());
+		player.startup();
+
+		debug = player.debug;
+		//debug.init(console);
+
+		player.autoPlay = true;	
+		//var input = $("#custom-source"),
+		//liveBox = $("#live-checkbox"),
+		
+		var input,
+		liveBox,
+		debug = player.getDebug(),
+		url,
+		isLive = false;
+
+		url = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd ";
+		isLive = true;
+
+		//player.setIsLive(isLive);
+		player.attachSource(url);
+		debug.log("manifest = " + url + " | isLive = " + isLive);
+		playing = true;
+		return player;
+	}
+
+	
+	 describe("Stream test Suite for Events", function () {
         var tape,result,stream,video,startFlg,seekFlag,timeout;
         beforeEach(function(){
             startFlg = false;
@@ -151,3 +204,7 @@ describe("Stream test Suite", function () {
 
     });
 });
+
+}
+
+

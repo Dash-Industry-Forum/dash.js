@@ -23,7 +23,7 @@ describe("Fragment Loader Test Suite", function () {
                             system.mapOutlet("system");
                             context = new Dash.di.DashContext();
                             system.injectInto(context);
-                            source = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
+                            source = "http://127.0.0.1:3000/test/js/utils/Manifest.mpd";
                             fragmentLoader = system.getObject('fragmentLoader');
     
               });
@@ -40,7 +40,7 @@ describe("Fragment Loader Test Suite", function () {
                   req.streamType="audio";
                   req.timescale=48000;
                   req.type="Media Segment";
-                  req.url="http://dashdemo.edgesuite.net/envivio/dashpr/clear/audio/1.m4s";
+                  req.url=source;
                   
               var promise = null,
               success,
@@ -61,13 +61,10 @@ describe("Fragment Loader Test Suite", function () {
                  
                 waitsFor(function(){
                   return flag;
-                 });
+                 },"",100);
                  
                 runs(function(){
                   expect(successResult.request.action).toEqual("download");
                     });
             });
-            
-            
- 
   });

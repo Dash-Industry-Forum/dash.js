@@ -17,12 +17,15 @@ MediaPlayer.models.ManifestModel = function () {
     var manifest;
 
     return {
+        system: undefined,
+
         getValue:  function () {
             return manifest;
         },
 
         setValue: function (value) {
             manifest = value;
+            this.system.notify("manifestUpdated");
         }
     };
 };

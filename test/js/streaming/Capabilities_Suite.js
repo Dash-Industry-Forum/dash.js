@@ -16,7 +16,6 @@ if(window.location.href.indexOf("runner.html")>0)
 {
     describe("Capabilities Suite", function () {
             var context,
-                source,
                 system,
                 result,
                 capabilitiesObj,
@@ -28,72 +27,62 @@ if(window.location.href.indexOf("runner.html")>0)
                     system.mapOutlet("system");
                     context = new Dash.di.DashContext();
                     system.injectInto(context);
-                    source = "http://dashdemo.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
                     capabilitiesObj=system.getObject('capabilities');
+					var element = document.createElement('video');
+                    video = system.getObject("videoModel");
+                    video.setElement(element);
+                         
+                    stream = system.getObject("stream");
                 });
               
                 it("supports Codec", function(){
-                         var element = document.createElement('video');
-                         video = system.getObject("videoModel");
-                         video.setElement(element);
-                         
-                         stream = system.getObject("stream");
-                     
-                         var manifestLoader = system.getObject('manifestLoader');
-                         manifestLoader = system.getObject('manifestLoader');
-                            manifestLoader.load(source).then( function (manifestResult) {
-                            stream.manifestModel.setValue(manifestResult);
-                            stream.manifestExt.getVideoData(stream.manifestModel.getValue()).then(
-                                function (videoData) {
-                                   stream.manifestExt.getCodec(videoData).then(
-                                            function (codec) {
-                                                 var result= stream.capabilities.supportsCodec(stream.videoModel.getElement(), codec)
-                                                  expect(result).toBe(true);
-                                                });
-                             });
-                         });
-                        
-                   });
+					debugger;
+                    stream.manifestModel.setValue(manifestRes);
+						stream.manifestExt.getVideoData(manifestRes,0).then(
+							function (videoData) {
+								debugger;
+								stream.manifestExt.getCodec(videoData).then(
+									function (codec) {
+										debugger;
+										var result= stream.capabilities.supportsCodec(stream.videoModel.getElement(), codec)
+										expect(result).toBe(true);
+									});
+						 });
+                });
                    
-                   it("supports Codec with manifestResult.Period_asArray[0].AdaptationSet_asArray as empty", function(){
-                         var element = document.createElement('video');
-                         video = system.getObject("videoModel");
-                         video.setElement(element);
-                         
-                         stream = system.getObject("stream");
-                         var manifestLoader = system.getObject('manifestLoader');
-                         manifestLoader = system.getObject('manifestLoader');
-                            manifestLoader.load(source).then( function (manifestResult) {
-                            manifestResult.Period_asArray[0].AdaptationSet_asArray={};
-                            stream.manifestModel.setValue(manifestResult);
-                            stream.manifestExt.getVideoData(stream.manifestModel.getValue()).then(
-                                function (videoData) {
-                                   expect(videoData).toBe(null);
-                             });
-                         });
-                        
+                   it("supports Codec with manifestResult.Period_asArray[0].AdaptationSet_asArray as empty", function(){						
+                        manifestRes.Period_asArray[0].AdaptationSet_asArray={};
+						stream.manifestModel.setValue(manifestRes);
+						stream.manifestExt.getVideoData(manifestRes,0).then(
+							function (videoData) {
+							   expect(videoData).not.toBe(null);
+						});
                     });
                     
                     it("supports Codec with videoData as null", function(){
-                         var element = document.createElement('video');
-                         video = system.getObject("videoModel");
-                         video.setElement(element);
-                         
-                         stream = system.getObject("stream");
-                         var manifestLoader = system.getObject('manifestLoader');
-                         manifestLoader = system.getObject('manifestLoader');
-                            manifestLoader.load(source).then( function (manifestResult) {
-                            stream.manifestModel.setValue(manifestResult);
-                            stream.manifestExt.getVideoData(stream.manifestModel.getValue()).then(
-                              function (videoData) {
-                                    videoData=null;
-                                   stream.manifestExt.getCodec(videoData).then(
-                                            function (codec) {
-                                                  expect(codec).toBe(null);
-                                                });
-                             });
-                         });
-                        
+                        stream.manifestModel.setValue(manifestRes);
+                        stream.manifestExt.getVideoData(manifestRes,0).then(
+                        	function (videoData) {
+                        	videoData = null;
+                        	stream.manifestExt.getCodec(videoData).then(
+                        		function (codec) {
+                        		expect(codec).toBe(null);
+                        	});
+                        });
                     });
+                    
+                    it("supports MediaSource", function () {
+                    	expect(capabilitiesObj.supportsMediaSource()).not.toBe(null);
+                    });
+                    it("supports MediaKeys", function () {
+                    	expect(capabilitiesObj.supportsMediaKeys()).not.toBe(null);
+                    });
+
+                    it("supports Codec", function () {
+                    	expect(function () {
+                    		capabilitiesObj.supportsCodec(null, null, null)
+                    	}).toThrow();
+                    });
+                  
         });
     }

@@ -18,8 +18,23 @@ Dash.vo.Segment = function () {
     this.mediaRange = null;
     this.media = null;
     this.duration = NaN;
-    this.startTime = NaN;
-    this.timescale = NaN;
+    // this is the time that should be inserted into the media url
+    this.replacementTime = null;
+    // this is the number that should be inserted into the media url
+    this.replacementNumber = NaN;
+    // This is supposed to match the time encoded in the media Segment
+    this.mediaStartTime = NaN;
+    // When the source buffer timeOffset is set to MSETimeOffset this is the 
+    // time that will match the seekTarget and video.currentTime
+    this.presentationStartTime = NaN;
+    // Do not schedule this segment until 
+    this.availabilityStartTime = NaN;
+    // Ignore and  discard this segment after
+    this.availabilityEndTime = NaN;
+    // For dynamic mpd's, this is the wall clock time that the video   
+    // element currentTime should be presentationStartTime
+    this.wallStartTime = NaN;
+    this.representation = null;
 };
 
 Dash.vo.Segment.prototype = {

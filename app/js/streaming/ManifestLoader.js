@@ -31,6 +31,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
             var baseUrl = parseBaseUrl(url),
                 request = new XMLHttpRequest(),
                 requestTime = new Date(),
+                mpdLoadedTime = null,
                 needFailureReport = true,
                 self = this;
 
@@ -44,6 +45,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                   return;
                 }
                 needFailureReport = false;
+                mpdLoadedTime = new Date();
 
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
@@ -52,7 +54,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  null,
                                                  null,
                                                  requestTime,
-                                                 new Date(),
+                                                 mpdLoadedTime,
                                                  request.status,
                                                  null,
                                                  null);
@@ -60,6 +62,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 self.parser.parse(request.responseText, baseUrl).then(
                     function (manifest) {
                         manifest.mpdUrl = url;
+                        manifest.mpdLoadedTime = mpdLoadedTime;
                         deferred.resolve(manifest);
                     },
                     function () {

@@ -16,11 +16,11 @@
 
 describe("AbrController Suite", function () {
         var context,
-            source,
             system,
             result,
             abrController,
             data={},
+			baseUrl="http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd",
             flag;
            
              beforeEach(function () {
@@ -31,7 +31,7 @@ describe("AbrController Suite", function () {
                 system.injectInto(context);
                 abrController=system.getObject("abrController");
                                 
-                data.BaseURL="http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
+                data.BaseURL=baseUrl;
                 var objSegmentTemplate={};
                 objSegmentTemplate.__cnt= 6;
                 objSegmentTemplate.duration=360000;
@@ -42,7 +42,7 @@ describe("AbrController Suite", function () {
                 objSegmentTemplate.timescale=90000;
                 var objRepresentation=[];
                 var objSubRepresentation=[];
-                objSubRepresentation.BaseURL="http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
+                objSubRepresentation.BaseURL=baseUrl;
                 objSubRepresentation.SegmentTemplate=objSegmentTemplate;
                 objSubRepresentation.__cnt=8;
                 objSubRepresentation.bandwidth=349952;
@@ -56,7 +56,7 @@ describe("AbrController Suite", function () {
                 objSubRepresentation.width=  320;
                 objRepresentation.push(objSubRepresentation);
                 var objSubRepresentation=[];
-                objSubRepresentation.BaseURL="http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
+                objSubRepresentation.BaseURL=baseUrl;
                 objSubRepresentation.SegmentTemplate=objSegmentTemplate;
                 objSubRepresentation.__cnt=8;
                 objSubRepresentation.bandwidth=600000;
@@ -70,7 +70,7 @@ describe("AbrController Suite", function () {
                 objSubRepresentation.width=  480;
                 objRepresentation.push(objSubRepresentation);
                 var objSubRepresentation=[];
-                objSubRepresentation.BaseURL="http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
+                objSubRepresentation.BaseURL=baseUrl;
                 objSubRepresentation.SegmentTemplate=objSegmentTemplate;
                 objSubRepresentation.__cnt=8;
                 objSubRepresentation.bandwidth=1000000;
@@ -84,7 +84,7 @@ describe("AbrController Suite", function () {
                 objSubRepresentation.width=  704;
                 objRepresentation.push(objSubRepresentation);
                 var objSubRepresentation=[];
-                objSubRepresentation.BaseURL="http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
+                objSubRepresentation.BaseURL=baseUrl;
                 objSubRepresentation.SegmentTemplate=objSegmentTemplate;
                 objSubRepresentation.__cnt=8;
                 objSubRepresentation.bandwidth= 2000000;
@@ -98,7 +98,7 @@ describe("AbrController Suite", function () {
                 objSubRepresentation.width=   1024;
                 objRepresentation.push(objSubRepresentation);
                 var objSubRepresentation=[];
-                objSubRepresentation.BaseURL="http://dashdemo.edgesuite.net/envivio/dashpr/clear/";
+                objSubRepresentation.BaseURL=baseUrl;
                 objSubRepresentation.SegmentTemplate=objSegmentTemplate;
                 objSubRepresentation.__cnt=8;
                 objSubRepresentation.bandwidth= 3000000;
@@ -126,8 +126,7 @@ describe("AbrController Suite", function () {
                 data.startWithSAP= 1;
             });
 
-
- 
+/* 
        it("getPlaybackQuality", function(){
                 var promise = null,
                   success,
@@ -150,15 +149,13 @@ describe("AbrController Suite", function () {
                  
                   waitsFor(function(){
                   return flag;
-                 });
+                 },"data null",100);
                  
                  runs(function(){
                      expect(successResult.quality).toEqual(0);
-                     expect(successResult.confidence).toEqual(0);
                   });
- 
         });
-        
+*/
          it("getPlaybackQuality with type as null", function(){
                     var promise = null,
                       success,
@@ -182,4 +179,68 @@ describe("AbrController Suite", function () {
  
             });
  
+       
+			it("setAutoSwitchBitrate and getAutoSwitchBitrate", function(){
+			  abrController.setAutoSwitchBitrate(5);
+			  expect(abrController.getAutoSwitchBitrate()).toEqual(5);
+			});  
+        
+       
+       
+		   it("setPlaybackQuality and getQualityFor", function(){
+				  abrController.setPlaybackQuality("audio",1);
+				  expect(abrController.getQualityFor("audio")).toEqual(1);
+			});
+        
+        if(window.location.href.indexOf("runner.html")==0)
+        {
+            describe("Abr Controller Negative Test Suite", function(){
+              it("getPlaybackQuality with type and data as null", function(){
+                    var promise = null,
+                      success,
+                      successResult,
+                      failure;
+     
+                      flag=false; 
+                      success = function(result) {
+                       successResult = result;
+                       flag = true;
+                      },
+                      failure = function(error) {
+                       flag = false;
+                      };
+
+                     runs(function(){
+                      promise =  abrController.getPlaybackQuality(null,null);
+                      promise.then(success, failure);
+                      expect(successResult).toEqual(null);
+                     });
+               });
+        
+                it("getPlaybackQuality with  data as null", function(){
+                        var promise = null,
+                          success,
+                          successResult,
+                          failure;
+         
+                          flag=false; 
+                          success = function(result) {
+                           successResult = result;
+                           flag = true;
+                          },
+                          failure = function(error) {
+                           flag = false;
+                          };
+
+                         runs(function(){
+                          promise =  abrController.getPlaybackQuality('video',null);
+                          promise.then(success, failure);
+                          expect(successResult).toEqual(null);
+                         });
+                });
+                
+                
+               
+            });
+       }
    });
