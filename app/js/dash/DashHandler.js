@@ -215,7 +215,7 @@ Dash.dependencies.DashHandler = function () {
                 if (repeat < 0) {
                     nextFrag = fragments[i+1];
                     repeatEndTime = (nextFrag && nextFrag.hasOwnProperty("t")) ? (nextFrag.t / fTimescale) : representation.adaptation.period.duration;
-                    repeat = (repeatEndTime - time/fTimescale)/(frag.d/fTimescale) - 1;
+                    repeat = Math.ceil((repeatEndTime - time/fTimescale)/(frag.d/fTimescale)) - 1;
                 }
 
                 for (j = 0; j <= repeat; j += 1) {
