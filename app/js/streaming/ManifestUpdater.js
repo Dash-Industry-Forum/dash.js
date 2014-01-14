@@ -30,7 +30,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
             if (!isNaN(refreshDelay)) {
                 this.debug.log("Refresh manifest in " + refreshDelay + " seconds.");
-                refreshTimer = setInterval(onRefreshTimer.bind(this), refreshDelay * 1000, this);
+                refreshTimer = setInterval(onRefreshTimer.bind(this), Math.min(refreshDelay * 1000, Math.pow(2, 31) - 1), this);
             }
         },
 
