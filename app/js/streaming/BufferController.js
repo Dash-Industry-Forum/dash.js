@@ -598,10 +598,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         loadInitialization = function (qualityChanged, currentQuality) {
-            var initializationPromise = null,
-                topQuality = this.bufferExt.getTopQualityIndex(type),
-                funcs = [],
-                quality;
+            var initializationPromise = null;
 
             if (initialPlayback) {
                 this.debug.log("Marking a special seek for initial " + type + " playback.");
@@ -618,13 +615,9 @@ MediaPlayer.dependencies.BufferController = function () {
             if (dataChanged) {
                 deferredInitAppend = Q.defer();
                 initializationData = [];
-                // get initialization requests for all the qualities of this buffer type
-                for (quality = 0; quality <= topQuality; quality += 1) {
-                    funcs.push(this.indexHandler.getInitRequest(availableRepresentations[quality]));
-                }
 
                 lastQuality = currentQuality;
-                initializationPromise = Q.all(funcs);
+                initializationPromise = this.indexHandler.getInitRequest(availableRepresentations[currentQuality]);
             } else {
                 initializationPromise = Q.when(null);
                 // if the quality has changed we should append the initialization data again. We get it
@@ -638,6 +631,9 @@ MediaPlayer.dependencies.BufferController = function () {
                                 deferredInitAppend.resolve();
                             }
                         );
+                    } else {
+                        // if we have not loaded the init segment for the current quality, do it
+                        initializationPromise = this.indexHandler.getInitRequest(availableRepresentations[currentQuality]);
                     }
                 }
             }
@@ -910,22 +906,15 @@ MediaPlayer.dependencies.BufferController = function () {
                     function (count) {
                         fragmentsToLoad = count;
                         loadInitialization.call(self, qualityChanged, newQuality).then(
-                            function (initializationRequests) {
-                                if (initializationRequests !== null) {
-                                    var ln = initializationRequests.length,
-                                        request,
-                                        i;
-
-                                    for (i = 0; i < ln; i += 1) {
-                                        request = initializationRequests[i];
-                                        self.debug.log("Loading " + type + " initialization: " + request.url);
-                                        self.debug.log(request);
-                                        self.fragmentController.prepareFragmentForLoading(self, request, onBytesLoadingStart, onBytesLoaded, onBytesError, signalStreamComplete).then(
-                                            function() {
-                                                setState.call(self, READY);
-                                            }
-                                        );
-                                    }
+                            function (request) {
+                                if (request !== null) {
+                                    self.debug.log("Loading " + type + " initialization: " + request.url);
+                                    self.debug.log(request);
+                                    self.fragmentController.prepareFragmentForLoading(self, request, onBytesLoadingStart, onBytesLoaded, onBytesError, signalStreamComplete).then(
+                                        function() {
+                                            setState.call(self, READY);
+                                        }
+                                    );
 
                                     dataChanged = false;
                                 }
