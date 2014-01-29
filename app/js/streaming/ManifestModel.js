@@ -14,18 +14,27 @@
 MediaPlayer.models.ManifestModel = function () {
     "use strict";
 
-    var manifest;
+    var manifest,
+        deferred = Q.defer();
+
 
     return {
         system: undefined,
+        eventBus: undefined,
 
         getValue:  function () {
-            return manifest;
+            return manifest === undefined ? deferred.promise : manifest;
         },
 
         setValue: function (value) {
             manifest = value;
             this.system.notify("manifestUpdated");
+
+            deferred.resolve(value);
+            this.eventBus.dispatchEvent({
+                type: "manifestLoaded",
+                data: value
+            });
         }
     };
 };
@@ -33,3 +42,7 @@ MediaPlayer.models.ManifestModel = function () {
 MediaPlayer.models.ManifestModel.prototype = {
     constructor: MediaPlayer.models.ManifestModel
 };
+
+
+
+
