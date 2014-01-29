@@ -261,8 +261,8 @@ Dash.dependencies.DashHandler = function () {
             if (range) {
                 periodStart = representation.adaptation.period.start;
                 duration = representation.segmentDuration;
-                startIdx = Math.floor((range.start - periodStart) / duration);
-                endIdx = Math.round((range.end - periodStart) / duration);
+                startIdx = Math.floor(range.start / duration);
+                endIdx = Math.round(range.end / duration);
             }
 
             for (i = startIdx;i < endIdx; i += 1) {
