@@ -624,6 +624,10 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             vo = null;
         }
 
+        if (periods.length === 0) {
+            return Q.when(periods);
+        }
+
         self.getCheckTime(manifest, periods[0]).then(
             function(checkTime) {
                 mpd.checkTime = checkTime;

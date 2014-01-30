@@ -239,6 +239,11 @@
                 function(mpd) {
                     self.manifestExt.getRegularPeriods(manifest, mpd).then(
                         function(periods) {
+
+                            if (periods.length === 0) {
+                                return deferred.reject("There are no regular periods");
+                            }
+
                             for (pIdx = 0, pLen = periods.length; pIdx < pLen; pIdx += 1) {
                                 period = periods[pIdx];
                                 for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx += 1) {
@@ -285,6 +290,10 @@
             composeStreams.call(self).then(
                 function() {
                     self.system.notify("streamsComposed");
+                },
+                function(errMsg) {
+                    self.errHandler.manifestError(errMsg, "nostreamscomposed", self.manifestModel.getValue());
+                    self.reset();
                 }
             );
         };
