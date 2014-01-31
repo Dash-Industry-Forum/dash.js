@@ -14,23 +14,20 @@
 MediaPlayer.models.ManifestModel = function () {
     "use strict";
 
-    var manifest,
-        deferred = Q.defer();
-
+    var manifest;
 
     return {
         system: undefined,
         eventBus: undefined,
 
         getValue:  function () {
-            return manifest === undefined ? deferred.promise : manifest;
+            return manifest;
         },
 
         setValue: function (value) {
             manifest = value;
             this.system.notify("manifestUpdated");
 
-            deferred.resolve(value);
             this.eventBus.dispatchEvent({
                 type: "manifestLoaded",
                 data: value
