@@ -106,7 +106,7 @@ Dash.dependencies.TimelineConverter = function () {
             if (isDynamic) {
                 checkTime = representation.adaptation.period.mpd.checkTime;
                 duration = representation.segmentDuration;
-                now = calcPresentationTimeFromWallTime(new Date(), representation.adaptation.period, isDynamic) - representation.adaptation.period.mpd.suggestedPresentationDelay;
+                now = calcPresentationTimeFromWallTime(new Date(), representation.adaptation.period, isDynamic);
                 //the Media Segment list is further restricted by the CheckTime together with the MPD attribute
                 // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
                 // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.

@@ -247,7 +247,6 @@ Dash.dependencies.DashHandler = function () {
                 i,
                 startIdx = 0,
                 endIdx = representation.adaptation.period.duration / representation.segmentDuration,
-                periodStart,
                 duration,
                 range,
                 seg = null,
@@ -259,10 +258,9 @@ Dash.dependencies.DashHandler = function () {
             range = representation.segmentAvailabilityRange || this.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
             if (range) {
-                periodStart = representation.adaptation.period.start;
                 duration = representation.segmentDuration;
                 startIdx = Math.floor(range.start / duration);
-                endIdx = Math.round(range.end / duration);
+                endIdx = Math.floor((range.end - duration) / duration);
             }
 
             for (i = startIdx;i < endIdx; i += 1) {
