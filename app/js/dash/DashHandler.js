@@ -244,24 +244,19 @@ Dash.dependencies.DashHandler = function () {
             var segments = [],
                 template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate,
+                duration = representation.segmentDuration,
                 i,
-                startIdx = 0,
-                endIdx = representation.adaptation.period.duration / representation.segmentDuration,
-                duration,
+                startIdx,
+                endIdx,
                 range,
                 seg = null,
                 start,
                 url = null;
 
             start = representation.startNumber;
-
-            range = representation.segmentAvailabilityRange || this.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
-
-            if (range) {
-                duration = representation.segmentDuration;
-                startIdx = Math.floor(range.start / duration);
-                endIdx = Math.floor((range.end - duration) / duration);
-            }
+            range = this.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
+            startIdx = Math.floor(range.start / duration);
+            endIdx = Math.floor((range.end - duration) / duration);
 
             for (i = startIdx;i < endIdx; i += 1) {
 
@@ -404,7 +399,7 @@ Dash.dependencies.DashHandler = function () {
                 lastIdx;
 
                 // Already figure out the segments.
-            if (representation.segments) {
+            if (!isSegmentListUpdateRequired.call(self, representation)) {
                 return Q.when(representation.segments);
             } else {
                 if (representation.segmentInfoType === "SegmentTimeline") {
@@ -487,6 +482,49 @@ Dash.dependencies.DashHandler = function () {
             */
 
             return Q.when(idx);
+        },
+
+        isSegmentListUpdateRequired = function(representation) {
+            // if representation has no segments the segment list should be created
+            if (!representation.segments) return true;
+
+            // segment list for static mpd should not be updated
+            if(!isDynamic) return false;
+
+            // if the index is less than the length of segment list than the segment for this inxed is available,
+            // so we don't need to update the list
+            if (index < representation.segments.length) return false;
+
+            var self = this,
+                lsn = getLatestSegmentNumber.call(self, representation),
+                gsn = getGreatestSegmentNumber.call(self, representation),
+                res;
+
+            // if the index is out of the range of available segments, but the latest segment number is less than the
+            // greatest segment number, this means that segment list is out of date and should be updated
+            res = (lsn <= gsn);
+
+            return res;
+        },
+
+        getLatestSegmentNumber = function(representation) {
+            var end = representation.segmentAvailabilityRange.end,
+                duration = representation.segmentDuration,
+                lsn;
+
+            lsn = Math.floor((end - duration) / duration);
+
+            return lsn;
+        },
+
+        getGreatestSegmentNumber = function(representation) {
+            var checkTime = representation.adaptation.period.mpd.checkTime,
+                duration = representation.segmentDuration,
+                gsn;
+
+            gsn = Math.ceil((checkTime - duration) / duration);
+
+            return gsn;
         },
 
         getRequestForSegment = function (segment) {

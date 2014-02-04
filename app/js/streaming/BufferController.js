@@ -962,6 +962,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
                     searchForLiveEdge.call(self).then(
                         function(liveEdgeTime) {
+                            self.system.notify("liveEdgeFound", periodInfo.liveEdge, liveEdgeTime, periodInfo);
                             // step back from a found live edge time to be able to buffer some data
                             periodInfo.liveEdge = liveEdgeTime - minBufferTime;
                             ready = true;

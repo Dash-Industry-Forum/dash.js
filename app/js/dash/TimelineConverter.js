@@ -96,26 +96,39 @@ Dash.dependencies.TimelineConverter = function () {
         },
 
         calcSegmentAvailabilityRange = function(representation, isDynamic) {
-            var range = null,
+            var clientServerTimeShift = representation.adaptation.period.clientServerTimeShift * 1000,
+                duration = representation.segmentDuration,
+                start = 0,
+                end = representation.adaptation.period.duration / duration,
+                range = {start: start, end: end},
                 checkTime,
-                duration,
-                now,
-                start,
-                end;
+                now;
 
-            if (isDynamic) {
-                checkTime = representation.adaptation.period.mpd.checkTime;
-                duration = representation.segmentDuration;
-                now = calcPresentationTimeFromWallTime(new Date(), representation.adaptation.period, isDynamic);
-                //the Media Segment list is further restricted by the CheckTime together with the MPD attribute
-                // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
-                // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.
-                start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth - duration), 0);
-                end = isNaN(checkTime) ? now : Math.min(checkTime, now);
-                range = {start: start, end: end};
+            if (!isDynamic) return range;
+
+            if (!representation.adaptation.period.isClientServerTimeSyncCompleted && representation.segmentAvailabilityRange) {
+                return representation.segmentAvailabilityRange;
             }
 
+            checkTime = representation.adaptation.period.mpd.checkTime;
+            now = calcPresentationTimeFromWallTime(new Date((new Date().getTime()) + clientServerTimeShift), representation.adaptation.period, isDynamic);
+            //the Media Segment list is further restricted by the CheckTime together with the MPD attribute
+            // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
+            // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.
+            start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth - duration), 0);
+            end = isNaN(checkTime) ? now : Math.min(checkTime, now);
+            range = {start: start, end: end};
+
             return range;
+        },
+
+        liveEdgeFound = function(expectedLiveEdge, actualLiveEdge, period) {
+            if (period.isClientServerTimeSyncCompleted) return;
+
+            // the difference between expected and actual live edge time is supposed to be a difference between client
+            // and server time as well
+            period.clientServerTimeShift = expectedLiveEdge - actualLiveEdge;
+            period.isClientServerTimeSyncCompleted = true;
         },
 
         calcMSETimeOffset = function (representation) {
@@ -128,6 +141,10 @@ Dash.dependencies.TimelineConverter = function () {
     return {
         system: undefined,
         debug: undefined,
+
+        setup: function() {
+            this.system.mapHandler("liveEdgeFound", undefined, liveEdgeFound.bind(this));
+        },
 
         calcAvailabilityStartTimeFromPresentationTime: calcAvailabilityStartTimeFromPresentationTime,
         calcAvailabilityEndTimeFromPresentationTime: calcAvailabilityEndTimeFromPresentationTime,
