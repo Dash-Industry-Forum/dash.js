@@ -48,7 +48,7 @@ MediaPlayer.dependencies.BufferController = function () {
         isQuotaExceeded = false,
         rejectedBytes = null,
         fragmentDuration = 0,
-        rejectTime = null,
+        appendingRejectedData = false,
         mediaSource,
 
         liveEdgeSearchRange = null,
@@ -235,11 +235,6 @@ MediaPlayer.dependencies.BufferController = function () {
 				function (data) {
 					if (data !== null && deferredInitAppend !== null) {
 
-                        if (request.quality !== lastQuality) {
-                            self.fragmentController.removeExecutedRequest(fragmentModel, request);
-                            return;
-                        }
-
                         Q.when(deferredInitAppend.promise).then(
                             function() {
                                 appendToBuffer.call(self, data, request.quality).then(
@@ -248,6 +243,10 @@ MediaPlayer.dependencies.BufferController = function () {
                                             function(lastRequest) {
                                                 if ((lastRequest.index - 1) === request.index && !isBufferingCompleted) {
                                                     isBufferingCompleted = true;
+                                                    if (stalled) {
+                                                        stalled = false;
+                                                        self.videoModel.stallStream(type, stalled);
+                                                    }
                                                     setState.call(self, READY);
                                                     self.system.notify("bufferingCompleted");
                                                 }
@@ -270,7 +269,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 // if we append the rejected data we should use the stored promise instead of creating a new one
                 deferred = isAppendingRejectedData ? deferredRejectedDataAppend : Q.defer(),
                 ln = isAppendingRejectedData ? deferredAppends.length : deferredAppends.push(deferred),
-                idx = deferredAppends.indexOf(deferred),
+                representation = getRepresentationForQuality(lastQuality, self.getData()),
                 currentVideoTime = self.videoModel.getCurrentTime(),
                 currentTime = new Date();
 
@@ -284,7 +283,7 @@ MediaPlayer.dependencies.BufferController = function () {
             Q.when((isAppendingRejectedData) || ln < 2 || deferredAppends[ln - 2].promise).then(
                 function() {
                     if (!buffer) return;
-                    clearBuffer.call(self).then(
+                    hasEnoughSpaceToAppend.call(self).then(
                         function() {
                             if (quality !== lastQuality) {
                                 deferred.resolve();
@@ -304,9 +303,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                                 rejectedBytes = null;
                                             }
 
-                                            // we should resume request scheduling after all peinding segments are appended -
-                                            //the last promise in the queue has been resolved
-                                            if ((state === WAITING) && ((idx + 1 === deferredAppends.length))) {
+                                            if (!self.requestScheduler.isScheduled(self)) {
                                                 doStart.call(self);
                                             }
 
@@ -345,7 +342,6 @@ MediaPlayer.dependencies.BufferController = function () {
                                                 rejectedBytes = data;
                                                 deferredRejectedDataAppend = deferred;
                                                 isQuotaExceeded = true;
-                                                rejectTime = self.videoModel.getCurrentTime();
                                                 fragmentsToLoad = 0;
                                                 // stop scheduling new requests
                                                 doStop.call(self);
@@ -398,6 +394,35 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
+        hasEnoughSpaceToAppend = function() {
+            var self = this,
+                deferred = Q.defer(),
+                removedTime = 0,
+                startClearing;
+
+            // do not remove any data until the quota is exceeded
+            if (!isQuotaExceeded) {
+                return Q.when(true);
+            }
+
+            startClearing = function() {
+                clearBuffer.call(self).then(
+                    function(removedTimeValue) {
+                        removedTime += removedTimeValue;
+                        if (removedTime >= fragmentDuration) {
+                            deferred.resolve();
+                        } else {
+                            setTimeout(startClearing, fragmentDuration * 1000);
+                        }
+                    }
+                );
+            };
+
+            startClearing.call(self);
+
+            return deferred.promise;
+        },
+
         clearBuffer = function() {
             var self = this,
                 deferred = Q.defer(),
@@ -405,11 +430,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 removeStart = 0,
                 removeEnd,
                 req;
-
-            // do not remove any data until the quota is exceeded
-            if (!isQuotaExceeded) {
-                return Q.when(true);
-            }
 
             // we need to remove data that is more than one segment before the video currentTime
             req = self.fragmentController.getExecutedRequestForTime(fragmentModel, currentTime);
@@ -421,13 +441,13 @@ MediaPlayer.dependencies.BufferController = function () {
                     if ((range === null) && (seekTarget === currentTime) && (buffer.buffered.length > 0)) {
                         removeEnd = buffer.buffered.end(buffer.buffered.length -1 );
                     }
-
+                    removeStart = buffer.buffered.start(0);
                     self.sourceBufferExt.remove(buffer, removeStart, removeEnd, periodInfo.duration, mediaSource).then(
                         function() {
                             // after the data has been removed from the buffer we should remove the requests from the list of
                             // the executed requests for which playback time is inside the time interval that has been removed from the buffer
                             self.fragmentController.removeExecutedRequestsBeforeTime(fragmentModel, removeEnd);
-                            deferred.resolve();
+                            deferred.resolve(removeEnd - removeStart);
                         }
                     );
                 }
@@ -719,7 +739,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
         checkIfSufficientBuffer = function () {
             if (waitingForBuffer) {
-                if (bufferLevel < minBufferTime) {
+                if ((bufferLevel < minBufferTime) && (minBufferTime < (periodInfo.duration - this.videoModel.getCurrentTime()))) {
                     if (!stalled) {
                         this.debug.log("Waiting for more " + type + " buffer before starting playback.");
                         stalled = true;
@@ -1119,16 +1139,19 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         updateBufferState: function() {
-            var self = this,
-                currentTime = self.videoModel.getCurrentTime();
+            var self = this;
 
             // if the buffer controller is stopped and the buffer is full we should try to clear the buffer
             // before that we should make sure that we will have enough space to append the data, so we wait
             // until the video time moves forward for a value greater than rejected data duration since the last reject event or since the last seek.
-            if (isQuotaExceeded && rejectedBytes && (Math.abs(currentTime - (seeking ? seekTarget : rejectTime)) > fragmentDuration)) {
+            if (isQuotaExceeded && rejectedBytes && !appendingRejectedData) {
+                appendingRejectedData = true;
                 //try to append the data that was previosly rejected
-                rejectTime = self.videoModel.getCurrentTime();
-                appendToBuffer.call(self, rejectedBytes);
+                appendToBuffer.call(self, rejectedBytes, lastQuality).then(
+                    function(){
+                        appendingRejectedData = false;
+                    }
+                );
             } else {
                 updateBufferLevel.call(self);
             }
