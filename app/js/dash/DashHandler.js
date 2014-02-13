@@ -256,9 +256,9 @@ Dash.dependencies.DashHandler = function () {
             start = representation.startNumber;
             range = this.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
             startIdx = Math.floor(range.start / duration);
-            endIdx = Math.floor((range.end - duration) / duration);
+            endIdx = Math.floor(range.end / duration);
 
-            for (i = startIdx;i < endIdx; i += 1) {
+            for (i = startIdx;i <= endIdx; i += 1) {
 
                 seg = getIndexBasedSegment.call(
                     this,
