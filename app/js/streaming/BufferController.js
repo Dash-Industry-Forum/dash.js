@@ -536,22 +536,22 @@ MediaPlayer.dependencies.BufferController = function () {
                 self.fragmentController.isFragmentExists(request).then(
                     function(isExist) {
                         if (isExist) {
-                            onSearchForSegmentSucceeded.call(self, request);
+                            onSearchForSegmentSucceeded.call(self, request, searchTime);
                         } else {
-                            onSearchForSegmentFailed.call(self, request);
+                            onSearchForSegmentFailed.call(self, request, searchTime);
                         }
                     }
                 );
             }
         },
 
-        onSearchForSegmentFailed = function(request) {
+        onSearchForSegmentFailed = function(request, lastSearchTime) {
             var startTime = request.startTime,
                 searchTime,
                 searchInterval;
 
             if (useBinarySearch) {
-                binarySearch.call(this, false, startTime);
+                binarySearch.call(this, false, lastSearchTime);
                 return;
             }
 
@@ -570,7 +570,7 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
-        onSearchForSegmentSucceeded = function (request) {
+        onSearchForSegmentSucceeded = function (request, lastSearchTime) {
             var startTime = request.startTime;
 
             if (!useBinarySearch) {
@@ -584,7 +584,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 liveEdgeSearchRange.end = startTime + (2 * liveEdgeSearchStep);
             }
 
-            binarySearch.call(this, true, startTime);
+            binarySearch.call(this, true, lastSearchTime);
         },
 
         binarySearch = function(lastSearchSucceeded, lastSearchTime) {
