@@ -983,7 +983,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     searchForLiveEdge.call(self).then(
                         function(liveEdgeTime) {
                             // step back from a found live edge time to be able to buffer some data
-                            var startTime = liveEdgeTime - minBufferTime,
+                            var startTime = Math.max((liveEdgeTime - minBufferTime), currentRepresentation.segmentAvailabilityRange.start),
                                 segmentStart;
                             // get a request for a start time
                             self.indexHandler.getSegmentRequestForTime(currentRepresentation, startTime).then(function(request) {
