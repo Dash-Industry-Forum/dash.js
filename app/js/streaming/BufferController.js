@@ -989,7 +989,9 @@ MediaPlayer.dependencies.BufferController = function () {
                             self.indexHandler.getSegmentRequestForTime(currentRepresentation, startTime).then(function(request) {
                                 self.system.notify("liveEdgeFound", periodInfo.liveEdge, liveEdgeTime, periodInfo);
                                 segmentStart = request.startTime;
-                                periodInfo.liveEdge = segmentStart;
+                                // set liveEdge to be in the middle of the segment time to avoid a possible gap between
+                                // currentTime and buffered.start(0)
+                                periodInfo.liveEdge = segmentStart + (fragmentDuration / 2);
                                 ready = true;
                                 startPlayback.call(self);
                                 doSeek.call(self, segmentStart);
