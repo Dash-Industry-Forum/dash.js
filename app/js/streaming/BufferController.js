@@ -269,7 +269,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 // if we append the rejected data we should use the stored promise instead of creating a new one
                 deferred = isAppendingRejectedData ? deferredRejectedDataAppend : Q.defer(),
                 ln = isAppendingRejectedData ? deferredAppends.length : deferredAppends.push(deferred),
-                representation = getRepresentationForQuality(lastQuality, self.getData()),
                 currentVideoTime = self.videoModel.getCurrentTime(),
                 currentTime = new Date();
 
