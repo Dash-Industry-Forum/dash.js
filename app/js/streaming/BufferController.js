@@ -982,12 +982,18 @@ MediaPlayer.dependencies.BufferController = function () {
 
                     searchForLiveEdge.call(self).then(
                         function(liveEdgeTime) {
-                            self.system.notify("liveEdgeFound", periodInfo.liveEdge, liveEdgeTime, periodInfo);
                             // step back from a found live edge time to be able to buffer some data
-                            periodInfo.liveEdge = liveEdgeTime - minBufferTime;
-                            ready = true;
-                            startPlayback.call(self);
-                            doSeek.call(self, periodInfo.liveEdge);
+                            var startTime = liveEdgeTime - minBufferTime,
+                                segmentStart;
+                            // get a request for a start time
+                            self.indexHandler.getSegmentRequestForTime(currentRepresentation, startTime).then(function(request) {
+                                self.system.notify("liveEdgeFound", periodInfo.liveEdge, liveEdgeTime, periodInfo);
+                                segmentStart = request.startTime;
+                                periodInfo.liveEdge = segmentStart;
+                                ready = true;
+                                startPlayback.call(self);
+                                doSeek.call(self, segmentStart);
+                            });
                         }
                     );
                 }
