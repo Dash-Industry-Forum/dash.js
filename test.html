@@ -66,6 +66,9 @@
 
             ms.addEventListener('webkitsourceopen', opened, false);
             ms.addEventListener('webkitsourceclose', closed, false);
+
+            ms.addEventListener('sourceopen', opened, false);
+            ms.addEventListener('sourceclose', closed, false);
         }
 
         function opened() {
@@ -81,6 +84,14 @@
             sourceBuffer = ms.addSourceBuffer(value);
 
             loadInit();
+        }
+
+        function append(buffer, bytes) {
+            if ("append" in buffer) {
+                buffer.append(bytes);
+            } else if ("appendBuffer" in buffer) {
+                buffer.appendBuffer(bytes);
+            }
         }
 
         function loadInit() {
@@ -100,7 +111,7 @@
 
                 req.onload = function () {
                     console.log("INIT DONE LOADING");
-                    sourceBuffer.append(new Uint8Array(req.response));
+                    append(sourceBuffer, new Uint8Array(req.response));
                     loadFragment();
                 }
 
@@ -131,7 +142,7 @@
 
                 req.onload = function () {
                     console.log("FRAGMENT DONE LOADING");
-                    sourceBuffer.append(new Uint8Array(req.response));
+                    append(sourceBuffer, new Uint8Array(req.response));
                     video.play();
                     video.currentTime = sourceBuffer.buffered.start(0);
 
