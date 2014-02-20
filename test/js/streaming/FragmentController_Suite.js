@@ -34,7 +34,7 @@ describe("Fragment Controller Suite", function () {
 			bufferController = system.getObject('bufferController');
 		    video = system.getObject("videoModel");
         });
-/*
+  
       it("process", function(){
          var bytes=new ArrayBuffer(612);
    
@@ -63,8 +63,7 @@ describe("Fragment Controller Suite", function () {
            expect(successResult).toEqual(new Uint8Array(bytes));
           });
      });
-*/
-/*
+     
      it("process with bytes as null", function(){
         var promise = null,
            success,
@@ -91,7 +90,7 @@ describe("Fragment Controller Suite", function () {
            expect(successResult).toEqual(null);
           });
      });
-*/	 
+	 
 	it("Check if its initialization Request with initialization Request type",function(){
 		debugger; 
 		var request = {};
@@ -132,7 +131,7 @@ describe("Fragment Controller Suite", function () {
 		expect(result).not.toBeTruthy();
 	});
 	
-/*
+
 	it("Process - Check bytes per element for a fragment",function(){
 		debugger;
 		GetBytes();
@@ -147,8 +146,7 @@ describe("Fragment Controller Suite", function () {
 			});
 		});
 	});
-*/
-/*
+	
 	it("Process - Check bytes length for a fragment",function(){
 		debugger;
 		if(bytes == undefined) 
@@ -166,7 +164,7 @@ describe("Fragment Controller Suite", function () {
 			});
 		});
 	});
-*/
+	
 	it("attachBufferController",function(){
 		var requestcheduler,manifestModel;
 		manifestModel= system.getObject("manifestModel");
@@ -199,7 +197,7 @@ describe("Fragment Controller Suite", function () {
 		var result = fragmentController.getLoadingRequests(bufferController);
 		expect(result.length).toEqual(0);
 	});
-/*
+	
 	it("getLoadingTime",function(){
 		debugger;
 		var requestcheduler,manifestModel;
@@ -211,7 +209,7 @@ describe("Fragment Controller Suite", function () {
 		var result = fragmentController.getLoadingTime(bufferController);
 		expect(result).toMatch(0);
 	});
-*/
+	
 	it("getExecutedRequestForTime",function(){
 		debugger;
 		var requestcheduler,manifestModel,fragmentModel;
@@ -324,7 +322,7 @@ describe("Fragment Controller Suite", function () {
 		expect(result).toEqual(null);	
 	});
 
-/*	
+	
 	function GetBytes()
 	{
 		request = new XMLHttpRequest();
@@ -336,7 +334,7 @@ describe("Fragment Controller Suite", function () {
 		};
 		request.send();
 	}
-*/	
+	
 	function CreateVideo()
 	{
 		element = document.createElement('video');

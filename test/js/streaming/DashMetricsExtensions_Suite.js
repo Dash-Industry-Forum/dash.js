@@ -341,13 +341,13 @@ describe("DashMetricsExtensions Test Suite", function () {
 		vo = metricExtn.getCurrentBufferLevel(null);
 		expect(vo).toBeNull();
 	});
-/*
+
 	it("getCurrentHttpRequest function with input as null", function () {
 		var vo = new MediaPlayer.vo.metrics.PlayList();
 		vo = metricExtn.getCurrentHttpRequest(null);
 		expect(vo).toBeNull();
 	});
-*/
+
 	it("getCurrentDroppedFrames returns null with input as null", function () {
 		expect(metricExtn.getCurrentDroppedFrames(null)).toBeNull();
 	});

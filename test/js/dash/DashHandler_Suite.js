@@ -117,8 +117,7 @@ describe("Dash Handler Test Suite", function(){
             data.segmentAlignment= "true";
             data.startWithSAP= 1;
         });
-
-/*
+         
       it("getInit function", function(){
                 var promise = null,
                   success,
@@ -146,8 +145,7 @@ describe("Dash Handler Test Suite", function(){
                      expect(successResult.action).toEqual("download");
                     });
           });
-*/
-/*
+          
          it("getSegmentRequestForTime function", function(){
                    var promise = null,
                   success,
@@ -174,8 +172,7 @@ describe("Dash Handler Test Suite", function(){
                      expect(successResult.action).toEqual("download");
                     });
         });
-*/
-/*
+        
        it("getNextSegmentRequest function", function(){
                       var promise = null,
                       success,
@@ -210,13 +207,12 @@ describe("Dash Handler Test Suite", function(){
                                  expect(successResult.action).toEqual("download");
                              });
         });
-*/
-/*
+        
          it("getNextSegmentRequest function without initialising", function(){
                  expect(function() {indexHandler.getNextSegmentRequest(0,data)}).toThrow(); //Without initialising hence index will be -1
                           
            });
-*/
+        
            /* it("getInit function with url and one set of representation as empty", function(){
                  data.BaseURL=""
                  data.Representation_asArray[0]=""
@@ -323,10 +319,14 @@ describe("Dash Handler Test Suite", function(){
                   expect(successResult).toEqual(undefined);
                  });
          });
-
+          
       it("All get and set functions", function(){
             indexHandler.setType("audio");
+            indexHandler.setIsLive(true);
+            indexHandler.setDuration(4);
             expect(indexHandler.getType()).toEqual("audio");
+            expect(indexHandler.getIsLive()).toEqual(true);
+            expect(indexHandler.getDuration()).toEqual(4);
          });
  if(window.location.href.indexOf("runner.html")==0)
  {

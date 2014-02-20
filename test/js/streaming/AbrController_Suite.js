@@ -126,7 +126,8 @@ describe("AbrController Suite", function () {
                 data.startWithSAP= 1;
             });
 
-/* 
+
+ 
        it("getPlaybackQuality", function(){
                 var promise = null,
                   success,
@@ -155,7 +156,7 @@ describe("AbrController Suite", function () {
                      expect(successResult.quality).toEqual(0);
                   });
         });
-*/
+        
          it("getPlaybackQuality with type as null", function(){
                     var promise = null,
                       success,

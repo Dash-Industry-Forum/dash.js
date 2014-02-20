@@ -664,7 +664,6 @@ for (var MPDstring in strMpd) {
 			/**
 			 * The method returns suggestedPresentationDelay(Live offset) fo the manifest
 			 */
-/*
 			it("getLiveOffset", function () {
 				var data = '';
 				manExtn.getLiveOffset(manifestObj).then(function (Data) {
@@ -696,7 +695,6 @@ for (var MPDstring in strMpd) {
 				});
 
 			});
-*/
 
 			/**
 			 * Check if the mpd file has timeShiftBufferDepth for Live stream data
@@ -927,7 +925,7 @@ for (var MPDstring in strMpd) {
 				res=manExtn.getContentProtectionData(data);
                 expect(res).not.toBeNull();
 			});            
-/*			
+			
             it("getLiveStart", function () {
                 res = '';
                 manExtn.getLiveStart(manifestObj,periodIndex).then(function (Data) {
@@ -983,7 +981,7 @@ for (var MPDstring in strMpd) {
                 res =manExtn.getSegmentInfoFor(representation);
                 expect(res).toBe(null);
 			}); 
-*/			
+			
 			it("Is Text Track - text/vtt", function () {
 				debugger;
                 var type="text/vtt",

@@ -178,7 +178,7 @@ describe("Metrics Model Suite", function () {
                     outPutVo=metricsModel.addRepresentationSwitch(null, t, mt, to, lto);
                     expect(outPutVo.streamType).toEqual(null);
              });
-/*
+             
              it("addRepresentationSwitch function with all parameters as null", function(){
                     var outPutVo = new MediaPlayer.vo.metrics.RepresentationSwitch();
                     t=new Date();
@@ -188,7 +188,7 @@ describe("Metrics Model Suite", function () {
                     outPutVo=metricsModel.addRepresentationSwitch(null, null, null, null, null);
                     expect(outPutVo.streamType).toEqual(null);
              });
-*/
+             
               it("addBufferLevel function with streamType as null", function(){
                     var outPutVo =new MediaPlayer.vo.metrics.BufferLevel();
                     t=new Date();

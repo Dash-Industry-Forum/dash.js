@@ -202,7 +202,7 @@ for (var MPDstring in strMpd) {
 					}
 				});
 			}); 
-/*
+
            it("getLiveEdge with parameter availabilityEndTime", function () {
                 res = '';
                 var lessDate = new Date();
@@ -226,7 +226,7 @@ for (var MPDstring in strMpd) {
 						expect(res).toBe("");
 				});
 			});    
-*/
+
             it("getDataForId with id null", function () {
 				var res = '';
 				var id = null;
@@ -305,7 +305,7 @@ for (var MPDstring in strMpd) {
 				});
 
 			});  
-/*
+
             it("getLiveOffset with empty data", function () {
 				var data = '';
                 manifestObj.suggestedPresentationDelay="";
@@ -316,7 +316,7 @@ for (var MPDstring in strMpd) {
 				});
 
 			});       
-*/
+
              it("getIsOnDemand with empty profiles", function () {
 				var boolRes = '';
                 manifestObj.profiles={};
@@ -378,7 +378,7 @@ for (var MPDstring in strMpd) {
 					res = Error;
 				});
 			});
-/*            
+            
             it("getRefreshDelay with minimumUpdatePeriod as null", function () {
 				var res = '';
                 manifestObj.minimumUpdatePeriod=null;
@@ -388,7 +388,7 @@ for (var MPDstring in strMpd) {
 					res = Error;
 				});
 			});
-*/          
+            
             
                   
          
