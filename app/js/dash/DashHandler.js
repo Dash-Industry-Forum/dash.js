@@ -242,40 +242,70 @@ Dash.dependencies.DashHandler = function () {
 
         getSegmentsFromTemplate = function (representation) {
             var segments = [],
+                self = this,
+                deferred = Q.defer(),
                 template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate,
                 duration = representation.segmentDuration,
                 i,
                 startIdx,
                 endIdx,
-                range,
                 seg = null,
                 start,
                 url = null;
 
             start = representation.startNumber;
-            range = this.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
-            startIdx = Math.floor(range.start / duration);
-            endIdx = Math.floor(range.end / duration);
 
-            for (i = startIdx;i <= endIdx; i += 1) {
+            waitForAvailabilityWindow.call(self, representation).then(
+                function(availabilityWindow) {
+                    startIdx = Math.floor(availabilityWindow.start / duration);
+                    endIdx = Math.floor(availabilityWindow.end / duration);
 
-                seg = getIndexBasedSegment.call(
-                    this,
-                    representation,
-                    i);
+                    for (i = startIdx;i <= endIdx; i += 1) {
 
-                seg.replacementTime = (start + i - 1) * representation.segmentDuration;
-                url = template.media;
-                url = replaceNumberForTemplate(url, seg.replacementNumber);
-                url = replaceTimeForTemplate(url, seg.replacementTime);
-                seg.media = url;
+                        seg = getIndexBasedSegment.call(
+                            self,
+                            representation,
+                            i);
 
-                segments.push(seg);
-                seg = null;
-            }
+                        seg.replacementTime = (start + i - 1) * representation.segmentDuration;
+                        url = template.media;
+                        url = replaceNumberForTemplate(url, seg.replacementNumber);
+                        url = replaceTimeForTemplate(url, seg.replacementTime);
+                        seg.media = url;
 
-            return Q.when(segments);
+                        segments.push(seg);
+                        seg = null;
+                    }
+
+                    deferred.resolve(segments);
+                }
+            );
+
+            return deferred.promise;
+        },
+
+        waitForAvailabilityWindow = function(representation) {
+            var self = this,
+                deferred = Q.defer(),
+                range,
+                waitingTime,
+                getRange = function() {
+                    range = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
+
+                    if (range.end > 0) {
+                        deferred.resolve(range);
+                    } else {
+                        // range.end represents a time gap between the current wall-clock time and the availability time of the first segment.
+                        // A negative value means that no segments are available yet, we should wait until segments become available
+                        waitingTime = Math.abs(range.end) * 1000;
+                        setTimeout(getRange, waitingTime);
+                    }
+                };
+
+            getRange();
+
+            return deferred.promise;
         },
 
         getTimeBasedSegment = function(representation, time, duration, fTimescale, url, range, index) {
