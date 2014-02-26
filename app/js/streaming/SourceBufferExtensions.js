@@ -31,7 +31,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             if (!self.manifestExt.getIsTextTrack(codec)) {
                 deferred.reject(ex.description);
             } else {
-                deferred.resolve(self.system.getObject("textVTTSourceBuffer"));
+                deferred.resolve(self.system.getObject("textSourceBuffer"));
             }
 
         }
