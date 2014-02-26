@@ -20,6 +20,7 @@ MediaPlayer.dependencies.TextController = function () {
          periodInfo = null,
          data,
          buffer,
+         availableRepresentations,
          state = READY,
          setState = function (value) {
              this.debug.log("TextController setState to:" + value);
@@ -32,19 +33,39 @@ MediaPlayer.dependencies.TextController = function () {
              }
 
              var self = this;
-             setState.call(self, LOADING);
             // TODO Multiple tracks can be handled here by passing in quality level.
-             self.indexHandler.getInitRequest(0, data).then(
-                 function (request) {
-                     self.debug.log("Loading text track initialization: " + request.url);
-                     self.debug.log(request);
-                     self.fragmentLoader.load(request).then(onBytesLoaded.bind(self, request), onBytesError.bind(self, request));
-                     setState.call(self, LOADING);
-                 }
-             );
+            self.indexHandler.getInitRequest(availableRepresentations[0]).then(
+             function (request) {
+                 self.debug.log("Loading text track initialization: " + request.url);
+                 self.debug.log(request);
+                 self.fragmentLoader.load(request).then(onBytesLoaded.bind(self, request), onBytesError.bind(self, request));
+                 setState.call(self, LOADING);
+             }
+            );
          },
          doStart = function () {
              startPlayback.call(this);
+         },
+
+         updateRepresentations = function (data, periodInfo) {
+             var self = this,
+                 deferred = Q.defer(),
+                 manifest = self.manifestModel.getValue();
+             self.manifestExt.getDataIndex(data, manifest, periodInfo.index).then(
+                 function(idx) {
+                     self.manifestExt.getAdaptationsForPeriod(manifest, periodInfo).then(
+                         function(adaptations) {
+                             self.manifestExt.getRepresentationsForAdaptation(manifest, adaptations[idx]).then(
+                                 function(representations) {
+                                     deferred.resolve(representations);
+                                 }
+                             );
+                         }
+                     );
+                 }
+             );
+
+             return deferred.promise;
          },
 
          onBytesLoaded = function (request, response) {
@@ -69,16 +90,21 @@ MediaPlayer.dependencies.TextController = function () {
         fragmentController: undefined,
         indexHandler: undefined,
         sourceBufferExt: undefined,
+        manifestModel: undefined,
+        manifestExt: undefined,
         debug: undefined,
         initialize: function (periodInfo, data, buffer, videoModel) {
             var self = this;
 
             self.setVideoModel(videoModel);
-            self.setPeriodInfo(periodInfo);
-            self.setData(data);
             self.setBuffer(buffer);
 
-            initialized = true;
+            self.updateData(data, periodInfo).then(
+                function() {
+                    initialized = true;
+                    startPlayback.call(self);
+                }
+            );
         },
 
         setPeriodInfo: function(value) {
@@ -111,6 +137,25 @@ MediaPlayer.dependencies.TextController = function () {
 
         setBuffer: function (value) {
             buffer = value;
+        },
+
+        updateData: function (dataValue, periodInfoValue) {
+            var self = this,
+                deferred = Q.defer();
+
+            data = dataValue;
+            periodInfo = periodInfoValue;
+
+            updateRepresentations.call(self, data, periodInfo).then(
+                function(representations) {
+                    availableRepresentations = representations;
+                    setState.call(self, READY);
+                    startPlayback.call(self);
+                    deferred.resolve();
+                }
+            );
+
+            return deferred.promise;
         },
 
         reset: function (errored, source) {

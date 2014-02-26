@@ -431,7 +431,7 @@ MediaPlayer.dependencies.Stream = function () {
                                             self.debug.log("Source buffer was not created for text track");
                                         } else {
                                             textController = self.system.getObject("textController");
-                                            textController.initialize(periodInfo.index, textData, buffer, self.videoModel);
+                                            textController.initialize(periodInfo, textData, buffer, self.videoModel);
                                             if (buffer.hasOwnProperty('initialize')) {
                                                 buffer.initialize(mimeType, textController);
                                             }
@@ -666,10 +666,13 @@ MediaPlayer.dependencies.Stream = function () {
             var self = this,
                 videoData,
                 audioData,
+                textData,
                 deferredVideoData,
                 deferredAudioData,
+                deferredTextData,
                 deferredVideoUpdate = Q.defer(),
                 deferredAudioUpdate = Q.defer(),
+                deferredTextUpdate = Q.defer(),
                 manifest = self.manifestModel.getValue();
 
             periodInfo = updatedPeriodInfo;
@@ -719,7 +722,27 @@ MediaPlayer.dependencies.Stream = function () {
                 deferredAudioUpdate.resolve();
             }
 
-            return Q.when(deferredVideoUpdate.promise, deferredAudioUpdate.promise);
+            if (textController) {
+                textData = textController.getData();
+
+                if (!!textData && textData.hasOwnProperty("id")) {
+                    deferredTextData = self.manifestExt.getDataForId(textData.id, manifest, periodInfo.index);
+                } else {
+                    deferredTextData = self.manifestExt.getDataForIndex(textTrackIndex, manifest, periodInfo.index);
+                }
+
+                deferredTextData.then(
+                    function (data) {
+                        textController.updateData(data, periodInfo).then(
+                            function(){
+                                deferredTextUpdate.resolve();
+                            }
+                        );
+                    }
+                );
+            }
+
+            return Q.when(deferredVideoUpdate.promise, deferredAudioUpdate.promise, deferredTextUpdate.promise);
         };
 
     return {
