@@ -136,7 +136,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         }
 
         if (adaptation.hasOwnProperty("mimeType")) {
-            result = adaptation.mimeType.indexOf("text") !== -1;
+            result = (adaptation.mimeType.indexOf("vtt") !== -1) || (adaptation.mimeType.indexOf("ttml") !== -1);
             found = true;
         }
 
