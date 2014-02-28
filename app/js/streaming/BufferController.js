@@ -545,8 +545,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         onSearchForSegmentFailed = function(request, lastSearchTime) {
-            var startTime = request.startTime,
-                searchTime,
+            var searchTime,
                 searchInterval;
 
             if (useBinarySearch) {
@@ -555,7 +554,7 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             // we have not found any available segments yet, update the search interval
-            searchInterval = startTime - liveEdgeInitialSearchPosition;
+            searchInterval = lastSearchTime - liveEdgeInitialSearchPosition;
             // we search forward and backward from the start position, increasing the search interval by the value of the half of the availability interavl - liveEdgeSearchStep
             searchTime = searchInterval > 0 ? (liveEdgeInitialSearchPosition - searchInterval) : (liveEdgeInitialSearchPosition + Math.abs(searchInterval) + liveEdgeSearchStep);
 
