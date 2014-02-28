@@ -14,50 +14,119 @@
 MediaPlayer.utils.TTMLParser = function () {
     "use strict";
 
-    var timeRegex = /(([\d.]*)s)?/,
-        matchers = [{
-            type: "time",
-            test: function (str) {
-                return timeRegex.test(str);
-            },
-            converter: function (str) {
-                var match = timeRegex.exec(str);
-                return (parseFloat(match[2] || 0));
+    /*
+    * This TTML parser follows "TTML Simple Delivery Profile for Closed Captions (US)" spec - http://www.w3.org/TR/ttml10-sdp-us/
+    * */
+
+    var SECONDS_IN_HOUR = 60 * 60,
+        SECONDS_IN_MIN = 60,
+        // R0028 - A document must not contain a <timeExpression> value that does not conform to the subset of clock-time that
+        // matches either of the following patterns: hh:mm:ss.mss or hh:mm:ss:ff, where hh denotes hours (00-23),
+        // mm denotes minutes (00-59), ss denotes seconds (00-59), mss denotes milliseconds (000-999), and ff denotes frames (00-frameRate - 1).
+        // R0030 - For time expressions that use the hh:mm:ss.mss format, the following constraints apply:
+        // - Exactly 2 digits must be used in each of the hours, minutes, and second components (include leading zeros).
+        // - Exactly 3 decimal places must be used for the milliseconds component (include leading zeros).
+        // R0031 -For time expressions that use the hh:mm:ss:ff format, the following constraints apply:
+        // - Exactly 2 digits must be used in each of the hours, minutes, second, and frame components (include leading zeros).
+        timingRegex = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])((\.[0-9][0-9][0-9])|(:[0-9][0-9]))$/,
+        ttml,
+
+        parseTimings = function(timingStr) {
+            var test = timingRegex.test(timingStr),
+                timeParts,
+                parsedTime,
+                frameRate;
+
+            if (!test) {
+                return NaN;
             }
-        }],
+
+            timeParts = timingStr.split(":");
+
+            parsedTime = (parseFloat(timeParts[0]) * SECONDS_IN_HOUR +
+                parseFloat(timeParts[1]) * SECONDS_IN_MIN +
+                parseFloat(timeParts[2]));
+
+            // R0031 -For time expressions that use the hh:mm:ss:ff format, the following constraints apply:
+            //  - A ttp:frameRate attribute must be present on the tt element.
+            //  - A ttp:frameRateMultiplier attribute may be present on the tt element.
+            if (timeParts[3]) {
+                frameRate = ttml.tt.frameRate;
+
+                if (frameRate && !isNaN(frameRate)) {
+                    parsedTime += parseFloat(timeParts[3]) / frameRate;
+                } else {
+                    return NaN;
+                }
+            }
+
+            return parsedTime;
+        },
+
+        passStructuralConstraints = function () {
+            var passed = false,
+                hasTt = ttml.hasOwnProperty("tt"),
+                hasHead = hasTt ? ttml.tt.hasOwnProperty("head") : false,
+                hasLayout = hasHead ? ttml.tt.head.hasOwnProperty("layout") : false,
+                hasStyling = hasHead ? ttml.tt.head.hasOwnProperty("styling") : false,
+                hasBody = ttml.tt.hasOwnProperty("body");
+
+            // R001 - A document must contain a tt element.
+            // R002 - A document must contain both a head and body element.
+            // R003 - A document must contain both a styling and a layout element.
+            if (hasTt && hasHead && hasLayout && hasStyling && hasBody) {
+                passed = true;
+            }
+
+            return passed;
+        },
 
         internalParse = function(data) {
-            var self = this,
-                captionArray = [],
-                converter = new X2JS(matchers, '', true),
-                ttml,
+            var captionArray = [],
+                converter = new X2JS([], "", false),
+                errorMsg,
                 cues,
                 cue,
+                startTime,
+                endTime,
                 i;
 
             try {
                 ttml = converter.xml_str2json(data);
             } catch (err) {
-                self.errHandler.manifestError("parsing the ttml failed", "parse", data);
-                return Q.when(captionArray);
+                errorMsg = err.message;
+                return Q.reject(errorMsg);
             }
 
-            if (!ttml.hasOwnProperty("body") || !ttml.body.div_asArray || ttml.body.div_asArray.length === 0) {
-                return Q.when(captionArray);
+            if (!passStructuralConstraints()) {
+                errorMsg = "TTML document has incorrect structure";
+                return Q.reject(errorMsg);
             }
 
-            cues = ttml.body.div_asArray[0].p_asArray;
+            if (ttml.tt.hasOwnProperty("frameRate")) {
+                ttml.tt.frameRate = parseInt(ttml.tt.frameRate, 10);
+            }
+
+            cues = ttml.tt.body.div_asArray[0].p_asArray;
 
             if (!cues || cues.length === 0) {
-                return Q.when(captionArray);
+                errorMsg = "TTML document does not contain any cues";
+                return Q.reject(errorMsg);
             }
 
             for (i = 0; i < cues.length; i += 1) {
                 cue = cues[i];
+                startTime = parseTimings(cue.begin);
+                endTime = parseTimings(cue.end);
+
+                if (isNaN(startTime) || isNaN(endTime)) {
+                    errorMsg = "TTML document has incorrect timing value";
+                    return Q.reject(errorMsg);
+                }
 
                 captionArray.push({
-                    start: cue.begin,
-                    end: cue.end,
+                    start: startTime,
+                    end: endTime,
                     data: cue.__text
                 });
             }
@@ -66,7 +135,6 @@ MediaPlayer.utils.TTMLParser = function () {
     };
 
     return {
-        parse: internalParse,
-        errHandler: undefined
+        parse: internalParse
     };
 };
