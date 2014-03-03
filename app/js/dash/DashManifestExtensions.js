@@ -612,6 +612,10 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 vo.id = p.id;
             }
 
+            if (vo !== null && p.hasOwnProperty("duration")){
+                vo.duration = p.duration;
+            }
+
             if (vo !== null){
                 vo.index = i;
                 vo.mpd = mpd;
