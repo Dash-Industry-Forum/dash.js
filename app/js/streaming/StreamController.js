@@ -25,7 +25,7 @@
         STREAM_BUFFER_END_THRESHOLD = 4,
         STREAM_END_THRESHOLD = 3,
         autoPlay = true,
-        deferredSwitch= null,
+        isPeriodSwitchingInProgress = false,
         timeupdateListener,
         seekingListener,
         progressListener,
@@ -197,26 +197,23 @@
 
         switchStream = function(from, to, seekTo) {
 
-            if(!from || !to || from === to) return;
+            if(isPeriodSwitchingInProgress || !from || !to || from === to) return;
 
-            var self = this;
+            isPeriodSwitchingInProgress = true;
 
-            Q.when(deferredSwitch || true).then(
-                function() {
-                    from.pause();
-                    activeStream = to;
+            from.pause();
+            activeStream = to;
 
-                    deferredSwitch = switchVideoModel.call(self, from.getVideoModel(), to.getVideoModel());
+            switchVideoModel.call(this, from.getVideoModel(), to.getVideoModel());
 
-                    if (seekTo) {
-                        seek(from.getVideoModel().getCurrentTime());
-                    } else {
-                        seek(to.getStartTime());
-                    }
+            if (seekTo) {
+                seek(from.getVideoModel().getCurrentTime());
+            } else {
+                seek(to.getStartTime());
+            }
 
-                    play();
-                }
-            );
+            play();
+            isPeriodSwitchingInProgress = false;
         },
 
         composeStreams = function() {
@@ -377,7 +374,7 @@
             streams = [];
             this.manifestUpdater.stop();
             this.manifestModel.setValue(null);
-            deferredSwitch = null;
+            isPeriodSwitchingInProgress = false;
             activeStream = null;
         },
 
