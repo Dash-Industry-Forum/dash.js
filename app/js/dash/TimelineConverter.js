@@ -98,7 +98,6 @@ Dash.dependencies.TimelineConverter = function () {
         calcSegmentAvailabilityRange = function(representation, isDynamic) {
             var clientServerTimeShift = representation.adaptation.period.clientServerTimeShift * 1000,
                 duration = representation.segmentDuration,
-                maxRangeSize = representation.adaptation.period.mpd.manifest.minBufferTime * 10,
                 start = 0,
                 end = representation.adaptation.period.duration,
                 range = {start: start, end: end},
@@ -116,7 +115,7 @@ Dash.dependencies.TimelineConverter = function () {
             //the Media Segment list is further restricted by the CheckTime together with the MPD attribute
             // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
             // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.
-            start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth - duration), now - maxRangeSize, 0);
+            start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth - duration), 0);
             checkTime -= duration;
             now -= duration;
             end = isNaN(checkTime) ? now : Math.min(checkTime, now);
