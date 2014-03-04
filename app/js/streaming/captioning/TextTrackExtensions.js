@@ -33,10 +33,11 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         },
         deleteCues: function(video) {
             //when multiple tracks are supported - iterate through and delete all cues from all tracks.
-            var track = video.textTracks[0];
-            var cues = track.cues;
+            var track = video.textTracks[0],
+                cues = track.cues,
+                lastIdx = cues.length - 1;
 
-            for (var i=cues.length;i>=0;i--) {
+            for (var i = lastIdx; i >= 0 ; i -= 1) {
                 track.removeCue(cues[i]);
             }
 
