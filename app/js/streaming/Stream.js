@@ -210,6 +210,10 @@ MediaPlayer.dependencies.Stream = function () {
             if (!!audioController) {
                 audioController.reset(errored);
             }
+            if (!!textController) {
+                textController.reset(errored);
+            }
+
             if (!!mediaSource) {
                 self.mediaSourceExt.detachMediaSource(self.videoModel);
             }
@@ -425,7 +429,7 @@ MediaPlayer.dependencies.Stream = function () {
                                             self.debug.log("Source buffer was not created for text track");
                                         } else {
                                             textController = self.system.getObject("textController");
-                                            textController.initialize(periodInfo, textData, buffer, self.videoModel);
+                                            textController.initialize(periodInfo, textData, buffer, self.videoModel, mediaSource);
                                             if (buffer.hasOwnProperty('initialize')) {
                                                 buffer.initialize(mimeType, textController);
                                             }
