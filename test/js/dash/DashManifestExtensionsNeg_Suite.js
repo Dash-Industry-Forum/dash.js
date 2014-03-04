@@ -203,6 +203,7 @@ for (var MPDstring in strMpd) {
 				});
 			}); 
 
+			/** This method is commented as getLiveEdge method is removed in DashManifestExtension.js 
            it("getLiveEdge with parameter availabilityEndTime", function () {
                 res = '';
                 var lessDate = new Date();
@@ -225,7 +226,7 @@ for (var MPDstring in strMpd) {
 				runs(function () {
 						expect(res).toBe("");
 				});
-			});    
+			});    **/
 
             it("getDataForId with id null", function () {
 				var res = '';
@@ -306,6 +307,7 @@ for (var MPDstring in strMpd) {
 
 			});  
 
+			/** Commented as getLiveOffset method is removed in DashManifestExtension.js
             it("getLiveOffset with empty data", function () {
 				var data = '';
                 manifestObj.suggestedPresentationDelay="";
@@ -314,8 +316,7 @@ for (var MPDstring in strMpd) {
 				}, function (Error) {
 					data = null;
 				});
-
-			});       
+			});    **/   
 
              it("getIsOnDemand with empty profiles", function () {
 				var boolRes = '';

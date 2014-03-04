@@ -33,7 +33,7 @@ if(window.location.href.indexOf("runner.html")>0)
                     
                     videoModel=system.getObject('videoModel');  
                     element = document.createElement('video');
-                    videoModel.setElement($(element));
+                    videoModel.setElement((element));
                    
                  });
                  
@@ -90,7 +90,7 @@ if(window.location.href.indexOf("runner.html")>0)
                  
                  it("getDroppedFrames", function(){
                      videoModelExtension=new MediaPlayer.dependencies.VideoModelExtensions();
-                     expect(videoModelExtension.getDroppedFrames($(element))).not.toBe(null);
+                     expect(videoModelExtension.getDroppedFrames((element))).not.toBe(null);
                  });
             });
             

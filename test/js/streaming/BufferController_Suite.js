@@ -23,6 +23,7 @@ if(window.location.href.indexOf("runner.html")>0)
             stream,
 			requestScheduler,
 			streamController,
+			periodInfo = {},
             system;
      
             beforeEach(function () {
@@ -39,9 +40,9 @@ if(window.location.href.indexOf("runner.html")>0)
 				streamController = system.getObject('streamController');
 				
 				element = document.createElement('video');
-				$(element).autoplay = true;
+				(element).autoplay = true;
 				video = system.getObject("videoModel");
-				video.setElement($(element)[0]);
+				video.setElement((element));
 				
 				stream = createObject(system);
             });
@@ -149,13 +150,22 @@ if(window.location.href.indexOf("runner.html")>0)
             });
 			
 			it("Get current time for the fragment", function () {
+				debugger;
 				var indexHandler = system.getObject("indexHandler"), 
 				quality = 1;
-
-				indexHandler.getCurrentTime(quality,manifestRes.Period_asArray[0].AdaptationSet_asArray[0]).then(function(time)
-				{
-					expect(isNaN(count)).not.toBeTruthy();
-				});				
+				waitsFor(function(){
+					if (manifestRes != undefined) return true;
+				},"waiting for manifest",100);
+				
+				runs(function(){
+					debugger;
+					indexHandler.getCurrentTime(manifestRes.Period_asArray[0].AdaptationSet_asArray[0]).then(function(time)
+					{
+						debugger;
+						expect(isNaN(count)).not.toBeTruthy();
+					});
+				});
+								
             });
             
             //Negative test cases
@@ -333,20 +343,24 @@ if(window.location.href.indexOf("runner.html")>0)
 			
 		});
 		
+		
+		/** Commented as SetData method is removed in bufferController.js
 		it("Check Data",function(){
 			debugger;
 			bufferController.setData(manifestRes.Period.AdaptationSet[0]).then(function(){
 				expect(bufferController.getData() === manifestRes.Period.AdaptationSet[0]).toBeTruthy();				
 			});
-		});
+		}); **/
 			
 		function createObject(system) {
 			debugger;
+			periodInfo.index = 0;
+			periodInfo.id = 0;
 			stream = system.getObject("stream");
 			stream.setVideoModel(video);
-			stream.setPeriodIndex(0);
-			periodIndex = stream.getPeriodIndex();
-			stream.load(manifestRes,periodIndex);
+			//stream.setPeriodIndex(0);
+			//periodIndex = stream.getPeriodIndex();
+			stream.load(manifestRes,periodInfo);
 			return stream;
         
 		} 

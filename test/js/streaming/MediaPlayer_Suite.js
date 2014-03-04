@@ -73,7 +73,7 @@ describe("Media Player Test Suite", function () {
             element = document.createElement('video');
             player.startup();
             player.autoPlay = true;
-            player.attachView($(element));
+            player.attachView((element));
             if(manifestRes != undefined)
 			{
 				festResult = manifestRes; 
@@ -126,16 +126,16 @@ describe("Media Player Test Suite", function () {
 		
 		 it("check whether initialized variable is initailised or not while attaching video", function () {
 			var element = document.createElement('video');
-			$(element).autoplay = true;
+			(element).autoplay = true;
 			player.setAutoPlay(true);
-			expect(function() {player.attachView($(element))}).toThrow();
+			expect(function() {player.attachView((element))}).toThrow();
 		});
 
 		it("check whether initialized variable is initialized or not while playing", function () {
 			var element = document.createElement('video');
-			$(element).autoplay = true;
+			(element).autoplay = true;
 			player.setAutoPlay(true);
-			expect(function() {player.attachView($(element))}).toThrow();
+			expect(function() {player.attachView((element))}).toThrow();
 		});
         
          it("check whether initialized variable is initialized or not while playing with invalid source", function () {
@@ -145,7 +145,7 @@ describe("Media Player Test Suite", function () {
             element = document.createElement('video');
             player.startup();
             player.autoPlay = true;
-            player.attachView($(element));
+            player.attachView((element));
 
            
             manifestLoader.load(invalidSource).then( function (manifestResult) {
@@ -167,6 +167,7 @@ describe("Media Player Test Suite", function () {
         });
         
         it("play the source ", function () {
+			debugger;
             var result=false;
             var element = document.createElement('video');
             player.startup();
@@ -175,16 +176,22 @@ describe("Media Player Test Suite", function () {
 			
             if(window.navigator.userAgent.indexOf ( "MSIE " )<0)
             {
-              player.attachView($(element)[0]);
-              player.play();
+              player.attachView((element));
+              //player.play();
             }
 			
-			if(manifestRes != undefined)
-			{
-				result = true;
-			}
+			waitsFor(function(){
+				if (manifestRes != undefined) return true;
+			},"waiting for manifest data",100);
 			
-			expect(manifestRes.xmlns).toEqual("urn:mpeg:DASH:schema:MPD:2011"); 
+			runs(function(){
+				debugger;
+				if(manifestRes != undefined)
+				{
+					result = true;
+					expect(manifestRes.xmlns).toEqual("urn:mpeg:DASH:schema:MPD:2011"); 
+				}							
+			});	
         });
         
         it("play with source and element empty ", function () {
