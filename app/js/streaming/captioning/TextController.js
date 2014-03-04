@@ -18,6 +18,7 @@ MediaPlayer.dependencies.TextController = function () {
          READY = "READY",
          initialized = false,
          periodInfo = null,
+         mediaSource,
          data,
          buffer,
          availableRepresentations,
@@ -93,11 +94,12 @@ MediaPlayer.dependencies.TextController = function () {
         manifestModel: undefined,
         manifestExt: undefined,
         debug: undefined,
-        initialize: function (periodInfo, data, buffer, videoModel) {
+        initialize: function (periodInfo, data, buffer, videoModel, source) {
             var self = this;
 
             self.setVideoModel(videoModel);
             self.setBuffer(buffer);
+            self.setMediaSource(source);
 
             self.updateData(data, periodInfo).then(
                 function() {
@@ -139,6 +141,10 @@ MediaPlayer.dependencies.TextController = function () {
             buffer = value;
         },
 
+        setMediaSource: function(value) {
+            mediaSource = value;
+        },
+
         updateData: function (dataValue, periodInfoValue) {
             var self = this,
                 deferred = Q.defer();
@@ -158,10 +164,10 @@ MediaPlayer.dependencies.TextController = function () {
             return deferred.promise;
         },
 
-        reset: function (errored, source) {
+        reset: function (errored) {
             if (!errored) {
-                this.sourceBufferExt.abort(source, buffer);
-                this.sourceBufferExt.removeSourceBuffer(source, buffer);
+                this.sourceBufferExt.abort(mediaSource, buffer);
+                this.sourceBufferExt.removeSourceBuffer(mediaSource, buffer);
             }
         },
 

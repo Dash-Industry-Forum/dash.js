@@ -44,7 +44,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         try {
             deferred.resolve(mediaSource.removeSourceBuffer(buffer));
         } catch(ex){
-            deferred.reject(ex.description);
+            if (buffer && typeof(buffer.getTextTrackExtensions) === "function") {
+                deferred.resolve();
+            } else {
+                deferred.reject(ex.description);
+            }
         }
         return deferred.promise;
     },
