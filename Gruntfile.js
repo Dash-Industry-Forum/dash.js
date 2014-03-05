@@ -54,6 +54,12 @@ module.exports = function(grunt) {
 
         options: {
           host: 'http://127.0.0.1:8000/',
+          keepRunner: true,
+          helpers: [
+            "./test/js/utils/MPDfiles.js",
+            "./test/js/utils/Utils.js",
+            "./test/js/utils/ValidateUrl.js",
+            "./app/js/Main.js"],
           specs: [
             './test/js/dash/DashParser_Suite.js',
             './test/js/dash/FragmentExtensions_Suite.js',
@@ -73,15 +79,11 @@ module.exports = function(grunt) {
             "./test/js/streaming/VideoModel_Suite.js",
             './test/js/streaming/ManifestLoader_Suite.js'],
           vendor: [
-            "./app/lib/jquery/js/jquery-1.8.3.min.js",
-            "./app/lib/jquery/js/jquery-ui-1.9.2.custom.min.js",
             "./app/lib/q.min.js",
             "./app/lib/xml2json.js",
             "./app/lib/objectiron.js",
             "./app/lib/Math.js",
             "./app/lib/long.js",
-            "./test/js/utils/MPDfiles.js",
-            "./test/js/utils/Main.js",
             "./app/lib/kendo/kendo.web.min.js",
             "./app/lib/dijon.js",
             "./app/lib/base64.js"],
