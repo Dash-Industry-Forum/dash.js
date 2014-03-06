@@ -131,13 +131,15 @@ Dash.dependencies.DashHandler = function () {
             } else {
                 if (index < 0) {
                     isFinished = false;
-                }
-                else if (index < representation.segments.length) {
-                    seg = representation.segments[index];
-                    fTime = seg.presentationStartTime - period.start;
-                    sDuration = representation.adaptation.period.duration;
-                    this.debug.log(representation.segmentInfoType + ": " + fTime + " / " + sDuration);
-                    isFinished = (fTime >= sDuration);
+                } else if (index < representation.availableSegmentsNumber) {
+                    seg = getSegmentByIndex(index, representation);
+
+                    if (seg) {
+                        fTime = seg.presentationStartTime - period.start;
+                        sDuration = representation.adaptation.period.duration;
+                        this.debug.log(representation.segmentInfoType + ": " + fTime + " / " + sDuration);
+                        isFinished = (fTime >= sDuration);
+                    }
                 } else {
                     isFinished = true;
                 }
@@ -172,6 +174,7 @@ Dash.dependencies.DashHandler = function () {
             seg.wallStartTime = self.timelineConverter.calcWallTimeForSegment(seg, isDynamic);
 
             seg.replacementNumber = getNumberForSegment(seg, index);
+            seg.availabilityIdx = index;
 
             return seg;
         },
@@ -237,6 +240,7 @@ Dash.dependencies.DashHandler = function () {
                 }
             }
 
+            representation.availableSegmentsNumber = count;
             return Q.when(segments);
         },
 
@@ -247,6 +251,11 @@ Dash.dependencies.DashHandler = function () {
                 template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate,
                 duration = representation.segmentDuration,
+                originAvailabilityTime = NaN,
+                originSegment = null,
+                currentSegmentList = representation.segments,
+                availabilityLowerLimit = 2 * duration,
+                availabilityUpperLimit = Math.max(2 * representation.adaptation.period.mpd.manifest.minBufferTime, 10 * duration),
                 i,
                 startIdx,
                 endIdx,
@@ -258,8 +267,23 @@ Dash.dependencies.DashHandler = function () {
 
             waitForAvailabilityWindow.call(self, representation).then(
                 function(availabilityWindow) {
-                    startIdx = Math.floor(availabilityWindow.start / duration);
-                    endIdx = Math.floor(availabilityWindow.end / duration);
+                    // if segments exist we should try to find the latest buffered time, which is the presentation time of the
+                    // segment for the current index
+                    if (currentSegmentList) {
+                        originSegment = getSegmentByIndex(index, representation);
+                        originAvailabilityTime = originSegment ? (originSegment.presentationStartTime) : (index > 0 ? (index * duration) : currentSegmentList[currentSegmentList.length - 1].presentationStartTime);
+                    } else {
+                        // If no segments exist, but index > 0, it means that we switch to the other representation, so
+                        // we should proceed from this time.
+                        // Otherwise we should start from the beginning for static mpds or from the end (live edge) for dynamic mpds
+                        originAvailabilityTime = (index > 0) ? (index * duration) : (isDynamic ? availabilityWindow.end : availabilityWindow.start);
+                    }
+
+                    // segment list should not be out of the availability window range
+                    startIdx = Math.floor(Math.max(originAvailabilityTime - availabilityLowerLimit, availabilityWindow.start) / duration);
+                    endIdx = Math.floor(Math.min(originAvailabilityTime + availabilityUpperLimit, availabilityWindow.end) / duration);
+
+                    representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
 
                     for (i = startIdx;i <= endIdx; i += 1) {
 
@@ -342,6 +366,7 @@ Dash.dependencies.DashHandler = function () {
             url = replaceTimeForTemplate(url, seg.replacementTime);
             seg.media = url;
             seg.mediaRange = range;
+            seg.availabilityIdx = index;
 
             return seg;
         },
@@ -376,6 +401,7 @@ Dash.dependencies.DashHandler = function () {
                 seg = null;
             }
 
+            representation.availableSegmentsNumber = len;
             return Q.when(segments);
         },
 
@@ -415,6 +441,8 @@ Dash.dependencies.DashHandler = function () {
                         seg = null;
                         count += 1;
                     }
+
+                    representation.availableSegmentsNumber = len;
                     deferred.resolve(segments);
                 }
             );
@@ -460,8 +488,9 @@ Dash.dependencies.DashHandler = function () {
             return deferred.promise;
         },
 
-        getIndexForSegments = function (time, segments) {
-            var segmentLastIdx = segments.length - 1,
+        getIndexForSegments = function (time, representation) {
+            var segments = representation.segments,
+                segmentLastIdx = segments.length - 1,
                 idx = -1,
                 frag,
                 ft,
@@ -475,19 +504,23 @@ Dash.dependencies.DashHandler = function () {
                     fd = frag.duration;
                     if ((time + Dash.dependencies.DashHandler.EPSILON) >= ft &&
                         (time - Dash.dependencies.DashHandler.EPSILON) <= (ft + fd)) {
-                        idx = i;
+                        idx = frag.availabilityIdx;
                         break;
                     } else if (idx === -1 && (time - Dash.dependencies.DashHandler.EPSILON) > (ft + fd)) {
                         // time is past the end
-                        idx  = i + 1;
+                        idx  = isNaN(representation.segmentDuration) ? (frag.availabilityIdx + 1) : Math.floor(time / representation.segmentDuration);
                     }
                 }
             }
 
             if (idx === -1) {
-                console.log("Couldn't figure out a time!");
-                console.log("Time: " + time);
-                console.log(segments);
+                if (!isNaN(representation.segmentDuration)) {
+                    idx = Math.floor(time / representation.segmentDuration);
+                } else {
+                    console.log("Couldn't figure out a time!");
+                    console.log("Time: " + time);
+                    console.log(segments);
+                }
             }
 
             // TODO : This is horrible.
@@ -514,16 +547,33 @@ Dash.dependencies.DashHandler = function () {
             return Q.when(idx);
         },
 
+        getSegmentByIndex = function(index, representation) {
+            if (!representation || !representation.segments) return null;
+
+            var ln = representation.segments.length,
+                seg,
+                i;
+
+            for (i = 0; i < ln; i += 1) {
+                seg = representation.segments[i];
+
+                if (seg.availabilityIdx === index) {
+                    return seg;
+                }
+            }
+
+            return null;
+        },
+
         isSegmentListUpdateRequired = function(representation) {
             // if representation has no segments the segment list should be created
             if (!representation.segments) return true;
 
-            // segment list for static mpd should not be updated
-            if(!isDynamic) return false;
+            if ((index > 0) && (index < representation.segments[0].availabilityIdx)) return true;
 
-            // if the index is less than the length of segment list than the segment for this inxed is available,
+            // if the index is less than the availability index of the last segment in the list than the segment for this index is available,
             // so we don't need to update the list
-            if (index < representation.segments.length) return false;
+            if (index <= representation.segments[representation.segments.length -1].availabilityIdx) return false;
 
             var self = this,
                 lsn = getLatestSegmentNumber.call(self, representation),
@@ -548,11 +598,11 @@ Dash.dependencies.DashHandler = function () {
         },
 
         getGreatestSegmentNumber = function(representation) {
-            var checkTime = representation.adaptation.period.mpd.checkTime,
+            var endTime = isDynamic ? representation.adaptation.period.mpd.checkTime : representation.segmentAvailabilityRange.end,
                 duration = representation.segmentDuration,
                 gsn;
 
-            gsn = Math.ceil((checkTime - duration) / duration);
+            gsn = Math.ceil((endTime - duration) / duration);
 
             return gsn;
         },
@@ -585,7 +635,7 @@ Dash.dependencies.DashHandler = function () {
             request.availabilityEndTime = segment.availabilityEndTime;
             request.wallStartTime = segment.wallStartTime;
             request.quality = representation.index;
-            request.index = index;
+            request.index = segment.availabilityIdx;
 
             return Q.when(request);
         },
@@ -611,7 +661,7 @@ Dash.dependencies.DashHandler = function () {
                     self.debug.log("Got segments.");
                     self.debug.log(segments);
                         self.debug.log("Got a list of segments, so dig deeper.");
-                        segmentsPromise = getIndexForSegments.call(self, time, segments);
+                        segmentsPromise = getIndexForSegments.call(self, time, representation);
                     return segmentsPromise;
                 }
             ).then(
@@ -634,7 +684,7 @@ Dash.dependencies.DashHandler = function () {
                         self.debug.log(request);
                         deferred.resolve(request);
                     } else {
-                            segment = representation.segments[index];
+                        segment = getSegmentByIndex(index, representation);
                         requestPromise = getRequestForSegment.call(self, segment);
                     }
 
@@ -689,7 +739,7 @@ Dash.dependencies.DashHandler = function () {
 
                                 self.debug.log("Got segments.");
                                 self.debug.log(segments);
-                                    segment = representation.segments[index];
+                                segment = getSegmentByIndex(index, representation);
                                 segmentsPromise = getRequestForSegment.call(self, segment);
                                 return segmentsPromise;
                             }
@@ -749,8 +799,8 @@ Dash.dependencies.DashHandler = function () {
                     if (bufferedIndex < 0) {
                         time = self.timelineConverter.calcPresentationStartTime(representation.adaptation.period);
                     } else {
-                        bufferedIndex = Math.min(segments.length - 1, bufferedIndex);
-                        time = segments[bufferedIndex].presentationStartTime;
+                        bufferedIndex = bufferedIndex < segments[0].availabilityIdx ? segments[0].availabilityIdx : Math.min(segments[segments.length - 1].availabilityIdx, bufferedIndex);
+                        time = getSegmentByIndex(bufferedIndex, representation).presentationStartTime;
                     }
 
                     deferred.resolve(time);
