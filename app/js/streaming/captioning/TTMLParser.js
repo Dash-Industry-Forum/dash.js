@@ -81,6 +81,19 @@ MediaPlayer.utils.TTMLParser = function () {
             return passed;
         },
 
+        getNamespacePrefix = function(json, ns) {
+            var r = Object.keys(json)
+                .filter(function(k, i){
+                    return k.split(":")[0] === "xmlns" && json[k] === ns;
+                }).map(function(k){
+                    return k.split(":")[1];
+                });
+            if (r.length != 1) {
+                return null;
+            }
+            return r[0];
+        },
+
         internalParse = function(data) {
             var captionArray = [],
                 converter = new X2JS([], "", false),
@@ -89,6 +102,7 @@ MediaPlayer.utils.TTMLParser = function () {
                 cue,
                 startTime,
                 endTime,
+                nsttp,
                 i;
 
             try {
@@ -103,8 +117,10 @@ MediaPlayer.utils.TTMLParser = function () {
                 return Q.reject(errorMsg);
             }
 
-            if (ttml.tt.hasOwnProperty("frameRate")) {
-                ttml.tt.frameRate = parseInt(ttml.tt.frameRate, 10);
+            nsttp = getNamespacePrefix(ttml.tt, "http://www.w3.org/ns/ttml#parameter");
+
+            if (ttml.tt.hasOwnProperty(nsttp + ":frameRate")) {
+                ttml.tt.frameRate = parseInt(ttml.tt[nsttp + ":frameRate"], 10);
             }
 
             cues = ttml.tt.body.div_asArray[0].p_asArray;
