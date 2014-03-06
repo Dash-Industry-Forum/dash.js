@@ -148,7 +148,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 representation = adaptation.Representation_asArray[i];
 
                 if (representation.hasOwnProperty("mimeType")) {
-                    result = representation.mimeType.indexOf("text") !== -1;
+                    result = (representation.mimeType.indexOf("vtt") !== -1) || (representation.mimeType.indexOf("ttml") !== -1);
                     found = true;
                 }
 
@@ -268,7 +268,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         Q.all(funcs).then(
             function (results) {
                 var found = false;
-                for (i = 0, len = results.length; i < len; i += 1) {
+                for (i = 0, len = results.length; i < len && !found; i += 1) {
                     if (results[i] === true) {
                         found = true;
                         deferred.resolve(self.processAdaptation(adaptations[i]));
