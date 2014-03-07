@@ -1,8 +1,4 @@
 @media screen and (min-width: 0px) and (max-width: 1100px) {
-    #ribbon {
-        display: none;
-    }
-
     #desktop-streams {
         display: none;
     }
@@ -12,12 +8,6 @@
     }
 
     #big-title {
-        display: none;
-    }
-}
-
-@media screen and (min-width: 1200px) and (max-width: 1300px) {
-    #ribbon {
         display: none;
     }
 }
