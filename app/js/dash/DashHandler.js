@@ -240,6 +240,7 @@ Dash.dependencies.DashHandler = function () {
                 }
             }
 
+            representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[count - 1].presentationStartTime};
             representation.availableSegmentsNumber = count;
             return Q.when(segments);
         },
@@ -251,11 +252,7 @@ Dash.dependencies.DashHandler = function () {
                 template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate,
                 duration = representation.segmentDuration,
-                originAvailabilityTime = NaN,
-                originSegment = null,
-                currentSegmentList = representation.segments,
-                availabilityLowerLimit = 2 * duration,
-                availabilityUpperLimit = Math.max(2 * representation.adaptation.period.mpd.manifest.minBufferTime, 10 * duration),
+                segmentRange = null,
                 i,
                 startIdx,
                 endIdx,
@@ -267,23 +264,11 @@ Dash.dependencies.DashHandler = function () {
 
             waitForAvailabilityWindow.call(self, representation).then(
                 function(availabilityWindow) {
-                    // if segments exist we should try to find the latest buffered time, which is the presentation time of the
-                    // segment for the current index
-                    if (currentSegmentList) {
-                        originSegment = getSegmentByIndex(index, representation);
-                        originAvailabilityTime = originSegment ? (originSegment.presentationStartTime) : (index > 0 ? (index * duration) : currentSegmentList[currentSegmentList.length - 1].presentationStartTime);
-                    } else {
-                        // If no segments exist, but index > 0, it means that we switch to the other representation, so
-                        // we should proceed from this time.
-                        // Otherwise we should start from the beginning for static mpds or from the end (live edge) for dynamic mpds
-                        originAvailabilityTime = (index > 0) ? (index * duration) : (isDynamic ? availabilityWindow.end : availabilityWindow.start);
-                    }
+                    representation.segmentAvailabilityRange = availabilityWindow;
+                    segmentRange = decideSegmentListRange.call(self, representation);
 
-                    // segment list should not be out of the availability window range
-                    startIdx = Math.floor(Math.max(originAvailabilityTime - availabilityLowerLimit, availabilityWindow.start) / duration);
-                    endIdx = Math.floor(Math.min(originAvailabilityTime + availabilityUpperLimit, availabilityWindow.end) / duration);
-
-                    representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
+                    startIdx = segmentRange.start;
+                    endIdx = segmentRange.end;
 
                     for (i = startIdx;i <= endIdx; i += 1) {
 
@@ -302,11 +287,54 @@ Dash.dependencies.DashHandler = function () {
                         seg = null;
                     }
 
+                    representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
+
                     deferred.resolve(segments);
                 }
             );
 
             return deferred.promise;
+        },
+
+        decideSegmentListRange = function(representation) {
+            var duration = representation.segmentDuration,
+                minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime,
+                availabilityWindow = representation.segmentAvailabilityRange,
+                originAvailabilityTime = NaN,
+                originSegment = null,
+                currentSegmentList = representation.segments,
+                availabilityLowerLimit = 2 * duration,
+                availabilityUpperLimit = Math.max(2 * minBufferTime, 10 * duration),
+                start,
+                end,
+                range;
+
+            if (isDynamic && !representation.adaptation.period.isClientServerTimeSyncCompleted) {
+                start = Math.floor(availabilityWindow.start / duration);
+                end = Math.floor(availabilityWindow.end / duration);
+                range = {start: start, end: end};
+                return range;
+            }
+
+            // if segments exist we should try to find the latest buffered time, which is the presentation time of the
+            // segment for the current index
+            if (currentSegmentList) {
+                originSegment = getSegmentByIndex(index, representation);
+                originAvailabilityTime = originSegment ? (originSegment.presentationStartTime) : (index > 0 ? (index * duration) : currentSegmentList[currentSegmentList.length - 1].presentationStartTime);
+            } else {
+                // If no segments exist, but index > 0, it means that we switch to the other representation, so
+                // we should proceed from this time.
+                // Otherwise we should start from the beginning for static mpds or from the end (live edge) for dynamic mpds
+                originAvailabilityTime = (index > 0) ? (index * duration) : (isDynamic ? availabilityWindow.end : availabilityWindow.start);
+            }
+
+            // segment list should not be out of the availability window range
+            start = Math.floor(Math.max(originAvailabilityTime - availabilityLowerLimit, availabilityWindow.start) / duration);
+            end = Math.floor(Math.min(originAvailabilityTime + availabilityUpperLimit, availabilityWindow.end) / duration);
+
+            range = {start: start, end: end};
+
+            return range;
         },
 
         waitForAvailabilityWindow = function(representation) {
@@ -372,37 +400,52 @@ Dash.dependencies.DashHandler = function () {
         },
 
         getSegmentsFromList = function (representation) {
-            var segments = [],
+            var self = this,
+                segments = [],
+                deferred = Q.defer(),
                 list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList,
+                len = list.SegmentURL_asArray.length,
                 i,
-                len,
                 seg,
                 s,
+                range,
+                startIdx,
+                endIdx,
                 start;
 
             start = representation.startNumber;
 
-            for (i = 0, len = list.SegmentURL_asArray.length; i < len; i += 1) {
-                s = list.SegmentURL_asArray[i];
+            waitForAvailabilityWindow.call(self, representation).then(
+                function(availabilityWindow) {
+                    representation.segmentAvailabilityRange = availabilityWindow;
+                    range = decideSegmentListRange.call(self, representation);
+                    startIdx = range.start;
+                    endIdx = range.end;
 
-                seg = getIndexBasedSegment.call(
-                    this,
-                    representation,
-                    i);
+                    for (i = startIdx; i < endIdx; i += 1) {
+                        s = list.SegmentURL_asArray[i];
 
-                seg.replacementTime = (start + i - 1) * representation.segmentDuration;
-                seg.media = s.media;
-                seg.mediaRange = s.mediaRange;
-                seg.index = s.index;
-                seg.indexRange = s.indexRange;
+                        seg = getIndexBasedSegment.call(
+                            self,
+                            representation,
+                            i);
 
-                segments.push(seg);
-                seg = null;
-            }
+                        seg.replacementTime = (start + i - 1) * representation.segmentDuration;
+                        seg.media = s.media;
+                        seg.mediaRange = s.mediaRange;
+                        seg.index = s.index;
+                        seg.indexRange = s.indexRange;
 
-            representation.availableSegmentsNumber = len;
-            return Q.when(segments);
+                        segments.push(seg);
+                        seg = null;
+                    }
+
+                    representation.availableSegmentsNumber = len;
+                    deferred.resolve(segments);
+            });
+
+            return deferred.promise;
         },
 
         getSegmentsFromSource = function (representation) {
@@ -442,6 +485,7 @@ Dash.dependencies.DashHandler = function () {
                         count += 1;
                     }
 
+                    representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};
                     representation.availableSegmentsNumber = len;
                     deferred.resolve(segments);
                 }
@@ -479,7 +523,6 @@ Dash.dependencies.DashHandler = function () {
                             representation.adaptation.period.liveEdge = segments[lastIdx].presentationStartTime;
                         }
 
-                        representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[lastIdx].presentationStartTime};
                         deferred.resolve(segments);
                     }
                 );
@@ -566,45 +609,21 @@ Dash.dependencies.DashHandler = function () {
         },
 
         isSegmentListUpdateRequired = function(representation) {
-            // if representation has no segments the segment list should be created
-            if (!representation.segments) return true;
+            var updateRequired = false,
+                segments = representation.segments,
+                isIndexPositive = (index >= 0),
+                upperIdx,
+                lowerIdx;
 
-            if ((index > 0) && (index < representation.segments[0].availabilityIdx)) return true;
+            if (!segments) {
+                updateRequired = true;
+            } else if (isIndexPositive) {
+                lowerIdx = segments[0].availabilityIdx;
+                upperIdx = segments[segments.length -1].availabilityIdx;
+                updateRequired = (index < lowerIdx) || (index > upperIdx);
+            }
 
-            // if the index is less than the availability index of the last segment in the list than the segment for this index is available,
-            // so we don't need to update the list
-            if (index <= representation.segments[representation.segments.length -1].availabilityIdx) return false;
-
-            var self = this,
-                lsn = getLatestSegmentNumber.call(self, representation),
-                gsn = getGreatestSegmentNumber.call(self, representation),
-                res;
-
-            // if the index is out of the range of available segments, but the latest segment number is less than the
-            // greatest segment number, this means that segment list is out of date and should be updated
-            res = (lsn <= gsn);
-
-            return res;
-        },
-
-        getLatestSegmentNumber = function(representation) {
-            var end = representation.segmentAvailabilityRange.end,
-                duration = representation.segmentDuration,
-                lsn;
-
-            lsn = Math.floor((end - duration) / duration);
-
-            return lsn;
-        },
-
-        getGreatestSegmentNumber = function(representation) {
-            var endTime = isDynamic ? representation.adaptation.period.mpd.checkTime : representation.segmentAvailabilityRange.end,
-                duration = representation.segmentDuration,
-                gsn;
-
-            gsn = Math.ceil((endTime - duration) / duration);
-
-            return gsn;
+            return updateRequired;
         },
 
         getRequestForSegment = function (segment) {
