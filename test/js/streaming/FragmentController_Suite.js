@@ -36,6 +36,7 @@ describe("Fragment Controller Suite", function () {
         });
   
       it("process", function(){
+		debugger;
          var bytes=new ArrayBuffer(612);
    
          var promise = null,
@@ -44,10 +45,12 @@ describe("Fragment Controller Suite", function () {
            failure;
    
          success = function(result) {
+			debugger;
             successResult = result;
             flag = true;
            },
          failure = function(error) {
+			debugger;
             flag = false;
            };
          runs(function(){
@@ -57,9 +60,10 @@ describe("Fragment Controller Suite", function () {
   
           waitsFor(function(){
            return flag;
-          });
+          },"",500);
   
           runs(function(){
+			debugger;
            expect(successResult).toEqual(new Uint8Array(bytes));
           });
      });
@@ -131,39 +135,43 @@ describe("Fragment Controller Suite", function () {
 		expect(result).not.toBeTruthy();
 	});
 	
-
-	it("Process - Check bytes per element for a fragment",function(){
-		debugger;
-		GetBytes();
-		waitsFor(function(){
-			if (bytes != undefined) return true;
-		},"bytes are null",100);
-		runs(function(){
+	if(window.location.href.indexOf("runner.html")>0)
+	{
+		it("Process - Check bytes per element for a fragment",function(){
 			debugger;
-			fragmentController.process(bytes).then(function(result){
-				debugger;
-				expect(result.BYTES_PER_ELEMENT).toBe(1);
-			});
-		});
-	});
-	
-	it("Process - Check bytes length for a fragment",function(){
-		debugger;
-		if(bytes == undefined) 
-		{
 			GetBytes();
-		}
-		waitsFor(function(){
-			if (bytes != undefined) return true;
-		},"bytes are null",100);
-		runs(function(){
-			debugger;
-			fragmentController.process(bytes).then(function(result){
+			waitsFor(function(){
+				if (bytes != undefined) return true;
+			},"bytes are null",100);
+			runs(function(){
 				debugger;
-				expect(isNaN(result.length)).not.toBeTruthy();
+				fragmentController.process(bytes).then(function(result){
+					debugger;
+					expect(result.BYTES_PER_ELEMENT).toBe(1);
+				});
 			});
 		});
-	});
+	
+		it("Process - Check bytes length for a fragment",function(){
+			debugger;
+			if(bytes == undefined) 
+			{
+				GetBytes();
+			}
+			waitsFor(function(){
+				if (bytes != undefined) return true;
+			},"bytes are null",100);
+			runs(function(){
+				debugger;
+				fragmentController.process(bytes).then(function(result){
+					debugger;
+					expect(isNaN(result.length)).not.toBeTruthy();
+				});
+			});
+		});
+	}
+
+
 	
 	it("attachBufferController",function(){
 		var requestcheduler,manifestModel;
@@ -330,7 +338,10 @@ describe("Fragment Controller Suite", function () {
 		request.responseType = "arraybuffer";
 		request.onreadystatechange = function () {	
 			debugger;
-			bytes = request.responseText;		
+			if(request.status == 200 && request.readyState == 4)
+			{
+				bytes = request.responseType;
+			}					
 		};
 		request.send();
 	}

@@ -13,7 +13,7 @@
 //This file contains valid MPD strings
 
 
-	var testUrl,testBaseUrl,testVideoUrl,parser,manifestRes,server,context,isActual = true;
+	var testUrl,testBaseUrl,testVideoUrl,parser,manifestRes,manifestFinal,server,context,system,isActual = true;
 	var mock,fakeServer;
 	var invalidSource="http://127.0.0.1:3000/test/js/utils/hostedFiles/Manifestg.mpd";
 	var segmentSource,source;
@@ -66,40 +66,51 @@
 			//segStatus.url=testVideoUrl;
 			
 			 //Creates a fake server and assigns urls and responses.
-			fakeServer = sinon.fakeServer.create();
-			fakeServer.autoRespond = true;
-			fakeServer.xhr.useFilters = true;
+			 
+			try{
+				fakeServer = sinon.fakeServer.create();
+				fakeServer.autoRespond = true;
+				fakeServer.xhr.useFilters = true;
+				
+				fakeServer.xhr.addFilter(function(method, url) {
+					//debugger;
+				  //whenever the this returns true the request will not be faked
+				  return ((url.indexOf("http://127.0.0.1:3000/hostedFiles/") && url.indexOf(segmentSource) && url.indexOf(unfakedUrl))!= -1);
+				});
+				
+				//manifest stub url and response assigned to fake server
+				fakeServer.respondWith(reqStatus.url,reqStatus.responseText);
+				
+				
+				/* segStatus.onreadystatechange = function(){
+					if(segStatus.readyState === 4){
+						//segment stub url and response assigned to fake server
+						fakeServer.respondWith(segStatus.url,segStatus.response);
+					}
+				};  */
+				
+				
+				
+				fakeServer.respond(); 				
+			}
 			
-			fakeServer.xhr.addFilter(function(method, url) {
-				//debugger;
-			  //whenever the this returns true the request will not be faked
-			  return ((url.indexOf("http://127.0.0.1:3000/hostedFiles/") && url.indexOf(segmentSource) && url.indexOf(unfakedUrl))!= -1);
-			});
+			catch(e){
+
+			}
 			
-			//manifest stub url and response assigned to fake server
-			fakeServer.respondWith(reqStatus.url,reqStatus.responseText);
-			
-			
-			/* segStatus.onreadystatechange = function(){
-				if(segStatus.readyState === 4){
-					//segment stub url and response assigned to fake server
-					fakeServer.respondWith(segStatus.url,segStatus.response);
-				}
-			};  */
-			
-			
-			
-			fakeServer.respond(); 
 
 		}
 		
 		
 		//Parser class is called to create the parser objects
 		//Urls and baseUrls assigned are stub urls.
-		//Globally assigned to be used in all the test methods		
+		//Globally assigned to be used in all the test methods	
+		
+		/**
 		var parser = system.getObject("parser");
 		parser.parse(reqStatus.responseText, testBaseUrl).then(
 		function (manifest) {
+			//debugger;
 			manifest.mpdUrl = testUrl;					
 			
 			//Contructs a Adaptation set with above segment url
@@ -134,10 +145,11 @@
 			objAdap.par="16:9";
 			objAdap.Representation=objRepresentation;
 			objAdap.Representation_asArray = objRepresentation;	
+		
             manifest.Period.AdaptationSet.push(objAdap);
 			
 			manifestRes = manifest;	
-		});
+		}); **/
 	 }
 	 
 	 
@@ -170,14 +182,15 @@
 	 
  function initialize()
  {
-	//debugger;
-    if(window.location.href.indexOf("runner.html")>0){
-        system = new dijon.System();
-        system.mapValue("system", system); 
-        system.mapOutlet("system");
-        context = new Dash.di.DashContext();
-		system.injectInto(context);
-        Isloaded();
+	debugger;	
+    if(window.location.href.indexOf("_SpecRunner.html")>0){    
+		//system = new dijon.System();		
+		//system.mapValue("system", system); 
+		//system.mapOutlet("system");
+		
+		//context = new Dash.di.DashContext();		
+		//system.injectInto(context); 
+		Isloaded();
     }
      else
     {
@@ -185,6 +198,8 @@
 		source= "http://127.0.0.1:3000/test/js/utils/hostedFiles/Manifest.mpd";
 		audioUrl="http://127.0.0.1:3000/test/js/utils/hostedFiles/1.m4s";
     }
+	
+	
  }
  
  

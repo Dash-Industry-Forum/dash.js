@@ -149,7 +149,8 @@ describe("AbrController Suite", function () {
                  });
                  
                   waitsFor(function(){
-                  return flag;
+				  if (flag) return flag;	  
+                  
                  },"data null",100);
                  
                  runs(function(){
