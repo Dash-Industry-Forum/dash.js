@@ -140,7 +140,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 req.send();
         },
 
-        checkForExistence = function(request, remainingAttempts) {
+        checkForExistence = function(request) {
             var req = new XMLHttpRequest(),
                 isSuccessful = false,
                 self = this;
@@ -158,14 +158,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
             req.onloadend = req.onerror = function () {
                 if (isSuccessful) return;
 
-                if (remainingAttempts > 0) {
-                    remainingAttempts--;
-                    setTimeout(function() {
-                        checkForExistence.call(self, request, remainingAttempts);
-                    }, RETRY_INTERVAL);
-                } else {
-                    request.deferred.reject(req);
-                }
+                request.deferred.reject(req);
             };
 
             req.send();
@@ -194,7 +187,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
             }
 
             req.deferred = Q.defer();
-            checkForExistence.call(this, req, RETRY_ATTEMPTS);
+            checkForExistence.call(this, req);
 
             return req.deferred.promise;
         },
