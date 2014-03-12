@@ -33,13 +33,12 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 requestTime = new Date(),
                 mpdLoadedTime = null,
                 needFailureReport = true,
+                onload = null,
+                report = null,
                 self = this;
 
-            this.debug.log("Start loading manifest: " + url);
 
-            request.open("GET", url, true);
-
-            request.onload = function () {
+            onload = function () {
                 if (request.status < 200 || request.status > 299)
                 {
                   return;
@@ -71,7 +70,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 );
             };
 
-            request.onloadend = request.onerror = function () {
+            report = function () {
                 if (!needFailureReport)
                 {
                   return;
@@ -102,7 +101,16 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 }
             };
 
-            request.send();
+            try {
+                this.debug.log("Start loading manifest: " + url);
+                request.onload = onload;
+                request.onloadend = report;
+                request.onerror = report;
+                request.open("GET", url, true);
+                request.send();
+            } catch(e) {
+                request.onerror();
+            }
         };
 
     return {
