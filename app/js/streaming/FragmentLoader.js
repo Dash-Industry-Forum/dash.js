@@ -142,8 +142,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
         checkForExistence = function(request) {
             var req = new XMLHttpRequest(),
-                isSuccessful = false,
-                self = this;
+                isSuccessful = false;
 
             req.open("HEAD", request.url, true);
 
