@@ -37,6 +37,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('abrController', MediaPlayer.dependencies.AbrController);
             this.system.mapSingleton('errHandler', MediaPlayer.dependencies.ErrorHandler);
             this.system.mapSingleton('protectionExt', MediaPlayer.dependencies.ProtectionExtensions);
+            this.system.mapSingleton('videoExt', MediaPlayer.dependencies.VideoModelExtensions);
             this.system.mapClass('protectionController', MediaPlayer.dependencies.ProtectionController);
 
 

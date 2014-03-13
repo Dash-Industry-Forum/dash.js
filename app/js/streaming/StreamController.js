@@ -73,10 +73,7 @@
         attachVideoEvents = function (videoModel) {
             videoModel.listen("seeking", seekingListener);
             videoModel.listen("progress", progressListener);
-
-            if (getNextStream()) {
-                videoModel.listen("timeupdate", timeupdateListener);
-            }
+            videoModel.listen("timeupdate", timeupdateListener);
         },
 
         detachVideoEvents = function (videoModel) {
@@ -126,7 +123,10 @@
             if (activeStream.getVideoModel().getElement().seeking) return;
 
             var streamEndTime  = activeStream.getStartTime() + activeStream.getDuration(),
-                currentTime = activeStream.getVideoModel().getCurrentTime();
+                currentTime = activeStream.getVideoModel().getCurrentTime(),
+                self = this;
+
+            self.metricsModel.addDroppedFrames("video", self.videoExt.getPlaybackQuality(activeStream.getVideoModel().getElement()));
 
             // check if stream end is reached
             if (streamEndTime - currentTime < STREAM_END_THRESHOLD) {
@@ -310,7 +310,8 @@
         fragmentExt: undefined,
         capabilities: undefined,
         debug: undefined,
-        metricsExt: undefined,
+        metricsModel: undefined,
+        videoExt: undefined,
         errHandler: undefined,
 
         setup: function() {

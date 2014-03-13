@@ -14,6 +14,7 @@
 MediaPlayer.vo.metrics.PlayList = function () {
     "use strict";
 
+    this.stream = null;     // type of stream ("audio" | "video" etc..)
     this.start = null;      // Real-Time | Timestamp of the user action that starts the playback period...
     this.mstart = null;     // Media-Time | Presentation time at which playout was requested by the user...
     this.starttype = null;  // Type of user action which triggered playout

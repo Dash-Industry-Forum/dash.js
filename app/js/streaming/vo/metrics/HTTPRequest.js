@@ -14,6 +14,7 @@
 MediaPlayer.vo.metrics.HTTPRequest = function () {
     "use strict";
 
+    this.stream = null;         // type of stream ("audio" | "video" etc..)
     this.tcpid = null;          // Identifier of the TCP connection on which the HTTP request was sent.
     this.type = null;           // This is an optional parameter and should not be included in HTTP request/response transactions for progressive download.
                                     // The type of the request:

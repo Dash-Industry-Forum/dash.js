@@ -15,15 +15,19 @@ MediaPlayer.dependencies.VideoModelExtensions = function () {
     "use strict";
 
     return {
-        getDroppedFrames: function (videoElement) {
-            var hasWebKit = videoElement.webkitDroppedFrameCount !== null,
-                droppedFrameCount = -1;
+        getPlaybackQuality: function (videoElement) {
+            var hasWebKit = ("webkitDroppedFrameCount" in videoElement),
+                hasQuality = ("getVideoPlaybackQuality" in videoElement),
+                result = null;
 
-            if (hasWebKit) {
-                droppedFrameCount = videoElement.webkitDroppedFrameCount;
+            if (hasQuality) {
+                result = videoElement.getVideoPlaybackQuality();
+            }
+            else if (hasWebKit) {
+                result = {droppedVideoFrames: videoElement.webkitDroppedFrameCount, creationTime: new Date()};
             }
 
-            return droppedFrameCount;
+            return result;
         }
     };
 };

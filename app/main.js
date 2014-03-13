@@ -98,8 +98,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         context,
         videoSeries = [],
         audioSeries = [],
-        maxGraphPoints = 50,
-        updateInterval = 333;
+        maxGraphPoints = 50;
 
     ////////////////////////////////////////
     //
@@ -216,49 +215,51 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         }
     }
 
-    function update() {
+    function metricChanged(e) {
         var metrics,
             point,
             treeData;
 
-        metrics = getCribbedMetricsFor("video");
-        if (metrics) {
-            $scope.videoBitrate = metrics.bandwidthValue;
-            $scope.videoIndex = metrics.bitrateIndexValue;
-            $scope.videoPendingIndex = metrics.pendingIndex;
-            $scope.videoMaxIndex = metrics.numBitratesValue;
-            $scope.videoBufferLength = metrics.bufferLengthValue;
-            $scope.videoDroppedFrames = metrics.droppedFramesValue;
+        if (e.data.stream == "video") {
+            metrics = getCribbedMetricsFor("video");
+            if (metrics) {
+                $scope.videoBitrate = metrics.bandwidthValue;
+                $scope.videoIndex = metrics.bitrateIndexValue;
+                $scope.videoPendingIndex = metrics.pendingIndex;
+                $scope.videoMaxIndex = metrics.numBitratesValue;
+                $scope.videoBufferLength = metrics.bufferLengthValue;
+                $scope.videoDroppedFrames = metrics.droppedFramesValue;
 
-            point = [parseFloat(video.currentTime), Math.round(parseFloat(metrics.bufferLengthValue))];
-            videoSeries.push(point);
+                point = [parseFloat(video.currentTime), Math.round(parseFloat(metrics.bufferLengthValue))];
+                videoSeries.push(point);
 
-            if (videoSeries.length > maxGraphPoints) {
-                videoSeries.splice(0, 1);
+                if (videoSeries.length > maxGraphPoints) {
+                    videoSeries.splice(0, 1);
+                }
             }
         }
 
-        metrics = getCribbedMetricsFor("audio");
-        if (metrics) {
-            $scope.audioBitrate = metrics.bandwidthValue;
-            $scope.audioIndex = metrics.bitrateIndexValue;
-            $scope.audioPendingIndex = metrics.pendingIndex;
-            $scope.audioMaxIndex = metrics.numBitratesValue;
-            $scope.audioBufferLength = metrics.bufferLengthValue;
-            $scope.audioDroppedFrames = metrics.droppedFramesValue;
+        if (e.data.stream == "audio") {
+            metrics = getCribbedMetricsFor("audio");
+            if (metrics) {
+                $scope.audioBitrate = metrics.bandwidthValue;
+                $scope.audioIndex = metrics.bitrateIndexValue;
+                $scope.audioPendingIndex = metrics.pendingIndex;
+                $scope.audioMaxIndex = metrics.numBitratesValue;
+                $scope.audioBufferLength = metrics.bufferLengthValue;
+                $scope.audioDroppedFrames = metrics.droppedFramesValue;
 
-            point = [parseFloat(video.currentTime), Math.round(parseFloat(metrics.bufferLengthValue))];
-            audioSeries.push(point);
+                point = [parseFloat(video.currentTime), Math.round(parseFloat(metrics.bufferLengthValue))];
+                audioSeries.push(point);
 
-            if (audioSeries.length > maxGraphPoints) {
-                audioSeries.splice(0, 1);
+                if (audioSeries.length > maxGraphPoints) {
+                    audioSeries.splice(0, 1);
+                }
             }
         }
 
         $scope.invalidateDisplay(true);
         $scope.$apply();
-
-        setTimeout(update, updateInterval);
     }
 
     ////////////////////////////////////////
@@ -319,6 +320,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     player.startup();
     player.addEventListener("error", onError.bind(this));
+    player.addEventListener("metricChanged", metricChanged.bind(this));
 
     player.attachView(video);
     player.setAutoPlay(true);
@@ -440,7 +442,6 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     $scope.doLoad = function () {
         player.attachSource($scope.selectedItem.url);
-        setTimeout(update, updateInterval);
     }
 
     $scope.hasLogo = function (item) {
