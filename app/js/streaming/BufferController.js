@@ -998,6 +998,10 @@ MediaPlayer.dependencies.BufferController = function () {
             self.setMediaSource(source);
             self.setVideoModel(videoModel);
             self.setType(type);
+            self.setBuffer(buffer);
+            self.setScheduler(scheduler);
+            self.setFragmentController(fragmentController);
+
             self.updateData(data, periodInfo).then(
                 function(){
                     if (!isDynamic) {
@@ -1026,9 +1030,6 @@ MediaPlayer.dependencies.BufferController = function () {
                     );
                 }
             );
-            self.setBuffer(buffer);
-            self.setScheduler(scheduler);
-            self.setFragmentController(fragmentController);
 
             self.indexHandler.setIsDynamic(isDynamic);
             self.bufferExt.decideBufferLength(manifest.minBufferTime, periodInfo, waitingForBuffer).then(
