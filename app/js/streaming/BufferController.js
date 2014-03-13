@@ -302,7 +302,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                                 rejectedBytes = null;
                                             }
 
-                                            if (!self.requestScheduler.isScheduled(self)) {
+                                            if (!self.requestScheduler.isScheduled(self) && isSchedulingRequired.call(self)) {
                                                 doStart.call(self);
                                             }
 
@@ -766,6 +766,13 @@ MediaPlayer.dependencies.BufferController = function () {
                 }
             }
         },
+
+        isSchedulingRequired = function() {
+            var isPaused = this.videoModel.isPaused();
+
+            return (!isPaused || (isPaused && this.scheduleWhilePaused));
+        },
+
 /*
         mseGetDesiredTime = function () {
             var ranges = buffer.buffered,
@@ -884,6 +891,11 @@ MediaPlayer.dependencies.BufferController = function () {
             checkIfSufficientBuffer.call(self);
             //mseSetTimeIfPossible.call(self);
 
+            if (!isSchedulingRequired.call(self) && !initialPlayback) {
+                doStop.call(self);
+                return;
+            }
+
             if (state === LOADING && bufferLevel < STALL_THRESHOLD) {
                 if (!stalled) {
                     self.debug.log("Stalling " + type + " Buffer: " + type);
@@ -976,6 +988,7 @@ MediaPlayer.dependencies.BufferController = function () {
         debug: undefined,
         system: undefined,
         errHandler: undefined,
+        scheduleWhilePaused: undefined,
 
         initialize: function (type, periodInfo, data, buffer, videoModel, scheduler, fragmentController, source) {
             var self = this,

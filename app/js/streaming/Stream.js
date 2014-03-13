@@ -496,6 +496,7 @@ MediaPlayer.dependencies.Stream = function () {
 
         onPlay = function () {
             this.debug.log("Got play event.");
+            startBuffering.call(this);
         },
 
         onPause = function () {
@@ -586,6 +587,15 @@ MediaPlayer.dependencies.Stream = function () {
 
             if (audioController) {
                audioController.updateBufferState();
+            }
+        },
+
+        startBuffering = function() {
+            if (videoController) {
+                videoController.start();
+            }
+            if (audioController) {
+                audioController.start();
             }
         },
 
