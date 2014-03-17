@@ -206,7 +206,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 var self = this,
                     time = self.fragmentController.getLoadingTime(self);
                 setTimeout(function(){
-                    if (!data && !buffer) return;
+                    if (!hasData()) return;
 
                     setState.call(self, READY);
                     requestNewFragment.call(self);
@@ -281,7 +281,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             Q.when((isAppendingRejectedData) || ln < 2 || deferredAppends[ln - 2].promise).then(
                 function() {
-                    if (!buffer) return;
+                    if (!hasData()) return;
                     hasEnoughSpaceToAppend.call(self).then(
                         function() {
                             if (quality !== lastQuality) {
@@ -295,6 +295,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
                             Q.when(deferredBuffersFlatten ? deferredBuffersFlatten.promise : true).then(
                                 function() {
+                                    if (!hasData()) return;
                                     self.sourceBufferExt.append(buffer, data, self.videoModel).then(
                                         function (/*appended*/) {
                                             if (isAppendingRejectedData) {
@@ -314,7 +315,6 @@ MediaPlayer.dependencies.BufferController = function () {
                                                 }
                                             );
 
-                                            if (!buffer) return;
                                             self.sourceBufferExt.getAllRanges(buffer).then(
                                                 function(ranges) {
                                                     if (ranges) {
@@ -358,7 +358,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         updateBufferLevel = function() {
-            if (!data && !buffer) return Q.when(false);
+            if (!hasData()) return Q.when(false);
 
             var self = this,
                 deferred = Q.defer(),
@@ -366,6 +366,11 @@ MediaPlayer.dependencies.BufferController = function () {
 
             self.sourceBufferExt.getBufferLength(buffer, currentTime).then(
                 function(bufferLength) {
+                    if (!hasData()) {
+                        deferred.reject();
+                        return;
+                    }
+
                     bufferLevel = bufferLength;
                     self.metricsModel.addBufferLevel(type, new Date(), bufferLevel);
                     checkGapBetweenBuffers.call(self);
@@ -771,6 +776,10 @@ MediaPlayer.dependencies.BufferController = function () {
             var isPaused = this.videoModel.isPaused();
 
             return (!isPaused || (isPaused && this.scheduleWhilePaused));
+        },
+
+        hasData = function() {
+           return !!data && !!buffer;
         },
 
 /*
