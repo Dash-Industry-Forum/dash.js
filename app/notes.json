@@ -10,7 +10,7 @@
             ]
         },
         {
-            "title": "Release Notes v1.1.1",
+            "title": "Release Notes v1.1.2",
             "items": [
                 "Improved support for dynamic mpd type",
                 "Added search for live edge.",
@@ -20,7 +20,9 @@
                 "Added manifestLoaded type on the eventbus",
                 "Add reset() to MediaPlayer.",
                 "Added ScheduleWhilePaused property to MediaPlayer.",
-                "Added BufferMax property to MediaPlayer."
+                "Added BufferMax property to MediaPlayer.",
+                "Added metricAdded, metricUpdated, metricChanged and metricsChanged events to remove polling",
+                "Fixed metrics for http requests and dropped frames"
             ]
         },
         {
