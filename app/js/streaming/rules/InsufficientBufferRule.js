@@ -43,17 +43,17 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 shift = false,
                 p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
 
-            self.debug.log("Checking insufficient buffer rule...");
+            //self.debug.log("Checking insufficient buffer rule...");
 
             if (metrics.PlayList === null || metrics.PlayList === undefined || metrics.PlayList.length === 0) {
-                self.debug.log("Not enough information for rule.");
+                //self.debug.log("Not enough information for rule.");
                 return Q.when(new MediaPlayer.rules.SwitchRequest());
             }
 
             playlist = metrics.PlayList[metrics.PlayList.length - 1];
 
             if (playlist === null || playlist === undefined || playlist.trace.length === 0) {
-                self.debug.log("Not enough information for rule.");
+                //self.debug.log("Not enough information for rule.");
                 return Q.when(new MediaPlayer.rules.SwitchRequest());
             }
 
@@ -62,7 +62,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
             trace = playlist.trace[playlist.trace.length - 2];
 
             if (trace === null || trace === undefined || trace.stopreason === null || trace.stopreason === undefined) {
-                self.debug.log("Not enough information for rule.");
+                //self.debug.log("Not enough information for rule.");
                 return Q.when(new MediaPlayer.rules.SwitchRequest());
             }
 

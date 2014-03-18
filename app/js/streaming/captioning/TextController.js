@@ -36,8 +36,8 @@ MediaPlayer.dependencies.TextController = function () {
             // TODO Multiple tracks can be handled here by passing in quality level.
             self.indexHandler.getInitRequest(availableRepresentations[0]).then(
              function (request) {
-                 self.debug.log("Loading text track initialization: " + request.url);
-                 self.debug.log(request);
+                 //self.debug.log("Loading text track initialization: " + request.url);
+                 //self.debug.log(request);
                  self.fragmentLoader.load(request).then(onBytesLoaded.bind(self, request), onBytesError.bind(self, request));
                  setState.call(self, LOADING);
              }
@@ -70,11 +70,11 @@ MediaPlayer.dependencies.TextController = function () {
 
          onBytesLoaded = function (request, response) {
              var self = this;
-             self.debug.log(" Text track Bytes finished loading: " + request.url);
+             //self.debug.log(" Text track Bytes finished loading: " + request.url);
              self.fragmentController.process(response.data).then(
                  function (data) {
                      if (data !== null) {
-                         self.debug.log("Push text track bytes: " + data.byteLength);
+                         //self.debug.log("Push text track bytes: " + data.byteLength);
                          self.sourceBufferExt.append(buffer, data, self.videoModel);
                      }
                  }

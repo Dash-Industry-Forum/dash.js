@@ -106,10 +106,10 @@ MediaPlayer.dependencies.AbrController = function () {
 
             confidence = getInternalConfidence(type);
 
-            self.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
+            //self.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
 
             if (autoSwitchBitrate) {
-                self.debug.log("Check ABR rules.");
+                //self.debug.log("Check ABR rules.");
 
                 self.getMetricsFor(data).then(
                     function (metrics) {
@@ -120,7 +120,7 @@ MediaPlayer.dependencies.AbrController = function () {
                                 }
                                 Q.all(funcs).then(
                                     function (results) {
-                                        self.debug.log(results);
+                                        //self.debug.log(results);
                                         values = {};
                                         values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
                                         values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
@@ -173,10 +173,10 @@ MediaPlayer.dependencies.AbrController = function () {
                                                 }
 
                                                 setInternalQuality(type, quality);
-                                                self.debug.log("New quality of " + quality);
+                                                //self.debug.log("New quality of " + quality);
 
                                                 setInternalConfidence(type, confidence);
-                                                self.debug.log("New confidence of " + confidence);
+                                                //self.debug.log("New confidence of " + confidence);
 
                                                 deferred.resolve({quality: quality, confidence: confidence});
                                             }

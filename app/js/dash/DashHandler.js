@@ -90,10 +90,10 @@ Dash.dependencies.DashHandler = function () {
                 return Q.reject("no represenation");
             }
 
-            self.debug.log("Getting the initialization request.");
+            //self.debug.log("Getting the initialization request.");
 
             if (representation.initialization) {
-                self.debug.log("Got an initialization.");
+                //self.debug.log("Got an initialization.");
                 request = generateInitRequest.call(self, representation, type);
                 deferred.resolve(request);
             } else {
@@ -102,7 +102,7 @@ Dash.dependencies.DashHandler = function () {
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
                 self.baseURLExt.loadInitialization(url).then(
                     function (theRange) {
-                        self.debug.log("Got an initialization.");
+                        //self.debug.log("Got an initialization.");
                         representation.range = theRange;
                         representation.initialization = url;
                         request = generateInitRequest.call(self, representation, type);
@@ -124,9 +124,9 @@ Dash.dependencies.DashHandler = function () {
                 seg,
                 fTime;
 
-            this.debug.log("Checking for stream end...");
+            //this.debug.log("Checking for stream end...");
             if (isDynamic) {
-                this.debug.log("Live never ends! (TODO)");
+                //this.debug.log("Live never ends! (TODO)");
                 // TODO : Check the contents of the last box to signal end.
                 isFinished = false;
             } else {
@@ -763,13 +763,13 @@ Dash.dependencies.DashHandler = function () {
             deferred = Q.defer();
 
             getSegments.call(self, representation).then(
-                function (segments) {
+                function (/*segments*/) {
                     var segmentsPromise;
 
-                    self.debug.log("Got segments.");
-                    self.debug.log(segments);
-                        self.debug.log("Got a list of segments, so dig deeper.");
-                        segmentsPromise = getIndexForSegments.call(self, time, representation);
+                    //self.debug.log("Got segments.");
+                    //self.debug.log(segments);
+                    //self.debug.log("Got a list of segments, so dig deeper.");
+                    segmentsPromise = getIndexForSegments.call(self, time, representation);
                     return segmentsPromise;
                 }
             ).then(
@@ -783,7 +783,7 @@ Dash.dependencies.DashHandler = function () {
                 function (finished) {
                     var requestPromise = null;
 
-                    self.debug.log("Stream finished? " + finished);
+                    //self.debug.log("Stream finished? " + finished);
                     if (finished) {
                         request = new MediaPlayer.vo.SegmentRequest();
                         request.action = request.ACTION_COMPLETE;
@@ -800,8 +800,8 @@ Dash.dependencies.DashHandler = function () {
                 }
             ).then(
                 function (request) {
-                    self.debug.log("Got a request.");
-                    self.debug.log(request);
+                    //self.debug.log("Got a request.");
+                    //self.debug.log(request);
                     deferred.resolve(request);
                 }
             );
@@ -819,42 +819,42 @@ Dash.dependencies.DashHandler = function () {
                 return Q.reject("no represenation");
             }
 
-            self.debug.log("Getting the next request.");
+            //self.debug.log("Getting the next request.");
 
             if (index === -1) {
                 throw "You must call getSegmentRequestForTime first.";
             }
 
             index += 1;
-            self.debug.log("New index: " + index);
+            //self.debug.log("New index: " + index);
 
             deferred = Q.defer();
 
             isMediaFinished.call(self, representation).then(
                 function (finished) {
-                    self.debug.log("Stream finished? " + finished);
+                    //self.debug.log("Stream finished? " + finished);
                     if (finished) {
                         request = new MediaPlayer.vo.SegmentRequest();
                         request.action = request.ACTION_COMPLETE;
                         request.index = index;
                         self.debug.log("Signal complete.");
-                        self.debug.log(request);
+                        //self.debug.log(request);
                         deferred.resolve(request);
                     } else {
                         getSegments.call(self, representation).then(
-                            function (segments) {
+                            function (/*segments*/) {
                                 var segmentsPromise;
 
-                                self.debug.log("Got segments.");
-                                self.debug.log(segments);
+                                //self.debug.log("Got segments.");
+                                //self.debug.log(segments);
                                 segment = getSegmentByIndex(index, representation);
                                 segmentsPromise = getRequestForSegment.call(self, segment);
                                 return segmentsPromise;
                             }
                         ).then(
                             function (request) {
-                                self.debug.log("Got a request.");
-                                self.debug.log(request);
+                                //self.debug.log("Got a request.");
+                                //self.debug.log(request);
                                 deferred.resolve(request);
                             }
                         );

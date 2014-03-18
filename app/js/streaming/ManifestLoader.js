@@ -102,7 +102,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
             };
 
             try {
-                this.debug.log("Start loading manifest: " + url);
+                //this.debug.log("Start loading manifest: " + url);
                 request.onload = onload;
                 request.onloadend = report;
                 request.onerror = report;

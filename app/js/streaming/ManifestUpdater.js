@@ -65,13 +65,13 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
                         url = manifest.Location;
                     }
 
-                    self.debug.log("Refresh manifest @ " + url);
+                    //self.debug.log("Refresh manifest @ " + url);
 
                     self.manifestLoader.load(url).then(
                         function (manifestResult) {
                             self.manifestModel.setValue(manifestResult);
                             self.debug.log("Manifest has been refreshed.");
-                            self.debug.log(manifestResult);
+                            //self.debug.log(manifestResult);
                             update.call(self);
                         }
                     );

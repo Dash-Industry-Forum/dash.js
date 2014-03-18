@@ -350,7 +350,7 @@
                 function(manifest) {
                     self.manifestModel.setValue(manifest);
                     self.debug.log("Manifest has loaded.");
-                    self.debug.log(self.manifestModel.getValue());
+                    //self.debug.log(self.manifestModel.getValue());
                     self.manifestUpdater.init();
                 },
                 function () {

@@ -85,8 +85,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     var currentTime = new Date(),
                         bytes = req.response,
                         latency,
-                        download,
-                        total;
+                        download;
 
                     if (!request.firstByteDate) {
                         request.firstByteDate = request.requestStartDate;
@@ -95,9 +94,8 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
                     latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime());
                     download = (request.requestEndDate.getTime() - request.firstByteDate.getTime());
-                    total = (request.requestEndDate.getTime() - request.requestStartDate.getTime());
 
-                    self.debug.log("segment loaded: (" + req.status + ", " + latency + "ms, " + download + "ms, " + total + "ms) " + request.url);
+                    self.debug.log("loaded " + request.streamType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
 
                     httpRequestMetrics.tresponse = request.firstByteDate;
                     httpRequestMetrics.tfinish = request.requestEndDate;
@@ -131,8 +129,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     var currentTime = new Date(),
                         bytes = req.response,
                         latency,
-                        download,
-                        total;
+                        download;
 
                     if (!request.firstByteDate) {
                         request.firstByteDate = request.requestStartDate;
@@ -141,9 +138,8 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
                     latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime());
                     download = (request.requestEndDate.getTime() - request.firstByteDate.getTime());
-                    total = (request.requestEndDate.getTime() - request.requestStartDate.getTime());
 
-                    self.debug.log("segment loaded: (" + req.status + ", " + latency + "ms, " + download + "ms, " + total + "ms) " + request.url);
+                    self.debug.log("failed " + request.streamType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
 
                     httpRequestMetrics.tresponse = request.firstByteDate;
                     httpRequestMetrics.tfinish = request.requestEndDate;
@@ -157,13 +153,13 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
 
                     if (remainingAttempts > 0) {
-                        self.debug.log("Failed loading segment: " + request.url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                        self.debug.log("Failed loading segment: " + request.streamType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
                         remainingAttempts--;
                         setTimeout(function() {
                             doLoad.call(self, request, remainingAttempts);
                         }, RETRY_INTERVAL);
                     } else {
-                        self.debug.log("Failed loading segment: " + request.url + " no retry attempts left");
+                        self.debug.log("Failed loading segment: " + request.streamType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
                         self.errHandler.downloadError("content", request.url, req);
                         request.deferred.reject(req);
                     }

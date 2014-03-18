@@ -73,7 +73,7 @@ MediaPlayer = function (aContext) {
             }
 
             playing = true;
-            this.debug.log("Playback initiated!");
+            //this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);

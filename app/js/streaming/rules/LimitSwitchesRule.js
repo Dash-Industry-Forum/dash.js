@@ -42,7 +42,7 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
                 i,
                 numSwitches = metrics.RepSwitchList.length;
 
-            self.debug.log("Checking limit switches rule...");
+            //self.debug.log("Checking limit switches rule...");
 
             for (i = numSwitches - 1; i >= 0; i -= 1) {
                 rs = metrics.RepSwitchList[i];
