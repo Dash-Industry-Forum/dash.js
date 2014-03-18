@@ -49,23 +49,23 @@ MediaPlayer.dependencies.Stream = function () {
         keyErrorListener,
 
         play = function () {
-            this.debug.log("Attempting play...");
+            //this.debug.log("Attempting play...");
 
             if (!initialized) {
                 return;
             }
 
-            this.debug.log("Do play.");
+            //this.debug.log("Do play.");
             this.videoModel.play();
         },
 
         pause = function () {
-            this.debug.log("Do pause.");
+            //this.debug.log("Do pause.");
             this.videoModel.pause();
         },
 
         seek = function (time) {
-            this.debug.log("Attempting seek...");
+            //this.debug.log("Attempting seek...");
 
             if (!initialized) {
                 return;
@@ -194,14 +194,14 @@ MediaPlayer.dependencies.Stream = function () {
                     deferred.resolve(mediaSourceArg);
                 };
 
-            self.debug.log("MediaSource should be closed. The actual readyState is: " + mediaSourceArg.readyState);
+            //self.debug.log("MediaSource should be closed. The actual readyState is: " + mediaSourceArg.readyState);
 
             mediaSourceArg.addEventListener("sourceopen", onMediaSourceOpen, false);
             mediaSourceArg.addEventListener("webkitsourceopen", onMediaSourceOpen, false);
 
             self.mediaSourceExt.attachMediaSource(mediaSourceArg, self.videoModel);
 
-            self.debug.log("MediaSource attached to video.  Waiting on open...");
+            //self.debug.log("MediaSource attached to video.  Waiting on open...");
 
             return deferred.promise;
         },
@@ -244,34 +244,33 @@ MediaPlayer.dependencies.Stream = function () {
                     this.debug.log(msg);
                     deferred.reject();
                 } else {
-                    this.debug.log("MediaSource initialized!");
+                    //this.debug.log("MediaSource initialized!");
                     deferred.resolve(true);
                 }
             }
         },
 
         initializeMediaSource = function () {
-            this.debug.log("Getting MediaSource ready...");
+            //this.debug.log("Getting MediaSource ready...");
 
             var initialize = Q.defer(),
                 videoReady = false,
                 audioReady = false,
                 textTrackReady = false,
-                self = this,
-                manifest = self.manifestModel.getValue();
+                self = this;
 
             // Figure out some bits about the stream before building anything.
-            self.debug.log("Gathering information for buffers. (1)");
+            //self.debug.log("Gathering information for buffers. (1)");
             self.manifestExt.getDuration(manifest, periodInfo).then(
                 function (/*duration*/) {
                     self.manifestExt.getVideoData(manifest, periodInfo.index).then(
                         function (videoData) {
                             if (videoData !== null) {
-                                self.debug.log("Create video buffer.");
+                                //self.debug.log("Create video buffer.");
                                 self.manifestExt.getDataIndex(videoData, manifest, periodInfo.index).then(
                                     function (index) {
                                         videoTrackIndex = index;
-                                        self.debug.log("Save video track: " + videoTrackIndex);
+                                        //self.debug.log("Save video track: " + videoTrackIndex);
                                     }
                                 );
 
@@ -282,7 +281,7 @@ MediaPlayer.dependencies.Stream = function () {
 
                                         return self.manifestExt.getContentProtectionData(videoData).then(
                                             function (contentProtectionData) {
-                                                self.debug.log("Video contentProtection");
+                                                //self.debug.log("Video contentProtection");
 
                                                 if (!!contentProtectionData && !self.capabilities.supportsMediaKeys()) {
                                                     self.errHandler.capabilityError("mediakeys");
@@ -315,7 +314,7 @@ MediaPlayer.dependencies.Stream = function () {
 
                                             videoController = self.system.getObject("bufferController");
                                             videoController.initialize("video", periodInfo, videoData, buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource);
-                                            self.debug.log("Video is ready!");
+                                            //self.debug.log("Video is ready!");
                                         }
 
                                         videoReady = true;
@@ -338,13 +337,13 @@ MediaPlayer.dependencies.Stream = function () {
                     ).then(
                         function (audioDatas) {
                             if (audioDatas !== null && audioDatas.length > 0) {
-                                self.debug.log("Have audio streams: " + audioDatas.length);
+                                //self.debug.log("Have audio streams: " + audioDatas.length);
                                 self.manifestExt.getPrimaryAudioData(manifest, periodInfo.index).then(
                                     function (primaryAudioData) {
                                         self.manifestExt.getDataIndex(primaryAudioData, manifest, periodInfo.index).then(
                                             function (index) {
                                                 audioTrackIndex = index;
-                                                self.debug.log("Save audio track: " + audioTrackIndex);
+                                                //self.debug.log("Save audio track: " + audioTrackIndex);
                                             }
                                         );
 
@@ -355,7 +354,7 @@ MediaPlayer.dependencies.Stream = function () {
 
                                                 return self.manifestExt.getContentProtectionData(primaryAudioData).then(
                                                     function (contentProtectionData) {
-                                                        self.debug.log("Audio contentProtection");
+                                                        //self.debug.log("Audio contentProtection");
 
                                                         if (!!contentProtectionData && !self.capabilities.supportsMediaKeys()) {
                                                             self.errHandler.capabilityError("mediakeys");
@@ -387,7 +386,7 @@ MediaPlayer.dependencies.Stream = function () {
                                                     // TODO : Pass to controller and then pass to each method on handler?
                                                     audioController = self.system.getObject("bufferController");
                                                     audioController.initialize("audio", periodInfo, primaryAudioData, buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource);
-                                                    self.debug.log("Audio is ready!");
+                                                    //self.debug.log("Audio is ready!");
                                                 }
 
                                                 audioReady = true;
@@ -416,7 +415,7 @@ MediaPlayer.dependencies.Stream = function () {
                                 self.manifestExt.getDataIndex(textData, manifest, periodInfo.index).then(
                                     function (index) {
                                         textTrackIndex = index;
-                                        self.debug.log("Save text track: " + textTrackIndex);
+                                        //self.debug.log("Save text track: " + textTrackIndex);
                                     }
                                 );
                                 self.manifestExt.getMimeType(textData).then(
@@ -435,7 +434,7 @@ MediaPlayer.dependencies.Stream = function () {
                                             if (buffer.hasOwnProperty('initialize')) {
                                                 buffer.initialize(mimeType, textController);
                                             }
-                                            self.debug.log("Text is ready!");
+                                            //self.debug.log("Text is ready!");
                                             textTrackReady = true;
                                             checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
                                         }
@@ -465,16 +464,16 @@ MediaPlayer.dependencies.Stream = function () {
             var self = this,
                 initialize = Q.defer();
 
-            self.debug.log("Getting ready for playback...");
+            //self.debug.log("Getting ready for playback...");
 
             self.manifestExt.getDuration(self.manifestModel.getValue(), periodInfo).then(
                 function (duration) {
-                    self.debug.log("Setting duration: " + duration);
+                    //self.debug.log("Setting duration: " + duration);
                     return self.mediaSourceExt.setDuration(mediaSource, duration);
                 }
             ).then(
-                function (/*value*/) {
-                    self.debug.log("Duration successfully set.");
+                function (value) {
+                    self.debug.log("Duration successfully set to: " + value);
                     initialized = true;
                     initialize.resolve(true);
                 }
@@ -495,12 +494,12 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         onPlay = function () {
-            this.debug.log("Got play event.");
+            //this.debug.log("Got play event.");
             startBuffering.call(this);
         },
 
         onPause = function () {
-            this.debug.log("Got pause event.");
+            //this.debug.log("Got pause event.");
 
             if (!this.scheduleWhilePaused) {
                 stopBuffering.call(this);
@@ -544,7 +543,7 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         onSeeking = function () {
-            this.debug.log("Got seeking event.");
+            //this.debug.log("Got seeking event.");
             var time = this.videoModel.getCurrentTime();
 
             if (videoController) {
@@ -556,7 +555,7 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         onSeeked = function () {
-            this.debug.log("Seek complete.");
+            //this.debug.log("Seek complete.");
 
             this.videoModel.listen("seeking", seekingListener);
             this.videoModel.unlisten("seeked", seekedListener);
@@ -612,28 +611,28 @@ MediaPlayer.dependencies.Stream = function () {
 
             var self = this;
 
-            self.debug.log("Stream start loading.");
+            //self.debug.log("Stream start loading.");
 
             manifest = manifestResult;
             return self.mediaSourceExt.createMediaSource().then(
                 function (mediaSourceResult) {
-                    self.debug.log("MediaSource created.");
+                    //self.debug.log("MediaSource created.");
                     return setUpMediaSource.call(self, mediaSourceResult);
                 }
             ).then(
                 function (mediaSourceResult) {
                     mediaSource = mediaSourceResult;
-                    self.debug.log("MediaSource set up.");
+                    //self.debug.log("MediaSource set up.");
                     return initializeMediaSource.call(self);
                 }
             ).then(
                 function (/*result*/) {
-                    self.debug.log("Start initializing playback.");
+                    //self.debug.log("Start initializing playback.");
                     return initializePlayback.call(self);
                 }
             ).then(
                 function (/*done*/) {
-                    self.debug.log("Playback initialized!");
+                    //self.debug.log("Playback initialized!");
                     return load.promise;
                 }
             ).then(
@@ -682,9 +681,9 @@ MediaPlayer.dependencies.Stream = function () {
                 deferredTextData,
                 deferredVideoUpdate = Q.defer(),
                 deferredAudioUpdate = Q.defer(),
-                deferredTextUpdate = Q.defer(),
-                manifest = self.manifestModel.getValue();
+                deferredTextUpdate = Q.defer();
 
+            manifest = self.manifestModel.getValue();
             periodInfo = updatedPeriodInfo;
             self.debug.log("Manifest updated... set new data on buffers.");
 
