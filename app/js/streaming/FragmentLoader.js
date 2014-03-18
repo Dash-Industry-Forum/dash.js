@@ -23,11 +23,30 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 httpRequestMetrics = null,
                 firstProgress = true,
                 needFailureReport = true,
+                lastTraceTime = null,
                 self = this;
 
                 xhrs.push(req);
                 request.requestStartDate = new Date();
-                request.firstByteDate = request.requestStartDate;
+
+                httpRequestMetrics = self.metricsModel.addHttpRequest(request.streamType,
+                                                                      null,
+                                                                      request.type,
+                                                                      request.url,
+                                                                      null,
+                                                                      request.range,
+                                                                      request.requestStartDate,
+                                                                      null,
+                                                                      null,
+                                                                      null,
+                                                                      null,
+                                                                      request.duration);
+
+                self.metricsModel.appendHttpTrace(httpRequestMetrics,
+                                                  request.requestStartDate,
+                                                  request.requestStartDate.getTime() - request.requestStartDate.getTime(),
+                                                  [0]);
+                lastTraceTime = request.requestStartDate;
 
                 req.open("GET", request.url, true);
                 req.responseType = "arraybuffer";
@@ -41,12 +60,19 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 }
 
                 req.onprogress = function (event) {
+                    var currentTime = new Date();
                     if (firstProgress) {
                         firstProgress = false;
                         if (!event.lengthComputable || (event.lengthComputable && event.total != event.loaded)) {
-                            request.firstByteDate = new Date();
+                            request.firstByteDate = currentTime;
+                            httpRequestMetrics.tresponse = currentTime;
                         }
                     }
+                    self.metricsModel.appendHttpTrace(httpRequestMetrics,
+                                                      currentTime,
+                                                      currentTime.getTime() - lastTraceTime.getTime(),
+                                                      [req.response ? req.response.byteLength : 0]);
+                    lastTraceTime = currentTime;
                 };
 
                 req.onload = function () {
@@ -56,33 +82,32 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     }
                     needFailureReport = false;
 
-                    request.requestEndDate = new Date();
-
-                    var currentTime = request.requestEndDate,
+                    var currentTime = new Date(),
                         bytes = req.response,
-                        latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime()),
-                        download = (request.requestEndDate.getTime() - request.firstByteDate.getTime()),
-                        total = (request.requestEndDate.getTime() - request.requestStartDate.getTime());
+                        latency,
+                        download,
+                        total;
+
+                    if (!request.firstByteDate) {
+                        request.firstByteDate = request.requestStartDate;
+                    }
+                    request.requestEndDate = currentTime;
+
+                    latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime());
+                    download = (request.requestEndDate.getTime() - request.firstByteDate.getTime());
+                    total = (request.requestEndDate.getTime() - request.requestStartDate.getTime());
 
                     self.debug.log("segment loaded: (" + req.status + ", " + latency + "ms, " + download + "ms, " + total + "ms) " + request.url);
 
-                    httpRequestMetrics = self.metricsModel.addHttpRequest(request.streamType,
-                                                                          null,
-                                                                          request.type,
-                                                                          request.url,
-                                                                          null,
-                                                                          request.range,
-                                                                          request.requestStartDate,
-                                                                          request.firstByteDate,
-                                                                          request.requestEndDate,
-                                                                          req.status,
-                                                                          null,
-                                                                          request.duration);
+                    httpRequestMetrics.tresponse = request.firstByteDate;
+                    httpRequestMetrics.tfinish = request.requestEndDate;
+                    httpRequestMetrics.responsecode = req.status;
 
                     self.metricsModel.appendHttpTrace(httpRequestMetrics,
                                                       currentTime,
-                                                      new Date().getTime() - currentTime.getTime(),
-                                                      [bytes.byteLength]);
+                                                      currentTime.getTime() - lastTraceTime.getTime(),
+                                                      [bytes ? bytes.byteLength : 0]);
+                    lastTraceTime = currentTime;
 
                     request.deferred.resolve({
                         data: bytes,
@@ -103,26 +128,33 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     }
                     needFailureReport = false;
 
-                    request.requestEndDate = new Date();
+                    var currentTime = new Date(),
+                        bytes = req.response,
+                        latency,
+                        download,
+                        total;
 
-                    var latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime()),
-                        download = (request.requestEndDate.getTime() - request.firstByteDate.getTime()),
-                        total = (request.requestEndDate.getTime() - request.requestStartDate.getTime());
+                    if (!request.firstByteDate) {
+                        request.firstByteDate = request.requestStartDate;
+                    }
+                    request.requestEndDate = currentTime;
+
+                    latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime());
+                    download = (request.requestEndDate.getTime() - request.firstByteDate.getTime());
+                    total = (request.requestEndDate.getTime() - request.requestStartDate.getTime());
 
                     self.debug.log("segment loaded: (" + req.status + ", " + latency + "ms, " + download + "ms, " + total + "ms) " + request.url);
 
-                    httpRequestMetrics = self.metricsModel.addHttpRequest(request.streamType,
-                                                                          null,
-                                                                          request.type,
-                                                                          request.url,
-                                                                          null,
-                                                                          request.range,
-                                                                          request.requestStartDate,
-                                                                          request.firstByteDate,
-                                                                          request.requestEndDate,
-                                                                          req.status,
-                                                                          null,
-                                                                          request.duration);
+                    httpRequestMetrics.tresponse = request.firstByteDate;
+                    httpRequestMetrics.tfinish = request.requestEndDate;
+                    httpRequestMetrics.responsecode = req.status;
+
+                    self.metricsModel.appendHttpTrace(httpRequestMetrics,
+                                                      currentTime,
+                                                      currentTime.getTime() - lastTraceTime.getTime(),
+                                                      [bytes ? bytes.byteLength : 0]);
+                    lastTraceTime = currentTime;
+
 
                     if (remainingAttempts > 0) {
                         self.debug.log("Failed loading segment: " + request.url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);

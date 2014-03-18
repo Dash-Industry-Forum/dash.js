@@ -46,11 +46,11 @@ MediaPlayer.rules.DownloadRatioRule = function () {
     return {
         debug: undefined,
         manifestExt: undefined,
+        metricsExt: undefined,
 
         checkIndex: function (current, metrics, data) {
             var self = this,
-                httpRequests = metrics.HttpList,
-                lastRequest,
+                lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
                 downloadTime,
                 totalTime,
                 downloadRatio,
@@ -69,12 +69,10 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 return Q.when(new MediaPlayer.rules.SwitchRequest());
             }
 
-            if (httpRequests === null || httpRequests === undefined || httpRequests.length === 0) {
+            if (lastRequest === null) {
                 self.debug.log("No requests made for this stream yet, bailing.");
                 return Q.when(new MediaPlayer.rules.SwitchRequest());
             }
-
-            lastRequest = httpRequests[httpRequests.length - 1];
 
             totalTime = (lastRequest.tfinish.getTime() - lastRequest.trequest.getTime()) / 1000;
             downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;

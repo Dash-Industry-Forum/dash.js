@@ -118,15 +118,17 @@
          * TODO move to ???Extensions class
          */
         onTimeupdate = function() {
-            // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new period starts
-            // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
-            if (activeStream.getVideoModel().getElement().seeking) return;
-
             var streamEndTime  = activeStream.getStartTime() + activeStream.getDuration(),
                 currentTime = activeStream.getVideoModel().getCurrentTime(),
                 self = this;
 
             self.metricsModel.addDroppedFrames("video", self.videoExt.getPlaybackQuality(activeStream.getVideoModel().getElement()));
+
+            if (!getNextStream()) return;
+
+            // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new period starts
+            // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
+            if (activeStream.getVideoModel().getElement().seeking) return;
 
             // check if stream end is reached
             if (streamEndTime - currentTime < STREAM_END_THRESHOLD) {

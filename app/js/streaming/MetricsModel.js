@@ -159,12 +159,17 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         addDroppedFrames: function (streamType, quality) {
-            var vo = new MediaPlayer.vo.metrics.DroppedFrames();
+            var vo = new MediaPlayer.vo.metrics.DroppedFrames(),
+                list = this.getMetricsFor(streamType).DroppedFrames;
 
             vo.time = quality.creationTime;
             vo.droppedFrames = quality.droppedVideoFrames;
 
-            this.getMetricsFor(streamType).DroppedFrames.push(vo);
+            if (list.length > 0 && list[list.length - 1] == vo) {
+                return list[list.length - 1];
+            }
+
+            list.push(vo);
 
             this.metricAdded(streamType, "DroppedFrames", vo);
             return vo;

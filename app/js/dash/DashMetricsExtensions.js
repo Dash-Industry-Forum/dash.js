@@ -208,7 +208,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
             var httpList = metrics.HttpList,
                 httpListLength,
                 httpListLastIndex,
-                currentHttpList;
+                currentHttpList = null;
 
             if (httpList === null || httpList.length <= 0) {
                 return null;
@@ -217,9 +217,24 @@ Dash.dependencies.DashMetricsExtensions = function () {
             httpListLength = httpList.length;
             httpListLastIndex = httpListLength - 1;
 
-            currentHttpList = httpList[httpListLastIndex];
+            while (httpListLastIndex > 0) {
+                if (httpList[httpListLastIndex].responsecode) {
+                    currentHttpList = httpList[httpListLastIndex];
+                    break;
+                }
+                httpListLastIndex -= 1;
+            }
             return currentHttpList;
         },
+
+        getHttpRequests = function (metrics) {
+            if (metrics === null) {
+                return [];
+            }
+
+            return !!metrics.HttpList ? metrics.HttpList : [];
+        },
+
         getCurrentDroppedFrames = function (metrics) {
             if (metrics === null) { return null; }
 
@@ -248,6 +263,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getCurrentRepresentationSwitch : getCurrentRepresentationSwitch,
         getCurrentBufferLevel : getCurrentBufferLevel,
         getCurrentHttpRequest : getCurrentHttpRequest,
+        getHttpRequests : getHttpRequests,
         getCurrentDroppedFrames : getCurrentDroppedFrames
     };
 };
