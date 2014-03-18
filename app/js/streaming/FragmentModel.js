@@ -98,8 +98,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
         },
 
         isFragmentLoadedOrPending: function(request) {
-            var self = this,
-                isLoaded = false,
+            var isLoaded = false,
                 ln = executedRequests.length,
                 req;
 
@@ -107,9 +106,9 @@ MediaPlayer.dependencies.FragmentModel = function () {
             for (var i = 0; i < ln; i++) {
                 req = executedRequests[i];
                 if (request.startTime === req.startTime || ((req.action === "complete") && request.action === req.action)) {
-                    self.debug.log(request.streamType + " Fragment already loaded for time: " + request.startTime);
+                    //self.debug.log(request.streamType + " Fragment already loaded for time: " + request.startTime);
                     if (request.url === req.url) {
-                        self.debug.log(request.streamType + " Fragment url already loaded: " + request.url);
+                        //self.debug.log(request.streamType + " Fragment url already loaded: " + request.url);
                         isLoaded = true;
                         break;
                     } else {
@@ -247,6 +246,12 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     break;
                 default:
                     this.debug.log("Unknown request action.");
+                    if (currentRequest.deferred) {
+                        currentRequest.deferred.reject();
+                        currentRequest.deferred = null;
+                    } else {
+                        errorLoadingCallback.call(context, currentRequest);
+                    }
             }
         }
     };
