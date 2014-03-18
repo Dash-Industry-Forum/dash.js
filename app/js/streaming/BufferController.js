@@ -651,6 +651,10 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             if (dataChanged) {
+                if (deferredInitAppend && Q.isPending(deferredInitAppend.promise)) {
+                    deferredInitAppend.resolve();
+                }
+
                 deferredInitAppend = Q.defer();
                 initializationData = [];
 
