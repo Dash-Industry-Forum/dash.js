@@ -761,7 +761,9 @@ MediaPlayer.dependencies.BufferController = function () {
 
         checkIfSufficientBuffer = function () {
             if (waitingForBuffer) {
-                if ((bufferLevel < minBufferTime) && (minBufferTime < (periodInfo.duration - this.videoModel.getCurrentTime()))) {
+                var timeToEnd = getTimeToEnd.call(this);
+
+                if ((bufferLevel < minBufferTime) && ((minBufferTime < timeToEnd) || (minBufferTime >= timeToEnd && !isBufferingCompleted))) {
                     if (!stalled) {
                         this.debug.log("Waiting for more " + type + " buffer before starting playback.");
                         stalled = true;
@@ -784,6 +786,12 @@ MediaPlayer.dependencies.BufferController = function () {
 
         hasData = function() {
            return !!data && !!buffer;
+        },
+
+        getTimeToEnd = function() {
+            var currentTime = this.videoModel.getCurrentTime();
+
+            return ((periodInfo.start + periodInfo.duration) - currentTime);
         },
 
         getWorkingTime = function () {
@@ -854,14 +862,12 @@ MediaPlayer.dependencies.BufferController = function () {
                 return;
             }
 
-            if (state === LOADING && bufferLevel < STALL_THRESHOLD) {
-                if (!stalled) {
-                    self.debug.log("Stalling " + type + " Buffer: " + type);
-                    clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
-                    stalled = true;
-                    waitingForBuffer = true;
-                    self.videoModel.stallStream(type, stalled);
-                }
+            if (bufferLevel < STALL_THRESHOLD && !stalled) {
+                self.debug.log("Stalling " + type + " Buffer: " + type);
+                clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
+                stalled = true;
+                waitingForBuffer = true;
+                self.videoModel.stallStream(type, stalled);
             } else if (state === READY) {
                 setState.call(self, VALIDATING);
                 var manifestMinBufferTime = self.manifestModel.getValue().minBufferTime;
