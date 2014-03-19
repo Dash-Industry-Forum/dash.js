@@ -28,8 +28,50 @@ Dash.dependencies.DashHandler = function () {
         },
 
         replaceNumberForTemplate = function (url, value) {
+
+            var startI = url.indexOf("$Number");
+
+            if (startI < 0) {
+                return url;
+            }
+
+            var endI = url.indexOf("$", startI + 7);
+            var per = url.indexOf("%", startI + 7);
+
+            if (per > startI && per < endI) {
+
+                var type = url.charAt(endI - 1);
+                var padding = url.substring(per + 1, endI - 1);
+
+                switch (type) {
+                    case 'd':
+                        value = addZeros(value, padding);
+                        break;
+                    case 'h':
+                        value = decimalToHex(value, padding);
+                        break;
+                    default:
+                        this.debug.log("Unrecognised numeric identifier in URL.");
+                }
+            }
+
             var v = value.toString();
-            return url.split("$Number$").join(v);
+            return url.substring(0, startI) + v + url.substring(endI + 1);
+        },
+
+        addZeros = function (s, padding) {
+            if (s.length == padding)
+                return s;
+            else {
+                s = "0" + s;
+                return addZeros(s, padding);
+           }
+        },
+
+        decimalToHex = function (d, padding) {
+            var hex = Number(d).toString(16);
+            padding = (padding == null) ? 2 : padding;
+            return addZeros(hex, padding);
         },
 
         replaceTimeForTemplate = function (url, value) {
@@ -198,12 +240,15 @@ Dash.dependencies.DashHandler = function () {
                 if (frag.hasOwnProperty("r")) {
                     repeat = frag.r;
                 }
-
+                if (repeat == -1) {
+                    var t_duration = duration * template.timescale;
+                    repeat = Math.ceil(t_duration/frag.d) - 1;
+                }
                 for (j = 0; j <= repeat; j += 1) {
                     seg = new Dash.vo.Segment();
 
                     seg.timescale = fTimescale;
-                    if (frag.hasOwnProperty("t")) {
+                    if (frag.hasOwnProperty("t") && j==0) {
                         seg.startTime = frag.t;
                         time = frag.t;
                     } else {
