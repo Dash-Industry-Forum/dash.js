@@ -868,7 +868,9 @@ MediaPlayer.dependencies.BufferController = function () {
                 stalled = true;
                 waitingForBuffer = true;
                 self.videoModel.stallStream(type, stalled);
-            } else if (state === READY) {
+            }
+
+            if (state === READY) {
                 setState.call(self, VALIDATING);
                 var manifestMinBufferTime = self.manifestModel.getValue().minBufferTime;
                 self.bufferExt.decideBufferLength(manifestMinBufferTime, periodInfo.duration, waitingForBuffer).then(
