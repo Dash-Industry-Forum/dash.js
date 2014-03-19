@@ -240,7 +240,10 @@ Dash.dependencies.DashHandler = function () {
                 if (frag.hasOwnProperty("r")) {
                     repeat = frag.r;
                 }
-
+                if (repeat == -1) {
+                    var t_duration = duration * template.timescale;
+                    repeat = Math.ceil(t_duration/frag.d) - 1;
+                }
                 for (j = 0; j <= repeat; j += 1) {
                     seg = new Dash.vo.Segment();
 
