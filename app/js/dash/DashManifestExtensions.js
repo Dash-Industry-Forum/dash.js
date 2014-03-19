@@ -727,9 +727,11 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
         if (mpd.manifest.mediaPresentationDuration) {
             periodEnd = mpd.manifest.mediaPresentationDuration;
-        } else {
+        } else if (!isNaN(mpd.checkTime)) {
             // in this case the Period End Time should match CheckTime
             periodEnd = mpd.checkTime;
+        } else {
+            return Q.fail(new Error("Must have @mediaPresentationDuration or @minimumUpdatePeriod on MPD or an explicit @duration on the last period."));
         }
 
         return Q.when(periodEnd);
