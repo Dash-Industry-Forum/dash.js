@@ -112,8 +112,11 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     $scope.videoMaxIndex = 0;
     $scope.videoBufferLength = 0;
     $scope.videoDroppedFrames = 0;
+    $scope.videoLatencyCount = 0;
     $scope.videoLatency = "";
+    $scope.videoDownloadCount = 0;
     $scope.videoDownload = "";
+    $scope.videoRatioCount = 0;
     $scope.videoRatio = "";
 
     $scope.audioBitrate = 0;
@@ -122,8 +125,11 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     $scope.audioMaxIndex = 0;
     $scope.audioBufferLength = 0;
     $scope.audioDroppedFrames = 0;
+    $scope.videoLatencyCount = 0;
     $scope.audioLatency = "";
+    $scope.audioDownloadCount = 0;
     $scope.audioDownload = "";
+    $scope.audioRatioCount = 0;
     $scope.audioRatio = "";
 
     var converter = new MetricsTreeConverter();
@@ -283,13 +289,16 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 $scope.videoBufferLength = metrics.bufferLengthValue;
                 $scope.videoDroppedFrames = metrics.droppedFramesValue;
                 if (metrics.movingLatency["video"]) {
-                    $scope.videoLatency = metrics.movingLatency["video"].count + "seg : " + metrics.movingLatency["video"].low + " < " + metrics.movingLatency["video"].average + " < " + metrics.movingLatency["video"].high;
+                    $scope.videoLatencyCount = metrics.movingLatency["video"].count;
+                    $scope.videoLatency = metrics.movingLatency["video"].low.toFixed(3) + " < " + metrics.movingLatency["video"].average.toFixed(3) + " < " + metrics.movingLatency["video"].high.toFixed(3);
                 }
                 if (metrics.movingDownload["video"]) {
-                    $scope.videoDownload = metrics.movingDownload["video"].count + "seg : " + metrics.movingDownload["video"].low + " < " + metrics.movingDownload["video"].average + " < " + metrics.movingDownload["video"].high;
+                    $scope.videoDownloadCount = metrics.movingDownload["video"].count;
+                    $scope.videoDownload = metrics.movingDownload["video"].low.toFixed(3) + " < " + metrics.movingDownload["video"].average.toFixed(3) + " < " + metrics.movingDownload["video"].high.toFixed(3);
                 }
                 if (metrics.movingRatio["video"]) {
-                    $scope.videoRatio = metrics.movingRatio["video"].count + "seg : " + metrics.movingRatio["video"].low + " < " + metrics.movingRatio["video"].average + " < " + metrics.movingRatio["video"].high;
+                    $scope.videoRatioCount = metrics.movingRatio["video"].count;
+                    $scope.videoRatio = metrics.movingRatio["video"].low.toFixed(3) + " < " + metrics.movingRatio["video"].average.toFixed(3) + " < " + metrics.movingRatio["video"].high.toFixed(3);
                 }
 
                 point = [parseFloat(video.currentTime), Math.round(parseFloat(metrics.bufferLengthValue))];
@@ -311,13 +320,16 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 $scope.audioBufferLength = metrics.bufferLengthValue;
                 $scope.audioDroppedFrames = metrics.droppedFramesValue;
                 if (metrics.movingLatency["audio"]) {
-                    $scope.audioLatency = metrics.movingLatency["audio"].count + "seg : " + metrics.movingLatency["audio"].low + " < " + metrics.movingLatency["audio"].average + " < " + metrics.movingLatency["audio"].high;
+                    $scope.audioLatencyCount = metrics.movingLatency["audio"].count;
+                    $scope.audioLatency = metrics.movingLatency["audio"].low.toFixed(3) + " < " + metrics.movingLatency["audio"].average.toFixed(3) + " < " + metrics.movingLatency["audio"].high.toFixed(3);
                 }
                 if (metrics.movingDownload["audio"]) {
-                    $scope.audioDownload = metrics.movingDownload["audio"].count + "seg : " + metrics.movingDownload["audio"].low + " < " + metrics.movingDownload["audio"].average + " < " + metrics.movingDownload["audio"].high;
+                    $scope.audioDownloadCount = metrics.movingDownload["audio"].count;
+                    $scope.audioDownload = metrics.movingDownload["audio"].low.toFixed(3) + " < " + metrics.movingDownload["audio"].average.toFixed(3) + " < " + metrics.movingDownload["audio"].high.toFixed(3);
                 }
                 if (metrics.movingRatio["audio"]) {
-                    $scope.audioRatio = metrics.movingRatio["audio"].count + "seg : " + metrics.movingRatio["audio"].low + " < " + metrics.movingRatio["audio"].average + " < " + metrics.movingRatio["audio"].high;
+                    $scope.audioRatioCount = metrics.movingRatio["audio"].count;
+                    $scope.audioRatio = metrics.movingRatio["audio"].low.toFixed(3) + " < " + metrics.movingRatio["audio"].average.toFixed(3) + " < " + metrics.movingRatio["audio"].high.toFixed(3);
                 }
 
                 point = [parseFloat(video.currentTime), Math.round(parseFloat(metrics.bufferLengthValue))];

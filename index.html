@@ -220,9 +220,12 @@
                         <p class="text-warning">{{videoBitrate}} kbps</p>
                         <p class="text-primary">Rep Index: <span class="text-success">{{videoIndex}}</span><span class="text-warning">{{videoPendingIndex}}</span>/<span class="text-success">{{videoMaxIndex}}</span></p>
                         <p class="text-primary">Buffer Length: <span class="text-success">{{videoBufferLength}}</span></p>
-                        <p class="text-primary">Latency: <span class="text-success">{{videoLatency}}</span></p>
-                        <p class="text-primary">Download: <span class="text-success">{{videoDownload}}</span></p>
-                        <p class="text-primary">Ratio: <span class="text-success">{{videoRatio}}</span></p>
+                        <p class="text-primary">Latency: <span class="text-success">last {{videoRatioCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{videoLatency}}</p>
+                        <p class="text-primary">Download: <span class="text-success">last {{videoRatioCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{videoDownload}}</p>
+                        <p class="text-primary">Ratio: <span class="text-success">last {{videoRatioCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{videoRatio}}</p>
                         <p class="text-primary">Dropped Frames: <span class="text-success">{{videoDroppedFrames}}</span></p>
                     </div>
                 </div>
@@ -248,9 +251,12 @@
                         <p class="text-warning">{{audioBitrate}} kbps</p>
                         <p class="text-primary">Rep Index: <span class="text-success">{{audioIndex}}</span><span class="text-warning">{{audioPendingIndex}}</span>/<span class="text-success">{{audioMaxIndex}}</span></p>
                         <p class="text-primary">Buffer Length: <span class="text-success">{{audioBufferLength}}</span></p>
-                        <p class="text-primary">Latency: <span class="text-success">{{audioLatency}}</span></p>
-                        <p class="text-primary">Download: <span class="text-success">{{audioDownload}}</span></p>
-                        <p class="text-primary">Ratio: <span class="text-success">{{audioRatio}}</span></p>
+                        <p class="text-primary">Latency: <span class="text-success">last {{audioLatencyCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{audioLatency}}</p>
+                        <p class="text-primary">Download: <span class="text-success">last {{audioDownloadCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{audioDownload}}</p>
+                        <p class="text-primary">Ratio: <span class="text-success">last {{audioRatioCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{audioRatio}}</p>
                     </div>
                 </div>
             </div>
