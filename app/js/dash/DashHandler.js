@@ -287,9 +287,14 @@ Dash.dependencies.DashHandler = function () {
                 }
             }
 
-            representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[segments.length - 1].presentationStartTime};
-
             if (!isAvailableSegmentNumberCalculated) {
+                var availabilityStartTime,
+                    availabilityEndTime,
+                    f = fragments[0];
+
+                availabilityStartTime = self.timelineConverter.calcPresentationTimeFromMediaTime(f.t / fTimescale, representation);
+                availabilityEndTime = self.timelineConverter.calcPresentationTimeFromMediaTime((time - frag.d) / fTimescale, representation);
+                representation.segmentAvailabilityRange = {start: availabilityStartTime, end: availabilityEndTime};
                 representation.availableSegmentsNumber = availabilityIdx;
             }
 
