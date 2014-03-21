@@ -95,6 +95,20 @@ Dash.dependencies.TimelineConverter = function () {
             return wallTime;
         },
 
+        calcActualPresentationTime = function(representation, currentTime, isDynamic) {
+            var self = this,
+                availabilityWindow = self.calcSegmentAvailabilityRange(representation, isDynamic),
+                actualTime;
+
+            if ((currentTime >= availabilityWindow.start) && (currentTime <= availabilityWindow.end)) {
+                return currentTime;
+            }
+
+            actualTime = Math.max(availabilityWindow.end - representation.adaptation.period.mpd.manifest.minBufferTime * 2, availabilityWindow.start);
+
+            return actualTime;
+        },
+
         calcSegmentAvailabilityRange = function(representation, isDynamic) {
             var clientServerTimeShift = representation.adaptation.period.clientServerTimeShift * 1000,
                 duration = representation.segmentDuration,
@@ -106,7 +120,7 @@ Dash.dependencies.TimelineConverter = function () {
 
             if (!isDynamic) return range;
 
-            if (!representation.adaptation.period.isClientServerTimeSyncCompleted && representation.segmentAvailabilityRange) {
+            if ((!representation.adaptation.period.isClientServerTimeSyncCompleted || isNaN(duration)) && representation.segmentAvailabilityRange) {
                 return representation.segmentAvailabilityRange;
             }
 
@@ -153,6 +167,7 @@ Dash.dependencies.TimelineConverter = function () {
         calcPresentationTimeFromWallTime: calcPresentationTimeFromWallTime,
         calcPresentationTimeFromMediaTime: calcPresentationTimeFromMediaTime,
         calcPresentationStartTime: calcPresentationStartTime,
+        calcActualPresentationTime: calcActualPresentationTime,
         calcMediaTimeFromPresentationTime: calcMediaTimeFromPresentationTime,
         calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
         calcWallTimeForSegment: calcWallTimeForSegment,

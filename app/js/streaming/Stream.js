@@ -76,12 +76,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.system.notify("setCurrentTime");
             this.videoModel.setCurrentTime(time);
 
-            if (videoController) {
-                videoController.seek(time);
-            }
-            if (audioController) {
-                audioController.seek(time);
-            }
+            startBuffering(time);
         },
 
         // Encrypted Media Extensions
@@ -495,15 +490,12 @@ MediaPlayer.dependencies.Stream = function () {
 
         onPlay = function () {
             //this.debug.log("Got play event.");
-            startBuffering.call(this);
+            updateCurrentTime.call(this);
         },
 
         onPause = function () {
             //this.debug.log("Got pause event.");
-
-            if (!this.scheduleWhilePaused) {
-                stopBuffering.call(this);
-            }
+            suspend.call(this);
         },
 
         onError = function (event) {
@@ -546,12 +538,7 @@ MediaPlayer.dependencies.Stream = function () {
             //this.debug.log("Got seeking event.");
             var time = this.videoModel.getCurrentTime();
 
-            if (videoController) {
-                videoController.seek(time);
-            }
-            if (audioController) {
-                audioController.seek(time);
-            }
+            startBuffering(time);
         },
 
         onSeeked = function () {
@@ -589,12 +576,21 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
-        startBuffering = function() {
+        startBuffering = function(time) {
             if (videoController) {
-                videoController.start();
+                if (time === undefined) {
+                    videoController.start();
+                } else {
+                    videoController.seek(time);
+                }
             }
+
             if (audioController) {
-                audioController.start();
+                if (time === undefined) {
+                    audioController.start();
+                } else {
+                    audioController.seek(time);
+                }
             }
         },
 
@@ -604,6 +600,28 @@ MediaPlayer.dependencies.Stream = function () {
             }
             if (audioController) {
                 audioController.stop();
+            }
+        },
+
+        suspend = function() {
+            if (!this.scheduleWhilePaused || this.manifestExt.getIsDynamic(manifest)) {
+                stopBuffering.call(this);
+            }
+        },
+
+        updateCurrentTime = function() {
+            if (this.videoModel.isPaused()) return;
+
+            var currentTime = this.videoModel.getCurrentTime(),
+                representation = videoController ? videoController.getCurrentRepresentation() : audioController.getCurrentRepresentation(),
+                actualTime = this.timelineConverter.calcActualPresentationTime(representation, currentTime, this.manifestExt.getIsDynamic(manifest)),
+                timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
+
+            if (timeChanged) {
+                this.videoModel.setCurrentTime(actualTime);
+                startBuffering(actualTime);
+            } else {
+                startBuffering();
             }
         },
 
@@ -679,6 +697,7 @@ MediaPlayer.dependencies.Stream = function () {
                 deferredVideoData,
                 deferredAudioData,
                 deferredTextData,
+                deferred = Q.defer(),
                 deferredVideoUpdate = Q.defer(),
                 deferredAudioUpdate = Q.defer(),
                 deferredTextUpdate = Q.defer();
@@ -751,7 +770,14 @@ MediaPlayer.dependencies.Stream = function () {
                 );
             }
 
-            return Q.when(deferredVideoUpdate.promise, deferredAudioUpdate.promise, deferredTextUpdate.promise);
+            Q.when(deferredVideoUpdate.promise, deferredAudioUpdate.promise, deferredTextUpdate.promise).then(
+                function() {
+                    updateCurrentTime.call(self);
+                    deferred.resolve();
+                }
+            );
+
+            return deferred.promise;
         };
 
     return {

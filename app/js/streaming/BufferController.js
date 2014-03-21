@@ -1089,7 +1089,12 @@ MediaPlayer.dependencies.BufferController = function () {
                                     data = dataValue;
                                     self.bufferExt.updateData(data, type);
                                     self.seek(time);
-                                    deferred.resolve();
+
+                                    self.indexHandler.updateSegmentList(currentRepresentation).then(
+                                        function() {
+                                            deferred.resolve();
+                                        }
+                                    );
                                 }
                             );
                         }
@@ -1098,6 +1103,10 @@ MediaPlayer.dependencies.BufferController = function () {
             );
 
             return deferred.promise;
+        },
+
+        getCurrentRepresentation: function() {
+            return currentRepresentation;
         },
 
         getBuffer: function () {

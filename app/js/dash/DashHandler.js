@@ -624,6 +624,22 @@ Dash.dependencies.DashHandler = function () {
             return deferred.promise;
         },
 
+        updateSegmentList = function(representation) {
+            var self = this,
+                deferred = Q.defer();
+
+            representation.segments = null;
+
+            getSegments.call(self, representation).then(
+                function(segments) {
+                    representation.segments = segments;
+                    deferred.resolve();
+                }
+            );
+
+            return deferred.promise;
+        },
+
         getIndexForSegments = function (time, representation) {
             var segments = representation.segments,
                 segmentLastIdx = segments.length - 1,
@@ -953,7 +969,8 @@ Dash.dependencies.DashHandler = function () {
         getSegmentRequestForTime: getForTime,
         getNextSegmentRequest: getNext,
         getCurrentTime: getCurrentTime,
-        getSegmentCountForDuration: getSegmentCountForDuration
+        getSegmentCountForDuration: getSegmentCountForDuration,
+        updateSegmentList: updateSegmentList
     };
 };
 
