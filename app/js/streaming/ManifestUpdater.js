@@ -30,18 +30,20 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
             if (!isNaN(refreshDelay)) {
                 this.debug.log("Refresh manifest in " + refreshDelay + " seconds.");
-                refreshTimer = setInterval(onRefreshTimer.bind(this), Math.min(refreshDelay * 1000, Math.pow(2, 31) - 1), this);
+                refreshTimer = setTimeout(onRefreshTimer.bind(this), Math.min(refreshDelay * 1000, Math.pow(2, 31) - 1), this);
             }
         },
 
         update = function () {
             var self = this,
-                manifest = self.manifestModel.getValue();
+                manifest = self.manifestModel.getValue(),
+                timeSinceLastUpdate;
 
             if (manifest !== undefined && manifest !== null) {
                 self.manifestExt.getRefreshDelay(manifest).then(
                     function (t) {
-                        refreshDelay = t;
+                        timeSinceLastUpdate = (new Date().getTime() - manifest.mpdLoadedTime.getTime()) / 1000;
+                        refreshDelay = Math.max(t - timeSinceLastUpdate, 0);
                         start.call(self);
                     }
                 );
@@ -99,7 +101,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             this.system.mapHandler("streamsComposed", undefined, onStreamsComposed.bind(this));
         },
 
-        init: function () {
+        start: function () {
             update.call(this);
         },
 

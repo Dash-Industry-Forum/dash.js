@@ -29,6 +29,8 @@
         timeupdateListener,
         seekingListener,
         progressListener,
+        pauseListener,
+        playListener,
 
         play = function () {
             activeStream.play();
@@ -74,12 +76,16 @@
             videoModel.listen("seeking", seekingListener);
             videoModel.listen("progress", progressListener);
             videoModel.listen("timeupdate", timeupdateListener);
+            videoModel.listen("pause", pauseListener);
+            videoModel.listen("play", playListener);
         },
 
         detachVideoEvents = function (videoModel) {
             videoModel.unlisten("seeking", seekingListener);
             videoModel.unlisten("progress", progressListener);
             videoModel.unlisten("timeupdate", timeupdateListener);
+            videoModel.unlisten("pause", pauseListener);
+            videoModel.unlisten("play", playListener);
         },
 
         copyVideoProperties = function (fromVideoElement, toVideoElement) {
@@ -147,6 +153,14 @@
             if (seekingStream && seekingStream !== activeStream) {
                 switchStream.call(this, activeStream, seekingStream, seekingTime);
             }
+        },
+
+        onPause = function() {
+            this.manifestUpdater.stop();
+        },
+
+        onPlay = function() {
+            this.manifestUpdater.start();
         },
 
         /*
@@ -321,6 +335,8 @@
             timeupdateListener = onTimeupdate.bind(this);
             progressListener = onProgress.bind(this);
             seekingListener = onSeeking.bind(this);
+            pauseListener = onPause.bind(this);
+            playListener = onPlay.bind(this);
         },
 
         getManifestExt: function () {
@@ -351,7 +367,7 @@
                     self.manifestModel.setValue(manifest);
                     self.debug.log("Manifest has loaded.");
                     //self.debug.log(self.manifestModel.getValue());
-                    self.manifestUpdater.init();
+                    self.manifestUpdater.start();
                 },
                 function () {
                     self.reset();
