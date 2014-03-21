@@ -16,6 +16,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
     var refreshDelay = NaN,
         refreshTimer = null,
+        isStopped = false,
         deferredUpdate,
 
         clear = function () {
@@ -74,6 +75,8 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
                             self.manifestModel.setValue(manifestResult);
                             self.debug.log("Manifest has been refreshed.");
                             //self.debug.log(manifestResult);
+                            if (isStopped) return;
+
                             update.call(self);
                         }
                     );
@@ -102,10 +105,12 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
         },
 
         start: function () {
+            isStopped = false;
             update.call(this);
         },
 
         stop: function() {
+            isStopped = true;
             clear.call(this);
         }
     };
