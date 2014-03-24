@@ -89,7 +89,7 @@ MediaPlayer.utils.TTMLParser = function () {
 
         getNamespacePrefix = function(json, ns) {
             var r = Object.keys(json)
-                .filter(function(k, i){
+                .filter(function(k){
                     return k.split(":")[0] === "xmlns" && json[k] === ns;
                 }).map(function(k){
                     return k.split(":")[1];
