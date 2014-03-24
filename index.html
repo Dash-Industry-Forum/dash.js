@@ -133,15 +133,31 @@
 
     <div class="container">
         <div class="row title-header">
-        <img
-            id="ribbon"
-            style="position: absolute; top: 0; right: 0; border: 0; width: 89px; height: 89px;"
-            src="http://aral.github.com/fork-me-on-github-retina-ribbons/right-cerulean@2x.png"
-            alt="Fork me on GitHub" usemap="#ribbonMap">
-            <map name="ribbonMap"><area shape="poly" coords="0,0,89,89,89,60,40,0" href="https://github.com/Dash-Industry-Forum/dash.js"/></map>
             <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
             <span id="big-title">Reference Client</span>
             <span>{{version}}</span>
+
+            <div class="github">
+                <iframe
+                    id="star-button"
+                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=watch&count=true&size=large"
+                    height="30"
+                    width="170"
+                    frameborder="0"
+                    scrolling="0"
+                    allowTransparency="true"
+                    class="hidden-xs github-button">
+                </iframe>
+                <iframe
+                    id="fork-button"
+                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=fork&count=true&size=large"
+                    height="30"
+                    width="170"
+                    frameborder="0"
+                    scrolling="0"
+                    allowTransparency="true github-button">
+                </iframe>
+            </div>
         </div>
 
         <div class="row">

@@ -1,3 +1,9 @@
+.github-button {
+    float: left;
+    width:170px;
+    height: 30px;
+}
+
 @media screen and (min-width: 0px) and (max-width: 1100px) {
     #desktop-streams {
         display: none;
@@ -40,6 +46,10 @@ a:hover {
     margin-bottom: 10px;
 }
 
+.title-header {
+    position: relative;
+}
+
 .title-header a img {
     height: 50px;
 }
@@ -47,6 +57,13 @@ a:hover {
 .title-header span {
     font-size: 24px;
     line-height: 50px;
+}
+
+.github {
+    position: absolute;
+    right: 0px;
+    top: 50%;
+    margin-top: -10px;
 }
 
 .dash-video-player {
