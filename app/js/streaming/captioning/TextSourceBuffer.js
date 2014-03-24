@@ -20,6 +20,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
     return {
         system:undefined,
         eventBus:undefined,
+        errHandler: undefined,
 
         initialize: function (type, bufferController) {
             mimeType = type;
@@ -28,9 +29,10 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         },
 
         append: function (bytes) {
-            var self = this;
+            var self = this,
+                ccContent = String.fromCharCode.apply(null, new Uint16Array(bytes));
 
-            self.getParser().parse(String.fromCharCode.apply(null, new Uint16Array(bytes))).then(
+            self.getParser().parse(ccContent).then(
                 function(result)
                 {
                     var label = data.Representation_asArray[0].id,
@@ -42,6 +44,9 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                             self.eventBus.dispatchEvent({type:"updateend"});
                         }
                     );
+                },
+                function(errMsg) {
+                    self.errHandler.closedCaptionsError(errMsg, "parse", ccContent);
                 }
             );
         },

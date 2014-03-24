@@ -107,47 +107,48 @@ MediaPlayer.utils.TTMLParser = function () {
 
             try {
                 ttml = converter.xml_str2json(data);
+
+                if (!passStructuralConstraints()) {
+                    errorMsg = "TTML document has incorrect structure";
+                    return Q.reject(errorMsg);
+                }
+
+                nsttp = getNamespacePrefix(ttml.tt, "http://www.w3.org/ns/ttml#parameter");
+
+                if (ttml.tt.hasOwnProperty(nsttp + ":frameRate")) {
+                    ttml.tt.frameRate = parseInt(ttml.tt[nsttp + ":frameRate"], 10);
+                }
+
+                cues = ttml.tt.body.div_asArray[0].p_asArray;
+
+                if (!cues || cues.length === 0) {
+                    errorMsg = "TTML document does not contain any cues";
+                    return Q.reject(errorMsg);
+                }
+
+                for (i = 0; i < cues.length; i += 1) {
+                    cue = cues[i];
+                    startTime = parseTimings(cue.begin);
+                    endTime = parseTimings(cue.end);
+
+                    if (isNaN(startTime) || isNaN(endTime)) {
+                        errorMsg = "TTML document has incorrect timing value";
+                        return Q.reject(errorMsg);
+                    }
+
+                    captionArray.push({
+                        start: startTime,
+                        end: endTime,
+                        data: cue.__text
+                    });
+                }
+
+                return Q.when(captionArray);
+
             } catch (err) {
                 errorMsg = err.message;
                 return Q.reject(errorMsg);
             }
-
-            if (!passStructuralConstraints()) {
-                errorMsg = "TTML document has incorrect structure";
-                return Q.reject(errorMsg);
-            }
-
-            nsttp = getNamespacePrefix(ttml.tt, "http://www.w3.org/ns/ttml#parameter");
-
-            if (ttml.tt.hasOwnProperty(nsttp + ":frameRate")) {
-                ttml.tt.frameRate = parseInt(ttml.tt[nsttp + ":frameRate"], 10);
-            }
-
-            cues = ttml.tt.body.div_asArray[0].p_asArray;
-
-            if (!cues || cues.length === 0) {
-                errorMsg = "TTML document does not contain any cues";
-                return Q.reject(errorMsg);
-            }
-
-            for (i = 0; i < cues.length; i += 1) {
-                cue = cues[i];
-                startTime = parseTimings(cue.begin);
-                endTime = parseTimings(cue.end);
-
-                if (isNaN(startTime) || isNaN(endTime)) {
-                    errorMsg = "TTML document has incorrect timing value";
-                    return Q.reject(errorMsg);
-                }
-
-                captionArray.push({
-                    start: startTime,
-                    end: endTime,
-                    data: cue.__text
-                });
-            }
-
-            return Q.when(captionArray);
     };
 
     return {
