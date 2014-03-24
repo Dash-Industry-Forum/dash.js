@@ -69,7 +69,7 @@ MediaPlayer.utils.TTMLParser = function () {
                 hasHead = hasTt ? ttml.tt.hasOwnProperty("head") : false,
                 hasLayout = hasHead ? ttml.tt.head.hasOwnProperty("layout") : false,
                 hasStyling = hasHead ? ttml.tt.head.hasOwnProperty("styling") : false,
-                hasBody = ttml.tt.hasOwnProperty("body");
+                hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false;
 
             // R001 - A document must contain a tt element.
             // R002 - A document must contain both a head and body element.
