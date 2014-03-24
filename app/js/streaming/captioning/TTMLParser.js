@@ -69,13 +69,19 @@ MediaPlayer.utils.TTMLParser = function () {
                 hasHead = hasTt ? ttml.tt.hasOwnProperty("head") : false,
                 hasLayout = hasHead ? ttml.tt.head.hasOwnProperty("layout") : false,
                 hasStyling = hasHead ? ttml.tt.head.hasOwnProperty("styling") : false,
-                hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false;
+                hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false,
+                hasProfile = hasHead ? ttml.tt.head.hasOwnProperty("profile") : false;
 
             // R001 - A document must contain a tt element.
             // R002 - A document must contain both a head and body element.
             // R003 - A document must contain both a styling and a layout element.
             if (hasTt && hasHead && hasLayout && hasStyling && hasBody) {
                 passed = true;
+            }
+
+            // R0008 - A document must contain a ttp:profile element where the use attribute of that element is specified as http://www.w3.org/ns/ttml/profile/sdp-us.
+            if (passed) {
+                passed = hasProfile && (ttml.tt.head.profile.use === "http://www.w3.org/ns/ttml/profile/sdp-us");
             }
 
             return passed;
