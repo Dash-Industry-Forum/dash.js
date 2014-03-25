@@ -41,6 +41,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('videoExt', MediaPlayer.dependencies.VideoModelExtensions);
             this.system.mapClass('protectionController', MediaPlayer.dependencies.ProtectionController);
 
+            this.system.mapClass('liveEdgeFinder', MediaPlayer.dependencies.LiveEdgeFinder);
 
             this.system.mapClass('metrics', MediaPlayer.models.MetricsList);
             this.system.mapClass('downloadRatioRule', MediaPlayer.rules.DownloadRatioRule);
