@@ -33,7 +33,6 @@ MediaPlayer.dependencies.BufferController = function () {
         currentRepresentation,
         playingTime,
         lastQuality = -1,
-        stalled = false,
         isDynamic = false,
         isBufferingCompleted = false,
         deferredAppends = [],
@@ -184,10 +183,6 @@ MediaPlayer.dependencies.BufferController = function () {
         finishValidation = function () {
             var self = this;
             if (state === LOADING) {
-                if (stalled) {
-                    stalled = false;
-                    this.videoModel.stallStream(type, stalled);
-                }
                 setState.call(self, READY);
             }
         },
@@ -237,10 +232,6 @@ MediaPlayer.dependencies.BufferController = function () {
                                             function(lastRequest) {
                                                 if ((lastRequest.index - 1) === request.index && !isBufferingCompleted) {
                                                     isBufferingCompleted = true;
-                                                    if (stalled) {
-                                                        stalled = false;
-                                                        self.videoModel.stallStream(type, stalled);
-                                                    }
                                                     setState.call(self, READY);
                                                     self.system.notify("bufferingCompleted");
                                                 }
@@ -638,18 +629,18 @@ MediaPlayer.dependencies.BufferController = function () {
                 var timeToEnd = getTimeToEnd.call(this);
 
                 if ((bufferLevel < minBufferTime) && ((minBufferTime < timeToEnd) || (minBufferTime >= timeToEnd && !isBufferingCompleted))) {
-                    if (!stalled) {
-                        this.debug.log("Waiting for more " + type + " buffer before starting playback.");
-                        stalled = true;
-                        this.videoModel.stallStream(type, stalled);
-                    }
+                    this.debug.log("Waiting for more " + type + " buffer before starting playback.");
+                    notifyBufferLevelChange.call(this, false);
                 } else {
                     this.debug.log("Got enough " + type + " buffer to start.");
                     waitingForBuffer = false;
-                    stalled = false;
-                    this.videoModel.stallStream(type, stalled);
+                    notifyBufferLevelChange.call(this, true);
                 }
             }
+        },
+
+        notifyBufferLevelChange = function(hasSufficientBuffer) {
+            this.system.notify("bufferLevelStateChanged", this, hasSufficientBuffer);
         },
 
         isSchedulingRequired = function() {
@@ -736,12 +727,11 @@ MediaPlayer.dependencies.BufferController = function () {
                 return;
             }
 
-            if (bufferLevel < STALL_THRESHOLD && !stalled) {
+            if (bufferLevel < STALL_THRESHOLD && !self.videoModel.isStreamStalled(type)) {
                 self.debug.log("Stalling " + type + " Buffer: " + type);
                 clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
-                stalled = true;
                 waitingForBuffer = true;
-                self.videoModel.stallStream(type, stalled);
+                notifyBufferLevelChange.call(self, false);
             }
 
             if (state === READY) {
@@ -1042,7 +1032,6 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         updateStalledState: function() {
-            stalled = this.videoModel.isStalled();
             checkIfSufficientBuffer.call(this);
         },
 

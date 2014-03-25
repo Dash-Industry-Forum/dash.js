@@ -61,7 +61,16 @@ MediaPlayer.models.VideoModel = function () {
             } else {
                 removeStalledStream(type);
             }
-        }/*,
+        },
+
+        bufferLevelStateChanged = function(sender, hasSufficientBuffer) {
+            var type = sender.getType();
+
+            if ((this !== sender.getVideoModel())) return;
+
+            stallStream.call(this, type, !hasSufficientBuffer);
+        }
+        /*,
         handleSetCurrentTimeNotification = function () {
             if (element.currentTime !== _currentTime) {
                 element.currentTime = _currentTime;
@@ -72,6 +81,7 @@ MediaPlayer.models.VideoModel = function () {
         system : undefined,
 
         setup : function () {
+            this.system.mapHandler("bufferLevelStateChanged", undefined, bufferLevelStateChanged.bind(this));
             //this.system.mapHandler("setCurrentTime", undefined, handleSetCurrentTimeNotification.bind(this));
         },
 
@@ -129,7 +139,11 @@ MediaPlayer.models.VideoModel = function () {
             element.src = source;
         },
 
-        isStalled: function () {
+        isStreamStalled: function(type) {
+            return stalledStreams[type] === true;
+        },
+
+        isPlayerStalled: function () {
             return element.playbackRate === 0;
         },
 
