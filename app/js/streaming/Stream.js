@@ -256,6 +256,7 @@ MediaPlayer.dependencies.Stream = function () {
                 videoReady = false,
                 audioReady = false,
                 textTrackReady = false,
+                representationController,
                 self = this;
 
             // Figure out some bits about the stream before building anything.
@@ -312,7 +313,9 @@ MediaPlayer.dependencies.Stream = function () {
                                             // TODO : Pass to controller and then pass to each method on handler?
 
                                             videoController = self.system.getObject("bufferController");
-                                            videoController.initialize("video", periodInfo, videoData, buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource);
+                                            representationController = self.system.getObject("representationController");
+                                            videoController.initialize("video", buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource, representationController);
+                                            representationController.updateData(videoData, periodInfo, "video");
                                             //self.debug.log("Video is ready!");
                                         }
 
@@ -384,7 +387,9 @@ MediaPlayer.dependencies.Stream = function () {
                                                     // TODO : How to tell index handler live/duration?
                                                     // TODO : Pass to controller and then pass to each method on handler?
                                                     audioController = self.system.getObject("bufferController");
-                                                    audioController.initialize("audio", periodInfo, primaryAudioData, buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource);
+                                                    representationController = self.system.getObject("representationController");
+                                                    audioController.initialize("audio", buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource, representationController);
+                                                    representationController.updateData(primaryAudioData, periodInfo, "audio");
                                                     //self.debug.log("Audio is ready!");
                                                 }
 
@@ -429,10 +434,9 @@ MediaPlayer.dependencies.Stream = function () {
                                             self.debug.log("Source buffer was not created for text track");
                                         } else {
                                             textController = self.system.getObject("textController");
-                                            textController.initialize(periodInfo, textData, buffer, self.videoModel, mediaSource);
-                                            if (buffer.hasOwnProperty('initialize')) {
-                                                buffer.initialize(mimeType, textController);
-                                            }
+                                            representationController = self.system.getObject("representationController");
+                                            textController.initialize(buffer, self.videoModel, mediaSource, representationController, mimeType);
+                                            representationController.updateData(textData, periodInfo, mimeType);
                                             //self.debug.log("Text is ready!");
                                             textTrackReady = true;
                                             checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
@@ -711,7 +715,7 @@ MediaPlayer.dependencies.Stream = function () {
             self.debug.log("Manifest updated... set new data on buffers.");
 
             if (videoController) {
-                videoData = videoController.getData();
+                videoData = videoController.representationController.getData();
 
                 if (!!videoData && videoData.hasOwnProperty("id")) {
                     deferredVideoData = self.manifestExt.getDataForId(videoData.id, manifest, periodInfo.index);
@@ -721,7 +725,7 @@ MediaPlayer.dependencies.Stream = function () {
 
                 deferredVideoData.then(
                         function (data) {
-                        videoController.updateData(data, periodInfo).then(
+                        videoController.getRepresentationController().updateData(data, periodInfo).then(
                             function(){
                                 deferredVideoUpdate.resolve();
                         }
@@ -733,7 +737,7 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             if (audioController) {
-                audioData = audioController.getData();
+                audioData = audioController.representationController.getData();
 
                 if (!!audioData && audioData.hasOwnProperty("id")) {
                     deferredAudioData = self.manifestExt.getDataForId(audioData.id, manifest, periodInfo.index);
@@ -743,7 +747,7 @@ MediaPlayer.dependencies.Stream = function () {
 
                 deferredAudioData.then(
                         function (data) {
-                        audioController.updateData(data, periodInfo).then(
+                        audioController.getRepresentationController().updateData(data, periodInfo).then(
                             function(){
                                 deferredAudioUpdate.resolve();
                         }
@@ -755,7 +759,7 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             if (textController) {
-                textData = textController.getData();
+                textData = textController.getRepresentationController().getData();
 
                 if (!!textData && textData.hasOwnProperty("id")) {
                     deferredTextData = self.manifestExt.getDataForId(textData.id, manifest, periodInfo.index);
@@ -765,7 +769,7 @@ MediaPlayer.dependencies.Stream = function () {
 
                 deferredTextData.then(
                     function (data) {
-                        textController.updateData(data, periodInfo).then(
+                        textController.representationController.updateData(data, periodInfo).then(
                             function(){
                                 deferredTextUpdate.resolve();
                             }

@@ -25,7 +25,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         initialize: function (type, bufferController) {
             mimeType = type;
             video = bufferController.getVideoModel().getElement();
-            data = bufferController.getData();
+            data = bufferController.getRepresentationController().getData();
         },
 
         append: function (bytes) {

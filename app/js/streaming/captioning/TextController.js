@@ -17,11 +17,9 @@ MediaPlayer.dependencies.TextController = function () {
          //LOADED = "LOADED",
          READY = "READY",
          initialized = false,
-         periodInfo = null,
          mediaSource,
-         data,
          buffer,
-         availableRepresentations,
+         type,
          state = READY,
          setState = function (value) {
              this.debug.log("TextController setState to:" + value);
@@ -35,7 +33,7 @@ MediaPlayer.dependencies.TextController = function () {
 
              var self = this;
             // TODO Multiple tracks can be handled here by passing in quality level.
-            self.indexHandler.getInitRequest(availableRepresentations[0]).then(
+            self.indexHandler.getInitRequest(self.representationController.getRepresentationForQuality(0)).then(
              function (request) {
                  //self.debug.log("Loading text track initialization: " + request.url);
                  //self.debug.log(request);
@@ -48,25 +46,18 @@ MediaPlayer.dependencies.TextController = function () {
              startPlayback.call(this);
          },
 
-         updateRepresentations = function (data, periodInfo) {
-             var self = this,
-                 deferred = Q.defer(),
-                 manifest = self.manifestModel.getValue();
-             self.manifestExt.getDataIndex(data, manifest, periodInfo.index).then(
-                 function(idx) {
-                     self.manifestExt.getAdaptationsForPeriod(manifest, periodInfo).then(
-                         function(adaptations) {
-                             self.manifestExt.getRepresentationsForAdaptation(manifest, adaptations[idx]).then(
-                                 function(representations) {
-                                     deferred.resolve(representations);
-                                 }
-                             );
-                         }
-                     );
-                 }
-             );
+         onDataUpdateCompleted = function(sender /*,newRepresentation*/) {
+             if (sender !== this.representationController) return;
 
-             return deferred.promise;
+             if (!initialized) {
+                 if (buffer.hasOwnProperty('initialize')) {
+                     buffer.initialize(type, this);
+                 }
+                 initialized = true;
+             }
+
+             setState.call(this, READY);
+             startPlayback.call(this);
          },
 
          onBytesLoaded = function (request, response) {
@@ -94,27 +85,20 @@ MediaPlayer.dependencies.TextController = function () {
         manifestModel: undefined,
         manifestExt: undefined,
         debug: undefined,
-        initialize: function (periodInfo, data, buffer, videoModel, source) {
+        system: undefined,
+
+        setup: function() {
+            this.system.mapHandler("dataUpdateCompleted", undefined, onDataUpdateCompleted.bind(this));
+        },
+
+        initialize: function (buffer, videoModel, source, representationController, typeValue) {
             var self = this;
 
             self.setVideoModel(videoModel);
             self.setBuffer(buffer);
             self.setMediaSource(source);
-
-            self.updateData(data, periodInfo).then(
-                function() {
-                    initialized = true;
-                    startPlayback.call(self);
-                }
-            );
-        },
-
-        setPeriodInfo: function(value) {
-            periodInfo = value;
-        },
-
-        getPeriodIndex: function () {
-            return periodInfo.index;
+            self.setRepresentationController(representationController);
+            type = typeValue;
         },
 
         getVideoModel: function () {
@@ -125,14 +109,6 @@ MediaPlayer.dependencies.TextController = function () {
             this.videoModel = value;
         },
 
-        getData: function () {
-            return data;
-        },
-
-        setData: function (value) {
-            data = value;
-        },
-
         getBuffer: function () {
             return buffer;
         },
@@ -141,27 +117,16 @@ MediaPlayer.dependencies.TextController = function () {
             buffer = value;
         },
 
-        setMediaSource: function(value) {
-            mediaSource = value;
+        setRepresentationController: function(value) {
+            this.representationController = value;
         },
 
-        updateData: function (dataValue, periodInfoValue) {
-            var self = this,
-                deferred = Q.defer();
+        getRepresentationController: function() {
+            return this.representationController;
+        },
 
-            data = dataValue;
-            periodInfo = periodInfoValue;
-
-            updateRepresentations.call(self, data, periodInfo).then(
-                function(representations) {
-                    availableRepresentations = representations;
-                    setState.call(self, READY);
-                    startPlayback.call(self);
-                    deferred.resolve();
-                }
-            );
-
-            return deferred.promise;
+        setMediaSource: function(value) {
+            mediaSource = value;
         },
 
         reset: function (errored) {
