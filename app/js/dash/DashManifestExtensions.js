@@ -239,7 +239,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 for (i = 0, len = results.length; i < len; i += 1) {
                     if (results[i] === true) {
                         found = true;
-                        deferred.resolve(self.processAdaptation(adaptations[i]));
+                        deferred.resolve(adaptations[i]);
                     }
                 }
                 if (!found) {
@@ -271,7 +271,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 for (i = 0, len = results.length; i < len && !found; i += 1) {
                     if (results[i] === true) {
                         found = true;
-                        deferred.resolve(self.processAdaptation(adaptations[i]));
+                        deferred.resolve(adaptations[i]);
                     }
                 }
                 if (!found) {
@@ -303,7 +303,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 var datas = [];
                 for (i = 0, len = results.length; i < len; i += 1) {
                     if (results[i] === true) {
-                        datas.push(self.processAdaptation(adaptations[i]));
+                        datas.push(adaptations[i]);
                     }
                 }
                 deferred.resolve(datas);
@@ -456,8 +456,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
     },
 
     getRepresentationsForAdaptation: function(manifest, adaptation) {
-        var a = manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index],
-            self = this,
+        var self = this,
+            a = self.processAdaptation(manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index]),
             representations = [],
             deferred = Q.defer(),
             representation,
