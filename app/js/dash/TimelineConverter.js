@@ -138,12 +138,12 @@ Dash.dependencies.TimelineConverter = function () {
             return range;
         },
 
-        liveEdgeFound = function(expectedLiveEdge, actualLiveEdge, period) {
+        liveEdgeFound = function(sender, actualLiveEdge, period) {
             if (period.isClientServerTimeSyncCompleted) return;
 
             // the difference between expected and actual live edge time is supposed to be a difference between client
             // and server time as well
-            period.clientServerTimeShift = actualLiveEdge - expectedLiveEdge;
+            period.clientServerTimeShift = actualLiveEdge - period.liveEdge;
             period.isClientServerTimeSyncCompleted = true;
         },
 

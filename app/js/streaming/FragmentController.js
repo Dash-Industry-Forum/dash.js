@@ -15,6 +15,7 @@ MediaPlayer.dependencies.FragmentController = function () {
     "use strict";
 
     var fragmentModels = [],
+        isLoadingPostponed = false,
 
         findModel = function(bufferController) {
             var ln = fragmentModels.length;
@@ -29,9 +30,52 @@ MediaPlayer.dependencies.FragmentController = function () {
             return null;
         },
 
+        executeIfReady = function() {
+            if (isReadyToLoadNextFragment.call(this)) {
+                executeRequests.call(this);
+            }
+        },
+
+        onFragmentLoadingStart = function(sender, request) {
+            var self = this;
+
+            if (self.isInitializationRequest(request)) {
+                self.system.notify("initSegmentLoadingStart", sender, request);
+            }else {
+                self.system.notify("mediaSegmentLoadingStart", sender, request);
+            }
+        },
+
+        onFragmentLoadingCompleted = function(sender, request, response) {
+            var self = this;
+
+            if (self.isInitializationRequest(request)) {
+                self.system.notify("onInitSegmentLoaded", sender, response.data, request.quality);
+            }else {
+                self.system.notify("onMediaSegmentLoaded", sender, response.data, request.quality, request.index);
+            }
+        },
+
+        onBufferLevelOutrun = function(sender) {
+            if (sender !== this.bufferController) return;
+
+            isLoadingPostponed = true;
+            executeIfReady.call(this);
+        },
+
+        onBufferLevelBalanced = function(sender) {
+            if (sender !== this.bufferController) return;
+
+            isLoadingPostponed = false;
+            executeIfReady.call(this);
+        },
+
         isReadyToLoadNextFragment = function() {
             var isReady = true,
                 ln = fragmentModels.length;
+
+            if (isLoadingPostponed) return false;
+
             // Loop through the models and check if all of them are in the ready state
             for (var i = 0; i < ln; i++) {
                 if (!fragmentModels[i].isReady()) {
@@ -54,6 +98,14 @@ MediaPlayer.dependencies.FragmentController = function () {
         debug: undefined,
         fragmentLoader: undefined,
 
+        setup: function() {
+            this.system.mapHandler("fragmentLoadingStart", undefined, onFragmentLoadingStart.bind(this));
+            this.system.mapHandler("fragmentLoadingCompleted", undefined, onFragmentLoadingCompleted.bind(this));
+
+            this.system.mapHandler("bufferLevelOutrun", undefined, onBufferLevelOutrun.bind(this));
+            this.system.mapHandler("bufferLevelBalanced", undefined, onBufferLevelBalanced.bind(this));
+        },
+
         process: function (bytes) {
             var result = null;
 
@@ -64,37 +116,35 @@ MediaPlayer.dependencies.FragmentController = function () {
             return Q.when(result);
         },
 
-        attachBufferController: function(bufferController) {
-            if (!bufferController) return null;
+        getModel: function(context) {
+            if (!context) return null;
             // Wrap the buffer controller into model and store it to track the loading state and execute the requests
-            var model = findModel(bufferController);
+            var model = findModel(context);
 
             if (!model){
                 model = this.system.getObject("fragmentModel");
-                model.setContext(bufferController);
+                model.setContext(context);
                 fragmentModels.push(model);
             }
 
             return model;
         },
 
-        detachBufferController: function(bufferController) {
-            var idx = fragmentModels.indexOf(bufferController);
+        detachModel: function(model) {
+            var idx = fragmentModels.indexOf(model);
             // If we have the model for the given buffer just remove it from array
             if (idx > -1) {
                 fragmentModels.splice(idx, 1);
             }
         },
 
-        onBufferControllerStateChange: function() {
+        onStateChange: function() {
             // Check if we are ready to execute pending requests and do it
-            if (isReadyToLoadNextFragment()) {
-                executeRequests.call(this);
-            }
+            executeIfReady.call(this);
         },
 
-        isFragmentLoadedOrPending: function(bufferController, request) {
-            var fragmentModel = findModel(bufferController),
+        isFragmentLoadedOrPending: function(context, request) {
+            var fragmentModel = findModel(context),
                 isLoaded;
 
             if (!fragmentModel) {
@@ -106,8 +156,8 @@ MediaPlayer.dependencies.FragmentController = function () {
             return isLoaded;
         },
 
-        getPendingRequests: function(bufferController) {
-            var fragmentModel = findModel(bufferController);
+        getPendingRequests: function(context) {
+            var fragmentModel = findModel(context);
 
             if (!fragmentModel) {
                 return null;
@@ -116,8 +166,8 @@ MediaPlayer.dependencies.FragmentController = function () {
             return fragmentModel.getPendingRequests();
         },
 
-        getLoadingRequests: function(bufferController) {
-            var fragmentModel = findModel(bufferController);
+        getLoadingRequests: function(context) {
+            var fragmentModel = findModel(context);
 
             if (!fragmentModel) {
                 return null;
@@ -130,8 +180,8 @@ MediaPlayer.dependencies.FragmentController = function () {
 			return (request && request.type && request.type.toLowerCase() === "initialization segment");
 		},
 
-        getLoadingTime: function(bufferController) {
-            var fragmentModel = findModel(bufferController);
+        getLoadingTime: function(context) {
+            var fragmentModel = findModel(context);
 
             if (!fragmentModel) {
                 return null;
@@ -187,15 +237,14 @@ MediaPlayer.dependencies.FragmentController = function () {
             return deferred.promise;
         },
 
-        prepareFragmentForLoading: function(bufferController, request, startLoadingCallback, successLoadingCallback, errorLoadingCallback, streamEndCallback) {
-            var fragmentModel = findModel(bufferController);
+        prepareFragmentForLoading: function(context, request) {
+            var fragmentModel = findModel(context);
 
             if (!fragmentModel || !request) {
                 return Q.when(null);
             }
             // Store the request and all the necessary callbacks in the model for deferred execution
             fragmentModel.addRequest(request);
-            fragmentModel.setCallbacks(startLoadingCallback, successLoadingCallback, errorLoadingCallback, streamEndCallback);
 
             return Q.when(true);
         }

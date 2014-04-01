@@ -49,6 +49,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('limitSwitchesRule', MediaPlayer.rules.LimitSwitchesRule);
             this.system.mapClass('abrRulesCollection', MediaPlayer.rules.BaseRulesCollection);
 
+            this.system.mapClass('streamProcessor', MediaPlayer.dependencies.StreamProcessor);
             this.system.mapClass('textController', MediaPlayer.dependencies.TextController);
             this.system.mapClass('bufferController', MediaPlayer.dependencies.BufferController);
             this.system.mapClass('manifestLoader', MediaPlayer.dependencies.ManifestLoader);
@@ -61,6 +62,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('requestScheduler', MediaPlayer.dependencies.RequestScheduler);
             this.system.mapSingleton('schedulerExt', MediaPlayer.dependencies.SchedulerExtensions);
             this.system.mapClass('schedulerModel', MediaPlayer.dependencies.SchedulerModel);
+            this.system.mapClass('scheduleController', MediaPlayer.dependencies.ScheduleController);
         }
     };
 };

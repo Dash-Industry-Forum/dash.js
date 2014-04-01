@@ -81,7 +81,7 @@ MediaPlayer = function (aContext) {
 
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
-            system.mapOutlet("scheduleWhilePaused", "bufferController");
+            system.mapOutlet("scheduleWhilePaused", "scheduleController");
             system.mapValue("bufferMax", bufferMax);
             system.injectInto(this.bufferExt, "bufferMax");
         },

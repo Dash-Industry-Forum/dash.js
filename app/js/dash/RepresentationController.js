@@ -3,11 +3,11 @@ Dash.dependencies.RepresentationController = function () {
 
     var data = null,
         availableRepresentations = [],
+        currentRepresentation,
 
         updateData = function(dataValue, periodInfoValue, type) {
             var self = this,
                 deferred = Q.defer(),
-                representation,
                 from = data;
 
             if (!from) {
@@ -21,10 +21,10 @@ Dash.dependencies.RepresentationController = function () {
                     availableRepresentations = representations;
                     self.abrController.getPlaybackQuality(type, from).then(
                         function (result) {
-                            representation = getRepresentationForQuality.call(self, result.quality);
+                            currentRepresentation = getRepresentationForQuality.call(self, result.quality);
                             data = dataValue;
                             self.bufferExt.updateData(data, type);
-                            notifyDataUpdateCompleted.call(self, representation);
+                            notifyDataUpdateCompleted.call(self, currentRepresentation);
                             deferred.resolve();
                         }
                     );
@@ -66,6 +66,14 @@ Dash.dependencies.RepresentationController = function () {
             );
 
             return deferred.promise;
+        },
+
+        onQualityChanged = function(sender, oldQuality, newQuality/*, dataChanged*/) {
+            var self = this;
+
+            if (sender !== self.streamProcessor.scheduleController) return;
+
+            currentRepresentation = self.getRepresentationForQuality(newQuality);
         };
 
     return {
@@ -76,12 +84,24 @@ Dash.dependencies.RepresentationController = function () {
         bufferExt: undefined,
         abrController: undefined,
 
+        setup: function() {
+            this.system.mapHandler("qualityChanged", undefined, onQualityChanged.bind(this));
+        },
+
+        initialize: function(streamProcessor) {
+            this.streamProcessor = streamProcessor;
+        },
+
         getData: function() {
             return data;
         },
 
         updateData: updateData,
-        getRepresentationForQuality: getRepresentationForQuality
+        getRepresentationForQuality: getRepresentationForQuality,
+
+        getCurrentRepresentation: function() {
+            return currentRepresentation;
+        }
     };
 };
 

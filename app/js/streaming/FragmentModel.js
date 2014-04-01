@@ -19,10 +19,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
         executedRequests = [],
         pendingRequests = [],
         loadingRequests = [],
-        startLoadingCallback,
-        successLoadingCallback,
-        errorLoadingCallback,
-        streamEndCallback,
 
         LOADING_REQUEST_THRESHOLD = 2,
 
@@ -32,18 +28,18 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 self = this;
 
             // We are about to start loading the fragment, so execute the corresponding callback
-            startLoadingCallback.call(context, request);
+            notifyLoadingStart.call(self, request);
 
             onSuccess = function(request, response) {
                 loadingRequests.splice(loadingRequests.indexOf(request), 1);
                 executedRequests.push(request);
-                successLoadingCallback.call(context, request, response);
+                notifyLoadingCompleted.call(self, request, response);
                 request.deferred = null;
             };
 
             onError = function(request) {
                 loadingRequests.splice(loadingRequests.indexOf(request), 1);
-                errorLoadingCallback.call(context, request);
+                notifyLoadingFailed.call(self, request);
                 request.deferred = null;
             };
 
@@ -60,6 +56,22 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
             requestsArray.sort(compare);
 
+        },
+
+        notifyLoadingStart = function(request) {
+            this.system.notify("fragmentLoadingStart", this, request);
+        },
+
+        notifyLoadingCompleted = function(request, response) {
+            this.system.notify("fragmentLoadingCompleted", this, request, response);
+        },
+
+        notifyLoadingFailed = function(request) {
+            this.system.notify("segmentLoadingFailed", this, request);
+        },
+
+        notifyStreamEnd = function(request) {
+            this.system.notify("streamCompleted", this, request);
         },
 
         removeExecutedRequest = function(request) {
@@ -88,13 +100,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 pendingRequests.push(value);
                 sortRequestsByProperty.call(this, pendingRequests, "index");
             }
-        },
-
-        setCallbacks: function(onLoadingStart, onLoadingSuccess, onLoadingError, onStreamEnd) {
-            startLoadingCallback = onLoadingStart;
-            streamEndCallback = onStreamEnd;
-            errorLoadingCallback = onLoadingError;
-            successLoadingCallback = onLoadingSuccess;
         },
 
         isFragmentLoadedOrPending: function(request) {
@@ -238,7 +243,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 case "complete":
                     // Stream has completed, execute the correspoinding callback
                     executedRequests.push(currentRequest);
-                    streamEndCallback.call(context, currentRequest);
+                    notifyStreamEnd.call(self, currentRequest);
                     break;
                 case "download":
                     loadingRequests.push(currentRequest);
@@ -250,7 +255,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                         currentRequest.deferred.reject();
                         currentRequest.deferred = null;
                     } else {
-                        errorLoadingCallback.call(context, currentRequest);
+                        notifyLoadingFailed.call(self, currentRequest);
                     }
             }
         }
