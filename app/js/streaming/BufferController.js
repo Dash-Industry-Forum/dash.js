@@ -321,7 +321,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         notifyBufferLevelUpdated = function(level) {
-            this.system.notify("onBufferLevelUpdated", this, level);
+            this.system.notify("bufferLevelUpdated", this, level);
         },
 
         notifyDataAppended = function(index) {
