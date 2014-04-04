@@ -429,7 +429,7 @@ MediaPlayer.dependencies.Stream = function () {
                                             self.debug.log("Source buffer was not created for text track");
                                         } else {
                                             textStreamProcessor = self.system.getObject("streamProcessor");
-                                            textStreamProcessor.initialize(buffer, self.videoModel, mediaSource, mimeType);
+                                            textStreamProcessor.initialize(mimeType, buffer, self.videoModel, null, self.fragmentController, mediaSource, textData, periodInfo);
                                             //self.debug.log("Text is ready!");
                                             textTrackReady = true;
                                             checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);

@@ -13,8 +13,7 @@
  */
 MediaPlayer.dependencies.TextSourceBuffer = function () {
 
-    var video,
-        data,
+    var data,
         mimeType;
 
     return {
@@ -24,8 +23,8 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
 
         initialize: function (type, bufferController) {
             mimeType = type;
-            video = bufferController.getVideoModel().getElement();
-            data = bufferController.getRepresentationController().getData();
+            this.videoModel = bufferController.videoModel;
+            data = bufferController.streamProcessor.getData();
         },
 
         append: function (bytes) {
@@ -38,7 +37,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                     var label = data.Representation_asArray[0].id,
                         lang = data.lang;
 
-                    self.getTextTrackExtensions().addTextTrack(video, result, label, lang, true).then(
+                    self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, true).then(
                         function(/*track*/)
                         {
                             self.eventBus.dispatchEvent({type:"updateend"});
@@ -52,7 +51,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         },
 
         abort:function() {
-            this.getTextTrackExtensions().deleteCues(video);
+            this.getTextTrackExtensions().deleteCues(this.videoModel.getElement());
         },
 
         getParser:function() {

@@ -2,7 +2,14 @@ MediaPlayer.dependencies.StreamProcessor = function () {
     "use strict";
 
     var isDynamic,
-        type;
+        type,
+
+        createBufferControllerForType = function(type) {
+            var self = this,
+            controllerName = (type === "video" || type === "audio") ? "bufferController" : "textController";
+
+            return self.system.getObject(controllerName);
+        };
 
     return {
         system : undefined,
@@ -17,7 +24,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 manifest = self.manifestModel.getValue(),
                 representationController = self.system.getObject("representationController"),
                 scheduleController = self.system.getObject("scheduleController"),
-                bufferController = self.system.getObject("bufferController");
+                bufferController = createBufferControllerForType.call(self, typeValue);
 
             type = typeValue;
             isDynamic = self.manifestExt.getIsDynamic(manifest);

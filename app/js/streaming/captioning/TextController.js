@@ -42,9 +42,6 @@ MediaPlayer.dependencies.TextController = function () {
              }
             );
          },
-         doStart = function () {
-             startPlayback.call(this);
-         },
 
          onDataUpdateCompleted = function(sender /*,newRepresentation*/) {
              if (sender !== this.representationController) return;
@@ -91,14 +88,15 @@ MediaPlayer.dependencies.TextController = function () {
             this.system.mapHandler("dataUpdateCompleted", undefined, onDataUpdateCompleted.bind(this));
         },
 
-        initialize: function (buffer, videoModel, source, representationController, typeValue) {
+        initialize: function (type, buffer, source, streamProcessor) {
             var self = this;
 
-            self.setVideoModel(videoModel);
+            self.setType(type);
+            self.setVideoModel(streamProcessor.videoModel);
             self.setBuffer(buffer);
             self.setMediaSource(source);
-            self.setRepresentationController(representationController);
-            type = typeValue;
+            self.setRepresentationController(streamProcessor.representationController);
+            self.streamProcessor = streamProcessor;
         },
 
         getVideoModel: function () {
@@ -115,6 +113,10 @@ MediaPlayer.dependencies.TextController = function () {
 
         setBuffer: function (value) {
             buffer = value;
+        },
+
+        setType: function(value) {
+            type = value;
         },
 
         setRepresentationController: function(value) {
@@ -134,9 +136,7 @@ MediaPlayer.dependencies.TextController = function () {
                 this.sourceBufferExt.abort(mediaSource, buffer);
                 this.sourceBufferExt.removeSourceBuffer(mediaSource, buffer);
             }
-        },
-
-        start: doStart
+        }
     };
 };
 
