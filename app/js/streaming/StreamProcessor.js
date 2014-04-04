@@ -1,7 +1,8 @@
 MediaPlayer.dependencies.StreamProcessor = function () {
     "use strict";
 
-    var isDynamic;
+    var isDynamic,
+        type;
 
     return {
         system : undefined,
@@ -10,7 +11,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         indexHandler: undefined,
         liveEdgeFinder: undefined,
 
-        initialize: function (type, buffer, videoModel, scheduler, fragmentController, mediaSource, data, periodInfo) {
+        initialize: function (typeValue, buffer, videoModel, scheduler, fragmentController, mediaSource, data, periodInfo) {
 
             var self = this,
                 manifest = self.manifestModel.getValue(),
@@ -18,6 +19,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 scheduleController = self.system.getObject("scheduleController"),
                 bufferController = self.system.getObject("bufferController");
 
+            type = typeValue;
             isDynamic = self.manifestExt.getIsDynamic(manifest);
             self.indexHandler.setType(type);
             self.indexHandler.setIsDynamic(isDynamic);
@@ -32,7 +34,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             bufferController.initialize(type, buffer, mediaSource, self);
             scheduleController.initialize(type, this);
             representationController.initialize(this);
-            representationController.updateData(data, periodInfo, "video");
+            representationController.updateData(data, periodInfo, type);
 
         },
 
@@ -45,7 +47,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         },
 
         updateData: function(data, periodInfo) {
-            return this.representationController.updateData(data, periodInfo);
+            return this.representationController.updateData(data, periodInfo, type);
         },
 
         start: function() {
