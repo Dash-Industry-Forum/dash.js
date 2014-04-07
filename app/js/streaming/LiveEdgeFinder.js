@@ -134,6 +134,8 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
         };
 
     return {
+        system: undefined,
+
         searchForLiveEdge: searchForLiveEdge,
 
         initialize: function(streamProcessor) {
