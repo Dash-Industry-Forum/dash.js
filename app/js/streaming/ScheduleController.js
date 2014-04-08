@@ -527,7 +527,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         abrController: undefined,
         requestScheduler: undefined,
         fragmentController: undefined,
-        indexHandler: undefined,
         metricsModel: undefined,
         bufferExt: undefined,
         scheduleWhilePaused: undefined,
@@ -564,6 +563,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.representationController = streamProcessor.representationController;
             self.liveEdgeFinder = streamProcessor.liveEdgeFinder;
             self.bufferController = streamProcessor.bufferController;
+            self.indexHandler = streamProcessor.indexHandler;
             isDynamic = streamProcessor.isDynamic();
         },
 
