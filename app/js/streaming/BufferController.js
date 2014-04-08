@@ -572,6 +572,8 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         updateStalledState: function() {
+            if (!ready) return;
+
             checkIfSufficientBuffer.call(this);
         },
 
