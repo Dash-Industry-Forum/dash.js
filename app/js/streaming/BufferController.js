@@ -128,6 +128,8 @@ MediaPlayer.dependencies.BufferController = function () {
 
                                             isQuotaExceeded = false;
 
+                                            if (!hasData.call(self)) return;
+
                                             updateBufferLevel.call(self).then(
                                                 function() {
                                                     notifyDataAppended.call(self, index);
