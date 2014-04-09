@@ -24,8 +24,12 @@ Dash.dependencies.RepresentationController = function () {
                             currentRepresentation = getRepresentationForQuality.call(self, result.quality);
                             data = dataValue;
                             self.bufferExt.updateData(data, type);
-                            notifyDataUpdateCompleted.call(self, currentRepresentation);
-                            deferred.resolve();
+                            self.indexHandler.updateSegmentList(currentRepresentation).then(
+                                function() {
+                                    notifyDataUpdateCompleted.call(self, currentRepresentation);
+                                    deferred.resolve();
+                                }
+                            );
                         }
                     );
                 }
@@ -90,6 +94,7 @@ Dash.dependencies.RepresentationController = function () {
 
         initialize: function(streamProcessor) {
             this.streamProcessor = streamProcessor;
+            this.indexHandler = streamProcessor.indexHandler;
         },
 
         getData: function() {

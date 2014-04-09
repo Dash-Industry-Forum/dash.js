@@ -357,7 +357,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 function (time) {
                     currentRepresentation = newRepresentation;
                     self.seek(time);
-                    self.indexHandler.updateSegmentList(currentRepresentation);
                 }
             );
         },
