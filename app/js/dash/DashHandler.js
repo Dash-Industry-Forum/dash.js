@@ -834,6 +834,7 @@ Dash.dependencies.DashHandler = function () {
             var deferred,
                 request,
                 segment,
+                idx,
                 self = this;
 
             if (!representation) {
@@ -847,6 +848,8 @@ Dash.dependencies.DashHandler = function () {
             }
 
             index += 1;
+            idx = index;
+
             //self.debug.log("New index: " + index);
 
             deferred = Q.defer();
@@ -857,7 +860,7 @@ Dash.dependencies.DashHandler = function () {
                     if (finished) {
                         request = new MediaPlayer.vo.SegmentRequest();
                         request.action = request.ACTION_COMPLETE;
-                        request.index = index;
+                        request.index = idx;
                         self.debug.log("Signal complete.");
                         //self.debug.log(request);
                         deferred.resolve(request);
@@ -868,7 +871,7 @@ Dash.dependencies.DashHandler = function () {
 
                                 //self.debug.log("Got segments.");
                                 //self.debug.log(segments);
-                                segment = getSegmentByIndex(index, representation);
+                                segment = getSegmentByIndex(idx, representation);
                                 segmentsPromise = getRequestForSegment.call(self, segment);
                                 return segmentsPromise;
                             }
