@@ -49,11 +49,20 @@ MediaPlayer.dependencies.FragmentController = function () {
         onFragmentLoadingCompleted = function(sender, request, response) {
             var self = this;
 
-            if (self.isInitializationRequest(request)) {
-                self.system.notify("onInitSegmentLoaded", sender, response.data, request.quality);
-            }else {
-                self.system.notify("onMediaSegmentLoaded", sender, response.data, request.quality, request.index);
-            }
+            self.process(response.data).then(
+                function(bytes) {
+                    if (bytes === null) {
+                        self.debug.log("No " + request.streamType + " bytes to push.");
+                        return;
+                    }
+
+                    if (self.isInitializationRequest(request)) {
+                        self.system.notify("onInitSegmentLoaded", sender, bytes, request.quality);
+                    }else {
+                        self.system.notify("onMediaSegmentLoaded", sender, bytes, request.quality, request.index);
+                    }
+                }
+            );
         },
 
         onBufferLevelOutrun = function(sender) {

@@ -44,53 +44,36 @@ MediaPlayer.dependencies.BufferController = function () {
 
             self.debug.log("Initialization finished loading: " + type);
 
-            self.fragmentController.process(bytes).then(
-                function (data) {
-                    if (data !== null) {
-                        // cache the initialization data to use it next time the quality has changed
-                        initializationData[quality] = data;
+            // cache the initialization data to use it next time the quality has changed
+            initializationData[quality] = bytes;
 
-                        // if this is the initialization data for current quality we need to push it to the buffer
-                        if (quality === lastQuality) {
-                            appendToBuffer.call(self, data, quality).then(
-                                function() {
-                                    deferredInitAppend.resolve();
-                                }
-                            );
-                        }
-                    } else {
-                        self.debug.log("No " + type + " bytes to push.");
+            // if this is the initialization data for current quality we need to push it to the buffer
+            if (quality === lastQuality) {
+                appendToBuffer.call(self, bytes, quality).then(
+                    function() {
+                        deferredInitAppend.resolve();
                     }
-                }
-            );
+                );
+            }
         },
 
 		onMediaLoaded = function (sender, bytes, quality, index) {
 			var self = this;
 
-            if (sender !== self.streamProcessor.getFragmentModel()) return;
+            if ((sender !== self.streamProcessor.getFragmentModel()) || (deferredInitAppend === null)) return;
 
 			//self.debug.log(type + " Bytes finished loading: " + request.streamType + ":" + request.startTime);
 
-			self.fragmentController.process(bytes).then(
-				function (data) {
-					if (data !== null && deferredInitAppend !== null) {
-
-                        Q.when(deferredInitAppend.promise).then(
-                            function() {
-                                appendToBuffer.call(self, data, quality, index).then(
-                                    function() {
-                                        maxAppendedIndex = (index > maxAppendedIndex) ? index : maxAppendedIndex;
-                                        checkIfBufferingCompleted.call(self);
-                                    }
-                                );
-                            }
-                        );
-					} else {
-						self.debug.log("No " + type + " bytes to push.");
-					}
-				}
-			);
+            Q.when(deferredInitAppend.promise).then(
+                function() {
+                    appendToBuffer.call(self, bytes, quality, index).then(
+                        function() {
+                            maxAppendedIndex = (index > maxAppendedIndex) ? index : maxAppendedIndex;
+                            checkIfBufferingCompleted.call(self);
+                        }
+                    );
+                }
+            );
 		},
 
         appendToBuffer = function(data, quality, index) {
