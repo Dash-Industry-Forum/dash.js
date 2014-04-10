@@ -948,9 +948,6 @@ Dash.dependencies.DashHandler = function () {
     return {
         debug: undefined,
         baseURLExt: undefined,
-        manifestModel: undefined,
-        manifestExt:undefined,
-        errHandler: undefined,
         timelineConverter: undefined,
 
         getType: function () {

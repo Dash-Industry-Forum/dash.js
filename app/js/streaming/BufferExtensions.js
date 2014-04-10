@@ -54,7 +54,6 @@ MediaPlayer.dependencies.BufferExtensions = function () {
 
     return {
         system:undefined,
-        videoModel: undefined,
         manifestExt: undefined,
         metricsExt: undefined,
         metricsModel: undefined,

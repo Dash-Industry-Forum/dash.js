@@ -49,6 +49,10 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             return this.representationController.getData();
         },
 
+        getType: function() {
+            return type;
+        },
+
         getFragmentModel: function() {
             return this.scheduleController.getFragmentModel();
         },

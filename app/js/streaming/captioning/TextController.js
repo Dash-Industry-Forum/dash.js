@@ -74,13 +74,10 @@ MediaPlayer.dependencies.TextController = function () {
          };
 
     return {
-        videoModel: undefined,
         fragmentLoader: undefined,
         fragmentController: undefined,
         indexHandler: undefined,
         sourceBufferExt: undefined,
-        manifestModel: undefined,
-        manifestExt: undefined,
         debug: undefined,
         system: undefined,
 
@@ -88,23 +85,15 @@ MediaPlayer.dependencies.TextController = function () {
             this.system.mapHandler("dataUpdateCompleted", undefined, onDataUpdateCompleted.bind(this));
         },
 
-        initialize: function (type, buffer, source, streamProcessor) {
+        initialize: function (typeValue, buffer, source, streamProcessor) {
             var self = this;
 
-            self.setType(type);
+            type = typeValue;
             self.setVideoModel(streamProcessor.videoModel);
             self.setBuffer(buffer);
             self.setMediaSource(source);
-            self.setRepresentationController(streamProcessor.representationController);
+            self.representationController = streamProcessor.representationController;
             self.streamProcessor = streamProcessor;
-        },
-
-        getVideoModel: function () {
-            return this.videoModel;
-        },
-
-        setVideoModel: function (value) {
-            this.videoModel = value;
         },
 
         getBuffer: function () {
@@ -113,18 +102,6 @@ MediaPlayer.dependencies.TextController = function () {
 
         setBuffer: function (value) {
             buffer = value;
-        },
-
-        setType: function(value) {
-            type = value;
-        },
-
-        setRepresentationController: function(value) {
-            this.representationController = value;
-        },
-
-        getRepresentationController: function() {
-            return this.representationController;
         },
 
         setMediaSource: function(value) {

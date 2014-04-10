@@ -443,11 +443,8 @@ MediaPlayer.dependencies.BufferController = function () {
         manifestModel: undefined,
         bufferExt: undefined,
         sourceBufferExt: undefined,
-        abrController: undefined,
-        fragmentExt: undefined,
         debug: undefined,
         system: undefined,
-        errHandler: undefined,
 
         setup: function() {
             this.system.mapHandler("liveEdgeFound", undefined, onLiveEdgeFound.bind(this));
@@ -462,11 +459,11 @@ MediaPlayer.dependencies.BufferController = function () {
             this.system.mapHandler("qualityChanged", undefined, onQualityChanged.bind(this));
         },
 
-        initialize: function (type, buffer, source, streamProcessor) {
+        initialize: function (typeValue, buffer, source, streamProcessor) {
             var self = this;
 
+            type = typeValue;
             self.setMediaSource(source);
-            self.setType(type);
             self.setBuffer(buffer);
             self.streamProcessor = streamProcessor;
             self.videoModel = streamProcessor.videoModel;
@@ -477,18 +474,6 @@ MediaPlayer.dependencies.BufferController = function () {
             self.requestScheduler = streamProcessor.requestScheduler;
         },
 
-        getType: function () {
-            return type;
-        },
-
-        setType: function (value) {
-            type = value;
-        },
-
-        getPeriodInfo: function () {
-            return periodInfo;
-        },
-
         getStreamProcessor: function() {
             return this.streamProcessor;
         },
@@ -497,26 +482,16 @@ MediaPlayer.dependencies.BufferController = function () {
             this.streamProcessor = value;
         },
 
-        getAutoSwitchBitrate : function () {
-            var self = this;
-            return self.abrController.getAutoSwitchBitrate();
-        },
-
-        setAutoSwitchBitrate : function (value) {
-            var self = this;
-            self.abrController.setAutoSwitchBitrate(value);
-        },
-
         getBuffer: function () {
             return buffer;
         },
 
-        getBufferLevel: function() {
-            return bufferLevel;
-        },
-
         setBuffer: function (value) {
             buffer = value;
+        },
+
+        getBufferLevel: function() {
+            return bufferLevel;
         },
 
         getMinBufferTime: function () {

@@ -25,7 +25,6 @@ MediaPlayer.dependencies.SchedulerModel = function () {
     return {
         system: undefined,
         debug: undefined,
-        schedulerExt: undefined,
 
         setContext: function(value) {
             context = value;

@@ -524,7 +524,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         debug: undefined,
         system: undefined,
         abrController: undefined,
-        fragmentController: undefined,
         metricsModel: undefined,
         bufferExt: undefined,
         scheduleWhilePaused: undefined,
@@ -551,10 +550,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.system.mapHandler("initRequested", undefined, onInitRequested.bind(this));
         },
 
-        initialize: function(type, streamProcessor) {
+        initialize: function(typeValue, streamProcessor) {
             var self = this;
 
-            self.setType(type);
+            type = typeValue;
             self.streamProcessor = streamProcessor;
             self.videoModel = streamProcessor.videoModel;
             self.fragmentController = streamProcessor.fragmentController;
@@ -564,10 +563,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.indexHandler = streamProcessor.indexHandler;
             self.requestScheduler = streamProcessor.requestScheduler;
             isDynamic = streamProcessor.isDynamic();
-        },
-
-        setType: function (value) {
-            type = value;
         },
 
         getFragmentModel: function() {
