@@ -341,6 +341,10 @@ MediaPlayer.dependencies.BufferController = function () {
             this.system.notify("bufferLevelBalanced", this);
         },
 
+        notifyMinBufferTimeUpdated = function(time) {
+            this.system.notify("minBufferTimeUpdated", this, time);
+        },
+
         onLiveEdgeFound = function(sender/*, liveEdgeTime, periodInfo*/) {
             var self = this;
 
@@ -363,9 +367,19 @@ MediaPlayer.dependencies.BufferController = function () {
             deferredInitAppend = Q.defer();
             initializationData = [];
 
-            if (!ready) {
-                finishInitialization.call(self);
-            }
+            self.bufferExt.decideBufferLength(self.manifestModel.getValue().minBufferTime, periodInfo.duration).then(
+                function (time) {
+                    //self.debug.log("Min Buffer time: " + time);
+                    if (minBufferTime !== time) {
+                        self.setMinBufferTime(time);
+                        notifyMinBufferTimeUpdated.call(self, time);
+                    }
+
+                    if (!ready) {
+                        finishInitialization.call(self);
+                    }
+                }
+            );
         },
 
         onStreamCompleted = function (sender, request) {
@@ -401,8 +415,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         onValidate = function(sender) {
-            var self = this,
-                manifestMinBufferTime = self.manifestModel.getValue().minBufferTime;
+            var self = this;
 
             if (sender !== self.scheduleController) return;
 
@@ -411,14 +424,6 @@ MediaPlayer.dependencies.BufferController = function () {
             if (bufferLevel < STALL_THRESHOLD && !self.videoModel.isStreamStalled(type)) {
                 notifyBufferLevelChange.call(self, false);
             }
-
-            self.bufferExt.decideBufferLength(manifestMinBufferTime, periodInfo.duration).then(
-                function (time) {
-                    //self.debug.log("Min Buffer time: " + time);
-                    self.setMinBufferTime(time);
-                    self.requestScheduler.adjustExecuteInterval();
-                }
-            );
         },
 
         finishInitialization = function(){
@@ -430,12 +435,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 self.liveEdgeFinder.searchForLiveEdge();
             }
 
-            self.bufferExt.decideBufferLength(self.manifestModel.getValue().minBufferTime, periodInfo).then(
-                function (time) {
-                    self.setMinBufferTime(time);
-                    notifyBufferControllerInitialized.call(self);
-                }
-            );
+            notifyBufferControllerInitialized.call(self);
         };
 
     return {
@@ -471,7 +471,6 @@ MediaPlayer.dependencies.BufferController = function () {
             self.scheduleController = streamProcessor.scheduleController;
             self.representationController = streamProcessor.representationController;
             self.liveEdgeFinder = streamProcessor.liveEdgeFinder;
-            self.requestScheduler = streamProcessor.requestScheduler;
         },
 
         getStreamProcessor: function() {

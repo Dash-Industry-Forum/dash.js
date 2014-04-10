@@ -19,7 +19,7 @@
       */
 
     var schedulerModels = [],
-        periodicExecuteInterval = null,
+        periodicExecuteInterval = 1000,
         periodicExecuteId = null,
         isCheckingForVideoTimeTriggersStarted = false,
 
@@ -220,7 +220,6 @@
         startPeriodicScheduleListener = function() {
             if (periodicExecuteId !== null) return;
 
-            this.adjustExecuteInterval();
             periodicExecuteId = setInterval(onScheduledTimeOccurred.bind(this), periodicExecuteInterval);
         },
 
@@ -311,6 +310,25 @@
             }
 
             return null;
+        },
+
+        adjustExecuteInterval = function(time) {
+             var newExecuteInterval = this.schedulerExt.getExecuteInterval(time);
+
+             if (periodicExecuteInterval !== newExecuteInterval) {
+                 periodicExecuteInterval = newExecuteInterval;
+                 if (schedulerModels.length < 1) return;
+
+                 if (periodicExecuteId !== null) {
+                     this.debug.log("Changing execute interval: " + periodicExecuteInterval);
+                     clearInterval(periodicExecuteId);
+                     periodicExecuteId = setInterval(onScheduledTimeOccurred.bind(this), periodicExecuteInterval);
+                 }
+             }
+        },
+
+        onMinBufferTimeUpdated = function(sender, time) {
+            adjustExecuteInterval.call(this, time);
         };
 
     return {
@@ -318,6 +336,10 @@
         videoModel: undefined,
         debug: undefined,
         schedulerExt: undefined,
+
+        setup: function() {
+            this.system.mapHandler("minBufferTimeUpdated", undefined, onMinBufferTimeUpdated.bind(this));
+        },
 
         /*
          * Indicates whether the executeContex has scheduled task or not
@@ -338,21 +360,6 @@
          */
         getExecuteInterval: function () {
             return periodicExecuteInterval;
-        },
-
-        adjustExecuteInterval: function() {
-            if (schedulerModels.length < 1) return;
-
-            var newExecuteInterval = this.schedulerExt.getExecuteInterval(schedulerModels[0].getContext());
-
-            if (periodicExecuteInterval !== newExecuteInterval) {
-                periodicExecuteInterval = newExecuteInterval;
-                if (periodicExecuteId !== null) {
-                    this.debug.log("Changing execute interval: " + periodicExecuteInterval);
-                    clearInterval(periodicExecuteId);
-                    periodicExecuteId = setInterval(onScheduledTimeOccurred.bind(this), periodicExecuteInterval);
-                }
-            }
         },
 
         startScheduling: startScheduling,
