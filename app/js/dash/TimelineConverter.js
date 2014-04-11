@@ -61,10 +61,8 @@ Dash.dependencies.TimelineConverter = function () {
             return presentationStartTime;
         },
 
-        calcPresentationTimeFromWallTime = function (wallTime, period, isDynamic) {
-            var periodAvailabilityStartTime = calcAvailabilityStartTimeFromPresentationTime.call(this, period.start, period.mpd, isDynamic);
-
-            return ((wallTime.getTime() - periodAvailabilityStartTime.getTime()) / 1000);
+        calcPresentationTimeFromWallTime = function (wallTime, period) {
+            return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime()) / 1000) + period.start;
         },
 
         calcPresentationTimeFromMediaTime = function (mediaTime, representation) {
@@ -125,7 +123,7 @@ Dash.dependencies.TimelineConverter = function () {
             }
 
             checkTime = representation.adaptation.period.mpd.checkTime;
-            now = calcPresentationTimeFromWallTime(new Date((new Date().getTime()) + clientServerTimeShift), representation.adaptation.period, isDynamic);
+            now = calcPresentationTimeFromWallTime(new Date((new Date().getTime()) + clientServerTimeShift), representation.adaptation.period);
             //the Media Segment list is further restricted by the CheckTime together with the MPD attribute
             // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
             // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.
