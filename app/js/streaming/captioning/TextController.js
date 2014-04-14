@@ -89,9 +89,9 @@ MediaPlayer.dependencies.TextController = function () {
             var self = this;
 
             type = typeValue;
-            self.setVideoModel(streamProcessor.videoModel);
             self.setBuffer(buffer);
             self.setMediaSource(source);
+            self.videoModel = streamProcessor.videoModel;
             self.representationController = streamProcessor.representationController;
             self.streamProcessor = streamProcessor;
         },
