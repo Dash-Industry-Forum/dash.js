@@ -628,6 +628,12 @@ Dash.dependencies.DashHandler = function () {
             var self = this,
                 deferred = Q.defer();
 
+            if (!representation) {
+                return Q.reject("no representation");
+            }
+
+            if (type !== "video" || type !== "audio") return Q.when();
+
             representation.segments = null;
 
             getSegments.call(self, representation).then(
