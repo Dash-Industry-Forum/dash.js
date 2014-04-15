@@ -157,9 +157,10 @@ Dash.dependencies.TimelineConverter = function () {
     return {
         system: undefined,
         debug: undefined,
+        notifier: undefined,
 
         setup: function() {
-            this.system.mapHandler("liveEdgeFound", undefined, liveEdgeFound.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_LIVE_EDGE_FOUND, undefined, liveEdgeFound.bind(this));
         },
 
         calcAvailabilityStartTimeFromPresentationTime: calcAvailabilityStartTimeFromPresentationTime,

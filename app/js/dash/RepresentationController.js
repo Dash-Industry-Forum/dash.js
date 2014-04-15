@@ -14,7 +14,7 @@ Dash.dependencies.RepresentationController = function () {
                 from = dataValue;
             }
 
-            notifyDataUpdateStarted.call(self);
+            self.notifier.notify(self.notifier.ENAME_DATA_UPDATE_STARTED, self);
 
             updateRepresentations.call(self, dataValue, periodInfoValue).then(
                 function(representations) {
@@ -26,7 +26,7 @@ Dash.dependencies.RepresentationController = function () {
                             self.bufferExt.updateData(data, type);
                             self.indexHandler.updateSegmentList(currentRepresentation).then(
                                 function() {
-                                    notifyDataUpdateCompleted.call(self, currentRepresentation);
+                                    self.notifier.notify(self.notifier.ENAME_DATA_UPDATE_COMPLETED, self, currentRepresentation);
                                     deferred.resolve();
                                 }
                             );
@@ -40,14 +40,6 @@ Dash.dependencies.RepresentationController = function () {
 
         getRepresentationForQuality = function(quality) {
             return availableRepresentations[quality];
-        },
-
-        notifyDataUpdateStarted = function() {
-            this.system.notify("dataUpdateStarted", this);
-        },
-
-        notifyDataUpdateCompleted = function(representation) {
-            this.system.notify("dataUpdateCompleted", this, representation);
         },
 
         updateRepresentations = function(data, periodInfo) {
@@ -87,9 +79,10 @@ Dash.dependencies.RepresentationController = function () {
         manifestModel: undefined,
         bufferExt: undefined,
         abrController: undefined,
+        notifier: undefined,
 
         setup: function() {
-            this.system.mapHandler("qualityChanged", undefined, onQualityChanged.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_QUALITY_CHANGED, undefined, onQualityChanged.bind(this));
         },
 
         initialize: function(streamProcessor) {

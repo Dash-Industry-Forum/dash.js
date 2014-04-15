@@ -73,7 +73,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             this.debug.log("Do seek: " + time);
 
-            this.system.notify("setCurrentTime");
+            this.notifier.notify(this.notifier.ENAME_SET_CURRENT_TIME, this, time);
             this.videoModel.setCurrentTime(time);
 
             startBuffering(time);
@@ -797,11 +797,12 @@ MediaPlayer.dependencies.Stream = function () {
         timelineConverter: undefined,
         requestScheduler: undefined,
         scheduleWhilePaused: undefined,
+        notifier: undefined,
 
         setup: function () {
-            this.system.mapHandler("setCurrentTime", undefined, currentTimeChanged.bind(this));
-            this.system.mapHandler("bufferingCompleted", undefined, bufferingCompleted.bind(this));
-            this.system.mapHandler("segmentLoadingFailed", undefined, segmentLoadingFailed.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_SET_CURRENT_TIME, undefined, currentTimeChanged.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_BUFFERING_COMPLETED, undefined, bufferingCompleted.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_FRAGMENT_LOADING_FAILED, undefined, segmentLoadingFailed.bind(this));
 
             load = Q.defer();
 

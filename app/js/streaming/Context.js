@@ -63,6 +63,8 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('schedulerExt', MediaPlayer.dependencies.SchedulerExtensions);
             this.system.mapClass('schedulerModel', MediaPlayer.dependencies.SchedulerModel);
             this.system.mapClass('scheduleController', MediaPlayer.dependencies.ScheduleController);
+
+            this.system.mapSingleton('notifier', MediaPlayer.dependencies.Notifier);
         }
     };
 };

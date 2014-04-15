@@ -115,7 +115,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
                                             updateBufferLevel.call(self).then(
                                                 function() {
-                                                    notifyDataAppended.call(self, index);
+                                                    self.notifier.notify(self.notifier.ENAME_BYTES_APPENDED, self, index);
                                                     deferred.resolve();
                                                 }
                                             );
@@ -146,7 +146,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                                 rejectedBytes = data;
                                                 deferredRejectedDataAppend = deferred;
                                                 isQuotaExceeded = true;
-                                                notifyQuotaExceeded.call(self, index);
+                                                self.notifier.notify(self.notifier.ENAME_QUOTA_EXCEEDED, self, index);
                                             }
                                         }
                                     );
@@ -175,7 +175,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     }
 
                     bufferLevel = bufferLength;
-                    notifyBufferLevelUpdated.call(self, bufferLevel);
+                    self.notifier.notify(self.notifier.ENAME_BUFFER_LEVEL_UPDATED, self, bufferLevel);
                     checkGapBetweenBuffers.call(self);
                     checkIfSufficientBuffer.call(self);
                     deferred.resolve();
@@ -194,11 +194,11 @@ MediaPlayer.dependencies.BufferController = function () {
             // buffer and requesting new segments until the gap will be reduced to the suitable size.
             if (actualGap > acceptableGap && !deferredBuffersFlatten) {
                 deferredBuffersFlatten = Q.defer();
-                notifyOutrun.call(this);
+                this.notifier.notify(this.notifier.ENAME_BUFFER_LEVEL_OUTRUN, this);
             } else if ((actualGap < acceptableGap) && deferredBuffersFlatten) {
                 deferredBuffersFlatten.resolve();
                 deferredBuffersFlatten = null;
-                notifyBalance.call(this);
+                this.notifier.notify(this.notifier.ENAME_BUFFER_LEVEL_BALANCED, this);
             }
         },
 
@@ -251,7 +251,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     removeStart = buffer.buffered.start(0);
                     self.sourceBufferExt.remove(buffer, removeStart, removeEnd, periodInfo.duration, mediaSource).then(
                         function() {
-                            notifyBufferCleared.call(self, removeStart, removeEnd);
+                            self.notifier.notify(self.notifier.ENAME_BUFFER_CLEARED, self, removeStart, removeEnd);
                             deferred.resolve(removeEnd - removeStart);
                         }
                     );
@@ -267,7 +267,7 @@ MediaPlayer.dependencies.BufferController = function () {
             if (!isLastIdxAppended || isBufferingCompleted) return;
 
             isBufferingCompleted = true;
-            notifyBufferingCompleted.call(this);
+            this.notifier.notify(this.notifier.ENAME_BUFFERING_COMPLETED, this);
         },
 
         checkIfSufficientBuffer = function () {
@@ -275,10 +275,10 @@ MediaPlayer.dependencies.BufferController = function () {
 
             if ((bufferLevel < minBufferTime) && ((minBufferTime < timeToEnd) || (minBufferTime >= timeToEnd && !isBufferingCompleted))) {
                 this.debug.log("Waiting for more " + type + " buffer before starting playback.");
-                notifyBufferLevelChange.call(this, false);
+                this.notifier.notify(this.notifier.ENAME_BUFFER_LEVEL_STATE_CHANGED, this, false);
             } else {
                 this.debug.log("Got enough " + type + " buffer to start.");
-                notifyBufferLevelChange.call(this, true);
+                this.notifier.notify(this.notifier.ENAME_BUFFER_LEVEL_STATE_CHANGED, this, true);
             }
         },
 
@@ -299,50 +299,6 @@ MediaPlayer.dependencies.BufferController = function () {
             //this.debug.log("Working time is video time: " + time);
 
             return time;
-        },
-
-        notifyBufferLevelChange = function(hasSufficientBuffer) {
-            this.system.notify("bufferLevelStateChanged", this, hasSufficientBuffer);
-        },
-
-        notifyBufferLevelUpdated = function(level) {
-            this.system.notify("bufferLevelUpdated", this, level);
-        },
-
-        notifyDataAppended = function(index) {
-            this.system.notify("bytesAppended", this, bufferLevel, index);
-        },
-
-        notifyQuotaExceeded = function(index) {
-            this.system.notify("quotaExceeded", this, bufferLevel, index);
-        },
-
-        notifyBufferingCompleted = function() {
-            this.system.notify("bufferingCompleted");
-        },
-
-        notifyBufferCleared = function(startTime, endTime) {
-            this.system.notify("bufferCleared", this, startTime, endTime);
-        },
-
-        notifyBufferControllerInitialized = function() {
-            this.system.notify("bufferControllerInitialized", this);
-        },
-
-        notifyInitRequested = function(quality) {
-            this.system.notify("initRequested", this, quality);
-        },
-
-        notifyOutrun = function() {
-            this.system.notify("bufferLevelOutrun", this);
-        },
-
-        notifyBalance = function() {
-            this.system.notify("bufferLevelBalanced", this);
-        },
-
-        notifyMinBufferTimeUpdated = function(time) {
-            this.system.notify("minBufferTimeUpdated", this, time);
         },
 
         onLiveEdgeFound = function(sender/*, liveEdgeTime, periodInfo*/) {
@@ -372,7 +328,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     //self.debug.log("Min Buffer time: " + time);
                     if (minBufferTime !== time) {
                         self.setMinBufferTime(time);
-                        notifyMinBufferTimeUpdated.call(self, time);
+                        self.notifier.notify(self.notifier.ENAME_MIN_BUFFER_TIME_UPDATED, self, time);
                     }
 
                     if (!ready) {
@@ -409,7 +365,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     );
                 } else {
                     // if we have not loaded the init segment for the current quality, do it
-                    notifyInitRequested.call(self, newQuality);
+                    self.notifier.notify(self.notifier.ENAME_INIT_REQUESTED, self, newQuality);
                 }
             }
         },
@@ -422,7 +378,7 @@ MediaPlayer.dependencies.BufferController = function () {
             checkIfSufficientBuffer.call(self);
 
             if (bufferLevel < STALL_THRESHOLD && !self.videoModel.isStreamStalled(type)) {
-                notifyBufferLevelChange.call(self, false);
+                self.notifier.notify(self.notifier.ENAME_BUFFER_LEVEL_STATE_CHANGED, self, false);
             }
         },
 
@@ -435,7 +391,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 self.liveEdgeFinder.searchForLiveEdge();
             }
 
-            notifyBufferControllerInitialized.call(self);
+            self.notifier.notify(self.notifier.ENAME_BUFFER_CONTROLLER_INITIALIZED, self);
         };
 
     return {
@@ -445,18 +401,19 @@ MediaPlayer.dependencies.BufferController = function () {
         sourceBufferExt: undefined,
         debug: undefined,
         system: undefined,
+        notifier: undefined,
 
         setup: function() {
-            this.system.mapHandler("liveEdgeFound", undefined, onLiveEdgeFound.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_LIVE_EDGE_FOUND, undefined, onLiveEdgeFound.bind(this));
 
-            this.system.mapHandler("dataUpdateCompleted", undefined, onDataUpdateCompleted.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_DATA_UPDATE_COMPLETED, undefined, onDataUpdateCompleted.bind(this));
 
-            this.system.mapHandler("onInitSegmentLoaded", undefined, onInitializationLoaded.bind(this));
-            this.system.mapHandler("onMediaSegmentLoaded", undefined, onMediaLoaded.bind(this));
-            this.system.mapHandler("streamCompleted", undefined, onStreamCompleted.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_INIT_SEGMENT_LOADED, undefined, onInitializationLoaded.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_MEDIA_SEGMENT_LOADED, undefined, onMediaLoaded.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_STREAM_COMPLETED, undefined, onStreamCompleted.bind(this));
 
-            this.system.mapHandler("scheduledTimeOccurred", undefined, onValidate.bind(this));
-            this.system.mapHandler("qualityChanged", undefined, onQualityChanged.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_VALIDATION_STARTED, undefined, onValidate.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_QUALITY_CHANGED, undefined, onQualityChanged.bind(this));
         },
 
         initialize: function (typeValue, buffer, source, streamProcessor) {

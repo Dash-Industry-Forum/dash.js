@@ -302,7 +302,7 @@
             var self = this;
             composeStreams.call(self).then(
                 function() {
-                    self.system.notify("streamsComposed");
+                    self.notifier.notify(self.notifier.ENAME_STREAMS_COMPOSED, self);
                 },
                 function(errMsg) {
                     self.errHandler.manifestError(errMsg, "nostreamscomposed", self.manifestModel.getValue());
@@ -322,9 +322,10 @@
         metricsModel: undefined,
         videoExt: undefined,
         errHandler: undefined,
+        notifier: undefined,
 
         setup: function() {
-            this.system.mapHandler("manifestUpdated", undefined, manifestHasUpdated.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_MANIFEST_UPDATED, undefined, manifestHasUpdated.bind(this));
             timeupdateListener = onTimeupdate.bind(this);
             progressListener = onProgress.bind(this);
             seekingListener = onSeeking.bind(this);

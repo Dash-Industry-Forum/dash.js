@@ -28,18 +28,18 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 self = this;
 
             // We are about to start loading the fragment, so execute the corresponding callback
-            notifyLoadingStart.call(self, request);
+            self.notifier.notify(self.notifier.ENAME_FRAGMENT_LOADING_STARTED, self, request);
 
             onSuccess = function(request, response) {
                 loadingRequests.splice(loadingRequests.indexOf(request), 1);
                 executedRequests.push(request);
-                notifyLoadingCompleted.call(self, request, response);
+                self.notifier.notify(self.notifier.ENAME_FRAGMENT_LOADING_COMPLETED, self, request, response);
                 request.deferred = null;
             };
 
             onError = function(request) {
                 loadingRequests.splice(loadingRequests.indexOf(request), 1);
-                notifyLoadingFailed.call(self, request);
+                self.notifier.notify(self.notifier.ENAME_FRAGMENT_LOADING_FAILED, self, request);
                 request.deferred = null;
             };
 
@@ -58,22 +58,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         },
 
-        notifyLoadingStart = function(request) {
-            this.system.notify("fragmentLoadingStart", this, request);
-        },
-
-        notifyLoadingCompleted = function(request, response) {
-            this.system.notify("fragmentLoadingCompleted", this, request, response);
-        },
-
-        notifyLoadingFailed = function(request) {
-            this.system.notify("segmentLoadingFailed", this, request);
-        },
-
-        notifyStreamEnd = function(request) {
-            this.system.notify("streamCompleted", this, request);
-        },
-
         removeExecutedRequest = function(request) {
             var idx = executedRequests.indexOf(request);
 
@@ -86,6 +70,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
         system: undefined,
         debug: undefined,
         fragmentLoader: undefined,
+        notifier: undefined,
 
         setContext: function(value) {
             context = value;
@@ -243,7 +228,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 case "complete":
                     // Stream has completed, execute the correspoinding callback
                     executedRequests.push(currentRequest);
-                    notifyStreamEnd.call(self, currentRequest);
+                    self.notifier.notify(self.notifier.ENAME_STREAM_COMPLETED, self, currentRequest);
                     break;
                 case "download":
                     loadingRequests.push(currentRequest);
@@ -255,7 +240,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                         currentRequest.deferred.reject();
                         currentRequest.deferred = null;
                     } else {
-                        notifyLoadingFailed.call(self, currentRequest);
+                        self.notifier.notify(self.notifier.ENAME_FRAGMENT_LOADING_FAILED, self, currentRequest);
                     }
             }
         }

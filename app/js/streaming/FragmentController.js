@@ -40,9 +40,9 @@ MediaPlayer.dependencies.FragmentController = function () {
             var self = this;
 
             if (self.isInitializationRequest(request)) {
-                self.system.notify("initSegmentLoadingStart", sender, request);
+                self.notifier.notify(self.notifier.ENAME_INIT_SEGMENT_LOADING_START, sender, request);
             }else {
-                self.system.notify("mediaSegmentLoadingStart", sender, request);
+                self.notifier.notify(self.notifier.ENAME_MEDIA_SEGMENT_LOADING_START, sender, request);
             }
         },
 
@@ -57,9 +57,9 @@ MediaPlayer.dependencies.FragmentController = function () {
                     }
 
                     if (self.isInitializationRequest(request)) {
-                        self.system.notify("onInitSegmentLoaded", sender, bytes, request.quality);
+                        self.notifier.notify(self.notifier.ENAME_INIT_SEGMENT_LOADED, sender, bytes, request.quality);
                     }else {
-                        self.system.notify("onMediaSegmentLoaded", sender, bytes, request.quality, request.index);
+                        self.notifier.notify(self.notifier.ENAME_MEDIA_SEGMENT_LOADED, sender, bytes, request.quality, request.index);
                     }
                 }
             );
@@ -106,13 +106,14 @@ MediaPlayer.dependencies.FragmentController = function () {
         system: undefined,
         debug: undefined,
         fragmentLoader: undefined,
+        notifier: undefined,
 
         setup: function() {
-            this.system.mapHandler("fragmentLoadingStart", undefined, onFragmentLoadingStart.bind(this));
-            this.system.mapHandler("fragmentLoadingCompleted", undefined, onFragmentLoadingCompleted.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_FRAGMENT_LOADING_STARTED, undefined, onFragmentLoadingStart.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_FRAGMENT_LOADING_COMPLETED, undefined, onFragmentLoadingCompleted.bind(this));
 
-            this.system.mapHandler("bufferLevelOutrun", undefined, onBufferLevelOutrun.bind(this));
-            this.system.mapHandler("bufferLevelBalanced", undefined, onBufferLevelBalanced.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_BUFFER_LEVEL_OUTRUN, undefined, onBufferLevelOutrun.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_BUFFER_LEVEL_BALANCED, undefined, onBufferLevelBalanced.bind(this));
         },
 
         process: function (bytes) {

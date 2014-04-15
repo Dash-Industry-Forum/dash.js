@@ -79,9 +79,10 @@ MediaPlayer.models.VideoModel = function () {
 
     return {
         system : undefined,
+        notifier: undefined,
 
         setup : function () {
-            this.system.mapHandler("bufferLevelStateChanged", undefined, bufferLevelStateChanged.bind(this));
+            this.system.mapHandler(this.notifier.ENAME_BUFFER_LEVEL_STATE_CHANGED, undefined, bufferLevelStateChanged.bind(this));
             //this.system.mapHandler("setCurrentTime", undefined, handleSetCurrentTimeNotification.bind(this));
         },
 
