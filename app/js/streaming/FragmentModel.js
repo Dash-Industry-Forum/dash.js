@@ -28,18 +28,18 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 self = this;
 
             // We are about to start loading the fragment, so execute the corresponding callback
-            self.notifier.notify(self.notifier.ENAME_FRAGMENT_LOADING_STARTED, self, request);
+            self.notify(self.notifier.ENAME_FRAGMENT_LOADING_STARTED, request);
 
             onSuccess = function(request, response) {
                 loadingRequests.splice(loadingRequests.indexOf(request), 1);
                 executedRequests.push(request);
-                self.notifier.notify(self.notifier.ENAME_FRAGMENT_LOADING_COMPLETED, self, request, response);
+                self.notify(self.notifier.ENAME_FRAGMENT_LOADING_COMPLETED, request, response);
                 request.deferred = null;
             };
 
             onError = function(request) {
                 loadingRequests.splice(loadingRequests.indexOf(request), 1);
-                self.notifier.notify(self.notifier.ENAME_FRAGMENT_LOADING_FAILED, self, request);
+                self.notify(self.notifier.ENAME_FRAGMENT_LOADING_FAILED, request);
                 request.deferred = null;
             };
 
@@ -71,6 +71,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
         debug: undefined,
         fragmentLoader: undefined,
         notifier: undefined,
+        notify: undefined,
 
         setContext: function(value) {
             context = value;
@@ -228,7 +229,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 case "complete":
                     // Stream has completed, execute the correspoinding callback
                     executedRequests.push(currentRequest);
-                    self.notifier.notify(self.notifier.ENAME_STREAM_COMPLETED, self, currentRequest);
+                    self.notify(self.notifier.ENAME_STREAM_COMPLETED, currentRequest);
                     break;
                 case "download":
                     loadingRequests.push(currentRequest);
@@ -240,7 +241,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                         currentRequest.deferred.reject();
                         currentRequest.deferred = null;
                     } else {
-                        self.notifier.notify(self.notifier.ENAME_FRAGMENT_LOADING_FAILED, self, currentRequest);
+                        self.notify(self.notifier.ENAME_FRAGMENT_LOADING_FAILED, currentRequest);
                     }
             }
         }

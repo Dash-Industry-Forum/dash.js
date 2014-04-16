@@ -14,7 +14,7 @@ Dash.dependencies.RepresentationController = function () {
                 from = dataValue;
             }
 
-            self.notifier.notify(self.notifier.ENAME_DATA_UPDATE_STARTED, self);
+            self.notify(self.notifier.ENAME_DATA_UPDATE_STARTED);
 
             updateRepresentations.call(self, dataValue, periodInfoValue).then(
                 function(representations) {
@@ -26,7 +26,7 @@ Dash.dependencies.RepresentationController = function () {
                             self.bufferExt.updateData(data, type);
                             self.indexHandler.updateSegmentList(currentRepresentation).then(
                                 function() {
-                                    self.notifier.notify(self.notifier.ENAME_DATA_UPDATE_COMPLETED, self, currentRepresentation);
+                                    self.notify(self.notifier.ENAME_DATA_UPDATE_COMPLETED, currentRepresentation);
                                     deferred.resolve();
                                 }
                             );
@@ -80,6 +80,7 @@ Dash.dependencies.RepresentationController = function () {
         bufferExt: undefined,
         abrController: undefined,
         notifier: undefined,
+        notify: undefined,
 
         setup: function() {
             this.system.mapHandler(this.notifier.ENAME_QUALITY_CHANGED, undefined, onQualityChanged.bind(this));

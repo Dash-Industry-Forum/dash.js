@@ -73,7 +73,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             this.debug.log("Do seek: " + time);
 
-            this.notifier.notify(this.notifier.ENAME_SET_CURRENT_TIME, this, time);
+            this.notify(this.notifier.ENAME_SET_CURRENT_TIME, time);
             this.videoModel.setCurrentTime(time);
 
             startBuffering(time);
@@ -798,6 +798,7 @@ MediaPlayer.dependencies.Stream = function () {
         requestScheduler: undefined,
         scheduleWhilePaused: undefined,
         notifier: undefined,
+        notify: undefined,
 
         setup: function () {
             this.system.mapHandler(this.notifier.ENAME_SET_CURRENT_TIME, undefined, currentTimeChanged.bind(this));

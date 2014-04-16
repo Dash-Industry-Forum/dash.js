@@ -125,7 +125,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
 
             if (dataChanged || qualityChanged) {
-                this.notifier.notify(this.notifier.ENAME_QUALITY_CHANGED, this, lastQuality, currentQuality, dataChanged);
+                this.notify(this.notifier.ENAME_QUALITY_CHANGED, lastQuality, currentQuality, dataChanged);
                 lastQuality = currentQuality;
             }
         },
@@ -255,7 +255,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             //mseSetTimeIfPossible.call(self);
 
-            self.notifier.notify(self.notifier.ENAME_VALIDATION_STARTED, self);
+            self.notify(self.notifier.ENAME_VALIDATION_STARTED);
 
             if (!isSchedulingRequired.call(self) && !initialPlayback && !dataChanged) {
                 doStop.call(self);
@@ -521,6 +521,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         scheduleWhilePaused: undefined,
         sourceBufferExt: undefined,
         notifier: undefined,
+        notify: undefined,
 
         setup: function() {
             this.system.mapHandler(this.notifier.ENAME_LIVE_EDGE_FOUND, undefined, onLiveEdgeFound.bind(this));

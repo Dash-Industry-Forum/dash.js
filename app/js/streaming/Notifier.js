@@ -1,8 +1,15 @@
 MediaPlayer.dependencies.Notifier = function () {
     "use strict";
 
+    var system;
+
     return {
         system : undefined,
+
+        setup: function() {
+            system = this.system;
+            system.mapValue('notify', this.notify);
+        },
 
         ENAME_INIT_SEGMENT_LOADING_START: "initSegmentLoadingStart",
         ENAME_MEDIA_SEGMENT_LOADING_START: "mediaSegmentLoadingStart",
@@ -43,7 +50,10 @@ MediaPlayer.dependencies.Notifier = function () {
         ENAME_MIN_BUFFER_TIME_UPDATED: "minBufferTimeUpdated",
 
         notify: function (/*eventName, sender[, args]*/) {
-            this.system.notify.apply(this.system, arguments);
+            var args = [].slice.call(arguments);
+            args.splice(1, 0, this);
+
+            system.notify.apply(system, args);
         }
     };
 };

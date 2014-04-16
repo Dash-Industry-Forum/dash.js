@@ -40,9 +40,9 @@ MediaPlayer.dependencies.FragmentController = function () {
             var self = this;
 
             if (self.isInitializationRequest(request)) {
-                self.notifier.notify(self.notifier.ENAME_INIT_SEGMENT_LOADING_START, sender, request);
+                self.notify.call(sender, self.notifier.ENAME_INIT_SEGMENT_LOADING_START, request);
             }else {
-                self.notifier.notify(self.notifier.ENAME_MEDIA_SEGMENT_LOADING_START, sender, request);
+                self.notify.call(sender, self.notifier.ENAME_MEDIA_SEGMENT_LOADING_START, request);
             }
         },
 
@@ -57,9 +57,9 @@ MediaPlayer.dependencies.FragmentController = function () {
                     }
 
                     if (self.isInitializationRequest(request)) {
-                        self.notifier.notify(self.notifier.ENAME_INIT_SEGMENT_LOADED, sender, bytes, request.quality);
+                        self.notify.call(sender, self.notifier.ENAME_INIT_SEGMENT_LOADED, bytes, request.quality);
                     }else {
-                        self.notifier.notify(self.notifier.ENAME_MEDIA_SEGMENT_LOADED, sender, bytes, request.quality, request.index);
+                        self.notify.call(sender, self.notifier.ENAME_MEDIA_SEGMENT_LOADED, bytes, request.quality, request.index);
                     }
                 }
             );
@@ -107,6 +107,7 @@ MediaPlayer.dependencies.FragmentController = function () {
         debug: undefined,
         fragmentLoader: undefined,
         notifier: undefined,
+        notify: undefined,
 
         setup: function() {
             this.system.mapHandler(this.notifier.ENAME_FRAGMENT_LOADING_STARTED, undefined, onFragmentLoadingStart.bind(this));
