@@ -75,6 +75,8 @@ MediaPlayer = function (aContext) {
             playing = true;
             //this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
+            streamController.subscribe(streamController.notifier.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
+            this.manifestUpdater.subscribe(this.manifestUpdater.notifier.ENAME_MANIFEST_UPDATED, streamController);
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.load(source);
@@ -107,6 +109,7 @@ MediaPlayer = function (aContext) {
         metricsExt: undefined,
         bufferExt: undefined,
         errHandler: undefined,
+        manifestUpdater: undefined,
 
         addEventListener: function (type, listener, useCapture) {
             this.eventBus.addEventListener(type, listener, useCapture);

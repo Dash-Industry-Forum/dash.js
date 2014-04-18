@@ -324,9 +324,11 @@
         errHandler: undefined,
         notifier: undefined,
         notify: undefined,
+        subscribe: undefined,
 
         setup: function() {
-            this.system.mapHandler(this.notifier.ENAME_MANIFEST_UPDATED, undefined, manifestHasUpdated.bind(this));
+            this.manifestUpdated = manifestHasUpdated;
+
             timeupdateListener = onTimeupdate.bind(this);
             progressListener = onProgress.bind(this);
             seekingListener = onSeeking.bind(this);

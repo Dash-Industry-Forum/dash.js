@@ -98,11 +98,12 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
         manifestExt: undefined,
         manifestLoader: undefined,
         notifier: undefined,
+        subscribe: undefined,
 
         setup: function () {
             update.call(this);
             // Listen to streamsComposed event to be aware that the streams have been composed
-            this.system.mapHandler(this.notifier.ENAME_STREAMS_COMPOSED, undefined, onStreamsComposed.bind(this));
+            this.streamsComposed = onStreamsComposed;
         },
 
         start: function () {

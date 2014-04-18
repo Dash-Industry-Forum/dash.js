@@ -73,7 +73,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             this.debug.log("Do seek: " + time);
 
-            this.notify(this.notifier.ENAME_SET_CURRENT_TIME, time);
+            currentTimeChanged.call(this);
             this.videoModel.setCurrentTime(time);
 
             startBuffering(time);
@@ -312,7 +312,7 @@ MediaPlayer.dependencies.Stream = function () {
                                             // TODO : Pass to controller and then pass to each method on handler?
 
                                             videoStreamProcessor = self.system.getObject("streamProcessor");
-                                            videoStreamProcessor.initialize("video", buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource, videoData, periodInfo);
+                                            videoStreamProcessor.initialize("video", buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource, videoData, periodInfo, self);
                                             //self.debug.log("Video is ready!");
                                         }
 
@@ -384,7 +384,7 @@ MediaPlayer.dependencies.Stream = function () {
                                                     // TODO : How to tell index handler live/duration?
                                                     // TODO : Pass to controller and then pass to each method on handler?
                                                     audioStreamProcessor = self.system.getObject("streamProcessor");
-                                                    audioStreamProcessor.initialize("audio", buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource, primaryAudioData, periodInfo);
+                                                    audioStreamProcessor.initialize("audio", buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource, primaryAudioData, periodInfo, self);
                                                     //self.debug.log("Audio is ready!");
                                                 }
 
@@ -429,7 +429,7 @@ MediaPlayer.dependencies.Stream = function () {
                                             self.debug.log("Source buffer was not created for text track");
                                         } else {
                                             textStreamProcessor = self.system.getObject("streamProcessor");
-                                            textStreamProcessor.initialize(mimeType, buffer, self.videoModel, null, self.fragmentController, mediaSource, textData, periodInfo);
+                                            textStreamProcessor.initialize(mimeType, buffer, self.videoModel, null, self.fragmentController, mediaSource, textData, periodInfo, self);
                                             //self.debug.log("Text is ready!");
                                             textTrackReady = true;
                                             checkIfInitialized.call(self, videoReady, audioReady, textTrackReady, initialize);
@@ -686,10 +686,6 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
-        segmentLoadingFailed = function() {
-            stopBuffering.call(this);
-        },
-
         updateData = function (updatedPeriodInfo) {
             var self = this,
                 videoData,
@@ -797,13 +793,9 @@ MediaPlayer.dependencies.Stream = function () {
         timelineConverter: undefined,
         requestScheduler: undefined,
         scheduleWhilePaused: undefined,
-        notifier: undefined,
-        notify: undefined,
 
         setup: function () {
-            this.system.mapHandler(this.notifier.ENAME_SET_CURRENT_TIME, undefined, currentTimeChanged.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_BUFFERING_COMPLETED, undefined, bufferingCompleted.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_FRAGMENT_LOADING_FAILED, undefined, segmentLoadingFailed.bind(this));
+            this.bufferingCompleted = bufferingCompleted;
 
             load = Q.defer();
 

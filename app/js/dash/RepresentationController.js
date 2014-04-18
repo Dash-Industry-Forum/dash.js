@@ -81,9 +81,10 @@ Dash.dependencies.RepresentationController = function () {
         abrController: undefined,
         notifier: undefined,
         notify: undefined,
+        subscribe: undefined,
 
         setup: function() {
-            this.system.mapHandler(this.notifier.ENAME_QUALITY_CHANGED, undefined, onQualityChanged.bind(this));
+            this.qualityChanged = onQualityChanged;
         },
 
         initialize: function(streamProcessor) {

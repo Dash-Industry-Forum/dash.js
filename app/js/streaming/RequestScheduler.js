@@ -336,10 +336,9 @@
         videoModel: undefined,
         debug: undefined,
         schedulerExt: undefined,
-        notifier: undefined,
 
         setup: function() {
-            this.system.mapHandler(this.notifier.ENAME_MIN_BUFFER_TIME_UPDATED, undefined, onMinBufferTimeUpdated.bind(this));
+            this.minBufferTimeUpdated = onMinBufferTimeUpdated;
         },
 
         /*

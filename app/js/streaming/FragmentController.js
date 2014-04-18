@@ -108,13 +108,14 @@ MediaPlayer.dependencies.FragmentController = function () {
         fragmentLoader: undefined,
         notifier: undefined,
         notify: undefined,
+        subscribe: undefined,
 
         setup: function() {
-            this.system.mapHandler(this.notifier.ENAME_FRAGMENT_LOADING_STARTED, undefined, onFragmentLoadingStart.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_FRAGMENT_LOADING_COMPLETED, undefined, onFragmentLoadingCompleted.bind(this));
+            this.fragmentLoadingStarted = onFragmentLoadingStart;
+            this.fragmentLoadingCompleted = onFragmentLoadingCompleted;
 
-            this.system.mapHandler(this.notifier.ENAME_BUFFER_LEVEL_OUTRUN, undefined, onBufferLevelOutrun.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_BUFFER_LEVEL_BALANCED, undefined, onBufferLevelBalanced.bind(this));
+            this.bufferLevelOutrun = onBufferLevelOutrun;
+            this.bufferLevelBalanced = onBufferLevelBalanced;
         },
 
         process: function (bytes) {
@@ -135,6 +136,10 @@ MediaPlayer.dependencies.FragmentController = function () {
             if (!model){
                 model = this.system.getObject("fragmentModel");
                 model.setContext(context);
+                model.subscribe(model.notifier.ENAME_FRAGMENT_LOADING_STARTED, this);
+                model.subscribe(model.notifier.ENAME_FRAGMENT_LOADING_COMPLETED, this);
+                model.subscribe(model.notifier.ENAME_FRAGMENT_LOADING_FAILED, context);
+                model.subscribe(model.notifier.ENAME_STREAM_COMPLETED, context);
                 fragmentModels.push(model);
             }
 

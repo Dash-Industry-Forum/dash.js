@@ -17,8 +17,10 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         manifestExt: undefined,
         indexHandler: undefined,
         liveEdgeFinder: undefined,
+        notifier: undefined,
+        timelineConverter: undefined,
 
-        initialize: function (typeValue, buffer, videoModel, scheduler, fragmentController, mediaSource, data, periodInfo) {
+        initialize: function (typeValue, buffer, videoModel, scheduler, fragmentController, mediaSource, data, periodInfo, stream) {
 
             var self = this,
                 manifest = self.manifestModel.getValue(),
@@ -37,6 +39,37 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             self.fragmentController = fragmentController;
             self.requestScheduler = scheduler;
             self.liveEdgeFinder.initialize(this);
+
+            scheduleController.subscribe(self.notifier.ENAME_QUALITY_CHANGED, bufferController);
+            scheduleController.subscribe(self.notifier.ENAME_QUALITY_CHANGED, representationController);
+            scheduleController.subscribe(self.notifier.ENAME_VALIDATION_STARTED, bufferController);
+
+            self.liveEdgeFinder.subscribe(self.notifier.ENAME_LIVE_EDGE_FOUND, self.timelineConverter);
+            self.liveEdgeFinder.subscribe(self.notifier.ENAME_LIVE_EDGE_FOUND, bufferController);
+            self.liveEdgeFinder.subscribe(self.notifier.ENAME_LIVE_EDGE_FOUND, scheduleController);
+
+            representationController.subscribe(self.notifier.ENAME_DATA_UPDATE_STARTED, scheduleController);
+            representationController.subscribe(self.notifier.ENAME_DATA_UPDATE_COMPLETED, bufferController);
+            representationController.subscribe(self.notifier.ENAME_DATA_UPDATE_COMPLETED, scheduleController);
+
+            fragmentController.subscribe(self.notifier.ENAME_INIT_SEGMENT_LOADED, bufferController);
+            fragmentController.subscribe(self.notifier.ENAME_MEDIA_SEGMENT_LOADED, bufferController);
+            fragmentController.subscribe(self.notifier.ENAME_INIT_SEGMENT_LOADING_START, scheduleController);
+            fragmentController.subscribe(self.notifier.ENAME_MEDIA_SEGMENT_LOADING_START, scheduleController);
+
+            bufferController.subscribe(self.notifier.ENAME_BUFFER_LEVEL_STATE_CHANGED, videoModel);
+            bufferController.subscribe(self.notifier.ENAME_MIN_BUFFER_TIME_UPDATED, scheduler);
+            bufferController.subscribe(self.notifier.ENAME_BUFFER_CONTROLLER_INITIALIZED, scheduleController);
+            bufferController.subscribe(self.notifier.ENAME_BUFFER_CLEARED, scheduleController);
+            bufferController.subscribe(self.notifier.ENAME_BUFFERING_COMPLETED, scheduleController);
+            bufferController.subscribe(self.notifier.ENAME_BYTES_APPENDED, scheduleController);
+            bufferController.subscribe(self.notifier.ENAME_BUFFER_LEVEL_OUTRUN, scheduleController);
+            bufferController.subscribe(self.notifier.ENAME_BUFFER_LEVEL_UPDATED, scheduleController);
+            bufferController.subscribe(self.notifier.ENAME_BUFFER_LEVEL_STATE_CHANGED, scheduleController);
+            bufferController.subscribe(self.notifier.ENAME_INIT_REQUESTED, scheduleController);
+            bufferController.subscribe(self.notifier.ENAME_BUFFER_LEVEL_OUTRUN, fragmentController);
+            bufferController.subscribe(self.notifier.ENAME_BUFFER_LEVEL_BALANCED, fragmentController);
+            bufferController.subscribe(self.notifier.ENAME_BUFFERING_COMPLETED, stream);
 
             bufferController.initialize(type, buffer, mediaSource, self);
             scheduleController.initialize(type, this);

@@ -386,13 +386,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onBytesError = function (sender/*, request*/) {
-            var self = this;
-
-            if (sender !== self.streamProcessor.getFragmentModel()) return;
-
-            if (state === LOADING) {
-                setState.call(this, READY);
-            }
+            doStop.call(this);
         },
 
         onBytesAppended = function(sender) {
@@ -522,26 +516,27 @@ MediaPlayer.dependencies.ScheduleController = function () {
         sourceBufferExt: undefined,
         notifier: undefined,
         notify: undefined,
+        subscribe: undefined,
 
         setup: function() {
-            this.system.mapHandler(this.notifier.ENAME_LIVE_EDGE_FOUND, undefined, onLiveEdgeFound.bind(this));
+            this.liveEdgeFound = onLiveEdgeFound;
 
-            this.system.mapHandler(this.notifier.ENAME_DATA_UPDATE_STARTED, undefined, onDataUpdateStarted.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_DATA_UPDATE_COMPLETED, undefined, onDataUpdateCompleted.bind(this));
+            this.dataUpdateStarted = onDataUpdateStarted;
+            this.dataUpdateCompleted = onDataUpdateCompleted;
 
-            this.system.mapHandler(this.notifier.ENAME_INIT_SEGMENT_LOADING_START, undefined, onInitSegmentLoadingStart.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_MEDIA_SEGMENT_LOADING_START, undefined, onMediaSegmentLoadingStart.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_FRAGMENT_LOADING_FAILED, undefined, onBytesError.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_STREAM_COMPLETED, undefined, onStreamCompleted.bind(this));
+            this.initSegmentLoadingStart = onInitSegmentLoadingStart;
+            this.mediaSegmentLoadingStart = onMediaSegmentLoadingStart;
+            this.segmentLoadingFailed = onBytesError;
+            this.streamCompleted = onStreamCompleted;
 
-            this.system.mapHandler(this.notifier.ENAME_BUFFER_CONTROLLER_INITIALIZED, undefined, onBufferControllerInitialized.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_BUFFER_CLEARED, undefined, onBufferCleared.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_BUFFERING_COMPLETED, undefined, onBufferingCompleted.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_BYTES_APPENDED, undefined, onBytesAppended.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_BUFFER_LEVEL_OUTRUN, undefined, onBufferLevelOutrun.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_BUFFER_LEVEL_STATE_CHANGED, undefined, onBufferLevelStateChanged.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_BUFFER_LEVEL_UPDATED, undefined, onBufferLevelUpdated.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_INIT_REQUESTED, undefined, onInitRequested.bind(this));
+            this.bufferControllerInitialized = onBufferControllerInitialized;
+            this.bufferCleared = onBufferCleared;
+            this.bufferingCompleted = onBufferingCompleted;
+            this.bytesAppended = onBytesAppended;
+            this.bufferLevelOutrun = onBufferLevelOutrun;
+            this.bufferLevelStateChanged = onBufferLevelStateChanged;
+            this.bufferLevelUpdated = onBufferLevelUpdated;
+            this.initRequested = onInitRequested;
         },
 
         initialize: function(typeValue, streamProcessor) {

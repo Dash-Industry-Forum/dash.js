@@ -403,18 +403,18 @@ MediaPlayer.dependencies.BufferController = function () {
         system: undefined,
         notifier: undefined,
         notify: undefined,
+        subscribe: undefined,
 
         setup: function() {
-            this.system.mapHandler(this.notifier.ENAME_LIVE_EDGE_FOUND, undefined, onLiveEdgeFound.bind(this));
+            this.liveEdgeFound = onLiveEdgeFound;
+            this.dataUpdateCompleted = onDataUpdateCompleted;
 
-            this.system.mapHandler(this.notifier.ENAME_DATA_UPDATE_COMPLETED, undefined, onDataUpdateCompleted.bind(this));
+            this.initSegmentLoaded = onInitializationLoaded;
+            this.mediaSegmentLoaded =  onMediaLoaded;
+            this.bufferingCompleted = onStreamCompleted;
 
-            this.system.mapHandler(this.notifier.ENAME_INIT_SEGMENT_LOADED, undefined, onInitializationLoaded.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_MEDIA_SEGMENT_LOADED, undefined, onMediaLoaded.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_STREAM_COMPLETED, undefined, onStreamCompleted.bind(this));
-
-            this.system.mapHandler(this.notifier.ENAME_VALIDATION_STARTED, undefined, onValidate.bind(this));
-            this.system.mapHandler(this.notifier.ENAME_QUALITY_CHANGED, undefined, onQualityChanged.bind(this));
+            this.validationStarted = onValidate;
+            this.qualityChanged = onQualityChanged;
         },
 
         initialize: function (typeValue, buffer, source, streamProcessor) {

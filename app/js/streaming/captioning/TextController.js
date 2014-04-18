@@ -80,10 +80,9 @@ MediaPlayer.dependencies.TextController = function () {
         sourceBufferExt: undefined,
         debug: undefined,
         system: undefined,
-        notifier: undefined,
 
         setup: function() {
-            this.system.mapHandler(this.notifier.ENAME_DATA_UPDATE_COMPLETED, undefined, onDataUpdateCompleted.bind(this));
+            this.dataUpdateCompleted = onDataUpdateCompleted;
         },
 
         initialize: function (typeValue, buffer, source, streamProcessor) {

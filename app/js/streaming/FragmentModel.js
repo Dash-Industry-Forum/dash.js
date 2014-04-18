@@ -72,6 +72,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
         fragmentLoader: undefined,
         notifier: undefined,
         notify: undefined,
+        subscribe: undefined,
 
         setContext: function(value) {
             context = value;

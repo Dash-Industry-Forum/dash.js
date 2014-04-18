@@ -9,6 +9,7 @@ MediaPlayer.dependencies.Notifier = function () {
         setup: function() {
             system = this.system;
             system.mapValue('notify', this.notify);
+            system.mapValue('subscribe', this.subscribe);
         },
 
         ENAME_INIT_SEGMENT_LOADING_START: "initSegmentLoadingStart",
@@ -49,11 +50,23 @@ MediaPlayer.dependencies.Notifier = function () {
         ENAME_BUFFER_LEVEL_BALANCED: "bufferLevelBalanced",
         ENAME_MIN_BUFFER_TIME_UPDATED: "minBufferTimeUpdated",
 
-        notify: function (/*eventName, sender[, args]*/) {
+        notify: function (/*eventName[, args]*/) {
             var args = [].slice.call(arguments);
             args.splice(1, 0, this);
 
             system.notify.apply(system, args);
+        },
+
+        subscribe: function(eventName, observer, handler) {
+            handler = handler || observer[eventName];
+
+            system.mapHandler(eventName, undefined, handler.bind(observer));
+        },
+
+        unsubscribe: function(eventName, observer, handler) {
+            handler = handler || observer[eventName];
+
+            system.unmapHandler(eventName, undefined, handler.bind(observer));
         }
     };
 };

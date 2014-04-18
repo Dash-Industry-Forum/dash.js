@@ -138,7 +138,7 @@ Dash.dependencies.TimelineConverter = function () {
             return range;
         },
 
-        liveEdgeFound = function(sender, actualLiveEdge, period) {
+        onLiveEdgeFound = function(sender, actualLiveEdge, period) {
             if (period.isClientServerTimeSyncCompleted) return;
 
             // the difference between expected and actual live edge time is supposed to be a difference between client
@@ -155,12 +155,10 @@ Dash.dependencies.TimelineConverter = function () {
         };
 
     return {
-        system: undefined,
-        debug: undefined,
         notifier: undefined,
 
         setup: function() {
-            this.system.mapHandler(this.notifier.ENAME_LIVE_EDGE_FOUND, undefined, liveEdgeFound.bind(this));
+            this.liveEdgeFound = onLiveEdgeFound;
         },
 
         calcAvailabilityStartTimeFromPresentationTime: calcAvailabilityStartTimeFromPresentationTime,
