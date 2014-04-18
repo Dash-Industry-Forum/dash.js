@@ -71,7 +71,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
             // if the search time is out of the range bounds we have not be able to find live edge, stop trying
             if (searchTime < liveEdgeSearchRange.start && searchTime > liveEdgeSearchRange.end) {
-                this.notify(this.notifier.ENAME_FRAGMENT_LOADING_FAILED, request);
+                this.notify(this.eventList.ENAME_FRAGMENT_LOADING_FAILED, request);
             } else {
                 // continue searching for a first available segment
                 this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime).then(findLiveEdge.bind(this, searchTime, onSearchForSegmentSucceeded, onSearchForSegmentFailed));
@@ -87,7 +87,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
                 // if the fragment duration is unknown we cannot use binary search because we will not be able to
                 // decide when to stop the search, so let the start time of the current segment be a liveEdge
                 if (!fragmentDuration) {
-                    self.notify(self.notifier.ENAME_LIVE_EDGE_FOUND, startTime, currentRepresentation.adaptation.period);
+                    self.notify(self.eventList.ENAME_LIVE_EDGE_FOUND, startTime, currentRepresentation.adaptation.period);
                     return;
                 }
                 useBinarySearch = true;
@@ -100,7 +100,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
                     this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime).then(findLiveEdge.bind(self, searchTime, function() {
                         binarySearch.call(self, true, searchTime);
                     }, function(){
-                        self.notify(self.notifier.ENAME_LIVE_EDGE_FOUND, searchTime, currentRepresentation.adaptation.period);
+                        self.notify(self.eventList.ENAME_LIVE_EDGE_FOUND, searchTime, currentRepresentation.adaptation.period);
                     }));
 
                     return;
@@ -125,7 +125,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
             if (isSearchCompleted) {
                 // search completed, we should take the time of the last found segment. If the last search succeded we
                 // take this time. Otherwise, we should subtract the time of the search step which is equal to fragment duaration
-                this.notify(this.notifier.ENAME_LIVE_EDGE_FOUND, (lastSearchSucceeded ? lastSearchTime : (lastSearchTime - fragmentDuration)), currentRepresentation.adaptation.period);
+                this.notify(this.eventList.ENAME_LIVE_EDGE_FOUND, (lastSearchSucceeded ? lastSearchTime : (lastSearchTime - fragmentDuration)), currentRepresentation.adaptation.period);
             } else {
                 // update the search time and continue searching
                 searchTime = ((liveEdgeSearchRange.start + liveEdgeSearchRange.end) / 2);
@@ -135,7 +135,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
     return {
         system: undefined,
-        notifier: undefined,
+        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
 

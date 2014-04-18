@@ -14,7 +14,7 @@ Dash.dependencies.RepresentationController = function () {
                 from = dataValue;
             }
 
-            self.notify(self.notifier.ENAME_DATA_UPDATE_STARTED);
+            self.notify(self.eventList.ENAME_DATA_UPDATE_STARTED);
 
             updateRepresentations.call(self, dataValue, periodInfoValue).then(
                 function(representations) {
@@ -26,7 +26,7 @@ Dash.dependencies.RepresentationController = function () {
                             self.bufferExt.updateData(data, type);
                             self.indexHandler.updateSegmentList(currentRepresentation).then(
                                 function() {
-                                    self.notify(self.notifier.ENAME_DATA_UPDATE_COMPLETED, currentRepresentation);
+                                    self.notify(self.eventList.ENAME_DATA_UPDATE_COMPLETED, currentRepresentation);
                                     deferred.resolve();
                                 }
                             );
@@ -79,7 +79,7 @@ Dash.dependencies.RepresentationController = function () {
         manifestModel: undefined,
         bufferExt: undefined,
         abrController: undefined,
-        notifier: undefined,
+        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
 

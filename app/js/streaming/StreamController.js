@@ -302,7 +302,7 @@
             var self = this;
             composeStreams.call(self).then(
                 function() {
-                    self.notify(self.notifier.ENAME_STREAMS_COMPOSED);
+                    self.notify(self.eventList.ENAME_STREAMS_COMPOSED);
                 },
                 function(errMsg) {
                     self.errHandler.manifestError(errMsg, "nostreamscomposed", self.manifestModel.getValue());
@@ -322,7 +322,7 @@
         metricsModel: undefined,
         videoExt: undefined,
         errHandler: undefined,
-        notifier: undefined,
+        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
 

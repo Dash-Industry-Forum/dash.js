@@ -97,8 +97,6 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
         manifestModel: undefined,
         manifestExt: undefined,
         manifestLoader: undefined,
-        notifier: undefined,
-        subscribe: undefined,
 
         setup: function () {
             update.call(this);

@@ -28,18 +28,18 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 self = this;
 
             // We are about to start loading the fragment, so execute the corresponding callback
-            self.notify(self.notifier.ENAME_FRAGMENT_LOADING_STARTED, request);
+            self.notify(self.eventList.ENAME_FRAGMENT_LOADING_STARTED, request);
 
             onSuccess = function(request, response) {
                 loadingRequests.splice(loadingRequests.indexOf(request), 1);
                 executedRequests.push(request);
-                self.notify(self.notifier.ENAME_FRAGMENT_LOADING_COMPLETED, request, response);
+                self.notify(self.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, request, response);
                 request.deferred = null;
             };
 
             onError = function(request) {
                 loadingRequests.splice(loadingRequests.indexOf(request), 1);
-                self.notify(self.notifier.ENAME_FRAGMENT_LOADING_FAILED, request);
+                self.notify(self.eventList.ENAME_FRAGMENT_LOADING_FAILED, request);
                 request.deferred = null;
             };
 
@@ -70,7 +70,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
         system: undefined,
         debug: undefined,
         fragmentLoader: undefined,
-        notifier: undefined,
+        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
 
@@ -230,7 +230,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 case "complete":
                     // Stream has completed, execute the correspoinding callback
                     executedRequests.push(currentRequest);
-                    self.notify(self.notifier.ENAME_STREAM_COMPLETED, currentRequest);
+                    self.notify(self.eventList.ENAME_STREAM_COMPLETED, currentRequest);
                     break;
                 case "download":
                     loadingRequests.push(currentRequest);
@@ -242,7 +242,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                         currentRequest.deferred.reject();
                         currentRequest.deferred = null;
                     } else {
-                        self.notify(self.notifier.ENAME_FRAGMENT_LOADING_FAILED, currentRequest);
+                        self.notify(self.eventList.ENAME_FRAGMENT_LOADING_FAILED, currentRequest);
                     }
             }
         }

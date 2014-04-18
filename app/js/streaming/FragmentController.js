@@ -40,9 +40,9 @@ MediaPlayer.dependencies.FragmentController = function () {
             var self = this;
 
             if (self.isInitializationRequest(request)) {
-                self.notify.call(sender, self.notifier.ENAME_INIT_SEGMENT_LOADING_START, request);
+                self.notify.call(sender, self.eventList.ENAME_INIT_SEGMENT_LOADING_START, request);
             }else {
-                self.notify.call(sender, self.notifier.ENAME_MEDIA_SEGMENT_LOADING_START, request);
+                self.notify.call(sender, self.eventList.ENAME_MEDIA_SEGMENT_LOADING_START, request);
             }
         },
 
@@ -57,9 +57,9 @@ MediaPlayer.dependencies.FragmentController = function () {
                     }
 
                     if (self.isInitializationRequest(request)) {
-                        self.notify.call(sender, self.notifier.ENAME_INIT_SEGMENT_LOADED, bytes, request.quality);
+                        self.notify.call(sender, self.eventList.ENAME_INIT_SEGMENT_LOADED, bytes, request.quality);
                     }else {
-                        self.notify.call(sender, self.notifier.ENAME_MEDIA_SEGMENT_LOADED, bytes, request.quality, request.index);
+                        self.notify.call(sender, self.eventList.ENAME_MEDIA_SEGMENT_LOADED, bytes, request.quality, request.index);
                     }
                 }
             );
@@ -106,7 +106,7 @@ MediaPlayer.dependencies.FragmentController = function () {
         system: undefined,
         debug: undefined,
         fragmentLoader: undefined,
-        notifier: undefined,
+        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
 
@@ -136,10 +136,10 @@ MediaPlayer.dependencies.FragmentController = function () {
             if (!model){
                 model = this.system.getObject("fragmentModel");
                 model.setContext(context);
-                model.subscribe(model.notifier.ENAME_FRAGMENT_LOADING_STARTED, this);
-                model.subscribe(model.notifier.ENAME_FRAGMENT_LOADING_COMPLETED, this);
-                model.subscribe(model.notifier.ENAME_FRAGMENT_LOADING_FAILED, context);
-                model.subscribe(model.notifier.ENAME_STREAM_COMPLETED, context);
+                model.subscribe(model.eventList.ENAME_FRAGMENT_LOADING_STARTED, this);
+                model.subscribe(model.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, this);
+                model.subscribe(model.eventList.ENAME_FRAGMENT_LOADING_FAILED, context);
+                model.subscribe(model.eventList.ENAME_STREAM_COMPLETED, context);
                 fragmentModels.push(model);
             }
 

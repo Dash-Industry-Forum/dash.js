@@ -19,8 +19,9 @@ MediaPlayer.models.ManifestModel = function () {
     return {
         system: undefined,
         eventBus: undefined,
-        notifier: undefined,
+        eventList: undefined,
         notify: undefined,
+        subscribe: undefined,
 
         getValue:  function () {
             return manifest;
@@ -28,7 +29,7 @@ MediaPlayer.models.ManifestModel = function () {
 
         setValue: function (value) {
             manifest = value;
-            this.notify(this.notifier.ENAME_MANIFEST_UPDATED, value);
+            this.notify(this.eventList.ENAME_MANIFEST_UPDATED, value);
 
             this.eventBus.dispatchEvent({
                 type: "manifestLoaded",

@@ -44,6 +44,7 @@ MediaPlayer = function (aContext) {
     var VERSION = "1.1.2",
         context = aContext,
         system,
+        manifestModel,
         element,
         source,
         streamController,
@@ -75,8 +76,9 @@ MediaPlayer = function (aContext) {
             playing = true;
             //this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
-            streamController.subscribe(streamController.notifier.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
-            this.manifestUpdater.subscribe(this.manifestUpdater.notifier.ENAME_MANIFEST_UPDATED, streamController);
+            streamController.subscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
+            manifestModel = system.getObject("manifestModel");
+            manifestModel.subscribe(manifestModel.eventList.ENAME_MANIFEST_UPDATED, streamController);
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.load(source);

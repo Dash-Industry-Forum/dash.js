@@ -125,7 +125,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
 
             if (dataChanged || qualityChanged) {
-                this.notify(this.notifier.ENAME_QUALITY_CHANGED, lastQuality, currentQuality, dataChanged);
+                this.notify(this.eventList.ENAME_QUALITY_CHANGED, lastQuality, currentQuality, dataChanged);
                 lastQuality = currentQuality;
             }
         },
@@ -255,7 +255,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             //mseSetTimeIfPossible.call(self);
 
-            self.notify(self.notifier.ENAME_VALIDATION_STARTED);
+            self.notify(self.eventList.ENAME_VALIDATION_STARTED);
 
             if (!isSchedulingRequired.call(self) && !initialPlayback && !dataChanged) {
                 doStop.call(self);
@@ -385,7 +385,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }, time);
         },
 
-        onBytesError = function (sender/*, request*/) {
+        onBytesError = function (/*sender, request*/) {
             doStop.call(this);
         },
 
@@ -514,7 +514,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         bufferExt: undefined,
         scheduleWhilePaused: undefined,
         sourceBufferExt: undefined,
-        notifier: undefined,
+        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
 
