@@ -223,8 +223,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         "use strict";
         //return Q.when(null);
         //------------------------------------
-        var self = this,
-            adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
+        var adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
             i,
             len,
             deferred = Q.defer(),
@@ -255,8 +254,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         "use strict";
         //return Q.when(null);
         //------------------------------------
-        var self = this,
-            adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
+        var adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
             i,
             len,
             deferred = Q.defer(),
@@ -287,8 +285,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         "use strict";
         //return Q.when(null);
         //------------------------------------
-        var self = this,
-            adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
+        var adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
             i,
             len,
             deferred = Q.defer(),
