@@ -275,10 +275,11 @@ Dash.dependencies.DashHandler = function () {
                     } else {
                         if (segments.length > maxSegmentsAhead) {
                             hasEnoughSegments = true;
-                            break;
+                            if (isAvailableSegmentNumberCalculated) break;
+                            continue;
                         }
 
-                        if (requiredMediaTime >= time/fTimescale) {
+                        if (time/fTimescale >= (requiredMediaTime - (frag.d / fTimescale))) {
                             segments.push(createSegment.call(self, frag));
                         }
                     }
@@ -408,6 +409,8 @@ Dash.dependencies.DashHandler = function () {
                 range = {start: firstIdx, end: lastIdx};
                 return range;
             }
+
+            if(!isDynamic && requestedTime) return null;
 
             // if segments exist use the current index as an origin index for a new range
             if (currentSegmentList) {
@@ -846,6 +849,7 @@ Dash.dependencies.DashHandler = function () {
                 throw "You must call getSegmentRequestForTime first.";
             }
 
+            requestedTime = null;
             index += 1;
             //self.debug.log("New index: " + index);
 

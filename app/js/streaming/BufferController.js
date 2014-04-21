@@ -692,19 +692,17 @@ MediaPlayer.dependencies.BufferController = function () {
                 promise = self.indexHandler.getSegmentRequestForTime(currentRepresentation, playingTime);
             } else {
                 var deferred = Q.defer(),
-                    segmentTime = self.videoModel.getCurrentTime();
+                    segmentTime;
                 promise = deferred.promise;
 
-                self.sourceBufferExt.getBufferRange(buffer, segmentTime).then(
-                    function (range) {
-                        return Q.when(seeking ? seekTarget : self.indexHandler.getCurrentTime(currentRepresentation)).then(
-                            function (time) {
-                                segmentTime = time;
-                                seeking = false;
+                Q.when(seeking ? seekTarget : self.indexHandler.getCurrentTime(currentRepresentation)).then(
+                    function (time) {
+                        self.sourceBufferExt.getBufferRange(buffer, time).then(
+                            function (range) {
+                                if (seeking) currentRepresentation.segments = null;
 
-                                if (range !== null) {
-                                    segmentTime = range.end;
-                                }
+                                seeking = false;
+                                segmentTime = range ? range.end : time;
 
                                 //self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
                                 self.indexHandler.getSegmentRequestForTime(currentRepresentation, segmentTime).then(
