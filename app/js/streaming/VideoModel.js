@@ -66,8 +66,6 @@ MediaPlayer.models.VideoModel = function () {
         bufferLevelStateChanged = function(sender, hasSufficientBuffer) {
             var type = sender.streamProcessor.getType();
 
-            if ((this !== sender.videoModel)) return;
-
             stallStream.call(this, type, !hasSufficientBuffer);
         }
         /*,

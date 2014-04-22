@@ -337,8 +337,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         onDataUpdateCompleted = function(sender, newRepresentation) {
             var self = this;
 
-            if (sender !== self.representationController) return;
-
             dataChanged = true;
 
             if (!currentRepresentation) {
@@ -353,27 +351,27 @@ MediaPlayer.dependencies.ScheduleController = function () {
             );
         },
 
-        onStreamCompleted = function(sender/*, request*/) {
-            if (sender !== this.streamProcessor.getFragmentModel()) return;
+        onStreamCompleted = function(sender, model /*, request*/) {
+            if (model !== this.streamProcessor.getFragmentModel()) return;
 
             this.debug.log(type + " Stream is complete.");
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON);
             doStop.call(this);
         },
 
-        onInitSegmentLoadingStart = function(sender/*, request*/) {
+        onInitSegmentLoadingStart = function(sender, model/*, request*/) {
             var self = this;
 
-            if (sender !== self.streamProcessor.getFragmentModel()) return;
+            if (model !== self.streamProcessor.getFragmentModel()) return;
 
             setState.call(this, READY);
         },
 
-        onMediaSegmentLoadingStart = function(sender/*, request*/) {
+        onMediaSegmentLoadingStart = function(sender, model/*, request*/) {
             var self = this,
                 time;
 
-            if (sender !== self.streamProcessor.getFragmentModel()) return;
+            if (model !== self.streamProcessor.getFragmentModel()) return;
 
             time = self.fragmentController.getLoadingTime(self);
             setState.call(this, LOADING);
@@ -389,12 +387,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
             doStop.call(this);
         },
 
-        onBytesAppended = function(sender) {
+        onBytesAppended = function(/*sender*/) {
             var self = this,
                 currentVideoTime = self.videoModel.getCurrentTime(),
                 currentTime = new Date();
-
-            if (sender !== self.bufferController) return;
 
             if (playListTraceMetricsClosed === true && state !== WAITING && lastQuality !== -1) {
                 playListTraceMetricsClosed = false;
@@ -406,25 +402,19 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
-        onBufferControllerInitialized = function(sender) {
-            if (sender !== this.bufferController) return;
-
+        onBufferControllerInitialized = function(/*sender*/) {
             if (!isDynamic) {
                 ready = true;
                 startPlayback.call(this);
             }
         },
 
-        onDataUpdateStarted = function(sender) {
-            if (sender !== this.representationController) return;
-
+        onDataUpdateStarted = function(/*sender*/) {
             doStop.call(this);
         },
 
         onInitRequested = function(sender, quality) {
             var self = this;
-
-            if (sender !== self.bufferController) return;
 
             self.indexHandler.getInitRequest(self.representationController.getRepresentationForQuality(quality)).then(
                 function(request) {
@@ -443,22 +433,15 @@ MediaPlayer.dependencies.ScheduleController = function () {
             );
         },
 
-        onBufferingCompleted = function (sender) {
-            if (sender !== this.bufferController) return;
-
+        onBufferingCompleted = function (/*sender*/) {
             setState.call(this, READY);
         },
 
-        onBufferLevelOutrun = function(sender) {
-            var self = this;
-
-            if (sender !== self.bufferController) return;
-
+        onBufferLevelOutrun = function(/*sender*/) {
             fragmentsToLoad = 0;
         },
 
         onBufferCleared = function(sender, startTime, endTime) {
-            if (sender !== this.bufferController) return;
             // after the data has been removed from the buffer we should remove the requests from the list of
             // the executed requests for which playback time is inside the time interval that has been removed from the buffer
             this.fragmentController.removeExecutedRequestsBeforeTime(fragmentModel, endTime);
@@ -466,8 +449,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onBufferLevelStateChanged = function(sender, hasSufficientBuffer) {
             var self = this;
-
-            if (sender !== this.bufferController) return;
 
             if (!hasSufficientBuffer) {
                 waitingForBuffer = true;
@@ -481,14 +462,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
         onBufferLevelUpdated = function(sender, newBufferLevel) {
             var self = this;
 
-            if (sender !== this.bufferController) return;
-
             self.metricsModel.addBufferLevel(type, new Date(), newBufferLevel);
         },
 
         onLiveEdgeFound = function(sender, liveEdgeTime, periodInfo) {
-            if (sender !== this.liveEdgeFinder) return;
-
             // step back from a found live edge time to be able to buffer some data
             var self = this,
                 fragmentDuration = currentRepresentation.segmentDuration || 0,

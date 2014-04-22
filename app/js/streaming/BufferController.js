@@ -37,10 +37,10 @@ MediaPlayer.dependencies.BufferController = function () {
         buffer = null,
         minBufferTime,
 
-        onInitializationLoaded = function(sender, bytes, quality) {
+        onInitializationLoaded = function(sender, model, bytes, quality) {
             var self = this;
 
-            if (sender !== self.streamProcessor.getFragmentModel()) return;
+            if (model !== self.streamProcessor.getFragmentModel()) return;
 
             self.debug.log("Initialization finished loading: " + type);
 
@@ -57,10 +57,10 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
-		onMediaLoaded = function (sender, bytes, quality, index) {
+		onMediaLoaded = function (sender, model, bytes, quality, index) {
 			var self = this;
 
-            if ((sender !== self.streamProcessor.getFragmentModel()) || (deferredInitAppend === null)) return;
+            if ((model !== self.streamProcessor.getFragmentModel()) || (deferredInitAppend === null)) return;
 
 			//self.debug.log(type + " Bytes finished loading: " + request.streamType + ":" + request.startTime);
 
@@ -304,15 +304,11 @@ MediaPlayer.dependencies.BufferController = function () {
         onLiveEdgeFound = function(sender/*, liveEdgeTime, periodInfo*/) {
             var self = this;
 
-            if (sender !== self.liveEdgeFinder) return;
-
             ready = true;
         },
 
         onDataUpdateCompleted = function(sender, newRepresentation) {
             var self = this;
-
-            if (sender !== self.representationController) return;
 
             periodInfo = newRepresentation.adaptation.period;
 
@@ -338,10 +334,10 @@ MediaPlayer.dependencies.BufferController = function () {
             );
         },
 
-        onStreamCompleted = function (sender, request) {
+        onStreamCompleted = function (sender, model, request) {
             var self = this;
 
-            if (sender !== self.streamProcessor.getFragmentModel()) return;
+            if (model !== self.streamProcessor.getFragmentModel()) return;
 
             lastIndex = request.index;
             checkIfBufferingCompleted.call(self);
@@ -349,8 +345,6 @@ MediaPlayer.dependencies.BufferController = function () {
 
         onQualityChanged = function(sender, oldQuality, newQuality, dataChanged) {
             var self = this;
-
-            if (sender !== self.scheduleController) return;
 
             // if the quality has changed we should append the initialization data again. We get it
             // from the cached array instead of sending a new request
@@ -370,10 +364,8 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
-        onValidate = function(sender) {
+        onValidate = function(/*sender*/) {
             var self = this;
-
-            if (sender !== self.scheduleController) return;
 
             checkIfSufficientBuffer.call(self);
 
@@ -411,7 +403,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             this.initSegmentLoaded = onInitializationLoaded;
             this.mediaSegmentLoaded =  onMediaLoaded;
-            this.bufferingCompleted = onStreamCompleted;
+            this.streamCompleted = onStreamCompleted;
 
             this.validationStarted = onValidate;
             this.qualityChanged = onQualityChanged;

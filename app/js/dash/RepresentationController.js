@@ -67,8 +67,6 @@ Dash.dependencies.RepresentationController = function () {
         onQualityChanged = function(sender, oldQuality, newQuality/*, dataChanged*/) {
             var self = this;
 
-            if (sender !== self.streamProcessor.scheduleController) return;
-
             currentRepresentation = self.getRepresentationForQuality(newQuality);
         };
 

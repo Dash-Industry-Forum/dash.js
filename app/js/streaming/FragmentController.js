@@ -40,9 +40,9 @@ MediaPlayer.dependencies.FragmentController = function () {
             var self = this;
 
             if (self.isInitializationRequest(request)) {
-                self.notify.call(sender, self.eventList.ENAME_INIT_SEGMENT_LOADING_START, request);
+                self.notify(self.eventList.ENAME_INIT_SEGMENT_LOADING_START, sender, request);
             }else {
-                self.notify.call(sender, self.eventList.ENAME_MEDIA_SEGMENT_LOADING_START, request);
+                self.notify(self.eventList.ENAME_MEDIA_SEGMENT_LOADING_START, sender, request);
             }
         },
 
@@ -57,24 +57,24 @@ MediaPlayer.dependencies.FragmentController = function () {
                     }
 
                     if (self.isInitializationRequest(request)) {
-                        self.notify.call(sender, self.eventList.ENAME_INIT_SEGMENT_LOADED, bytes, request.quality);
+                        self.notify(self.eventList.ENAME_INIT_SEGMENT_LOADED, sender, bytes, request.quality);
                     }else {
-                        self.notify.call(sender, self.eventList.ENAME_MEDIA_SEGMENT_LOADED, bytes, request.quality, request.index);
+                        self.notify(self.eventList.ENAME_MEDIA_SEGMENT_LOADED, sender, bytes, request.quality, request.index);
                     }
                 }
             );
         },
 
-        onBufferLevelOutrun = function(sender) {
-            if (sender !== this.bufferController) return;
+        onStreamCompleted = function(sender, request) {
+            this.notify(this.eventList.ENAME_STREAM_COMPLETED, sender, request);
+        },
 
+        onBufferLevelOutrun = function(/*sender*/) {
             isLoadingPostponed = true;
             executeIfReady.call(this);
         },
 
-        onBufferLevelBalanced = function(sender) {
-            if (sender !== this.bufferController) return;
-
+        onBufferLevelBalanced = function(/*sender*/) {
             isLoadingPostponed = false;
             executeIfReady.call(this);
         },
@@ -113,6 +113,7 @@ MediaPlayer.dependencies.FragmentController = function () {
         setup: function() {
             this.fragmentLoadingStarted = onFragmentLoadingStart;
             this.fragmentLoadingCompleted = onFragmentLoadingCompleted;
+            this.streamCompleted = onStreamCompleted;
 
             this.bufferLevelOutrun = onBufferLevelOutrun;
             this.bufferLevelBalanced = onBufferLevelBalanced;
@@ -138,8 +139,8 @@ MediaPlayer.dependencies.FragmentController = function () {
                 model.setContext(context);
                 model.subscribe(model.eventList.ENAME_FRAGMENT_LOADING_STARTED, this);
                 model.subscribe(model.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, this);
+                model.subscribe(model.eventList.ENAME_STREAM_COMPLETED, this);
                 model.subscribe(model.eventList.ENAME_FRAGMENT_LOADING_FAILED, context);
-                model.subscribe(model.eventList.ENAME_STREAM_COMPLETED, context);
                 fragmentModels.push(model);
             }
 

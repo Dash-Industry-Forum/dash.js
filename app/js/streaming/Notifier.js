@@ -2,6 +2,17 @@ MediaPlayer.dependencies.Notifier = function () {
     "use strict";
 
     var system,
+        id = 0,
+
+        getId = function() {
+            if (!this.id) {
+                id += 1;
+                this.id = "_id_" + id;
+            }
+
+            return this.id;
+        },
+
         isEventSupported = function(eventName) {
             var event,
                 events = this.eventList;
@@ -43,6 +54,7 @@ MediaPlayer.dependencies.Notifier = function () {
                 },
 
                 fragmentControllerEvents = {
+                    ENAME_STREAM_COMPLETED: "streamCompleted",
                     ENAME_INIT_SEGMENT_LOADING_START: "initSegmentLoadingStart",
                     ENAME_MEDIA_SEGMENT_LOADING_START: "mediaSegmentLoadingStart",
                     ENAME_INIT_SEGMENT_LOADED: "initSegmentLoaded",
@@ -99,6 +111,8 @@ MediaPlayer.dependencies.Notifier = function () {
             var args = [].slice.call(arguments);
             args.splice(1, 0, this);
 
+            args[0] += getId.call(this);
+
             system.notify.apply(system, args);
         },
 
@@ -110,6 +124,8 @@ MediaPlayer.dependencies.Notifier = function () {
             if(!observer) throw "observer object cannot be null or undefined";
 
             if(!handler) throw "event handler cannot be null or undefined";
+
+            eventName += getId.call(this);
 
             system.mapHandler(eventName, undefined, handler.bind(observer));
         },

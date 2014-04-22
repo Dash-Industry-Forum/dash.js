@@ -57,6 +57,8 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             fragmentController.subscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADED, bufferController);
             fragmentController.subscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADING_START, scheduleController);
             fragmentController.subscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADING_START, scheduleController);
+            fragmentController.subscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController);
+            fragmentController.subscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, bufferController);
 
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, videoModel);
             bufferController.subscribe(bufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, scheduler);

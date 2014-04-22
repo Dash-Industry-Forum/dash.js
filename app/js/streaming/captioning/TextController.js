@@ -43,9 +43,7 @@ MediaPlayer.dependencies.TextController = function () {
             );
          },
 
-         onDataUpdateCompleted = function(sender /*,newRepresentation*/) {
-             if (sender !== this.representationController) return;
-
+         onDataUpdateCompleted = function(/*sender ,newRepresentation*/) {
              if (!initialized) {
                  if (buffer.hasOwnProperty('initialize')) {
                      buffer.initialize(type, this);
