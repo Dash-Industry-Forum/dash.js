@@ -632,7 +632,7 @@ Dash.dependencies.DashHandler = function () {
                 return Q.reject("no representation");
             }
 
-            if (type !== "video" || type !== "audio") return Q.when();
+            if (type !== "video" && type !== "audio") return Q.when();
 
             representation.segments = null;
 
