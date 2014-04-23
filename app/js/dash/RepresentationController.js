@@ -80,6 +80,7 @@ Dash.dependencies.RepresentationController = function () {
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
+        unsubscribe: undefined,
 
         setup: function() {
             this.qualityChanged = onQualityChanged;

@@ -94,6 +94,16 @@ MediaPlayer = function (aContext) {
             if (isReady()) {
                 play.call(this);
             }
+        },
+
+        doReset = function() {
+            if (playing && streamController) {
+                streamController.unsubscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
+                manifestModel.unsubscribe(manifestModel.eventList.ENAME_MANIFEST_UPDATED, streamController);
+                streamController.reset();
+                streamController = null;
+                playing = false;
+            }
         };
 
     // Set up DI.
@@ -204,11 +214,7 @@ MediaPlayer = function (aContext) {
 
             // TODO : update
 
-            if (playing && streamController) {
-                streamController.reset();
-                streamController = null;
-                playing = false;
-            }
+            doReset.call(this);
 
             if (isReady.call(this)) {
                 doAutoPlay.call(this);
@@ -226,11 +232,7 @@ MediaPlayer = function (aContext) {
 
             // TODO : update
 
-            if (playing && streamController) {
-                streamController.reset();
-                streamController = null;
-                playing = false;
-            }
+            doReset.call(this);
 
             if (isReady.call(this)) {
                 doAutoPlay.call(this);

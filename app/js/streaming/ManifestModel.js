@@ -22,6 +22,7 @@ MediaPlayer.models.ManifestModel = function () {
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
+        unsubscribe: undefined,
 
         getValue:  function () {
             return manifest;

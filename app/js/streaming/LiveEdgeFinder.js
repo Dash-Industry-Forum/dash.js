@@ -138,6 +138,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
+        unsubscribe: undefined,
 
         searchForLiveEdge: searchForLiveEdge,
 

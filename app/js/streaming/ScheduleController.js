@@ -494,6 +494,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
+        unsubscribe: undefined,
 
         setup: function() {
             this.liveEdgeFound = onLiveEdgeFound;

@@ -325,6 +325,7 @@
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
+        unsubscribe: undefined,
 
         setup: function() {
             this.manifestUpdated = manifestHasUpdated;

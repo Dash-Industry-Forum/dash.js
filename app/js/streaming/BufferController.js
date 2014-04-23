@@ -301,9 +301,7 @@ MediaPlayer.dependencies.BufferController = function () {
             return time;
         },
 
-        onLiveEdgeFound = function(sender/*, liveEdgeTime, periodInfo*/) {
-            var self = this;
-
+        onLiveEdgeFound = function(/*sender, liveEdgeTime, periodInfo*/) {
             ready = true;
         },
 
@@ -396,6 +394,7 @@ MediaPlayer.dependencies.BufferController = function () {
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
+        unsubscribe: undefined,
 
         setup: function() {
             this.liveEdgeFound = onLiveEdgeFound;

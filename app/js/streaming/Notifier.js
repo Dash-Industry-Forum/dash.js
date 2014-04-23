@@ -81,6 +81,7 @@ MediaPlayer.dependencies.Notifier = function () {
             system = this.system;
             system.mapValue('notify', this.notify);
             system.mapValue('subscribe', this.subscribe);
+            system.mapValue('unsubscribe', this.unsubscribe);
 
             system.mapValue('bufferControllerEvents', bufferControllerEvents);
             system.mapOutlet('bufferControllerEvents', "bufferController", "eventList");
@@ -117,7 +118,9 @@ MediaPlayer.dependencies.Notifier = function () {
         },
 
         subscribe: function(eventName, observer, handler) {
-            handler = handler || observer[eventName];
+            if (!handler && observer[eventName]) {
+                handler = observer[eventName] = observer[eventName].bind(observer);
+            }
 
             if(!isEventSupported.call(this, eventName)) throw ("object does not support given event " + eventName);
 
@@ -127,13 +130,14 @@ MediaPlayer.dependencies.Notifier = function () {
 
             eventName += getId.call(this);
 
-            system.mapHandler(eventName, undefined, handler.bind(observer));
+            system.mapHandler(eventName, undefined, handler);
         },
 
         unsubscribe: function(eventName, observer, handler) {
             handler = handler || observer[eventName];
+            eventName += getId.call(this);
 
-            system.unmapHandler(eventName, undefined, handler.bind(observer));
+            system.unmapHandler(eventName, undefined, handler);
         }
     };
 };

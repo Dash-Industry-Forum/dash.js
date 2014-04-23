@@ -2,6 +2,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
     "use strict";
 
     var isDynamic,
+        stream,
         type,
 
         createBufferControllerForType = function(type) {
@@ -20,7 +21,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         eventList: undefined,
         timelineConverter: undefined,
 
-        initialize: function (typeValue, buffer, videoModel, scheduler, fragmentController, mediaSource, data, periodInfo, stream) {
+        initialize: function (typeValue, buffer, videoModel, scheduler, fragmentController, mediaSource, data, periodInfo, streamValue) {
 
             var self = this,
                 manifest = self.manifestModel.getValue(),
@@ -29,6 +30,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 liveEdgeFinder = self.liveEdgeFinder,
                 bufferController = createBufferControllerForType.call(self, typeValue);
 
+            stream = streamValue;
             type = typeValue;
             isDynamic = self.manifestExt.getIsDynamic(manifest);
             self.indexHandler.setType(type);
@@ -130,6 +132,50 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         },
 
         reset: function(errored) {
+            var self = this,
+                bufferController = self.bufferController,
+                representationController = self.representationController,
+                scheduleController = self.scheduleController,
+                liveEdgeFinder = self.liveEdgeFinder,
+                fragmentController = self.fragmentController,
+                requestScheduler = self.requestScheduler,
+                videoModel = self.videoModel;
+
+            scheduleController.unsubscribe(scheduleController.eventList.ENAME_QUALITY_CHANGED, bufferController);
+            scheduleController.unsubscribe(scheduleController.eventList.ENAME_QUALITY_CHANGED, representationController);
+            scheduleController.unsubscribe(scheduleController.eventList.ENAME_VALIDATION_STARTED, bufferController);
+
+            liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.timelineConverter);
+            liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, bufferController);
+            liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, scheduleController);
+
+            representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_STARTED, scheduleController);
+            representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, bufferController);
+            representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, scheduleController);
+
+            fragmentController.unsubscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADED, bufferController);
+            fragmentController.unsubscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADED, bufferController);
+            fragmentController.unsubscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADING_START, scheduleController);
+            fragmentController.unsubscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADING_START, scheduleController);
+            fragmentController.unsubscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController);
+            fragmentController.unsubscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, bufferController);
+
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, videoModel);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, requestScheduler);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_CONTROLLER_INITIALIZED, scheduleController);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, scheduleController);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, scheduleController);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, scheduleController);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, scheduleController);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_INIT_REQUESTED, scheduleController);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, fragmentController);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentController);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
+
+            fragmentController.resetModel(this.getFragmentModel());
+
             this.liveEdgeFinder.abortSearch();
             this.bufferController.reset(errored);
             this.scheduleController.reset();

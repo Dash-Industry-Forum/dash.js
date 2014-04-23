@@ -109,6 +109,7 @@ MediaPlayer.dependencies.FragmentController = function () {
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
+        unsubscribe: undefined,
 
         setup: function() {
             this.fragmentLoadingStarted = onFragmentLoadingStart;
@@ -264,6 +265,16 @@ MediaPlayer.dependencies.FragmentController = function () {
             fragmentModel.addRequest(request);
 
             return Q.when(true);
+        },
+
+        resetModel: function(model) {
+            this.abortRequestsForModel(model);
+            this.cancelPendingRequestsForModel(model);
+
+            model.unsubscribe(model.eventList.ENAME_FRAGMENT_LOADING_STARTED, this);
+            model.unsubscribe(model.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, this);
+            model.unsubscribe(model.eventList.ENAME_STREAM_COMPLETED, this);
+            model.unsubscribe(model.eventList.ENAME_FRAGMENT_LOADING_FAILED, model.getContext());
         }
     };
 };
