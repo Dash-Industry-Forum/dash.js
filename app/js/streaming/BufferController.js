@@ -18,7 +18,7 @@ MediaPlayer.dependencies.BufferController = function () {
         ready = false,
         initializationData = [],
         seekTarget = -1,
-        lastQuality = -1,
+        lastQuality = 0,
         isBufferingCompleted = false,
         deferredAppends = [],
         deferredInitAppend = null,
@@ -341,29 +341,39 @@ MediaPlayer.dependencies.BufferController = function () {
             checkIfBufferingCompleted.call(self);
         },
 
-        onQualityChanged = function(sender, oldQuality, newQuality, dataChanged) {
+        onQualityChanged = function(sender, typeValue, oldQuality, newQuality) {
+            if (type !== typeValue) return;
+
             var self = this;
 
             // if the quality has changed we should append the initialization data again. We get it
             // from the cached array instead of sending a new request
-            if (oldQuality !== newQuality || dataChanged) {
-                deferredInitAppend = Q.defer();
-                lastQuality = newQuality;
-                if (initializationData[newQuality]) {
-                    appendToBuffer.call(this, initializationData[newQuality], newQuality).then(
-                        function() {
-                            deferredInitAppend.resolve();
-                        }
-                    );
-                } else {
-                    // if we have not loaded the init segment for the current quality, do it
-                    self.notify(self.eventList.ENAME_INIT_REQUESTED, newQuality);
-                }
+            if (lastQuality === newQuality) return;
+
+            lastQuality = newQuality;
+            switchInitData.call(self);
+        },
+
+        switchInitData = function() {
+            var self = this;
+
+            deferredInitAppend = Q.defer();
+            if (initializationData[lastQuality]) {
+                appendToBuffer.call(self, initializationData[lastQuality], lastQuality).then(
+                    function() {
+                        deferredInitAppend.resolve();
+                    }
+                );
+            } else {
+                // if we have not loaded the init segment for the current quality, do it
+                self.notify(self.eventList.ENAME_INIT_REQUESTED, lastQuality);
             }
         },
 
-        onValidate = function(/*sender*/) {
+        onScheduledTimeOccurred = function(sender, typeValue) {
             var self = this;
+
+            if (type !== typeValue) return;
 
             checkIfSufficientBuffer.call(self);
 
@@ -404,7 +414,7 @@ MediaPlayer.dependencies.BufferController = function () {
             this.mediaSegmentLoaded =  onMediaLoaded;
             this.streamCompleted = onStreamCompleted;
 
-            this.validationStarted = onValidate;
+            this.scheduledTimeOccurred = onScheduledTimeOccurred;
             this.qualityChanged = onQualityChanged;
         },
 

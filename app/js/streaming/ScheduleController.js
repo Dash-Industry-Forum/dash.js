@@ -18,7 +18,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         currentRepresentation,
         initialPlayback = true,
         playingTime,
-        lastQuality,
+        lastQuality = 0,
         waitingForBuffer = false,
 
         playListMetrics = null,
@@ -58,7 +58,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             //this.debug.log("BufferController begin " + type + " validation");
             setState.call(this, READY);
 
-            this.requestScheduler.startScheduling(this, validate);
+            this.requestScheduler.startScheduling(this);
             fragmentModel = this.fragmentController.getModel(this);
         },
 
@@ -110,7 +110,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
         },
 
-        loadInitialization = function (qualityChanged, currentQuality) {
+        loadInitialization = function () {
 
             if (initialPlayback) {
                 this.debug.log("Marking a special seek for initial " + type + " playback.");
@@ -122,11 +122,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 }
 
                 initialPlayback = false;
-            }
-
-            if (dataChanged || qualityChanged) {
-                this.notify(this.eventList.ENAME_QUALITY_CHANGED, lastQuality, currentQuality, dataChanged);
-                lastQuality = currentQuality;
             }
         },
 
@@ -221,6 +216,26 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
+        getInitRequest = function(quality) {
+            var self = this;
+
+            self.indexHandler.getInitRequest(self.representationController.getRepresentationForQuality(quality)).then(
+                function(request) {
+                    if (request !== null) {
+                        //self.debug.log("Loading initialization: " + request.streamType + ":" + request.startTime);
+                        //self.debug.log(request);
+                        self.fragmentController.prepareFragmentForLoading(self, request).then(
+                            function() {
+                                setState.call(self, READY);
+                            }
+                        );
+
+                        dataChanged = false;
+                    }
+                }
+            );
+        },
+
         getRequiredFragmentCount = function() {
             var self =this,
                 playbackRate = self.videoModel.getPlaybackRate(),
@@ -241,11 +256,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         validate = function () {
-            var self = this,
-                newQuality,
-                qualityChanged = false,
-                now = new Date(),
-                currentVideoTime = self.videoModel.getCurrentTime();
+            var self = this;
 
             //self.debug.log("BufferController.validate() " + type + " | state: " + state);
             //self.debug.log(type + " Playback rate: " + self.videoModel.getElement().playbackRate);
@@ -255,8 +266,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             //mseSetTimeIfPossible.call(self);
 
-            self.notify(self.eventList.ENAME_VALIDATION_STARTED);
-
             if (!isSchedulingRequired.call(self) && !initialPlayback && !dataChanged) {
                 doStop.call(self);
                 return;
@@ -265,42 +274,13 @@ MediaPlayer.dependencies.ScheduleController = function () {
             if (state === READY) {
                 setState.call(self, VALIDATING);
                 self.abrController.getPlaybackQuality(type, self.representationController.getData()).then(
-                    function (result) {
-                        var quality = result.quality;
-                        //self.debug.log(type + " Playback quality: " + quality);
-                        //self.debug.log("Populate " + type + " buffers.");
-
-                        if (quality !== undefined) {
-                            newQuality = quality;
-                        }
-
-                        qualityChanged = (quality !== lastQuality);
-
-                        if (qualityChanged === true) {
-                            // The quality has beeen changed so we should abort the requests that has not been loaded yet
-                            self.fragmentController.abortRequestsForModel(fragmentModel);
-                            currentRepresentation = self.representationController.getRepresentationForQuality(newQuality);
-                            if (currentRepresentation === null || currentRepresentation === undefined) {
-                                throw "Unexpected error!";
-                            }
-
-                            // each representation can have its own @presentationTimeOffset, so we should set the offset
-                            // if it has changed after switching the quality
-                            if (self.bufferController.getBuffer().timestampOffset !== currentRepresentation.MSETimeOffset) {
-                                self.bufferController.getBuffer().timestampOffset = currentRepresentation.MSETimeOffset;
-                            }
-
-                            clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
-                            self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, currentRepresentation.id);
-                        }
-
-                        //self.debug.log(qualityChanged ? (type + " Quality changed to: " + quality) : "Quality didn't change.");
-                        return getRequiredFragmentCount.call(self, quality);
+                    function() {
+                        return getRequiredFragmentCount.call(self, lastQuality);
                     }
                 ).then(
                     function (count) {
                         fragmentsToLoad = count;
-                        loadInitialization.call(self, qualityChanged, newQuality);
+                        loadInitialization.call(self);
                         // We should request the media fragment w/o waiting for the next validate call
                         // or until the initialization fragment has been loaded
                         requestNewFragment.call(self);
@@ -347,6 +327,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 function (time) {
                     currentRepresentation = newRepresentation;
                     self.seek(time);
+                    getInitRequest.call(self, lastQuality);
                 }
             );
         },
@@ -414,23 +395,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onInitRequested = function(sender, quality) {
-            var self = this;
-
-            self.indexHandler.getInitRequest(self.representationController.getRepresentationForQuality(quality)).then(
-                function(request) {
-                    if (request !== null) {
-                        //self.debug.log("Loading initialization: " + request.streamType + ":" + request.startTime);
-                        //self.debug.log(request);
-                        self.fragmentController.prepareFragmentForLoading(self, request).then(
-                            function() {
-                                setState.call(self, READY);
-                            }
-                        );
-
-                        dataChanged = false;
-                    }
-                }
-            );
+            getInitRequest.call(this, quality);
         },
 
         onBufferingCompleted = function (/*sender*/) {
@@ -463,6 +428,41 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             self.metricsModel.addBufferLevel(type, new Date(), newBufferLevel);
+        },
+
+        onQualityChanged = function(sender, typeValue, oldQuality, newQuality) {
+            if (type !== typeValue) return;
+
+            var self = this,
+                now = new Date(),
+                currentVideoTime = self.videoModel.getCurrentTime();
+
+            if (lastQuality === newQuality) return;
+
+            lastQuality = newQuality;
+
+            // The quality has beeen changed so we should abort the requests that has not been loaded yet
+            self.fragmentController.abortRequestsForModel(fragmentModel);
+            self.fragmentController.cancelPendingRequestsForModel(fragmentModel);
+            currentRepresentation = self.representationController.getRepresentationForQuality(newQuality);
+
+            if (currentRepresentation === null || currentRepresentation === undefined) {
+                throw "Unexpected error!";
+            }
+
+            // each representation can have its own @presentationTimeOffset, so we should set the offset
+            // if it has changed after switching the quality
+            if (self.bufferController.getBuffer().timestampOffset !== currentRepresentation.MSETimeOffset) {
+                self.bufferController.getBuffer().timestampOffset = currentRepresentation.MSETimeOffset;
+            }
+
+            clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
+            self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, currentRepresentation.id);
+        },
+
+        onScheduledTimeOccurred = function(sender, typeValue) {
+            if (type !== typeValue) return;
+            validate.call(this);
         },
 
         onLiveEdgeFound = function(sender, liveEdgeTime, periodInfo) {
@@ -498,6 +498,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         setup: function() {
             this.liveEdgeFound = onLiveEdgeFound;
+
+            this.scheduledTimeOccurred = onScheduledTimeOccurred;
+
+            this.qualityChanged = onQualityChanged;
 
             this.dataUpdateStarted = onDataUpdateStarted;
             this.dataUpdateCompleted = onDataUpdateCompleted;

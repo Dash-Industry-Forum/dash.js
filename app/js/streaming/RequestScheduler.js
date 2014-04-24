@@ -169,8 +169,8 @@
          * @param executeFunction The function to be executed on schedule
          *
          */
-        startScheduling = function(executeContext, executeFunction) {
-            if(!executeContext || !executeFunction) return;
+        startScheduling = function(executeContext) {
+            if(!executeContext) return;
 
             // Searching for existing model for the given context
             var schedulerModel = findSchedulerModel(executeContext, PERIODICALLY_TRIGGERED_TASK);
@@ -180,11 +180,10 @@
                 schedulerModel = registerSchedulerModel.call(this, executeContext, PERIODICALLY_TRIGGERED_TASK);
             }
             schedulerModel.setIsScheduled(true);
-            schedulerModel.setScheduledTask(executeFunction);
             startPeriodicScheduleListener.call(this);
             // For the first time call the executeFunction from here because we should start requesting segments
             // as soon as possible
-            executeFunction.call(executeContext);
+            this.notify(this.eventList.ENAME_SCHEDULED_TIME_OCCURED, executeContext.streamProcessor.getType());
         },
 
         /*
@@ -206,7 +205,7 @@
                 schedulerModel = periodicModels[i];
 
                 if (schedulerModel.getIsScheduled()) {
-                    schedulerModel.executeScheduledTask();
+                    this.notify(this.eventList.ENAME_SCHEDULED_TIME_OCCURED, schedulerModel.getContext().streamProcessor.getType());
                 }
             }
         },
@@ -336,6 +335,10 @@
         videoModel: undefined,
         debug: undefined,
         schedulerExt: undefined,
+        eventList: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
 
         setup: function() {
             this.minBufferTimeUpdated = onMinBufferTimeUpdated;

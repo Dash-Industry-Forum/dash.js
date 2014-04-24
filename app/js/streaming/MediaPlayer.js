@@ -45,9 +45,13 @@ MediaPlayer = function (aContext) {
         context = aContext,
         system,
         manifestModel,
+        abrController,
+        bufferExt,
         element,
         source,
         streamController,
+        manifestUpdater,
+        metricsExt,
         videoModel,
         initialized = false,
         playing = false,
@@ -76,8 +80,7 @@ MediaPlayer = function (aContext) {
             playing = true;
             //this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
-            streamController.subscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
-            manifestModel = system.getObject("manifestModel");
+            streamController.subscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
             manifestModel.subscribe(manifestModel.eventList.ENAME_MANIFEST_UPDATED, streamController);
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
@@ -87,7 +90,7 @@ MediaPlayer = function (aContext) {
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
             system.mapValue("bufferMax", bufferMax);
-            system.injectInto(this.bufferExt, "bufferMax");
+            system.injectInto(bufferExt, "bufferMax");
         },
 
         doAutoPlay = function () {
@@ -98,7 +101,7 @@ MediaPlayer = function (aContext) {
 
         doReset = function() {
             if (playing && streamController) {
-                streamController.unsubscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
+                streamController.unsubscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
                 manifestModel.unsubscribe(manifestModel.eventList.ENAME_MANIFEST_UPDATED, streamController);
                 streamController.reset();
                 streamController = null;
@@ -113,15 +116,20 @@ MediaPlayer = function (aContext) {
     system.injectInto(context);
 
     return {
+        notifier: undefined,
         debug: undefined,
         eventBus: undefined,
         capabilities: undefined,
-        abrController: undefined,
         metricsModel: undefined,
-        metricsExt: undefined,
-        bufferExt: undefined,
         errHandler: undefined,
-        manifestUpdater: undefined,
+
+        setup: function() {
+            metricsExt = system.getObject("metricsExt");
+            manifestModel = system.getObject("manifestModel");
+            manifestUpdater = system.getObject("manifestUpdater");
+            bufferExt = system.getObject("bufferExt");
+            abrController = system.getObject("abrController");
+        },
 
         addEventListener: function (type, listener, useCapture) {
             this.eventBus.addEventListener(type, listener, useCapture);
@@ -175,7 +183,7 @@ MediaPlayer = function (aContext) {
         },
 
         getMetricsExt: function () {
-            return this.metricsExt;
+            return metricsExt;
         },
 
         getMetricsFor: function (type) {
@@ -184,19 +192,19 @@ MediaPlayer = function (aContext) {
         },
 
         getQualityFor: function (type) {
-            return this.abrController.getQualityFor(type);
+            return abrController.getQualityFor(type);
         },
 
         setQualityFor: function (type, value) {
-            this.abrController.setPlaybackQuality(type, value);
+            abrController.setPlaybackQuality(type, value);
         },
 
         getAutoSwitchQuality : function () {
-            return this.abrController.getAutoSwitchBitrate();
+            return abrController.getAutoSwitchBitrate();
         },
 
         setAutoSwitchQuality : function (value) {
-            this.abrController.setAutoSwitchBitrate(value);
+            abrController.setAutoSwitchBitrate(value);
         },
 
         attachView: function (view) {

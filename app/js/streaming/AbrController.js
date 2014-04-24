@@ -55,6 +55,10 @@ MediaPlayer.dependencies.AbrController = function () {
         abrRulesCollection: undefined,
         manifestExt: undefined,
         metricsModel: undefined,
+        eventList: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
 
         getAutoSwitchBitrate: function () {
             return autoSwitchBitrate;
@@ -100,6 +104,7 @@ MediaPlayer.dependencies.AbrController = function () {
                 req,
                 values,
                 quality,
+                oldQuality,
                 confidence;
 
             quality = getInternalQuality(type);
@@ -172,6 +177,12 @@ MediaPlayer.dependencies.AbrController = function () {
                                                     confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
                                                 }
 
+                                                oldQuality = getInternalQuality(type);
+
+                                                if (quality !== oldQuality) {
+                                                    self.notify(self.eventList.ENAME_QUALITY_CHANGED, type, oldQuality, quality);
+                                                }
+
                                                 setInternalQuality(type, quality);
                                                 //self.debug.log("New quality of " + quality);
 
@@ -200,6 +211,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
             if (newPlaybackQuality !== quality) {
                 setInternalQuality(type, newPlaybackQuality);
+                this.notify(this.eventList.ENAME_QUALITY_CHANGED, type, quality, newPlaybackQuality);
             }
         },
 

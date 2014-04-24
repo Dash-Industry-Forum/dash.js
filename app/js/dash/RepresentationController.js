@@ -64,8 +64,10 @@ Dash.dependencies.RepresentationController = function () {
             return deferred.promise;
         },
 
-        onQualityChanged = function(sender, oldQuality, newQuality/*, dataChanged*/) {
+        onQualityChanged = function(sender, type, oldQuality, newQuality/*, dataChanged*/) {
             var self = this;
+
+            if (type !== self.streamProcessor.getType()) return;
 
             currentRepresentation = self.getRepresentationForQuality(newQuality);
         };

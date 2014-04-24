@@ -42,6 +42,14 @@ MediaPlayer.dependencies.Notifier = function () {
                     ENAME_MIN_BUFFER_TIME_UPDATED: "minBufferTimeUpdated"
                 },
 
+                abrControllerEvents = {
+                    ENAME_QUALITY_CHANGED: "qualityChanged"
+                },
+
+                requestSchedulerEvents = {
+                    ENAME_SCHEDULED_TIME_OCCURED: "scheduledTimeOccurred"
+                },
+
                 representationControllerEvents = {
                     ENAME_DATA_UPDATE_COMPLETED: "dataUpdateCompleted",
                     ENAME_DATA_UPDATE_STARTED: "dataUpdateStarted"},
@@ -59,11 +67,6 @@ MediaPlayer.dependencies.Notifier = function () {
                     ENAME_MEDIA_SEGMENT_LOADING_START: "mediaSegmentLoadingStart",
                     ENAME_INIT_SEGMENT_LOADED: "initSegmentLoaded",
                     ENAME_MEDIA_SEGMENT_LOADED: "mediaSegmentLoaded"
-                },
-
-                scheduleControllerEvents = {
-                    ENAME_QUALITY_CHANGED: "qualityChanged",
-                    ENAME_VALIDATION_STARTED: "validationStarted"
                 },
 
                 streamControllerEvents = {
@@ -95,17 +98,20 @@ MediaPlayer.dependencies.Notifier = function () {
             system.mapValue('representationControllerEvents', representationControllerEvents);
             system.mapOutlet('representationControllerEvents', "representationController", "eventList");
 
+            system.mapValue('requestSchedulerEvents', requestSchedulerEvents);
+            system.mapOutlet('requestSchedulerEvents', "requestScheduler", "eventList");
+
             system.mapValue('fragmentModelEvents', fragmentModelEvents);
             system.mapOutlet('fragmentModelEvents', "fragmentModel", "eventList");
 
             system.mapValue('fragmentControllerEvents', fragmentControllerEvents);
             system.mapOutlet('fragmentControllerEvents', "fragmentController", "eventList");
 
-            system.mapValue('scheduleControllerEvents', scheduleControllerEvents);
-            system.mapOutlet('scheduleControllerEvents', "scheduleController", "eventList");
-
             system.mapValue('streamControllerEvents', streamControllerEvents);
             system.mapOutlet('streamControllerEvents', "streamController", "eventList");
+
+            system.mapValue('abrControllerEvents', abrControllerEvents);
+            system.mapOutlet('abrControllerEvents', "abrController", "eventList");
         },
 
         notify: function (/*eventName[, args]*/) {
