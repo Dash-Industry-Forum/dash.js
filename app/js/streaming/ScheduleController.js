@@ -7,7 +7,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         LOADING = "LOADING",
         fragmentsToLoad,
         type,
-        dataChanged = true,
         ready,
         started,
         fragmentModel,
@@ -17,7 +16,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         isDynamic,
         currentRepresentation,
         initialPlayback = true,
-        playingTime,
         lastQuality = 0,
         waitingForBuffer = false,
 
@@ -126,50 +124,41 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         loadNextFragment = function () {
-            var promise,
-                self = this;
+            var self = this,
+                deferred = Q.defer(),
+                segmentTime;
 
-            if (dataChanged && !seeking) {
-                //time = self.videoModel.getCurrentTime();
-                self.debug.log("Data changed - loading the " + type + " fragment for time: " + playingTime);
-                promise = self.indexHandler.getSegmentRequestForTime(currentRepresentation, playingTime);
-            } else {
-                var deferred = Q.defer(),
-                    segmentTime;
-                promise = deferred.promise;
+            Q.when(seeking ? seekTarget : self.indexHandler.getCurrentTime(currentRepresentation)).then(
+                function (time) {
+                    segmentTime = time;
+                    seeking = false;
 
-                Q.when(seeking ? seekTarget : self.indexHandler.getCurrentTime(currentRepresentation)).then(
-                    function (time) {
-                        segmentTime = time;
-                        seeking = false;
-
-                        self.sourceBufferExt.getBufferRange(self.bufferController.getBuffer(), segmentTime).then(
-                            function (range) {
-                                if (range !== null) {
-                                    segmentTime = range.end;
-                                }
-                                //self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
-                                self.indexHandler.getSegmentRequestForTime(currentRepresentation, segmentTime).then(
-                                    function (request) {
-                                        deferred.resolve(request);
-                                    },
-                                    function () {
-                                        deferred.reject();
-                                    }
-                                );
-                            },
-                            function () {
-                                deferred.reject();
+                    self.sourceBufferExt.getBufferRange(self.bufferController.getBuffer(), segmentTime).then(
+                        function (range) {
+                            if (range !== null) {
+                                segmentTime = range.end;
                             }
-                        );
-                    },
-                    function () {
-                        deferred.reject();
-                    }
-                );
-            }
+                            //self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
+                            self.indexHandler.getSegmentRequestForTime(currentRepresentation, segmentTime).then(
+                                function (request) {
+                                    deferred.resolve(request);
+                                },
+                                function () {
+                                    deferred.reject();
+                                }
+                            );
+                        },
+                        function () {
+                            deferred.reject();
+                        }
+                    );
+                },
+                function () {
+                    deferred.reject();
+                }
+            );
 
-            return promise;
+            return deferred.promise;
         },
 
         onFragmentRequest = function (request) {
@@ -229,8 +218,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
                                 setState.call(self, READY);
                             }
                         );
-
-                        dataChanged = false;
                     }
                 }
             );
@@ -266,7 +253,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             //mseSetTimeIfPossible.call(self);
 
-            if (!isSchedulingRequired.call(self) && !initialPlayback && !dataChanged) {
+            if (!isSchedulingRequired.call(self) && !initialPlayback) {
                 doStop.call(self);
                 return;
             }
@@ -316,8 +303,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onDataUpdateCompleted = function(sender, newRepresentation) {
             var self = this;
-
-            dataChanged = true;
 
             if (!currentRepresentation) {
                 currentRepresentation = newRepresentation;
