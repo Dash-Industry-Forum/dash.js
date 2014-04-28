@@ -7,29 +7,19 @@ Dash.dependencies.RepresentationController = function () {
 
         updateData = function(dataValue, periodInfoValue, type) {
             var self = this,
-                deferred = Q.defer(),
-                from = data;
-
-            if (!from) {
-                from = dataValue;
-            }
+                deferred = Q.defer();
 
             self.notify(self.eventList.ENAME_DATA_UPDATE_STARTED);
 
             updateRepresentations.call(self, dataValue, periodInfoValue).then(
                 function(representations) {
                     availableRepresentations = representations;
-                    self.abrController.getPlaybackQuality(type, from).then(
-                        function (result) {
-                            currentRepresentation = getRepresentationForQuality.call(self, result.quality);
-                            data = dataValue;
-                            self.bufferExt.updateData(data, type);
-                            self.indexHandler.updateSegmentList(currentRepresentation).then(
-                                function() {
-                                    self.notify(self.eventList.ENAME_DATA_UPDATE_COMPLETED, currentRepresentation);
-                                    deferred.resolve();
-                                }
-                            );
+                    currentRepresentation = getRepresentationForQuality.call(self, self.abrController.getQualityFor(type));
+                    data = dataValue;
+                    self.indexHandler.updateSegmentList(currentRepresentation).then(
+                        function() {
+                            self.notify(self.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
+                            deferred.resolve();
                         }
                     );
                 }

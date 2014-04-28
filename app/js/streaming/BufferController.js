@@ -305,7 +305,7 @@ MediaPlayer.dependencies.BufferController = function () {
             ready = true;
         },
 
-        onDataUpdateCompleted = function(sender, newRepresentation) {
+        onDataUpdateCompleted = function(sender, data, newRepresentation) {
             var self = this;
 
             periodInfo = newRepresentation.adaptation.period;
@@ -370,10 +370,10 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
-        onScheduledTimeOccurred = function(sender, typeValue) {
+        onScheduledTimeOccurred = function(sender, model) {
             var self = this;
 
-            if (type !== typeValue) return;
+            if (type !== model.getContext().streamProcessor.getType()) return;
 
             checkIfSufficientBuffer.call(self);
 

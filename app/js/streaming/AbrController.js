@@ -15,6 +15,7 @@ MediaPlayer.dependencies.AbrController = function () {
     "use strict";
 
     var autoSwitchBitrate = true,
+        topQualities = {},
         qualityDict = {},
         confidenceDict = {},
 
@@ -48,6 +49,47 @@ MediaPlayer.dependencies.AbrController = function () {
 
         setInternalConfidence = function (type, value) {
             confidenceDict[type] = value;
+        },
+
+        setTopQualityIndex = function (type, value) {
+            topQualities[type] = value;
+        },
+
+        getTopQualityIndex = function(type) {
+            var idx;
+
+            if (!topQualities.hasOwnProperty(type)) {
+                topQualities[type] = 0;
+            }
+
+            idx = topQualities[type];
+
+            return idx;
+        },
+
+        onDataUpdateCompleted = function(sender, data/*, representation*/) {
+            var self = this,
+                type = sender.streamProcessor.getType(),
+                idx;
+
+            self.manifestExt.getRepresentationCount(data).then(
+                function(max) {
+                    idx = max -1;
+
+                    if (getTopQualityIndex(type) === idx) return;
+
+                    setTopQualityIndex(type, idx);
+                    self.notify(self.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, type, idx);
+                }
+            );
+        },
+
+        onScheduledTimeOccurred = function(sender, model) {
+            var self = this,
+                type = model.getContext().streamProcessor.getType(),
+                data = model.getContext().streamProcessor.getData();
+
+            self.getPlaybackQuality(type, data);
         };
 
     return {
@@ -59,6 +101,11 @@ MediaPlayer.dependencies.AbrController = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+
+        setup: function() {
+            this.scheduledTimeOccurred = onScheduledTimeOccurred;
+            this.dataUpdateCompleted = onDataUpdateCompleted;
+        },
 
         getAutoSwitchBitrate: function () {
             return autoSwitchBitrate;
@@ -105,6 +152,7 @@ MediaPlayer.dependencies.AbrController = function () {
                 values,
                 quality,
                 oldQuality,
+                topQualityIdx,
                 confidence;
 
             quality = getInternalQuality(type);
@@ -161,37 +209,35 @@ MediaPlayer.dependencies.AbrController = function () {
                                             confidence = newConfidence;
                                         }
 
-                                        self.manifestExt.getRepresentationCount(data).then(
-                                            function (max) {
-                                                // be sure the quality valid!
-                                                if (quality < 0) {
-                                                    quality = 0;
-                                                }
-                                                // zero based
-                                                if (quality >= max) {
-                                                    quality = max - 1;
-                                                }
+                                        topQualityIdx = getTopQualityIndex(type);
 
-                                                if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
-                                                    confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
-                                                    confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-                                                }
+                                        // be sure the quality valid!
+                                        if (quality < 0) {
+                                            quality = 0;
+                                        }
+                                        // zero based
+                                        if (quality > topQualityIdx) {
+                                            quality = topQualityIdx;
+                                        }
 
-                                                oldQuality = getInternalQuality(type);
+                                        if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
+                                            confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
+                                            confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+                                        }
 
-                                                if (quality !== oldQuality) {
-                                                    self.notify(self.eventList.ENAME_QUALITY_CHANGED, type, oldQuality, quality);
-                                                }
+                                        oldQuality = getInternalQuality(type);
 
-                                                setInternalQuality(type, quality);
-                                                //self.debug.log("New quality of " + quality);
+                                        if (quality !== oldQuality) {
+                                            self.notify(self.eventList.ENAME_QUALITY_CHANGED, type, oldQuality, quality);
+                                        }
 
-                                                setInternalConfidence(type, confidence);
-                                                //self.debug.log("New confidence of " + confidence);
+                                        setInternalQuality(type, quality);
+                                        //self.debug.log("New quality of " + quality);
 
-                                                deferred.resolve({quality: quality, confidence: confidence});
-                                            }
-                                        );
+                                        setInternalConfidence(type, confidence);
+                                        //self.debug.log("New confidence of " + confidence);
+
+                                        deferred.resolve({quality: quality, confidence: confidence});
                                     }
                                 );
                             }
@@ -217,6 +263,10 @@ MediaPlayer.dependencies.AbrController = function () {
 
         getQualityFor: function (type) {
             return getInternalQuality(type);
+        },
+
+        getConfidenceFor: function(type) {
+            return getInternalConfidence(type);
         }
     };
 };

@@ -43,7 +43,8 @@ MediaPlayer.dependencies.Notifier = function () {
                 },
 
                 abrControllerEvents = {
-                    ENAME_QUALITY_CHANGED: "qualityChanged"
+                    ENAME_QUALITY_CHANGED: "qualityChanged",
+                    ENAME_TOP_QUALITY_INDEX_CHANGED: "topQualityIndexChanged"
                 },
 
                 requestSchedulerEvents = {

@@ -82,6 +82,7 @@ MediaPlayer = function (aContext) {
             streamController = system.getObject("streamController");
             streamController.subscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
             manifestModel.subscribe(manifestModel.eventList.ENAME_MANIFEST_UPDATED, streamController);
+            abrController.subscribe(abrController.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, bufferExt);
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.load(source);
@@ -103,6 +104,7 @@ MediaPlayer = function (aContext) {
             if (playing && streamController) {
                 streamController.unsubscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
                 manifestModel.unsubscribe(manifestModel.eventList.ENAME_MANIFEST_UPDATED, streamController);
+                abrController.unsubscribe(abrController.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, bufferExt);
                 streamController.reset();
                 streamController = null;
                 playing = false;

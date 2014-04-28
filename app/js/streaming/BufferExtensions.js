@@ -18,8 +18,6 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         currentBufferTarget,
         topAudioQualityIndex = 0,
         topVideoQualityIndex = 0,
-        audioData = null,
-        videoData = null,
 
         getCurrentHttpRequestLatency = function(metrics) {
             var httpRequest = this.metricsExt.getCurrentHttpRequest(metrics);
@@ -31,25 +29,28 @@ MediaPlayer.dependencies.BufferExtensions = function () {
 
         isPlayingAtTopQuality = function() {
             var self = this,
-                deferred = Q.defer(),
-                isAtTop;
+                isAtTop,
+                audioQuality = self.abrController.getQualityFor("audio"),
+                audioConfidence  = self.abrController.getConfidenceFor("audio"),
+                videoQuality = self.abrController.getQualityFor("video"),
+                videoConfidence  = self.abrController.getConfidenceFor("video");
 
-            Q.when(audioData ? self.abrController.getPlaybackQuality("audio", audioData) : topAudioQualityIndex).then(
-                function(audioQuality) {
-                    Q.when(videoData ? self.abrController.getPlaybackQuality("video", videoData) : topVideoQualityIndex).then(
-                        function(videoQuality) {
-                            isAtTop = (audioQuality.quality === topAudioQualityIndex) &&
-                                (videoQuality.quality === topVideoQualityIndex);
-                            isAtTop = isAtTop ||
-                                ((audioQuality.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) &&
-                                    (videoQuality.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG));
-                            deferred.resolve(isAtTop);
-                        }
-                    );
-                }
-            );
+            isAtTop = (audioQuality === topAudioQualityIndex) &&
+                (videoQuality === topVideoQualityIndex);
 
-            return deferred.promise;
+            isAtTop = isAtTop ||
+                ((audioConfidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) &&
+                    (videoConfidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG));
+
+            return Q.when(isAtTop);
+        },
+
+        onTopQualityIndexChanged = function(sender, type, newTopIdx) {
+            if (type === "audio") {
+                topAudioQualityIndex = newTopIdx;
+            } else if (type === "video") {
+                topVideoQualityIndex = newTopIdx;
+            }
         };
 
     return {
@@ -60,16 +61,8 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         abrController: undefined,
         bufferMax: undefined,
 
-        updateData: function(data, type) {
-            var topIndex = data.Representation_asArray.length - 1;
-
-            if (type === "audio") {
-                topAudioQualityIndex = topIndex;
-                audioData = data;
-            } else if (type === "video") {
-                topVideoQualityIndex = topIndex;
-                videoData = data;
-            }
+        setup: function() {
+            this.topQualityIndexChanged = onTopQualityIndexChanged;
         },
 
         getTopQualityIndex: function(type) {

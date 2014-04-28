@@ -183,7 +183,7 @@
             startPeriodicScheduleListener.call(this);
             // For the first time call the executeFunction from here because we should start requesting segments
             // as soon as possible
-            this.notify(this.eventList.ENAME_SCHEDULED_TIME_OCCURED, executeContext.streamProcessor.getType());
+            this.notify(this.eventList.ENAME_SCHEDULED_TIME_OCCURED,schedulerModel);
         },
 
         /*
@@ -205,7 +205,7 @@
                 schedulerModel = periodicModels[i];
 
                 if (schedulerModel.getIsScheduled()) {
-                    this.notify(this.eventList.ENAME_SCHEDULED_TIME_OCCURED, schedulerModel.getContext().streamProcessor.getType());
+                    this.notify(this.eventList.ENAME_SCHEDULED_TIME_OCCURED, schedulerModel);
                 }
             }
         },

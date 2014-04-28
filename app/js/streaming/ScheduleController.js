@@ -260,11 +260,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             if (state === READY) {
                 setState.call(self, VALIDATING);
-                self.abrController.getPlaybackQuality(type, self.representationController.getData()).then(
-                    function() {
-                        return getRequiredFragmentCount.call(self, lastQuality);
-                    }
-                ).then(
+                getRequiredFragmentCount.call(self, lastQuality).then(
                     function (count) {
                         fragmentsToLoad = count;
                         loadInitialization.call(self);
@@ -301,7 +297,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.metricsModel.clearCurrentMetricsForType(type);
         },
 
-        onDataUpdateCompleted = function(sender, newRepresentation) {
+        onDataUpdateCompleted = function(sender, data, newRepresentation) {
             var self = this;
 
             if (!currentRepresentation) {
@@ -445,8 +441,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, currentRepresentation.id);
         },
 
-        onScheduledTimeOccurred = function(sender, typeValue) {
-            if (type !== typeValue) return;
+        onScheduledTimeOccurred = function(sender, model) {
+            if (type !== model.getContext().streamProcessor.getType()) return;
             validate.call(this);
         },
 
@@ -471,7 +467,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
     return {
         debug: undefined,
         system: undefined,
-        abrController: undefined,
         metricsModel: undefined,
         bufferExt: undefined,
         scheduleWhilePaused: undefined,
