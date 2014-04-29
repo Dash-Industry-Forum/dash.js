@@ -61,6 +61,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, bufferController);
             representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, scheduleController);
             representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, abrController);
+            representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, stream);
 
             fragmentController.subscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADED, bufferController);
             fragmentController.subscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADED, bufferController);
@@ -92,6 +93,14 @@ MediaPlayer.dependencies.StreamProcessor = function () {
 
         getData: function() {
             return this.representationController.getData();
+        },
+
+        getDataIndex: function() {
+            return this.representationController.getDataIndex();
+        },
+
+        isUpdating: function() {
+            return this.representationController.isUpdating();
         },
 
         getType: function() {
@@ -156,6 +165,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             requestScheduler.unsubscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, bufferController);
             requestScheduler.unsubscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, scheduleController);
             requestScheduler.unsubscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, abrController);
+            representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, stream);
 
             liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.timelineConverter);
             liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, bufferController);

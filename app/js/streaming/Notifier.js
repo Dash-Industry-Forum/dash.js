@@ -51,6 +51,10 @@ MediaPlayer.dependencies.Notifier = function () {
                     ENAME_SCHEDULED_TIME_OCCURED: "scheduledTimeOccurred"
                 },
 
+                streamEvents = {
+                    ENAME_STREAM_UPDATED: "streamUpdated"
+                },
+
                 representationControllerEvents = {
                     ENAME_DATA_UPDATE_COMPLETED: "dataUpdateCompleted",
                     ENAME_DATA_UPDATE_STARTED: "dataUpdateStarted"},
@@ -113,6 +117,9 @@ MediaPlayer.dependencies.Notifier = function () {
 
             system.mapValue('abrControllerEvents', abrControllerEvents);
             system.mapOutlet('abrControllerEvents', "abrController", "eventList");
+
+            system.mapValue('streamEvents', streamEvents);
+            system.mapOutlet('streamEvents', "stream", "eventList");
         },
 
         notify: function (/*eventName[, args]*/) {

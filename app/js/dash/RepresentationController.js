@@ -2,13 +2,15 @@ Dash.dependencies.RepresentationController = function () {
     "use strict";
 
     var data = null,
+        dataIndex = -1,
+        updating = true,
         availableRepresentations = [],
         currentRepresentation,
 
         updateData = function(dataValue, periodInfoValue, type) {
-            var self = this,
-                deferred = Q.defer();
+            var self = this;
 
+            updating = true;
             self.notify(self.eventList.ENAME_DATA_UPDATE_STARTED);
 
             updateRepresentations.call(self, dataValue, periodInfoValue).then(
@@ -18,14 +20,12 @@ Dash.dependencies.RepresentationController = function () {
                     data = dataValue;
                     self.indexHandler.updateSegmentList(currentRepresentation).then(
                         function() {
+                            updating = false;
                             self.notify(self.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
-                            deferred.resolve();
                         }
                     );
                 }
             );
-
-            return deferred.promise;
         },
 
         getRepresentationForQuality = function(quality) {
@@ -39,6 +39,7 @@ Dash.dependencies.RepresentationController = function () {
 
             self.manifestExt.getDataIndex(data, manifest, periodInfo.index).then(
                 function(idx) {
+                    dataIndex = idx;
                     self.manifestExt.getAdaptationsForPeriod(manifest, periodInfo).then(
                         function(adaptations) {
                             self.manifestExt.getRepresentationsForAdaptation(manifest, adaptations[idx]).then(
@@ -85,6 +86,14 @@ Dash.dependencies.RepresentationController = function () {
 
         getData: function() {
             return data;
+        },
+
+        getDataIndex: function() {
+            return dataIndex;
+        },
+
+        isUpdating: function() {
+            return updating;
         },
 
         updateData: updateData,

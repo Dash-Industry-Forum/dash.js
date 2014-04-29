@@ -235,8 +235,6 @@
         composeStreams = function() {
             var self = this,
                 manifest = self.manifestModel.getValue(),
-                deferred = Q.defer(),
-                updatedStreams = [],
                 pLen,
                 sLen,
                 pIdx,
@@ -244,71 +242,69 @@
                 period,
                 stream;
 
-            if (!manifest) {
-                return Q.when(false);
-            }
+            if (!manifest) return;
 
             self.manifestExt.getMpd(manifest).then(
                 function(mpd) {
                     self.manifestExt.getRegularPeriods(manifest, mpd).then(
                         function(periods) {
+                            try {
+                                if (periods.length === 0) {
+                                    throw new Error("There are no regular periods");
+                                }
 
-                            if (periods.length === 0) {
-                                return deferred.reject("There are no regular periods");
-                            }
-
-                            for (pIdx = 0, pLen = periods.length; pIdx < pLen; pIdx += 1) {
-                                period = periods[pIdx];
-                                for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx += 1) {
-                                    // If the stream already exists we just need to update the values we got from the updated manifest
-                                    if (streams[sIdx].getId() === period.id) {
-                                        stream = streams[sIdx];
-                                        updatedStreams.push(stream.updateData(period));
+                                for (pIdx = 0, pLen = periods.length; pIdx < pLen; pIdx += 1) {
+                                    period = periods[pIdx];
+                                    for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx += 1) {
+                                        // If the stream already exists we just need to update the values we got from the updated manifest
+                                        if (streams[sIdx].getId() === period.id) {
+                                            stream = streams[sIdx];
+                                            stream.updateData(period);
+                                        }
                                     }
+                                    // If the Stream object does not exist we probably loaded the manifest the first time or it was
+                                    // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
+                                    if (!stream) {
+                                        stream = self.system.getObject("stream");
+                                        stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
+                                        stream.initProtection();
+                                        stream.setAutoPlay(autoPlay);
+                                        stream.load(manifest, period);
+                                        stream.subscribe(stream.eventList.ENAME_STREAM_UPDATED, self);
+                                        streams.push(stream);
+                                    }
+                                    stream = null;
                                 }
-                                // If the Stream object does not exist we probably loaded the manifest the first time or it was
-                                // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
-                                if (!stream) {
-                                    stream = self.system.getObject("stream");
-                                    stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
-                                    stream.initProtection();
-                                    stream.setAutoPlay(autoPlay);
-                                    stream.load(manifest, period);
-                                    streams.push(stream);
-                                }
-                                stream = null;
-                            }
 
-                            // If the active stream has not been set up yet, let it be the first Stream in the list
-                            if (!activeStream) {
-                                activeStream = streams[0];
-                                attachVideoEvents.call(self, activeStream.getVideoModel());
-                            }
-
-                            Q.all(updatedStreams).then(
-                                function() {
-                                    deferred.resolve();
+                                // If the active stream has not been set up yet, let it be the first Stream in the list
+                                if (!activeStream) {
+                                    activeStream = streams[0];
+                                    attachVideoEvents.call(self, activeStream.getVideoModel());
                                 }
-                            );
+                            } catch(e) {
+                                self.errHandler.manifestError(e.message, "nostreamscomposed", self.manifestModel.getValue());
+                                self.reset();
+                            }
                         }
                     );
                 }
             );
-
-            return deferred.promise;
         },
 
-        manifestHasUpdated = function() {
-            var self = this;
-            composeStreams.call(self).then(
-                function() {
-                    self.notify(self.eventList.ENAME_STREAMS_COMPOSED);
-                },
-                function(errMsg) {
-                    self.errHandler.manifestError(errMsg, "nostreamscomposed", self.manifestModel.getValue());
-                    self.reset();
-                }
-            );
+        onStreamUpdated = function() {
+            var self = this,
+                ln = streams.length,
+                i = 0;
+
+            for (i; i < ln; i += 1) {
+                if (streams[i].isUpdating()) return;
+            }
+
+            self.notify(self.eventList.ENAME_STREAMS_COMPOSED);
+        },
+
+        onManifestUpdated = function() {
+            composeStreams.call(this);
         };
 
     return {
@@ -328,7 +324,8 @@
         unsubscribe: undefined,
 
         setup: function() {
-            this.manifestUpdated = manifestHasUpdated;
+            this.manifestUpdated = onManifestUpdated;
+            this.streamUpdated = onStreamUpdated;
 
             timeupdateListener = onTimeupdate.bind(this);
             progressListener = onProgress.bind(this);
@@ -381,6 +378,7 @@
 
             for (var i = 0, ln = streams.length; i < ln; i++) {
                 var stream = streams[i];
+                stream.unsubscribe(stream.eventList.ENAME_STREAM_UPDATED, this);
                 stream.reset();
                 // we should not remove the video element for the active stream since it is the element users see at the page
                 if (stream !== activeStream) {
