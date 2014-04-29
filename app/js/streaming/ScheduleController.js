@@ -448,6 +448,14 @@ MediaPlayer.dependencies.ScheduleController = function () {
             validate.call(this);
         },
 
+        onClosedCaptioningRequested = function(sender, quality) {
+            var self = this;
+
+            fragmentModel = self.fragmentController.getModel(self);
+            getInitRequest.call(self, quality);
+            fragmentModel.executeCurrentRequest();
+        },
+
         onLiveEdgeFound = function(sender, liveEdgeTime, periodInfo) {
             // step back from a found live edge time to be able to buffer some data
             var self = this,
@@ -502,6 +510,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.bufferLevelStateChanged = onBufferLevelStateChanged;
             this.bufferLevelUpdated = onBufferLevelUpdated;
             this.initRequested = onInitRequested;
+
+            this.closedCaptioningRequested = onClosedCaptioningRequested;
         },
 
         initialize: function(typeValue, streamProcessor) {

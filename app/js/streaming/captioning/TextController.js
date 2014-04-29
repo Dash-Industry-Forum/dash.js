@@ -13,74 +13,53 @@
  */
 MediaPlayer.dependencies.TextController = function () {
 
-     var LOADING = "LOADING",
-         //LOADED = "LOADED",
-         READY = "READY",
-         initialized = false,
+     var initialized = false,
          mediaSource,
          buffer,
          type,
-         state = READY,
-         setState = function (value) {
-             this.debug.log("TextController setState to:" + value);
-             state = value;
-         },
-         startPlayback = function () {
 
-             if (!initialized || state !== READY) {
-                 return;
-             }
-
-             var self = this;
-            // TODO Multiple tracks can be handled here by passing in quality level.
-            self.indexHandler.getInitRequest(self.representationController.getRepresentationForQuality(0)).then(
-             function (request) {
-                 //self.debug.log("Loading text track initialization: " + request.url);
-                 //self.debug.log(request);
-                 self.fragmentLoader.load(request).then(onBytesLoaded.bind(self, request), onBytesError.bind(self, request));
-                 setState.call(self, LOADING);
-             }
-            );
-         },
-
-         onDataUpdateCompleted = function(/*sender ,newRepresentation*/) {
+         onDataUpdateCompleted = function(/*sender ,data, newRepresentation*/) {
              if (!initialized) {
                  if (buffer.hasOwnProperty('initialize')) {
                      buffer.initialize(type, this);
                  }
                  initialized = true;
              }
-
-             setState.call(this, READY);
-             startPlayback.call(this);
+             this.notify(this.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, 0);
          },
 
-         onBytesLoaded = function (request, response) {
+         onInitSegmentLoaded = function (sender, model, bytes/*, quality*/) {
              var self = this;
-             //self.debug.log(" Text track Bytes finished loading: " + request.url);
-             self.fragmentController.process(response.data).then(
-                 function (data) {
-                     if (data !== null) {
-                         //self.debug.log("Push text track bytes: " + data.byteLength);
-                         self.sourceBufferExt.append(buffer, data, self.videoModel);
-                     }
-                 }
-             );
-         },
 
-         onBytesError = function (/*request*/) {
+             if (model !== self.streamProcessor.getFragmentModel()) return;
+
+             if (bytes !== null) {
+                 //self.debug.log("Push text track bytes: " + data.byteLength);
+                 self.sourceBufferExt.append(buffer, bytes, self.videoModel);
+             }
          };
 
     return {
-        fragmentLoader: undefined,
-        fragmentController: undefined,
-        indexHandler: undefined,
         sourceBufferExt: undefined,
         debug: undefined,
         system: undefined,
+        eventList: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
 
         setup: function() {
             this.dataUpdateCompleted = onDataUpdateCompleted;
+            this.initSegmentLoaded = onInitSegmentLoaded;
+
+            // TODO We should not subscribe to events we are not interested in
+            var doNothing = function(){};
+
+            this.liveEdgeFound = doNothing;
+            this.mediaSegmentLoaded =  doNothing;
+            this.streamCompleted = doNothing;
+            this.scheduledTimeOccurred = doNothing;
+            this.qualityChanged = doNothing;
         },
 
         initialize: function (typeValue, buffer, source, streamProcessor) {

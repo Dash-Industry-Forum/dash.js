@@ -83,6 +83,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, fragmentController);
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentController);
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
+            bufferController.subscribe(bufferController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
 
             bufferController.initialize(type, buffer, mediaSource, self);
             scheduleController.initialize(type, this);

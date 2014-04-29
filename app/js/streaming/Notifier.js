@@ -29,6 +29,7 @@ MediaPlayer.dependencies.Notifier = function () {
 
         setup: function() {
             var bufferControllerEvents = {
+                    ENAME_CLOSED_CAPTIONING_REQUESTED: "closedCaptioningRequested",
                     ENAME_BUFFER_LEVEL_STATE_CHANGED: "bufferLevelStateChanged",
                     ENAME_BUFFER_LEVEL_UPDATED: "bufferLevelUpdated",
                     ENAME_QUOTA_EXCEEDED: "quotaExceeded",
@@ -93,6 +94,7 @@ MediaPlayer.dependencies.Notifier = function () {
 
             system.mapValue('bufferControllerEvents', bufferControllerEvents);
             system.mapOutlet('bufferControllerEvents', "bufferController", "eventList");
+            system.mapOutlet('bufferControllerEvents', "textController", "eventList");
 
             system.mapValue('manifestModelEvents', manifestModelEvents);
             system.mapOutlet('manifestModelEvents', "manifestModel", "eventList");
