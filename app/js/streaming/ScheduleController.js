@@ -308,7 +308,9 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 function (time) {
                     currentRepresentation = newRepresentation;
                     self.seek(time);
-                    getInitRequest.call(self, lastQuality);
+                    if (ready) {
+                        getInitRequest.call(self, lastQuality);
+                    }
                 }
             );
         },
@@ -459,6 +461,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 // currentTime and buffered.start(0)
                 periodInfo.liveEdge = segmentStart + (fragmentDuration / 2);
                 ready = true;
+                getInitRequest.call(self, lastQuality);
                 startPlayback.call(self);
                 doSeek.call(self, segmentStart);
             });
