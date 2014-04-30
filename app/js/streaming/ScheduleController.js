@@ -81,6 +81,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
             startPlayback.call(this);
         },
 
+        startOnReady = function(time) {
+            getInitRequest.call(this, lastQuality);
+            this.seek(time);
+        },
+
         doSeek = function (time) {
             var currentTime;
 
@@ -307,9 +312,13 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.indexHandler.getCurrentTime(currentRepresentation).then(
                 function (time) {
                     currentRepresentation = newRepresentation;
-                    self.seek(time);
+
+                    if (!isDynamic) {
+                        ready = true;
+                    }
+
                     if (ready) {
-                        getInitRequest.call(self, lastQuality);
+                        startOnReady.call(self, time);
                     }
                 }
             );
@@ -363,13 +372,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             if (!this.requestScheduler.isScheduled(this) && isSchedulingRequired.call(this)) {
                 doStart.call(this);
-            }
-        },
-
-        onBufferControllerInitialized = function(/*sender*/) {
-            if (!isDynamic) {
-                ready = true;
-                startPlayback.call(this);
             }
         },
 
@@ -469,9 +471,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 // currentTime and buffered.start(0)
                 periodInfo.liveEdge = segmentStart + (fragmentDuration / 2);
                 ready = true;
-                getInitRequest.call(self, lastQuality);
-                startPlayback.call(self);
-                doSeek.call(self, segmentStart);
+                startOnReady.call(self, segmentStart);
             });
         };
 
@@ -502,7 +502,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.segmentLoadingFailed = onBytesError;
             this.streamCompleted = onStreamCompleted;
 
-            this.bufferControllerInitialized = onBufferControllerInitialized;
             this.bufferCleared = onBufferCleared;
             this.bufferingCompleted = onBufferingCompleted;
             this.bytesAppended = onBytesAppended;

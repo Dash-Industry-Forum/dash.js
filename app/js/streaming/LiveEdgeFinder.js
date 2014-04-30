@@ -131,6 +131,12 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
                 searchTime = ((liveEdgeSearchRange.start + liveEdgeSearchRange.end) / 2);
                 this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime).then(findLiveEdge.bind(this, searchTime, onSearchForSegmentSucceeded, onSearchForSegmentFailed));
             }
+        },
+
+        onDataUpdateCompleted = function(/*sender, data, representation*/) {
+            if (!this.streamProcessor.isDynamic() || deferredLiveEdge) return;
+
+            searchForLiveEdge.call(this);
         };
 
     return {
@@ -140,7 +146,9 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
         subscribe: undefined,
         unsubscribe: undefined,
 
-        searchForLiveEdge: searchForLiveEdge,
+        setup: function() {
+            this.dataUpdateCompleted = onDataUpdateCompleted;
+        },
 
         initialize: function(streamProcessor) {
             this.streamProcessor = streamProcessor;

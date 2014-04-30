@@ -325,8 +325,8 @@ MediaPlayer.dependencies.BufferController = function () {
                         self.notify(self.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, time);
                     }
 
-                    if (!ready) {
-                        finishInitialization.call(self);
+                    if (!self.streamProcessor.isDynamic()) {
+                            ready = true;
                     }
                 }
             );
@@ -380,18 +380,6 @@ MediaPlayer.dependencies.BufferController = function () {
             if (bufferLevel < STALL_THRESHOLD && !self.videoModel.isStreamStalled(type)) {
                 self.notify(self.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, false);
             }
-        },
-
-        finishInitialization = function(){
-            var self = this;
-
-            if (!self.streamProcessor.isDynamic()) {
-                ready = true;
-            } else {
-                self.liveEdgeFinder.searchForLiveEdge();
-            }
-
-            self.notify(self.eventList.ENAME_BUFFER_CONTROLLER_INITIALIZED);
         };
 
     return {

@@ -62,6 +62,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, scheduleController);
             representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, abrController);
             representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, stream);
+            representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, liveEdgeFinder);
 
             fragmentController.subscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADED, bufferController);
             fragmentController.subscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADED, bufferController);
@@ -72,7 +73,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
 
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, videoModel);
             bufferController.subscribe(bufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, scheduler);
-            bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_CONTROLLER_INITIALIZED, scheduleController);
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, scheduleController);
             bufferController.subscribe(bufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
