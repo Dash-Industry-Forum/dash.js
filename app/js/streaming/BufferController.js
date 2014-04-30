@@ -15,7 +15,6 @@ MediaPlayer.dependencies.BufferController = function () {
     "use strict";
     var STALL_THRESHOLD = 0.5,
         QUOTA_EXCEEDED_ERROR_CODE = 22,
-        ready = false,
         initializationData = [],
         seekTarget = -1,
         lastQuality = 0,
@@ -25,7 +24,6 @@ MediaPlayer.dependencies.BufferController = function () {
         deferredStreamComplete = Q.defer(),
         deferredRejectedDataAppend = null,
         deferredBuffersFlatten = null,
-        periodInfo = null,
         bufferLevel = 0,
         isQuotaExceeded = false,
         rejectedBytes = null,
@@ -249,7 +247,7 @@ MediaPlayer.dependencies.BufferController = function () {
                         removeEnd = buffer.buffered.end(buffer.buffered.length -1 );
                     }
                     removeStart = buffer.buffered.start(0);
-                    self.sourceBufferExt.remove(buffer, removeStart, removeEnd, periodInfo.duration, mediaSource).then(
+                    self.sourceBufferExt.remove(buffer, removeStart, removeEnd, mediaSource).then(
                         function() {
                             self.notify(self.eventList.ENAME_BUFFER_CLEARED, removeStart, removeEnd);
                             deferred.resolve(removeEnd - removeStart);
@@ -271,7 +269,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         checkIfSufficientBuffer = function () {
-            var timeToEnd = getTimeToEnd.call(this);
+            var timeToEnd = this.playbackController.getTimeToPeriodEnd();
 
             if ((bufferLevel < minBufferTime) && ((minBufferTime < timeToEnd) || (minBufferTime >= timeToEnd && !isBufferingCompleted))) {
                 this.debug.log("Waiting for more " + type + " buffer before starting playback.");
@@ -286,12 +284,6 @@ MediaPlayer.dependencies.BufferController = function () {
             return !!this.representationController && !!this.representationController.getData() && !!buffer;
         },
 
-        getTimeToEnd = function() {
-            var currentTime = this.videoModel.getCurrentTime();
-
-            return ((periodInfo.start + periodInfo.duration) - currentTime);
-        },
-
         getWorkingTime = function () {
             var time = -1;
 
@@ -301,14 +293,8 @@ MediaPlayer.dependencies.BufferController = function () {
             return time;
         },
 
-        onLiveEdgeFound = function(/*sender, liveEdgeTime, periodInfo*/) {
-            ready = true;
-        },
-
-        onDataUpdateCompleted = function(sender, data, newRepresentation) {
+        onDataUpdateCompleted = function(/*sender, data, newRepresentation*/) {
             var self = this;
-
-            periodInfo = newRepresentation.adaptation.period;
 
             if (deferredInitAppend && Q.isPending(deferredInitAppend.promise)) {
                 deferredInitAppend.resolve();
@@ -317,16 +303,12 @@ MediaPlayer.dependencies.BufferController = function () {
             deferredInitAppend = Q.defer();
             initializationData = [];
 
-            self.bufferExt.decideBufferLength(self.manifestModel.getValue().minBufferTime, periodInfo.duration).then(
+            self.bufferExt.decideBufferLength(self.manifestModel.getValue().minBufferTime, self.playbackController.getPeriodDuration()).then(
                 function (time) {
                     //self.debug.log("Min Buffer time: " + time);
                     if (minBufferTime !== time) {
                         self.setMinBufferTime(time);
                         self.notify(self.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, time);
-                    }
-
-                    if (!self.streamProcessor.isDynamic()) {
-                            ready = true;
                     }
                 }
             );
@@ -395,7 +377,6 @@ MediaPlayer.dependencies.BufferController = function () {
         unsubscribe: undefined,
 
         setup: function() {
-            this.liveEdgeFound = onLiveEdgeFound;
             this.dataUpdateCompleted = onDataUpdateCompleted;
 
             this.initSegmentLoaded = onInitializationLoaded;
@@ -417,7 +398,7 @@ MediaPlayer.dependencies.BufferController = function () {
             self.fragmentController = streamProcessor.fragmentController;
             self.scheduleController = streamProcessor.scheduleController;
             self.representationController = streamProcessor.representationController;
-            self.liveEdgeFinder = streamProcessor.liveEdgeFinder;
+            self.playbackController = streamProcessor.playbackController;
         },
 
         getStreamProcessor: function() {
@@ -476,8 +457,6 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         updateStalledState: function() {
-            if (!ready) return;
-
             checkIfSufficientBuffer.call(this);
         },
 

@@ -252,6 +252,7 @@ MediaPlayer.dependencies.Stream = function () {
                 processor = null,
                 self = this;
 
+            this.playbackController.initialize(periodInfo, this.videoModel);
             // Figure out some bits about the stream before building anything.
             //self.debug.log("Gathering information for buffers. (1)");
             self.manifestExt.getDuration(manifest, periodInfo).then(
@@ -299,7 +300,7 @@ MediaPlayer.dependencies.Stream = function () {
                                             // TODO : Pass to controller and then pass to each method on handler?
 
                                             processor = self.system.getObject("streamProcessor");
-                                            processor.initialize("video", buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource, videoData, periodInfo, self);
+                                            processor.initialize("video", buffer, self.videoModel, self.requestScheduler, self.fragmentController, self.playbackController, mediaSource, videoData, periodInfo, self);
                                             streamProcessors.push(processor);
                                             //self.debug.log("Video is ready!");
                                         }
@@ -365,7 +366,7 @@ MediaPlayer.dependencies.Stream = function () {
                                                     // TODO : How to tell index handler live/duration?
                                                     // TODO : Pass to controller and then pass to each method on handler?
                                                     processor = self.system.getObject("streamProcessor");
-                                                    processor.initialize("audio", buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource, primaryAudioData, periodInfo, self);
+                                                    processor.initialize("audio", buffer, self.videoModel, self.requestScheduler, self.fragmentController, self.playbackController, mediaSource, primaryAudioData, periodInfo, self);
                                                     streamProcessors.push(processor);
                                                     //self.debug.log("Audio is ready!");
                                                 }
@@ -405,7 +406,7 @@ MediaPlayer.dependencies.Stream = function () {
                                             self.debug.log("Source buffer was not created for text track");
                                         } else {
                                             processor = self.system.getObject("streamProcessor");
-                                            processor.initialize(mimeType, buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource, textData, periodInfo, self);
+                                            processor.initialize(mimeType, buffer, self.videoModel, self.requestScheduler, self.fragmentController, self.playbackController, mediaSource, textData, periodInfo, self);
                                             streamProcessors.push(processor);
                                             //self.debug.log("Text is ready!");
                                             textTrackReady = true;
@@ -741,6 +742,7 @@ MediaPlayer.dependencies.Stream = function () {
         sourceBufferExt: undefined,
         manifestExt: undefined,
         fragmentController: undefined,
+        playbackController: undefined,
         protectionModel: undefined,
         protectionController: undefined,
         protectionExt: undefined,

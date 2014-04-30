@@ -22,7 +22,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         timelineConverter: undefined,
         abrController: undefined,
 
-        initialize: function (typeValue, buffer, videoModel, scheduler, fragmentController, mediaSource, data, periodInfo, streamValue) {
+        initialize: function (typeValue, buffer, videoModel, scheduler, fragmentController, playbackController, mediaSource, data, periodInfo, streamValue) {
 
             var self = this,
                 manifest = self.manifestModel.getValue(),
@@ -38,6 +38,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             self.indexHandler.setType(type);
             self.indexHandler.setIsDynamic(isDynamic);
             self.bufferController = bufferController;
+            self.playbackController = playbackController;
             self.scheduleController = scheduleController;
             self.representationController = representationController;
             self.videoModel = videoModel;
@@ -54,7 +55,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             scheduler.subscribe(scheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, abrController);
 
             liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.timelineConverter);
-            liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, bufferController);
             liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, scheduleController);
 
             representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_STARTED, scheduleController);
@@ -63,6 +63,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, abrController);
             representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, stream);
             representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, liveEdgeFinder);
+            representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, playbackController);
 
             fragmentController.subscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADED, bufferController);
             fragmentController.subscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADED, bufferController);
