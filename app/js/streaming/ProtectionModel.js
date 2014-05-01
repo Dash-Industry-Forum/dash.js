@@ -21,13 +21,7 @@ MediaPlayer.models.ProtectionModel = function () {
 
     return {
         system : undefined,
-        videoModel : undefined,
         protectionExt : undefined,
-
-        setup : function () {
-            //this.system.mapHandler("setCurrentTime", undefined, handleSetCurrentTimeNotification.bind(this));
-            element = this.videoModel.getElement();
-        },
 
         init: function (videoModel) {
             this.videoModel = videoModel;

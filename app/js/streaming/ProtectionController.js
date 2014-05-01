@@ -89,7 +89,6 @@ MediaPlayer.dependencies.ProtectionController = function () {
         debug : undefined,
         manifestExt : undefined,
         capabilities : undefined,
-        videoModel : undefined,
         protectionModel : undefined,
         protectionExt : undefined,
 

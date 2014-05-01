@@ -332,7 +332,6 @@
 
     return {
         system: undefined,
-        videoModel: undefined,
         debug: undefined,
         schedulerExt: undefined,
         eventList: undefined,
