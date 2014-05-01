@@ -179,7 +179,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     checkIfSufficientBuffer.call(self);
 
                     if (bufferLevel < STALL_THRESHOLD) {
-                        notifyIfSufficientBufferStateChanged.call(this, false);
+                        notifyIfSufficientBufferStateChanged.call(self, false);
                     }
 
                     deferred.resolve();
@@ -278,10 +278,8 @@ MediaPlayer.dependencies.BufferController = function () {
             var timeToEnd = this.playbackController.getTimeToPeriodEnd();
 
             if ((bufferLevel < minBufferTime) && ((minBufferTime < timeToEnd) || (minBufferTime >= timeToEnd && !isBufferingCompleted))) {
-                this.debug.log("Waiting for more " + type + " buffer before starting playback.");
                 notifyIfSufficientBufferStateChanged.call(this, false);
             } else {
-                this.debug.log("Got enough " + type + " buffer to start.");
                 notifyIfSufficientBufferStateChanged.call(this, true);
             }
         },
@@ -290,6 +288,8 @@ MediaPlayer.dependencies.BufferController = function () {
             if (hasSufficientBuffer === state) return;
 
             hasSufficientBuffer = state;
+
+            this.debug.log(hasSufficientBuffer ? ("Got enough " + type + " buffer to start.") : ("Waiting for more " + type + " buffer before starting playback."));
             this.notify(this.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, state);
         },
 
