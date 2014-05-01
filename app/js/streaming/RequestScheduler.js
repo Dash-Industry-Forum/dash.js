@@ -46,22 +46,20 @@
             schedulerModel.setExecuteTime(dueTime);
 
             if (!isCheckingForVideoTimeTriggersStarted) {
-                startCheckingDueTimeForVideoTimeTrigger.call(this);
+                startCheckingDueTimeForVideoTimeTrigger.call(this, executeContext.playbackController);
             }
         },
 
-        startCheckingDueTimeForVideoTimeTrigger = function() {
-            var element = this.videoModel.getElement();
-
-            this.schedulerExt.attachScheduleListener(element, checkDueTimeForVideoTimeTriggers.bind(this));
-            this.schedulerExt.attachUpdateScheduleListener(element, onUpdateSchedule.bind(this));
+        startCheckingDueTimeForVideoTimeTrigger = function(playbackController) {
+            this.schedulerExt.attachScheduleListener(playbackController, this);
+            this.schedulerExt.attachUpdateScheduleListener(playbackController, this);
             isCheckingForVideoTimeTriggersStarted = true;
         },
 
         checkDueTimeForVideoTimeTriggers = function() {
             var videoTimeTriggers = getAllModelsForType.call(this, VIDEO_TIME_TRIGGERED_TASK),
                 ln = videoTimeTriggers.length,
-                now = this.videoModel.getCurrentTime(),
+                now,
                 model,
                 due,
                 i;
@@ -69,6 +67,7 @@
             for (i = 0; i < ln; i += 1) {
                 model = videoTimeTriggers[i];
                 due = model.getExecuteTime();
+                now = model.getContext().playbackController.getTime();
 
                 if (model.getIsScheduled() && (now > due)) {
                     model.executeScheduledTask();
@@ -92,16 +91,14 @@
                 videoTimeTriggers = getAllModelsForType.call(this, VIDEO_TIME_TRIGGERED_TASK);
 
                 if (videoTimeTriggers.length === 0) {
-                    stopCheckingDueTimeForVideoTimeTrigger.call(this);
+                    stopCheckingDueTimeForVideoTimeTrigger.call(this, executeContext.playbackController);
                 }
             }
         },
 
-        stopCheckingDueTimeForVideoTimeTrigger = function() {
-            var element = this.videoModel.getElement();
-
-            this.schedulerExt.detachScheduleListener(element, checkDueTimeForVideoTimeTriggers.bind(this));
-            this.schedulerExt.detachUpdateScheduleListener(element, onUpdateSchedule.bind(this));
+        stopCheckingDueTimeForVideoTimeTrigger = function(playbackController) {
+            this.schedulerExt.detachScheduleListener(playbackController, this);
+            this.schedulerExt.detachUpdateScheduleListener(playbackController, this);
             isCheckingForVideoTimeTriggersStarted = false;
         },
 
@@ -341,6 +338,8 @@
 
         setup: function() {
             this.minBufferTimeUpdated = onMinBufferTimeUpdated;
+            this.playbackSeeking = checkDueTimeForVideoTimeTriggers;
+            this.playbackTimeUpdated = onUpdateSchedule;
         },
 
         /*

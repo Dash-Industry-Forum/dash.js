@@ -78,6 +78,19 @@ MediaPlayer.dependencies.Notifier = function () {
                     ENAME_STREAMS_COMPOSED: "streamsComposed"
                 },
 
+                playbackControllerEvents = {
+                    ENAME_PLAYBACK_STARTED: "playbackStarted",
+                    ENAME_PLAYBACK_STOPPED: "playbackStopped",
+                    ENAME_PLAYBACK_PAUSED: "playbackPaused",
+                    ENAME_PLAYBACK_SEEKING: "playbackSeeking",
+                    ENAME_PLAYBACK_SEEKED: "playbackSeeked",
+                    ENAME_PLAYBACK_TIME_UPDATED: "playbackTimeUpdated",
+                    ENAME_PLAYBACK_PROGRESS: "playbackProgress",
+                    ENAME_PLAYBACK_RATE_CHANGED: "playbackRateChanged",
+                    ENAME_PLAYBACK_METADATA_LOADED: "playbackMetaDataLoaded",
+                    ENAME_PLAYBACK_ERROR: "playbackError"
+                },
+
                 liveEdgeFinderEvents = {
                     ENAME_LIVE_EDGE_FOUND: "liveEdgeFound"
                 },
@@ -115,6 +128,9 @@ MediaPlayer.dependencies.Notifier = function () {
 
             system.mapValue('streamControllerEvents', streamControllerEvents);
             system.mapOutlet('streamControllerEvents', "streamController", "eventList");
+
+            system.mapValue('playbackControllerEvents', playbackControllerEvents);
+            system.mapOutlet('playbackControllerEvents', "playbackController", "eventList");
 
             system.mapValue('abrControllerEvents', abrControllerEvents);
             system.mapOutlet('abrControllerEvents', "abrController", "eventList");

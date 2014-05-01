@@ -170,7 +170,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         return defer.promise;
     },
 
-    append: function (buffer, bytes /*, videoModel*/) {
+    append: function (buffer, bytes) {
         var deferred = Q.defer();
 
         try {

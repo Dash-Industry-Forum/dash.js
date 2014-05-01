@@ -101,7 +101,7 @@ MediaPlayer.dependencies.BufferController = function () {
                             Q.when(deferredBuffersFlatten ? deferredBuffersFlatten.promise : true).then(
                                 function() {
                                     if (!hasData.call(self)) return;
-                                    self.sourceBufferExt.append(buffer, data, self.videoModel).then(
+                                    self.sourceBufferExt.append(buffer, data).then(
                                         function (/*appended*/) {
                                             if (isAppendingRejectedData) {
                                                 deferredRejectedDataAppend = null;
@@ -164,7 +164,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             var self = this,
                 deferred = Q.defer(),
-                currentTime = getWorkingTime.call(self);
+                currentTime = self.playbackController.getTime();
 
             self.sourceBufferExt.getBufferLength(buffer, currentTime).then(
                 function(bufferLength) {
@@ -238,7 +238,7 @@ MediaPlayer.dependencies.BufferController = function () {
         clearBuffer = function() {
             var self = this,
                 deferred = Q.defer(),
-                currentTime = self.videoModel.getCurrentTime(),
+                currentTime = self.playbackController.getTime(),
                 removeStart = 0,
                 removeEnd,
                 req;
@@ -295,15 +295,6 @@ MediaPlayer.dependencies.BufferController = function () {
 
         hasData = function() {
             return !!this.representationController && !!this.representationController.getData() && !!buffer;
-        },
-
-        getWorkingTime = function () {
-            var time = -1;
-
-            time = this.videoModel.getCurrentTime();
-            //this.debug.log("Working time is video time: " + time);
-
-            return time;
         },
 
         onDataUpdateCompleted = function(/*sender, data, newRepresentation*/) {
@@ -403,7 +394,6 @@ MediaPlayer.dependencies.BufferController = function () {
             self.setMediaSource(source);
             self.setBuffer(buffer);
             self.streamProcessor = streamProcessor;
-            self.videoModel = streamProcessor.videoModel;
             self.fragmentController = streamProcessor.fragmentController;
             self.scheduleController = streamProcessor.scheduleController;
             self.representationController = streamProcessor.representationController;

@@ -25,19 +25,19 @@ MediaPlayer.dependencies.SchedulerExtensions.prototype = {
         return interval;
     },
 
-    attachScheduleListener: function(element, scheduleListener) {
-        element.addEventListener("timeupdate", scheduleListener);
+    attachScheduleListener: function(element, observer) {
+        element.subscribe(element.eventList.ENAME_PLAYBACK_TIME_UPDATED, observer);
     },
 
-    detachScheduleListener: function(element, scheduleListener) {
-        element.removeEventListener("timeupdate", scheduleListener);
+    detachScheduleListener: function(element, observer) {
+        element.unsubscribe(element.eventList.ENAME_PLAYBACK_TIME_UPDATED, observer);
     },
 
-    attachUpdateScheduleListener: function(element, updateScheduleListener) {
-        element.addEventListener("seeking", updateScheduleListener);
+    attachUpdateScheduleListener: function(element, observer) {
+        element.subscribe(element.eventList.ENAME_PLAYBACK_SEEKING, observer);
     },
 
-    detachUpdateScheduleListener: function(element, updateScheduleListener) {
-        element.removeEventListener("seeking", updateScheduleListener);
+    detachUpdateScheduleListener: function(element, observer) {
+        element.unsubscribe(element.eventList.ENAME_PLAYBACK_SEEKING, observer);
     }
 };

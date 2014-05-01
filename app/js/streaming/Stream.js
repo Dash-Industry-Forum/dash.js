@@ -27,16 +27,6 @@ MediaPlayer.dependencies.Stream = function () {
         kid = null,
         initData = [],
         updating = true,
-
-        loadedListener,
-        playListener,
-        pauseListener,
-        errorListener,
-        seekingListener,
-        seekedListener,
-        timeupdateListener,
-        progressListener,
-        ratechangeListener,
         periodInfo = null,
 
         needKeyListener,
@@ -52,12 +42,12 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             //this.debug.log("Do play.");
-            this.videoModel.play();
+            this.playbackController.start();
         },
 
         pause = function () {
             //this.debug.log("Do pause.");
-            this.videoModel.pause();
+            this.playbackController.pause();
         },
 
         seek = function (time) {
@@ -70,7 +60,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.debug.log("Do seek: " + time);
 
             currentTimeChanged.call(this);
-            this.videoModel.setCurrentTime(time);
+            this.playbackController.seek(time);
 
             startBuffering(time);
         },
@@ -252,7 +242,6 @@ MediaPlayer.dependencies.Stream = function () {
                 processor = null,
                 self = this;
 
-            this.playbackController.initialize(periodInfo, this.videoModel);
             // Figure out some bits about the stream before building anything.
             //self.debug.log("Gathering information for buffers. (1)");
             self.manifestExt.getDuration(manifest, periodInfo).then(
@@ -462,7 +451,7 @@ MediaPlayer.dependencies.Stream = function () {
             var initialSeekTime = this.timelineConverter.calcPresentationStartTime(periodInfo);
             this.debug.log("Starting playback at offset: " + initialSeekTime);
 
-            this.videoModel.setCurrentTime(initialSeekTime);
+            this.playbackController.seek(initialSeekTime);
 
             load.resolve(null);
         },
@@ -515,16 +504,15 @@ MediaPlayer.dependencies.Stream = function () {
 
         onSeeking = function () {
             //this.debug.log("Got seeking event.");
-            var time = this.videoModel.getCurrentTime();
+            var time = this.playbackController.getTime();
 
             startBuffering(time);
         },
 
         onSeeked = function () {
             //this.debug.log("Seek complete.");
-
-            this.videoModel.listen("seeking", seekingListener);
-            this.videoModel.unlisten("seeked", seekedListener);
+            this.playbackController.subscribe(this.playbackController.eventList.ENAME_PLAYBACK_SEEKING, this);
+            this.playbackController.unsubscribe(this.playbackController.eventList.ENAME_PLAYBACK_SEEKED, this);
         },
 
         onProgress = function () {
@@ -589,15 +577,15 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         updateCurrentTime = function() {
-            if (this.videoModel.isPaused()) return;
+            if (this.playbackController.isPaused()) return;
 
-            var currentTime = this.videoModel.getCurrentTime(),
+            var currentTime = this.playbackController.getTime(),
                 representation = streamProcessors[0].getCurrentRepresentation(),
                 actualTime = this.timelineConverter.calcActualPresentationTime(representation, currentTime, this.manifestExt.getIsDynamic(manifest)),
                 timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
 
             if (timeChanged) {
-                this.videoModel.setCurrentTime(actualTime);
+                this.playbackController.seek(actualTime);
                 startBuffering(actualTime);
             } else {
                 startBuffering();
@@ -648,8 +636,8 @@ MediaPlayer.dependencies.Stream = function () {
         currentTimeChanged = function () {
             this.debug.log("Current time has changed, block programmatic seek.");
 
-            this.videoModel.unlisten("seeking", seekingListener);
-            this.videoModel.listen("seeked", seekedListener);
+            this.playbackController.unsubscribe(this.playbackController.eventList.ENAME_PLAYBACK_SEEKING, this);
+            this.playbackController.subscribe(this.playbackController.eventList.ENAME_PLAYBACK_SEEKED, this);
         },
 
         onBufferingCompleted = function() {
@@ -763,34 +751,23 @@ MediaPlayer.dependencies.Stream = function () {
 
             load = Q.defer();
 
-            playListener = onPlay.bind(this);
-            pauseListener = onPause.bind(this);
-            errorListener = onError.bind(this);
-            seekingListener = onSeeking.bind(this);
-            seekedListener = onSeeked.bind(this);
-            progressListener = onProgress.bind(this);
-            ratechangeListener = onRatechange.bind(this);
-            timeupdateListener = onTimeupdate.bind(this);
-            loadedListener = onLoad.bind(this);
+            this.playbackStarted = onPlay;
+            this.playbackPaused = onPause;
+            this.playbackError = onError;
+            this.playbackSeeking = onSeeking;
+            this.playbackSeeked = onSeeked;
+            this.playbackProgress = onProgress;
+            this.playbackRateChanged = onRatechange;
+            this.playbackTimeUpdated = onTimeupdate;
+            this.playbackMetaDataLoaded = onLoad;
         },
 
-        load: function(manifest, periodInfoValue) {
-            periodInfo = periodInfoValue;
+        load: function(manifest) {
             doLoad.call(this, manifest);
         },
 
         setVideoModel: function(value) {
             this.videoModel = value;
-            this.videoModel.listen("play", playListener);
-            this.videoModel.listen("pause", pauseListener);
-            this.videoModel.listen("error", errorListener);
-            this.videoModel.listen("seeking", seekingListener);
-            this.videoModel.listen("timeupdate", timeupdateListener);
-            this.videoModel.listen("progress", progressListener);
-            this.videoModel.listen("ratechange", ratechangeListener);
-            this.videoModel.listen("loadedmetadata", loadedListener);
-
-            this.requestScheduler.videoModel = value;
         },
 
         initProtection: function() {
@@ -830,14 +807,6 @@ MediaPlayer.dependencies.Stream = function () {
         reset: function () {
             pause.call(this);
 
-            this.videoModel.unlisten("play", playListener);
-            this.videoModel.unlisten("pause", pauseListener);
-            this.videoModel.unlisten("error", errorListener);
-            this.videoModel.unlisten("seeking", seekingListener);
-            this.videoModel.unlisten("timeupdate", timeupdateListener);
-            this.videoModel.unlisten("progress", progressListener);
-            this.videoModel.unlisten("loadedmetadata", loadedListener);
-
             tearDownMediaSource.call(this);
             if (!!this.protectionController) {
                 this.protectionController.teardownKeySystem(kid);
@@ -846,6 +815,8 @@ MediaPlayer.dependencies.Stream = function () {
             this.protectionModel = undefined;
             this.fragmentController = undefined;
             this.requestScheduler = undefined;
+            this.playbackController.reset();
+            this.playbackController = undefined;
 
             // streamcontroller expects this to be valid
             //this.videoModel = null;
@@ -869,8 +840,21 @@ MediaPlayer.dependencies.Stream = function () {
             return periodInfo.id;
         },
 
+        setPeriodInfo: function(period) {
+            periodInfo = period;
+        },
+
         getPeriodInfo: function() {
             return periodInfo;
+        },
+
+        setPlaybackController: function(value) {
+            this.playbackController = value;
+            value.initialize(periodInfo, this.videoModel);
+        },
+
+        getPlaybackController: function() {
+            return this.playbackController;
         },
 
         isUpdating: function() {

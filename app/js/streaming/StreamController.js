@@ -26,11 +26,6 @@
         STREAM_END_THRESHOLD = 3,
         autoPlay = true,
         isPeriodSwitchingInProgress = false,
-        timeupdateListener,
-        seekingListener,
-        progressListener,
-        pauseListener,
-        playListener,
 
         play = function () {
             activeStream.play();
@@ -52,9 +47,9 @@
          *
          * TODO - move method to appropriate place - VideoModelExtensions??
          */
-        switchVideoModel = function (fromVideoModel, toVideoModel) {
-            var activeVideoElement = fromVideoModel.getElement(),
-                newVideoElement = toVideoModel.getElement();
+        switchVideoModel = function (fromStream, toStream) {
+            var activeVideoElement = fromStream.getVideoModel().getElement(),
+                newVideoElement = toStream.getVideoModel().getElement();
 
             if (!newVideoElement.parentNode) {
                 activeVideoElement.parentNode.insertBefore(newVideoElement, activeVideoElement);
@@ -66,26 +61,30 @@
             newVideoElement.style.width = "100%";
 
             copyVideoProperties(activeVideoElement, newVideoElement);
-            detachVideoEvents.call(this, fromVideoModel);
-            attachVideoEvents.call(this, toVideoModel);
+            detachVideoEvents.call(this, fromStream);
+            attachVideoEvents.call(this, toStream);
 
             return Q.when(true);
         },
 
-        attachVideoEvents = function (videoModel) {
-            videoModel.listen("seeking", seekingListener);
-            videoModel.listen("progress", progressListener);
-            videoModel.listen("timeupdate", timeupdateListener);
-            videoModel.listen("pause", pauseListener);
-            videoModel.listen("play", playListener);
+        attachVideoEvents = function (stream) {
+            var playbackCtrl = stream.getPlaybackController();
+
+            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_STARTED, this);
+            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PAUSED, this);
+            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKING, this);
+            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_TIME_UPDATED, this);
+            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PROGRESS, this);
         },
 
-        detachVideoEvents = function (videoModel) {
-            videoModel.unlisten("seeking", seekingListener);
-            videoModel.unlisten("progress", progressListener);
-            videoModel.unlisten("timeupdate", timeupdateListener);
-            videoModel.unlisten("pause", pauseListener);
-            videoModel.unlisten("play", playListener);
+        detachVideoEvents = function (stream) {
+            var playbackCtrl = stream.getPlaybackController();
+
+            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_STARTED, this);
+            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PAUSED, this);
+            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKING, this);
+            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_TIME_UPDATED, this);
+            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PROGRESS, this);
         },
 
         copyVideoProperties = function (fromVideoElement, toVideoElement) {
@@ -113,7 +112,7 @@
                 remainingBufferDuration = activeStream.getStartTime() + activeStream.getDuration() - bufferEndTime;
 
             if (remainingBufferDuration < STREAM_BUFFER_END_THRESHOLD) {
-                activeStream.getVideoModel().unlisten("progress", progressListener);
+                activeStream.getPlaybackController().unsubscribe(activeStream.getPlaybackController().eventList.ENAME_PLAYBACK_PROGRESS, this);
                 onStreamBufferingEnd();
             }
         },
@@ -125,7 +124,7 @@
          */
         onTimeupdate = function() {
             var streamEndTime  = activeStream.getStartTime() + activeStream.getDuration(),
-                currentTime = activeStream.getVideoModel().getCurrentTime(),
+                currentTime = activeStream.getPlaybackController().getTime(),
                 self = this;
 
             self.metricsModel.addDroppedFrames("video", self.videoExt.getPlaybackQuality(activeStream.getVideoModel().getElement()));
@@ -147,7 +146,7 @@
          * TODO move to ???Extensions class
          */
         onSeeking = function() {
-            var seekingTime = activeStream.getVideoModel().getCurrentTime(),
+            var seekingTime = activeStream.getPlaybackController().getTime(),
                 seekingStream = getStreamForTime(seekingTime);
 
             if (seekingStream && seekingStream !== activeStream) {
@@ -220,10 +219,10 @@
             from.pause();
             activeStream = to;
 
-            switchVideoModel.call(this, from.getVideoModel(), to.getVideoModel());
+            switchVideoModel.call(this, from, to);
 
             if (seekTo) {
-                seek(from.getVideoModel().getCurrentTime());
+                seek(from.getPlaybackController().getTime());
             } else {
                 seek(to.getStartTime());
             }
@@ -235,6 +234,7 @@
         composeStreams = function() {
             var self = this,
                 manifest = self.manifestModel.getValue(),
+                playbackCtrl,
                 pLen,
                 sLen,
                 pIdx,
@@ -266,10 +266,22 @@
                                     // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
                                     if (!stream) {
                                         stream = self.system.getObject("stream");
+                                        playbackCtrl = self.system.getObject("playbackController");
+                                        stream.setPeriodInfo(period);
                                         stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
+                                        stream.setPlaybackController(playbackCtrl);
+                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_STARTED, stream);
+                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PAUSED, stream);
+                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKING, stream);
+                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_TIME_UPDATED, stream);
+                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_ERROR, stream);
+                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKED, stream);
+                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PROGRESS, stream);
+                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_RATE_CHANGED, stream);
+                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_METADATA_LOADED, stream);
                                         stream.initProtection();
                                         stream.setAutoPlay(autoPlay);
-                                        stream.load(manifest, period);
+                                        stream.load(manifest);
                                         stream.subscribe(stream.eventList.ENAME_STREAM_UPDATED, self);
                                         streams.push(stream);
                                     }
@@ -279,7 +291,7 @@
                                 // If the active stream has not been set up yet, let it be the first Stream in the list
                                 if (!activeStream) {
                                     activeStream = streams[0];
-                                    attachVideoEvents.call(self, activeStream.getVideoModel());
+                                    attachVideoEvents.call(self, activeStream);
                                 }
                             } catch(e) {
                                 self.errHandler.manifestError(e.message, "nostreamscomposed", self.manifestModel.getValue());
@@ -327,11 +339,11 @@
             this.manifestUpdated = onManifestUpdated;
             this.streamUpdated = onStreamUpdated;
 
-            timeupdateListener = onTimeupdate.bind(this);
-            progressListener = onProgress.bind(this);
-            seekingListener = onSeeking.bind(this);
-            pauseListener = onPause.bind(this);
-            playListener = onPlay.bind(this);
+            this.playbackStarted = onPlay;
+            this.playbackPaused = onPause;
+            this.playbackSeeking = onSeeking;
+            this.playbackProgress = onProgress;
+            this.playbackTimeUpdated = onTimeupdate;
         },
 
         getManifestExt: function () {
@@ -373,7 +385,7 @@
         reset: function () {
 
             if (!!activeStream) {
-                detachVideoEvents.call(this, activeStream.getVideoModel());
+                detachVideoEvents.call(this, activeStream);
             }
 
             for (var i = 0, ln = streams.length; i < ln; i++) {

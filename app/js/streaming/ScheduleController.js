@@ -230,11 +230,12 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         getRequiredFragmentCount = function() {
             var self =this,
-                playbackRate = self.videoModel.getPlaybackRate(),
+                playbackRate = self.playbackController.getPlaybackRate(),
+                duration = self.playbackController.getPeriodDuration(),
                 actualBufferedDuration = self.bufferController.getBufferLevel() / Math.max(playbackRate, 1),
                 deferred = Q.defer();
 
-            self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, currentRepresentation.adaptation.period.duration).then(
+            self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, duration).then(
                 function (requiredBufferLength) {
                     self.indexHandler.getSegmentCountForDuration(currentRepresentation, requiredBufferLength, actualBufferedDuration).then(
                         function(count) {
@@ -287,7 +288,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         isSchedulingRequired = function() {
-            var isPaused = this.videoModel.isPaused();
+            var isPaused = this.playbackController.isPaused();
 
             return (!isPaused || (isPaused && this.scheduleWhilePaused));
         },
@@ -362,7 +363,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onBytesAppended = function(/*sender*/) {
             var self = this,
-                currentVideoTime = self.videoModel.getCurrentTime(),
+                currentVideoTime = self.playbackController.getTime(),
                 currentTime = new Date();
 
             if (playListTraceMetricsClosed === true && state !== WAITING && lastQuality !== -1) {
@@ -420,7 +421,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             var self = this,
                 now = new Date(),
-                currentVideoTime = self.videoModel.getCurrentTime();
+                currentVideoTime = self.playbackController.getTime();
 
             if (lastQuality === newQuality) return;
 
@@ -518,7 +519,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             type = typeValue;
             self.streamProcessor = streamProcessor;
-            self.videoModel = streamProcessor.videoModel;
+            self.playbackController = streamProcessor.playbackController;
             self.fragmentController = streamProcessor.fragmentController;
             self.representationController = streamProcessor.representationController;
             self.liveEdgeFinder = streamProcessor.liveEdgeFinder;
