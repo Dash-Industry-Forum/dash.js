@@ -34,6 +34,7 @@ MediaPlayer.dependencies.BufferController = function () {
         type,
         buffer = null,
         minBufferTime,
+        hasSufficientBuffer = null,
 
         onInitializationLoaded = function(sender, model, bytes, quality) {
             var self = this;
@@ -176,6 +177,11 @@ MediaPlayer.dependencies.BufferController = function () {
                     self.notify(self.eventList.ENAME_BUFFER_LEVEL_UPDATED, bufferLevel);
                     checkGapBetweenBuffers.call(self);
                     checkIfSufficientBuffer.call(self);
+
+                    if (bufferLevel < STALL_THRESHOLD) {
+                        notifyIfSufficientBufferStateChanged.call(this, false);
+                    }
+
                     deferred.resolve();
                 }
             );
@@ -273,11 +279,18 @@ MediaPlayer.dependencies.BufferController = function () {
 
             if ((bufferLevel < minBufferTime) && ((minBufferTime < timeToEnd) || (minBufferTime >= timeToEnd && !isBufferingCompleted))) {
                 this.debug.log("Waiting for more " + type + " buffer before starting playback.");
-                this.notify(this.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, false);
+                notifyIfSufficientBufferStateChanged.call(this, false);
             } else {
                 this.debug.log("Got enough " + type + " buffer to start.");
-                this.notify(this.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, true);
+                notifyIfSufficientBufferStateChanged.call(this, true);
             }
+        },
+
+        notifyIfSufficientBufferStateChanged = function(state) {
+            if (hasSufficientBuffer === state) return;
+
+            hasSufficientBuffer = state;
+            this.notify(this.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, state);
         },
 
         hasData = function() {
@@ -358,10 +371,6 @@ MediaPlayer.dependencies.BufferController = function () {
             if (type !== model.getContext().streamProcessor.getType()) return;
 
             checkIfSufficientBuffer.call(self);
-
-            if (bufferLevel < STALL_THRESHOLD && !self.videoModel.isStreamStalled(type)) {
-                self.notify(self.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, false);
-            }
         };
 
     return {
@@ -481,6 +490,7 @@ MediaPlayer.dependencies.BufferController = function () {
             isQuotaExceeded = false;
             rejectedBytes = null;
             appendingRejectedData = false;
+            hasSufficientBuffer = null;
 
             if (!errored) {
                 self.sourceBufferExt.abort(mediaSource, buffer);
