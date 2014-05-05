@@ -224,6 +224,11 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         abortRequests: function() {
             this.fragmentLoader.abort();
+
+            for (var i = 0, ln = loadingRequests.length; i < ln; i += 1) {
+                this.removeExecutedRequest(loadingRequests[i]);
+            }
+
             loadingRequests = [];
         },
 
