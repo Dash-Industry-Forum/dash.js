@@ -295,7 +295,7 @@ Dash.dependencies.DashHandler = function () {
                 availabilityStartTime = self.timelineConverter.calcPresentationTimeFromMediaTime(f.t / fTimescale, representation);
                 availabilityEndTime = self.timelineConverter.calcPresentationTimeFromMediaTime((time - frag.d) / fTimescale, representation);
                 representation.segmentAvailabilityRange = {start: availabilityStartTime, end: availabilityEndTime};
-                representation.availableSegmentsNumber = availabilityIdx;
+                representation.availableSegmentsNumber = availabilityIdx + 1;
             }
 
             return Q.when(segments);
