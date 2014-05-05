@@ -15,7 +15,6 @@ MediaPlayer.dependencies.FragmentController = function () {
     "use strict";
 
     var fragmentModels = [],
-        isLoadingPostponed = false,
 
         findModel = function(bufferController) {
             var ln = fragmentModels.length;
@@ -69,21 +68,13 @@ MediaPlayer.dependencies.FragmentController = function () {
             this.notify(this.eventList.ENAME_STREAM_COMPLETED, sender, request);
         },
 
-        onBufferLevelOutrun = function(/*sender*/) {
-            isLoadingPostponed = true;
-            executeIfReady.call(this);
-        },
-
         onBufferLevelBalanced = function(/*sender*/) {
-            isLoadingPostponed = false;
             executeIfReady.call(this);
         },
 
         isReadyToLoadNextFragment = function() {
             var isReady = true,
                 ln = fragmentModels.length;
-
-            if (isLoadingPostponed) return false;
 
             // Loop through the models and check if all of them are in the ready state
             for (var i = 0; i < ln; i++) {
@@ -116,7 +107,6 @@ MediaPlayer.dependencies.FragmentController = function () {
             this.fragmentLoadingCompleted = onFragmentLoadingCompleted;
             this.streamCompleted = onStreamCompleted;
 
-            this.bufferLevelOutrun = onBufferLevelOutrun;
             this.bufferLevelBalanced = onBufferLevelBalanced;
         },
 

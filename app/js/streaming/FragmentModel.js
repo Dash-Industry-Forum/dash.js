@@ -21,6 +21,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
         loadingRequests = [],
 
         LOADING_REQUEST_THRESHOLD = 2,
+        isLoadingPostponed = false,
 
         loadCurrentFragment = function(request) {
             var onSuccess,
@@ -64,6 +65,14 @@ MediaPlayer.dependencies.FragmentModel = function () {
             if (idx !== -1) {
                 executedRequests.splice(idx, 1);
             }
+        },
+
+        onBufferLevelOutrun = function() {
+            isLoadingPostponed = true;
+        },
+
+        onBufferLevelBalanced = function() {
+            isLoadingPostponed = false;
         };
 
     return {
@@ -74,6 +83,11 @@ MediaPlayer.dependencies.FragmentModel = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+
+        setup: function() {
+            this.bufferLevelOutrun = onBufferLevelOutrun;
+            this.bufferLevelBalanced = onBufferLevelBalanced;
+        },
 
         setContext: function(value) {
             context = value;
@@ -217,7 +231,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             var self = this,
                 currentRequest;
 
-            if (pendingRequests.length === 0) return;
+            if (pendingRequests.length === 0 || isLoadingPostponed) return;
 
             if (loadingRequests.length >= LOADING_REQUEST_THRESHOLD) {
                 // too many requests have been loading, do nothing until some of them are loaded or aborted

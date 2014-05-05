@@ -57,7 +57,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             setState.call(this, READY);
 
             this.requestScheduler.startScheduling(this);
-            fragmentModel = this.fragmentController.getModel(this);
         },
 
         doStart = function () {
@@ -453,8 +452,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onClosedCaptioningRequested = function(sender, quality) {
             var self = this;
-
-            fragmentModel = self.fragmentController.getModel(self);
             getInitRequest.call(self, quality);
             fragmentModel.executeCurrentRequest();
         },
@@ -527,6 +524,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.indexHandler = streamProcessor.indexHandler;
             self.requestScheduler = streamProcessor.requestScheduler;
             isDynamic = streamProcessor.isDynamic();
+            fragmentModel = this.fragmentController.getModel(this);
         },
 
         getFragmentModel: function() {
