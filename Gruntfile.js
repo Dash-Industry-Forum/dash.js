@@ -18,6 +18,8 @@ module.exports = function(grunt) {
             "app/js/streaming/Context.js",
             "app/js/dash/Dash.js",
             "app/js/dash/DashContext.js",
+            "app/js/webm/Webm.js",
+            "app/js/webm/WebmContext.js",
             "app/lib/q.js",
             "app/lib/xml2json.js",
             "app/lib/objectiron.js",
@@ -39,6 +41,8 @@ module.exports = function(grunt) {
             "./app/js/streaming/Context.js",
             "./app/js/dash/Dash.js",
             "./app/js/dash/DashContext.js",
+            "./app/js/webm/Webm.js",
+            "./app/js/webm/WebmContext.js",
             "./app/js/*/**/*.js"]
         }
       }
@@ -50,6 +54,8 @@ module.exports = function(grunt) {
             "./app/js/streaming/Context.js",
             "./app/js/dash/Dash.js",
             "./app/js/dash/DashContext.js",
+            "./app/js/webm/Webm.js",
+            "./app/js/webm/WebmContext.js",
             "./app/js/*/**/*.js"],
 
         options: {
@@ -61,7 +67,7 @@ module.exports = function(grunt) {
             "./test/js/utils/ValidateUrl.js",
             "./app/js/Main.js"],
           specs: [
-            './test/js/dash/DashParser_Suite.js',
+           /* './test/js/dash/DashParser_Suite.js',
              './test/js/dash/FragmentExtensions_Suite.js',
              './test/js/dash/DashMetricsExtensions_Suite.js',
              './test/js/dash/DashMetricsConverter_Suite.js',
@@ -77,7 +83,8 @@ module.exports = function(grunt) {
              './test/js/streaming/ManifestUpdater_Suite.js',
              './test/js/streaming/FragmentController_Suite.js',
              "./test/js/streaming/VideoModel_Suite.js",
-             './test/js/streaming/ManifestLoader_Suite.js'
+             './test/js/streaming/ManifestLoader_Suite.js',*/
+             './test/js/webm/WebmURLExtensions_Suite.js'
 			],
           vendor: [
 			"./app/lib/jquery/jquery-1.10.2.min.js",
