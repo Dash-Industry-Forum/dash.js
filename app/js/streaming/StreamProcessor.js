@@ -22,7 +22,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         timelineConverter: undefined,
         abrController: undefined,
 
-        initialize: function (typeValue, buffer, videoModel, scheduler, fragmentController, playbackController, mediaSource, data, periodInfo, streamValue) {
+        initialize: function (typeValue, buffer, videoModel, requestScheduler, fragmentController, playbackController, mediaSource, data, periodInfo, streamValue) {
 
             var self = this,
                 manifest = self.manifestModel.getValue(),
@@ -43,16 +43,16 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             self.representationController = representationController;
             self.videoModel = videoModel;
             self.fragmentController = fragmentController;
-            self.requestScheduler = scheduler;
+            self.requestScheduler = requestScheduler;
             self.liveEdgeFinder.initialize(this);
 
             abrController.subscribe(abrController.eventList.ENAME_QUALITY_CHANGED, bufferController);
             abrController.subscribe(abrController.eventList.ENAME_QUALITY_CHANGED, representationController);
             abrController.subscribe(abrController.eventList.ENAME_QUALITY_CHANGED, scheduleController);
 
-            scheduler.subscribe(scheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, bufferController);
-            scheduler.subscribe(scheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, scheduleController);
-            scheduler.subscribe(scheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, abrController);
+            requestScheduler.subscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, bufferController);
+            requestScheduler.subscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, scheduleController);
+            requestScheduler.subscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, abrController);
 
             liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.timelineConverter);
             liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, scheduleController);
@@ -73,7 +73,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             fragmentController.subscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, bufferController);
 
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, videoModel);
-            bufferController.subscribe(bufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, scheduler);
+            bufferController.subscribe(bufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, requestScheduler);
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, scheduleController);
             bufferController.subscribe(bufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
@@ -158,6 +158,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 fragmentController = self.fragmentController,
                 requestScheduler = self.requestScheduler,
                 abrController = self.abrController,
+                playbackController = self.playbackController,
                 videoModel = self.videoModel;
 
             abrController.unsubscribe(abrController.eventList.ENAME_QUALITY_CHANGED, bufferController);
@@ -167,16 +168,17 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             requestScheduler.unsubscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, bufferController);
             requestScheduler.unsubscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, scheduleController);
             requestScheduler.unsubscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, abrController);
-            representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, stream);
 
             liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.timelineConverter);
-            liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, bufferController);
             liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, scheduleController);
 
             representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_STARTED, scheduleController);
             representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, bufferController);
             representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, scheduleController);
             representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, abrController);
+            representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, stream);
+            representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, liveEdgeFinder);
+            representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, playbackController);
 
             fragmentController.unsubscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADED, bufferController);
             fragmentController.unsubscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADED, bufferController);
@@ -187,7 +189,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
 
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, videoModel);
             bufferController.unsubscribe(bufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, requestScheduler);
-            bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_CONTROLLER_INITIALIZED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
@@ -198,6 +199,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, fragmentController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
 
             fragmentController.resetModel(this.getFragmentModel());
 
