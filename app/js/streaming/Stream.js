@@ -242,6 +242,7 @@ MediaPlayer.dependencies.Stream = function () {
                 processor = null,
                 self = this;
 
+            this.requestScheduler.subscribe(this.requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, this.abrController);
             // Figure out some bits about the stream before building anything.
             //self.debug.log("Gathering information for buffers. (1)");
             self.manifestExt.getDuration(manifest, periodInfo).then(
@@ -739,6 +740,7 @@ MediaPlayer.dependencies.Stream = function () {
         errHandler: undefined,
         timelineConverter: undefined,
         requestScheduler: undefined,
+        abrController: undefined,
         scheduleWhilePaused: undefined,
         eventList: undefined,
         notify: undefined,
@@ -811,6 +813,8 @@ MediaPlayer.dependencies.Stream = function () {
             if (!!this.protectionController) {
                 this.protectionController.teardownKeySystem(kid);
             }
+
+            this.requestScheduler.unsubscribe(this.requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, this.abrController);
             this.protectionController = undefined;
             this.protectionModel = undefined;
             this.fragmentController = undefined;
