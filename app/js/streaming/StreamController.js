@@ -275,7 +275,6 @@
                                         playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKING, stream);
                                         playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_TIME_UPDATED, stream);
                                         playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_ERROR, stream);
-                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKED, stream);
                                         playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PROGRESS, stream);
                                         playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_RATE_CHANGED, stream);
                                         playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_METADATA_LOADED, stream);
