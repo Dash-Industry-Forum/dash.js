@@ -63,7 +63,7 @@ MediaPlayer.models.VideoModel = function () {
             }
         },
 
-        bufferLevelStateChanged = function(sender, hasSufficientBuffer) {
+        onBufferLevelStateChanged = function(sender, hasSufficientBuffer) {
             var type = sender.streamProcessor.getType();
 
             stallStream.call(this, type, !hasSufficientBuffer);
@@ -79,7 +79,7 @@ MediaPlayer.models.VideoModel = function () {
         system : undefined,
 
         setup : function () {
-            this.bufferLevelStateChanged = bufferLevelStateChanged;
+            this.bufferLevelStateChanged = onBufferLevelStateChanged;
             //this.system.mapHandler("setCurrentTime", undefined, handleSetCurrentTimeNotification.bind(this));
         },
 
@@ -135,17 +135,7 @@ MediaPlayer.models.VideoModel = function () {
 
         setSource: function (source) {
             element.src = source;
-        },
-
-        isStreamStalled: function(type) {
-            return stalledStreams[type] === true;
-        },
-
-        isPlayerStalled: function () {
-            return element.playbackRate === 0;
-        },
-
-        stallStream: stallStream
+        }
     };
 };
 
