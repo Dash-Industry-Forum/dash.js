@@ -16,12 +16,12 @@ MediaPlayer.dependencies.FragmentController = function () {
 
     var fragmentModels = [],
 
-        findModel = function(bufferController) {
+        findModel = function(context) {
             var ln = fragmentModels.length;
-            // We expect one-to-one relation between FragmentModel and BufferController,
-            // so just compare the given BufferController object with the one that stored in the model to find the model for it
+            // We expect one-to-one relation between FragmentModel and context,
+            // so just compare the given context object with the one that stored in the model to find the model for it
             for (var i = 0; i < ln; i++) {
-                if (fragmentModels[i].getContext() == bufferController) {
+                if (fragmentModels[i].getContext() == context) {
                     return fragmentModels[i];
                 }
             }

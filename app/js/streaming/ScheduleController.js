@@ -25,9 +25,9 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         setState = function(value) {
             var self = this;
-            //self.debug.log("BufferController " + type + " setState to:" + value);
+            //self.debug.log("ScheduleController " + type + " setState to:" + value);
             state = value;
-            // Notify the FragmentController about any state change to track the loading process of each active BufferController
+            // Notify the FragmentController about any state change to track the loading process of each active ScheduleController
             if (fragmentModel !== null) {
                 self.fragmentController.onStateChange();
             }
@@ -48,12 +48,12 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
-        startPlayback = function() {
+        startScheduling = function() {
             if (!ready || !started) {
                 return;
             }
 
-            //this.debug.log("BufferController begin " + type + " validation");
+            //this.debug.log("ScheduleController begin " + type + " validation");
             setState.call(this, READY);
 
             this.requestScheduler.startScheduling(this);
@@ -73,11 +73,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 //mseSetTime = true;
             }
 
-            this.debug.log("BufferController " + type + " start.");
+            this.debug.log("ScheduleController " + type + " start.");
 
             started = true;
             waitingForBuffer = true;
-            startPlayback.call(this);
+            startScheduling.call(this);
         },
 
         startOnReady = function(time) {
@@ -88,7 +88,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         doSeek = function (time) {
             var currentTime;
 
-            this.debug.log("BufferController " + type + " seek: " + time);
+            this.debug.log("ScheduleController " + type + " seek: " + time);
             seeking = true;
             seekTarget = time;
             currentTime = new Date();
@@ -101,7 +101,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         doStop = function () {
             if (state === WAITING) return;
 
-            this.debug.log("BufferController " + type + " stop.");
+            this.debug.log("ScheduleController " + type + " stop.");
             setState.call(this, WAITING);
             this.requestScheduler.stopScheduling(this);
             // cancel the requests that have already been created, but not loaded yet.
@@ -250,7 +250,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         validate = function () {
             var self = this;
 
-            //self.debug.log("BufferController.validate() " + type + " | state: " + state);
+            //self.debug.log("ScheduleController.validate() " + type + " | state: " + state);
             //self.debug.log(type + " Playback rate: " + self.videoModel.getElement().playbackRate);
             //self.debug.log(type + " Working time: " + currentTime);
             //self.debug.log(type + " Video time: " + currentVideoTime);
