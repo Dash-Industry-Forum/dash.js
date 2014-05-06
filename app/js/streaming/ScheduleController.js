@@ -435,12 +435,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 throw "Unexpected error!";
             }
 
-            // each representation can have its own @presentationTimeOffset, so we should set the offset
-            // if it has changed after switching the quality
-            if (self.bufferController.getBuffer().timestampOffset !== currentRepresentation.MSETimeOffset) {
-                self.bufferController.getBuffer().timestampOffset = currentRepresentation.MSETimeOffset;
-            }
-
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
             self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, currentRepresentation.id);
         },

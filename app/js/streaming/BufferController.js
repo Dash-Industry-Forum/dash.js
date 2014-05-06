@@ -297,12 +297,22 @@ MediaPlayer.dependencies.BufferController = function () {
             return !!this.representationController && !!this.representationController.getData() && !!buffer;
         },
 
-        onDataUpdateCompleted = function(/*sender, data, newRepresentation*/) {
+        updateBufferTimestampOffset = function(MSETimeOffset) {
+            // each representation can have its own @presentationTimeOffset, so we should set the offset
+            // if it has changed after switching the quality or updating an mpd
+            if (buffer.timestampOffset !== MSETimeOffset) {
+                buffer.timestampOffset = MSETimeOffset;
+            }
+        },
+
+        onDataUpdateCompleted = function(sender, data, newRepresentation) {
             var self = this;
 
             if (deferredInitAppend && Q.isPending(deferredInitAppend.promise)) {
                 deferredInitAppend.resolve();
             }
+
+            updateBufferTimestampOffset.call(self, newRepresentation.MSETimeOffset);
 
             deferredInitAppend = Q.defer();
             initializationData = [];
@@ -335,6 +345,8 @@ MediaPlayer.dependencies.BufferController = function () {
             // if the quality has changed we should append the initialization data again. We get it
             // from the cached array instead of sending a new request
             if (lastQuality === newQuality) return;
+
+            updateBufferTimestampOffset.call(self, self.representationController.getRepresentationForQuality(newQuality).MSETimeOffset);
 
             lastQuality = newQuality;
             switchInitData.call(self);
