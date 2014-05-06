@@ -31,7 +31,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackSeeking = function() {
-            this.notify(this.eventList.ENAME_PLAYBACK_SEEKING);
+            this.notify(this.eventList.ENAME_PLAYBACK_SEEKING, this.getTime());
         },
 
         onPlaybackSeeked = function() {
@@ -39,11 +39,22 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackTimeUpdated = function() {
-            this.notify(this.eventList.ENAME_PLAYBACK_TIME_UPDATED);
+            this.notify(this.eventList.ENAME_PLAYBACK_TIME_UPDATED, this.getTimeToPeriodEnd());
         },
 
         onPlaybackProgress = function() {
-            this.notify(this.eventList.ENAME_PLAYBACK_PROGRESS);
+            var ranges = videoModel.getElement().buffered,
+                lastRange,
+                bufferEndTime,
+                remainingUnbufferedDuration;
+
+            if (ranges.length) {
+                lastRange = ranges.length -1;
+                bufferEndTime = ranges.end(lastRange);
+                remainingUnbufferedDuration = period.start + period.duration - bufferEndTime;
+            }
+
+            this.notify(this.eventList.ENAME_PLAYBACK_PROGRESS, videoModel.getElement().buffered, remainingUnbufferedDuration);
         },
 
         onPlaybackRateChanged = function() {

@@ -503,11 +503,9 @@ MediaPlayer.dependencies.Stream = function () {
             this.reset();
         },
 
-        onSeeking = function () {
+        onSeeking = function (sender, seekingTime) {
             //this.debug.log("Got seeking event.");
-            var time = this.playbackController.getTime();
-
-            startBuffering(time);
+            startBuffering(seekingTime);
         },
 
         onSeeked = function () {

@@ -98,23 +98,11 @@
          * Used to determine the time current stream is almost buffered and we can start buffering of the next stream.
          * TODO move to ???Extensions class
          */
-        onProgress = function() {
+        onProgress = function(sender, ranges, remainingUnbufferedDuration) {
+            if (!remainingUnbufferedDuration || (remainingUnbufferedDuration >= STREAM_BUFFER_END_THRESHOLD)) return;
 
-            var ranges = activeStream.getVideoModel().getElement().buffered;
-
-            // nothing is buffered
-            if (!ranges.length) {
-                return;
-            }
-
-            var lastRange = ranges.length -1,
-                bufferEndTime = ranges.end(lastRange),
-                remainingBufferDuration = activeStream.getStartTime() + activeStream.getDuration() - bufferEndTime;
-
-            if (remainingBufferDuration < STREAM_BUFFER_END_THRESHOLD) {
-                activeStream.getPlaybackController().unsubscribe(activeStream.getPlaybackController().eventList.ENAME_PLAYBACK_PROGRESS, this);
-                onStreamBufferingEnd();
-            }
+            activeStream.getPlaybackController().unsubscribe(activeStream.getPlaybackController().eventList.ENAME_PLAYBACK_PROGRESS, this);
+            onStreamBufferingEnd();
         },
 
         /*
@@ -122,10 +110,8 @@
          * Used to determine the time current stream is finished and we should switch to the next stream.
          * TODO move to ???Extensions class
          */
-        onTimeupdate = function() {
-            var streamEndTime  = activeStream.getStartTime() + activeStream.getDuration(),
-                currentTime = activeStream.getPlaybackController().getTime(),
-                self = this;
+        onTimeupdate = function(sender, timeToPeriodEnd) {
+            var self = this;
 
             self.metricsModel.addDroppedFrames("video", self.videoExt.getPlaybackQuality(activeStream.getVideoModel().getElement()));
 
@@ -136,7 +122,7 @@
             if (activeStream.getVideoModel().getElement().seeking) return;
 
             // check if stream end is reached
-            if (streamEndTime - currentTime < STREAM_END_THRESHOLD) {
+            if (timeToPeriodEnd < STREAM_END_THRESHOLD) {
                 switchStream.call(this, activeStream, getNextStream());
             }
         },
@@ -145,9 +131,8 @@
          * Called when Seeking event is occured.
          * TODO move to ???Extensions class
          */
-        onSeeking = function() {
-            var seekingTime = activeStream.getPlaybackController().getTime(),
-                seekingStream = getStreamForTime(seekingTime);
+        onSeeking = function(sender, seekingTime) {
+            var seekingStream = getStreamForTime(seekingTime);
 
             if (seekingStream && seekingStream !== activeStream) {
                 switchStream.call(this, activeStream, seekingStream, seekingTime);
