@@ -146,7 +146,7 @@ Dash.dependencies.DashHandler = function () {
                 }
             }
 
-            return Q.when(isFinished);
+            return isFinished;
         },
 
         getIndexBasedSegment = function (representation, index) {
@@ -702,7 +702,7 @@ Dash.dependencies.DashHandler = function () {
             }
             */
 
-            return Q.when(idx);
+            return idx;
         },
 
         getSegmentByIndex = function(index, representation) {
@@ -742,7 +742,7 @@ Dash.dependencies.DashHandler = function () {
 
         getRequestForSegment = function (segment) {
             if (segment === null || segment === undefined) {
-                return Q.when(null);
+                return null;
             }
 
             var request = new MediaPlayer.vo.SegmentRequest(),
@@ -770,13 +770,14 @@ Dash.dependencies.DashHandler = function () {
             request.quality = representation.index;
             request.index = segment.availabilityIdx;
 
-            return Q.when(request);
+            return request;
         },
 
         getForTime = function (representation, time) {
             var deferred,
                 request,
                 segment,
+                finished,
                 self = this;
 
             if (!representation) {
@@ -791,24 +792,13 @@ Dash.dependencies.DashHandler = function () {
 
             getSegments.call(self, representation).then(
                 function (/*segments*/) {
-                    var segmentsPromise;
-
                     //self.debug.log("Got segments.");
                     //self.debug.log(segments);
                     //self.debug.log("Got a list of segments, so dig deeper.");
-                    segmentsPromise = getIndexForSegments.call(self, time, representation);
-                    return segmentsPromise;
-                }
-            ).then(
-                function (newIndex) {
-                    self.debug.log("Index for time " + time + " is " + newIndex);
-                    index = newIndex;
+                    index = getIndexForSegments.call(self, time, representation);
+                    self.debug.log("Index for time " + time + " is " + index);
 
-                    return isMediaFinished.call(self, representation);
-                }
-            ).then(
-                function (finished) {
-                    var requestPromise = null;
+                    finished = isMediaFinished.call(self, representation);
 
                     //self.debug.log("Stream finished? " + finished);
                     if (finished) {
@@ -819,16 +809,12 @@ Dash.dependencies.DashHandler = function () {
                         self.debug.log(request);
                         deferred.resolve(request);
                     } else {
+                        //self.debug.log("Got a request.");
+                        //self.debug.log(request);
                         segment = getSegmentByIndex(index, representation);
-                        requestPromise = getRequestForSegment.call(self, segment);
+                        request = getRequestForSegment.call(self, segment);
                     }
 
-                    return requestPromise;
-                }
-            ).then(
-                function (request) {
-                    //self.debug.log("Got a request.");
-                    //self.debug.log(request);
                     deferred.resolve(request);
                 }
             );
@@ -840,6 +826,7 @@ Dash.dependencies.DashHandler = function () {
             var deferred,
                 request,
                 segment,
+                finished,
                 idx,
                 self = this;
 
@@ -860,37 +847,28 @@ Dash.dependencies.DashHandler = function () {
 
             deferred = Q.defer();
 
-            isMediaFinished.call(self, representation).then(
-                function (finished) {
-                    //self.debug.log("Stream finished? " + finished);
-                    if (finished) {
-                        request = new MediaPlayer.vo.SegmentRequest();
-                        request.action = request.ACTION_COMPLETE;
-                        request.index = idx;
-                        self.debug.log("Signal complete.");
-                        //self.debug.log(request);
-                        deferred.resolve(request);
-                    } else {
-                        getSegments.call(self, representation).then(
-                            function (/*segments*/) {
-                                var segmentsPromise;
+            finished = isMediaFinished.call(self, representation);
 
-                                //self.debug.log("Got segments.");
-                                //self.debug.log(segments);
-                                segment = getSegmentByIndex(idx, representation);
-                                segmentsPromise = getRequestForSegment.call(self, segment);
-                                return segmentsPromise;
-                            }
-                        ).then(
-                            function (request) {
-                                //self.debug.log("Got a request.");
-                                //self.debug.log(request);
-                                deferred.resolve(request);
-                            }
-                        );
+            //self.debug.log("Stream finished? " + finished);
+            if (finished) {
+                request = new MediaPlayer.vo.SegmentRequest();
+                request.action = request.ACTION_COMPLETE;
+                request.index = idx;
+                self.debug.log("Signal complete.");
+                //self.debug.log(request);
+                deferred.resolve(request);
+            } else {
+                getSegments.call(self, representation).then(
+                    function (/*segments*/) {
+                        var request;
+                        //self.debug.log("Got segments.");
+                        //self.debug.log(segments);
+                        segment = getSegmentByIndex(idx, representation);
+                        request = getRequestForSegment.call(self, segment);
+                        deferred.resolve(request);
                     }
-                }
-            );
+                );
+            }
 
             return deferred.promise;
         },

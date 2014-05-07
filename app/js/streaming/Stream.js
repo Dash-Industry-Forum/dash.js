@@ -253,16 +253,9 @@ MediaPlayer.dependencies.Stream = function () {
                     deferredData = self.manifestExt.getTextData(manifest, periodIndex);
 
                     getCodecOrMimeType = function(mediaData) {
-                        var deferred = Q.defer();
+                        mimeType = self.manifestExt.getMimeType(mediaData);
 
-                        self.manifestExt.getMimeType(mediaData).then(
-                            function(mimeTypeValue) {
-                                mimeType = mimeTypeValue;
-                                deferred.resolve(mimeTypeValue);
-                            }
-                        );
-
-                        return deferred.promise;
+                        return mimeType;
                     };
 
                     break;
@@ -274,66 +267,63 @@ MediaPlayer.dependencies.Stream = function () {
                 function (mediaData) {
                     if (mediaData !== null) {
                         //self.debug.log("Create " + type + " buffer.");
-                        getCodecOrMimeType.call(self, mediaData).then(
-                            function (result) {
-                                if (result === mimeType) {
-                                    return self.sourceBufferExt.createSourceBuffer(mediaSource, mimeType);
-                                }
+                        var codecOrMime = getCodecOrMimeType.call(self, mediaData),
+                            contentProtectionData,
+                            buffer = null;
 
-                                codec = result;
-                                self.debug.log(type + " codec: " + codec);
-                                codecs[type] = codec;
-
-                                return self.manifestExt.getContentProtectionData(mediaData).then(
-                                    function (contentProtectionData) {
-                                        //self.debug.log(type + " contentProtection");
-
-                                        if (!!contentProtectionData && !self.capabilities.supportsMediaKeys()) {
-                                            self.errHandler.capabilityError("mediakeys");
-                                            return Q.when(null);
-                                        }
-
-                                        contentProtection = contentProtectionData;
-
-                                        //kid = self.protectionController.selectKeySystem(codec, contentProtection);
-                                        //self.protectionController.ensureKeySession(kid, codec, null);
-
-                                        if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
-                                            var msg = type + "Codec (" + codec + ") is not supported.";
-                                            self.errHandler.manifestError(msg, "codec", manifest);
-                                            self.debug.log(msg);
-                                            return Q.when(null);
-                                        }
-
-                                        return self.sourceBufferExt.createSourceBuffer(mediaSource, codec);
-                                    }
-                                );
-                            }
-                        ).then(
-                            function (buffer) {
-                                if (buffer === null) {
-                                    self.debug.log("No buffer was created, skipping " + type + " data.");
-                                } else {
-                                    // TODO : How to tell index handler live/duration?
-                                    // TODO : Pass to controller and then pass to each method on handler?
-
-                                    processor = self.system.getObject("streamProcessor");
-                                    processor.initialize(mimeType || type, buffer, self.videoModel, self.requestScheduler, self.fragmentController, self.playbackController, mediaSource, mediaData, periodInfo, self);
-                                    streamProcessors.push(processor);
-                                    //self.debug.log(type + " is ready!");
-                                }
-
-                                deferred.resolve(type);
-                            },
-                            function (/*error*/) {
+                        if (codecOrMime === mimeType) {
+                            try{
+                                buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mimeType);
+                            } catch (e) {
                                 self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
-                                deferred.resolve(type);
                             }
-                        );
+                        } else {
+                            codec = codecOrMime;
+                            self.debug.log(type + " codec: " + codec);
+                            codecs[type] = codec;
+
+                            contentProtectionData = self.manifestExt.getContentProtectionData(mediaData);
+
+                            if (!!contentProtectionData && !self.capabilities.supportsMediaKeys()) {
+                                self.errHandler.capabilityError("mediakeys");
+                            } else {
+                                contentProtection = contentProtectionData;
+
+                                //kid = self.protectionController.selectKeySystem(codec, contentProtection);
+                                //self.protectionController.ensureKeySession(kid, codec, null);
+
+                                if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
+                                    var msg = type + "Codec (" + codec + ") is not supported.";
+                                    self.errHandler.manifestError(msg, "codec", manifest);
+                                    self.debug.log(msg);
+                                } else {
+                                    try {
+                                        buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, codec);
+                                    } catch (e) {
+                                        self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
+                                    }
+                                }
+                            }
+                        }
+
+                        if (buffer === null) {
+                            self.debug.log("No buffer was created, skipping " + type + " data.");
+                        } else {
+                            // TODO : How to tell index handler live/duration?
+                            // TODO : Pass to controller and then pass to each method on handler?
+
+                            processor = self.system.getObject("streamProcessor");
+                            processor.initialize(mimeType || type, buffer, self.videoModel, self.requestScheduler, self.fragmentController, self.playbackController, mediaSource, mediaData, periodInfo, self);
+                            streamProcessors.push(processor);
+                            //self.debug.log(type + " is ready!");
+                        }
+
+
                     } else {
                         self.debug.log("No " + type + " data.");
-                        deferred.resolve(type);
                     }
+
+                    deferred.resolve(type);
                 }
             );
 

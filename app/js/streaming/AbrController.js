@@ -119,23 +119,15 @@ MediaPlayer.dependencies.AbrController = function () {
             var deferred = Q.defer(),
                 self = this;
 
-            self.manifestExt.getIsVideo(data).then(
-                function (isVideo) {
-                    if (isVideo) {
-                        deferred.resolve(self.metricsModel.getMetricsFor("video"));
-                    } else {
-                        self.manifestExt.getIsAudio(data).then(
-                            function (isAudio) {
-                                if (isAudio) {
-                                    deferred.resolve(self.metricsModel.getMetricsFor("audio"));
-                                } else {
-                                    deferred.resolve(self.metricsModel.getMetricsFor("stream"));
-                                }
-                            }
-                        );
-                    }
+            if (self.manifestExt.getIsVideo(data)) {
+                deferred.resolve(self.metricsModel.getMetricsFor("video"));
+            } else {
+                if (self.manifestExt.getIsAudio(data)) {
+                    deferred.resolve(self.metricsModel.getMetricsFor("audio"));
+                } else {
+                    deferred.resolve(self.metricsModel.getMetricsFor("stream"));
                 }
-            );
+            }
 
             return deferred.promise;
         },

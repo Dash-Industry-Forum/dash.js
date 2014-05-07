@@ -139,7 +139,7 @@ Dash.dependencies.BaseURLExtensions = function () {
             }
 
             this.debug.log("Parsed SIDX box: " + segments.length + " segments.");
-            return Q.when(segments);
+            return segments;
         },
 
         findInit = function (data, info) {
@@ -284,6 +284,7 @@ Dash.dependencies.BaseURLExtensions = function () {
 
         findSIDX = function (data, info) {
             var deferred = Q.defer(),
+                segments,
                 d = new DataView(data),
                 request = new XMLHttpRequest(),
                 pos = 0,
@@ -422,11 +423,8 @@ Dash.dependencies.BaseURLExtensions = function () {
 
                 } else {
                     self.debug.log("Parsing segments from SIDX.");
-                    parseSegments.call(self, sidxBytes, info.url, info.range.start).then(
-                        function (segments) {
-                            deferred.resolve(segments);
-                        }
-                    );
+                    segments = parseSegments.call(self, sidxBytes, info.url, info.range.start);
+                    deferred.resolve(segments);
                 }
             }
 
@@ -436,6 +434,7 @@ Dash.dependencies.BaseURLExtensions = function () {
         loadSegments = function (media, theRange) {
             var deferred = Q.defer(),
                 request = new XMLHttpRequest(),
+                segments,
                 parts,
                 needFailureReport = true,
                 self = this,
@@ -479,11 +478,8 @@ Dash.dependencies.BaseURLExtensions = function () {
                         }
                     );
                 } else {
-                    parseSegments.call(self, request.response, info.url, info.range.start).then(
-                        function (segments) {
-                            deferred.resolve(segments);
-                        }
-                    );
+                    segments = parseSegments.call(self, request.response, info.url, info.range.start);
+                    deferred.resolve(segments);
                 }
             };
 

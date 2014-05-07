@@ -15,6 +15,7 @@ MediaPlayer.dependencies.SourceBufferExtensions = function () {
     "use strict";
     this.system = undefined;
     this.manifestExt = undefined;
+    this.errHandler = undefined;
 };
 
 MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
@@ -23,19 +24,19 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
     createSourceBuffer: function (mediaSource, codec) {
         "use strict";
-        var deferred = Q.defer(),
-            self = this;
+        var self = this,
+            buffer = null;
         try {
-            deferred.resolve(mediaSource.addSourceBuffer(codec));
+            buffer = mediaSource.addSourceBuffer(codec);
         } catch(ex) {
-            if (!self.manifestExt.getIsTextTrack(codec)) {
-                deferred.reject(ex.description);
+            if (self.manifestExt.getIsTextTrack(codec)) {
+                buffer = self.system.getObject("textSourceBuffer");
             } else {
-                deferred.resolve(self.system.getObject("textSourceBuffer"));
+                throw ex;
             }
-
         }
-        return deferred.promise;
+
+        return buffer;
     },
 
     removeSourceBuffer: function (mediaSource, buffer) {
