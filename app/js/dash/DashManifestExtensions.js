@@ -59,13 +59,6 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             }
         }
 
-        // TODO : Add the type here so that somebody who has access to the adapatation set can check it.
-        // THIS IS A HACK for a bug in DashMetricsExtensions.
-        // See the note in DashMetricsExtensions.adaptationIsType().
-        if (result) {
-            adaptation.type = type;
-        }
-
         return result;
     },
 

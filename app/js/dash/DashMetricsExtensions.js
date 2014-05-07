@@ -70,34 +70,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
         },
 
         adaptationIsType = function (adaptation, bufferType) {
-            var found = false;
-
-            // TODO : HACK ATTACK
-            // Below we call getIsVideo and getIsAudio and then check the adaptation set for a 'type' property.
-            // getIsVideo and getIsAudio are adding this 'type' property and SHOULD NOT BE.
-            // This method expects getIsVideo and getIsAudio to be sync, but they are async (returns a promise).
-            // This is a bad workaround!
-            // The metrics extensions should have every method use promises.
-
-            if (bufferType === "video") {
-                //found = this.manifestExt.getIsVideo(adaptation);
-                this.manifestExt.getIsVideo(adaptation);
-                if (adaptation.type === "video") {
-                    found = true;
-                }
-            }
-            else if (bufferType === "audio") {
-                //found = this.manifestExt.getIsAudio(adaptation); // TODO : Have to be sure it's the *active* audio track.
-                this.manifestExt.getIsAudio(adaptation);
-                if (adaptation.type === "audio") {
-                    found = true;
-                }
-            }
-            else {
-                found = false;
-            }
-
-            return found;
+            return this.manifestExt.getIsTypeOf(adaptation, bufferType);
         },
 
         findMaxBufferIndex = function (periodArray, bufferType) {
