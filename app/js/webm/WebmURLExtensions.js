@@ -404,10 +404,11 @@ Webm.dependencies.WebmURLExtensions = function () {
                 segment.startTime = parsed[i].CueTime;
                 segment.timescale = 1000; // hardcoded for ms
                 start = parsed[i].CueTracks[0].ClusterPosition + segmentStart;
+
                 if (i < parsed.length - 1) {
                     end = parsed[i + 1].CueTracks[0].ClusterPosition + segmentStart - 1;
                 } else {
-                    end = segmentEnd - 1;
+                    end = segmentEnd;
                 }
                 segment.mediaRange = start + "-" + end;
 
@@ -465,6 +466,7 @@ Webm.dependencies.WebmURLExtensions = function () {
                 if (request.status < 200 || request.status > 299) {
                     return;
                 }
+                needFailureReport = false;
                 parseSegments.call(self, request.response, info.url, segmentStart, segmentEnd, duration).then(
                     function (segments) {
                         deferred.resolve(segments);
@@ -473,8 +475,7 @@ Webm.dependencies.WebmURLExtensions = function () {
             };
 
             request.onloadend = request.onerror = function () {
-                if (!needFailureReport)
-                {
+                if (!needFailureReport) {
                     return;
                 }
                 needFailureReport = false;
@@ -527,8 +528,7 @@ Webm.dependencies.WebmURLExtensions = function () {
             };
 
             request.onloadend = request.onerror = function () {
-                if (!needFailureReport)
-                {
+                if (!needFailureReport) {
                     return;
                 }
                 needFailureReport = false;

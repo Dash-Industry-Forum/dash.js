@@ -13,7 +13,8 @@
  */
 
 /*jshint -W020*/
-var Webm = (function () {
+/*global Webm*/
+Webm = (function () {
     "use strict";
 
     return {
