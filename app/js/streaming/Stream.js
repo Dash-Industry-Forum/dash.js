@@ -217,143 +217,108 @@ MediaPlayer.dependencies.Stream = function () {
             manifest = null;
         },
 
-        checkIfInitialized = function (videoReady, audioReady, textTrackReady, deferred) {
-            if (videoReady && audioReady && textTrackReady) {
-                if (streamProcessors.length === 0) {
-                    var msg = "No streams to play.";
-                    this.errHandler.manifestError(msg, "nostreams", manifest);
-                    this.debug.log(msg);
-                    deferred.reject();
-                } else {
-                    //this.debug.log("MediaSource initialized!");
-                    deferred.resolve(true);
-                }
-            }
-        },
-
         initializeMediaForType = function(type, manifest, periodIndex) {
             var self = this,
                 mimeType,
                 codec,
-                deferred = Q.defer(),
                 getCodecOrMimeType = function(mediaData) {
                     return self.manifestExt.getCodec(mediaData);
                 },
                 processor,
-                deferredData;
+                mediaData;
 
-            switch (type) {
-                case "video":
-                    deferredData = self.manifestExt.getVideoData(manifest, periodIndex);
-                    break;
-                case "audio":
-                    deferredData = self.manifestExt.getPrimaryAudioData(manifest, periodIndex);
-                    break;
-                case "text":
-                    deferredData = self.manifestExt.getTextData(manifest, periodIndex);
+            if (type === "text") {
+                getCodecOrMimeType = function(mediaData) {
+                    mimeType = self.manifestExt.getMimeType(mediaData);
 
-                    getCodecOrMimeType = function(mediaData) {
-                        mimeType = self.manifestExt.getMimeType(mediaData);
-
-                        return mimeType;
-                    };
-
-                    break;
-                default:
-                    deferred.reject("unsupported media type: " + type);
+                    return mimeType;
+                };
             }
 
-            deferredData.then(
-                function (mediaData) {
-                    if (mediaData !== null) {
-                        //self.debug.log("Create " + type + " buffer.");
-                        var codecOrMime = getCodecOrMimeType.call(self, mediaData),
-                            contentProtectionData,
-                            buffer = null;
+            mediaData = self.manifestExt.getDataForType(manifest, periodIndex, type);
 
-                        if (codecOrMime === mimeType) {
-                            try{
-                                buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mimeType);
+            if (mediaData !== null) {
+                //self.debug.log("Create " + type + " buffer.");
+                var codecOrMime = getCodecOrMimeType.call(self, mediaData),
+                    contentProtectionData,
+                    buffer = null;
+
+                if (codecOrMime === mimeType) {
+                    try{
+                        buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mimeType);
+                    } catch (e) {
+                        self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
+                    }
+                } else {
+                    codec = codecOrMime;
+                    self.debug.log(type + " codec: " + codec);
+                    codecs[type] = codec;
+
+                    contentProtectionData = self.manifestExt.getContentProtectionData(mediaData);
+
+                    if (!!contentProtectionData && !self.capabilities.supportsMediaKeys()) {
+                        self.errHandler.capabilityError("mediakeys");
+                    } else {
+                        contentProtection = contentProtectionData;
+
+                        //kid = self.protectionController.selectKeySystem(codec, contentProtection);
+                        //self.protectionController.ensureKeySession(kid, codec, null);
+
+                        if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
+                            var msg = type + "Codec (" + codec + ") is not supported.";
+                            self.errHandler.manifestError(msg, "codec", manifest);
+                            self.debug.log(msg);
+                        } else {
+                            try {
+                                buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, codec);
                             } catch (e) {
                                 self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
                             }
-                        } else {
-                            codec = codecOrMime;
-                            self.debug.log(type + " codec: " + codec);
-                            codecs[type] = codec;
-
-                            contentProtectionData = self.manifestExt.getContentProtectionData(mediaData);
-
-                            if (!!contentProtectionData && !self.capabilities.supportsMediaKeys()) {
-                                self.errHandler.capabilityError("mediakeys");
-                            } else {
-                                contentProtection = contentProtectionData;
-
-                                //kid = self.protectionController.selectKeySystem(codec, contentProtection);
-                                //self.protectionController.ensureKeySession(kid, codec, null);
-
-                                if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
-                                    var msg = type + "Codec (" + codec + ") is not supported.";
-                                    self.errHandler.manifestError(msg, "codec", manifest);
-                                    self.debug.log(msg);
-                                } else {
-                                    try {
-                                        buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, codec);
-                                    } catch (e) {
-                                        self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
-                                    }
-                                }
-                            }
                         }
-
-                        if (buffer === null) {
-                            self.debug.log("No buffer was created, skipping " + type + " data.");
-                        } else {
-                            // TODO : How to tell index handler live/duration?
-                            // TODO : Pass to controller and then pass to each method on handler?
-
-                            processor = self.system.getObject("streamProcessor");
-                            processor.initialize(mimeType || type, buffer, self.videoModel, self.requestScheduler, self.fragmentController, self.playbackController, mediaSource, mediaData, periodInfo, self);
-                            streamProcessors.push(processor);
-                            //self.debug.log(type + " is ready!");
-                        }
-
-
-                    } else {
-                        self.debug.log("No " + type + " data.");
                     }
-
-                    deferred.resolve(type);
                 }
-            );
 
-            return deferred.promise;
+                if (buffer === null) {
+                    self.debug.log("No buffer was created, skipping " + type + " data.");
+                } else {
+                    // TODO : How to tell index handler live/duration?
+                    // TODO : Pass to controller and then pass to each method on handler?
+
+                    processor = self.system.getObject("streamProcessor");
+                    processor.initialize(mimeType || type, buffer, self.videoModel, self.requestScheduler, self.fragmentController, self.playbackController, mediaSource, mediaData, periodInfo, self);
+                    streamProcessors.push(processor);
+                    //self.debug.log(type + " is ready!");
+                }
+
+
+            } else {
+                self.debug.log("No " + type + " data.");
+            }
         },
 
         initializeMediaSource = function () {
             //this.debug.log("Getting MediaSource ready...");
 
             var initialize = Q.defer(),
-                initializedTypes = {},
-                funcs = [],
                 self = this;
 
             this.requestScheduler.subscribe(this.requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, this.abrController);
             // Figure out some bits about the stream before building anything.
             //self.debug.log("Gathering information for buffers. (1)");
 
-            funcs.push(initializeMediaForType.call(self, "video", manifest, periodInfo.index));
-            funcs.push(initializeMediaForType.call(self, "audio", manifest, periodInfo.index));
-            funcs.push(initializeMediaForType.call(self, "text", manifest, periodInfo.index));
+            initializeMediaForType.call(self, "video", manifest, periodInfo.index);
+            initializeMediaForType.call(self, "audio", manifest, periodInfo.index);
+            initializeMediaForType.call(self, "text", manifest, periodInfo.index);
 
-            Q.all(funcs).then(
-                function(initializedTypesValues) {
-                    for (var i = 0; i < initializedTypesValues.length; i += 1) {
-                        initializedTypes[initializedTypesValues[i]] = true;
-                        checkIfInitialized.call(self, initializedTypes.video, initializedTypes.audio, initializedTypes.text, initialize);
-                    }
-                }
-            );
+            if (streamProcessors.length === 0) {
+                var msg = "No streams to play.";
+                this.errHandler.manifestError(msg, "nostreams", manifest);
+                this.debug.log(msg);
+                initialize.reject();
+            } else {
+                //this.debug.log("MediaSource initialized!");
+                initialize.resolve(true);
+            }
 
             return initialize.promise;
         },

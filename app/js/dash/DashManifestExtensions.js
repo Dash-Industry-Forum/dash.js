@@ -19,18 +19,19 @@ Dash.dependencies.DashManifestExtensions = function () {
 Dash.dependencies.DashManifestExtensions.prototype = {
     constructor: Dash.dependencies.DashManifestExtensions,
 
-    getIsAudio: function (adaptation) {
+    getIsTypeOf: function(adaptation, type) {
         "use strict";
         var i,
             len,
             col = adaptation.ContentComponent_asArray,
+            mimeTypeRegEx = (type !== "text") ? new RegExp(type) : new RegExp("(vtt|ttml)"),
             representation,
             result = false,
             found = false;
 
         if (col) {
             for (i = 0, len = col.length; i < len; i += 1) {
-                if (col[i].contentType === "audio") {
+                if (col[i].contentType === type) {
                     result = true;
                     found = true;
                 }
@@ -38,7 +39,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         }
 
         if (adaptation.hasOwnProperty("mimeType")) {
-            result = adaptation.mimeType.indexOf("audio") !== -1;
+            result = mimeTypeRegEx.test(adaptation.mimeType);
             found = true;
         }
 
@@ -50,7 +51,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 representation = adaptation.Representation_asArray[i];
 
                 if (representation.hasOwnProperty("mimeType")) {
-                    result = representation.mimeType.indexOf("audio") !== -1;
+                    result = mimeTypeRegEx.test(representation.mimeType);
                     found = true;
                 }
 
@@ -62,101 +63,28 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         // THIS IS A HACK for a bug in DashMetricsExtensions.
         // See the note in DashMetricsExtensions.adaptationIsType().
         if (result) {
-            adaptation.type = "audio";
+            adaptation.type = type;
         }
 
         return result;
+    },
+
+    getIsAudio: function (adaptation) {
+        "use strict";
+
+        return this.getIsTypeOf(adaptation, "audio");
     },
 
     getIsVideo: function (adaptation) {
         "use strict";
-        var i,
-            len,
-            col = adaptation.ContentComponent_asArray,
-            representation,
-            result = false,
-            found = false;
 
-        if (col) {
-            for (i = 0, len = col.length; i < len; i += 1) {
-                if (col[i].contentType === "video") {
-                    result = true;
-                    found = true;
-                }
-            }
-        }
-
-        if (adaptation.hasOwnProperty("mimeType")) {
-            result = adaptation.mimeType.indexOf("video") !== -1;
-            found = true;
-        }
-
-        // couldn't find on adaptationset, so check a representation
-        if (!found) {
-            i = 0;
-            len = adaptation.Representation_asArray.length;
-            while (!found && i < len) {
-                representation = adaptation.Representation_asArray[i];
-
-                if (representation.hasOwnProperty("mimeType")) {
-                    result = representation.mimeType.indexOf("video") !== -1;
-                    found = true;
-                }
-
-                i += 1;
-            }
-        }
-
-        // TODO : Add the type here so that somebody who has access to the adapatation set can check it.
-        // THIS IS A HACK for a bug in DashMetricsExtensions.
-        // See the note in DashMetricsExtensions.adaptationIsType().
-        if (result) {
-            adaptation.type = "video";
-        }
-
-        return result;
+        return this.getIsTypeOf(adaptation, "video");
     },
 
     getIsText: function (adaptation) {
         "use strict";
-        var i,
-            len,
-            col = adaptation.ContentComponent_asArray,
-            representation,
-            result = false,
-            found = false;
 
-        if (col) {
-            for (i = 0, len = col.length; i < len; i += 1) {
-                if (col[i].contentType === "text") {
-                    result = true;
-                    found = true;
-                }
-            }
-        }
-
-        if (adaptation.hasOwnProperty("mimeType")) {
-            result = (adaptation.mimeType.indexOf("vtt") !== -1) || (adaptation.mimeType.indexOf("ttml") !== -1);
-            found = true;
-        }
-
-        // couldn't find on adaptationset, so check a representation
-        if (!found) {
-            i = 0;
-            len = adaptation.Representation_asArray.length;
-            while (!found && i < len) {
-                representation = adaptation.Representation_asArray[i];
-
-                if (representation.hasOwnProperty("mimeType")) {
-                    result = (representation.mimeType.indexOf("vtt") !== -1) || (representation.mimeType.indexOf("ttml") !== -1);
-                    found = true;
-                }
-
-                i += 1;
-            }
-        }
-
-        return result;
+        return this.getIsTypeOf(adaptation, "text");
     },
 
     getIsTextTrack: function(type) {
@@ -167,7 +95,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         "use strict";
         // TODO : Check "Role" node.
         // TODO : Use this somewhere.
-        return Q.when(false);
+        return false;
     },
 
     processAdaptation: function (adaptation) {
@@ -219,60 +147,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return Q.when(-1);
     },
 
-    getVideoData: function (manifest, periodIndex) {
+    getDatasForType: function (manifest, periodIndex, type) {
         "use strict";
-        //return Q.when(null);
-        //------------------------------------
-        var self = this,
-            adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
-            i,
-            len,
-            deferred = Q.defer(),
-            found = false;
 
-        for (i = 0, len = adaptations.length; i < len; i += 1) {
-            if (this.getIsVideo(adaptations[i])) {
-                found = true;
-                deferred.resolve(self.processAdaptation(adaptations[i]));
-            }
-        }
-
-        if (!found) {
-            deferred.resolve(null);
-        }
-
-        return deferred.promise;
-    },
-
-    getTextData: function (manifest, periodIndex) {
-        "use strict";
-        //return Q.when(null);
-        //------------------------------------
-        var self = this,
-            adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
-            i,
-            len,
-            deferred = Q.defer(),
-            found = false;
-
-        for (i = 0, len = adaptations.length; i < len; i += 1) {
-            if (this.getIsText(adaptations[i]) === true) {
-                found = true;
-                deferred.resolve(self.processAdaptation(adaptations[i]));
-            }
-        }
-
-        if (!found) {
-            deferred.resolve(null);
-        }
-
-        return deferred.promise;
-    },
-
-    getAudioDatas: function (manifest, periodIndex) {
-        "use strict";
-        //return Q.when(null);
-        //------------------------------------
         var self = this,
             adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
             i,
@@ -280,7 +157,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             datas = [];
 
         for (i = 0, len = adaptations.length; i < len; i += 1) {
-            if (this.getIsAudio(adaptations[i])) {
+            if (this.getIsTypeOf(adaptations[i], type)) {
                 datas.push(self.processAdaptation(adaptations[i]));
             }
         }
@@ -288,47 +165,29 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return datas;
     },
 
-    getPrimaryAudioData: function (manifest, periodIndex) {
+    getDataForType: function (manifest, periodIndex, type) {
         "use strict";
         var i,
             len,
-            deferred = Q.defer(),
             datas,
-            funcs = [],
             self = this;
 
-        datas = this.getAudioDatas(manifest, periodIndex);
+        datas = this.getDatasForType(manifest, periodIndex, type);
 
-        if (!datas || datas.length === 0) {
-            deferred.resolve(null);
-        }
+        if (!datas || datas.length === 0) return null;
 
         for (i = 0, len = datas.length; i < len; i += 1) {
-            funcs.push(self.getIsMain(datas[i]));
+            if (self.getIsMain(datas[i])) return datas[i];
         }
 
-        Q.all(funcs).then(
-            function (results) {
-                var found = false;
-                for (i = 0, len = results.length; i < len; i += 1) {
-                    if (results[i] === true) {
-                        found = true;
-                        deferred.resolve(self.processAdaptation(datas[i]));
-                    }
-                }
-                if (!found) {
-                    deferred.resolve(datas[0]);
-                }
-            }
-        );
-
-        return deferred.promise;
+        return datas[0];
     },
 
     getCodec: function (data) {
         "use strict";
         var representation = data.Representation_asArray[0],
             codec = (representation.mimeType + ';codecs="' + representation.codecs + '"');
+
         return codec;
     },
 
