@@ -104,7 +104,7 @@ var validCues =
     {"mediaRange":"1545708-1699982","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-171.webm","duration":10001,"startTime":100136,"timescale":1000},
     {"mediaRange":"1699983-1859341","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-171.webm","duration":10019,"startTime":110137,"timescale":1000},
     {"mediaRange":"1859342-2009815","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-171.webm","duration":10003,"startTime":120156,"timescale":1000},
-    {"mediaRange":"2009816-2061225","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-171.webm","duration":5447,"startTime":130159,"timescale":1000}
+    {"mediaRange":"2009816-2061224","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-171.webm","duration":5447,"startTime":130159,"timescale":1000}
   ],
   [
     {"mediaRange":"4230-207919","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-172.webm","duration":10012,"startTime":0,"timescale":1000},
@@ -120,7 +120,7 @@ var validCues =
     {"mediaRange":"2234587-2455612","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-172.webm","duration":10018,"startTime":100136,"timescale":1000},
     {"mediaRange":"2455613-2688802","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-172.webm","duration":10002,"startTime":110154,"timescale":1000},
     {"mediaRange":"2688803-2910082","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-172.webm","duration":10003,"startTime":120156,"timescale":1000},
-    {"mediaRange":"2910083-2985979","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-172.webm","duration":5447,"startTime":130159,"timescale":1000}
+    {"mediaRange":"2910083-2985978","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-172.webm","duration":5447,"startTime":130159,"timescale":1000}
   ],
   [
     {"mediaRange":"683-111240","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-242.webm","duration":5005,"startTime":0,"timescale":1000},
@@ -149,7 +149,7 @@ var validCues =
     {"mediaRange":"4135076-4249906","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-242.webm","duration":5005,"startTime":115115,"timescale":1000},
     {"mediaRange":"4249907-4360446","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-242.webm","duration":5005,"startTime":120120,"timescale":1000},
     {"mediaRange":"4360447-4459978","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-242.webm","duration":5005,"startTime":125125,"timescale":1000},
-    {"mediaRange":"4459979-4478156","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-242.webm","duration":5339,"startTime":130130,"timescale":1000}
+    {"mediaRange":"4459979-4478155","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-242.webm","duration":5339,"startTime":130130,"timescale":1000}
   ],
   [
     {"mediaRange":"684-201657","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-243.webm","duration":5005,"startTime":0,"timescale":1000},
@@ -178,7 +178,7 @@ var validCues =
     {"mediaRange":"7262097-7474662","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-243.webm","duration":5005,"startTime":115115,"timescale":1000},
     {"mediaRange":"7474663-7682068","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-243.webm","duration":5005,"startTime":120120,"timescale":1000},
     {"mediaRange":"7682069-7874067","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-243.webm","duration":5005,"startTime":125125,"timescale":1000},
-    {"mediaRange":"7874068-7902885","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-243.webm","duration":5339,"startTime":130130,"timescale":1000}
+    {"mediaRange":"7874068-7902884","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-243.webm","duration":5339,"startTime":130130,"timescale":1000}
   ],
   [
     {"mediaRange":"684-410260","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-244.webm","duration":5005,"startTime":0,"timescale":1000},
@@ -207,7 +207,7 @@ var validCues =
     {"mediaRange":"11725349-12140071","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-244.webm","duration":5005,"startTime":115115,"timescale":1000},
     {"mediaRange":"12140072-12557750","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-244.webm","duration":5005,"startTime":120120,"timescale":1000},
     {"mediaRange":"12557751-12898123","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-244.webm","duration":5005,"startTime":125125,"timescale":1000},
-    {"mediaRange":"12898124-12941793","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-244.webm","duration":5339,"startTime":130130,"timescale":1000}
+    {"mediaRange":"12898124-12941792","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-244.webm","duration":5339,"startTime":130130,"timescale":1000}
   ],
   [
     {"mediaRange":"685-627819","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-245.webm","duration":5005,"startTime":0,"timescale":1000},
@@ -236,7 +236,7 @@ var validCues =
     {"mediaRange":"15426876-16055693","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-245.webm","duration":5005,"startTime":115115,"timescale":1000},
     {"mediaRange":"16055694-16693226","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-245.webm","duration":5005,"startTime":120120,"timescale":1000},
     {"mediaRange":"16693227-17174369","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-245.webm","duration":5005,"startTime":125125,"timescale":1000},
-    {"mediaRange":"17174370-17220192","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-245.webm","duration":5339,"startTime":130130,"timescale":1000}
+    {"mediaRange":"17174370-17220191","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-245.webm","duration":5339,"startTime":130130,"timescale":1000}
   ],
   [
     {"mediaRange":"697-1180610","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-246.webm","duration":5005,"startTime":0,"timescale":1000},
@@ -265,7 +265,7 @@ var validCues =
     {"mediaRange":"29550572-30789223","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-246.webm","duration":5005,"startTime":115115,"timescale":1000},
     {"mediaRange":"30789224-31914712","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-246.webm","duration":5005,"startTime":120120,"timescale":1000},
     {"mediaRange":"31914713-32556367","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-246.webm","duration":5005,"startTime":125125,"timescale":1000},
-    {"mediaRange":"32556368-32602936","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-246.webm","duration":5339,"startTime":130130,"timescale":1000}
+    {"mediaRange":"32556368-32602935","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-246.webm","duration":5339,"startTime":130130,"timescale":1000}
   ],
   [
     {"mediaRange":"696-829340","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-247.webm","duration":5005,"startTime":0,"timescale":1000},
@@ -294,7 +294,7 @@ var validCues =
     {"mediaRange":"25238177-26074950","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-247.webm","duration":5005,"startTime":115115,"timescale":1000},
     {"mediaRange":"26074951-26921859","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-247.webm","duration":5005,"startTime":120120,"timescale":1000},
     {"mediaRange":"26921860-27670811","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-247.webm","duration":5005,"startTime":125125,"timescale":1000},
-    {"mediaRange":"27670812-27757852","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-247.webm","duration":5339,"startTime":130130,"timescale":1000}
+    {"mediaRange":"27670812-27757851","media":"http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-247.webm","duration":5339,"startTime":130130,"timescale":1000}
   ]
 ];
 
