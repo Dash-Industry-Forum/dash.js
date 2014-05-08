@@ -408,7 +408,7 @@ Webm.dependencies.WebmURLExtensions = function () {
                 if (i < parsed.length - 1) {
                     end = parsed[i + 1].CueTracks[0].ClusterPosition + segmentStart - 1;
                 } else {
-                    end = segmentEnd;
+                    end = segmentEnd - 1;
                 }
                 segment.mediaRange = start + "-" + end;
 
