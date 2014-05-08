@@ -16,12 +16,10 @@ Dash.dependencies.RepresentationController = function () {
             availableRepresentations = updateRepresentations.call(self, dataValue, periodInfoValue);
             currentRepresentation = getRepresentationForQuality.call(self, self.abrController.getQualityFor(type));
             data = dataValue;
-            self.indexHandler.updateSegmentList(currentRepresentation).then(
-                function() {
-                    updating = false;
-                    self.notify(self.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
-                }
-            );
+
+            for (var i = 0; i < availableRepresentations.length; i += 1) {
+                self.indexHandler.updateRepresentation(availableRepresentations[i]);
+            }
         },
 
         getRepresentationForQuality = function(quality) {
@@ -40,6 +38,13 @@ Dash.dependencies.RepresentationController = function () {
             reps = self.manifestExt.getRepresentationsForAdaptation(manifest, adaptations[dataIndex]);
 
             return reps;
+        },
+
+        onRepresentationUpdated = function(sender, representation) {
+            if (representation === currentRepresentation) {
+                updating = false;
+                this.notify(this.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
+            }
         },
 
         onQualityChanged = function(sender, type, oldQuality, newQuality/*, dataChanged*/) {
@@ -64,6 +69,7 @@ Dash.dependencies.RepresentationController = function () {
 
         setup: function() {
             this.qualityChanged = onQualityChanged;
+            this.representationUpdated = onRepresentationUpdated;
         },
 
         initialize: function(streamProcessor) {

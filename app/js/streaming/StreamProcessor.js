@@ -21,6 +21,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         eventList: undefined,
         timelineConverter: undefined,
         abrController: undefined,
+        baseURLExt: undefined,
 
         initialize: function (typeValue, buffer, videoModel, requestScheduler, fragmentController, playbackController, mediaSource, data, periodInfo, streamValue) {
 
@@ -30,14 +31,16 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 scheduleController = self.system.getObject("scheduleController"),
                 liveEdgeFinder = self.liveEdgeFinder,
                 abrController = self.abrController,
+                indexHandler = self.indexHandler,
+                baseUrlExt = self.baseURLExt,
                 fragmentModel,
                 bufferController = createBufferControllerForType.call(self, typeValue);
 
             stream = streamValue;
             type = typeValue;
             isDynamic = self.manifestExt.getIsDynamic(manifest);
-            self.indexHandler.setType(type);
-            self.indexHandler.setIsDynamic(isDynamic);
+            indexHandler.setType(type);
+            indexHandler.setIsDynamic(isDynamic);
             self.bufferController = bufferController;
             self.playbackController = playbackController;
             self.scheduleController = scheduleController;
@@ -84,6 +87,9 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentController);
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
             bufferController.subscribe(bufferController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
+
+            indexHandler.subscribe(indexHandler.eventList.ENAME_REPRESENTATION_UPDATED, representationController);
+            baseUrlExt.subscribe(baseUrlExt.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
 
             bufferController.initialize(type, buffer, mediaSource, self);
             scheduleController.initialize(type, this);

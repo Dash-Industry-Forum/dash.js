@@ -107,10 +107,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                       [bytes ? bytes.byteLength : 0]);
                     lastTraceTime = currentTime;
 
-                    request.deferred.resolve({
-                        data: bytes,
-                        request: request
-                    });
+                    self.notify(self.eventList.ENAME_LOADING_COMPLETED, request, bytes);
                 };
 
                 req.onloadend = req.onerror = function () {
@@ -161,7 +158,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     } else {
                         self.debug.log("Failed loading segment: " + request.streamType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
                         self.errHandler.downloadError("content", request.url, req);
-                        request.deferred.reject(req);
+                        self.notify(self.eventList.ENAME_LOADING_COMPLETED, request, null, new Error("failed loading segment"));
                     }
                 };
 
@@ -195,17 +192,18 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         metricsModel: undefined,
         errHandler: undefined,
         debug: undefined,
+        eventList: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
 
         load: function (req) {
 
             if (!req) {
-                return Q.when(null);
+                this.notify(this.eventList.ENAME_LOADING_COMPLETED, req, null, new Error("request is null"));
+            } else {
+                doLoad.call(this, req, RETRY_ATTEMPTS);
             }
-
-            req.deferred = Q.defer();
-            doLoad.call(this, req, RETRY_ATTEMPTS);
-
-            return req.deferred.promise;
         },
 
         checkForExistence: function(req) {

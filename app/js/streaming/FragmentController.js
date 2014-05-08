@@ -47,7 +47,7 @@ MediaPlayer.dependencies.FragmentController = function () {
 
         onFragmentLoadingCompleted = function(sender, request, response) {
             var self = this,
-                bytes = self.process(response.data);
+                bytes = self.process(response);
 
             if (bytes === null) {
                 self.debug.log("No " + request.streamType + " bytes to push.");
@@ -120,15 +120,19 @@ MediaPlayer.dependencies.FragmentController = function () {
         getModel: function(context) {
             if (!context) return null;
             // Wrap the buffer controller into model and store it to track the loading state and execute the requests
-            var model = findModel(context);
+            var model = findModel(context),
+                loader;
 
             if (!model){
                 model = this.system.getObject("fragmentModel");
+                loader = this.system.getObject("fragmentLoader");
                 model.setContext(context);
+                model.setLoader(loader);
                 model.subscribe(model.eventList.ENAME_FRAGMENT_LOADING_STARTED, this);
                 model.subscribe(model.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, this);
                 model.subscribe(model.eventList.ENAME_STREAM_COMPLETED, this);
                 model.subscribe(model.eventList.ENAME_FRAGMENT_LOADING_FAILED, context);
+                loader.subscribe(loader.eventList.ENAME_LOADING_COMPLETED, model);
                 fragmentModels.push(model);
             }
 

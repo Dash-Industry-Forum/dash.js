@@ -203,18 +203,17 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         getInitRequest = function(quality) {
-            var self = this;
+            var self = this,
+                request;
 
-            self.indexHandler.getInitRequest(self.representationController.getRepresentationForQuality(quality)).then(
-                function(request) {
-                    if (request !== null) {
-                        //self.debug.log("Loading initialization: " + request.streamType + ":" + request.startTime);
-                        //self.debug.log(request);
-                        self.fragmentController.prepareFragmentForLoading(self, request);
-                        setState.call(self, READY);
-                    }
-                }
-            );
+            request = self.indexHandler.getInitRequest(self.representationController.getRepresentationForQuality(quality));
+
+            if (request !== null) {
+                //self.debug.log("Loading initialization: " + request.streamType + ":" + request.startTime);
+                //self.debug.log(request);
+                self.fragmentController.prepareFragmentForLoading(self, request);
+                setState.call(self, READY);
+            }
         },
 
         getRequiredFragmentCount = function() {

@@ -24,28 +24,11 @@ MediaPlayer.dependencies.FragmentModel = function () {
         isLoadingPostponed = false,
 
         loadCurrentFragment = function(request) {
-            var onSuccess,
-                onError,
-                self = this;
+            var self = this;
 
             // We are about to start loading the fragment, so execute the corresponding callback
             self.notify(self.eventList.ENAME_FRAGMENT_LOADING_STARTED, request);
-
-            onSuccess = function(request, response) {
-                loadingRequests.splice(loadingRequests.indexOf(request), 1);
-                executedRequests.push(request);
-                self.notify(self.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, request, response);
-                request.deferred = null;
-            };
-
-            onError = function(request) {
-                loadingRequests.splice(loadingRequests.indexOf(request), 1);
-                self.notify(self.eventList.ENAME_FRAGMENT_LOADING_FAILED, request);
-                request.deferred = null;
-            };
-
-            self.fragmentLoader.load(request).then(onSuccess.bind(context, request),
-                onError.bind(context, request));
+            self.fragmentLoader.load(request);
         },
 
         sortRequestsByProperty = function(requestsArray, sortProp) {
@@ -67,6 +50,17 @@ MediaPlayer.dependencies.FragmentModel = function () {
             }
         },
 
+        onLoadingCompleted = function(sender, request, response, error) {
+            if (response && !error) {
+                loadingRequests.splice(loadingRequests.indexOf(request), 1);
+                executedRequests.push(request);
+                this.notify(this.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, request, response);
+            } else {
+                loadingRequests.splice(loadingRequests.indexOf(request), 1);
+                this.notify(this.eventList.ENAME_FRAGMENT_LOADING_FAILED, request);
+            }
+        },
+
         onBufferLevelOutrun = function() {
             isLoadingPostponed = true;
         },
@@ -78,7 +72,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
     return {
         system: undefined,
         debug: undefined,
-        fragmentLoader: undefined,
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -87,6 +80,11 @@ MediaPlayer.dependencies.FragmentModel = function () {
         setup: function() {
             this.bufferLevelOutrun = onBufferLevelOutrun;
             this.bufferLevelBalanced = onBufferLevelBalanced;
+            this.loadingCompleted = onLoadingCompleted;
+        },
+
+        setLoader: function(value) {
+            this.fragmentLoader = value;
         },
 
         setContext: function(value) {

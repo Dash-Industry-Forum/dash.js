@@ -81,40 +81,15 @@ Dash.dependencies.DashHandler = function () {
         },
 
         getInit = function (representation) {
-            var deferred = Q.defer(),
-                request = null,
-                url = null,
-                self = this;
+            var self = this,
+                request;
 
-            if (!representation) {
-                return Q.reject("no represenation");
-            }
+            if (!representation) return null;
 
-            //self.debug.log("Getting the initialization request.");
+            request = generateInitRequest.call(self, representation, type);
+            //self.debug.log("Got an initialization.");
 
-            if (representation.initialization) {
-                //self.debug.log("Got an initialization.");
-                request = generateInitRequest.call(self, representation, type);
-                deferred.resolve(request);
-            } else {
-                // Go out and find the initialization.
-                url = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                    AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
-                self.baseURLExt.loadInitialization(url).then(
-                    function (theRange) {
-                        //self.debug.log("Got an initialization.");
-                        representation.range = theRange;
-                        representation.initialization = url;
-                        request = generateInitRequest.call(self, representation, type);
-                        deferred.resolve(request);
-                    },
-                    function (httprequest) {
-                        deferred.reject(httprequest);
-                    }
-                );
-            }
-
-            return deferred.promise;
+            return request;
         },
 
         isMediaFinished = function (representation) { // TODO
@@ -646,6 +621,21 @@ Dash.dependencies.DashHandler = function () {
             return deferred.promise;
         },
 
+        updateRepresentation = function(representation) {
+            var self = this;
+
+            updateSegmentList.call(self, representation).then(
+                function() {
+                    if(representation.initialization) {
+                        self.notify(self.eventList.ENAME_REPRESENTATION_UPDATED, representation);
+                        return;
+                    }
+
+                    self.baseURLExt.loadInitialization(representation);
+                }
+            );
+        },
+
         getIndexForSegments = function (time, representation) {
             var segments = representation.segments,
                 segmentLastIdx = segments.length - 1,
@@ -927,12 +917,25 @@ Dash.dependencies.DashHandler = function () {
             );
 
             return deferred.promise;
+        },
+
+        onInitializationLoaded = function(sender, representation) {
+            //self.debug.log("Got an initialization.");
+            this.notify(this.eventList.ENAME_REPRESENTATION_UPDATED, representation);
         };
 
     return {
         debug: undefined,
         baseURLExt: undefined,
         timelineConverter: undefined,
+        eventList: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
+
+        setup: function() {
+            this.initializationLoaded = onInitializationLoaded;
+        },
 
         getType: function () {
             return type;
@@ -954,7 +957,7 @@ Dash.dependencies.DashHandler = function () {
         getNextSegmentRequest: getNext,
         getCurrentTime: getCurrentTime,
         getSegmentCountForDuration: getSegmentCountForDuration,
-        updateSegmentList: updateSegmentList
+        updateRepresentation: updateRepresentation
     };
 };
 

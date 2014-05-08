@@ -42,6 +42,18 @@ MediaPlayer.dependencies.Notifier = function () {
                     ENAME_MIN_BUFFER_TIME_UPDATED: "minBufferTimeUpdated"
                 },
 
+                fragmentLoaderEvents = {
+                    ENAME_LOADING_COMPLETED: "loadingCompleted"
+                },
+
+                indexHandlerEvents = {
+                    ENAME_REPRESENTATION_UPDATED: "representationUpdated"
+                },
+
+                baseUrlEvents = {
+                    ENAME_INITIALIZATION_LOADED: "initializationLoaded"
+                },
+
                 abrControllerEvents = {
                     ENAME_QUALITY_CHANGED: "qualityChanged",
                     ENAME_TOP_QUALITY_INDEX_CHANGED: "topQualityIndexChanged"
@@ -111,6 +123,12 @@ MediaPlayer.dependencies.Notifier = function () {
             system.mapValue('manifestModelEvents', manifestModelEvents);
             system.mapOutlet('manifestModelEvents', "manifestModel", "eventList");
 
+            system.mapValue('fragmentLoaderEvents', fragmentLoaderEvents);
+            system.mapOutlet('fragmentLoaderEvents', "fragmentLoader", "eventList");
+
+            system.mapValue('baseUrlEvents', baseUrlEvents);
+            system.mapOutlet('baseUrlEvents', "baseURLExt", "eventList");
+
             system.mapValue('liveEdgeFinderEvents', liveEdgeFinderEvents);
             system.mapOutlet('liveEdgeFinderEvents', "liveEdgeFinder", "eventList");
 
@@ -134,6 +152,9 @@ MediaPlayer.dependencies.Notifier = function () {
 
             system.mapValue('abrControllerEvents', abrControllerEvents);
             system.mapOutlet('abrControllerEvents', "abrController", "eventList");
+
+            system.mapValue('indexHandlerEvents', indexHandlerEvents);
+            system.mapOutlet('indexHandlerEvents', "indexHandler", "eventList");
 
             system.mapValue('streamEvents', streamEvents);
             system.mapOutlet('streamEvents', "stream", "eventList");

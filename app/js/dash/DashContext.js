@@ -21,7 +21,7 @@ Dash.di.DashContext = function () {
 
             this.system.mapClass('parser', Dash.dependencies.DashParser);
             this.system.mapClass('indexHandler', Dash.dependencies.DashHandler);
-            this.system.mapClass('baseURLExt', Dash.dependencies.BaseURLExtensions);
+            this.system.mapSingleton('baseURLExt', Dash.dependencies.BaseURLExtensions);
             this.system.mapClass('fragmentExt', Dash.dependencies.FragmentExtensions);
             this.system.mapClass('representationController', Dash.dependencies.RepresentationController);
             this.system.mapSingleton('manifestExt', Dash.dependencies.DashManifestExtensions);

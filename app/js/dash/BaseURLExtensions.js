@@ -229,11 +229,12 @@ Dash.dependencies.BaseURLExtensions = function () {
             return deferred.promise;
         },
 
-        loadInit = function (media) {
-            var deferred = Q.defer(),
-                request = new XMLHttpRequest(),
+        loadInit = function (representation) {
+            var request = new XMLHttpRequest(),
                 needFailureReport = true,
                 self = this,
+                media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+                    AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
                 info = {
                     url: media,
                     range: {},
@@ -257,7 +258,9 @@ Dash.dependencies.BaseURLExtensions = function () {
                 info.bytesLoaded = info.range.end;
                 findInit.call(self, request.response, info).then(
                     function (range) {
-                        deferred.resolve(range);
+                        representation.range = range;
+                        representation.initialization = media;
+                        self.notify(self.eventList.ENAME_INITIALIZATION_LOADED, representation);
                     }
                 );
             };
@@ -270,7 +273,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 needFailureReport = false;
 
                 self.errHandler.downloadError("initialization", info.url, request);
-                deferred.reject(request);
+                self.notify(self.eventList.ENAME_INITIALIZATION_LOADED, representation);
             };
 
             request.open("GET", info.url);
@@ -278,8 +281,6 @@ Dash.dependencies.BaseURLExtensions = function () {
             request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
             request.send(null);
             self.debug.log("Perform init search: " + info.url);
-
-            return deferred.promise;
         },
 
         findSIDX = function (data, info) {
@@ -506,6 +507,10 @@ Dash.dependencies.BaseURLExtensions = function () {
     return {
         debug: undefined,
         errHandler: undefined,
+        eventList: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
 
         loadSegments: loadSegments,
         loadInitialization: loadInit,
