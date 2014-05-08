@@ -107,6 +107,7 @@ MediaPlayer = function (aContext) {
         metricsExt: undefined,
         bufferExt: undefined,
         errHandler: undefined,
+        tokenAuthentication:undefined,
 
         addEventListener: function (type, listener, useCapture) {
             this.eventBus.addEventListener(type, listener, useCapture);
@@ -151,6 +152,9 @@ MediaPlayer = function (aContext) {
             return scheduleWhilePaused;
         },
 
+        setTokenAuthentication:function(name, type) {
+            this.tokenAuthentication.setTokenAuthentication({name:name, type:type});
+        },
         setBufferMax: function(value) {
             bufferMax = value;
         },
