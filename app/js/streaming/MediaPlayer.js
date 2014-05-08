@@ -126,6 +126,7 @@ MediaPlayer = function (aContext) {
         capabilities: undefined,
         metricsModel: undefined,
         errHandler: undefined,
+        tokenAuthentication:undefined,
 
         setup: function() {
             metricsExt = system.getObject("metricsExt");
@@ -178,6 +179,9 @@ MediaPlayer = function (aContext) {
             return scheduleWhilePaused;
         },
 
+        setTokenAuthentication:function(name, type) {
+            this.tokenAuthentication.setTokenAuthentication({name:name, type:type});
+        },
         setBufferMax: function(value) {
             bufferMax = value;
         },

@@ -48,8 +48,9 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                   [0]);
                 lastTraceTime = request.requestStartDate;
 
-                req.open("GET", request.url, true);
+                req.open("GET", self.tokenAuthentication.addTokenAsQueryArg(request.url), true);
                 req.responseType = "arraybuffer";
+                req = self.tokenAuthentication.setTokenInRequestHeader(req);
 /*
                 req.setRequestHeader("Cache-Control", "no-cache");
                 req.setRequestHeader("Pragma", "no-cache");
@@ -193,6 +194,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         metricsModel: undefined,
         errHandler: undefined,
         debug: undefined,
+        tokenAuthentication:undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,

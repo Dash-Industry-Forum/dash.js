@@ -19,7 +19,11 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         parseBaseUrl = function (url) {
             var base = null;
 
-            if (url.indexOf("/") !== -1) {
+            if (url.indexOf("/") !== -1)
+            {
+                if (url.indexOf("?") !== -1) {
+                    url = url.substring(0, url.indexOf("?"));
+                }
                 base = url.substring(0, url.lastIndexOf("/") + 1);
             }
 
@@ -46,6 +50,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 needFailureReport = false;
                 mpdLoadedTime = new Date();
 
+                self.tokenAuthentication.checkRequestHeaderForToken(request);
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
                                                  "MPD",
@@ -117,6 +122,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         parser: undefined,
         errHandler: undefined,
         metricsModel: undefined,
+        tokenAuthentication:undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
