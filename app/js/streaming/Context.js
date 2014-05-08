@@ -20,6 +20,7 @@ MediaPlayer.di.Context = function () {
             this.system.autoMapOutlets = true;
 
             this.system.mapSingleton('debug', MediaPlayer.utils.Debug);
+            this.system.mapSingleton('tokenAuthentication', MediaPlayer.utils.TokenAuthentication);
             this.system.mapSingleton('eventBus', MediaPlayer.utils.EventBus);
             this.system.mapSingleton('capabilities', MediaPlayer.utils.Capabilities);
             this.system.mapSingleton('textTrackExtensions', MediaPlayer.utils.TextTrackExtensions);
