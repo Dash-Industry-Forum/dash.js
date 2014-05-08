@@ -33,6 +33,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 requestTime = new Date(),
                 mpdLoadedTime = null,
                 needFailureReport = true,
+                manifest,
                 onload = null,
                 report = null,
                 self = this;
@@ -58,16 +59,15 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  null,
                                                  null);
 
-                self.parser.parse(request.responseText, baseUrl).then(
-                    function (manifest) {
-                        manifest.mpdUrl = url;
-                        manifest.mpdLoadedTime = mpdLoadedTime;
-                        deferred.resolve(manifest);
-                    },
-                    function () {
-                        deferred.reject(request);
-                    }
-                );
+                manifest = self.parser.parse(request.responseText, baseUrl);
+
+                if (manifest) {
+                    manifest.mpdUrl = url;
+                    manifest.mpdLoadedTime = mpdLoadedTime;
+                    deferred.resolve(manifest);
+                } else {
+                    deferred.reject(request);
+                }
             };
 
             report = function () {

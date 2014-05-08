@@ -13,17 +13,13 @@ Dash.dependencies.RepresentationController = function () {
             updating = true;
             self.notify(self.eventList.ENAME_DATA_UPDATE_STARTED);
 
-            updateRepresentations.call(self, dataValue, periodInfoValue).then(
-                function(representations) {
-                    availableRepresentations = representations;
-                    currentRepresentation = getRepresentationForQuality.call(self, self.abrController.getQualityFor(type));
-                    data = dataValue;
-                    self.indexHandler.updateSegmentList(currentRepresentation).then(
-                        function() {
-                            updating = false;
-                            self.notify(self.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
-                        }
-                    );
+            availableRepresentations = updateRepresentations.call(self, dataValue, periodInfoValue);
+            currentRepresentation = getRepresentationForQuality.call(self, self.abrController.getQualityFor(type));
+            data = dataValue;
+            self.indexHandler.updateSegmentList(currentRepresentation).then(
+                function() {
+                    updating = false;
+                    self.notify(self.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
                 }
             );
         },
@@ -34,25 +30,16 @@ Dash.dependencies.RepresentationController = function () {
 
         updateRepresentations = function(data, periodInfo) {
             var self = this,
-                deferred = Q.defer(),
+                reps,
+                adaptations,
                 manifest = self.manifestModel.getValue();
 
-            self.manifestExt.getDataIndex(data, manifest, periodInfo.index).then(
-                function(idx) {
-                    dataIndex = idx;
-                    self.manifestExt.getAdaptationsForPeriod(manifest, periodInfo).then(
-                        function(adaptations) {
-                            self.manifestExt.getRepresentationsForAdaptation(manifest, adaptations[idx]).then(
-                                function(representations) {
-                                    deferred.resolve(representations);
-                                }
-                            );
-                        }
-                    );
-                }
-            );
+            dataIndex = self.manifestExt.getDataIndex(data, manifest, periodInfo.index);
 
-            return deferred.promise;
+            adaptations = self.manifestExt.getAdaptationsForPeriod(manifest, periodInfo);
+            reps = self.manifestExt.getRepresentationsForAdaptation(manifest, adaptations[dataIndex]);
+
+            return reps;
         },
 
         onQualityChanged = function(sender, type, oldQuality, newQuality/*, dataChanged*/) {

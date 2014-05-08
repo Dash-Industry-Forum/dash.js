@@ -25,9 +25,9 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
             hasMediaSource = ("MediaSource" in window);
 
         if (hasMediaSource) {
-            return Q.when(new MediaSource());
+            return new MediaSource();
         } else if (hasWebKit) {
-            return Q.when(new WebKitMediaSource());
+            return new WebKitMediaSource();
         }
 
         return null;
@@ -37,7 +37,6 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
         "use strict";
 
         videoModel.setSource(window.URL.createObjectURL(source));
-        return Q.when(true);
     },
 
     detachMediaSource: function (videoModel) {
@@ -45,14 +44,14 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
         // it seems that any value passed to the setSource is cast to a sting when setting element.src,
         // so we cannot use null or undefined to reset the element. Use empty string instead.
         videoModel.setSource("");
-        return Q.when(true);
     },
 
     setDuration: function (source, value) {
         "use strict";
 
         source.duration = value;
-        return Q.when(source.duration);
+
+        return source.duration;
     },
 
     signalEndOfStream: function(source) {
@@ -61,7 +60,5 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
         if (source.readyState === "open") {
             source.endOfStream();
         }
-
-        return Q.when(true);
     }
 };

@@ -299,8 +299,7 @@ MediaPlayer.dependencies.Stream = function () {
         initializeMediaSource = function () {
             //this.debug.log("Getting MediaSource ready...");
 
-            var initialize = Q.defer(),
-                self = this;
+            var self = this;
 
             this.requestScheduler.subscribe(this.requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, this.abrController);
             // Figure out some bits about the stream before building anything.
@@ -314,35 +313,21 @@ MediaPlayer.dependencies.Stream = function () {
                 var msg = "No streams to play.";
                 this.errHandler.manifestError(msg, "nostreams", manifest);
                 this.debug.log(msg);
-                initialize.reject();
-            } else {
-                //this.debug.log("MediaSource initialized!");
-                initialize.resolve(true);
             }
-
-            return initialize.promise;
+            //this.debug.log("MediaSource initialized!");
         },
 
         initializePlayback = function () {
             var self = this,
-                initialize = Q.defer();
+                manifestDuration,
+                mediaDuration;
 
             //self.debug.log("Getting ready for playback...");
 
-            self.manifestExt.getDuration(self.manifestModel.getValue(), periodInfo).then(
-                function (duration) {
-                    //self.debug.log("Setting duration: " + duration);
-                    return self.mediaSourceExt.setDuration(mediaSource, duration);
-                }
-            ).then(
-                function (value) {
-                    self.debug.log("Duration successfully set to: " + value);
-                    initialized = true;
-                    initialize.resolve(true);
-                }
-            );
-
-            return initialize.promise;
+            manifestDuration = self.manifestExt.getDuration(self.manifestModel.getValue(), periodInfo);
+            mediaDuration = self.mediaSourceExt.setDuration(mediaSource, manifestDuration);
+            self.debug.log("Duration successfully set to: " + mediaDuration);
+            initialized = true;
         },
 
         onLoad = function () {
@@ -492,29 +477,21 @@ MediaPlayer.dependencies.Stream = function () {
 
         doLoad = function (manifestResult) {
 
-            var self = this;
+            var self = this,
+                mediaSourceResult;
 
             //self.debug.log("Stream start loading.");
 
             manifest = manifestResult;
-            return self.mediaSourceExt.createMediaSource().then(
-                function (mediaSourceResult) {
-                    //self.debug.log("MediaSource created.");
-                    return setUpMediaSource.call(self, mediaSourceResult);
-                }
-            ).then(
+            mediaSourceResult = self.mediaSourceExt.createMediaSource();
+            //self.debug.log("MediaSource created.");
+
+            return setUpMediaSource.call(self, mediaSourceResult).then(
                 function (mediaSourceResult) {
                     mediaSource = mediaSourceResult;
                     //self.debug.log("MediaSource set up.");
-                    return initializeMediaSource.call(self);
-                }
-            ).then(
-                function (/*result*/) {
-                    //self.debug.log("Start initializing playback.");
-                    return initializePlayback.call(self);
-                }
-            ).then(
-                function (/*done*/) {
+                    initializeMediaSource.call(self);
+                    initializePlayback.call(self);
                     //self.debug.log("Playback initialized!");
                     return load.promise;
                 }
@@ -594,9 +571,9 @@ MediaPlayer.dependencies.Stream = function () {
                 ln = streamProcessors.length,
                 i = 0,
                 idx,
-                data,
-                processor,
-                onDataReceived;
+                oldData,
+                newData,
+                processor;
 
             updating = true;
             manifest = self.manifestModel.getValue();
@@ -605,19 +582,16 @@ MediaPlayer.dependencies.Stream = function () {
 
             for (i; i < ln; i +=1) {
                 processor = streamProcessors[i];
-                data = processor.getData();
+                oldData = processor.getData();
                 idx = processor.getDataIndex();
-                onDataReceived = (function(p) {
-                    return function(data) {
-                        p.updateData(data, periodInfo);
-                    };
-                })(processor);
 
-                if (!!data && data.hasOwnProperty("id")) {
-                    self.manifestExt.getDataForId(data.id, manifest, periodInfo.index).then(onDataReceived);
+                if (!!oldData && oldData.hasOwnProperty("id")) {
+                    newData = self.manifestExt.getDataForId(oldData.id, manifest, periodInfo.index);
                 } else {
-                    self.manifestExt.getDataForIndex(idx, manifest, periodInfo.index).then(onDataReceived);
+                    newData = self.manifestExt.getDataForIndex(idx, manifest, periodInfo.index);
                 }
+
+                processor.updateData(newData, periodInfo);
             }
         };
 

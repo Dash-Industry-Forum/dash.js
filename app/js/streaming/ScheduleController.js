@@ -130,6 +130,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         loadNextFragment = function () {
             var self = this,
                 deferred = Q.defer(),
+                range,
                 segmentTime;
 
             Q.when(seeking ? seekTarget : self.indexHandler.getCurrentTime(currentRepresentation)).then(
@@ -137,20 +138,15 @@ MediaPlayer.dependencies.ScheduleController = function () {
                     segmentTime = time;
                     seeking = false;
 
-                    self.sourceBufferExt.getBufferRange(self.bufferController.getBuffer(), segmentTime).then(
-                        function (range) {
-                            if (range !== null) {
-                                segmentTime = range.end;
-                            }
-                            //self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
-                            self.indexHandler.getSegmentRequestForTime(currentRepresentation, segmentTime).then(
-                                function (request) {
-                                    deferred.resolve(request);
-                                },
-                                function () {
-                                    deferred.reject();
-                                }
-                            );
+                    range = self.sourceBufferExt.getBufferRange(self.bufferController.getBuffer(), segmentTime);
+
+                    if (range !== null) {
+                        segmentTime = range.end;
+                    }
+                    //self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
+                    self.indexHandler.getSegmentRequestForTime(currentRepresentation, segmentTime).then(
+                        function (request) {
+                            deferred.resolve(request);
                         },
                         function () {
                             deferred.reject();
@@ -179,11 +175,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
                     }
                 } else {
                     //self.debug.log("Loading fragment: " + request.streamType + ":" + request.startTime);
-                    self.fragmentController.prepareFragmentForLoading(self, request).then(
-                        function() {
-                            setState.call(self, READY);
-                        }
-                    );
+                    self.fragmentController.prepareFragmentForLoading(self, request);
+                    setState.call(self, READY);
                 }
             } else {
                 setState.call(self, READY);
@@ -217,11 +210,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
                     if (request !== null) {
                         //self.debug.log("Loading initialization: " + request.streamType + ":" + request.startTime);
                         //self.debug.log(request);
-                        self.fragmentController.prepareFragmentForLoading(self, request).then(
-                            function() {
-                                setState.call(self, READY);
-                            }
-                        );
+                        self.fragmentController.prepareFragmentForLoading(self, request);
+                        setState.call(self, READY);
                     }
                 }
             );
@@ -232,15 +222,13 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 playbackRate = self.playbackController.getPlaybackRate(),
                 duration = self.playbackController.getPeriodDuration(),
                 actualBufferedDuration = self.bufferController.getBufferLevel() / Math.max(playbackRate, 1),
+                requiredBufferLength,
                 deferred = Q.defer();
 
-            self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, duration).then(
-                function (requiredBufferLength) {
-                    self.indexHandler.getSegmentCountForDuration(currentRepresentation, requiredBufferLength, actualBufferedDuration).then(
-                        function(count) {
-                            deferred.resolve(count);
-                        }
-                    );
+            requiredBufferLength = self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, duration);
+            self.indexHandler.getSegmentCountForDuration(currentRepresentation, requiredBufferLength, actualBufferedDuration).then(
+                function(count) {
+                    deferred.resolve(count);
                 }
             );
 

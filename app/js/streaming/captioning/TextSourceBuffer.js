@@ -29,25 +29,21 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
 
         append: function (bytes) {
             var self = this,
+                result,
+                label,
+                lang,
                 ccContent = String.fromCharCode.apply(null, new Uint16Array(bytes));
 
-            self.getParser().parse(ccContent).then(
-                function(result)
-                {
-                    var label = data.Representation_asArray[0].id,
-                        lang = data.lang;
+            try {
+                result = self.getParser().parse(ccContent);
+                label = data.Representation_asArray[0].id;
+                lang = data.lang;
 
-                    self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, true).then(
-                        function(/*track*/)
-                        {
-                            self.eventBus.dispatchEvent({type:"updateend"});
-                        }
-                    );
-                },
-                function(errMsg) {
-                    self.errHandler.closedCaptionsError(errMsg, "parse", ccContent);
-                }
-            );
+                self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, true);
+                self.eventBus.dispatchEvent({type:"updateend"});
+            } catch(e) {
+                self.errHandler.closedCaptionsError(e, "parse", ccContent);
+            }
         },
 
         abort:function() {

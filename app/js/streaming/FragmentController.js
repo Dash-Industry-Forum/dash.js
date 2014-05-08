@@ -46,22 +46,19 @@ MediaPlayer.dependencies.FragmentController = function () {
         },
 
         onFragmentLoadingCompleted = function(sender, request, response) {
-            var self = this;
+            var self = this,
+                bytes = self.process(response.data);
 
-            self.process(response.data).then(
-                function(bytes) {
-                    if (bytes === null) {
-                        self.debug.log("No " + request.streamType + " bytes to push.");
-                        return;
-                    }
+            if (bytes === null) {
+                self.debug.log("No " + request.streamType + " bytes to push.");
+                return;
+            }
 
-                    if (self.isInitializationRequest(request)) {
-                        self.notify(self.eventList.ENAME_INIT_SEGMENT_LOADED, sender, bytes, request.quality);
-                    }else {
-                        self.notify(self.eventList.ENAME_MEDIA_SEGMENT_LOADED, sender, bytes, request.quality, request.index);
-                    }
-                }
-            );
+            if (self.isInitializationRequest(request)) {
+                self.notify(self.eventList.ENAME_INIT_SEGMENT_LOADED, sender, bytes, request.quality);
+            }else {
+                self.notify(self.eventList.ENAME_MEDIA_SEGMENT_LOADED, sender, bytes, request.quality, request.index);
+            }
         },
 
         onStreamCompleted = function(sender, request) {
@@ -117,7 +114,7 @@ MediaPlayer.dependencies.FragmentController = function () {
                 result = new Uint8Array(bytes);
             }
 
-            return Q.when(result);
+            return result;
         },
 
         getModel: function(context) {
@@ -249,12 +246,12 @@ MediaPlayer.dependencies.FragmentController = function () {
             var fragmentModel = findModel(context);
 
             if (!fragmentModel || !request) {
-                return Q.when(null);
+                return false;
             }
             // Store the request and all the necessary callbacks in the model for deferred execution
             fragmentModel.addRequest(request);
 
-            return Q.when(true);
+            return true;
         },
 
         resetModel: function(model) {

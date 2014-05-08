@@ -110,18 +110,18 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
         for (i = 0, len = adaptations.length; i < len; i += 1) {
             if (adaptations[i].hasOwnProperty("id") && adaptations[i].id === id) {
-                return Q.when(adaptations[i]);
+                return adaptations[i];
             }
         }
 
-        return Q.when(null);
+        return null;
     },
 
     getDataForIndex: function (index, manifest, periodIndex) {
         "use strict";
         var adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
 
-        return Q.when(adaptations[index]);
+        return adaptations[index];
     },
 
     getDataIndex: function (data, manifest, periodIndex) {
@@ -133,11 +133,11 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
         for (i = 0, len = adaptations.length; i < len; i += 1) {
             if (adaptations[i] === data) {
-                return Q.when(i);
+                return i;
             }
         }
 
-        return Q.when(-1);
+        return -1;
     },
 
     getDatasForType: function (manifest, periodIndex, type) {
@@ -227,7 +227,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         containsDVR = !isNaN(manifest.timeShiftBufferDepth);
         isDVR = (isDynamic && containsDVR);
 
-        return Q.when(isDVR);
+        return isDVR;
     },
 
     getIsOnDemand: function (manifest) {
@@ -238,7 +238,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             isOnDemand = (manifest.profiles.indexOf("urn:mpeg:dash:profile:isoff-on-demand:2011") !== -1);
         }
 
-        return Q.when(isOnDemand);
+        return isOnDemand;
     },
 
     getDuration: function (manifest) {
@@ -252,12 +252,12 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             mpdDuration = Number.POSITIVE_INFINITY;
         }
 
-        return Q.when(mpdDuration);
+        return mpdDuration;
     },
 
     getBandwidth: function (representation) {
         "use strict";
-        return Q.when(representation.bandwidth);
+        return representation.bandwidth;
     },
 
     getRefreshDelay: function (manifest) {
@@ -268,24 +268,23 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             delay = parseFloat(manifest.minimumUpdatePeriod);
         }
 
-        return Q.when(delay);
+        return delay;
     },
 
     getRepresentationCount: function (adaptation) {
         "use strict";
-        return Q.when(adaptation.Representation_asArray.length);
+        return adaptation.Representation_asArray.length;
     },
 
     getRepresentationFor: function (index, data) {
         "use strict";
-        return Q.when(data.Representation_asArray[index]);
+        return data.Representation_asArray[index];
     },
 
     getRepresentationsForAdaptation: function(manifest, adaptation) {
         var a = manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index],
             self = this,
             representations = [],
-            deferred = Q.defer(),
             representation,
             initialization,
             segmentInfo,
@@ -365,9 +364,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             representations.push(representation);
         }
 
-        deferred.resolve(representations);
-
-        return deferred.promise;
+        return representations;
     },
 
     getAdaptationsForPeriod: function(manifest, period) {
@@ -382,12 +379,11 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             adaptations.push(adaptationSet);
         }
 
-        return Q.when(adaptations);
+        return adaptations;
     },
 
     getRegularPeriods: function (manifest, mpd) {
         var self = this,
-            deferred = Q.defer(),
             periods = [],
             isDynamic = self.getIsDynamic(manifest),
             i,
@@ -455,30 +451,18 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         }
 
         if (periods.length === 0) {
-            return Q.when(periods);
+            return periods;
         }
 
-        self.getCheckTime(manifest, periods[0]).then(
-            function(checkTime) {
-                mpd.checkTime = checkTime;
+        mpd.checkTime = self.getCheckTime(manifest, periods[0]);
+        // The last Period extends until the end of the Media Presentation.
+        // The difference between the PeriodStart time of the last Period
+        // and the mpd duration
+        if (vo1 !== null && isNaN(vo1.duration)) {
+            vo1.duration = self.getEndTimeForLastPeriod(mpd) - vo1.start;
+        }
 
-                // The last Period extends until the end of the Media Presentation.
-                // The difference between the PeriodStart time of the last Period
-                // and the mpd duration
-                if (vo1 !== null && isNaN(vo1.duration)) {
-                    self.getEndTimeForLastPeriod(mpd).then(
-                        function(periodEndTime) {
-                            vo1.duration = periodEndTime - vo1.start;
-                            deferred.resolve(periods);
-                        }
-                    );
-                } else {
-                    deferred.resolve(periods);
-                }
-            }
-        );
-
-        return Q.when(deferred.promise);
+        return periods;
     },
 
     getMpd: function(manifest) {
@@ -508,7 +492,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             mpd.maxSegmentDuration = manifest.maxSegmentDuration;
         }
 
-        return Q.when(mpd);
+        return mpd;
     },
 
     getFetchTime: function(manifest, period) {
@@ -518,31 +502,25 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         // either if the client obtains an updated MPD or the client verifies that the MPD has not been updated since the previous fetching.
         var fetchTime = this.timelineConverter.calcPresentationTimeFromWallTime(manifest.mpdLoadedTime, period, true);
 
-        return Q.when(fetchTime);
+        return fetchTime;
     },
 
     getCheckTime: function(manifest, period) {
         var self = this,
-            deferred = Q.defer(),
-            checkTime = NaN;
+            checkTime = NaN,
+            fetchTime;
 
         // If the MPD@minimumUpdatePeriod attribute in the client is provided, then the check time is defined as the
         // sum of the fetch time of this operating MPD and the value of this attribute,
         // i.e. CheckTime = FetchTime + MPD@minimumUpdatePeriod.
         if (manifest.hasOwnProperty("minimumUpdatePeriod")) {
-            self.getFetchTime(manifest, period).then(
-                function (fetchTime) {
-                    checkTime = fetchTime + manifest.minimumUpdatePeriod;
-                    deferred.resolve(checkTime);
-                }
-            );
-        } else {
-            // TODO If the MPD@minimumUpdatePeriod attribute in the client is not provided, external means are used to
-            // determine CheckTime, such as a priori knowledge, or HTTP cache headers, etc.
-            deferred.resolve(checkTime);
+            fetchTime = self.getFetchTime(manifest, period);
+            checkTime = fetchTime + manifest.minimumUpdatePeriod;
         }
+        // TODO If the MPD@minimumUpdatePeriod attribute in the client is not provided, external means are used to
+        // determine CheckTime, such as a priori knowledge, or HTTP cache headers, etc.
 
-        return deferred.promise;
+        return checkTime;
     },
 
     getEndTimeForLastPeriod: function(mpd) {
@@ -557,9 +535,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             // in this case the Period End Time should match CheckTime
             periodEnd = mpd.checkTime;
         } else {
-            return Q.fail(new Error("Must have @mediaPresentationDuration or @minimumUpdatePeriod on MPD or an explicit @duration on the last period."));
+            throw new Error("Must have @mediaPresentationDuration or @minimumUpdatePeriod on MPD or an explicit @duration on the last period.");
         }
 
-        return Q.when(periodEnd);
+        return periodEnd;
     }
 };

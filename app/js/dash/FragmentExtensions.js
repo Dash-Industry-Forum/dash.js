@@ -15,8 +15,7 @@ Dash.dependencies.FragmentExtensions = function () {
     "use strict";
 
     var parseTFDT = function (ab) {
-            var deferred = Q.defer(),
-                d = new DataView(ab),
+            var d = new DataView(ab),
                 pos = 0,
                 base_media_decode_time,
                 version,
@@ -57,12 +56,10 @@ Dash.dependencies.FragmentExtensions = function () {
                 base_media_decode_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
             }
 
-            deferred.resolve({
+            return {
                 'version' : version,
                 'base_media_decode_time' : base_media_decode_time
-            });
-
-            return deferred.promise;
+            };
         },
 
         parseSIDX = function (ab) {
@@ -110,10 +107,10 @@ Dash.dependencies.FragmentExtensions = function () {
                 earliest_presentation_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
             }
 
-            return Q.when({
+            return {
                 'earliestPresentationTime' : earliest_presentation_time,
                 'timescale' : timescale
-            });
+            };
         },
 
         loadFragment = function (media) {

@@ -31,7 +31,7 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
         checkIndex: function (current, metrics /*, data*/) {
             if (waiting > 0) {
                 waiting -= 1;
-                return Q.when(new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
+                return new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
             }
 
             var self = this,
@@ -63,9 +63,9 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
             if (panic) {
                 self.debug.log("Wait some time before allowing another switch.");
                 waiting = WAIT_COUNT;
-                return Q.when(new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
+                return new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
             } else {
-                return Q.when(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
+                return new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
             }
         }
     };

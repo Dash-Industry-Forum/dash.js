@@ -3,7 +3,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
     "use strict";
 
     var SEARCH_TIME_SPAN = 12 * 60 * 60, // set the time span that limits our search range to a 12 hours in seconds
-        deferredLiveEdge = null,
+        isSearchStarted = false,
         liveEdgeInitialSearchPosition = NaN,
         liveEdgeSearchRange = null,
         liveEdgeSearchStep = NaN,
@@ -27,10 +27,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
             liveEdgeSearchStep = Math.floor((availabilityRange.end - availabilityRange.start) / 2);
             // start search from finding a request for the initial search time
             self.indexHandler.getSegmentRequestForTime(currentRepresentation, liveEdgeInitialSearchPosition).then(findLiveEdge.bind(self, liveEdgeInitialSearchPosition, onSearchForSegmentSucceeded, onSearchForSegmentFailed));
-
-            deferredLiveEdge = Q.defer();
-
-            return deferredLiveEdge.promise;
+            isSearchStarted = true;
         },
 
         findLiveEdge = function (searchTime, onSuccess, onError, request) {
@@ -134,7 +131,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
         },
 
         onDataUpdateCompleted = function(/*sender, data, representation*/) {
-            if (!this.streamProcessor.isDynamic() || deferredLiveEdge) return;
+            if (!this.streamProcessor.isDynamic() || isSearchStarted) return;
 
             searchForLiveEdge.call(this);
         };
@@ -157,11 +154,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
         },
 
         abortSearch: function() {
-            if (deferredLiveEdge) {
-                deferredLiveEdge.reject();
-                deferredLiveEdge = null;
-            }
-
+            isSearchStarted = false;
             liveEdgeInitialSearchPosition = NaN;
             liveEdgeSearchRange = null;
             liveEdgeSearchStep = NaN;

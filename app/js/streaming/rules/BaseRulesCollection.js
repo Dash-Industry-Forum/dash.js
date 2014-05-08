@@ -22,19 +22,17 @@ MediaPlayer.rules.BaseRulesCollection = function () {
         //limitSwitchesRule: undefined,
 
         getRules: function () {
-            return Q.when(rules);
+            return rules;
         },
 
         setup: function () {
-            var self = this;
+            var self = this,
+                r;
 
-            self.getRules().then(
-                function (r) {
-                    r.push(self.downloadRatioRule);
-                    r.push(self.insufficientBufferRule);
-                    //r.push(self.limitSwitchesRule);
-                }
-            );
+            r = self.getRules();
+            r.push(self.downloadRatioRule);
+            r.push(self.insufficientBufferRule);
+            //r.push(self.limitSwitchesRule);
         }
     };
 };

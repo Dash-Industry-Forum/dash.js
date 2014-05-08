@@ -17,7 +17,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
     var refreshDelay = NaN,
         refreshTimer = null,
         isStopped = false,
-        deferredUpdate,
+        isUpdating = false,
 
         clear = function () {
             if (refreshTimer !== null) {
@@ -38,16 +38,14 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
         update = function () {
             var self = this,
                 manifest = self.manifestModel.getValue(),
+                delay,
                 timeSinceLastUpdate;
 
             if (manifest !== undefined && manifest !== null) {
-                self.manifestExt.getRefreshDelay(manifest).then(
-                    function (t) {
-                        timeSinceLastUpdate = (new Date().getTime() - manifest.mpdLoadedTime.getTime()) / 1000;
-                        refreshDelay = Math.max(t - timeSinceLastUpdate, 0);
-                        start.call(self);
-                    }
-                );
+                delay = self.manifestExt.getRefreshDelay(manifest);
+                timeSinceLastUpdate = (new Date().getTime() - manifest.mpdLoadedTime.getTime()) / 1000;
+                refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
+                start.call(self);
             }
         },
 
@@ -56,39 +54,33 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
                 manifest,
                 url;
 
-            // The manifest should not update until the previous update has completed. A promise postpones the update
-            // until is is resolved. For the first time the promise does not exist yet, so pass 'true' instead.
-            Q.when(deferredUpdate ? deferredUpdate.promise : true).then(
-                function() {
-                    deferredUpdate = Q.defer();
-                    manifest = self.manifestModel.getValue();
-                    url = manifest.mpdUrl;
+            if (isUpdating) return;
 
-                    if (manifest.hasOwnProperty("Location")) {
-                        url = manifest.Location;
-                    }
+            isUpdating = true;
+            manifest = self.manifestModel.getValue();
+            url = manifest.mpdUrl;
 
-                    //self.debug.log("Refresh manifest @ " + url);
+            if (manifest.hasOwnProperty("Location")) {
+                url = manifest.Location;
+            }
 
-                    self.manifestLoader.load(url).then(
-                        function (manifestResult) {
-                            self.manifestModel.setValue(manifestResult);
-                            self.debug.log("Manifest has been refreshed.");
-                            //self.debug.log(manifestResult);
-                            if (isStopped) return;
+            //self.debug.log("Refresh manifest @ " + url);
 
-                            update.call(self);
-                        }
-                    );
+            self.manifestLoader.load(url).then(
+                function (manifestResult) {
+                    self.manifestModel.setValue(manifestResult);
+                    self.debug.log("Manifest has been refreshed.");
+                    //self.debug.log(manifestResult);
+                    if (isStopped) return;
+
+                    update.call(self);
                 }
             );
         },
 
         onStreamsComposed = function() {
             // When streams are ready we can consider manifest update completed. Resolve the update promise.
-            if (deferredUpdate) {
-                deferredUpdate.resolve();
-            }
+            isUpdating = false;
         };
 
     return {

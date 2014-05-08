@@ -47,14 +47,14 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
 
             if (metrics.PlayList === null || metrics.PlayList === undefined || metrics.PlayList.length === 0) {
                 //self.debug.log("Not enough information for rule.");
-                return Q.when(new MediaPlayer.rules.SwitchRequest());
+                return new MediaPlayer.rules.SwitchRequest();
             }
 
             playlist = metrics.PlayList[metrics.PlayList.length - 1];
 
             if (playlist === null || playlist === undefined || playlist.trace.length === 0) {
                 //self.debug.log("Not enough information for rule.");
-                return Q.when(new MediaPlayer.rules.SwitchRequest());
+                return new MediaPlayer.rules.SwitchRequest();
             }
 
             // The last trace is the currently playing fragment.
@@ -63,7 +63,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
 
             if (trace === null || trace === undefined || trace.stopreason === null || trace.stopreason === undefined) {
                 //self.debug.log("Not enough information for rule.");
-                return Q.when(new MediaPlayer.rules.SwitchRequest());
+                return new MediaPlayer.rules.SwitchRequest();
             }
 
             if (trace.stopreason === MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON) {
@@ -81,12 +81,12 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
 
             if (shift) {
                 self.debug.log("The buffer ran dry recently, switch down.");
-                return Q.when(new MediaPlayer.rules.SwitchRequest(current - 1, p));
+                return new MediaPlayer.rules.SwitchRequest(current - 1, p);
             } else if (dryBufferHits > DRY_BUFFER_LIMIT) {
                 self.debug.log("Too many dry buffer hits, quit switching bitrates.");
-                return Q.when(new MediaPlayer.rules.SwitchRequest(current, p));
+                return new MediaPlayer.rules.SwitchRequest(current, p);
             } else {
-                return Q.when(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, p));
+                return new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, p);
             }
         }
     };

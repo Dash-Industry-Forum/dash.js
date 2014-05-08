@@ -63,8 +63,6 @@
             copyVideoProperties(activeVideoElement, newVideoElement);
             detachVideoEvents.call(this, fromStream);
             attachVideoEvents.call(this, toStream);
-
-            return Q.when(true);
         },
 
         attachVideoEvents = function (stream) {
@@ -225,66 +223,63 @@
                 pIdx,
                 sIdx,
                 period,
+                periods,
+                mpd,
                 stream;
 
             if (!manifest) return;
 
-            self.manifestExt.getMpd(manifest).then(
-                function(mpd) {
-                    self.manifestExt.getRegularPeriods(manifest, mpd).then(
-                        function(periods) {
-                            try {
-                                if (periods.length === 0) {
-                                    throw new Error("There are no regular periods");
-                                }
+            mpd = self.manifestExt.getMpd(manifest);
+            periods = self.manifestExt.getRegularPeriods(manifest, mpd);
 
-                                for (pIdx = 0, pLen = periods.length; pIdx < pLen; pIdx += 1) {
-                                    period = periods[pIdx];
-                                    for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx += 1) {
-                                        // If the stream already exists we just need to update the values we got from the updated manifest
-                                        if (streams[sIdx].getId() === period.id) {
-                                            stream = streams[sIdx];
-                                            stream.updateData(period);
-                                        }
-                                    }
-                                    // If the Stream object does not exist we probably loaded the manifest the first time or it was
-                                    // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
-                                    if (!stream) {
-                                        stream = self.system.getObject("stream");
-                                        playbackCtrl = self.system.getObject("playbackController");
-                                        stream.setPeriodInfo(period);
-                                        stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
-                                        stream.setPlaybackController(playbackCtrl);
-                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_STARTED, stream);
-                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PAUSED, stream);
-                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKING, stream);
-                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_TIME_UPDATED, stream);
-                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_ERROR, stream);
-                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PROGRESS, stream);
-                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_RATE_CHANGED, stream);
-                                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_METADATA_LOADED, stream);
-                                        stream.initProtection();
-                                        stream.setAutoPlay(autoPlay);
-                                        stream.load(manifest);
-                                        stream.subscribe(stream.eventList.ENAME_STREAM_UPDATED, self);
-                                        streams.push(stream);
-                                    }
-                                    stream = null;
-                                }
-
-                                // If the active stream has not been set up yet, let it be the first Stream in the list
-                                if (!activeStream) {
-                                    activeStream = streams[0];
-                                    attachVideoEvents.call(self, activeStream);
-                                }
-                            } catch(e) {
-                                self.errHandler.manifestError(e.message, "nostreamscomposed", self.manifestModel.getValue());
-                                self.reset();
-                            }
-                        }
-                    );
+            try {
+                if (periods.length === 0) {
+                    throw new Error("There are no regular periods");
                 }
-            );
+
+                for (pIdx = 0, pLen = periods.length; pIdx < pLen; pIdx += 1) {
+                    period = periods[pIdx];
+                    for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx += 1) {
+                        // If the stream already exists we just need to update the values we got from the updated manifest
+                        if (streams[sIdx].getId() === period.id) {
+                            stream = streams[sIdx];
+                            stream.updateData(period);
+                        }
+                    }
+                    // If the Stream object does not exist we probably loaded the manifest the first time or it was
+                    // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
+                    if (!stream) {
+                        stream = self.system.getObject("stream");
+                        playbackCtrl = self.system.getObject("playbackController");
+                        stream.setPeriodInfo(period);
+                        stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
+                        stream.setPlaybackController(playbackCtrl);
+                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_STARTED, stream);
+                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PAUSED, stream);
+                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKING, stream);
+                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_TIME_UPDATED, stream);
+                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_ERROR, stream);
+                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PROGRESS, stream);
+                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_RATE_CHANGED, stream);
+                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_METADATA_LOADED, stream);
+                        stream.initProtection();
+                        stream.setAutoPlay(autoPlay);
+                        stream.load(manifest);
+                        stream.subscribe(stream.eventList.ENAME_STREAM_UPDATED, self);
+                        streams.push(stream);
+                    }
+                    stream = null;
+                }
+
+                // If the active stream has not been set up yet, let it be the first Stream in the list
+                if (!activeStream) {
+                    activeStream = streams[0];
+                    attachVideoEvents.call(self, activeStream);
+                }
+            } catch(e) {
+                self.errHandler.manifestError(e.message, "nostreamscomposed", self.manifestModel.getValue());
+                self.reset();
+            }
         },
 
         onStreamUpdated = function() {
