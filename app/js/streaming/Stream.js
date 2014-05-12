@@ -58,7 +58,6 @@ MediaPlayer.dependencies.Stream = function () {
 
             this.debug.log("Do seek: " + time);
 
-            currentTimeChanged.call(this);
             this.playbackController.seek(time);
 
             startBuffering(time);
@@ -331,24 +330,7 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         onLoad = function () {
-            this.debug.log("Got loadmetadata event.");
-
-            var initialSeekTime = this.timelineConverter.calcPresentationStartTime(periodInfo);
-            this.debug.log("Starting playback at offset: " + initialSeekTime);
-
-            this.playbackController.seek(initialSeekTime);
-
             load.resolve(null);
-        },
-
-        onPlay = function () {
-            //this.debug.log("Got play event.");
-            updateCurrentTime.call(this);
-        },
-
-        onPause = function () {
-            //this.debug.log("Got pause event.");
-            suspend.call(this);
         },
 
         onError = function (event) {
@@ -387,46 +369,6 @@ MediaPlayer.dependencies.Stream = function () {
             this.reset();
         },
 
-        onSeeking = function (sender, seekingTime) {
-            //this.debug.log("Got seeking event.");
-            startBuffering(seekingTime);
-        },
-
-        onSeeked = function () {
-            //this.debug.log("Seek complete.");
-            this.playbackController.subscribe(this.playbackController.eventList.ENAME_PLAYBACK_SEEKING, this);
-            this.playbackController.unsubscribe(this.playbackController.eventList.ENAME_PLAYBACK_SEEKED, this);
-        },
-
-        onProgress = function () {
-            //this.debug.log("Got timeupdate event.");
-            updateBuffer.call(this);
-        },
-
-        onTimeupdate = function () {
-            updateBuffer.call(this);
-        },
-
-        onRatechange = function() {
-            var processors = getAudioVideoProcessors(),
-                ln = processors.length,
-                i = 0;
-
-            for (i; i < ln; i += 1) {
-                processors[i].updateStalledState();
-            }
-        },
-
-        updateBuffer = function() {
-            var processors = getAudioVideoProcessors(),
-                ln = processors.length,
-                i = 0;
-
-            for (i; i < ln; i += 1) {
-                processors[i].updateBufferState();
-            }
-        },
-
         startBuffering = function(time) {
             var processors = getAudioVideoProcessors(),
                 ln = processors.length,
@@ -440,38 +382,6 @@ MediaPlayer.dependencies.Stream = function () {
                 } else {
                     processor.seek(time);
                 }
-            }
-        },
-
-        stopBuffering = function() {
-            var processors = getAudioVideoProcessors(),
-                ln = processors.length,
-                i = 0;
-
-            for (i; i < ln; i += 1) {
-                processors[i].stop();
-            }
-        },
-
-        suspend = function() {
-            if (!this.scheduleWhilePaused || this.manifestExt.getIsDynamic(manifest)) {
-                stopBuffering.call(this);
-            }
-        },
-
-        updateCurrentTime = function() {
-            if (this.playbackController.isPaused()) return;
-
-            var currentTime = this.playbackController.getTime(),
-                representation = streamProcessors[0].getCurrentRepresentation(),
-                actualTime = this.timelineConverter.calcActualPresentationTime(representation, currentTime, this.manifestExt.getIsDynamic(manifest)),
-                timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
-
-            if (timeChanged) {
-                this.playbackController.seek(actualTime);
-                startBuffering(actualTime);
-            } else {
-                startBuffering();
             }
         },
 
@@ -508,13 +418,6 @@ MediaPlayer.dependencies.Stream = function () {
             );
         },
 
-        currentTimeChanged = function () {
-            this.debug.log("Current time has changed, block programmatic seek.");
-
-            this.playbackController.unsubscribe(this.playbackController.eventList.ENAME_PLAYBACK_SEEKING, this);
-            this.playbackController.subscribe(this.playbackController.eventList.ENAME_PLAYBACK_SEEKED, this);
-        },
-
         onBufferingCompleted = function() {
             var processors = getAudioVideoProcessors(),
                 ln = processors.length,
@@ -542,7 +445,6 @@ MediaPlayer.dependencies.Stream = function () {
                 if (streamProcessors[i].isUpdating()) return;
             }
 
-            updateCurrentTime.call(self);
             updating = false;
             self.notify(self.eventList.ENAME_STREAM_UPDATED);
         },
@@ -612,7 +514,6 @@ MediaPlayer.dependencies.Stream = function () {
         timelineConverter: undefined,
         requestScheduler: undefined,
         abrController: undefined,
-        scheduleWhilePaused: undefined,
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -624,14 +525,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             load = Q.defer();
 
-            this.playbackStarted = onPlay;
-            this.playbackPaused = onPause;
             this.playbackError = onError;
-            this.playbackSeeking = onSeeking;
-            this.playbackSeeked = onSeeked;
-            this.playbackProgress = onProgress;
-            this.playbackRateChanged = onRatechange;
-            this.playbackTimeUpdated = onTimeupdate;
             this.playbackMetaDataLoaded = onLoad;
         },
 

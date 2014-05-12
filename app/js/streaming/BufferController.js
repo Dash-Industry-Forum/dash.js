@@ -296,6 +296,25 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
+        updateBufferState = function() {
+            var self = this;
+
+            // if the buffer controller is stopped and the buffer is full we should try to clear the buffer
+            // before that we should make sure that we will have enough space to append the data, so we wait
+            // until the video time moves forward for a value greater than rejected data duration since the last reject event or since the last seek.
+            if (isQuotaExceeded && rejectedBytes && !appendingRejectedData) {
+                appendingRejectedData = true;
+                //try to append the data that was previosly rejected
+                appendToBuffer.call(self, rejectedBytes, lastQuality).then(
+                    function(){
+                        appendingRejectedData = false;
+                    }
+                );
+            } else {
+                updateBufferLevel.call(self);
+            }
+        },
+
         onDataUpdateCompleted = function(sender, data, newRepresentation) {
             var self = this,
                 bufferLength;
@@ -357,6 +376,10 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
+        onPlaybackRateChanged = function(/*sender*/) {
+            checkIfSufficientBuffer.call(this);
+        },
+
         onScheduledTimeOccurred = function(sender, model) {
             var self = this;
 
@@ -386,6 +409,11 @@ MediaPlayer.dependencies.BufferController = function () {
 
             this.scheduledTimeOccurred = onScheduledTimeOccurred;
             this.qualityChanged = onQualityChanged;
+
+            this.playbackProgress = updateBufferState;
+            this.playbackSeeking = updateBufferState;
+            this.playbackTimeUpdated = updateBufferState;
+            this.playbackRateChanged = onPlaybackRateChanged;
         },
 
         initialize: function (typeValue, buffer, source, streamProcessor) {
@@ -435,29 +463,6 @@ MediaPlayer.dependencies.BufferController = function () {
 
         isBufferingCompleted : function() {
             return isBufferingCompleted;
-        },
-
-        updateBufferState: function() {
-            var self = this;
-
-            // if the buffer controller is stopped and the buffer is full we should try to clear the buffer
-            // before that we should make sure that we will have enough space to append the data, so we wait
-            // until the video time moves forward for a value greater than rejected data duration since the last reject event or since the last seek.
-            if (isQuotaExceeded && rejectedBytes && !appendingRejectedData) {
-                appendingRejectedData = true;
-                //try to append the data that was previosly rejected
-                appendToBuffer.call(self, rejectedBytes, lastQuality).then(
-                    function(){
-                        appendingRejectedData = false;
-                    }
-                );
-            } else {
-                updateBufferLevel.call(self);
-            }
-        },
-
-        updateStalledState: function() {
-            checkIfSufficientBuffer.call(this);
         },
 
         reset: function(errored) {

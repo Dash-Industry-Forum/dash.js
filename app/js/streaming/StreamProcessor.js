@@ -88,6 +88,15 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
             bufferController.subscribe(bufferController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
 
+            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
+            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);
+            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, bufferController);
+            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, bufferController);
+            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController);
+            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_PAUSED, scheduleController);
+            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
+
+
             indexHandler.subscribe(indexHandler.eventList.ENAME_REPRESENTATION_UPDATED, representationController);
             baseUrlExt.subscribe(baseUrlExt.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
             baseUrlExt.subscribe(baseUrlExt.eventList.ENAME_SEGMENTS_LOADED, indexHandler);
@@ -138,14 +147,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             this.scheduleController.stop();
         },
 
-        updateStalledState: function() {
-            this.bufferController.updateStalledState();
-        },
-
-        updateBufferState: function() {
-            this.bufferController.updateBufferState();
-        },
-
         getCurrentRepresentation: function() {
             return this.representationController.getCurrentRepresentation();
         },
@@ -168,6 +169,8 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 requestScheduler = self.requestScheduler,
                 abrController = self.abrController,
                 playbackController = self.playbackController,
+                indexHandler = this.indexHandler,
+                baseUrlExt = this.baseUrlExt,
                 fragmentModel = this.getFragmentModel(),
                 videoModel = self.videoModel;
 
@@ -208,6 +211,19 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
             bufferController.unsubscribe(bufferController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
+
+            playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
+            playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);
+            playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, bufferController);
+            playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, bufferController);
+            playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController);
+            playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_PAUSED, scheduleController);
+            playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
+
+            indexHandler.unsubscribe(indexHandler.eventList.ENAME_REPRESENTATION_UPDATED, representationController);
+            baseUrlExt.unsubscribe(baseUrlExt.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
+            baseUrlExt.unsubscribe(baseUrlExt.eventList.ENAME_SEGMENTS_LOADED, indexHandler);
+
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, fragmentModel);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentModel);
 

@@ -3,9 +3,26 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
     var period,
         videoModel,
+        representation,
+        isDynamic,
 
-        onDataUpdateCompleted = function(sender, data, representation) {
+        updateCurrentTime = function() {
+            if (this.isPaused()) return;
+
+            var currentTime = this.getTime(),
+                actualTime = this.timelineConverter.calcActualPresentationTime(representation, currentTime, isDynamic),
+                timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
+
+            if (timeChanged) {
+                this.seek(actualTime);
+            }
+        },
+
+        onDataUpdateCompleted = function(sender, data, representationValue) {
+            representation = representationValue;
             period = representation.adaptation.period;
+            isDynamic = sender.streamProcessor.isDynamic();
+            updateCurrentTime.call(this);
         },
 
         removeAllListeners = function() {
@@ -23,18 +40,25 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackStart = function() {
-            this.notify(this.eventList.ENAME_PLAYBACK_STARTED);
+            //this.debug.log("Got play event.");
+            updateCurrentTime.call(this);
+            this.notify(this.eventList.ENAME_PLAYBACK_STARTED, this.getTime());
         },
 
         onPlaybackPaused = function() {
+            //this.debug.log("Got pause event.");
             this.notify(this.eventList.ENAME_PLAYBACK_PAUSED);
         },
 
         onPlaybackSeeking = function() {
+            //this.debug.log("Got seeking event.");
             this.notify(this.eventList.ENAME_PLAYBACK_SEEKING, this.getTime());
         },
 
         onPlaybackSeeked = function() {
+            //this.debug.log("Seek complete.");
+            videoModel.listen("seeking", onPlaybackSeeking);
+            videoModel.unlisten("seeked", onPlaybackSeeked);
             this.notify(this.eventList.ENAME_PLAYBACK_SEEKED);
         },
 
@@ -62,6 +86,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackMetaDataLoaded = function() {
+            this.debug.log("Got loadmetadata event.");
+            var initialSeekTime = this.timelineConverter.calcPresentationStartTime(period);
+            this.debug.log("Starting playback at offset: " + initialSeekTime);
+            this.seek(initialSeekTime);
             this.notify(this.eventList.ENAME_PLAYBACK_METADATA_LOADED);
         },
 
@@ -84,6 +112,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
         };
 
     return {
+        debug: undefined,
+        timelineConverter: undefined,
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -142,6 +172,12 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         seek: function(time) {
+            this.debug.log("Current time has changed, block programmatic seek.");
+
+            if (time === this.getTime()) return;
+
+            videoModel.unlisten("seeking", onPlaybackSeeking);
+            videoModel.listen("seeked", onPlaybackSeeked);
             videoModel.setCurrentTime(time);
         },
 

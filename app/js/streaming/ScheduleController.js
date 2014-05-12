@@ -437,6 +437,20 @@ MediaPlayer.dependencies.ScheduleController = function () {
             fragmentModel.executeCurrentRequest();
         },
 
+        onPlaybackStarted = function(sender, startTime) {
+            doSeek.call(this, startTime);
+        },
+
+        onPlaybackPaused = function(/*sender*/) {
+            if (!this.scheduleWhilePaused || isDynamic) {
+                doStop.call(this);
+            }
+        },
+
+        onPlaybackSeeking = function(sender, time) {
+            doSeek.call(this, time);
+        },
+
         onLiveEdgeFound = function(sender, liveEdgeTime, periodInfo) {
             // step back from a found live edge time to be able to buffer some data
             var self = this,
@@ -490,6 +504,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.initRequested = onInitRequested;
 
             this.closedCaptioningRequested = onClosedCaptioningRequested;
+
+            this.playbackStarted = onPlaybackStarted;
+            this.playbackPaused = onPlaybackPaused;
+            this.playbackSeeking = onPlaybackSeeking;
         },
 
         initialize: function(typeValue, streamProcessor) {
