@@ -34,6 +34,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 indexHandler = self.indexHandler,
                 baseUrlExt = self.baseURLExt,
                 fragmentModel,
+                fragmentLoader = this.system.getObject("fragmentLoader"),
                 bufferController = createBufferControllerForType.call(self, typeValue);
 
             stream = streamValue;
@@ -48,6 +49,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             self.videoModel = videoModel;
             self.fragmentController = fragmentController;
             self.requestScheduler = requestScheduler;
+            self.fragmentLoader = fragmentLoader;
             self.liveEdgeFinder.initialize(this);
 
             abrController.subscribe(abrController.eventList.ENAME_QUALITY_CHANGED, bufferController);
@@ -107,6 +109,13 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             representationController.updateData(data, periodInfo, type);
 
             fragmentModel = this.getFragmentModel();
+            fragmentModel.setLoader(fragmentLoader);
+            fragmentModel.subscribe(fragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, fragmentController);
+            fragmentModel.subscribe(fragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, fragmentController);
+            fragmentModel.subscribe(fragmentModel.eventList.ENAME_STREAM_COMPLETED, fragmentController);
+            fragmentModel.subscribe(fragmentModel.eventList.ENAME_FRAGMENT_LOADING_FAILED, scheduleController);
+            fragmentLoader.subscribe(fragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
+
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, fragmentModel);
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentModel);
         },
@@ -170,8 +179,9 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 abrController = self.abrController,
                 playbackController = self.playbackController,
                 indexHandler = this.indexHandler,
-                baseUrlExt = this.baseUrlExt,
+                baseUrlExt = this.baseURLExt,
                 fragmentModel = this.getFragmentModel(),
+                fragmentLoader = this.fragmentLoader,
                 videoModel = self.videoModel;
 
             abrController.unsubscribe(abrController.eventList.ENAME_QUALITY_CHANGED, bufferController);
@@ -227,6 +237,11 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, fragmentModel);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentModel);
 
+            fragmentModel.unsubscribe(fragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, fragmentController);
+            fragmentModel.unsubscribe(fragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, fragmentController);
+            fragmentModel.unsubscribe(fragmentModel.eventList.ENAME_STREAM_COMPLETED, fragmentController);
+            fragmentModel.unsubscribe(fragmentModel.eventList.ENAME_FRAGMENT_LOADING_FAILED, scheduleController);
+            fragmentLoader.unsubscribe(fragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
             fragmentController.resetModel(fragmentModel);
 
             this.liveEdgeFinder.abortSearch();
