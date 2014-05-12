@@ -17,6 +17,7 @@ Dash.dependencies.DashHandler = function () {
     var index = -1,
         requestedTime,
         isDynamic,
+        deferredSegments = [],
         type,
 
         replaceNumberForTemplate = function (url, value) {
@@ -517,49 +518,11 @@ Dash.dependencies.DashHandler = function () {
         },
 
         getSegmentsFromSource = function (representation) {
-            var self = this,
-                baseURL = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                    AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
-                deferred = Q.defer(),
-                segments = [],
-                count = 0,
-                range = null,
-                s,
-                i,
-                len,
-                seg;
+            deferredSegments[representation.index] = Q.defer();
 
-            if (representation.indexRange) {
-                range = representation.indexRange;
-            }
+            this.baseURLExt.loadSegments(representation, type, representation.indexRange);
 
-            this.baseURLExt.loadSegments(baseURL, range).then(
-                function(fragments) {
-                    for (i = 0, len = fragments.length; i < len; i+=1) {
-                        s = fragments[i];
-
-                        seg = getTimeBasedSegment.call(
-                            self,
-                            representation,
-                            s.startTime,
-                            s.duration,
-                            s.timescale,
-                            s.media,
-                            s.mediaRange,
-                            count);
-
-                        segments.push(seg);
-                        seg = null;
-                        count += 1;
-                    }
-
-                    representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};
-                    representation.availableSegmentsNumber = len;
-                    deferred.resolve(segments);
-                }
-            );
-
-            return deferred.promise;
+            return deferredSegments[representation.index].promise;
         },
 
         getSegments = function (representation) {
@@ -922,6 +885,40 @@ Dash.dependencies.DashHandler = function () {
         onInitializationLoaded = function(sender, representation) {
             //self.debug.log("Got an initialization.");
             this.notify(this.eventList.ENAME_REPRESENTATION_UPDATED, representation);
+        },
+
+        onSegmentsLoaded = function(sender, fragments, representation, typeValue, error) {
+            if (error || (type !== typeValue)) return;
+
+            var self = this,
+                i,
+                len,
+                s,
+                segments = [],
+                count = 0,
+                seg;
+
+            for (i = 0, len = fragments.length; i < len; i+=1) {
+                s = fragments[i];
+
+                seg = getTimeBasedSegment.call(
+                    self,
+                    representation,
+                    s.startTime,
+                    s.duration,
+                    s.timescale,
+                    s.media,
+                    s.mediaRange,
+                    count);
+
+                segments.push(seg);
+                seg = null;
+                count += 1;
+            }
+
+            representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};
+            representation.availableSegmentsNumber = len;
+            deferredSegments[representation.index].resolve(segments);
         };
 
     return {
@@ -935,6 +932,7 @@ Dash.dependencies.DashHandler = function () {
 
         setup: function() {
             this.initializationLoaded = onInitializationLoaded;
+            this.segmentsLoaded = onSegmentsLoaded;
         },
 
         getType: function () {

@@ -51,7 +51,8 @@ MediaPlayer.dependencies.Notifier = function () {
                 },
 
                 baseUrlEvents = {
-                    ENAME_INITIALIZATION_LOADED: "initializationLoaded"
+                    ENAME_INITIALIZATION_LOADED: "initializationLoaded",
+                    ENAME_SEGMENTS_LOADED: "segmentsLoaded"
                 },
 
                 abrControllerEvents = {
