@@ -68,8 +68,8 @@
         attachVideoEvents = function (stream) {
             var playbackCtrl = stream.getPlaybackController();
 
-            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_STARTED, this);
-            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PAUSED, this);
+            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
+            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
             playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKING, this);
             playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_TIME_UPDATED, this);
             playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PROGRESS, this);
@@ -78,8 +78,8 @@
         detachVideoEvents = function (stream) {
             var playbackCtrl = stream.getPlaybackController();
 
-            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_STARTED, this);
-            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PAUSED, this);
+            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
+            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
             playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKING, this);
             playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_TIME_UPDATED, this);
             playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PROGRESS, this);
@@ -288,8 +288,15 @@
             self.notify(self.eventList.ENAME_STREAMS_COMPOSED);
         },
 
-        onManifestUpdated = function() {
-            composeStreams.call(this);
+        onManifestLoaded = function(sender, manifest, error) {
+            if (!error) {
+                this.manifestModel.setValue(manifest);
+                this.debug.log("Manifest has loaded.");
+                //self.debug.log(self.manifestModel.getValue());
+                composeStreams.call(this);
+            } else {
+                this.reset();
+            }
         };
 
     return {
@@ -309,7 +316,7 @@
         unsubscribe: undefined,
 
         setup: function() {
-            this.manifestUpdated = onManifestUpdated;
+            this.manifestLoaded = onManifestLoaded;
             this.streamUpdated = onStreamUpdated;
 
             this.playbackStarted = onPlay;
@@ -340,19 +347,7 @@
         },
 
         load: function (url) {
-            var self = this;
-
-            self.manifestLoader.load(url).then(
-                function(manifest) {
-                    self.manifestModel.setValue(manifest);
-                    self.debug.log("Manifest has loaded.");
-                    //self.debug.log(self.manifestModel.getValue());
-                    self.manifestUpdater.start();
-                },
-                function () {
-                    self.reset();
-                }
-            );
+            this.manifestLoader.load(url);
         },
 
         reset: function () {

@@ -40,15 +40,17 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
                 // try to get request object again
                 self.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime).then(findLiveEdge.bind(self, searchTime, onSuccess, onError));
             } else {
-                self.fragmentController.isFragmentExists(request).then(
-                    function(isExist) {
-                        if (isExist) {
-                            onSuccess.call(self, request, searchTime);
-                        } else {
-                            onError.call(self, request, searchTime);
-                        }
+                var handler = function(sender, isExist, request) {
+                    self.fragmentLoader.unsubscribe(self.fragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
+                    if (isExist) {
+                        onSuccess.call(self, request, searchTime);
+                    } else {
+                        onError.call(self, request, searchTime);
                     }
-                );
+                };
+
+                self.fragmentLoader.subscribe(self.fragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
+                self.fragmentLoader.checkForExistence(request);
             }
         },
 
@@ -150,7 +152,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
         initialize: function(streamProcessor) {
             this.streamProcessor = streamProcessor;
             this.indexHandler = streamProcessor.indexHandler;
-            this.fragmentController = streamProcessor.fragmentController;
+            this.fragmentLoader = streamProcessor.fragmentLoader;
         },
 
         abortSearch: function() {

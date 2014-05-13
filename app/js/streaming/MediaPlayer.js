@@ -44,7 +44,7 @@ MediaPlayer = function (aContext) {
     var VERSION = "1.1.2",
         context = aContext,
         system,
-        manifestModel,
+        manifestLoader,
         abrController,
         bufferExt,
         element,
@@ -81,7 +81,8 @@ MediaPlayer = function (aContext) {
             //this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
             streamController.subscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
-            manifestModel.subscribe(manifestModel.eventList.ENAME_MANIFEST_UPDATED, streamController);
+            manifestLoader.subscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
+            manifestLoader.subscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, manifestUpdater);
             abrController.subscribe(abrController.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, bufferExt);
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
@@ -103,7 +104,7 @@ MediaPlayer = function (aContext) {
         doReset = function() {
             if (playing && streamController) {
                 streamController.unsubscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
-                manifestModel.unsubscribe(manifestModel.eventList.ENAME_MANIFEST_UPDATED, streamController);
+                manifestLoader.unsubscribe(manifestLoader.eventList.ENAME_MANIFEST_UPDATED, streamController);
                 abrController.unsubscribe(abrController.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, bufferExt);
                 streamController.reset();
                 streamController = null;
@@ -127,7 +128,7 @@ MediaPlayer = function (aContext) {
 
         setup: function() {
             metricsExt = system.getObject("metricsExt");
-            manifestModel = system.getObject("manifestModel");
+            manifestLoader = system.getObject("manifestLoader");
             manifestUpdater = system.getObject("manifestUpdater");
             bufferExt = system.getObject("bufferExt");
             abrController = system.getObject("abrController");

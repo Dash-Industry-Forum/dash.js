@@ -127,14 +127,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
-        loadNextFragment = function () {
+        loadNextFragment = function (callback) {
             var self = this,
-                deferred = Q.defer(),
                 range,
-                segmentTime;
-
-            Q.when(seeking ? seekTarget : self.indexHandler.getCurrentTime(currentRepresentation)).then(
-                function (time) {
+                segmentTime,
+                onGetTime = function (time) {
                     segmentTime = time;
                     seeking = false;
 
@@ -146,19 +143,20 @@ MediaPlayer.dependencies.ScheduleController = function () {
                     //self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
                     self.indexHandler.getSegmentRequestForTime(currentRepresentation, segmentTime).then(
                         function (request) {
-                            deferred.resolve(request);
-                        },
-                        function () {
-                            deferred.reject();
+                            callback.call(self, request);
                         }
                     );
-                },
-                function () {
-                    deferred.reject();
-                }
-            );
+                };
 
-            return deferred.promise;
+            if (seeking) {
+                onGetTime(seekTarget);
+            } else {
+                self.indexHandler.getCurrentTime(currentRepresentation).then(
+                    function (time) {
+                        onGetTime(time);
+                    }
+                );
+            }
         },
 
         onFragmentRequest = function (request) {
@@ -191,7 +189,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             if ((fragmentsToLoad - ln) > 0) {
                 fragmentsToLoad--;
-                loadNextFragment.call(self).then(onFragmentRequest.bind(self));
+                loadNextFragment.call(self,onFragmentRequest.bind(self));
             } else {
 
                 if (state === VALIDATING) {
@@ -216,22 +214,27 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
-        getRequiredFragmentCount = function() {
+        getRequiredFragmentCount = function(callback) {
             var self =this,
                 playbackRate = self.playbackController.getPlaybackRate(),
                 duration = self.playbackController.getPeriodDuration(),
                 actualBufferedDuration = self.bufferController.getBufferLevel() / Math.max(playbackRate, 1),
-                requiredBufferLength,
-                deferred = Q.defer();
+                requiredBufferLength;
 
             requiredBufferLength = self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, duration);
             self.indexHandler.getSegmentCountForDuration(currentRepresentation, requiredBufferLength, actualBufferedDuration).then(
                 function(count) {
-                    deferred.resolve(count);
+                    callback.call(self, count);
                 }
             );
+        },
 
-            return deferred.promise;
+        onGetRequiredFragmentCount = function(count) {
+            fragmentsToLoad = count;
+            loadInitialization.call(this);
+            // We should request the media fragment w/o waiting for the next validate call
+            // or until the initialization fragment has been loaded
+            requestNewFragment.call(this);
         },
 
         validate = function () {
@@ -252,15 +255,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             if (state === READY) {
                 setState.call(self, VALIDATING);
-                getRequiredFragmentCount.call(self, lastQuality).then(
-                    function (count) {
-                        fragmentsToLoad = count;
-                        loadInitialization.call(self);
-                        // We should request the media fragment w/o waiting for the next validate call
-                        // or until the initialization fragment has been loaded
-                        requestNewFragment.call(self);
-                    }
-                );
+                getRequiredFragmentCount.call(self, onGetRequiredFragmentCount);
             } else if (state === VALIDATING) {
                 setState.call(self, READY);
             }

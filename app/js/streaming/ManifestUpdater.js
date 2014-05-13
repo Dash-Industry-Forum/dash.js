@@ -66,16 +66,26 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
             //self.debug.log("Refresh manifest @ " + url);
 
-            self.manifestLoader.load(url).then(
-                function (manifestResult) {
-                    self.manifestModel.setValue(manifestResult);
-                    self.debug.log("Manifest has been refreshed.");
-                    //self.debug.log(manifestResult);
-                    if (isStopped) return;
+            self.manifestLoader.load(url);
+        },
 
-                    update.call(self);
-                }
-            );
+        onManifestLoaded = function(sender, manifest, error) {
+            if (error) return;
+
+            this.manifestModel.setValue(manifest);
+            this.debug.log("Manifest has been refreshed.");
+            //self.debug.log(manifestResult);
+            if (isStopped) return;
+
+            update.call(this);
+        },
+
+        onPlaybackStarted = function() {
+            this.start();
+        },
+
+        onPlaybackPaused = function() {
+            this.stop();
         },
 
         onStreamsComposed = function() {
@@ -94,6 +104,9 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             update.call(this);
             // Listen to streamsComposed event to be aware that the streams have been composed
             this.streamsComposed = onStreamsComposed;
+            this.manifestLoaded = onManifestLoaded;
+            this.playbackStarted = onPlaybackStarted;
+            this.playbackPaused = onPlaybackPaused;
         },
 
         start: function () {

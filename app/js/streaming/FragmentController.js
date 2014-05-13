@@ -223,21 +223,6 @@ MediaPlayer.dependencies.FragmentController = function () {
             }
         },
 
-        isFragmentExists: function(request) {
-            var deferred = Q.defer();
-
-            this.fragmentLoader.checkForExistence(request).then(
-                function() {
-                    deferred.resolve(true);
-                },
-                function() {
-                    deferred.resolve(false);
-                }
-            );
-
-            return deferred.promise;
-        },
-
         prepareFragmentForLoading: function(context, request) {
             var fragmentModel = findModel(context);
 

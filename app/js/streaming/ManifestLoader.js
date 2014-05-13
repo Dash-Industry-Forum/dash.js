@@ -16,7 +16,6 @@ MediaPlayer.dependencies.ManifestLoader = function () {
 
     var RETRY_ATTEMPTS = 3,
         RETRY_INTERVAL = 500,
-        deferred = null,
         parseBaseUrl = function (url) {
             var base = null;
 
@@ -64,9 +63,9 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 if (manifest) {
                     manifest.mpdUrl = url;
                     manifest.mpdLoadedTime = mpdLoadedTime;
-                    deferred.resolve(manifest);
+                    self.notify(self.eventList.ENAME_MANIFEST_LOADED, manifest);
                 } else {
-                    deferred.reject(request);
+                    self.notify(self.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url));
                 }
             };
 
@@ -97,7 +96,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 } else {
                     self.debug.log("Failed loading manifest: " + url + " no retry attempts left");
                     self.errHandler.downloadError("manifest", url, request);
-                    deferred.reject(request);
+                    self.notify(self.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url + " no retry attempts left"));
                 }
             };
 
@@ -118,11 +117,13 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         parser: undefined,
         errHandler: undefined,
         metricsModel: undefined,
-        load: function(url) {
-            deferred = Q.defer();
-            doLoad.call(this, url, RETRY_ATTEMPTS);
+        eventList: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
 
-            return deferred.promise;
+        load: function(url) {
+            doLoad.call(this, url, RETRY_ATTEMPTS);
         }
     };
 };

@@ -166,7 +166,8 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         },
 
         checkForExistence = function(request) {
-            var req = new XMLHttpRequest(),
+            var self = this,
+                req = new XMLHttpRequest(),
                 isSuccessful = false;
 
             req.open("HEAD", request.url, true);
@@ -176,13 +177,13 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
                 isSuccessful = true;
 
-                request.deferred.resolve(request);
+                self.notify(self.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, true, request);
             };
 
             req.onloadend = req.onerror = function () {
                 if (isSuccessful) return;
 
-                request.deferred.reject(req);
+                self.notify(self.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, false, request);
             };
 
             req.send();
@@ -208,13 +209,11 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
         checkForExistence: function(req) {
             if (!req) {
-                return Q.when(null);
+                this.notify(this.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, false, req);
+                return;
             }
 
-            req.deferred = Q.defer();
             checkForExistence.call(this, req);
-
-            return req.deferred.promise;
         },
 
         abort: function() {

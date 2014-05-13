@@ -24,7 +24,6 @@ MediaPlayer.vo.SegmentRequest = function () {
     this.requestStartDate = null;
     this.firstByteDate = null;
     this.requestEndDate = null;
-    this.deferred = null;
     this.quality = NaN;
     this.index = NaN;
     this.availabilityStartTime = null;

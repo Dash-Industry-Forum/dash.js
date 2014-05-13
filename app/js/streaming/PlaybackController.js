@@ -93,8 +93,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
             this.notify(this.eventList.ENAME_PLAYBACK_METADATA_LOADED);
         },
 
-        onPlaybackError = function() {
-            this.notify(this.eventList.ENAME_PLAYBACK_ERROR);
+        onPlaybackError = function(event) {
+            this.notify(this.eventList.ENAME_PLAYBACK_ERROR, event.srcElement.error);
         },
 
         setupVideoModel = function(model) {

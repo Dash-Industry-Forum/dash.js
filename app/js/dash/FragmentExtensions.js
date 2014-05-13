@@ -114,7 +114,7 @@ Dash.dependencies.FragmentExtensions = function () {
         },
 
         loadFragment = function (media) {
-            var deferred = Q.defer(),
+            var self = this,
                 request = new XMLHttpRequest(),
                 url,
                 loaded = false,
@@ -126,30 +126,33 @@ Dash.dependencies.FragmentExtensions = function () {
             request.onloadend = function () {
                 if (!loaded) {
                     errorStr = "Error loading fragment: " + url;
-                    deferred.reject(errorStr);
+                    self.notify(self.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, null, new Error(errorStr));
                 }
             };
 
             request.onload = function () {
                 loaded = true;
                 parsed = parseTFDT(request.response);
-                deferred.resolve(parsed);
+                self.notify(self.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, parsed);
             };
 
             request.onerror = function () {
                 errorStr = "Error loading fragment: " + url;
-                deferred.reject(errorStr);
+                self.notify(self.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, null, new Error(errorStr));
             };
 
             request.responseType = "arraybuffer";
             request.open("GET", url);
             request.send(null);
-
-            return deferred.promise;
         };
 
     return {
         debug : undefined,
+        eventList: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
+
         loadFragment : loadFragment,
         parseTFDT : parseTFDT,
         parseSIDX : parseSIDX

@@ -43,7 +43,8 @@ MediaPlayer.dependencies.Notifier = function () {
                 },
 
                 fragmentLoaderEvents = {
-                    ENAME_LOADING_COMPLETED: "loadingCompleted"
+                    ENAME_LOADING_COMPLETED: "loadingCompleted",
+                    ENAME_CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted"
                 },
 
                 indexHandlerEvents = {
@@ -108,8 +109,20 @@ MediaPlayer.dependencies.Notifier = function () {
                     ENAME_LIVE_EDGE_FOUND: "liveEdgeFound"
                 },
 
+                fragmentExtensionsEvents = {
+                    ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
+                },
+
+                protectionExtensionsEvents = {
+                    ENAME_KEY_SYSTEM_UPDATE_COMPLETED: "keySystemUpdateCompleted"
+                },
+
                 manifestModelEvents = {
                     ENAME_MANIFEST_UPDATED: "manifestUpdated"
+                },
+
+                manifestLoaderEvents = {
+                    ENAME_MANIFEST_LOADED: "manifestLoaded"
                 };
 
             system = this.system;
@@ -157,8 +170,17 @@ MediaPlayer.dependencies.Notifier = function () {
             system.mapValue('indexHandlerEvents', indexHandlerEvents);
             system.mapOutlet('indexHandlerEvents', "indexHandler", "eventList");
 
+            system.mapValue('fragmentExtensionsEvents', fragmentExtensionsEvents);
+            system.mapOutlet('fragmentExtensionsEvents', "fragmentExtensions", "eventList");
+
+            system.mapValue('protectionExtensionsEvents', protectionExtensionsEvents);
+            system.mapOutlet('protectionExtensionsEvents', "protectionExt", "eventList");
+
             system.mapValue('streamEvents', streamEvents);
             system.mapOutlet('streamEvents', "stream", "eventList");
+
+            system.mapValue('manifestLoaderEvents', manifestLoaderEvents);
+            system.mapOutlet('manifestLoaderEvents', "manifestLoader", "eventList");
         },
 
         notify: function (/*eventName[, args]*/) {

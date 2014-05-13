@@ -21,7 +21,7 @@ MediaPlayer.dependencies.Stream = function () {
         streamProcessors = [],
         autoPlay = true,
         initialized = false,
-        load,
+        loaded = false,
         errored = false,
         kid = null,
         initData = [],
@@ -108,12 +108,7 @@ MediaPlayer.dependencies.Stream = function () {
             msg = String.fromCharCode.apply(null, bytes);
             laURL = event.destinationURL;
 
-            self.protectionController.updateFromMessage(kid, session, msg, laURL).fail(
-                function (error) {
-                    pause.call(self);
-                    self.debug.log(error);
-                    self.errHandler.mediaKeyMessageError(error);
-            });
+            self.protectionController.updateFromMessage(kid, session, msg, laURL);
 
             //if (event.keySystem !== DEFAULT_KEY_TYPE) {
             //    this.debug.log("DRM: Key type not supported!");
@@ -160,9 +155,8 @@ MediaPlayer.dependencies.Stream = function () {
 
         // Media Source
 
-        setUpMediaSource = function (mediaSourceArg) {
-            var deferred = Q.defer(),
-                self = this,
+        setUpMediaSource = function (mediaSourceArg, callback) {
+            var self = this,
 
                 onMediaSourceOpen = function (e) {
                     self.debug.log("MediaSource is open!");
@@ -171,7 +165,7 @@ MediaPlayer.dependencies.Stream = function () {
                     mediaSourceArg.removeEventListener("sourceopen", onMediaSourceOpen);
                     mediaSourceArg.removeEventListener("webkitsourceopen", onMediaSourceOpen);
 
-                    deferred.resolve(mediaSourceArg);
+                    callback(mediaSourceArg);
                 };
 
             //self.debug.log("MediaSource should be closed. The actual readyState is: " + mediaSourceArg.readyState);
@@ -182,8 +176,6 @@ MediaPlayer.dependencies.Stream = function () {
             self.mediaSourceExt.attachMediaSource(mediaSourceArg, self.videoModel);
 
             //self.debug.log("MediaSource attached to video.  Waiting on open...");
-
-            return deferred.promise;
         },
 
         tearDownMediaSource = function () {
@@ -330,12 +322,24 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         onLoad = function () {
-            load.resolve(null);
+            this.debug.log("element loaded!");
+            loaded = true;
+            startAutoPlay.call(this);
         },
 
-        onError = function (event) {
-            var error = event.srcElement.error,
-                code = error.code,
+        startAutoPlay = function() {
+            if (!initialized || !loaded) return;
+
+            // only first period stream must be played automatically during playback initialization
+            if (periodInfo.index === 0) {
+                if (autoPlay) {
+                    play.call(this);
+                }
+            }
+        },
+
+        onError = function (sender, error) {
+            var code = error.code,
                 msg = "";
 
             if (code === -1) {
@@ -388,6 +392,14 @@ MediaPlayer.dependencies.Stream = function () {
         doLoad = function (manifestResult) {
 
             var self = this,
+                onMediaSourceSetup = function (mediaSourceResult) {
+                    mediaSource = mediaSourceResult;
+                    //self.debug.log("MediaSource set up.");
+                    initializeMediaSource.call(self);
+                    initializePlayback.call(self);
+                    //self.debug.log("Playback initialized!");
+                    startAutoPlay.call(self);
+                },
                 mediaSourceResult;
 
             //self.debug.log("Stream start loading.");
@@ -396,26 +408,7 @@ MediaPlayer.dependencies.Stream = function () {
             mediaSourceResult = self.mediaSourceExt.createMediaSource();
             //self.debug.log("MediaSource created.");
 
-            return setUpMediaSource.call(self, mediaSourceResult).then(
-                function (mediaSourceResult) {
-                    mediaSource = mediaSourceResult;
-                    //self.debug.log("MediaSource set up.");
-                    initializeMediaSource.call(self);
-                    initializePlayback.call(self);
-                    //self.debug.log("Playback initialized!");
-                    return load.promise;
-                }
-            ).then(
-                function () {
-                    self.debug.log("element loaded!");
-                    // only first period stream must be played automatically during playback initialization
-                    if (periodInfo.index === 0) {
-                        if (autoPlay) {
-                            play.call(self);
-                        }
-                    }
-                }
-            );
+            setUpMediaSource.call(self, mediaSourceResult, onMediaSourceSetup);
         },
 
         onBufferingCompleted = function() {
@@ -447,6 +440,14 @@ MediaPlayer.dependencies.Stream = function () {
 
             updating = false;
             self.notify(self.eventList.ENAME_STREAM_UPDATED);
+        },
+
+        onKeySystemUpdateCompleted = function(sender, data, error) {
+            if (!error) return;
+
+            pause.call(this);
+            this.debug.log(error);
+            this.errHandler.mediaKeyMessageError(error);
         },
 
         getAudioVideoProcessors = function() {
@@ -522,11 +523,9 @@ MediaPlayer.dependencies.Stream = function () {
         setup: function () {
             this.bufferingCompleted = onBufferingCompleted;
             this.dataUpdateCompleted = onDataUpdateCompleted;
-
-            load = Q.defer();
-
             this.playbackError = onError;
             this.playbackMetaDataLoaded = onLoad;
+            this.keySystemUpdateCompleted = onKeySystemUpdateCompleted;
         },
 
         load: function(manifest) {
@@ -552,6 +551,9 @@ MediaPlayer.dependencies.Stream = function () {
             this.protectionModel.listenToKeyMessage(keyMessageListener);
             this.protectionModel.listenToKeyError(keyErrorListener);
             this.protectionModel.listenToKeyAdded(keyAddedListener);
+
+            this.protectionExt.subscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this.protectionModel);
+            this.protectionExt.subscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this);
         },
 
         getVideoModel: function() {
@@ -590,7 +592,7 @@ MediaPlayer.dependencies.Stream = function () {
             // streamcontroller expects this to be valid
             //this.videoModel = null;
 
-            load = Q.defer();
+            loaded = false;
         },
 
         getDuration: function () {
