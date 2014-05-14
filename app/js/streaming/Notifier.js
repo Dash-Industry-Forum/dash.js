@@ -42,6 +42,11 @@ MediaPlayer.dependencies.Notifier = function () {
                     ENAME_MIN_BUFFER_TIME_UPDATED: "minBufferTimeUpdated"
                 },
 
+                sourceBufferEvents = {
+                    ENAME_SOURCEBUFFER_REMOVE_COMPLETED: "sourceBufferRemoveCompleted",
+                    ENAME_SOURCEBUFFER_APPEND_COMPLETED: "sourceBufferAppendCompleted"
+                },
+
                 fragmentLoaderEvents = {
                     ENAME_LOADING_COMPLETED: "loadingCompleted",
                     ENAME_CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted"
@@ -133,6 +138,9 @@ MediaPlayer.dependencies.Notifier = function () {
             system.mapValue('bufferControllerEvents', bufferControllerEvents);
             system.mapOutlet('bufferControllerEvents', "bufferController", "eventList");
             system.mapOutlet('bufferControllerEvents', "textController", "eventList");
+
+            system.mapValue('sourceBufferEvents', sourceBufferEvents);
+            system.mapOutlet('sourceBufferEvents', "sourceBufferExt", "eventList");
 
             system.mapValue('manifestModelEvents', manifestModelEvents);
             system.mapOutlet('manifestModelEvents', "manifestModel", "eventList");

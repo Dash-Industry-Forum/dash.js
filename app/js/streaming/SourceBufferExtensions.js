@@ -16,6 +16,10 @@ MediaPlayer.dependencies.SourceBufferExtensions = function () {
     this.system = undefined;
     this.manifestExt = undefined;
     this.errHandler = undefined;
+    this.eventList = undefined;
+    this.notify = undefined;
+    this.subscribe = undefined;
+    this.unsubscribe = undefined;
 };
 
 MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
@@ -130,21 +134,20 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         return length;
     },
 
-    waitForUpdateEnd: function(buffer) {
+    waitForUpdateEnd: function(buffer, callback) {
         "use strict";
-        var defer = Q.defer(),
-            intervalId,
+        var intervalId,
             CHECK_INTERVAL = 50,
             checkIsUpdateEnded = function() {
                 // if undating is still in progress do nothing and wait for the next check again.
                 if (buffer.updating) return;
                 // updating is completed, now we can stop checking and resolve the promise
                 clearInterval(intervalId);
-                defer.resolve(true);
+                callback(true);
             },
             updateEndHandler = function() {
                 buffer.removeEventListener("updateend", updateEndHandler, false);
-                defer.resolve(true);
+                callback(true);
             };
         // use updateend event if possible
         if (buffer.hasOwnProperty("addEventListener")) {
@@ -158,12 +161,10 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             // use setInterval to periodically check if updating has been completed
             intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
         }
-
-        return defer.promise;
     },
 
     append: function (buffer, bytes) {
-        var deferred = Q.defer();
+        var self = this;
 
         try {
             if ("append" in buffer) {
@@ -172,20 +173,16 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 buffer.appendBuffer(bytes);
             }
             // updating is in progress, we should wait for it to complete before signaling that this operation is done
-            this.waitForUpdateEnd(buffer).then(
-                function() {
-                    deferred.resolve();
-                }
-            );
+            this.waitForUpdateEnd(buffer, function() {
+                self.notify(self.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, bytes);
+            });
         } catch (err) {
-            deferred.reject({err: err, data: bytes});
+            self.notify(self.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, bytes, err);
         }
-
-        return deferred.promise;
     },
 
     remove: function (buffer, start, end, mediaSource) {
-        var deferred = Q.defer();
+        var self = this;
 
         try {
             // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
@@ -193,29 +190,21 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 buffer.remove(start, end);
             }
             // updating is in progress, we should wait for it to complete before signaling that this operation is done
-            this.waitForUpdateEnd(buffer).then(
-                function() {
-                    deferred.resolve();
-                }
-            );
+            this.waitForUpdateEnd(buffer, function() {
+                self.notify(self.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, start, end);
+            });
         } catch (err) {
-            deferred.reject(err);
+            self.notify(self.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, start, end, err);
         }
-
-        return deferred.promise;
     },
 
     abort: function (mediaSource, buffer) {
         "use strict";
-        var deferred = Q.defer();
         try {
             if (mediaSource.readyState === "open") {
                 buffer.abort();
             }
-            deferred.resolve();
         } catch(ex){
-            deferred.reject(ex.description);
         }
-        return deferred.promise;
     }
 };
