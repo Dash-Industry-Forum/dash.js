@@ -17,7 +17,8 @@ MediaPlayer.dependencies.BufferController = function () {
         QUOTA_EXCEEDED_ERROR_CODE = 22,
         initializationData = [],
         seekTarget = -1,
-        lastQuality = 0,
+        necessaryQuality = 0,
+        currentQuality = 0,
         isBufferingCompleted = false,
         bufferLevel = 0,
         isQuotaExceeded = false,
@@ -50,7 +51,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             // if this is the initialization data for current quality we need to push it to the buffer
 
-            if (quality !== lastQuality || !waitingForInit()) return;
+            if (quality !== necessaryQuality || !waitingForInit()) return;
 
             switchInitData.call(self);
         },
@@ -112,8 +113,8 @@ MediaPlayer.dependencies.BufferController = function () {
             if (!hasData.call(self)) return;
 
             hasEnoughSpaceToAppend.call(self, function() {
-                if (quality !== lastQuality) {
-                    onAppended.call(self, quality, index);
+                if (quality !== currentQuality && (index !== undefined)) {
+                    onMediaRejected.call(self, quality, index);
                     return;
                 }
 
@@ -280,8 +281,21 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
+        onMediaRejected = function(quality, index) {
+            isAppendingInProgress = false;
+            this.notify(this.eventList.ENAME_BYTES_REJECTED, quality, index);
+
+            if (waitingForInit()) {
+                switchInitData.call(this);
+            } else {
+                appendNextMedia.call(this);
+            }
+        },
+
         onInitAppended = function(quality) {
-            if (quality === requiredInitQuality) {
+            currentQuality = quality;
+
+            if (currentQuality === requiredInitQuality) {
                 requiredInitQuality = null;
             } else {
                 switchInitData.call(this);
@@ -338,11 +352,11 @@ MediaPlayer.dependencies.BufferController = function () {
 
             // if the quality has changed we should append the initialization data again. We get it
             // from the cached array instead of sending a new request
-            if (lastQuality === newQuality) return;
+            if (necessaryQuality === newQuality) return;
 
             updateBufferTimestampOffset.call(self, self.representationController.getRepresentationForQuality(newQuality).MSETimeOffset);
 
-            lastQuality = newQuality;
+            necessaryQuality = newQuality;
             requiredInitQuality = newQuality;
             switchInitData.call(self);
         },
@@ -350,13 +364,13 @@ MediaPlayer.dependencies.BufferController = function () {
         switchInitData = function() {
             var self = this;
 
-            if (initializationData[lastQuality]) {
+            if (initializationData[necessaryQuality]) {
                 if (isAppendingInProgress) return;
 
-                appendToBuffer.call(self, initializationData[lastQuality], lastQuality);
+                appendToBuffer.call(self, initializationData[necessaryQuality], necessaryQuality);
             } else {
                 // if we have not loaded the init segment for the current quality, do it
-                self.notify(self.eventList.ENAME_INIT_REQUESTED, lastQuality);
+                self.notify(self.eventList.ENAME_INIT_REQUESTED, necessaryQuality);
             }
         },
 

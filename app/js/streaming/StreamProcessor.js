@@ -82,6 +82,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, scheduleController);
             bufferController.subscribe(bufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
+            bufferController.subscribe(bufferController.eventList.ENAME_BYTES_REJECTED, scheduleController);
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, scheduleController);
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, scheduleController);
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, scheduleController);
@@ -214,6 +215,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BYTES_REJECTED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, scheduleController);

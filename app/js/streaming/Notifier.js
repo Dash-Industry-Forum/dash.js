@@ -34,6 +34,7 @@ MediaPlayer.dependencies.Notifier = function () {
                     ENAME_BUFFER_LEVEL_UPDATED: "bufferLevelUpdated",
                     ENAME_QUOTA_EXCEEDED: "quotaExceeded",
                     ENAME_BYTES_APPENDED: "bytesAppended",
+                    ENAME_BYTES_REJECTED: "bytesRejected",
                     ENAME_BUFFERING_COMPLETED: "bufferingCompleted",
                     ENAME_BUFFER_CLEARED: "bufferCleared",
                     ENAME_INIT_REQUESTED: "initRequested",

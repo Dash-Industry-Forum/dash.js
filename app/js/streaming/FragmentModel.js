@@ -196,6 +196,21 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return null;
         },
 
+        getExecutedRequestForQualityAndIndex: function(quality, index) {
+            var lastIdx = executedRequests.length - 1,
+                req = null,
+                i;
+
+            for (i = lastIdx; i >= 0; i -=1) {
+                req = executedRequests[i];
+                if ((req.quality === quality) && (req.index === index)) {
+                    return req;
+                }
+            }
+
+            return null;
+        },
+
         removeExecutedRequest: function(request) {
             removeExecutedRequest.call(this, request);
         },

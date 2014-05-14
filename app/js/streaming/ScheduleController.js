@@ -357,6 +357,12 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
+        onBytesRejected = function(sender, quality, index) {
+            var req = fragmentModel.getExecutedRequestForQualityAndIndex(quality, index);
+
+            fragmentModel.removeExecutedRequest(req);
+        },
+
         onDataUpdateStarted = function(/*sender*/) {
             doStop.call(this);
         },
@@ -408,9 +414,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             lastQuality = newQuality;
 
-            // The quality has beeen changed so we should abort the requests that has not been loaded yet
-            self.fragmentController.abortRequestsForModel(fragmentModel);
-            self.fragmentController.cancelPendingRequestsForModel(fragmentModel);
             currentRepresentation = self.representationController.getRepresentationForQuality(newQuality);
 
             if (currentRepresentation === null || currentRepresentation === undefined) {
@@ -493,6 +496,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.bufferCleared = onBufferCleared;
             this.bufferingCompleted = onBufferingCompleted;
             this.bytesAppended = onBytesAppended;
+            this.bytesRejected = onBytesRejected;
             this.bufferLevelOutrun = onBufferLevelOutrun;
             this.bufferLevelStateChanged = onBufferLevelStateChanged;
             this.bufferLevelUpdated = onBufferLevelUpdated;
