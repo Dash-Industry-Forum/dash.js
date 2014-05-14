@@ -60,6 +60,11 @@ MediaPlayer.dependencies.TextController = function () {
             this.streamCompleted = doNothing;
             this.scheduledTimeOccurred = doNothing;
             this.qualityChanged = doNothing;
+
+            this.playbackProgress = doNothing;
+            this.playbackSeeking = doNothing;
+            this.playbackTimeUpdated = doNothing;
+            this.playbackRateChanged = doNothing;
         },
 
         initialize: function (typeValue, buffer, source, streamProcessor) {
