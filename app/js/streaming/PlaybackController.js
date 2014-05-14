@@ -75,7 +75,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (ranges.length) {
                 lastRange = ranges.length -1;
                 bufferEndTime = ranges.end(lastRange);
-                remainingUnbufferedDuration = period.start + period.duration - bufferEndTime;
+                remainingUnbufferedDuration = this.timelineConverter.calcPresentationStartTime(period) + period.duration - bufferEndTime;
             }
 
             this.notify(this.eventList.ENAME_PLAYBACK_PROGRESS, videoModel.getElement().buffered, remainingUnbufferedDuration);
@@ -144,7 +144,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         getTimeToPeriodEnd: function() {
             var currentTime = videoModel.getCurrentTime();
 
-            return ((period.start + period.duration) - currentTime);
+            return ((this.timelineConverter.calcPresentationStartTime(period) + period.duration) - currentTime);
         },
 
         getPeriodDuration: function() {
