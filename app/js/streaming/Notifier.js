@@ -192,7 +192,7 @@ MediaPlayer.dependencies.Notifier = function () {
             system.notify.apply(system, args);
         },
 
-        subscribe: function(eventName, observer, handler) {
+        subscribe: function(eventName, observer, handler, oneShot) {
             if (!handler && observer[eventName]) {
                 handler = observer[eventName] = observer[eventName].bind(observer);
             }
@@ -205,7 +205,7 @@ MediaPlayer.dependencies.Notifier = function () {
 
             eventName += getId.call(this);
 
-            system.mapHandler(eventName, undefined, handler);
+            system.mapHandler(eventName, undefined, handler, oneShot);
         },
 
         unsubscribe: function(eventName, observer, handler) {
