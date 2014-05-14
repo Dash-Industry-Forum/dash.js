@@ -99,7 +99,6 @@
         onProgress = function(sender, ranges, remainingUnbufferedDuration) {
             if (!remainingUnbufferedDuration || (remainingUnbufferedDuration >= STREAM_BUFFER_END_THRESHOLD)) return;
 
-            activeStream.getPlaybackController().unsubscribe(activeStream.getPlaybackController().eventList.ENAME_PLAYBACK_PROGRESS, this);
             onStreamBufferingEnd();
         },
 
