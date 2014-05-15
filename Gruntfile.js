@@ -18,17 +18,15 @@ module.exports = function(grunt) {
             "app/js/streaming/Context.js",
             "app/js/dash/Dash.js",
             "app/js/dash/DashContext.js",
-            "app/lib/q.js",
             "app/lib/xml2json.js",
             "app/lib/objectiron.js",
             "app/lib/dijon.js",
-            "app/js/*/**/*.js"],
+            "app/js/*/**/*.js"]
         }
       },
       all : {
         files: {
           "dash.all.js" : [
-            "./app/lib/q.js",
             "./app/lib/xml2json.js",
             "./app/lib/objectiron.js",
             "./app/lib/dijon.js",
@@ -81,7 +79,6 @@ module.exports = function(grunt) {
 			],
           vendor: [
 			"./app/lib/jquery/jquery-1.10.2.min.js",
-            "./app/lib/q.js",
             "./app/lib/xml2json.js",
             "./app/lib/objectiron.js",			
             "./app/lib/Math.js",
