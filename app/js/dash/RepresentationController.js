@@ -17,6 +17,11 @@ Dash.dependencies.RepresentationController = function () {
             currentRepresentation = getRepresentationForQuality.call(self, self.abrController.getQualityFor(type));
             data = dataValue;
 
+            if (type !== "video" && type !== "audio") {
+                self.notify(self.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
+                return;
+            }
+
             for (var i = 0; i < availableRepresentations.length; i += 1) {
                 self.indexHandler.updateRepresentation(availableRepresentations[i]);
             }

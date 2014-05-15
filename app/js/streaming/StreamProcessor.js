@@ -52,60 +52,64 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             self.fragmentLoader = fragmentLoader;
             self.liveEdgeFinder.initialize(this);
 
-            abrController.subscribe(abrController.eventList.ENAME_QUALITY_CHANGED, bufferController);
-            abrController.subscribe(abrController.eventList.ENAME_QUALITY_CHANGED, representationController);
-            abrController.subscribe(abrController.eventList.ENAME_QUALITY_CHANGED, scheduleController);
-
-            requestScheduler.subscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, bufferController);
-            requestScheduler.subscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, scheduleController);
-
-            liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.timelineConverter);
-            liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, scheduleController);
-
-            representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_STARTED, scheduleController);
             representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, bufferController);
-            representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, scheduleController);
-            representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, abrController);
-            representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, stream);
-            representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, liveEdgeFinder);
-            representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, playbackController);
-
             fragmentController.subscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADED, bufferController);
-            fragmentController.subscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADED, bufferController);
-            fragmentController.subscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADING_START, scheduleController);
-            fragmentController.subscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADING_START, scheduleController);
-            fragmentController.subscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController);
-            fragmentController.subscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, bufferController);
-
-            bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, videoModel);
-            bufferController.subscribe(bufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, requestScheduler);
-            bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
-            bufferController.subscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, scheduleController);
-            bufferController.subscribe(bufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
-            bufferController.subscribe(bufferController.eventList.ENAME_BYTES_REJECTED, scheduleController);
-            bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, scheduleController);
-            bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, scheduleController);
-            bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, scheduleController);
-            bufferController.subscribe(bufferController.eventList.ENAME_INIT_REQUESTED, scheduleController);
-            bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentController);
-            bufferController.subscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
             bufferController.subscribe(bufferController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
 
-            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
-            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);
-            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, bufferController);
-            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, bufferController);
-            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController);
-            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_PAUSED, scheduleController);
-            playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
+            if (type === "video" || type === "audio") {
+                abrController.subscribe(abrController.eventList.ENAME_QUALITY_CHANGED, bufferController);
+                abrController.subscribe(abrController.eventList.ENAME_QUALITY_CHANGED, representationController);
+                abrController.subscribe(abrController.eventList.ENAME_QUALITY_CHANGED, scheduleController);
 
-            if (isDynamic) {
-                playbackController.subscribe(playbackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, representationController);
+                requestScheduler.subscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, bufferController);
+                requestScheduler.subscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, scheduleController);
+
+                liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.timelineConverter);
+                liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, scheduleController);
+
+                representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_STARTED, scheduleController);
+
+                representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, scheduleController);
+                representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, abrController);
+                representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, stream);
+                representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, liveEdgeFinder);
+                representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, playbackController);
+
+                fragmentController.subscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADED, bufferController);
+                fragmentController.subscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADING_START, scheduleController);
+                fragmentController.subscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADING_START, scheduleController);
+                fragmentController.subscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController);
+                fragmentController.subscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, bufferController);
+
+                bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, videoModel);
+                bufferController.subscribe(bufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, requestScheduler);
+                bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
+                bufferController.subscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, scheduleController);
+                bufferController.subscribe(bufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
+                bufferController.subscribe(bufferController.eventList.ENAME_BYTES_REJECTED, scheduleController);
+                bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, scheduleController);
+                bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, scheduleController);
+                bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, scheduleController);
+                bufferController.subscribe(bufferController.eventList.ENAME_INIT_REQUESTED, scheduleController);
+                bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentController);
+                bufferController.subscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
+
+                playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
+                playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);
+                playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, bufferController);
+                playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, bufferController);
+                playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController);
+                playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_PAUSED, scheduleController);
+                playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
+
+                if (isDynamic) {
+                    playbackController.subscribe(playbackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, representationController);
+                }
+
+                indexHandler.subscribe(indexHandler.eventList.ENAME_REPRESENTATION_UPDATED, representationController);
+                baseUrlExt.subscribe(baseUrlExt.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
+                baseUrlExt.subscribe(baseUrlExt.eventList.ENAME_SEGMENTS_LOADED, indexHandler);
             }
-
-            indexHandler.subscribe(indexHandler.eventList.ENAME_REPRESENTATION_UPDATED, representationController);
-            baseUrlExt.subscribe(baseUrlExt.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
-            baseUrlExt.subscribe(baseUrlExt.eventList.ENAME_SEGMENTS_LOADED, indexHandler);
 
             bufferController.initialize(type, buffer, mediaSource, self);
             scheduleController.initialize(type, this);

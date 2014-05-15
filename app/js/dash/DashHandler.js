@@ -521,8 +521,6 @@ Dash.dependencies.DashHandler = function () {
                 throw new Error("no representation");
             }
 
-            if (type !== "video" && type !== "audio") return null;
-
             representation.segments = null;
 
             getSegments.call(self, representation);

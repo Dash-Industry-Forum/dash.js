@@ -51,20 +51,6 @@ MediaPlayer.dependencies.TextController = function () {
         setup: function() {
             this.dataUpdateCompleted = onDataUpdateCompleted;
             this.initSegmentLoaded = onInitSegmentLoaded;
-
-            // TODO We should not subscribe to events we are not interested in
-            var doNothing = function(){};
-
-            this.liveEdgeFound = doNothing;
-            this.mediaSegmentLoaded =  doNothing;
-            this.streamCompleted = doNothing;
-            this.scheduledTimeOccurred = doNothing;
-            this.qualityChanged = doNothing;
-
-            this.playbackProgress = doNothing;
-            this.playbackSeeking = doNothing;
-            this.playbackTimeUpdated = doNothing;
-            this.playbackRateChanged = doNothing;
         },
 
         initialize: function (typeValue, buffer, source, streamProcessor) {
