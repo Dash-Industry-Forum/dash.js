@@ -13,6 +13,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
         searchForLiveEdge = function () {
             var self = this,
+                request,
                 availabilityRange; // all segments are supposed to be available in this interval
 
             currentRepresentation = self.streamProcessor.getCurrentRepresentation();
@@ -26,19 +27,22 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
             // we have to use half of the availability interval (window) as a search step to ensure that we find a segment in the window
             liveEdgeSearchStep = Math.floor((availabilityRange.end - availabilityRange.start) / 2);
             // start search from finding a request for the initial search time
-            self.indexHandler.getSegmentRequestForTime(currentRepresentation, liveEdgeInitialSearchPosition).then(findLiveEdge.bind(self, liveEdgeInitialSearchPosition, onSearchForSegmentSucceeded, onSearchForSegmentFailed));
+            request = self.indexHandler.getSegmentRequestForTime(currentRepresentation, liveEdgeInitialSearchPosition);
+            findLiveEdge.call(self, liveEdgeInitialSearchPosition, onSearchForSegmentSucceeded, onSearchForSegmentFailed, request);
             isSearchStarted = true;
         },
 
         findLiveEdge = function (searchTime, onSuccess, onError, request) {
-            var self = this;
+            var self = this,
+                req;
             if (request === null) {
                 // request can be null because it is out of the generated list of request. In this case we need to
                 // update the list and the segmentAvailabilityRange
                 currentRepresentation.segments = null;
                 currentRepresentation.segmentAvailabilityRange = {start: searchTime - liveEdgeSearchStep, end: searchTime + liveEdgeSearchStep};
                 // try to get request object again
-                self.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime).then(findLiveEdge.bind(self, searchTime, onSuccess, onError));
+                req = self.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime);
+                findLiveEdge.call(self, searchTime, onSuccess, onError, req);
             } else {
                 var handler = function(sender, isExist, request) {
                     self.fragmentLoader.unsubscribe(self.fragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
@@ -56,6 +60,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
         onSearchForSegmentFailed = function(request, lastSearchTime) {
             var searchTime,
+                req,
                 searchInterval;
 
             if (useBinarySearch) {
@@ -73,13 +78,15 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
                 this.notify(this.eventList.ENAME_FRAGMENT_LOADING_FAILED, request);
             } else {
                 // continue searching for a first available segment
-                this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime).then(findLiveEdge.bind(this, searchTime, onSearchForSegmentSucceeded, onSearchForSegmentFailed));
+                req = this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime);
+                findLiveEdge.call(this, searchTime, onSearchForSegmentSucceeded, onSearchForSegmentFailed, req);
             }
         },
 
         onSearchForSegmentSucceeded = function (request, lastSearchTime) {
             var startTime = request.startTime,
                 self = this,
+                req,
                 searchTime;
 
             if (!useBinarySearch) {
@@ -96,11 +103,12 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
                 // otherwise start binary search to find live edge
                 if (lastSearchTime === liveEdgeInitialSearchPosition) {
                     searchTime = lastSearchTime + fragmentDuration;
-                    this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime).then(findLiveEdge.bind(self, searchTime, function() {
+                    req = this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime);
+                    findLiveEdge.call(self, searchTime, function() {
                         binarySearch.call(self, true, searchTime);
                     }, function(){
                         self.notify(self.eventList.ENAME_LIVE_EDGE_FOUND, searchTime, currentRepresentation.adaptation.period);
-                    }));
+                    }, req);
 
                     return;
                 }
@@ -111,6 +119,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
         binarySearch = function(lastSearchSucceeded, lastSearchTime) {
             var isSearchCompleted,
+                req,
                 searchTime;
 
             if (lastSearchSucceeded) {
@@ -128,7 +137,8 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
             } else {
                 // update the search time and continue searching
                 searchTime = ((liveEdgeSearchRange.start + liveEdgeSearchRange.end) / 2);
-                this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime).then(findLiveEdge.bind(this, searchTime, onSearchForSegmentSucceeded, onSearchForSegmentFailed));
+                req = this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime);
+                findLiveEdge.call(this, searchTime, onSearchForSegmentSucceeded, onSearchForSegmentFailed, req);
             }
         },
 

@@ -1,10 +1,30 @@
 MediaPlayer.dependencies.PlaybackController = function () {
     "use strict";
 
-    var period,
+    var WALLCLOCK_TIME_UPDATE_INTERVAL = 1000,
+        wallclockTimeIntervalId,
+        period,
         videoModel,
         representation,
         isDynamic,
+
+        startUpdatingWallclockTime = function() {
+            var self = this,
+                tick = function() {
+                    onWallclockTime.call(self);
+                };
+
+            if (wallclockTimeIntervalId !== null) {
+                stopUpdatingWallclockTime.call(this);
+            }
+
+            wallclockTimeIntervalId = setInterval(tick, WALLCLOCK_TIME_UPDATE_INTERVAL);
+        },
+
+        stopUpdatingWallclockTime = function() {
+            clearInterval(wallclockTimeIntervalId);
+            wallclockTimeIntervalId = null;
+        },
 
         updateCurrentTime = function() {
             if (this.isPaused()) return;
@@ -97,6 +117,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
             this.notify(this.eventList.ENAME_PLAYBACK_ERROR, event.srcElement.error);
         },
 
+        onWallclockTime = function() {
+            this.notify(this.eventList.ENAME_WALLCLOCK_TIME_UPDATED,isDynamic, new Date());
+        },
+
         setupVideoModel = function(model) {
             videoModel = model;
 
@@ -130,6 +154,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
             onPlaybackProgress = onPlaybackProgress.bind(this);
             onPlaybackRateChanged = onPlaybackRateChanged.bind(this);
             onPlaybackMetaDataLoaded = onPlaybackMetaDataLoaded.bind(this);
+
+            startUpdatingWallclockTime.call(this);
         },
 
         initialize: function(periodInfo, model) {
@@ -182,6 +208,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         reset: function() {
+            stopUpdatingWallclockTime.call(this);
             removeAllListeners.call(this);
             videoModel = null;
             period = null;

@@ -127,46 +127,35 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
-        loadNextFragment = function (callback) {
+        loadNextFragment = function () {
             var self = this,
                 range,
                 segmentTime,
-                onGetTime = function (time) {
-                    segmentTime = time;
-                    seeking = false;
+                request;
 
-                    range = self.sourceBufferExt.getBufferRange(self.bufferController.getBuffer(), segmentTime);
+            segmentTime = seeking ? seekTarget : self.indexHandler.getCurrentTime(currentRepresentation);
+            seeking = false;
+            range = self.sourceBufferExt.getBufferRange(self.bufferController.getBuffer(), segmentTime);
 
-                    if (range !== null) {
-                        segmentTime = range.end;
-                    }
-                    //self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
-                    self.indexHandler.getSegmentRequestForTime(currentRepresentation, segmentTime).then(
-                        function (request) {
-                            callback.call(self, request);
-                        }
-                    );
-                };
-
-            if (seeking) {
-                onGetTime(seekTarget);
-            } else {
-                self.indexHandler.getCurrentTime(currentRepresentation).then(
-                    function (time) {
-                        onGetTime(time);
-                    }
-                );
+            if (range !== null) {
+                segmentTime = range.end;
             }
+            //self.debug.log("Loading the " + type + " fragment for time: " + segmentTime);
+            request = self.indexHandler.getSegmentRequestForTime(currentRepresentation, segmentTime);
+
+            return request;
         },
 
         onFragmentRequest = function (request) {
-            var self = this;
+            var self = this,
+                req;
 
             if (request !== null) {
                 // If we have already loaded the given fragment ask for the next one. Otherwise prepare it to get loaded
                 if (self.fragmentController.isFragmentLoadedOrPending(self, request)) {
                     if (request.action !== "complete") {
-                        self.indexHandler.getNextSegmentRequest(currentRepresentation).then(onFragmentRequest.bind(self));
+                        req = self.indexHandler.getNextSegmentRequest(currentRepresentation);
+                        onFragmentRequest.call(self, req);
                     } else {
                         doStop.call(self);
                         setState.call(self, READY);
@@ -185,11 +174,13 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this,
                 pendingRequests = self.fragmentController.getPendingRequests(self),
                 loadingRequests = self.fragmentController.getLoadingRequests(self),
-                ln = (pendingRequests ? pendingRequests.length : 0) + (loadingRequests ? loadingRequests.length : 0);
+                ln = (pendingRequests ? pendingRequests.length : 0) + (loadingRequests ? loadingRequests.length : 0),
+                request;
 
             if ((fragmentsToLoad - ln) > 0) {
                 fragmentsToLoad--;
-                loadNextFragment.call(self,onFragmentRequest.bind(self));
+                request = loadNextFragment.call(self);
+                onFragmentRequest.call(self, request);
             } else {
 
                 if (state === VALIDATING) {
@@ -214,27 +205,18 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
-        getRequiredFragmentCount = function(callback) {
+        getRequiredFragmentCount = function() {
             var self =this,
                 playbackRate = self.playbackController.getPlaybackRate(),
                 duration = self.playbackController.getPeriodDuration(),
                 actualBufferedDuration = self.bufferController.getBufferLevel() / Math.max(playbackRate, 1),
+                count,
                 requiredBufferLength;
 
             requiredBufferLength = self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, duration);
-            self.indexHandler.getSegmentCountForDuration(currentRepresentation, requiredBufferLength, actualBufferedDuration).then(
-                function(count) {
-                    callback.call(self, count);
-                }
-            );
-        },
+            count = self.indexHandler.getSegmentCountForDuration(currentRepresentation, requiredBufferLength, actualBufferedDuration);
 
-        onGetRequiredFragmentCount = function(count) {
-            fragmentsToLoad = count;
-            loadInitialization.call(this);
-            // We should request the media fragment w/o waiting for the next validate call
-            // or until the initialization fragment has been loaded
-            requestNewFragment.call(this);
+            return count;
         },
 
         validate = function () {
@@ -255,7 +237,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             if (state === READY) {
                 setState.call(self, VALIDATING);
-                getRequiredFragmentCount.call(self, onGetRequiredFragmentCount);
+                fragmentsToLoad = getRequiredFragmentCount.call(self);
+                loadInitialization.call(this);
+                // We should request the media fragment w/o waiting for the next validate call
+                // or until the initialization fragment has been loaded
+                requestNewFragment.call(this);
             } else if (state === VALIDATING) {
                 setState.call(self, READY);
             }
@@ -285,25 +271,19 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onDataUpdateCompleted = function(sender, data, newRepresentation) {
-            var self = this;
+            var self = this,
+                time;
 
-            if (!currentRepresentation) {
-                currentRepresentation = newRepresentation;
+            time = self.indexHandler.getCurrentTime(currentRepresentation || newRepresentation);
+            currentRepresentation = newRepresentation;
+
+            if (!isDynamic) {
+                ready = true;
             }
 
-            self.indexHandler.getCurrentTime(currentRepresentation).then(
-                function (time) {
-                    currentRepresentation = newRepresentation;
-
-                    if (!isDynamic) {
-                        ready = true;
-                    }
-
-                    if (ready) {
-                        startOnReady.call(self, time);
-                    }
-                }
-            );
+            if (ready) {
+                startOnReady.call(self, time);
+            }
         },
 
         onStreamCompleted = function(sender, model /*, request*/) {
@@ -454,16 +434,16 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this,
                 fragmentDuration = currentRepresentation.segmentDuration || 0,
                 startTime = Math.max((liveEdgeTime - self.bufferController.getMinBufferTime()), currentRepresentation.segmentAvailabilityRange.start),
+                request,
                 segmentStart;
             // get a request for a start time
-            self.indexHandler.getSegmentRequestForTime(currentRepresentation, startTime).then(function(request) {
-                segmentStart = request.startTime;
-                // set liveEdge to be in the middle of the segment time to avoid a possible gap between
-                // currentTime and buffered.start(0)
-                periodInfo.liveEdge = segmentStart + (fragmentDuration / 2);
-                ready = true;
-                startOnReady.call(self, segmentStart);
-            });
+            request = self.indexHandler.getSegmentRequestForTime(currentRepresentation, startTime);
+            segmentStart = request.startTime;
+            // set liveEdge to be in the middle of the segment time to avoid a possible gap between
+            // currentTime and buffered.start(0)
+            periodInfo.liveEdge = segmentStart + (fragmentDuration / 2);
+            ready = true;
+            startOnReady.call(self, segmentStart);
         };
 
     return {

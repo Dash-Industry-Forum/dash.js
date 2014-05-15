@@ -108,7 +108,8 @@ MediaPlayer.dependencies.Notifier = function () {
                     ENAME_PLAYBACK_PROGRESS: "playbackProgress",
                     ENAME_PLAYBACK_RATE_CHANGED: "playbackRateChanged",
                     ENAME_PLAYBACK_METADATA_LOADED: "playbackMetaDataLoaded",
-                    ENAME_PLAYBACK_ERROR: "playbackError"
+                    ENAME_PLAYBACK_ERROR: "playbackError",
+                    ENAME_WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated"
                 },
 
                 liveEdgeFinderEvents = {

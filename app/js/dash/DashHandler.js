@@ -17,7 +17,6 @@ Dash.dependencies.DashHandler = function () {
     var index = -1,
         requestedTime,
         isDynamic,
-        deferredSegments = [],
         type,
 
         replaceNumberForTemplate = function (url, value) {
@@ -274,17 +273,17 @@ Dash.dependencies.DashHandler = function () {
                 representation.availableSegmentsNumber = availabilityIdx + 1;
             }
 
-            return Q.when(segments);
+            return segments;
         },
 
         getSegmentsFromTemplate = function (representation) {
             var segments = [],
                 self = this,
-                deferred = Q.defer(),
                 template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate,
                 duration = representation.segmentDuration,
-                segmentRange = null,
+                availabilityWindow = representation.segmentAvailabilityRange,
+                segmentRange,
                 i,
                 startIdx,
                 endIdx,
@@ -294,38 +293,31 @@ Dash.dependencies.DashHandler = function () {
 
             start = representation.startNumber;
 
-            waitForAvailabilityWindow.call(self, representation).then(
-                function(availabilityWindow) {
-                    representation.segmentAvailabilityRange = availabilityWindow;
-                    segmentRange = decideSegmentListRangeForTemplate.call(self, representation);
+            segmentRange = decideSegmentListRangeForTemplate.call(self, representation);
 
-                    startIdx = segmentRange.start;
-                    endIdx = segmentRange.end;
+            startIdx = segmentRange.start;
+            endIdx = segmentRange.end;
 
-                    for (i = startIdx;i <= endIdx; i += 1) {
+            for (i = startIdx;i <= endIdx; i += 1) {
 
-                        seg = getIndexBasedSegment.call(
-                            self,
-                            representation,
-                            i);
+                seg = getIndexBasedSegment.call(
+                    self,
+                    representation,
+                    i);
 
-                        seg.replacementTime = (start + i - 1) * representation.segmentDuration;
-                        url = template.media;
-                        url = replaceNumberForTemplate(url, seg.replacementNumber);
-                        url = replaceTimeForTemplate(url, seg.replacementTime);
-                        seg.media = url;
+                seg.replacementTime = (start + i - 1) * representation.segmentDuration;
+                url = template.media;
+                url = replaceNumberForTemplate(url, seg.replacementNumber);
+                url = replaceTimeForTemplate(url, seg.replacementTime);
+                seg.media = url;
 
-                        segments.push(seg);
-                        seg = null;
-                    }
+                segments.push(seg);
+                seg = null;
+            }
 
-                    representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
+            representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
 
-                    deferred.resolve(segments);
-                }
-            );
-
-            return deferred.promise;
+            return segments;
         },
 
         decideSegmentListRangeForTemplate = function(representation) {
@@ -406,29 +398,6 @@ Dash.dependencies.DashHandler = function () {
             return range;
         },
 
-        waitForAvailabilityWindow = function(representation) {
-            var self = this,
-                deferred = Q.defer(),
-                range,
-                waitingTime,
-                getRange = function() {
-                    range = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
-
-                    if (range.end > 0) {
-                        deferred.resolve(range);
-                    } else {
-                        // range.end represents a time gap between the current wall-clock time and the availability time of the first segment.
-                        // A negative value means that no segments are available yet, we should wait until segments become available
-                        waitingTime = Math.abs(range.end) * 1000;
-                        setTimeout(getRange, waitingTime);
-                    }
-                };
-
-            getRange();
-
-            return deferred.promise;
-        },
-
         getTimeBasedSegment = function(representation, time, duration, fTimescale, url, range, index) {
             var self = this,
                 scaledTime = time / fTimescale,
@@ -471,7 +440,6 @@ Dash.dependencies.DashHandler = function () {
         getSegmentsFromList = function (representation) {
             var self = this,
                 segments = [],
-                deferred = Q.defer(),
                 list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList,
                 len = list.SegmentURL_asArray.length,
@@ -485,118 +453,102 @@ Dash.dependencies.DashHandler = function () {
 
             start = representation.startNumber;
 
-            waitForAvailabilityWindow.call(self, representation).then(
-                function(availabilityWindow) {
-                    representation.segmentAvailabilityRange = availabilityWindow;
-                    range = decideSegmentListRangeForTemplate.call(self, representation);
-                    startIdx = range.start;
-                    endIdx = range.end;
+            range = decideSegmentListRangeForTemplate.call(self, representation);
+            startIdx = range.start;
+            endIdx = range.end;
 
-                    for (i = startIdx; i < endIdx; i += 1) {
-                        s = list.SegmentURL_asArray[i];
+            for (i = startIdx; i < endIdx; i += 1) {
+                s = list.SegmentURL_asArray[i];
 
-                        seg = getIndexBasedSegment.call(
-                            self,
-                            representation,
-                            i);
+                seg = getIndexBasedSegment.call(
+                    self,
+                    representation,
+                    i);
 
-                        seg.replacementTime = (start + i - 1) * representation.segmentDuration;
-                        seg.media = s.media;
-                        seg.mediaRange = s.mediaRange;
-                        seg.index = s.index;
-                        seg.indexRange = s.indexRange;
+                seg.replacementTime = (start + i - 1) * representation.segmentDuration;
+                seg.media = s.media;
+                seg.mediaRange = s.mediaRange;
+                seg.index = s.index;
+                seg.indexRange = s.indexRange;
 
-                        segments.push(seg);
-                        seg = null;
-                    }
+                segments.push(seg);
+                seg = null;
+            }
 
-                    representation.availableSegmentsNumber = len;
-                    deferred.resolve(segments);
-            });
+            representation.availableSegmentsNumber = len;
 
-            return deferred.promise;
-        },
-
-        getSegmentsFromSource = function (representation) {
-            deferredSegments[representation.index] = Q.defer();
-
-            this.baseURLExt.loadSegments(representation, type, representation.indexRange);
-
-            return deferredSegments[representation.index].promise;
+            return segments;
         },
 
         getSegments = function (representation) {
-            var segmentPromise,
-                deferred = Q.defer(),
+            var segments,
                 self = this,
-                lastIdx;
+                type = representation.segmentInfoType;
 
                 // Already figure out the segments.
-            if (!isSegmentListUpdateRequired.call(self, representation)) {
-                return Q.when(representation.segments);
+            if (type === "SegmentBase" || type === "BaseURL" || !isSegmentListUpdateRequired.call(self, representation)) {
+                segments = representation.segments;
             } else {
-                if (representation.segmentInfoType === "SegmentTimeline") {
-                    segmentPromise = getSegmentsFromTimeline.call(self, representation);
-                } else if (representation.segmentInfoType === "SegmentTemplate") {
-                    segmentPromise = getSegmentsFromTemplate.call(self, representation);
-                } else if (representation.segmentInfoType === "SegmentList") {
-                    segmentPromise = getSegmentsFromList.call(self, representation);
-                } else {
-                    segmentPromise = getSegmentsFromSource.call(self, representation);
+                if (type === "SegmentTimeline") {
+                    segments = getSegmentsFromTimeline.call(self, representation);
+                } else if (type === "SegmentTemplate") {
+                    segments = getSegmentsFromTemplate.call(self, representation);
+                } else if (type === "SegmentList") {
+                    segments = getSegmentsFromList.call(self, representation);
                 }
 
-                Q.when(segmentPromise).then(
-                    function (segments) {
-                        representation.segments = segments;
-                        lastIdx = segments.length - 1;
-                        if (isDynamic && isNaN(representation.adaptation.period.liveEdge)) {
-                            // the last segment is supposed to be a live edge
-                            representation.adaptation.period.liveEdge = segments[lastIdx].presentationStartTime;
-                        }
-
-                        deferred.resolve(segments);
-                    }
-                );
+                onSegmentListUpdated.call(self, representation, segments);
             }
 
-            return deferred.promise;
+            return segments;
+        },
+
+        onSegmentListUpdated = function(representation, segments) {
+            var lastIdx;
+
+            representation.segments = segments;
+            lastIdx = segments.length - 1;
+            if (isDynamic && isNaN(representation.adaptation.period.liveEdge)) {
+                // the last segment is supposed to be a live edge
+                representation.adaptation.period.liveEdge = segments[lastIdx].presentationStartTime;
+            }
         },
 
         updateSegmentList = function(representation) {
-            var self = this,
-                deferred = Q.defer();
+            var self = this;
 
             if (!representation) {
-                return Q.reject("no representation");
+                throw new Error("no representation");
             }
 
-            if (type !== "video" && type !== "audio") return Q.when();
+            if (type !== "video" && type !== "audio") return null;
 
             representation.segments = null;
 
-            getSegments.call(self, representation).then(
-                function(segments) {
-                    representation.segments = segments;
-                    deferred.resolve();
-                }
-            );
+            getSegments.call(self, representation);
 
-            return deferred.promise;
+            return representation;
         },
 
         updateRepresentation = function(representation) {
-            var self = this;
+            var self = this,
+                hasInitialization = representation.initialization,
+                hasSegments = representation.segmentInfoType !== "BaseURL" && representation.segmentInfoType !== "SegmentBase";
 
-            updateSegmentList.call(self, representation).then(
-                function() {
-                    if(representation.initialization) {
-                        self.notify(self.eventList.ENAME_REPRESENTATION_UPDATED, representation);
-                        return;
-                    }
+            representation.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
-                    self.baseURLExt.loadInitialization(representation);
-                }
-            );
+            updateSegmentList.call(self, representation);
+            if (!hasInitialization) {
+                self.baseURLExt.loadInitialization(representation);
+            }
+
+            if (!hasSegments) {
+                self.baseURLExt.loadSegments(representation, type, representation.indexRange);
+            }
+
+            if (hasInitialization && hasSegments) {
+                self.notify(self.eventList.ENAME_REPRESENTATION_UPDATED, representation);
+            }
         },
 
         getIndexForSegments = function (time, representation) {
@@ -727,64 +679,54 @@ Dash.dependencies.DashHandler = function () {
         },
 
         getForTime = function (representation, time) {
-            var deferred,
-                request,
+            var request,
                 segment,
                 finished,
                 self = this;
 
             if (!representation) {
-                return Q.reject("no represenation");
+                return null;
             }
 
             requestedTime = time;
 
             self.debug.log("Getting the request for time: " + time);
 
-            deferred = Q.defer();
+            getSegments.call(self, representation);
+            //self.debug.log("Got segments.");
+            //self.debug.log(segments);
+            //self.debug.log("Got a list of segments, so dig deeper.");
+            index = getIndexForSegments.call(self, time, representation);
+            self.debug.log("Index for time " + time + " is " + index);
 
-            getSegments.call(self, representation).then(
-                function (/*segments*/) {
-                    //self.debug.log("Got segments.");
-                    //self.debug.log(segments);
-                    //self.debug.log("Got a list of segments, so dig deeper.");
-                    index = getIndexForSegments.call(self, time, representation);
-                    self.debug.log("Index for time " + time + " is " + index);
+            finished = isMediaFinished.call(self, representation);
 
-                    finished = isMediaFinished.call(self, representation);
+            //self.debug.log("Stream finished? " + finished);
+            if (finished) {
+                request = new MediaPlayer.vo.SegmentRequest();
+                request.action = request.ACTION_COMPLETE;
+                request.index = index;
+                self.debug.log("Signal complete.");
+                self.debug.log(request);
+            } else {
+                //self.debug.log("Got a request.");
+                //self.debug.log(request);
+                segment = getSegmentByIndex(index, representation);
+                request = getRequestForSegment.call(self, segment);
+            }
 
-                    //self.debug.log("Stream finished? " + finished);
-                    if (finished) {
-                        request = new MediaPlayer.vo.SegmentRequest();
-                        request.action = request.ACTION_COMPLETE;
-                        request.index = index;
-                        self.debug.log("Signal complete.");
-                        self.debug.log(request);
-                        deferred.resolve(request);
-                    } else {
-                        //self.debug.log("Got a request.");
-                        //self.debug.log(request);
-                        segment = getSegmentByIndex(index, representation);
-                        request = getRequestForSegment.call(self, segment);
-                    }
-
-                    deferred.resolve(request);
-                }
-            );
-
-            return deferred.promise;
+            return request;
         },
 
         getNext = function (representation) {
-            var deferred,
-                request,
+            var request,
                 segment,
                 finished,
                 idx,
                 self = this;
 
             if (!representation) {
-                return Q.reject("no represenation");
+                return null;
             }
 
             //self.debug.log("Getting the next request.");
@@ -798,8 +740,6 @@ Dash.dependencies.DashHandler = function () {
 
             //self.debug.log("New index: " + index);
 
-            deferred = Q.defer();
-
             finished = isMediaFinished.call(self, representation);
 
             //self.debug.log("Stream finished? " + finished);
@@ -809,81 +749,63 @@ Dash.dependencies.DashHandler = function () {
                 request.index = idx;
                 self.debug.log("Signal complete.");
                 //self.debug.log(request);
-                deferred.resolve(request);
             } else {
-                getSegments.call(self, representation).then(
-                    function (/*segments*/) {
-                        var request;
-                        //self.debug.log("Got segments.");
-                        //self.debug.log(segments);
-                        segment = getSegmentByIndex(idx, representation);
-                        request = getRequestForSegment.call(self, segment);
-                        deferred.resolve(request);
-                    }
-                );
+                getSegments.call(self, representation);
+                //self.debug.log("Got segments.");
+                //self.debug.log(segments);
+                segment = getSegmentByIndex(idx, representation);
+                request = getRequestForSegment.call(self, segment);
             }
 
-            return deferred.promise;
+            return request;
         },
 
         getSegmentCountForDuration = function (representation, requiredDuration, bufferedDuration) {
             var self = this,
                 remainingDuration = Math.max(requiredDuration - bufferedDuration, 0),
-                deferred = Q.defer(),
                 segmentDuration,
-                segmentCount = 0;
+                segments,
+                segmentCount;
 
             if (!representation) {
-                return Q.reject("no represenation");
+                throw new Error("no represenation");
             }
 
-            getSegments.call(self, representation).then(
-                function (segments) {
-                    segmentDuration = segments[0].duration;
-                    segmentCount = Math.ceil(remainingDuration/segmentDuration);
-                    deferred.resolve(segmentCount);
-                },
-                function () {
-                    deferred.resolve(0);
-                }
-            );
+            segments = getSegments.call(self, representation);
+            segmentDuration = segments[0].duration;
+            segmentCount = Math.ceil(remainingDuration/segmentDuration);
 
-            return deferred.promise;
+            return segmentCount;
         },
 
         getCurrentTime = function (representation) {
             var self = this,
                 time,
                 bufferedIndex,
-                deferred = Q.defer();
+                segments;
 
             if (!representation) {
-                return Q.reject("no represenation");
+                throw new Error("no represenation");
             }
 
             bufferedIndex = index;
 
-            getSegments.call(self, representation).then(
-                function (segments) {
-                    if (bufferedIndex < 0) {
-                        time = self.timelineConverter.calcPresentationStartTime(representation.adaptation.period);
-                    } else {
-                        bufferedIndex = bufferedIndex < segments[0].availabilityIdx ? segments[0].availabilityIdx : Math.min(segments[segments.length - 1].availabilityIdx, bufferedIndex);
-                        time = getSegmentByIndex(bufferedIndex, representation).presentationStartTime;
-                    }
+            segments = getSegments.call(self, representation);
 
-                    deferred.resolve(time);
-                },
-                function () {
-                    deferred.reject();
-                }
-            );
+            if (bufferedIndex < 0) {
+                time = self.timelineConverter.calcPresentationStartTime(representation.adaptation.period);
+            } else {
+                bufferedIndex = bufferedIndex < segments[0].availabilityIdx ? segments[0].availabilityIdx : Math.min(segments[segments.length - 1].availabilityIdx, bufferedIndex);
+                time = getSegmentByIndex(bufferedIndex, representation).presentationStartTime;
+            }
 
-            return deferred.promise;
+            return time;
         },
 
         onInitializationLoaded = function(sender, representation) {
             //self.debug.log("Got an initialization.");
+            if (!representation.segments) return;
+
             this.notify(this.eventList.ENAME_REPRESENTATION_UPDATED, representation);
         },
 
@@ -918,7 +840,12 @@ Dash.dependencies.DashHandler = function () {
 
             representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};
             representation.availableSegmentsNumber = len;
-            deferredSegments[representation.index].resolve(segments);
+
+            onSegmentListUpdated.call(self, representation, segments);
+
+            if (!representation.initialization) return;
+
+            this.notify(this.eventList.ENAME_REPRESENTATION_UPDATED, representation);
         };
 
     return {

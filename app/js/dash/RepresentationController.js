@@ -47,6 +47,16 @@ Dash.dependencies.RepresentationController = function () {
             }
         },
 
+        onWallclockTimeUpdated = function(sender, isDynamic/*, wallclockTime*/) {
+            var self = this,
+                rep;
+
+            for (var i = 0, ln = availableRepresentations.length; i < ln; i +=1) {
+                rep = availableRepresentations[i];
+                rep.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(rep, isDynamic);
+            }
+        },
+
         onQualityChanged = function(sender, type, oldQuality, newQuality/*, dataChanged*/) {
             var self = this;
 
@@ -62,6 +72,7 @@ Dash.dependencies.RepresentationController = function () {
         manifestModel: undefined,
         bufferExt: undefined,
         abrController: undefined,
+        timelineConverter: undefined,
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -70,6 +81,7 @@ Dash.dependencies.RepresentationController = function () {
         setup: function() {
             this.qualityChanged = onQualityChanged;
             this.representationUpdated = onRepresentationUpdated;
+            this.wallclockTimeUpdated = onWallclockTimeUpdated;
         },
 
         initialize: function(streamProcessor) {

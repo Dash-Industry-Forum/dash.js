@@ -271,12 +271,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     break;
                 default:
                     this.debug.log("Unknown request action.");
-                    if (currentRequest.deferred) {
-                        currentRequest.deferred.reject();
-                        currentRequest.deferred = null;
-                    } else {
-                        self.notify(self.eventList.ENAME_FRAGMENT_LOADING_FAILED, currentRequest);
-                    }
             }
         }
     };

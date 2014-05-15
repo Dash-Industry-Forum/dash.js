@@ -99,6 +99,9 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_PAUSED, scheduleController);
             playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
 
+            if (isDynamic) {
+                playbackController.subscribe(playbackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, representationController);
+            }
 
             indexHandler.subscribe(indexHandler.eventList.ENAME_REPRESENTATION_UPDATED, representationController);
             baseUrlExt.subscribe(baseUrlExt.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
@@ -106,8 +109,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
 
             bufferController.initialize(type, buffer, mediaSource, self);
             scheduleController.initialize(type, this);
-            representationController.initialize(this);
-            representationController.updateData(data, periodInfo, type);
 
             fragmentModel = this.getFragmentModel();
             fragmentModel.setLoader(fragmentLoader);
@@ -119,6 +120,9 @@ MediaPlayer.dependencies.StreamProcessor = function () {
 
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, fragmentModel);
             bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentModel);
+
+            representationController.initialize(this);
+            representationController.updateData(data, periodInfo, type);
         },
 
         getData: function() {
@@ -231,6 +235,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_PAUSED, scheduleController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
+            playbackController.unsubscribe(playbackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, representationController);
 
             indexHandler.unsubscribe(indexHandler.eventList.ENAME_REPRESENTATION_UPDATED, representationController);
             baseUrlExt.unsubscribe(baseUrlExt.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
