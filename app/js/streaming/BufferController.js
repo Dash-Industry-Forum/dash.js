@@ -39,6 +39,16 @@ MediaPlayer.dependencies.BufferController = function () {
             return (requiredInitQuality !== null);
         },
 
+        sortArrayByProperty = function(array, sortProp) {
+            var compare = function (obj1, obj2){
+                if (obj1[sortProp] < obj2[sortProp]) return -1;
+                if (obj1[sortProp] > obj2[sortProp]) return 1;
+                return 0;
+            };
+
+            array.sort(compare);
+        },
+
         onInitializationLoaded = function(sender, model, bytes, quality) {
             var self = this;
 
@@ -60,6 +70,7 @@ MediaPlayer.dependencies.BufferController = function () {
             if (model !== this.streamProcessor.getFragmentModel()) return;
 
             pendingMedia.push({bytes: bytes, quality: quality, index: index});
+            sortArrayByProperty(pendingMedia, "index");
             appendNextMedia.call(this);
 		},
 
