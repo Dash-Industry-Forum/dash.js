@@ -18,6 +18,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
         currentBufferTarget,
         topAudioQualityIndex = 0,
         topVideoQualityIndex = 0,
+        criticalBufferLevel = Number.POSITIVE_INFINITY,
 
         getCurrentHttpRequestLatency = function(metrics) {
             var httpRequest = this.metricsExt.getCurrentHttpRequest(metrics);
@@ -63,6 +64,10 @@ MediaPlayer.dependencies.BufferExtensions = function () {
 
         setup: function() {
             this.topQualityIndexChanged = onTopQualityIndexChanged;
+        },
+
+        setCriticalBufferLevel: function(value) {
+            criticalBufferLevel = value;
         },
 
         getTopQualityIndex: function(type) {
@@ -135,6 +140,8 @@ MediaPlayer.dependencies.BufferExtensions = function () {
                 requiredBufferLength = currentBufferTarget + delay + Math.max(getCurrentHttpRequestLatency.call(self, vmetrics),
                     getCurrentHttpRequestLatency.call(self, ametrics));
             }
+
+            requiredBufferLength = Math.min(requiredBufferLength, criticalBufferLevel);
 
             return requiredBufferLength;
         },

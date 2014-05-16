@@ -383,6 +383,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.metricsModel.addBufferLevel(type, new Date(), newBufferLevel);
         },
 
+        onQuotaExceeded = function(/*sender, criticalBufferLevel*/) {
+            doStop.call(this);
+        },
+
         onQualityChanged = function(sender, typeValue, oldQuality, newQuality) {
             if (type !== typeValue) return;
 
@@ -481,6 +485,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.bufferLevelStateChanged = onBufferLevelStateChanged;
             this.bufferLevelUpdated = onBufferLevelUpdated;
             this.initRequested = onInitRequested;
+            this.quotaExceeded = onQuotaExceeded;
 
             this.closedCaptioningRequested = onClosedCaptioningRequested;
 

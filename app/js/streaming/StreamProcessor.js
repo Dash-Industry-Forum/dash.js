@@ -93,6 +93,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 bufferController.subscribe(bufferController.eventList.ENAME_INIT_REQUESTED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
+                bufferController.subscribe(bufferController.eventList.ENAME_QUOTA_EXCEEDED, scheduleController);
 
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);

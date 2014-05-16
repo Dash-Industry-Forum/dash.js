@@ -21,7 +21,7 @@ MediaPlayer.dependencies.BufferController = function () {
         currentQuality = 0,
         isBufferingCompleted = false,
         bufferLevel = 0,
-        isQuotaExceeded = false,
+        criticalBufferLevel = Number.POSITIVE_INFINITY,
         mediaSource,
         maxAppendedIndex = -1,
         lastIndex = -1,
@@ -37,6 +37,10 @@ MediaPlayer.dependencies.BufferController = function () {
 
         waitingForInit = function() {
             return (requiredInitQuality !== null);
+        },
+
+        isCriticalBufferLevelExceeded = function() {
+            return bufferLevel > criticalBufferLevel;
         },
 
         sortArrayByProperty = function(array, sortProp) {
@@ -87,14 +91,14 @@ MediaPlayer.dependencies.BufferController = function () {
                         // this promise is resolved.
                         if (error.code === QUOTA_EXCEEDED_ERROR_CODE) {
                             pendingMedia.unshift({bytes: data, quality: quality, index: index});
-                            isQuotaExceeded = true;
-                            self.notify(self.eventList.ENAME_QUOTA_EXCEEDED, index);
+                            criticalBufferLevel = bufferLevel * 0.8;
+                            self.bufferExt.setCriticalBufferLevel(criticalBufferLevel);
+                            self.notify(self.eventList.ENAME_QUOTA_EXCEEDED, criticalBufferLevel);
+                            clearBuffer.call(self);
                         }
                         isAppendingInProgress = false;
                         return;
                     }
-
-                    isQuotaExceeded = false;
 
                     if (!hasData.call(self)) return;
 
@@ -139,16 +143,14 @@ MediaPlayer.dependencies.BufferController = function () {
             if (!hasData.call(this)) return false;
 
             var self = this,
-                currentTime = self.playbackController.getTime(),
-                bufferLength;
+                currentTime = self.playbackController.getTime();
 
-            bufferLength = self.sourceBufferExt.getBufferLength(buffer, currentTime);
+            bufferLevel = self.sourceBufferExt.getBufferLength(buffer, currentTime);
 
             if (!hasData.call(self)) {
                 return false;
             }
 
-            bufferLevel = bufferLength;
             self.notify(self.eventList.ENAME_BUFFER_LEVEL_UPDATED, bufferLevel);
             checkGapBetweenBuffers.call(self);
             checkIfSufficientBuffer.call(self);
@@ -179,19 +181,20 @@ MediaPlayer.dependencies.BufferController = function () {
 
         hasEnoughSpaceToAppend = function(callback) {
             var self = this,
-                removedTime = 0,
+                totalBufferedTime = getTotalBufferedTime.call(self),
                 startClearing;
 
             // do not remove any data until the quota is exceeded
-            if (!isQuotaExceeded) {
+            if (totalBufferedTime < criticalBufferLevel) {
                 callback.call(self);
                 return;
             }
 
             startClearing = function() {
-                clearBuffer.call(self, function(removedTimeValue) {
-                    removedTime += removedTimeValue;
-                    if (removedTime >= minBufferTime) {
+                clearBuffer.call(self, function() {
+                    totalBufferedTime = getTotalBufferedTime.call(self);
+
+                    if (totalBufferedTime < criticalBufferLevel) {
                         callback.call(self);
                     } else {
                         setTimeout(startClearing, minBufferTime * 1000);
@@ -211,6 +214,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 req,
                 removeHandler = function(sender, removeStart, removeEnd) {
                     self.notify(self.eventList.ENAME_BUFFER_CLEARED, removeStart, removeEnd);
+                    if (!callback) return;
                     callback.call(self, removeEnd - removeStart);
                 };
 
@@ -226,6 +230,22 @@ MediaPlayer.dependencies.BufferController = function () {
             removeStart = buffer.buffered.start(0);
             self.sourceBufferExt.subscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, self, removeHandler, true);
             self.sourceBufferExt.remove(buffer, removeStart, removeEnd, mediaSource);
+        },
+
+        getTotalBufferedTime = function() {
+            var self = this,
+                ranges = self.sourceBufferExt.getAllRanges(buffer),
+                totalBufferedTime = 0,
+                ln,
+                i;
+
+            if (!ranges) return totalBufferedTime;
+
+            for (i = 0, ln = ranges.length; i < ln; i += 1) {
+                totalBufferedTime += ranges.end(i) - ranges.start(i);
+            }
+
+            return totalBufferedTime;
         },
 
         checkIfBufferingCompleted = function() {
@@ -271,15 +291,8 @@ MediaPlayer.dependencies.BufferController = function () {
         updateBufferState = function() {
             var self = this;
 
-            // if the buffer controller is stopped and the buffer is full we should try to clear the buffer
-            // before that we should make sure that we will have enough space to append the data, so we wait
-            // until the video time moves forward for a value greater than rejected data duration since the last reject event or since the last seek.
-            if (isQuotaExceeded) {
-                //try to append the data that was previosly rejected
-                appendNextMedia.call(self);
-            } else {
-                updateBufferLevel.call(self);
-            }
+            updateBufferLevel.call(self);
+            appendNextMedia.call(self);
         },
 
         onAppended = function(quality, index) {
@@ -327,7 +340,7 @@ MediaPlayer.dependencies.BufferController = function () {
         appendNextMedia = function() {
             var data;
 
-            if (pendingMedia.length === 0 || isBufferLevelOutrun || isAppendingInProgress || waitingForInit()) return;
+            if (pendingMedia.length === 0 || isBufferLevelOutrun || isAppendingInProgress || waitingForInit() || isCriticalBufferLevelExceeded()) return;
 
             data = pendingMedia.shift();
             appendToBuffer.call(this, data.bytes, data.quality, data.index);
@@ -478,7 +491,8 @@ MediaPlayer.dependencies.BufferController = function () {
             var self = this;
 
             initializationData = [];
-            isQuotaExceeded = false;
+            criticalBufferLevel = Number.POSITIVE_INFINITY;
+            self.bufferExt.setCriticalBufferLevel(criticalBufferLevel);
             hasSufficientBuffer = null;
 
             isBufferLevelOutrun = false;
