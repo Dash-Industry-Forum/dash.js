@@ -86,7 +86,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         doSeek = function (time) {
-            var currentTime;
+            var currentTime,
+                range = this.sourceBufferExt.getBufferRange(this.bufferController.getBuffer(), time);
 
             this.debug.log("ScheduleController " + type + " seek: " + time);
             seeking = true;
@@ -94,6 +95,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
             currentTime = new Date();
             clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
             playListMetrics = this.metricsModel.addPlayList(type, currentTime, seekTarget, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
+
+            if (!range) {
+                this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
+            }
 
             doStart.call(this);
         },
