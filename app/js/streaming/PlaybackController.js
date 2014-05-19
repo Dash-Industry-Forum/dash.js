@@ -194,7 +194,9 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         pause: function() {
-            videoModel.pause();
+            if (videoModel) {
+                videoModel.pause();
+            }
         },
 
         seek: function(time) {

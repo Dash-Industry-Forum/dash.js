@@ -585,9 +585,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.protectionController = undefined;
             this.protectionModel = undefined;
             this.fragmentController = undefined;
-            this.requestScheduler = undefined;
             this.playbackController.reset();
-            this.playbackController = undefined;
 
             // streamcontroller expects this to be valid
             //this.videoModel = null;
