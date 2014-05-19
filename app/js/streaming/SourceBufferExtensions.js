@@ -149,8 +149,14 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 buffer.removeEventListener("updateend", updateEndHandler, false);
                 callback(true);
             };
+
+        if (!buffer.updating) {
+            callback(true);
+            return;
+        }
+
         // use updateend event if possible
-        if (buffer.hasOwnProperty("addEventListener")) {
+        if (typeof buffer.addEventListener === "function") {
             try {
                 buffer.addEventListener("updateend", updateEndHandler, false);
             } catch (err) {
@@ -164,17 +170,19 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
     },
 
     append: function (buffer, bytes) {
-        var self = this;
+        var self = this,
+            appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null);
+
+        if (!appendMethod) return;
 
         try {
-            if ("append" in buffer) {
-                buffer.append(bytes);
-            } else if ("appendBuffer" in buffer) {
-                buffer.appendBuffer(bytes);
-            }
-            // updating is in progress, we should wait for it to complete before signaling that this operation is done
-            this.waitForUpdateEnd(buffer, function() {
-                self.notify(self.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, bytes);
+            self.waitForUpdateEnd(buffer, function() {
+                buffer[appendMethod](bytes);
+
+                // updating is in progress, we should wait for it to complete before signaling that this operation is done
+                self.waitForUpdateEnd(buffer, function() {
+                    self.notify(self.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, bytes);
+                });
             });
         } catch (err) {
             self.notify(self.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, bytes, err);
