@@ -281,6 +281,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             time = self.indexHandler.getCurrentTime(currentRepresentation || newRepresentation);
             currentRepresentation = newRepresentation;
+            addRepresentationSwitch.call(self);
 
             if (!isDynamic) {
                 ready = true;
@@ -395,9 +396,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         onQualityChanged = function(sender, typeValue, oldQuality, newQuality) {
             if (type !== typeValue) return;
 
-            var self = this,
-                now = new Date(),
-                currentVideoTime = self.playbackController.getTime();
+            var self = this;
 
             if (lastQuality === newQuality) return;
 
@@ -410,7 +409,14 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
 
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
-            self.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, currentRepresentation.id);
+            addRepresentationSwitch.call(self);
+        },
+
+        addRepresentationSwitch = function() {
+            var now = new Date(),
+                currentVideoTime = this.playbackController.getTime();
+
+            this.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, currentRepresentation.id);
         },
 
         onScheduledTimeOccurred = function(sender, model) {
