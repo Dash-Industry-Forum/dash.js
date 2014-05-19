@@ -96,7 +96,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
             playListMetrics = this.metricsModel.addPlayList(type, currentTime, seekTarget, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
 
-            if (!range) {
+            if (!range && !initialPlayback) {
                 this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
             }
 
