@@ -17,7 +17,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         currentRepresentation,
         initialPlayback = true,
         lastQuality = 0,
-        waitingForBuffer = false,
 
         playListMetrics = null,
         playListTraceMetrics = null,
@@ -76,7 +75,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.debug.log("ScheduleController " + type + " start.");
 
             started = true;
-            waitingForBuffer = true;
             startScheduling.call(this);
         },
 
@@ -112,7 +110,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             // cancel the requests that have already been created, but not loaded yet.
             this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
             started = false;
-            waitingForBuffer = false;
 
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
         },
@@ -218,7 +215,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 count,
                 requiredBufferLength;
 
-            requiredBufferLength = self.bufferExt.getRequiredBufferLength(waitingForBuffer, self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, duration);
+            requiredBufferLength = self.bufferExt.getRequiredBufferLength(self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, duration);
             count = self.indexHandler.getSegmentCountForDuration(currentRepresentation, requiredBufferLength, actualBufferedDuration);
 
             return count;
@@ -375,11 +372,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             if (!hasSufficientBuffer) {
-                waitingForBuffer = true;
                 self.debug.log("Stalling " + type + " Buffer: " + type);
                 clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
-            } else {
-                waitingForBuffer = false;
             }
         },
 

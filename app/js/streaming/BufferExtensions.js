@@ -110,7 +110,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
             return leastLevel;
         },
 
-        getRequiredBufferLength: function (waitingForBuffer, delay, isDynamic, duration) {
+        getRequiredBufferLength: function (delay, isDynamic, duration) {
             var self = this,
                 vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
                 ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"),
@@ -126,9 +126,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
                 currentBufferTarget = minBufferTarget;
 
                 if (!isDynamic) {
-                    if (!waitingForBuffer) {
-                        isAtTop = isPlayingAtTopQuality.call(self);
-                    }
+                    isAtTop = isPlayingAtTopQuality.call(self);
                 }
 
                 if (isAtTop) {
