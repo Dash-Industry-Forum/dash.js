@@ -50,6 +50,7 @@ MediaPlayer.dependencies.BufferController = function () {
         fragmentDuration = 0,
         appendingRejectedData = false,
         mediaSource,
+        timeoutId = null,
 
         liveEdgeSearchRange = null,
         liveEdgeInitialSearchPosition = null,
@@ -152,7 +153,7 @@ MediaPlayer.dependencies.BufferController = function () {
             if (state === WAITING) return;
 
             this.debug.log("BufferController " + type + " stop.");
-            setState.call(this, WAITING);
+            setState.call(this, isBufferingCompleted ? READY : WAITING);
             this.requestScheduler.stopScheduling(this);
             // cancel the requests that have already been created, but not loaded yet.
             this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
@@ -205,11 +206,13 @@ MediaPlayer.dependencies.BufferController = function () {
 				setState.call(this, LOADING);
                 var self = this,
                     time = self.fragmentController.getLoadingTime(self);
-                setTimeout(function(){
+                if (timeoutId !== null) return;
+                timeoutId =  setTimeout(function(){
                     if (!hasData()) return;
 
                     setState.call(self, READY);
                     requestNewFragment.call(self);
+                    timeoutId = null;
                 }, time);
 			}
         },
@@ -237,7 +240,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
                         Q.when(deferredInitAppend.promise).then(
                             function() {
-                                appendToBuffer.call(self, data, request.quality).then(
+                                appendToBuffer.call(self, data, request.quality, request.index).then(
                                     function() {
                                         deferredStreamComplete.promise.then(
                                             function(lastRequest) {
@@ -263,9 +266,10 @@ MediaPlayer.dependencies.BufferController = function () {
 			);
 		},
 
-        appendToBuffer = function(data, quality) {
+        appendToBuffer = function(data, quality, index) {
             var self = this,
-                isAppendingRejectedData = (data == rejectedBytes),
+                req,
+                isAppendingRejectedData = rejectedBytes && (data == rejectedBytes.data),
                 // if we append the rejected data we should use the stored promise instead of creating a new one
                 deferred = isAppendingRejectedData ? deferredRejectedDataAppend : Q.defer(),
                 ln = isAppendingRejectedData ? deferredAppends.length : deferredAppends.push(deferred),
@@ -285,6 +289,9 @@ MediaPlayer.dependencies.BufferController = function () {
                     hasEnoughSpaceToAppend.call(self).then(
                         function() {
                             if (quality !== lastQuality) {
+                                req = fragmentModel.getExecutedRequestForQualityAndIndex(quality, index);
+                                fragmentModel.removeExecutedRequest(req);
+                                self.indexHandler.getSegmentRequestForTime(currentRepresentation, req.startTime).then(onFragmentRequest.bind(self));
                                 deferred.resolve();
                                 if (isAppendingRejectedData) {
                                     deferredRejectedDataAppend = null;
@@ -338,7 +345,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                             // the promise for this append because the next data can be appended only after
                                             // this promise is resolved.
                                             if (result.err.code === QUOTA_EXCEEDED_ERROR_CODE) {
-                                                rejectedBytes = data;
+                                                rejectedBytes = {data: data, quality: quality, index: index};
                                                 deferredRejectedDataAppend = deferred;
                                                 isQuotaExceeded = true;
                                                 fragmentsToLoad = 0;
@@ -892,7 +899,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
                         if (qualityChanged === true) {
                             // The quality has beeen changed so we should abort the requests that has not been loaded yet
-                            self.fragmentController.abortRequestsForModel(fragmentModel);
+                            self.fragmentController.cancelPendingRequestsForModel(fragmentModel);
                             currentRepresentation = getRepresentationForQuality.call(self, newQuality);
                             if (currentRepresentation === null || currentRepresentation === undefined) {
                                 throw "Unexpected error!";
@@ -1154,7 +1161,7 @@ MediaPlayer.dependencies.BufferController = function () {
             if (isQuotaExceeded && rejectedBytes && !appendingRejectedData) {
                 appendingRejectedData = true;
                 //try to append the data that was previosly rejected
-                appendToBuffer.call(self, rejectedBytes, lastQuality).then(
+                appendToBuffer.call(self, rejectedBytes.data, rejectedBytes.quality, rejectedBytes.index).then(
                     function(){
                         appendingRejectedData = false;
                     }

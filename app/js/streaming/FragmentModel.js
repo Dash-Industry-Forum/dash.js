@@ -85,6 +85,8 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         addRequest: function(value) {
             if (value) {
+                if (this.isFragmentLoadedOrPending(value)) return;
+
                 pendingRequests.push(value);
                 sortRequestsByProperty.call(this, pendingRequests, "index");
             }
@@ -184,6 +186,21 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 start = req.startTime;
                 end = start + req.duration;
                 if (!isNaN(start) && !isNaN(end) && (time > start) && (time < end)) {
+                    return req;
+                }
+            }
+
+            return null;
+        },
+
+        getExecutedRequestForQualityAndIndex: function(quality, index) {
+            var lastIdx = executedRequests.length - 1,
+                req = null,
+                i;
+
+            for (i = lastIdx; i >= 0; i -=1) {
+                req = executedRequests[i];
+                if (req.quality === quality && req.index === index) {
                     return req;
                 }
             }
