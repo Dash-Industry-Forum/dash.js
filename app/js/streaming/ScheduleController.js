@@ -344,6 +344,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var req = fragmentModel.getExecutedRequestForQualityAndIndex(quality, index);
 
             fragmentModel.removeExecutedRequest(req);
+            req = this.indexHandler.getSegmentRequestForTime(currentRepresentation, req.startTime);
+            onFragmentRequest.call(this, req);
         },
 
         onDataUpdateStarted = function(/*sender*/) {
