@@ -136,14 +136,6 @@
             }
         },
 
-        onPause = function() {
-            this.manifestUpdater.stop();
-        },
-
-        onPlay = function() {
-            this.manifestUpdater.start();
-        },
-
         /*
          * Handles the current stream buffering end moment to start the next stream buffering
          */
@@ -318,8 +310,6 @@
             this.manifestLoaded = onManifestLoaded;
             this.streamUpdated = onStreamUpdated;
 
-            this.playbackStarted = onPlay;
-            this.playbackPaused = onPause;
             this.playbackSeeking = onSeeking;
             this.playbackProgress = onProgress;
             this.playbackTimeUpdated = onTimeupdate;
