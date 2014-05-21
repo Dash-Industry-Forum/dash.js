@@ -19,10 +19,12 @@ MediaPlayer.models.ManifestModel = function () {
     return {
         system: undefined,
         eventBus: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_MANIFEST_UPDATED: "manifestUpdated"
+        },
 
         getValue:  function () {
             return manifest;

@@ -501,10 +501,13 @@ Dash.dependencies.BaseURLExtensions = function () {
     return {
         debug: undefined,
         errHandler: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_INITIALIZATION_LOADED: "initializationLoaded",
+            ENAME_SEGMENTS_LOADED: "segmentsLoaded"
+        },
 
         loadSegments: function(representation, type, range) {
             loadSegments.call(this, representation, type, range, onLoaded.bind(this));

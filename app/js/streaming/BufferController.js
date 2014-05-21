@@ -417,10 +417,23 @@ MediaPlayer.dependencies.BufferController = function () {
         sourceBufferExt: undefined,
         debug: undefined,
         system: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_CLOSED_CAPTIONING_REQUESTED: "closedCaptioningRequested",
+            ENAME_BUFFER_LEVEL_STATE_CHANGED: "bufferLevelStateChanged",
+            ENAME_BUFFER_LEVEL_UPDATED: "bufferLevelUpdated",
+            ENAME_QUOTA_EXCEEDED: "quotaExceeded",
+            ENAME_BYTES_APPENDED: "bytesAppended",
+            ENAME_BYTES_REJECTED: "bytesRejected",
+            ENAME_BUFFERING_COMPLETED: "bufferingCompleted",
+            ENAME_BUFFER_CLEARED: "bufferCleared",
+            ENAME_INIT_REQUESTED: "initRequested",
+            ENAME_BUFFER_LEVEL_OUTRUN: "bufferLevelOutrun",
+            ENAME_BUFFER_LEVEL_BALANCED: "bufferLevelBalanced",
+            ENAME_MIN_BUFFER_TIME_UPDATED: "minBufferTimeUpdated"
+        },
 
         setup: function() {
             this.dataUpdateCompleted = onDataUpdateCompleted;

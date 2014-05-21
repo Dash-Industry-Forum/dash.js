@@ -193,10 +193,13 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         metricsModel: undefined,
         errHandler: undefined,
         debug: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_LOADING_COMPLETED: "loadingCompleted",
+            ENAME_CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted"
+        },
 
         load: function (req) {
 

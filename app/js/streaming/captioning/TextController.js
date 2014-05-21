@@ -43,10 +43,12 @@ MediaPlayer.dependencies.TextController = function () {
         sourceBufferExt: undefined,
         debug: undefined,
         system: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_CLOSED_CAPTIONING_REQUESTED: "closedCaptioningRequested"
+        },
 
         setup: function() {
             this.dataUpdateCompleted = onDataUpdateCompleted;

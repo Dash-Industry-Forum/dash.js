@@ -331,10 +331,12 @@
         system: undefined,
         debug: undefined,
         schedulerExt: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_SCHEDULED_TIME_OCCURED: "scheduledTimeOccurred"
+        },
 
         setup: function() {
             this.minBufferTimeUpdated = onMinBufferTimeUpdated;

@@ -72,10 +72,15 @@ MediaPlayer.dependencies.FragmentModel = function () {
     return {
         system: undefined,
         debug: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_STREAM_COMPLETED: "streamCompleted",
+            ENAME_FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted",
+            ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted",
+            ENAME_FRAGMENT_LOADING_FAILED: "segmentLoadingFailed"
+        },
 
         setup: function() {
             this.bufferLevelOutrun = onBufferLevelOutrun;

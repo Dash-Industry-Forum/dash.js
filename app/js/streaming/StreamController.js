@@ -301,10 +301,12 @@
         metricsModel: undefined,
         videoExt: undefined,
         errHandler: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_STREAMS_COMPOSED: "streamsComposed"
+        },
 
         setup: function() {
             this.manifestLoaded = onManifestLoaded;

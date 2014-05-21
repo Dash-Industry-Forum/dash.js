@@ -850,10 +850,12 @@ Dash.dependencies.DashHandler = function () {
         debug: undefined,
         baseURLExt: undefined,
         timelineConverter: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_REPRESENTATION_UPDATED: "representationUpdated"
+        },
 
         setup: function() {
             this.initializationLoaded = onInitializationLoaded;

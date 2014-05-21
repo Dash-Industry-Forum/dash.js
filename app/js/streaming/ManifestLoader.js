@@ -117,10 +117,12 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         parser: undefined,
         errHandler: undefined,
         metricsModel: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_MANIFEST_LOADED: "manifestLoaded"
+        },
 
         load: function(url) {
             doLoad.call(this, url, RETRY_ATTEMPTS);

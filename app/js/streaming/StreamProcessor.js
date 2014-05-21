@@ -123,8 +123,10 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             fragmentModel.subscribe(fragmentModel.eventList.ENAME_FRAGMENT_LOADING_FAILED, scheduleController);
             fragmentLoader.subscribe(fragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
 
-            bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, fragmentModel);
-            bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentModel);
+            if (type === "video" || type === "audio") {
+                bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, fragmentModel);
+                bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentModel);
+            }
 
             representationController.initialize(this);
             representationController.updateData(data, periodInfo, type);

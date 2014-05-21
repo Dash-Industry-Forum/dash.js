@@ -150,10 +150,12 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
     return {
         system: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_LIVE_EDGE_FOUND: "liveEdgeFound"
+        },
 
         setup: function() {
             this.dataUpdateCompleted = onDataUpdateCompleted;

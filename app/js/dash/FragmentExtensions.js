@@ -148,10 +148,12 @@ Dash.dependencies.FragmentExtensions = function () {
 
     return {
         debug : undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
+        },
 
         loadFragment : loadFragment,
         parseTFDT : parseTFDT,

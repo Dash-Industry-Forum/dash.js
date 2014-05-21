@@ -16,10 +16,13 @@ MediaPlayer.dependencies.SourceBufferExtensions = function () {
     this.system = undefined;
     this.manifestExt = undefined;
     this.errHandler = undefined;
-    this.eventList = undefined;
     this.notify = undefined;
     this.subscribe = undefined;
     this.unsubscribe = undefined;
+    this.eventList = {
+        ENAME_SOURCEBUFFER_REMOVE_COMPLETED: "sourceBufferRemoveCompleted",
+        ENAME_SOURCEBUFFER_APPEND_COMPLETED: "sourceBufferAppendCompleted"
+    };
 };
 
 MediaPlayer.dependencies.SourceBufferExtensions.prototype = {

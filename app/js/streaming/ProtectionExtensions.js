@@ -16,10 +16,12 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
 
 MediaPlayer.dependencies.ProtectionExtensions.prototype = {
     constructor: MediaPlayer.dependencies.ProtectionExtensions,
-    eventList: undefined,
     notify: undefined,
     subscribe: undefined,
     unsubscribe: undefined,
+    eventList: {
+        ENAME_KEY_SYSTEM_UPDATE_COMPLETED: "keySystemUpdateCompleted"
+    },
 
     supportsCodec: function (mediaKeysString, codec) {
         "use strict";

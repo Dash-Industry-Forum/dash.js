@@ -94,10 +94,16 @@ MediaPlayer.dependencies.FragmentController = function () {
         system: undefined,
         debug: undefined,
         fragmentLoader: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_STREAM_COMPLETED: "streamCompleted",
+            ENAME_INIT_SEGMENT_LOADING_START: "initSegmentLoadingStart",
+            ENAME_MEDIA_SEGMENT_LOADING_START: "mediaSegmentLoadingStart",
+            ENAME_INIT_SEGMENT_LOADED: "initSegmentLoaded",
+            ENAME_MEDIA_SEGMENT_LOADED: "mediaSegmentLoaded"
+        },
 
         setup: function() {
             this.fragmentLoadingStarted = onFragmentLoadingStart;

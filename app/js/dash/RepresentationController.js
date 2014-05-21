@@ -78,10 +78,13 @@ Dash.dependencies.RepresentationController = function () {
         bufferExt: undefined,
         abrController: undefined,
         timelineConverter: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_DATA_UPDATE_COMPLETED: "dataUpdateCompleted",
+            ENAME_DATA_UPDATE_STARTED: "dataUpdateStarted"
+        },
 
         setup: function() {
             this.qualityChanged = onQualityChanged;

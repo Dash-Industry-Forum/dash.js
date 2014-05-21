@@ -515,10 +515,12 @@ MediaPlayer.dependencies.Stream = function () {
         timelineConverter: undefined,
         requestScheduler: undefined,
         abrController: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_STREAM_UPDATED: "streamUpdated"
+        },
 
         setup: function () {
             this.bufferingCompleted = onBufferingCompleted;

@@ -93,10 +93,13 @@ MediaPlayer.dependencies.AbrController = function () {
         abrRulesCollection: undefined,
         manifestExt: undefined,
         metricsModel: undefined,
-        eventList: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        eventList: {
+            ENAME_QUALITY_CHANGED: "qualityChanged",
+            ENAME_TOP_QUALITY_INDEX_CHANGED: "topQualityIndexChanged"
+        },
 
         setup: function() {
             this.scheduledTimeOccurred = onScheduledTimeOccurred;
