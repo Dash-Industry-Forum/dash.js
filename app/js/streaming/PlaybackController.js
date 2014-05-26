@@ -211,6 +211,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
             }
         },
 
+        isSeeking: function(){
+            return videoModel.getElement().seeking;
+        },
+
         seek: function(time) {
             this.debug.log("Current time has changed, block programmatic seek.");
 

@@ -346,7 +346,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         onBufferLevelStateChanged = function(sender, hasSufficientBuffer) {
             var self = this;
 
-            if (!hasSufficientBuffer) {
+            if (!hasSufficientBuffer && !self.playbackController.isSeeking()) {
                 self.debug.log("Stalling " + type + " Buffer: " + type);
                 clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
             }
