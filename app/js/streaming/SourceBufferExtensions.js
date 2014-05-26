@@ -149,6 +149,8 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 callback(true);
             },
             updateEndHandler = function() {
+                if (buffer.updating) return;
+
                 buffer.removeEventListener("updateend", updateEndHandler, false);
                 callback(true);
             };
