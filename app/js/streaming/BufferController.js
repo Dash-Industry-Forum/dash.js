@@ -83,6 +83,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             var self = this,
                 ranges,
+                isInit = index === undefined,
                 appendHandler = function(sender, data, error) {
                     if (error) {
                         // if the append has failed because the buffer is full we should store the data
@@ -128,7 +129,12 @@ MediaPlayer.dependencies.BufferController = function () {
             if (!hasData.call(self)) return;
 
             hasEnoughSpaceToAppend.call(self, function() {
-                if (quality !== currentQuality && (index !== undefined)) {
+                // The segment should be rejected if this an init segment and its quality does not match
+                // the required quality or if this a media segment and its quality does not match the
+                // quality of the last appended init segment. This means that media segment of the old
+                // quality can be appended providing init segment for a new required quality has not been
+                // appended yet.
+                if ((quality !== requiredInitQuality && isInit) || (quality !== currentQuality && !isInit)) {
                     onMediaRejected.call(self, quality, index);
                     return;
                 }

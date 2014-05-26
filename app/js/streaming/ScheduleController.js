@@ -315,10 +315,17 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onBytesRejected = function(sender, quality, index) {
             var req = fragmentModel.getExecutedRequestForQualityAndIndex(quality, index);
-
-            fragmentModel.removeExecutedRequest(req);
-            req = this.indexHandler.getSegmentRequestForTime(currentRepresentation, req.startTime);
-            onFragmentRequest.call(this, req);
+            // if request for an unappropriate quality has not been removed yet, do it now
+            if (req) {
+                fragmentModel.removeExecutedRequest(req);
+                // if index is not undefined it means that this is a media segment, so we should
+                // request the segment for the same time but with an appropriate quality
+                // If this is init segment do nothing, because it will be requested in loadInitialization method
+                if (index !== undefined) {
+                    req = this.indexHandler.getSegmentRequestForTime(currentRepresentation, req.startTime);
+                    onFragmentRequest.call(this, req);
+                }
+            }
         },
 
         onDataUpdateStarted = function(/*sender*/) {
