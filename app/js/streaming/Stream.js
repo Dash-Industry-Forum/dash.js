@@ -292,7 +292,6 @@ MediaPlayer.dependencies.Stream = function () {
 
             var self = this;
 
-            this.requestScheduler.subscribe(this.requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, this.abrController);
             // Figure out some bits about the stream before building anything.
             //self.debug.log("Gathering information for buffers. (1)");
 
@@ -583,7 +582,6 @@ MediaPlayer.dependencies.Stream = function () {
                 this.protectionController.teardownKeySystem(kid);
             }
 
-            this.requestScheduler.unsubscribe(this.requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, this.abrController);
             this.protectionController = undefined;
             this.protectionModel = undefined;
             this.fragmentController = undefined;

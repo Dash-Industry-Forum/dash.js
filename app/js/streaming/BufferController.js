@@ -400,14 +400,6 @@ MediaPlayer.dependencies.BufferController = function () {
 
         onPlaybackRateChanged = function(/*sender*/) {
             checkIfSufficientBuffer.call(this);
-        },
-
-        onScheduledTimeOccurred = function(sender, model) {
-            var self = this;
-
-            if (type !== model.getContext().streamProcessor.getType()) return;
-
-            checkIfSufficientBuffer.call(self);
         };
 
     return {
@@ -442,7 +434,6 @@ MediaPlayer.dependencies.BufferController = function () {
             this.mediaSegmentLoaded =  onMediaLoaded;
             this.streamCompleted = onStreamCompleted;
 
-            this.scheduledTimeOccurred = onScheduledTimeOccurred;
             this.qualityChanged = onQualityChanged;
 
             this.playbackProgress = updateBufferState;

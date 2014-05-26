@@ -110,7 +110,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
             return leastLevel;
         },
 
-        getRequiredBufferLength: function (delay, isDynamic, duration) {
+        getRequiredBufferLength: function (isDynamic, duration) {
             var self = this,
                 vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
                 ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"),
@@ -135,7 +135,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
                         MediaPlayer.dependencies.BufferExtensions.BUFFER_TIME_AT_TOP_QUALITY;
                 }
 
-                requiredBufferLength = currentBufferTarget + delay + Math.max(getCurrentHttpRequestLatency.call(self, vmetrics),
+                requiredBufferLength = currentBufferTarget + Math.max(getCurrentHttpRequestLatency.call(self, vmetrics),
                     getCurrentHttpRequestLatency.call(self, ametrics));
             }
 

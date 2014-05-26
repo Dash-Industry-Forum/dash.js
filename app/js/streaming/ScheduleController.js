@@ -8,7 +8,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         fragmentsToLoad,
         type,
         ready,
-        started,
         fragmentModel,
         seeking,
         seekTarget,
@@ -47,23 +46,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
-        startScheduling = function() {
-            if (!ready || !started) {
-                return;
-            }
-
-            //this.debug.log("ScheduleController begin " + type + " validation");
-            setState.call(this, READY);
-
-            this.requestScheduler.startScheduling(this);
-        },
-
         doStart = function () {
             var currentTime;
-
-            if(this.requestScheduler.isScheduled(this)) {
-                return;
-            }
 
             if (seeking === false) {
                 currentTime = new Date();
@@ -74,8 +58,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             this.debug.log("ScheduleController " + type + " start.");
 
-            started = true;
-            startScheduling.call(this);
+            if (!ready) return;
+
+            //this.debug.log("ScheduleController begin " + type + " validation");
+            setState.call(this, READY);
+            validate.call(this);
         },
 
         startOnReady = function(time) {
@@ -106,10 +93,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             this.debug.log("ScheduleController " + type + " stop.");
             setState.call(this, WAITING);
-            this.requestScheduler.stopScheduling(this);
             // cancel the requests that have already been created, but not loaded yet.
             this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
-            started = false;
 
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
         },
@@ -215,7 +200,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 count,
                 requiredBufferLength;
 
-            requiredBufferLength = self.bufferExt.getRequiredBufferLength(self.requestScheduler.getExecuteInterval(self)/1000, isDynamic, duration);
+            requiredBufferLength = self.bufferExt.getRequiredBufferLength(isDynamic, duration);
             count = self.indexHandler.getSegmentCountForDuration(currentRepresentation, requiredBufferLength, actualBufferedDuration);
 
             return count;
@@ -232,13 +217,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             //mseSetTimeIfPossible.call(self);
 
-            if (!isSchedulingRequired.call(self) && !initialPlayback) {
-                doStop.call(self);
-                return;
-            }
+            if (this.playbackController.isPaused() && (!this.scheduleWhilePaused || isDynamic)) return;
 
             if (state === READY) {
                 setState.call(self, VALIDATING);
+                self.abrController.getPlaybackQuality(type, self.streamProcessor.getData());
                 fragmentsToLoad = getRequiredFragmentCount.call(self);
                 loadInitialization.call(this);
                 // We should request the media fragment w/o waiting for the next validate call
@@ -254,12 +237,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             if (state === LOADING) {
                 setState.call(self, READY);
             }
-        },
-
-        isSchedulingRequired = function() {
-            var isPaused = this.playbackController.isPaused();
-
-            return (!isPaused || (isPaused && this.scheduleWhilePaused));
         },
 
         clearMetrics = function () {
@@ -334,10 +311,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 playListTraceMetricsClosed = false;
                 playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, currentRepresentation.id, null, currentTime, currentVideoTime, null, 1.0, null);
             }
-
-            if (!this.requestScheduler.isScheduled(this) && isSchedulingRequired.call(this)) {
-                doStart.call(this);
-            }
         },
 
         onBytesRejected = function(sender, quality, index) {
@@ -383,6 +356,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             self.metricsModel.addBufferLevel(type, new Date(), newBufferLevel);
+            validate.call(this);
         },
 
         onQuotaExceeded = function(/*sender, criticalBufferLevel*/) {
@@ -415,11 +389,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, currentRepresentation.id);
         },
 
-        onScheduledTimeOccurred = function(sender, model) {
-            if (type !== model.getContext().streamProcessor.getType()) return;
-            validate.call(this);
-        },
-
         onClosedCaptioningRequested = function(sender, quality) {
             var self = this;
             getInitRequest.call(self, quality);
@@ -428,12 +397,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onPlaybackStarted = function(sender, startTime) {
             doSeek.call(this, startTime);
-        },
-
-        onPlaybackPaused = function(/*sender*/) {
-            if (!this.scheduleWhilePaused || isDynamic) {
-                doStop.call(this);
-            }
         },
 
         onPlaybackSeeking = function(sender, time) {
@@ -464,6 +427,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         bufferExt: undefined,
         scheduleWhilePaused: undefined,
         sourceBufferExt: undefined,
+        abrController: undefined,
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -471,8 +435,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         setup: function() {
             this.liveEdgeFound = onLiveEdgeFound;
-
-            this.scheduledTimeOccurred = onScheduledTimeOccurred;
 
             this.qualityChanged = onQualityChanged;
 
@@ -497,7 +459,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.closedCaptioningRequested = onClosedCaptioningRequested;
 
             this.playbackStarted = onPlaybackStarted;
-            this.playbackPaused = onPlaybackPaused;
             this.playbackSeeking = onPlaybackSeeking;
         },
 
@@ -512,7 +473,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.liveEdgeFinder = streamProcessor.liveEdgeFinder;
             self.bufferController = streamProcessor.bufferController;
             self.indexHandler = streamProcessor.indexHandler;
-            self.requestScheduler = streamProcessor.requestScheduler;
             isDynamic = streamProcessor.isDynamic();
             fragmentModel = this.fragmentController.getModel(this);
         },

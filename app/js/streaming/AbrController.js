@@ -78,14 +78,6 @@ MediaPlayer.dependencies.AbrController = function () {
 
             setTopQualityIndex(type, max);
             self.notify(self.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, type, max);
-        },
-
-        onScheduledTimeOccurred = function(sender, model) {
-            var self = this,
-                type = model.getContext().streamProcessor.getType(),
-                data = model.getContext().streamProcessor.getData();
-
-            self.getPlaybackQuality(type, data);
         };
 
     return {
@@ -102,7 +94,6 @@ MediaPlayer.dependencies.AbrController = function () {
         },
 
         setup: function() {
-            this.scheduledTimeOccurred = onScheduledTimeOccurred;
             this.dataUpdateCompleted = onDataUpdateCompleted;
         },
 

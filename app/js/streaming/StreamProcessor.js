@@ -61,9 +61,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 abrController.subscribe(abrController.eventList.ENAME_QUALITY_CHANGED, representationController);
                 abrController.subscribe(abrController.eventList.ENAME_QUALITY_CHANGED, scheduleController);
 
-                requestScheduler.subscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, bufferController);
-                requestScheduler.subscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, scheduleController);
-
                 liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.timelineConverter);
                 liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, scheduleController);
 
@@ -100,7 +97,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, bufferController);
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, bufferController);
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController);
-                playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_PAUSED, scheduleController);
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
 
                 if (isDynamic) {
@@ -200,9 +196,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             abrController.unsubscribe(abrController.eventList.ENAME_QUALITY_CHANGED, representationController);
             abrController.unsubscribe(abrController.eventList.ENAME_QUALITY_CHANGED, scheduleController);
 
-            requestScheduler.unsubscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, bufferController);
-            requestScheduler.unsubscribe(requestScheduler.eventList.ENAME_SCHEDULED_TIME_OCCURED, scheduleController);
-
             liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.timelineConverter);
             liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, scheduleController);
 
@@ -240,7 +233,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, bufferController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, bufferController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController);
-            playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_PAUSED, scheduleController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, representationController);
 
