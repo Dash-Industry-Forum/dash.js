@@ -693,6 +693,8 @@ MediaPlayer.dependencies.BufferController = function () {
                 // if the quality has changed we should append the initialization data again. We get it
                 // from the cached array instead of sending a new request
                 if ((currentQuality !== requiredQuality) || (currentQuality === -1)) {
+                    if (deferredInitAppend && Q.isPending(deferredInitAppend.promise)) return Q.when(null);
+
                     deferredInitAppend = Q.defer();
                     if (initializationData[requiredQuality]) {
                         appendToBuffer.call(this, initializationData[requiredQuality], requiredQuality).then(
