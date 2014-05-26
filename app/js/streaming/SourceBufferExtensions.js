@@ -151,11 +151,13 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 defer.resolve(true);
             },
             updateEndHandler = function() {
+                if (buffer.updating) return;
+
                 buffer.removeEventListener("updateend", updateEndHandler, false);
                 defer.resolve(true);
             };
         // use updateend event if possible
-        if (buffer.hasOwnProperty("addEventListener")) {
+        if (typeof buffer.addEventListener === "function") {
             try {
                 buffer.addEventListener("updateend", updateEndHandler, false);
             } catch (err) {
