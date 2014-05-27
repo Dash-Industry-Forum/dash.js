@@ -16,8 +16,8 @@ MediaPlayer.dependencies.BufferController = function () {
     var STALL_THRESHOLD = 0.5,
         QUOTA_EXCEEDED_ERROR_CODE = 22,
         initializationData = [],
-        necessaryQuality = 0,
-        currentQuality = 0,
+        requiredQuality = 0,
+        currentQuality = -1,
         isBufferingCompleted = false,
         bufferLevel = 0,
         criticalBufferLevel = Number.POSITIVE_INFINITY,
@@ -28,14 +28,14 @@ MediaPlayer.dependencies.BufferController = function () {
         buffer = null,
         minBufferTime,
         hasSufficientBuffer = null,
+        appendedListener = null,
 
         isBufferLevelOutrun = false,
         isAppendingInProgress = false,
-        requiredInitQuality = 0,
         pendingMedia = [],
 
         waitingForInit = function() {
-            return (requiredInitQuality !== null);
+            return (currentQuality !== requiredQuality);
         },
 
         isCriticalBufferLevelExceeded = function() {
@@ -64,7 +64,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             // if this is the initialization data for current quality we need to push it to the buffer
 
-            if (quality !== necessaryQuality || !waitingForInit()) return;
+            if (quality !== requiredQuality || !waitingForInit()) return;
 
             switchInitData.call(self);
         },
@@ -81,47 +81,7 @@ MediaPlayer.dependencies.BufferController = function () {
             isAppendingInProgress = true;
 
             var self = this,
-                ranges,
-                isInit = index === undefined,
-                appendHandler = function(sender, data, error) {
-                    if (error) {
-                        // if the append has failed because the buffer is full we should store the data
-                        // that has not been appended and stop request scheduling. We also need to store
-                        // the promise for this append because the next data can be appended only after
-                        // this promise is resolved.
-                        if (error.code === QUOTA_EXCEEDED_ERROR_CODE) {
-                            pendingMedia.unshift({bytes: data, quality: quality, index: index});
-                            criticalBufferLevel = bufferLevel * 0.8;
-                            self.bufferExt.setCriticalBufferLevel(criticalBufferLevel);
-                            self.notify(self.eventList.ENAME_QUOTA_EXCEEDED, criticalBufferLevel);
-                            clearBuffer.call(self);
-                        }
-                        isAppendingInProgress = false;
-                        return;
-                    }
-
-                    if (!hasData.call(self)) return;
-
-                    updateBufferLevel.call(self);
-
-                    ranges = self.sourceBufferExt.getAllRanges(buffer);
-
-                    if (ranges) {
-                        //self.debug.log("Append " + type + " complete: " + ranges.length);
-                        if (ranges.length > 0) {
-                            var i,
-                                len;
-
-                            //self.debug.log("Number of buffered " + type + " ranges: " + ranges.length);
-                            for (i = 0, len = ranges.length; i < len; i += 1) {
-                                self.debug.log("Buffered " + type + " Range: " + ranges.start(i) + " - " + ranges.end(i));
-                            }
-                        }
-                    }
-
-                    onAppended.call(self, quality, index);
-                    self.notify(self.eventList.ENAME_BYTES_APPENDED, index);
-                };
+                isInit = index === undefined;
 
             //self.debug.log("Push (" + type + ") bytes: " + data.byteLength);
 
@@ -133,15 +93,59 @@ MediaPlayer.dependencies.BufferController = function () {
                 // quality of the last appended init segment. This means that media segment of the old
                 // quality can be appended providing init segment for a new required quality has not been
                 // appended yet.
-                if ((quality !== requiredInitQuality && isInit) || (quality !== currentQuality && !isInit)) {
+                if ((quality !== requiredQuality && isInit) || (quality !== currentQuality && !isInit)) {
                     onMediaRejected.call(self, quality, index);
                     return;
                 }
 
                 if (!hasData.call(self)) return;
-                self.sourceBufferExt.subscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, appendHandler, true);
+
+                self.sourceBufferExt.unsubscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, appendedListener);
+                appendedListener = onAppended.bind(self, quality, index);
+                self.sourceBufferExt.subscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, appendedListener);
                 self.sourceBufferExt.append(buffer, data);
             });
+        },
+
+        onAppended = function(quality, index, sender, data, error) {
+            var self = this,ranges;
+            if (error) {
+                // if the append has failed because the buffer is full we should store the data
+                // that has not been appended and stop request scheduling. We also need to store
+                // the promise for this append because the next data can be appended only after
+                // this promise is resolved.
+                if (error.code === QUOTA_EXCEEDED_ERROR_CODE) {
+                    pendingMedia.unshift({bytes: data, quality: quality, index: index});
+                    criticalBufferLevel = bufferLevel * 0.8;
+                    self.bufferExt.setCriticalBufferLevel(criticalBufferLevel);
+                    self.notify(self.eventList.ENAME_QUOTA_EXCEEDED, criticalBufferLevel);
+                    clearBuffer.call(self);
+                }
+                isAppendingInProgress = false;
+                return;
+            }
+
+            if (!hasData.call(self)) return;
+
+            updateBufferLevel.call(self);
+
+            ranges = self.sourceBufferExt.getAllRanges(buffer);
+
+            if (ranges) {
+                //self.debug.log("Append " + type + " complete: " + ranges.length);
+                if (ranges.length > 0) {
+                    var i,
+                        len;
+
+                    //self.debug.log("Number of buffered " + type + " ranges: " + ranges.length);
+                    for (i = 0, len = ranges.length; i < len; i += 1) {
+                        self.debug.log("Buffered " + type + " Range: " + ranges.start(i) + " - " + ranges.end(i));
+                    }
+                }
+            }
+
+            onAppendToBufferCompleted.call(self, quality, index);
+            self.notify(self.eventList.ENAME_BYTES_APPENDED, index);
         },
 
         updateBufferLevel = function() {
@@ -300,7 +304,15 @@ MediaPlayer.dependencies.BufferController = function () {
             appendNextMedia.call(self);
         },
 
-        onAppended = function(quality, index) {
+        appendNext = function() {
+            if (waitingForInit()) {
+                switchInitData.call(this);
+            } else {
+                appendNextMedia.call(this);
+            }
+        },
+
+        onAppendToBufferCompleted = function(quality, index) {
             isAppendingInProgress = false;
 
             if (index !== undefined) {
@@ -308,38 +320,23 @@ MediaPlayer.dependencies.BufferController = function () {
             } else {
                 onInitAppended.call(this, quality);
             }
+
+            appendNext.call(this);
         },
 
         onMediaRejected = function(quality, index) {
             isAppendingInProgress = false;
             this.notify(this.eventList.ENAME_BYTES_REJECTED, quality, index);
-
-            if (waitingForInit()) {
-                switchInitData.call(this);
-            } else {
-                appendNextMedia.call(this);
-            }
+            appendNext.call(this);
         },
 
         onInitAppended = function(quality) {
             currentQuality = quality;
-
-            if (currentQuality === requiredInitQuality) {
-                requiredInitQuality = null;
-            } else {
-                switchInitData.call(this);
-            }
         },
 
         onMediaAppended = function(index) {
             maxAppendedIndex = Math.max(index,maxAppendedIndex);
             checkIfBufferingCompleted.call(this);
-
-            if (waitingForInit()) {
-                switchInitData.call(this);
-            } else {
-                appendNextMedia.call(this);
-            }
         },
 
         appendNextMedia = function() {
@@ -381,25 +378,24 @@ MediaPlayer.dependencies.BufferController = function () {
 
             // if the quality has changed we should append the initialization data again. We get it
             // from the cached array instead of sending a new request
-            if (necessaryQuality === newQuality) return;
+            if (requiredQuality === newQuality) return;
 
             updateBufferTimestampOffset.call(self, self.representationController.getRepresentationForQuality(newQuality).MSETimeOffset);
 
-            necessaryQuality = newQuality;
-            requiredInitQuality = newQuality;
+            requiredQuality = newQuality;
             switchInitData.call(self);
         },
 
         switchInitData = function() {
             var self = this;
 
-            if (initializationData[necessaryQuality]) {
+            if (initializationData[requiredQuality]) {
                 if (isAppendingInProgress) return;
 
-                appendToBuffer.call(self, initializationData[necessaryQuality], necessaryQuality);
+                appendToBuffer.call(self, initializationData[requiredQuality], requiredQuality);
             } else {
                 // if we have not loaded the init segment for the current quality, do it
-                self.notify(self.eventList.ENAME_INIT_REQUESTED, necessaryQuality);
+                self.notify(self.eventList.ENAME_INIT_REQUESTED, requiredQuality);
             }
         },
 
@@ -503,11 +499,14 @@ MediaPlayer.dependencies.BufferController = function () {
             criticalBufferLevel = Number.POSITIVE_INFINITY;
             self.bufferExt.setCriticalBufferLevel(criticalBufferLevel);
             hasSufficientBuffer = null;
+            currentQuality = -1;
+            requiredQuality = 0;
+            self.sourceBufferExt.unsubscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, appendedListener);
 
             isBufferLevelOutrun = false;
             isAppendingInProgress = false;
-            requiredInitQuality = 0;
             pendingMedia = [];
+            appendedListener = null;
 
             if (!errored) {
                 self.sourceBufferExt.abort(mediaSource, buffer);
