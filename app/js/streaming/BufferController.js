@@ -16,7 +16,6 @@ MediaPlayer.dependencies.BufferController = function () {
     var STALL_THRESHOLD = 0.5,
         QUOTA_EXCEEDED_ERROR_CODE = 22,
         initializationData = [],
-        seekTarget = -1,
         necessaryQuality = 0,
         currentQuality = 0,
         isBufferingCompleted = false,
@@ -230,7 +229,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             range = self.sourceBufferExt.getBufferRange(buffer, currentTime);
 
-            if ((range === null) && (seekTarget === currentTime) && (buffer.buffered.length > 0)) {
+            if ((range === null) && (buffer.buffered.length > 0)) {
                 removeEnd = buffer.buffered.end(buffer.buffered.length -1 );
             }
             removeStart = buffer.buffered.start(0);
