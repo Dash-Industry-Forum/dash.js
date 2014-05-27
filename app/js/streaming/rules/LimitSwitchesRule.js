@@ -19,54 +19,45 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
      * We might get into a situation where there quality is bouncing around a ton.
      * This can create an unpleasant experience, so let the stream settle down.
      */
-
-    var MAX_SWITCHES = 10,
-        VALIDATION_TIME = 20000,
-        WAIT_COUNT = 5,
-        waiting = 0;
+    var lastCheckTime = 0,
+        qualitySwitchThreshold = 2000;
 
     return {
         debug: undefined,
+        manifestModel: undefined,
 
         checkIndex: function (current, metrics /*, data*/) {
-            if (waiting > 0) {
-                waiting -= 1;
-                return new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
-            }
-
             var self = this,
-                panic = false,
-                rs,
+                manifest = self.manifestModel.getValue(),
+                minBufferTime,
+                maxSegmentDuration = Number.POSITIVE_INFINITY,
+                lastIdx = metrics.RepSwitchList.length - 1,
+                rs = metrics.RepSwitchList[lastIdx],
                 now = new Date().getTime(),
-                delay,
-                i,
-                numSwitches = metrics.RepSwitchList.length;
+                delay;
 
             //self.debug.log("Checking limit switches rule...");
 
-            for (i = numSwitches - 1; i >= 0; i -= 1) {
-                rs = metrics.RepSwitchList[i];
-                delay = now - rs.t.getTime();
+            if (manifest) {
+                minBufferTime = manifest.minBufferTime;
 
-                if (delay >= VALIDATION_TIME) {
-                    self.debug.log("Reached time limit, bailing.");
-                    break;
+                if (manifest.hasOwnProperty("maxSegmentDuration")) {
+                    maxSegmentDuration = manifest.maxSegmentDuration;
                 }
 
-                if (i >= MAX_SWITCHES) {
-                    self.debug.log("Found too many switches within validation time, force the stream to not change.");
-                    panic = true;
-                    break;
-                }
+                qualitySwitchThreshold = Math.min(minBufferTime, maxSegmentDuration) * 1000;
             }
 
-            if (panic) {
+            delay = now - lastCheckTime;
+
+            if (delay < qualitySwitchThreshold && (now - rs.t.getTime()) < qualitySwitchThreshold) {
                 self.debug.log("Wait some time before allowing another switch.");
-                waiting = WAIT_COUNT;
                 return new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
-            } else {
-                return new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
             }
+
+            lastCheckTime = now;
+
+            return new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
         }
     };
 };
