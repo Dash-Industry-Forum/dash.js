@@ -1112,6 +1112,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                     playingTime = time;
                                     requiredQuality = result.quality;
                                     currentRepresentation = getRepresentationForQuality.call(self, result.quality);
+                                    buffer.timestampOffset = currentRepresentation.MSETimeOffset;
                                     if (currentRepresentation.segmentDuration) {
                                         fragmentDuration = currentRepresentation.segmentDuration;
                                     }
