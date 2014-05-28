@@ -2,6 +2,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
     "use strict";
 
     var WALLCLOCK_TIME_UPDATE_INTERVAL = 1000,
+        currentTime = 0,
         wallclockTimeIntervalId,
         period,
         videoModel,
@@ -83,6 +84,11 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackTimeUpdated = function() {
+            var time = this.getTime();
+
+            if (time === currentTime) return;
+
+            currentTime = time;
             this.notify(this.eventList.ENAME_PLAYBACK_TIME_UPDATED, this.getTimeToPeriodEnd());
         },
 
@@ -230,6 +236,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             removeAllListeners.call(this);
             videoModel = null;
             period = null;
+            currentTime = 0;
         }
     };
 };
