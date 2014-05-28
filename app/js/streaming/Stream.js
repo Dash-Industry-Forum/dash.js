@@ -582,9 +582,13 @@ MediaPlayer.dependencies.Stream = function () {
                 this.protectionController.teardownKeySystem(kid);
             }
 
+            this.protectionExt.unsubscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this.protectionModel);
+            this.protectionExt.unsubscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this);
             this.protectionController = undefined;
             this.protectionModel = undefined;
             this.fragmentController = undefined;
+            this.playbackController.unsubscribe(this.playbackController.eventList.ENAME_PLAYBACK_ERROR, this);
+            this.playbackController.unsubscribe(this.playbackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, this);
             this.playbackController.reset();
 
             // streamcontroller expects this to be valid

@@ -32,12 +32,13 @@ MediaPlayer.models.ManifestModel = function () {
 
         setValue: function (value) {
             manifest = value;
-            this.notify(this.eventList.ENAME_MANIFEST_UPDATED, value);
 
             this.eventBus.dispatchEvent({
                 type: "manifestLoaded",
                 data: value
             });
+
+            this.notify(this.eventList.ENAME_MANIFEST_UPDATED, value);
         }
     };
 };

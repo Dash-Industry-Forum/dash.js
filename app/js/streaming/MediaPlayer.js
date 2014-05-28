@@ -104,7 +104,8 @@ MediaPlayer = function (aContext) {
         doReset = function() {
             if (playing && streamController) {
                 streamController.unsubscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
-                manifestLoader.unsubscribe(manifestLoader.eventList.ENAME_MANIFEST_UPDATED, streamController);
+                manifestLoader.unsubscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
+                manifestLoader.unsubscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, manifestUpdater);
                 abrController.unsubscribe(abrController.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, bufferExt);
                 streamController.reset();
                 streamController = null;
