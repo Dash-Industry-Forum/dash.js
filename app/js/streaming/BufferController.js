@@ -32,7 +32,8 @@ MediaPlayer.dependencies.BufferController = function () {
         availableRepresentations,
         currentRepresentation,
         playingTime,
-        lastQuality = -1,
+        requiredQuality = -1,
+        currentQuality = -1,
         stalled = false,
         isDynamic = false,
         isBufferingCompleted = false,
@@ -269,6 +270,7 @@ MediaPlayer.dependencies.BufferController = function () {
         appendToBuffer = function(data, quality, index) {
             var self = this,
                 req,
+                isInit = index === undefined,
                 isAppendingRejectedData = rejectedBytes && (data == rejectedBytes.data),
                 // if we append the rejected data we should use the stored promise instead of creating a new one
                 deferred = isAppendingRejectedData ? deferredRejectedDataAppend : Q.defer(),
@@ -278,7 +280,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             //self.debug.log("Push (" + type + ") bytes: " + data.byteLength);
 
-            if (playListTraceMetricsClosed === true && state !== WAITING && lastQuality !== -1) {
+            if (playListTraceMetricsClosed === true && state !== WAITING && requiredQuality !== -1) {
                 playListTraceMetricsClosed = false;
                 playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, currentRepresentation.id, null, currentTime, currentVideoTime, null, 1.0, null);
             }
@@ -288,10 +290,25 @@ MediaPlayer.dependencies.BufferController = function () {
                     if (!hasData()) return;
                     hasEnoughSpaceToAppend.call(self).then(
                         function() {
-                            if (quality !== lastQuality) {
+                            // The segment should be rejected if this an init segment and its quality does not match
+                            // the required quality or if this a media segment and its quality does not match the
+                            // quality of the last appended init segment. This means that media segment of the old
+                            // quality can be appended providing init segment for a new required quality has not been
+                            // appended yet.
+                            if ((quality !== requiredQuality && isInit) || (quality !== currentQuality && !isInit)) {
                                 req = fragmentModel.getExecutedRequestForQualityAndIndex(quality, index);
-                                fragmentModel.removeExecutedRequest(req);
-                                self.indexHandler.getSegmentRequestForTime(currentRepresentation, req.startTime).then(onFragmentRequest.bind(self));
+                                // if request for an unappropriate quality has not been removed yet, do it now
+                                if (req) {
+                                    window.removed = req;
+                                    fragmentModel.removeExecutedRequest(req);
+                                    // if index is not undefined it means that this is a media segment, so we should
+                                    // request the segment for the same time but with an appropriate quality
+                                    // If this is init segment do nothing, because it will be requested in loadInitialization method
+                                    if (!isInit) {
+                                        self.indexHandler.getSegmentRequestForTime(currentRepresentation, req.startTime).then(onFragmentRequest.bind(self));
+                                    }
+                                }
+
                                 deferred.resolve();
                                 if (isAppendingRejectedData) {
                                     deferredRejectedDataAppend = null;
@@ -308,6 +325,12 @@ MediaPlayer.dependencies.BufferController = function () {
                                             if (isAppendingRejectedData) {
                                                 deferredRejectedDataAppend = null;
                                                 rejectedBytes = null;
+                                            }
+
+                                            // index can be undefined only for init segments. In this case
+                                            // change currentQuality to a quality of a new appended init segment.
+                                            if (isInit) {
+                                                currentQuality = quality;
                                             }
 
                                             if (!self.requestScheduler.isScheduled(self) && isSchedulingRequired.call(self)) {
@@ -481,7 +504,7 @@ MediaPlayer.dependencies.BufferController = function () {
                         initializationData[quality] = data;
 
                         // if this is the initialization data for current quality we need to push it to the buffer
-                        if (quality === lastQuality) {
+                        if (quality === requiredQuality) {
                             appendToBuffer.call(self, data, request.quality).then(
                                 function() {
                                     deferredInitAppend.resolve();
@@ -642,7 +665,7 @@ MediaPlayer.dependencies.BufferController = function () {
             deferredStreamComplete.resolve(request);
         },
 
-        loadInitialization = function (qualityChanged, currentQuality) {
+        loadInitialization = function () {
             var initializationPromise = null;
 
             if (initialPlayback) {
@@ -664,25 +687,24 @@ MediaPlayer.dependencies.BufferController = function () {
 
                 deferredInitAppend = Q.defer();
                 initializationData = [];
-
-                lastQuality = currentQuality;
-                initializationPromise = this.indexHandler.getInitRequest(availableRepresentations[currentQuality]);
+                initializationPromise = this.indexHandler.getInitRequest(availableRepresentations[requiredQuality]);
             } else {
                 initializationPromise = Q.when(null);
                 // if the quality has changed we should append the initialization data again. We get it
                 // from the cached array instead of sending a new request
-                if (qualityChanged) {
+                if ((currentQuality !== requiredQuality) || (currentQuality === -1)) {
+                    if (deferredInitAppend && Q.isPending(deferredInitAppend.promise)) return Q.when(null);
+
                     deferredInitAppend = Q.defer();
-                    lastQuality = currentQuality;
-                    if (initializationData[currentQuality]) {
-                        appendToBuffer.call(this, initializationData[currentQuality], currentQuality).then(
+                    if (initializationData[requiredQuality]) {
+                        appendToBuffer.call(this, initializationData[requiredQuality], requiredQuality).then(
                             function() {
                                 deferredInitAppend.resolve();
                             }
                         );
                     } else {
                         // if we have not loaded the init segment for the current quality, do it
-                        initializationPromise = this.indexHandler.getInitRequest(availableRepresentations[currentQuality]);
+                        initializationPromise = this.indexHandler.getInitRequest(availableRepresentations[requiredQuality]);
                     }
                 }
             }
@@ -895,9 +917,10 @@ MediaPlayer.dependencies.BufferController = function () {
                             newQuality = quality;
                         }
 
-                        qualityChanged = (quality !== lastQuality);
+                        qualityChanged = (quality !== requiredQuality);
 
                         if (qualityChanged === true) {
+                            requiredQuality = newQuality;
                             // The quality has beeen changed so we should abort the requests that has not been loaded yet
                             self.fragmentController.cancelPendingRequestsForModel(fragmentModel);
                             currentRepresentation = getRepresentationForQuality.call(self, newQuality);
@@ -921,7 +944,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 ).then(
                     function (count) {
                         fragmentsToLoad = count;
-                        loadInitialization.call(self, qualityChanged, newQuality).then(
+                        loadInitialization.call(self).then(
                             function (request) {
                                 if (request !== null) {
                                     //self.debug.log("Loading initialization: " + request.streamType + ":" + request.startTime);
@@ -1087,7 +1110,9 @@ MediaPlayer.dependencies.BufferController = function () {
                                 function (time) {
                                     dataChanged = true;
                                     playingTime = time;
+                                    requiredQuality = result.quality;
                                     currentRepresentation = getRepresentationForQuality.call(self, result.quality);
+                                    buffer.timestampOffset = currentRepresentation.MSETimeOffset;
                                     if (currentRepresentation.segmentDuration) {
                                         fragmentDuration = currentRepresentation.segmentDuration;
                                     }
