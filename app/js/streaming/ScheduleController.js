@@ -9,26 +9,22 @@ MediaPlayer.dependencies.ScheduleController = function () {
         type,
         ready,
         fragmentModel,
-        seeking,
         seekTarget,
         state = WAITING,
         isDynamic,
         currentRepresentation,
         initialPlayback = true,
-        lastQuality = 0,
 
         playListMetrics = null,
         playListTraceMetrics = null,
         playListTraceMetricsClosed = true,
 
         setState = function(value) {
-            var self = this;
+            if (state === value) return;
             //self.debug.log("ScheduleController " + type + " setState to:" + value);
             state = value;
             // Notify the FragmentController about any state change to track the loading process of each active ScheduleController
-            if (fragmentModel !== null) {
-                self.fragmentController.onStateChange();
-            }
+            this.fragmentController.onStateChange();
         },
 
         clearPlayListTraceMetrics = function (endTime, stopreason) {
@@ -47,18 +43,17 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         doStart = function () {
-            var currentTime;
+            if (!ready) return;
 
-            if (seeking === false) {
-                currentTime = new Date();
-                clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
-                playListMetrics = this.metricsModel.addPlayList(type, currentTime, 0, MediaPlayer.vo.metrics.PlayList.INITIAL_PLAY_START_REASON);
-                //mseSetTime = true;
+            var currentTime = new Date();
+            clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
+            playListMetrics = this.metricsModel.addPlayList(type, currentTime, 0, MediaPlayer.vo.metrics.PlayList.INITIAL_PLAY_START_REASON);
+
+            if (initialPlayback) {
+                initialPlayback = false;
             }
 
             this.debug.log("ScheduleController " + type + " start.");
-
-            if (!ready) return;
 
             //this.debug.log("ScheduleController begin " + type + " validation");
             setState.call(this, READY);
@@ -66,7 +61,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         startOnReady = function(time) {
-            getInitRequest.call(this, lastQuality);
+            getInitRequest.call(this, currentRepresentation.index);
             this.seek(time);
         },
 
@@ -75,11 +70,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 range = this.sourceBufferExt.getBufferRange(this.bufferController.getBuffer(), time);
 
             this.debug.log("ScheduleController " + type + " seek: " + time);
-            seeking = true;
             seekTarget = time;
             currentTime = new Date();
             clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
-            playListMetrics = this.metricsModel.addPlayList(type, currentTime, seekTarget, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
+            playListMetrics = this.metricsModel.addPlayList(type, currentTime, time, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
 
             if (!range && !initialPlayback) {
                 this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
@@ -99,29 +93,14 @@ MediaPlayer.dependencies.ScheduleController = function () {
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
         },
 
-        loadInitialization = function () {
-
-            if (initialPlayback) {
-                this.debug.log("Marking a special seek for initial " + type + " playback.");
-
-                // If we weren't already seeking, 'seek' to the beginning of the stream.
-                if (!seeking) {
-                    seeking = true;
-                    seekTarget = 0;
-                }
-
-                initialPlayback = false;
-            }
-        },
-
         loadNextFragment = function () {
             var self = this,
                 range,
                 segmentTime,
                 request;
 
-            segmentTime = seeking ? seekTarget : self.indexHandler.getCurrentTime(currentRepresentation);
-            seeking = false;
+            segmentTime = seekTarget || self.indexHandler.getCurrentTime(currentRepresentation);
+            seekTarget = null;
             range = self.sourceBufferExt.getBufferRange(self.bufferController.getBuffer(), segmentTime);
 
             if (range !== null) {
@@ -168,13 +147,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 fragmentsToLoad--;
                 request = loadNextFragment.call(self);
                 onFragmentRequest.call(self, request);
-            } else {
-
-                if (state === VALIDATING) {
-                    setState.call(self, READY);
-                }
-
-                finishValidation.call(self);
+            } else if (state !== WAITING) {
+                setState.call(self, READY);
             }
         },
 
@@ -217,26 +191,15 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             //mseSetTimeIfPossible.call(self);
 
-            if (this.playbackController.isPaused() && (!this.scheduleWhilePaused || isDynamic)) return;
+            if (state !== READY || (this.playbackController.isPaused() && (!this.scheduleWhilePaused || isDynamic))) return;
 
-            if (state === READY) {
-                setState.call(self, VALIDATING);
-                self.abrController.getPlaybackQuality(type, self.streamProcessor.getData());
-                fragmentsToLoad = getRequiredFragmentCount.call(self);
-                loadInitialization.call(this);
-                // We should request the media fragment w/o waiting for the next validate call
-                // or until the initialization fragment has been loaded
-                requestNewFragment.call(this);
-            } else if (state === VALIDATING) {
-                setState.call(self, READY);
-            }
-        },
+            setState.call(self, VALIDATING);
+            self.abrController.getPlaybackQuality(type, self.streamProcessor.getData());
+            fragmentsToLoad = getRequiredFragmentCount.call(self);
 
-        finishValidation = function () {
-            var self = this;
-            if (state === LOADING) {
-                setState.call(self, READY);
-            }
+            // We should request the media fragment w/o waiting for the next validate call
+            // or until the initialization fragment has been loaded
+            requestNewFragment.call(this);
         },
 
         clearMetrics = function () {
@@ -307,7 +270,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 currentVideoTime = self.playbackController.getTime(),
                 currentTime = new Date();
 
-            if (playListTraceMetricsClosed === true && state !== WAITING && lastQuality !== -1) {
+            if (playListTraceMetricsClosed === true) {
                 playListTraceMetricsClosed = false;
                 playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, currentRepresentation.id, null, currentTime, currentVideoTime, null, 1.0, null);
             }
@@ -374,10 +337,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             if (type !== typeValue) return;
 
             var self = this;
-
-            if (lastQuality === newQuality) return;
-
-            lastQuality = newQuality;
 
             currentRepresentation = self.representationController.getRepresentationForQuality(newQuality);
 
