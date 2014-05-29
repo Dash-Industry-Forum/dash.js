@@ -84,9 +84,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 isInit = index === undefined;
 
             //self.debug.log("Push (" + type + ") bytes: " + data.byteLength);
-
-            if (!hasData.call(self)) return;
-
             hasEnoughSpaceToAppend.call(self, function() {
                 // The segment should be rejected if this an init segment and its quality does not match
                 // the required quality or if this a media segment and its quality does not match the
@@ -97,8 +94,6 @@ MediaPlayer.dependencies.BufferController = function () {
                     onMediaRejected.call(self, quality, index);
                     return;
                 }
-
-                if (!hasData.call(self)) return;
 
                 self.sourceBufferExt.unsubscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, appendedListener);
                 appendedListener = onAppended.bind(self, quality, index);
@@ -125,8 +120,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 return;
             }
 
-            if (!hasData.call(self)) return;
-
             updateBufferLevel.call(self);
 
             ranges = self.sourceBufferExt.getAllRanges(buffer);
@@ -149,17 +142,10 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         updateBufferLevel = function() {
-            if (!hasData.call(this)) return false;
-
             var self = this,
                 currentTime = self.playbackController.getTime();
 
             bufferLevel = self.sourceBufferExt.getBufferLength(buffer, currentTime);
-
-            if (!hasData.call(self)) {
-                return false;
-            }
-
             self.notify(self.eventList.ENAME_BUFFER_LEVEL_UPDATED, bufferLevel);
             checkGapBetweenBuffers.call(self);
             checkIfSufficientBuffer.call(self);
@@ -283,10 +269,6 @@ MediaPlayer.dependencies.BufferController = function () {
 
             this.debug.log(hasSufficientBuffer ? ("Got enough " + type + " buffer to start.") : ("Waiting for more " + type + " buffer before starting playback."));
             this.notify(this.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, state);
-        },
-
-        hasData = function() {
-            return !!this.representationController && !!this.representationController.getData() && !!buffer;
         },
 
         updateBufferTimestampOffset = function(MSETimeOffset) {
