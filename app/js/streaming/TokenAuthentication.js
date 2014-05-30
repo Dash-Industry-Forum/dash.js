@@ -32,7 +32,7 @@ MediaPlayer.utils.TokenAuthentication = function () {
                 request.getResponseHeader(tokenAuthentication.name) !== null) {
 
                 tokenAuthentication.token = request.getResponseHeader(tokenAuthentication.name);
-                debug.log(tokenAuthentication.name+" received: " + tokenAuthentication.token);
+                this.debug.log(tokenAuthentication.name+" received: " + tokenAuthentication.token);
 
            }
         },
@@ -43,7 +43,7 @@ MediaPlayer.utils.TokenAuthentication = function () {
 
                     var modifier = url.indexOf('?') === -1 ? '?' : '&';
                     url += modifier + tokenAuthentication.name +"=" + tokenAuthentication.token;
-                    debug.log(tokenAuthentication.name+" is being appended on the request url with a value of : " + tokenAuthentication.token);
+                    this.debug.log(tokenAuthentication.name+" is being appended on the request url with a value of : " + tokenAuthentication.token);
 
                 }
             }
@@ -55,7 +55,7 @@ MediaPlayer.utils.TokenAuthentication = function () {
             if (tokenAuthentication.type === MediaPlayer.utils.TokenAuthentication.TYPE_HEADER) {
 
                 request.setRequestHeader(tokenAuthentication.name, tokenAuthentication.token);
-                debug.log(tokenAuthentication.name+" is being set in the request header with a value of : " + tokenAuthentication.token);
+                this.debug.log(tokenAuthentication.name+" is being set in the request header with a value of : " + tokenAuthentication.token);
 
             }
 
