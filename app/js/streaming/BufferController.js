@@ -102,7 +102,9 @@ MediaPlayer.dependencies.BufferController = function () {
             });
         },
 
-        onAppended = function(quality, index, sender, data, error) {
+        onAppended = function(quality, index, sender, sourceBuffer, data, error) {
+            if (buffer !== sourceBuffer) return;
+
             var self = this,ranges;
             if (error) {
                 // if the append has failed because the buffer is full we should store the data
@@ -207,7 +209,9 @@ MediaPlayer.dependencies.BufferController = function () {
                 removeEnd,
                 range,
                 req,
-                removeHandler = function(sender, removeStart, removeEnd) {
+                removeHandler = function(sender, sourceBuffer, removeStart, removeEnd) {
+                    if (buffer !== sourceBuffer) return;
+
                     self.notify(self.eventList.ENAME_BUFFER_CLEARED, removeStart, removeEnd);
                     if (!callback) return;
                     callback.call(self, removeEnd - removeStart);
@@ -302,8 +306,6 @@ MediaPlayer.dependencies.BufferController = function () {
             } else {
                 onInitAppended.call(this, quality);
             }
-
-            appendNext.call(this);
         },
 
         onMediaRejected = function(quality, index) {

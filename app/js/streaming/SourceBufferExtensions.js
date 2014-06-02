@@ -186,11 +186,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 self.waitForUpdateEnd(buffer, function() {
-                    self.notify(self.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, bytes);
+                    self.notify(self.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, buffer, bytes);
                 });
             });
         } catch (err) {
-            self.notify(self.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, bytes, err);
+            self.notify(self.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, buffer, bytes, err);
         }
     },
 
@@ -204,10 +204,10 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             }
             // updating is in progress, we should wait for it to complete before signaling that this operation is done
             this.waitForUpdateEnd(buffer, function() {
-                self.notify(self.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, start, end);
+                self.notify(self.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, buffer, start, end);
             });
         } catch (err) {
-            self.notify(self.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, start, end, err);
+            self.notify(self.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, buffer, start, end, err);
         }
     },
 
