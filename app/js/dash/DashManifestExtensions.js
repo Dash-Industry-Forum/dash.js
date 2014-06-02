@@ -282,8 +282,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
     },
 
     getRepresentationsForAdaptation: function(manifest, adaptation) {
-        var a = manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index],
-            self = this,
+        var self = this,
+            a = self.processAdaptation(manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index]),
             representations = [],
             representation,
             initialization,
