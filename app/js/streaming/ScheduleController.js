@@ -14,6 +14,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         isDynamic,
         currentRepresentation,
         initialPlayback = true,
+        timeoutId,
 
         playListMetrics = null,
         playListTraceMetrics = null,
@@ -254,8 +255,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
             time = self.fragmentController.getLoadingTime(self);
             setState.call(this, LOADING);
 
-            setTimeout(function() {
-                if (!self.fragmentController) return;
+            timeoutId = setTimeout(function() {
+                if (!timeoutId) return;
+                timeoutId = null;
+
                 setState.call(self, READY);
                 requestNewFragment.call(self);
             }, time);
@@ -449,6 +452,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         reset: function() {
             var self = this;
+
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
 
             doStop.call(self);
             self.fragmentController.abortRequestsForModel(fragmentModel);
