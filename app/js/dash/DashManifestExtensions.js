@@ -262,10 +262,11 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
     getRefreshDelay: function (manifest) {
         "use strict";
-        var delay = NaN;
+        var delay = NaN,
+            minDelay = 2;
 
         if (manifest.hasOwnProperty("minimumUpdatePeriod")) {
-            delay = parseFloat(manifest.minimumUpdatePeriod);
+            delay = Math.max(parseFloat(manifest.minimumUpdatePeriod), minDelay);
         }
 
         return delay;
