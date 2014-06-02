@@ -250,10 +250,11 @@ Dash.dependencies.DashHandler = function () {
                     } else {
                         if (segments.length > maxSegmentsAhead) {
                             hasEnoughSegments = true;
-                            break;
+                            if (isAvailableSegmentNumberCalculated) break;
+                            continue;
                         }
 
-                        if (requiredMediaTime >= time/fTimescale) {
+                        if (time/fTimescale >= (requiredMediaTime - (frag.d / fTimescale))) {
                             segments.push(createSegment.call(self, frag));
                         }
                     }
@@ -376,6 +377,8 @@ Dash.dependencies.DashHandler = function () {
                 range = {start: firstIdx, end: lastIdx};
                 return range;
             }
+
+            if(!isDynamic && requestedTime) return null;
 
             // if segments exist use the current index as an origin index for a new range
             if (currentSegmentList) {
@@ -551,7 +554,7 @@ Dash.dependencies.DashHandler = function () {
 
         getIndexForSegments = function (time, representation) {
             var segments = representation.segments,
-                segmentLastIdx = segments.length - 1,
+                segmentLastIdx = segments ? (segments.length - 1) : null,
                 idx = -1,
                 frag,
                 ft,
@@ -567,20 +570,7 @@ Dash.dependencies.DashHandler = function () {
                         (time - Dash.dependencies.DashHandler.EPSILON) <= (ft + fd)) {
                         idx = frag.availabilityIdx;
                         break;
-                    } else if (idx === -1 && (time - Dash.dependencies.DashHandler.EPSILON) > (ft + fd)) {
-                        // time is past the end
-                        idx  = isNaN(representation.segmentDuration) ? (frag.availabilityIdx + 1) : Math.floor(time / representation.segmentDuration);
                     }
-                }
-            }
-
-            if (idx === -1) {
-                if (!isNaN(representation.segmentDuration)) {
-                    idx = Math.floor(time / representation.segmentDuration);
-                } else {
-                    console.log("Couldn't figure out a time!");
-                    console.log("Time: " + time);
-                    console.log(segments);
                 }
             }
 
@@ -690,11 +680,16 @@ Dash.dependencies.DashHandler = function () {
 
             self.debug.log("Getting the request for time: " + time);
 
+            index = getIndexForSegments.call(self, time, representation);
             getSegments.call(self, representation);
+
+            if (index < 0) {
+                index = getIndexForSegments.call(self, time, representation);
+            }
+
             //self.debug.log("Got segments.");
             //self.debug.log(segments);
             //self.debug.log("Got a list of segments, so dig deeper.");
-            index = getIndexForSegments.call(self, time, representation);
             self.debug.log("Index for time " + time + " is " + index);
 
             finished = isMediaFinished.call(self, representation);
@@ -733,6 +728,7 @@ Dash.dependencies.DashHandler = function () {
                 throw "You must call getSegmentRequestForTime first.";
             }
 
+            requestedTime = null;
             index += 1;
             idx = index;
 
