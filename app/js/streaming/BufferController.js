@@ -383,6 +383,10 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
+        onWallclockTimeUpdated = function(/*sender*/) {
+            appendNext.call(this);
+        },
+
         onPlaybackRateChanged = function(/*sender*/) {
             checkIfSufficientBuffer.call(this);
         };
@@ -425,6 +429,7 @@ MediaPlayer.dependencies.BufferController = function () {
             this.playbackSeeking = updateBufferState;
             this.playbackTimeUpdated = updateBufferState;
             this.playbackRateChanged = onPlaybackRateChanged;
+            this.wallclockTimeUpdated = onWallclockTimeUpdated;
 
             onAppended = onAppended.bind(this);
             this.sourceBufferExt.subscribe(this.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);

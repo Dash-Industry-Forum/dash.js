@@ -372,6 +372,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
             doSeek.call(this, time);
         },
 
+        onWallclockTimeUpdated = function(/*sender*/) {
+            validate.call(this);
+        },
+
         onLiveEdgeFound = function(sender, liveEdgeTime, periodInfo) {
             // step back from a found live edge time to be able to buffer some data
             var self = this,
@@ -429,6 +433,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             this.playbackStarted = onPlaybackStarted;
             this.playbackSeeking = onPlaybackSeeking;
+            this.wallclockTimeUpdated = onWallclockTimeUpdated;
         },
 
         initialize: function(typeValue, streamProcessor) {
