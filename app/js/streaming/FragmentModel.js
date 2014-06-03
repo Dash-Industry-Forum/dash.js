@@ -33,7 +33,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         sortRequestsByProperty = function(requestsArray, sortProp) {
             var compare = function (req1, req2){
-                if (req1[sortProp] < req2[sortProp]) return -1;
+                if (req1[sortProp] < req2[sortProp] || isNaN(req1[sortProp])) return -1;
                 if (req1[sortProp] > req2[sortProp]) return 1;
                 return 0;
             };
@@ -102,6 +102,8 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         addRequest: function(value) {
             if (value) {
+                if (this.isFragmentLoadedOrPending(value)) return;
+
                 pendingRequests.push(value);
                 sortRequestsByProperty.call(this, pendingRequests, "index");
             }
@@ -110,11 +112,20 @@ MediaPlayer.dependencies.FragmentModel = function () {
         isFragmentLoadedOrPending: function(request) {
             var isLoaded = false,
                 ln = executedRequests.length,
+                isEqualInit = function(req1, req2) {
+                    return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
+                },
                 req;
 
             // First, check if the fragment has already been loaded
             for (var i = 0; i < ln; i++) {
                 req = executedRequests[i];
+
+                if (isEqualInit(request, req)) {
+                    isLoaded = true;
+                    break;
+                }
+
                 if (request.startTime === req.startTime || ((req.action === "complete") && request.action === req.action)) {
                     //self.debug.log(request.streamType + " Fragment already loaded for time: " + request.startTime);
                     if (request.url === req.url) {
@@ -135,6 +146,10 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     if ((request.url === req.url) && (request.startTime === req.startTime)) {
                         isLoaded = true;
                     }
+                    if (isEqualInit(request, req)) {
+                        isLoaded = true;
+                        break;
+                    }
                 }
             }
 
@@ -143,6 +158,10 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     req = loadingRequests[i];
                     if ((request.url === req.url) && (request.startTime === req.startTime)) {
                         isLoaded = true;
+                    }
+                    if (isEqualInit(request, req)) {
+                        isLoaded = true;
+                        break;
                     }
                 }
             }
@@ -260,7 +279,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 // too many requests have been loading, do nothing until some of them are loaded or aborted
                 return;
             }
-
+            sortRequestsByProperty.call(this, pendingRequests, "index");
             // take the next request to execute and remove it from the list of pending requests
             currentRequest = pendingRequests.shift();
 

@@ -284,10 +284,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
             // if request for an unappropriate quality has not been removed yet, do it now
             if (req) {
                 fragmentModel.removeExecutedRequest(req);
-                // if index is not undefined it means that this is a media segment, so we should
+                // if index is not a number it means that this is a media segment, so we should
                 // request the segment for the same time but with an appropriate quality
                 // If this is init segment do nothing, because it will be requested in loadInitialization method
-                if (index !== undefined) {
+                if (!isNaN(index)) {
                     req = this.indexHandler.getSegmentRequestForTime(currentRepresentation, req.startTime);
                     onFragmentRequest.call(this, req);
                 }

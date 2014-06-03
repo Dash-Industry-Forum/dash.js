@@ -28,7 +28,7 @@ MediaPlayer.dependencies.BufferController = function () {
         buffer = null,
         minBufferTime,
         hasSufficientBuffer = null,
-        appendedListener = null,
+        appendedBytesInfo,
 
         isBufferLevelOutrun = false,
         isAppendingInProgress = false,
@@ -74,14 +74,15 @@ MediaPlayer.dependencies.BufferController = function () {
 
             pendingMedia.push({bytes: bytes, quality: quality, index: index});
             sortArrayByProperty(pendingMedia, "index");
-            appendNextMedia.call(this);
+            appendNext.call(this);
 		},
 
         appendToBuffer = function(data, quality, index) {
             isAppendingInProgress = true;
+            appendedBytesInfo = {quality: quality, index: index};
 
             var self = this,
-                isInit = index === undefined;
+                isInit = isNaN(index);
 
             //self.debug.log("Push (" + type + ") bytes: " + data.byteLength);
             hasEnoughSpaceToAppend.call(self, function() {
@@ -95,14 +96,11 @@ MediaPlayer.dependencies.BufferController = function () {
                     return;
                 }
 
-                self.sourceBufferExt.unsubscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, appendedListener);
-                appendedListener = onAppended.bind(self, quality, index);
-                self.sourceBufferExt.subscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, appendedListener);
                 self.sourceBufferExt.append(buffer, data);
             });
         },
 
-        onAppended = function(quality, index, sender, sourceBuffer, data, error) {
+        onAppended = function(sender, sourceBuffer, data, error) {
             if (buffer !== sourceBuffer) return;
 
             var self = this,ranges;
@@ -112,7 +110,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 // the promise for this append because the next data can be appended only after
                 // this promise is resolved.
                 if (error.code === QUOTA_EXCEEDED_ERROR_CODE) {
-                    pendingMedia.unshift({bytes: data, quality: quality, index: index});
+                    pendingMedia.unshift({bytes: data, quality: appendedBytesInfo.quality, index: appendedBytesInfo.index});
                     criticalBufferLevel = bufferLevel * 0.8;
                     self.bufferExt.setCriticalBufferLevel(criticalBufferLevel);
                     self.notify(self.eventList.ENAME_QUOTA_EXCEEDED, criticalBufferLevel);
@@ -139,8 +137,8 @@ MediaPlayer.dependencies.BufferController = function () {
                 }
             }
 
-            onAppendToBufferCompleted.call(self, quality, index);
-            self.notify(self.eventList.ENAME_BYTES_APPENDED, index);
+            onAppendToBufferCompleted.call(self, appendedBytesInfo.quality, appendedBytesInfo.index);
+            self.notify(self.eventList.ENAME_BYTES_APPENDED, appendedBytesInfo.index);
         },
 
         updateBufferLevel = function() {
@@ -172,7 +170,7 @@ MediaPlayer.dependencies.BufferController = function () {
             } else if ((actualGap < acceptableGap && isBufferLevelOutrun)) {
                 this.notify(this.eventList.ENAME_BUFFER_LEVEL_BALANCED);
                 isBufferLevelOutrun = false;
-                appendNextMedia.call(this);
+                appendNext.call(this);
             }
         },
 
@@ -287,7 +285,7 @@ MediaPlayer.dependencies.BufferController = function () {
             var self = this;
 
             updateBufferLevel.call(self);
-            appendNextMedia.call(self);
+            appendNext.call(self);
         },
 
         appendNext = function() {
@@ -301,11 +299,13 @@ MediaPlayer.dependencies.BufferController = function () {
         onAppendToBufferCompleted = function(quality, index) {
             isAppendingInProgress = false;
 
-            if (index !== undefined) {
+            if (!isNaN(index)) {
                 onMediaAppended.call(this, index);
             } else {
                 onInitAppended.call(this, quality);
             }
+
+            appendNext.call(this);
         },
 
         onMediaRejected = function(quality, index) {
@@ -425,6 +425,9 @@ MediaPlayer.dependencies.BufferController = function () {
             this.playbackSeeking = updateBufferState;
             this.playbackTimeUpdated = updateBufferState;
             this.playbackRateChanged = onPlaybackRateChanged;
+
+            onAppended = onAppended.bind(this);
+            this.sourceBufferExt.subscribe(this.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);
         },
 
         initialize: function (typeValue, buffer, source, streamProcessor) {
@@ -485,12 +488,12 @@ MediaPlayer.dependencies.BufferController = function () {
             hasSufficientBuffer = null;
             currentQuality = -1;
             requiredQuality = 0;
-            self.sourceBufferExt.unsubscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, appendedListener);
+            self.sourceBufferExt.unsubscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, onAppended);
+            appendedBytesInfo = null;
 
             isBufferLevelOutrun = false;
             isAppendingInProgress = false;
             pendingMedia = [];
-            appendedListener = null;
 
             if (!errored) {
                 self.sourceBufferExt.abort(mediaSource, buffer);
