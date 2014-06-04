@@ -173,6 +173,29 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return currentBufferLevel;
         },
 
+        getCurrentPlaybackRate = function (metrics) {
+            if (metrics === null) {
+                return null;
+            }
+
+            var playList = metrics.PlayList,
+                trace,
+                currentRate;
+
+            if (playList === null || playList.length <= 0) {
+                return null;
+            }
+
+            trace = playList[playList.length - 1].trace;
+
+            if (trace === null || trace.length <= 0) {
+                return null;
+            }
+
+            currentRate = trace[trace.length - 1].playbackspeed;
+            return currentRate;
+        },
+
         getCurrentHttpRequest = function (metrics) {
             if (metrics === null) {
                 return null;
@@ -235,6 +258,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getMaxIndexForBufferType : getMaxIndexForBufferType,
         getCurrentRepresentationSwitch : getCurrentRepresentationSwitch,
         getCurrentBufferLevel : getCurrentBufferLevel,
+        getCurrentPlaybackRate: getCurrentPlaybackRate,
         getCurrentHttpRequest : getCurrentHttpRequest,
         getHttpRequests : getHttpRequests,
         getCurrentDroppedFrames : getCurrentDroppedFrames

@@ -95,6 +95,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, bufferController);
+                playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, scheduleController);
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, bufferController);
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController);
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
@@ -234,6 +235,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, bufferController);
+            playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, scheduleController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, bufferController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);

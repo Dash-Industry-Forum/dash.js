@@ -50,6 +50,9 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('limitSwitchesRule', MediaPlayer.rules.LimitSwitchesRule);
             this.system.mapClass('abrRulesCollection', MediaPlayer.rules.BaseRulesCollection);
 
+            this.system.mapClass('bufferLevelRule', MediaPlayer.rules.BufferLevelRule);
+            this.system.mapClass('scheduleRulesCollection', MediaPlayer.rules.ScheduleRulesCollection);
+
             this.system.mapClass('streamProcessor', MediaPlayer.dependencies.StreamProcessor);
             this.system.mapClass('textController', MediaPlayer.dependencies.TextController);
             this.system.mapClass('bufferController', MediaPlayer.dependencies.BufferController);

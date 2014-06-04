@@ -169,16 +169,52 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         getRequiredFragmentCount = function() {
             var self =this,
-                playbackRate = self.playbackController.getPlaybackRate(),
+                metrics = this.metricsModel.getReadOnlyMetricsFor(type),
+                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.SegmentsToScheduleRules),
                 duration = self.playbackController.getPeriodDuration(),
-                actualBufferedDuration = self.bufferController.getBufferLevel() / Math.max(playbackRate, 1),
                 count,
-                requiredBufferLength;
+                req,
+                i,len,
+                requiredBufferLength,
+                confidence,
+                values;
 
             requiredBufferLength = self.bufferExt.getRequiredBufferLength(isDynamic, duration);
-            count = self.indexHandler.getSegmentCountForDuration(currentRepresentation, requiredBufferLength, actualBufferedDuration);
 
-            return count;
+            values = {};
+            values[MediaPlayer.rules.ScheduleRequest.prototype.STRONG] = MediaPlayer.rules.ScheduleRequest.prototype.NO_CHANGE;
+            values[MediaPlayer.rules.ScheduleRequest.prototype.WEAK] = MediaPlayer.rules.ScheduleRequest.prototype.NO_CHANGE;
+            values[MediaPlayer.rules.ScheduleRequest.prototype.DEFAULT] = MediaPlayer.rules.ScheduleRequest.prototype.NO_CHANGE;
+
+            for (i = 0, len = rules.length; i < len; i += 1) {
+                req = rules[i].getSegmentNumberToSchedule(metrics, currentRepresentation.segments[0].duration, requiredBufferLength);
+
+                if (req.count !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                    values[req.priority] = Math.min(values[req.priority], req.count);
+                }
+            }
+
+            if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                confidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
+                count = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
+            }
+
+            if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+                count = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
+            }
+
+            if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                confidence = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
+                count = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
+            }
+
+            if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
+                confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
+                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+            }
+
+            return {count: count, confidence: confidence};
         },
 
         validate = function () {
@@ -196,7 +232,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             setState.call(self, VALIDATING);
             self.abrController.getPlaybackQuality(type, self.streamProcessor.getData());
-            fragmentsToLoad = getRequiredFragmentCount.call(self);
+            fragmentsToLoad = getRequiredFragmentCount.call(self).count;
 
             // We should request the media fragment w/o waiting for the next validate call
             // or until the initialization fragment has been loaded
@@ -269,14 +305,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onBytesAppended = function(/*sender*/) {
-            var self = this,
-                currentVideoTime = self.playbackController.getTime(),
-                currentTime = new Date();
-
-            if (playListTraceMetricsClosed === true) {
-                playListTraceMetricsClosed = false;
-                playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, currentRepresentation.id, null, currentTime, currentVideoTime, null, 1.0, null);
-            }
+            addPlaylistTraceMetrics.call(this);
         },
 
         onBytesRejected = function(sender, quality, index) {
@@ -358,6 +387,18 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, currentRepresentation.id);
         },
 
+        addPlaylistTraceMetrics = function() {
+            var self = this,
+                currentVideoTime = self.playbackController.getTime(),
+                rate = self.playbackController.getPlaybackRate(),
+                currentTime = new Date();
+
+            if (playListTraceMetricsClosed === true) {
+                playListTraceMetricsClosed = false;
+                playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, currentRepresentation.id, null, currentTime, currentVideoTime, null, rate, null);
+            }
+        },
+
         onClosedCaptioningRequested = function(sender, quality) {
             var self = this;
             getInitRequest.call(self, quality);
@@ -370,6 +411,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onPlaybackSeeking = function(sender, time) {
             doSeek.call(this, time);
+        },
+
+        onPlaybackRateChanged = function() {
+            addPlaylistTraceMetrics.call(this);
         },
 
         onWallclockTimeUpdated = function(/*sender*/) {
@@ -401,6 +446,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         scheduleWhilePaused: undefined,
         sourceBufferExt: undefined,
         abrController: undefined,
+        scheduleRulesCollection: undefined,
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -433,6 +479,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             this.playbackStarted = onPlaybackStarted;
             this.playbackSeeking = onPlaybackSeeking;
+            this.playbackRateChanged = onPlaybackRateChanged;
             this.wallclockTimeUpdated = onWallclockTimeUpdated;
         },
 
