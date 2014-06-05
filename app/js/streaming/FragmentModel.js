@@ -110,63 +110,38 @@ MediaPlayer.dependencies.FragmentModel = function () {
         },
 
         isFragmentLoadedOrPending: function(request) {
-            var isLoaded = false,
-                ln = executedRequests.length,
+            var isEqualComplete = function(req1, req2) {
+                    return ((req1.action === "complete") && (req1.action === req2.action));
+                },
+
+                isEqualMedia = function(req1, req2) {
+                    return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
+                },
+
                 isEqualInit = function(req1, req2) {
                     return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
                 },
-                req;
 
-            // First, check if the fragment has already been loaded
-            for (var i = 0; i < ln; i++) {
-                req = executedRequests[i];
+                check = function(arr) {
+                    var req,
+                        isLoaded = false,
+                        ln = arr.length,
+                        i;
 
-                if (isEqualInit(request, req)) {
-                    isLoaded = true;
-                    break;
-                }
+                    for (i = 0; i < ln; i += 1) {
+                        req = arr[i];
 
-                if (request.startTime === req.startTime || ((req.action === "complete") && request.action === req.action)) {
-                    //self.debug.log(request.streamType + " Fragment already loaded for time: " + request.startTime);
-                    if (request.url === req.url) {
-                        //self.debug.log(request.streamType + " Fragment url already loaded: " + request.url);
-                        isLoaded = true;
-                        break;
-                    } else {
-                        // remove overlapping segement of a different quality
-                        removeExecutedRequest(request);
+                        if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
+                            //self.debug.log(request.streamType + " Fragment already loaded for time: " + request.startTime);
+                            isLoaded = true;
+                            break;
+                        }
                     }
-                }
-            }
 
-            // if it has not been loaded check if it is going to be loaded
-            if (!isLoaded) {
-                for (i = 0, ln = pendingRequests.length; i < ln; i += 1) {
-                    req = pendingRequests[i];
-                    if ((request.url === req.url) && (request.startTime === req.startTime)) {
-                        isLoaded = true;
-                    }
-                    if (isEqualInit(request, req)) {
-                        isLoaded = true;
-                        break;
-                    }
-                }
-            }
+                    return isLoaded;
+                };
 
-            if (!isLoaded) {
-                for (i = 0, ln = loadingRequests.length; i < ln; i += 1) {
-                    req = loadingRequests[i];
-                    if ((request.url === req.url) && (request.startTime === req.startTime)) {
-                        isLoaded = true;
-                    }
-                    if (isEqualInit(request, req)) {
-                        isLoaded = true;
-                        break;
-                    }
-                }
-            }
-
-            return isLoaded;
+            return (check(pendingRequests) || check(loadingRequests) || check(executedRequests));
         },
 
         isReady: function() {
