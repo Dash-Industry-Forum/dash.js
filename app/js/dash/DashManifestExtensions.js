@@ -540,5 +540,105 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         }
 
         return periodEnd;
+    },
+
+    getEventsForPeriod: function(manifest,period) {
+
+        var periodArray = manifest.Period_asArray,
+            eventStreams = periodArray[period.index].EventStream_asArray,
+            events = [],
+            value,
+            timescale;
+
+        if(eventStreams) {
+            for(var i = 0; i<eventStreams.length;i++) {
+
+                var eventStream = new Dash.vo.EventStream;
+
+                eventStream.period = period;
+                eventStream.timescale = 1;
+                eventStream.schemeIdUri = eventStreams[i].schemeIdUri;
+
+                if(eventStreams[i].hasOwnProperty("timescale")) {
+                    eventStream.timescale = eventStreams[i].timescale;
+                }
+
+                if(eventStreams[i].hasOwnProperty("value")) {
+                    eventStream.value = eventStreams[i].value;
+                }
+
+                for(var j = 0; j<eventStreams[i].Event_asArray.length;j++) {
+                    var event = new Dash.vo.Event();
+                    event.presentationTime = 0;
+                    event.eventStream = eventStream;
+
+                    if(eventStreams[i].Event_asArray[j].hasOwnProperty("presentationTime")) {
+                        event.presentationTime = eventStreams[i].Event_asArray[j].presentationTime;
+                    }
+                    if(eventStreams[i].Event_asArray[j].hasOwnProperty("duration")) {
+                        event.duration = eventStreams[i].Event_asArray[j].duration;
+                    }
+                    if(eventStreams[i].Event_asArray[j].hasOwnProperty("id")) {
+                        event.id = eventStreams[i].Event_asArray[j].id;
+                    }
+                    events.push(event)
+                }
+            }
+        }
+
+        return events;
+    },
+
+    getEventStreamForAdaption : function (data) {
+
+        var eventStreams = [],
+            inbandStreams = data.InbandEventStream_asArray;
+
+        if(inbandStreams) {
+            for(var i = 0; i < inbandStreams.length ; i++ ) {
+                var eventStream = new Dash.vo.EventStream();
+                eventStream.timescale = 1;
+                eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
+
+                if(inbandStreams[i].hasOwnProperty("timescale")) {
+                    eventStream.timescale = inbandStreams[i].timescale;
+                }
+
+                if(inbandStreams[i].hasOwnProperty("value")) {
+                    eventStream.value = inbandStreams[i].value;
+                }
+
+                eventStreams.push(eventStream);
+            }
+        }
+        return eventStreams;
+    },
+
+    getEventStreamForRepresentation : function (data,representation) {
+
+        var eventStreams = [],
+            inbandStreams = data.Representation_asArray[representation.index].InbandEventStream_asArray;
+
+        if(inbandStreams) {
+            for(var i = 0; i < inbandStreams.length ; i++ ) {
+                var eventStream = new Dash.vo.EventStream();
+                eventStream.timescale = 1;
+                eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
+                eventStream.representation = representation;
+
+                if(inbandStreams[i].hasOwnProperty("timescale")) {
+                    eventStream.timescale = inbandStreams[i].timescale;
+                }
+
+                if(inbandStreams[i].hasOwnProperty("value")) {
+                    eventStream.value = inbandStreams[i].value;
+                }
+
+                eventStreams.push(eventStream);
+            }
+        }
+        return eventStreams;
+
     }
+
 };

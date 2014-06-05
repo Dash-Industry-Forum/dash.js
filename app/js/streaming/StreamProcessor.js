@@ -4,6 +4,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
     var isDynamic,
         stream,
         type,
+        eventController,
 
         createBufferControllerForType = function(type) {
             var self = this,
@@ -23,7 +24,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         abrController: undefined,
         baseURLExt: undefined,
 
-        initialize: function (typeValue, buffer, videoModel, requestScheduler, fragmentController, playbackController, mediaSource, data, periodInfo, streamValue) {
+        initialize: function (typeValue, buffer, videoModel, requestScheduler, fragmentController, playbackController, mediaSource, data, periodInfo, streamValue, eventControllerValue) {
 
             var self = this,
                 manifest = self.manifestModel.getValue(),
@@ -39,6 +40,8 @@ MediaPlayer.dependencies.StreamProcessor = function () {
 
             stream = streamValue;
             type = typeValue;
+            eventController = eventControllerValue;
+
             isDynamic = self.manifestExt.getIsDynamic(manifest);
             indexHandler.setType(type);
             indexHandler.setIsDynamic(isDynamic);
@@ -149,6 +152,10 @@ MediaPlayer.dependencies.StreamProcessor = function () {
 
         getFragmentModel: function() {
             return this.scheduleController.getFragmentModel();
+        },
+
+        getEventController: function() {
+            return eventController;
         },
 
         updateData: function(data, periodInfo) {

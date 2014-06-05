@@ -68,8 +68,22 @@ MediaPlayer.dependencies.BufferController = function () {
 		onMediaLoaded = function (sender, model, bytes, quality, index) {
             if (model !== this.streamProcessor.getFragmentModel()) return;
 
+            var events,
+                request = this.streamProcessor.getFragmentModel().getExecutedRequestForQualityAndIndex(quality, index),
+                currentRepresentation = this.representationController.getRepresentationForQuality(quality),
+                eventStreamAdaption = this.manifestExt.getEventStreamForAdaption(this.streamProcessor.getData()),
+                eventStreamRepresentation = this.manifestExt.getEventStreamForRepresentation(this.streamProcessor.getData(),currentRepresentation);
+
+            if(eventStreamAdaption.length > 0 || eventStreamRepresentation.length > 0) {
+                events = handleInbandEvents.call(this, bytes, request, eventStreamAdaption, eventStreamRepresentation);
+                this.streamProcessor.getEventController().addInbandEvents(events);
+            }
+
+            bytes = deleteInbandEvents.call(this, bytes);
+
             pendingMedia.push({bytes: bytes, quality: quality, index: index});
             sortArrayByProperty(pendingMedia, "index");
+
             appendNext.call(this);
 		},
 
@@ -155,6 +169,114 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             return true;
+        },
+
+        handleInbandEvents = function(data,request,adaptionSetInbandEvents,representationInbandEvents) {
+
+            var events = [],
+                i = 0,
+                identifier,
+                size,
+                expTwo = Math.pow(256,2),
+                expThree = Math.pow(256,3),
+                segmentStarttime = Math.max(isNaN(request.startTime) ? 0 : request.startTime,0),
+                eventStreams = [],
+                inbandEvents;
+
+            /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
+            inbandEvents = adaptionSetInbandEvents.concat(representationInbandEvents);
+
+            for(var loop = 0; loop < inbandEvents.length; loop++) {
+                eventStreams[inbandEvents[loop].schemeIdUri] = inbandEvents[loop];
+            }
+
+            while(i<data.length) {
+
+                identifier = String.fromCharCode(data[i+4],data[i+5],data[i+6],data[i+7]) // box identifier
+                size = data[i]*expThree + data[i+1]*expTwo + data[i+2]*256 + data[i+3]*1; // size of the box
+
+
+                if( identifier == "moov" || identifier == "moof") {
+                    break;
+                } else if(identifier == "emsg") {
+                    var  eventBox = ["","",0,0,0,0,""],
+                        arrIndex = 0,
+                        j = i+12; //Ignore zero bytes before the scheme_id_uri. Thats why we start at 12
+
+
+                    while(j < size+i) {
+                        /* == Zero in a string indicating next attribute coming == */
+                        if(arrIndex == 0 || arrIndex == 1 || arrIndex == 6) {
+                            if(data[j] != 0){
+                                eventBox[arrIndex] += String.fromCharCode(data[j]);
+                            } else{
+                                arrIndex += 1;
+                            }
+                            j += 1;
+                        } else {
+                            eventBox[arrIndex] = data[j]*expThree + data[j+1]*expTwo + data[j+2]*256 + data[j+3]*1;
+                            j += 4;
+                            arrIndex += 1;
+                        }
+
+
+                    }
+                    var schemeIdUri = eventBox[0],
+                        value = eventBox[1],
+                        timescale = eventBox[2],
+                        presentationTimeDelta = eventBox[3],
+                        duration = eventBox[4],
+                        id = eventBox[5],
+                        messageData = eventBox[6],
+                        presentationTime = segmentStarttime*timescale+presentationTimeDelta;
+
+
+                    if(eventStreams[schemeIdUri]) {
+                        var event = new Dash.vo.Event();
+                        event.eventStream = eventStreams[schemeIdUri];
+                        event.eventStream.value = value;
+                        event.eventStream.timescale = timescale;
+                        event.duration = duration;
+                        event.id = id;
+                        event.presentationTime = presentationTime;
+                        event.messageData = messageData;
+                        event.presentationTimeDelta = presentationTimeDelta;
+                        events.push(event);
+                    }
+                }
+                i += size;
+            }
+
+
+            return events;
+        },
+
+        deleteInbandEvents = function(data) {
+            var length = data.length,
+                i = 0,
+                j = 0,
+                identifier,
+                size,
+                expTwo = Math.pow(256,2),
+                expThree = Math.pow(256,3),
+                modData = new Uint8Array(data.length);
+
+            while(i<length) {
+
+                identifier = String.fromCharCode(data[i+4],data[i+5],data[i+6],data[i+7])
+                size = data[i]*expThree + data[i+1]*expTwo + data[i+2]*256 + data[i+3]*1;
+
+                if(identifier != "emsg" ) {
+                    for(var l = i ; l < i + size; l++) {
+                        modData[j] = data[l];
+                        j += 1;
+                    }
+                }
+                i += size;
+
+            }
+
+            return modData.subarray(0,j);
         },
 
         checkGapBetweenBuffers= function() {

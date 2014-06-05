@@ -33,6 +33,8 @@ MediaPlayer.dependencies.Stream = function () {
         keyAddedListener,
         keyErrorListener,
 
+        eventController = null,
+
         play = function () {
             //this.debug.log("Attempting play...");
 
@@ -187,6 +189,9 @@ MediaPlayer.dependencies.Stream = function () {
                 processor.reset(errored);
                 processor = null;
             }
+            if(!!eventController) {
+                eventController.reset();
+            }
 
             streamProcessors = [];
 
@@ -274,7 +279,7 @@ MediaPlayer.dependencies.Stream = function () {
                     // TODO : Pass to controller and then pass to each method on handler?
 
                     processor = self.system.getObject("streamProcessor");
-                    processor.initialize(mimeType || type, buffer, self.videoModel, self.requestScheduler, self.fragmentController, self.playbackController, mediaSource, mediaData, periodInfo, self);
+                    processor.initialize(mimeType || type, buffer, self.videoModel, self.requestScheduler, self.fragmentController, self.playbackController, mediaSource, mediaData, periodInfo, self, eventController);
                     streamProcessors.push(processor);
                     //self.debug.log(type + " is ready!");
                 }
@@ -288,8 +293,13 @@ MediaPlayer.dependencies.Stream = function () {
         initializeMediaSource = function () {
             //this.debug.log("Getting MediaSource ready...");
 
-            var self = this;
+            var self = this,
+                events;
 
+            eventController = self.system.getObject("eventController");
+            eventController.initialize(self.videoModel);
+            events = self.manifestExt.getEventsForPeriod(manifest,periodInfo);
+            eventController.addInlineEvents(events);
             // Figure out some bits about the stream before building anything.
             //self.debug.log("Gathering information for buffers. (1)");
 
@@ -329,6 +339,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             // only first period stream must be played automatically during playback initialization
             if (periodInfo.index === 0) {
+                eventController.start();
                 if (autoPlay) {
                     play.call(this);
                 }
@@ -457,12 +468,18 @@ MediaPlayer.dependencies.Stream = function () {
                 idx,
                 oldData,
                 newData,
+                events,
                 processor;
 
             updating = true;
             manifest = self.manifestModel.getValue();
             periodInfo = updatedPeriodInfo;
             self.debug.log("Manifest updated... set new data on buffers.");
+
+            if (eventController) {
+                events = self.manifestExt.getEventsForPeriod(manifest,periodInfo);
+                eventController.addInlineEvents(events);
+            }
 
             for (i; i < ln; i +=1) {
                 processor = streamProcessors[i];
@@ -601,6 +618,12 @@ MediaPlayer.dependencies.Stream = function () {
 
         getPeriodInfo: function() {
             return periodInfo;
+        },
+        startEventController: function() {
+            eventController.start();
+        },
+        resetEventController: function() {
+            eventController.reset();
         },
 
         setPlaybackController: function(value) {

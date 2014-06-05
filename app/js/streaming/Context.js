@@ -58,6 +58,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('scheduleRulesCollection', MediaPlayer.rules.ScheduleRulesCollection);
 
             this.system.mapClass('streamProcessor', MediaPlayer.dependencies.StreamProcessor);
+			this.system.mapClass('eventController', MediaPlayer.dependencies.EventController);
             this.system.mapClass('textController', MediaPlayer.dependencies.TextController);
             this.system.mapClass('bufferController', MediaPlayer.dependencies.BufferController);
             this.system.mapSingleton('manifestLoader', MediaPlayer.dependencies.ManifestLoader);
