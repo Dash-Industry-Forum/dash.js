@@ -14,16 +14,20 @@
 MediaPlayer.rules.ScheduleRulesCollection = function () {
     "use strict";
 
-    var segmentsToScheduleRules = [];
+    var segmentsToScheduleRules = [],
+        nextSegmentRules = [];
 
     return {
         bufferLevelRule: undefined,
         pendingRequestsRule: undefined,
+        playbackTimeRule: undefined,
 
         getRules: function (type) {
             switch (type) {
-                case MediaPlayer.rules.ScheduleRulesCollection.SegmentsToScheduleRules:
+                case MediaPlayer.rules.ScheduleRulesCollection.prototype.SEGMENTS_TO_SCHEDULE_RULES:
                     return segmentsToScheduleRules;
+                case MediaPlayer.rules.ScheduleRulesCollection.prototype.NEXT_SEGMENT_RULES:
+                    return nextSegmentRules;
                 default:
                     return null;
             }
@@ -32,11 +36,13 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
         setup: function () {
             segmentsToScheduleRules.push(this.bufferLevelRule);
             segmentsToScheduleRules.push(this.pendingRequestsRule);
+            nextSegmentRules.push(this.playbackTimeRule);
         }
     };
 };
 
 MediaPlayer.rules.ScheduleRulesCollection.prototype = {
     constructor: MediaPlayer.rules.ScheduleRulesCollection,
-    SegmentsToScheduleRules: 1
+    SEGMENTS_TO_SCHEDULE_RULES: 1,
+    NEXT_SEGMENT_RULES: 2
 };

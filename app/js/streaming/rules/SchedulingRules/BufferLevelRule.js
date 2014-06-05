@@ -22,7 +22,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
         },
 
         getSegmentNumberToSchedule: function(current, metrics, scheduleController) {
-            if (isBufferLevelOutran) return new MediaPlayer.rules.ScheduleRequest(0, MediaPlayer.rules.ScheduleRequest.prototype.STRONG);
+            if (isBufferLevelOutran) return new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
 
             var bufferLevel = this.metricsExt.getCurrentBufferLevel(metrics) ? this.metricsExt.getCurrentBufferLevel(metrics).level : 0,
                 representation = scheduleController.streamProcessor.getCurrentRepresentation(),
@@ -37,7 +37,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
 
             segmentCount = Math.ceil(remainingDuration/segmentDuration);
 
-            return new MediaPlayer.rules.ScheduleRequest(segmentCount, MediaPlayer.rules.ScheduleRequest.prototype.DEFAULT);
+            return new MediaPlayer.rules.SwitchRequest(segmentCount, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
         }
     };
 };

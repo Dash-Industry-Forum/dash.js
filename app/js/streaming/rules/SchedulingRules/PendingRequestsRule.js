@@ -12,11 +12,11 @@ MediaPlayer.rules.PendingRequestsRule = function () {
                 ln = pendingRequests.length + loadingRequests.length,
                 count = current - ln;
 
-            if (count > 0) return new MediaPlayer.rules.ScheduleRequest(count, MediaPlayer.rules.ScheduleRequest.prototype.DEFAULT);
+            if (count > 0) return new MediaPlayer.rules.SwitchRequest(count, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
 
-            if (current === 0) return new MediaPlayer.rules.ScheduleRequest(count, MediaPlayer.rules.ScheduleRequest.prototype.NO_CHANGE);
+            if (current === 0) return new MediaPlayer.rules.SwitchRequest(count, MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE);
 
-            return new MediaPlayer.rules.ScheduleRequest(0, MediaPlayer.rules.ScheduleRequest.prototype.STRONG);
+            return new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
         }
     };
 };
