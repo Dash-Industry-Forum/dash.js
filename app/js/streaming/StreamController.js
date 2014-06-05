@@ -229,6 +229,8 @@
             }
 
             play();
+            from.resetEventController();
+            activeStream.startEventController();
             isPeriodSwitchingInProgress = false;
         },
 
