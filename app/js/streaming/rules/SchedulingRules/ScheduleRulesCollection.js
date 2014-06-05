@@ -18,6 +18,7 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
 
     return {
         bufferLevelRule: undefined,
+        pendingRequestsRule: undefined,
 
         getRules: function (type) {
             switch (type) {
@@ -30,6 +31,7 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
 
         setup: function () {
             segmentsToScheduleRules.push(this.bufferLevelRule);
+            segmentsToScheduleRules.push(this.pendingRequestsRule);
         }
     };
 };

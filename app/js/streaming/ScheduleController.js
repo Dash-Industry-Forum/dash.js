@@ -5,7 +5,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         READY = "READY",
         VALIDATING = "VALIDATING",
         LOADING = "LOADING",
-        fragmentsToLoad,
+        fragmentsToLoad = 0,
         type,
         ready,
         fragmentModel,
@@ -139,12 +139,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         requestNewFragment = function() {
             var self = this,
-                pendingRequests = self.fragmentController.getPendingRequests(self),
-                loadingRequests = self.fragmentController.getLoadingRequests(self),
-                ln = (pendingRequests ? pendingRequests.length : 0) + (loadingRequests ? loadingRequests.length : 0),
                 request;
 
-            if ((fragmentsToLoad - ln) > 0) {
+            fragmentsToLoad = getRequiredFragmentCount.call(self).count;
+
+            if (fragmentsToLoad > 0) {
                 fragmentsToLoad--;
                 request = loadNextFragment.call(self);
                 onFragmentRequest.call(self, request);
@@ -171,15 +170,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self =this,
                 metrics = this.metricsModel.getReadOnlyMetricsFor(type),
                 rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.SegmentsToScheduleRules),
-                duration = self.playbackController.getPeriodDuration(),
                 count,
                 req,
                 i,len,
-                requiredBufferLength,
                 confidence,
                 values;
-
-            requiredBufferLength = self.bufferExt.getRequiredBufferLength(isDynamic, duration);
 
             values = {};
             values[MediaPlayer.rules.ScheduleRequest.prototype.STRONG] = MediaPlayer.rules.ScheduleRequest.prototype.NO_CHANGE;
@@ -187,7 +182,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             values[MediaPlayer.rules.ScheduleRequest.prototype.DEFAULT] = MediaPlayer.rules.ScheduleRequest.prototype.NO_CHANGE;
 
             for (i = 0, len = rules.length; i < len; i += 1) {
-                req = rules[i].getSegmentNumberToSchedule(metrics, currentRepresentation.segments[0].duration, requiredBufferLength);
+                req = rules[i].getSegmentNumberToSchedule(fragmentsToLoad, metrics, self);
 
                 if (req.count !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
                     values[req.priority] = Math.min(values[req.priority], req.count);
@@ -232,8 +227,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             setState.call(self, VALIDATING);
             self.abrController.getPlaybackQuality(type, self.streamProcessor.getData());
-            fragmentsToLoad = getRequiredFragmentCount.call(self).count;
-
             // We should request the media fragment w/o waiting for the next validate call
             // or until the initialization fragment has been loaded
             requestNewFragment.call(this);
@@ -333,10 +326,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onBufferingCompleted = function (/*sender*/) {
             setState.call(this, READY);
-        },
-
-        onBufferLevelOutrun = function(/*sender*/) {
-            fragmentsToLoad = 0;
         },
 
         onBufferCleared = function(sender, startTime, endTime) {
@@ -469,7 +458,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.bufferingCompleted = onBufferingCompleted;
             this.bytesAppended = onBytesAppended;
             this.bytesRejected = onBytesRejected;
-            this.bufferLevelOutrun = onBufferLevelOutrun;
             this.bufferLevelStateChanged = onBufferLevelStateChanged;
             this.bufferLevelUpdated = onBufferLevelUpdated;
             this.initRequested = onInitRequested;
@@ -511,9 +499,12 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
 
             doStop.call(self);
+            self.bufferController.unsubscribe(self.bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, self.scheduleRulesCollection.bufferLevelRule);
+            self.bufferController.unsubscribe(self.bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, self.scheduleRulesCollection.bufferLevelRule);
             self.fragmentController.abortRequestsForModel(fragmentModel);
             self.fragmentController.detachModel(fragmentModel);
             clearMetrics.call(self);
+            fragmentsToLoad = 0;
         },
 
         isReady: function() {
