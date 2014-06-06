@@ -51,12 +51,12 @@ MediaPlayer.dependencies.FragmentModel = function () {
         },
 
         onLoadingCompleted = function(sender, request, response, error) {
+            loadingRequests.splice(loadingRequests.indexOf(request), 1);
+
             if (response && !error) {
-                loadingRequests.splice(loadingRequests.indexOf(request), 1);
                 executedRequests.push(request);
                 this.notify(this.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, request, response);
             } else {
-                loadingRequests.splice(loadingRequests.indexOf(request), 1);
                 this.notify(this.eventList.ENAME_FRAGMENT_LOADING_FAILED, request);
             }
         },
@@ -101,12 +101,10 @@ MediaPlayer.dependencies.FragmentModel = function () {
         },
 
         addRequest: function(value) {
-            if (value) {
-                if (this.isFragmentLoadedOrPending(value)) return;
+            if (!value || this.isFragmentLoadedOrPending(value)) return;
 
-                pendingRequests.push(value);
-                sortRequestsByProperty.call(this, pendingRequests, "index");
-            }
+            pendingRequests.push(value);
+            sortRequestsByProperty.call(this, pendingRequests, "index");
         },
 
         isFragmentLoadedOrPending: function(request) {
@@ -142,10 +140,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 };
 
             return (check(pendingRequests) || check(loadingRequests) || check(executedRequests));
-        },
-
-        isReady: function() {
-            return context.isReady();
         },
 
         getPendingRequests: function() {

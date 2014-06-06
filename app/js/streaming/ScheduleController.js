@@ -1,32 +1,21 @@
 MediaPlayer.dependencies.ScheduleController = function () {
     "use strict";
 
-    var WAITING = "WAITING",
-        READY = "READY",
-        VALIDATING = "VALIDATING",
-        LOADING = "LOADING",
-        fragmentsToLoad = 0,
+    var fragmentsToLoad = 0,
         type,
         ready,
         fragmentModel,
         seekTarget,
-        state = WAITING,
         isDynamic,
         currentRepresentation,
         initialPlayback = true,
-        timeoutId,
+        lastValidationTime = null,
+
+        isStopped = false,
 
         playListMetrics = null,
         playListTraceMetrics = null,
         playListTraceMetricsClosed = true,
-
-        setState = function(value) {
-            if (state === value) return;
-            //self.debug.log("ScheduleController " + type + " setState to:" + value);
-            state = value;
-            // Notify the FragmentController about any state change to track the loading process of each active ScheduleController
-            this.fragmentController.onStateChange();
-        },
 
         clearPlayListTraceMetrics = function (endTime, stopreason) {
             var duration = 0,
@@ -46,6 +35,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
         doStart = function () {
             if (!ready) return;
 
+            isStopped = false;
+
             var currentTime = new Date();
             clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
             playListMetrics = this.metricsModel.addPlayList(type, currentTime, 0, MediaPlayer.vo.metrics.PlayList.INITIAL_PLAY_START_REASON);
@@ -57,7 +48,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.debug.log("ScheduleController " + type + " start.");
 
             //this.debug.log("ScheduleController begin " + type + " validation");
-            setState.call(this, READY);
             validate.call(this);
         },
 
@@ -84,10 +74,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         doStop = function () {
-            if (state === WAITING) return;
+            if (isStopped) return;
+
+            isStopped = true;
 
             this.debug.log("ScheduleController " + type + " stop.");
-            setState.call(this, WAITING);
             // cancel the requests that have already been created, but not loaded yet.
             this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
 
@@ -154,11 +145,9 @@ MediaPlayer.dependencies.ScheduleController = function () {
                     fragmentsToLoad--;
                     //self.debug.log("Loading fragment: " + request.streamType + ":" + request.startTime);
                     self.fragmentController.prepareFragmentForLoading(self, request);
+                } else {
+                    doStop.call(self);
                 }
-            }
-
-            if (state !== WAITING) {
-                setState.call(self, READY);
             }
         },
 
@@ -172,7 +161,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 //self.debug.log("Loading initialization: " + request.streamType + ":" + request.startTime);
                 //self.debug.log(request);
                 self.fragmentController.prepareFragmentForLoading(self, request);
-                setState.call(self, READY);
             }
         },
 
@@ -223,22 +211,13 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         validate = function () {
-            var self = this;
+            var now = new Date().getTime(),
+                isEnoughTimeSinceLastValidation = lastValidationTime ? (now - lastValidationTime > this.fragmentController.getLoadingTime(this)) : true;
 
-            //self.debug.log("ScheduleController.validate() " + type + " | state: " + state);
-            //self.debug.log(type + " Playback rate: " + self.videoModel.getElement().playbackRate);
-            //self.debug.log(type + " Working time: " + currentTime);
-            //self.debug.log(type + " Video time: " + currentVideoTime);
-            //self.debug.log("Current " + type + " buffer length: " + bufferLevel);
+            if (!isEnoughTimeSinceLastValidation || isStopped || (this.playbackController.isPaused() && (!this.scheduleWhilePaused || isDynamic))) return;
 
-            //mseSetTimeIfPossible.call(self);
-
-            if (state !== READY || (this.playbackController.isPaused() && (!this.scheduleWhilePaused || isDynamic))) return;
-
-            setState.call(self, VALIDATING);
-            self.abrController.getPlaybackQuality(type, self.streamProcessor.getData());
-            // We should request the media fragment w/o waiting for the next validate call
-            // or until the initialization fragment has been loaded
+            lastValidationTime = now;
+            this.abrController.getPlaybackQuality(type, this.streamProcessor.getData());
             requestNewFragment.call(this);
         },
 
@@ -274,33 +253,14 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             this.debug.log(type + " Stream is complete.");
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON);
-            doStop.call(this);
         },
 
-        onInitSegmentLoadingStart = function(sender, model/*, request*/) {
+        onMediaSegmentLoadingStart = function(sender, model/*, request*/) {
             var self = this;
 
             if (model !== self.streamProcessor.getFragmentModel()) return;
 
-            setState.call(this, READY);
-        },
-
-        onMediaSegmentLoadingStart = function(sender, model/*, request*/) {
-            var self = this,
-                time;
-
-            if (model !== self.streamProcessor.getFragmentModel()) return;
-
-            time = self.fragmentController.getLoadingTime(self);
-            setState.call(this, LOADING);
-
-            timeoutId = setTimeout(function() {
-                if (!timeoutId) return;
-                timeoutId = null;
-
-                setState.call(self, READY);
-                requestNewFragment.call(self);
-            }, time);
+            validate.call(self);
         },
 
         onBytesError = function (/*sender, request*/) {
@@ -331,10 +291,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onInitRequested = function(sender, quality) {
             getInitRequest.call(this, quality);
-        },
-
-        onBufferingCompleted = function (/*sender*/) {
-            setState.call(this, READY);
         },
 
         onBufferCleared = function(sender, startTime, endTime) {
@@ -458,13 +414,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this.dataUpdateStarted = onDataUpdateStarted;
             this.dataUpdateCompleted = onDataUpdateCompleted;
 
-            this.initSegmentLoadingStart = onInitSegmentLoadingStart;
             this.mediaSegmentLoadingStart = onMediaSegmentLoadingStart;
             this.segmentLoadingFailed = onBytesError;
             this.streamCompleted = onStreamCompleted;
 
             this.bufferCleared = onBufferCleared;
-            this.bufferingCompleted = onBufferingCompleted;
             this.bytesAppended = onBytesAppended;
             this.bytesRejected = onBytesRejected;
             this.bufferLevelStateChanged = onBufferLevelStateChanged;
@@ -502,11 +456,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         reset: function() {
             var self = this;
 
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-                timeoutId = null;
-            }
-
             doStop.call(self);
             self.bufferController.unsubscribe(self.bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, self.scheduleRulesCollection.bufferLevelRule);
             self.bufferController.unsubscribe(self.bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, self.scheduleRulesCollection.bufferLevelRule);
@@ -514,10 +463,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.fragmentController.detachModel(fragmentModel);
             clearMetrics.call(self);
             fragmentsToLoad = 0;
-        },
-
-        isReady: function() {
-            return state === READY;
         },
 
         start: doStart,

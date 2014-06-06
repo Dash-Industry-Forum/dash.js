@@ -29,12 +29,6 @@ MediaPlayer.dependencies.FragmentController = function () {
             return null;
         },
 
-        executeIfReady = function() {
-            if (isReadyToLoadNextFragment.call(this)) {
-                executeRequests.call(this);
-            }
-        },
-
         onFragmentLoadingStart = function(sender, request) {
             var self = this;
 
@@ -59,6 +53,8 @@ MediaPlayer.dependencies.FragmentController = function () {
             }else {
                 self.notify(self.eventList.ENAME_MEDIA_SEGMENT_LOADED, sender, bytes, request.quality, request.index);
             }
+
+            executeRequests.call(this);
         },
 
         onStreamCompleted = function(sender, request) {
@@ -66,22 +62,7 @@ MediaPlayer.dependencies.FragmentController = function () {
         },
 
         onBufferLevelBalanced = function(/*sender*/) {
-            executeIfReady.call(this);
-        },
-
-        isReadyToLoadNextFragment = function() {
-            var isReady = true,
-                ln = fragmentModels.length;
-
-            // Loop through the models and check if all of them are in the ready state
-            for (var i = 0; i < ln; i++) {
-                if (!fragmentModels[i].isReady()) {
-                    isReady = false;
-                    break;
-                }
-            }
-
-            return isReady;
+            executeRequests.call(this);
         },
 
         executeRequests = function() {
@@ -143,11 +124,6 @@ MediaPlayer.dependencies.FragmentController = function () {
             if (idx > -1) {
                 fragmentModels.splice(idx, 1);
             }
-        },
-
-        onStateChange: function() {
-            // Check if we are ready to execute pending requests and do it
-            executeIfReady.call(this);
         },
 
         isFragmentLoadedOrPending: function(context, request) {
@@ -227,18 +203,17 @@ MediaPlayer.dependencies.FragmentController = function () {
             if (model) {
                 model.abortRequests();
             }
+
+            executeRequests.call(this);
         },
 
         prepareFragmentForLoading: function(context, request) {
             var fragmentModel = findModel(context);
 
-            if (!fragmentModel || !request) {
-                return false;
-            }
+            if (!fragmentModel || !request) return;
             // Store the request and all the necessary callbacks in the model for deferred execution
             fragmentModel.addRequest(request);
-
-            return true;
+            executeRequests.call(this);
         },
 
         resetModel: function(model) {

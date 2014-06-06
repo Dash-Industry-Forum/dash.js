@@ -73,7 +73,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, playbackController);
 
                 fragmentController.subscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADED, bufferController);
-                fragmentController.subscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADING_START, scheduleController);
                 fragmentController.subscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADING_START, scheduleController);
                 fragmentController.subscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController);
                 fragmentController.subscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, bufferController);
@@ -81,13 +80,11 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, videoModel);
                 bufferController.subscribe(bufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, requestScheduler);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
-                bufferController.subscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BYTES_REJECTED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_INIT_REQUESTED, scheduleController);
-                bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
                 bufferController.subscribe(bufferController.eventList.ENAME_QUOTA_EXCEEDED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, scheduleController.scheduleRulesCollection.bufferLevelRule);
@@ -214,7 +211,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
 
             fragmentController.unsubscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADED, bufferController);
             fragmentController.unsubscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADED, bufferController);
-            fragmentController.unsubscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADING_START, scheduleController);
             fragmentController.unsubscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADING_START, scheduleController);
             fragmentController.unsubscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController);
             fragmentController.unsubscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, bufferController);
@@ -222,13 +218,11 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, videoModel);
             bufferController.unsubscribe(bufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, requestScheduler);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
-            bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BYTES_REJECTED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_INIT_REQUESTED, scheduleController);
-            bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
             bufferController.unsubscribe(bufferController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, scheduleController.scheduleRulesCollection.bufferLevelRule);
