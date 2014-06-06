@@ -38,10 +38,6 @@ MediaPlayer.dependencies.BufferController = function () {
             return (currentQuality !== requiredQuality);
         },
 
-        isCriticalBufferLevelExceeded = function() {
-            return bufferLevel > criticalBufferLevel;
-        },
-
         sortArrayByProperty = function(array, sortProp) {
             var compare = function (obj1, obj2){
                 if (obj1[sortProp] < obj2[sortProp]) return -1;
@@ -84,26 +80,25 @@ MediaPlayer.dependencies.BufferController = function () {
             var self = this,
                 isInit = isNaN(index);
 
+            // The segment should be rejected if this an init segment and its quality does not match
+            // the required quality or if this a media segment and its quality does not match the
+            // quality of the last appended init segment. This means that media segment of the old
+            // quality can be appended providing init segment for a new required quality has not been
+            // appended yet.
+            if ((quality !== requiredQuality && isInit) || (quality !== currentQuality && !isInit)) {
+                onMediaRejected.call(self, quality, index);
+                return;
+            }
             //self.debug.log("Push (" + type + ") bytes: " + data.byteLength);
-            hasEnoughSpaceToAppend.call(self, function() {
-                // The segment should be rejected if this an init segment and its quality does not match
-                // the required quality or if this a media segment and its quality does not match the
-                // quality of the last appended init segment. This means that media segment of the old
-                // quality can be appended providing init segment for a new required quality has not been
-                // appended yet.
-                if ((quality !== requiredQuality && isInit) || (quality !== currentQuality && !isInit)) {
-                    onMediaRejected.call(self, quality, index);
-                    return;
-                }
-
-                self.sourceBufferExt.append(buffer, data);
-            });
+            self.sourceBufferExt.append(buffer, data);
         },
 
         onAppended = function(sender, sourceBuffer, data, error) {
             if (buffer !== sourceBuffer) return;
 
-            var self = this,ranges;
+            var self = this,
+                ranges;
+
             if (error) {
                 // if the append has failed because the buffer is full we should store the data
                 // that has not been appended and stop request scheduling. We also need to store
@@ -111,7 +106,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 // this promise is resolved.
                 if (error.code === QUOTA_EXCEEDED_ERROR_CODE) {
                     pendingMedia.unshift({bytes: data, quality: appendedBytesInfo.quality, index: appendedBytesInfo.index});
-                    criticalBufferLevel = bufferLevel * 0.8;
+                    criticalBufferLevel = getTotalBufferedTime.call(self) * 0.8;
                     self.bufferExt.setCriticalBufferLevel(criticalBufferLevel);
                     self.notify(self.eventList.ENAME_QUOTA_EXCEEDED, criticalBufferLevel);
                     clearBuffer.call(self);
@@ -121,6 +116,11 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             updateBufferLevel.call(self);
+
+            if (!hasEnoughSpaceToAppend.call(self)) {
+                self.notify(self.eventList.ENAME_QUOTA_EXCEEDED, criticalBufferLevel);
+                clearBuffer.call(self);
+            }
 
             ranges = self.sourceBufferExt.getAllRanges(buffer);
 
@@ -174,46 +174,22 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
-        hasEnoughSpaceToAppend = function(callback) {
+        hasEnoughSpaceToAppend = function() {
             var self = this,
-                totalBufferedTime = getTotalBufferedTime.call(self),
-                startClearing;
+                totalBufferedTime = getTotalBufferedTime.call(self);
 
-            // do not remove any data until the quota is exceeded
-            if (totalBufferedTime < criticalBufferLevel) {
-                callback.call(self);
-                return;
-            }
-
-            startClearing = function() {
-                clearBuffer.call(self, function() {
-                    totalBufferedTime = getTotalBufferedTime.call(self);
-
-                    if (totalBufferedTime < criticalBufferLevel) {
-                        callback.call(self);
-                    } else {
-                        setTimeout(startClearing, minBufferTime * 1000);
-                    }
-                });
-            };
-
-            startClearing.call(self);
+            return (totalBufferedTime < criticalBufferLevel);
         },
 
-        clearBuffer = function(callback) {
+        clearBuffer = function() {
             var self = this,
                 currentTime = self.playbackController.getTime(),
-                removeStart = 0,
+                removeStart,
                 removeEnd,
                 range,
-                req,
-                removeHandler = function(sender, sourceBuffer, removeStart, removeEnd) {
-                    if (buffer !== sourceBuffer) return;
+                req;
 
-                    self.notify(self.eventList.ENAME_BUFFER_CLEARED, removeStart, removeEnd);
-                    if (!callback) return;
-                    callback.call(self, removeEnd - removeStart);
-                };
+            if (!buffer) return;
 
             // we need to remove data that is more than one segment before the video currentTime
             req = self.fragmentController.getExecutedRequestForTime(self.streamProcessor.getFragmentModel(), currentTime);
@@ -224,9 +200,19 @@ MediaPlayer.dependencies.BufferController = function () {
             if ((range === null) && (buffer.buffered.length > 0)) {
                 removeEnd = buffer.buffered.end(buffer.buffered.length -1 );
             }
+
             removeStart = buffer.buffered.start(0);
-            self.sourceBufferExt.subscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, self, removeHandler, true);
             self.sourceBufferExt.remove(buffer, removeStart, removeEnd, mediaSource);
+        },
+
+        onRemoved = function(sender, sourceBuffer, removeStart, removeEnd) {
+            if (buffer !== sourceBuffer) return;
+
+            updateBufferLevel.call(this);
+            this.notify(this.eventList.ENAME_BUFFER_CLEARED, removeStart, removeEnd, hasEnoughSpaceToAppend.call(this));
+            if (hasEnoughSpaceToAppend.call(this)) return;
+
+            setTimeout(clearBuffer.bind(this), minBufferTime * 1000);
         },
 
         getTotalBufferedTime = function() {
@@ -326,7 +312,7 @@ MediaPlayer.dependencies.BufferController = function () {
         appendNextMedia = function() {
             var data;
 
-            if (pendingMedia.length === 0 || isBufferLevelOutrun || isAppendingInProgress || waitingForInit() || isCriticalBufferLevelExceeded()) return;
+            if (pendingMedia.length === 0 || isBufferLevelOutrun || isAppendingInProgress || waitingForInit() || !hasEnoughSpaceToAppend.call(this)) return;
 
             data = pendingMedia.shift();
             appendToBuffer.call(this, data.bytes, data.quality, data.index);
@@ -432,7 +418,9 @@ MediaPlayer.dependencies.BufferController = function () {
             this.wallclockTimeUpdated = onWallclockTimeUpdated;
 
             onAppended = onAppended.bind(this);
+            onRemoved = onRemoved.bind(this);
             this.sourceBufferExt.subscribe(this.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);
+            this.sourceBufferExt.subscribe(this.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, this, onRemoved);
         },
 
         initialize: function (typeValue, buffer, source, streamProcessor) {
@@ -494,6 +482,7 @@ MediaPlayer.dependencies.BufferController = function () {
             currentQuality = -1;
             requiredQuality = 0;
             self.sourceBufferExt.unsubscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, onAppended);
+            self.sourceBufferExt.unsubscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, self, onRemoved);
             appendedBytesInfo = null;
 
             isBufferLevelOutrun = false;

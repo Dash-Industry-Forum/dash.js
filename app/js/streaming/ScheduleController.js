@@ -293,10 +293,14 @@ MediaPlayer.dependencies.ScheduleController = function () {
             getInitRequest.call(this, quality);
         },
 
-        onBufferCleared = function(sender, startTime, endTime) {
+        onBufferCleared = function(sender, startTime, endTime, hasEnoughSpace) {
             // after the data has been removed from the buffer we should remove the requests from the list of
             // the executed requests for which playback time is inside the time interval that has been removed from the buffer
             this.fragmentController.removeExecutedRequestsBeforeTime(fragmentModel, endTime);
+
+            if (hasEnoughSpace) {
+                doStart.call(this);
+            }
         },
 
         onBufferLevelStateChanged = function(sender, hasSufficientBuffer) {
@@ -347,7 +351,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 rate = self.playbackController.getPlaybackRate(),
                 currentTime = new Date();
 
-            if (playListTraceMetricsClosed === true) {
+            if (playListTraceMetricsClosed === true && currentRepresentation) {
                 playListTraceMetricsClosed = false;
                 playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, currentRepresentation.id, null, currentTime, currentVideoTime, null, rate, null);
             }
