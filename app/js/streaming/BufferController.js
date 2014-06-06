@@ -167,7 +167,7 @@ MediaPlayer.dependencies.BufferController = function () {
             if (actualGap >= acceptableGap && !isBufferLevelOutrun) {
                 isBufferLevelOutrun = true;
                 this.notify(this.eventList.ENAME_BUFFER_LEVEL_OUTRUN);
-            } else if ((actualGap < acceptableGap && isBufferLevelOutrun)) {
+            } else if ((actualGap < (acceptableGap / 2) && isBufferLevelOutrun)) {
                 this.notify(this.eventList.ENAME_BUFFER_LEVEL_BALANCED);
                 isBufferLevelOutrun = false;
                 appendNext.call(this);
