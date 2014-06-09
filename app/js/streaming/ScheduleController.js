@@ -162,6 +162,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 //self.debug.log(request);
                 self.fragmentController.prepareFragmentForLoading(self, request);
             }
+
+            return request;
         },
 
         getRequiredFragmentCount = function() {
@@ -358,9 +360,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onClosedCaptioningRequested = function(sender, quality) {
-            var self = this;
-            getInitRequest.call(self, quality);
-            fragmentModel.executeCurrentRequest();
+            var self = this,
+                req = getInitRequest.call(self, quality);
+
+            fragmentModel.executeRequest(req);
         },
 
         onPlaybackStarted = function(sender, startTime) {

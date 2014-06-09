@@ -20,7 +20,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
         pendingRequests = [],
         loadingRequests = [],
 
-        LOADING_REQUEST_THRESHOLD = 2,
         isLoadingPostponed = false,
 
         loadCurrentFragment = function(request) {
@@ -31,23 +30,32 @@ MediaPlayer.dependencies.FragmentModel = function () {
             self.fragmentLoader.load(request);
         },
 
-        sortRequestsByProperty = function(requestsArray, sortProp) {
-            var compare = function (req1, req2){
-                if (req1[sortProp] < req2[sortProp] || isNaN(req1[sortProp])) return -1;
-                if (req1[sortProp] > req2[sortProp]) return 1;
-                return 0;
-            };
-
-            requestsArray.sort(compare);
-
-        },
-
         removeExecutedRequest = function(request) {
             var idx = executedRequests.indexOf(request);
 
             if (idx !== -1) {
                 executedRequests.splice(idx, 1);
             }
+        },
+
+        getRequestForTime = function(arr, time) {
+            var lastIdx = arr.length - 1,
+                start = NaN,
+                end = NaN,
+                req = null,
+                i;
+
+            // loop through the executed requests and pick the one for which the playback interval matches the given time
+            for (i = lastIdx; i >= 0; i -=1) {
+                req = arr[i];
+                start = req.startTime;
+                end = start + req.duration;
+                if ((!isNaN(start) && !isNaN(end) && (time >= start) && (time < end)) || (isNaN(start) && isNaN(time))) {
+                    return req;
+                }
+            }
+
+            return null;
         },
 
         onLoadingCompleted = function(sender, request, response, error) {
@@ -100,11 +108,16 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return context;
         },
 
+        getIsPostponed: function() {
+            return isLoadingPostponed;
+        },
+
         addRequest: function(value) {
-            if (!value || this.isFragmentLoadedOrPending(value)) return;
+            if (!value || this.isFragmentLoadedOrPending(value)) return false;
 
             pendingRequests.push(value);
-            sortRequestsByProperty.call(this, pendingRequests, "index");
+
+            return true;
         },
 
         isFragmentLoadedOrPending: function(request) {
@@ -150,6 +163,10 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return loadingRequests;
         },
 
+        getExecutedRequests: function() {
+            return executedRequests;
+        },
+
         getLoadingTime: function() {
             var loadingTime = 0,
                 req,
@@ -170,23 +187,15 @@ MediaPlayer.dependencies.FragmentModel = function () {
         },
 
         getExecutedRequestForTime: function(time) {
-            var lastIdx = executedRequests.length - 1,
-                start = NaN,
-                end = NaN,
-                req = null,
-                i;
+            return getRequestForTime(executedRequests, time);
+        },
 
-            // loop through the executed requests and pick the one for which the playback interval matches the given time
-            for (i = lastIdx; i >= 0; i -=1) {
-                req = executedRequests[i];
-                start = req.startTime;
-                end = start + req.duration;
-                if (!isNaN(start) && !isNaN(end) && (time > start) && (time < end)) {
-                    return req;
-                }
-            }
+        getPendingRequestForTime: function(time) {
+            return getRequestForTime(pendingRequests, time);
+        },
 
-            return null;
+        getLoadingRequestForTime: function(time) {
+            return getRequestForTime(loadingRequests, time);
         },
 
         getExecutedRequestForQualityAndIndex: function(quality, index) {
@@ -238,29 +247,23 @@ MediaPlayer.dependencies.FragmentModel = function () {
             loadingRequests = [];
         },
 
-        executeCurrentRequest: function() {
+        executeRequest: function(request) {
             var self = this,
-                currentRequest;
+                idx = pendingRequests.indexOf(request);
 
-            if (pendingRequests.length === 0 || isLoadingPostponed) return;
+            if (!request || idx === -1) return;
 
-            if (loadingRequests.length >= LOADING_REQUEST_THRESHOLD) {
-                // too many requests have been loading, do nothing until some of them are loaded or aborted
-                return;
-            }
-            sortRequestsByProperty.call(this, pendingRequests, "index");
-            // take the next request to execute and remove it from the list of pending requests
-            currentRequest = pendingRequests.shift();
+            pendingRequests.splice(idx, 1);
 
-            switch (currentRequest.action) {
+            switch (request.action) {
                 case "complete":
                     // Stream has completed, execute the correspoinding callback
-                    executedRequests.push(currentRequest);
-                    self.notify(self.eventList.ENAME_STREAM_COMPLETED, currentRequest);
+                    executedRequests.push(request);
+                    self.notify(self.eventList.ENAME_STREAM_COMPLETED, request);
                     break;
                 case "download":
-                    loadingRequests.push(currentRequest);
-                    loadCurrentFragment.call(self, currentRequest);
+                    loadingRequests.push(request);
+                    loadCurrentFragment.call(self, request);
                     break;
                 default:
                     this.debug.log("Unknown request action.");

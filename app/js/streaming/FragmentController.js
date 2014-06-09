@@ -15,6 +15,7 @@ MediaPlayer.dependencies.FragmentController = function () {
     "use strict";
 
     var fragmentModels = [],
+        inProgress = false,
 
         findModel = function(context) {
             var ln = fragmentModels.length;
@@ -27,6 +28,51 @@ MediaPlayer.dependencies.FragmentController = function () {
             }
 
             return null;
+        },
+
+        getRequestsToLoad = function(current) {
+            var self =this,
+                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.SEGMENTS_TO_EXECUTE_RULES),
+                switchReq,
+                reqsToExecute,
+                i,len,
+                confidence,
+                values;
+
+            values = {};
+            values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
+            values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
+            values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
+
+            for (i = 0, len = rules.length; i < len; i += 1) {
+                switchReq = rules[i].getRequestsToLoad(current, fragmentModels);
+
+                if (switchReq.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                    values[switchReq.priority] = switchReq.value;
+                }
+            }
+
+            if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                confidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
+                reqsToExecute = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
+            }
+
+            if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+                reqsToExecute = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
+            }
+
+            if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                confidence = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
+                reqsToExecute = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
+            }
+
+            if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
+                confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
+                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+            }
+
+            return {reqs: reqsToExecute, confidence: confidence};
         },
 
         onFragmentLoadingStart = function(sender, request) {
@@ -65,15 +111,33 @@ MediaPlayer.dependencies.FragmentController = function () {
             executeRequests.call(this);
         },
 
-        executeRequests = function() {
-            for (var i = 0; i < fragmentModels.length; i++) {
-                fragmentModels[i].executeCurrentRequest();
+        executeRequests = function(request) {
+            if (inProgress) return;
+
+            inProgress = true;
+
+            var reqsToExecute = getRequestsToLoad.call(this, request).reqs,
+                r,
+                m,
+                i,
+                j;
+
+            for (i = 0; i < reqsToExecute.length; i += 1) {
+               r = reqsToExecute[i];
+
+               for (j = 0; j < fragmentModels.length; j += 1) {
+                   m = fragmentModels[j];
+                   m.executeRequest(r);
+               }
             }
+
+            inProgress = false;
         };
 
     return {
         system: undefined,
         debug: undefined,
+        scheduleRulesCollection: undefined,
         fragmentLoader: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -212,8 +276,9 @@ MediaPlayer.dependencies.FragmentController = function () {
 
             if (!fragmentModel || !request) return;
             // Store the request and all the necessary callbacks in the model for deferred execution
-            fragmentModel.addRequest(request);
-            executeRequests.call(this);
+            if (fragmentModel.addRequest(request)) {
+                executeRequests.call(this, request);
+            }
         },
 
         resetModel: function(model) {

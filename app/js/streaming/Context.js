@@ -53,6 +53,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('bufferLevelRule', MediaPlayer.rules.BufferLevelRule);
             this.system.mapClass('pendingRequestsRule', MediaPlayer.rules.PendingRequestsRule);
             this.system.mapClass('playbackTimeRule', MediaPlayer.rules.PlaybackTimeRule);
+            this.system.mapClass('sameTimeRequestRule', MediaPlayer.rules.SameTimeRequestRule);
             this.system.mapClass('scheduleRulesCollection', MediaPlayer.rules.ScheduleRulesCollection);
 
             this.system.mapClass('streamProcessor', MediaPlayer.dependencies.StreamProcessor);
