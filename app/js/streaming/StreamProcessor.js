@@ -81,7 +81,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 bufferController.subscribe(bufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, requestScheduler);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
-                bufferController.subscribe(bufferController.eventList.ENAME_BYTES_REJECTED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_INIT_REQUESTED, scheduleController);
@@ -97,6 +96,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, bufferController);
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController);
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
+                playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController.scheduleRulesCollection.playbackTimeRule);
 
                 if (isDynamic) {
                     playbackController.subscribe(playbackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, representationController);
@@ -124,6 +124,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             if (type === "video" || type === "audio") {
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, fragmentModel);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentModel);
+                bufferController.subscribe(bufferController.eventList.ENAME_BYTES_REJECTED, fragmentModel);
             }
 
             representationController.initialize(this);
@@ -238,6 +239,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             playbackController.unsubscribe(playbackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, representationController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, bufferController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, scheduleController);
+            playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController.scheduleRulesCollection.playbackTimeRule);
 
             indexHandler.unsubscribe(indexHandler.eventList.ENAME_REPRESENTATION_UPDATED, representationController);
             baseUrlExt.unsubscribe(baseUrlExt.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
@@ -245,6 +247,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
 
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, fragmentModel);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentModel);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BYTES_REJECTED, fragmentModel);
 
             fragmentModel.unsubscribe(fragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, fragmentController);
             fragmentModel.unsubscribe(fragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, fragmentController);

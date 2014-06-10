@@ -5,7 +5,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         type,
         ready,
         fragmentModel,
-        seekTarget,
         isDynamic,
         currentRepresentation,
         initialPlayback = true,
@@ -61,7 +60,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 range = this.sourceBufferExt.getBufferRange(this.bufferController.getBuffer(), time);
 
             this.debug.log("ScheduleController " + type + " seek: " + time);
-            seekTarget = time;
             currentTime = new Date();
             clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
             playListMetrics = this.metricsModel.addPlayList(type, currentTime, time, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
@@ -73,14 +71,16 @@ MediaPlayer.dependencies.ScheduleController = function () {
             doStart.call(this);
         },
 
-        doStop = function () {
+        doStop = function (cancelPending) {
             if (isStopped) return;
 
             isStopped = true;
 
             this.debug.log("ScheduleController " + type + " stop.");
             // cancel the requests that have already been created, but not loaded yet.
-            this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
+            if (cancelPending) {
+                this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
+            }
 
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
         },
@@ -101,7 +101,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
 
             for (i = 0, len = rules.length; i < len; i += 1) {
-                req = rules[i].getNextRequest(seekTarget, metrics, self);
+                req = rules[i].getNextRequest(metrics, self);
 
                 if (req.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
                     values[req.priority] = req.value;
@@ -139,7 +139,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             if (fragmentsToLoad > 0) {
                 request = loadNextFragment.call(self).request;
-                seekTarget = null;
 
                 if (request) {
                     fragmentsToLoad--;
@@ -273,22 +272,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             addPlaylistTraceMetrics.call(this);
         },
 
-        onBytesRejected = function(sender, quality, index) {
-            var req = fragmentModel.getExecutedRequestForQualityAndIndex(quality, index);
-            // if request for an unappropriate quality has not been removed yet, do it now
-            if (req) {
-                fragmentModel.removeExecutedRequest(req);
-                // if index is not a number it means that this is a media segment, so we should
-                // request the segment for the same time but with an appropriate quality
-                // If this is init segment do nothing, because it will be requested in loadInitialization method
-                if (!isNaN(index)) {
-                    seekTarget = req.startTime;
-                }
-            }
-        },
-
         onDataUpdateStarted = function(/*sender*/) {
-            doStop.call(this);
+            doStop.call(this, true);
         },
 
         onInitRequested = function(sender, quality) {
@@ -322,7 +307,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onQuotaExceeded = function(/*sender, criticalBufferLevel*/) {
-            doStop.call(this);
+            doStop.call(this, true);
         },
 
         onQualityChanged = function(sender, typeValue, oldQuality, newQuality) {
@@ -427,7 +412,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             this.bufferCleared = onBufferCleared;
             this.bytesAppended = onBytesAppended;
-            this.bytesRejected = onBytesRejected;
             this.bufferLevelStateChanged = onBufferLevelStateChanged;
             this.bufferLevelUpdated = onBufferLevelUpdated;
             this.initRequested = onInitRequested;
@@ -463,7 +447,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         reset: function() {
             var self = this;
 
-            doStop.call(self);
+            doStop.call(self, true);
             self.bufferController.unsubscribe(self.bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, self.scheduleRulesCollection.bufferLevelRule);
             self.bufferController.unsubscribe(self.bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, self.scheduleRulesCollection.bufferLevelRule);
             self.fragmentController.abortRequestsForModel(fragmentModel);

@@ -5,7 +5,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
         sortRequestsByProperty = function(requestsArray, sortProp) {
             var compare = function (req1, req2){
-                if (req1[sortProp] < req2[sortProp] || isNaN(req1[sortProp])) return -1;
+                if (req1[sortProp] < req2[sortProp] || (isNaN(req1[sortProp]) && req1.action !== "complete")) return -1;
                 if (req1[sortProp] > req2[sortProp]) return 1;
                 return 0;
             };
@@ -25,6 +25,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 req = current,
                 mLength = fragmentModels.length,
                 shouldWait = false,
+                firstReq,
                 reqsToExecute = [],
                 isLoadingPostponed,
                 pendingReqs,
@@ -39,11 +40,14 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 executedRecs = model.getExecutedRequests();
                 loadingLength = loadingReqs.length;
 
-                if (loadingLength > LOADING_REQUEST_THRESHOLD || isLoadingPostponed) return new MediaPlayer.rules.SwitchRequest([], p);
+                if (isLoadingPostponed) continue;
+
+                if (loadingLength > LOADING_REQUEST_THRESHOLD) return new MediaPlayer.rules.SwitchRequest([], p);
 
                 sortRequestsByProperty.call(this, pendingReqs, "index");
 
-                if (!req || (pendingReqs[0] && (pendingReqs[0].startTime < req.startTime))) {
+                firstReq = pendingReqs[0];
+                if (!req || (firstReq && (isNaN(firstReq.startTime) || (firstReq.startTime < req.startTime)))) {
                     req = pendingReqs[0];
                 }
 

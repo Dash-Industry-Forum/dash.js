@@ -19,6 +19,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
         executedRequests = [],
         pendingRequests = [],
         loadingRequests = [],
+        rejectedRequests = [],
 
         isLoadingPostponed = false,
 
@@ -69,6 +70,20 @@ MediaPlayer.dependencies.FragmentModel = function () {
             }
         },
 
+        onBytesRejected = function(sender, quality, index) {
+            var req = this.getExecutedRequestForQualityAndIndex(quality, index);
+            // if request for an unappropriate quality has not been removed yet, do it now
+            if (req) {
+                this.removeExecutedRequest(req);
+                // if index is not a number it means that this is a media segment, so we should
+                // request the segment for the same time but with an appropriate quality
+                // If this is init segment do nothing, because it will be requested in loadInitialization method
+                if (!isNaN(index)) {
+                    rejectedRequests.push(req);
+                }
+            }
+        },
+
         onBufferLevelOutrun = function() {
             isLoadingPostponed = true;
         },
@@ -93,6 +108,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
         setup: function() {
             this.bufferLevelOutrun = onBufferLevelOutrun;
             this.bufferLevelBalanced = onBufferLevelBalanced;
+            this.bytesRejected = onBytesRejected;
             this.loadingCompleted = onLoadingCompleted;
         },
 
@@ -165,6 +181,10 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         getExecutedRequests: function() {
             return executedRequests;
+        },
+
+        getRejectedRequests: function() {
+            return rejectedRequests;
         },
 
         getLoadingTime: function() {

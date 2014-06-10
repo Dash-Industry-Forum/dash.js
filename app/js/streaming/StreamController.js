@@ -128,7 +128,7 @@
          * Called when Seeking event is occured.
          * TODO move to ???Extensions class
          */
-        onSeeking = function(sender, seekingTime) {
+        onSeeking = function(sender, seekingTime/*, isProgrammatic*/) {
             var seekingStream = getStreamForTime(seekingTime);
 
             if (seekingStream && seekingStream !== activeStream) {

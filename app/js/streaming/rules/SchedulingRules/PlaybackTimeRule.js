@@ -1,16 +1,29 @@
 MediaPlayer.rules.PlaybackTimeRule = function () {
     "use strict";
 
-    return {
+    var seekTarget,
 
-        getNextRequest: function(seekTarget, metrics, scheduleController) {
+        onPlaybackSeeking = function(sender, time) {
+            seekTarget = time;
+        };
+
+    return {
+        setup: function() {
+            this.playbackSeeking = onPlaybackSeeking;
+        },
+
+        getNextRequest: function(metrics, scheduleController) {
             var representation = scheduleController.streamProcessor.getCurrentRepresentation(),
                 p = seekTarget ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
+                rejected = scheduleController.getFragmentModel().getRejectedRequests().shift(),
+                keepIdx = !!rejected && !seekTarget,
                 range,
                 time,
                 request;
 
-            time = seekTarget || scheduleController.indexHandler.getCurrentTime(representation);
+            time = seekTarget || (rejected ? rejected.startTime : null) || scheduleController.indexHandler.getCurrentTime(representation);
+
+            seekTarget = null;
 
             range = scheduleController.sourceBufferExt.getBufferRange(scheduleController.bufferController.getBuffer(), time);
 
@@ -18,7 +31,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 time = range.end;
             }
 
-            request = scheduleController.indexHandler.getSegmentRequestForTime(representation, time);
+            request = scheduleController.indexHandler.getSegmentRequestForTime(representation, time, keepIdx);
 
             while (request && scheduleController.fragmentController.isFragmentLoadedOrPending(scheduleController, request)) {
                 if (request.action === "complete") {

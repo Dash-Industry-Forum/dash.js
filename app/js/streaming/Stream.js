@@ -59,8 +59,6 @@ MediaPlayer.dependencies.Stream = function () {
             this.debug.log("Do seek: " + time);
 
             this.playbackController.seek(time);
-
-            startBuffering(time);
         },
 
         // Encrypted Media Extensions
@@ -370,22 +368,6 @@ MediaPlayer.dependencies.Stream = function () {
             this.debug.log(error);
             this.errHandler.mediaSourceError(msg);
             this.reset();
-        },
-
-        startBuffering = function(time) {
-            var processors = getAudioVideoProcessors(),
-                ln = processors.length,
-                i = 0,
-                processor;
-
-            for (i; i < ln; i += 1) {
-                processor = processors[i];
-                if (time === undefined) {
-                    processor.start();
-                } else {
-                    processor.seek(time);
-                }
-            }
         },
 
         doLoad = function (manifestResult) {

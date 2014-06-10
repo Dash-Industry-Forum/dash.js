@@ -666,10 +666,11 @@ Dash.dependencies.DashHandler = function () {
             return request;
         },
 
-        getForTime = function (representation, time) {
+        getForTime = function(representation, time, keepIdx) {
             var request,
                 segment,
                 finished,
+                idx = index,
                 self = this;
 
             if (!representation) {
@@ -706,6 +707,10 @@ Dash.dependencies.DashHandler = function () {
                 //self.debug.log(request);
                 segment = getSegmentByIndex(index, representation);
                 request = getRequestForSegment.call(self, segment);
+            }
+
+            if (keepIdx) {
+                index = idx;
             }
 
             return request;

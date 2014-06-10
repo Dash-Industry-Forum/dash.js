@@ -73,13 +73,11 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         onPlaybackSeeking = function() {
             //this.debug.log("Got seeking event.");
-            this.notify(this.eventList.ENAME_PLAYBACK_SEEKING, this.getTime());
+            this.notify(this.eventList.ENAME_PLAYBACK_SEEKING, this.getTime(), false);
         },
 
         onPlaybackSeeked = function() {
             //this.debug.log("Seek complete.");
-            videoModel.listen("seeking", onPlaybackSeeking);
-            videoModel.unlisten("seeked", onPlaybackSeeked);
             this.notify(this.eventList.ENAME_PLAYBACK_SEEKED);
         },
 
@@ -222,13 +220,9 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         seek: function(time) {
-            this.debug.log("Current time has changed, block programmatic seek.");
-
             if (time === this.getTime()) return;
-
-            videoModel.unlisten("seeking", onPlaybackSeeking);
-            videoModel.listen("seeked", onPlaybackSeeked);
             videoModel.setCurrentTime(time);
+            this.notify(this.eventList.ENAME_PLAYBACK_SEEKING, time, true);
         },
 
         reset: function() {
