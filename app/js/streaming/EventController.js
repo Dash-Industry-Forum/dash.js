@@ -88,16 +88,18 @@ MediaPlayer.dependencies.EventController = function(){
                 presentationTime;
 
             /* == Trigger events that are ready == */
-            for(var j = 0; j < events.length;j++) {
-                var curr = events[j];
+            if(events) {
+                for (var j = 0; j < events.length; j++) {
+                    var curr = events[j];
 
-                if(curr !== undefined) {
-                    presentationTime = curr.presentationTime / curr.eventStream.timescale;
-                    if(presentationTime == 0 || (presentationTime <= currentVideoTime && presentationTime+presentationTimeThreshold > currentVideoTime)) {
-                        console.log("Start Event at "+currentVideoTime);
-                        if(curr.duration > 0 ) activeEvents.push(curr);
-                        if(curr.eventStream.schemeIdUri == MPD_RELOAD_SCHEME && curr.eventStream.value == MPD_RELOAD_VALUE) refreshManifest.call(this);
-                        events.splice(j,1);
+                    if (curr !== undefined) {
+                        presentationTime = curr.presentationTime / curr.eventStream.timescale;
+                        if (presentationTime == 0 || (presentationTime <= currentVideoTime && presentationTime + presentationTimeThreshold > currentVideoTime)) {
+                            console.log("Start Event at " + currentVideoTime);
+                            if (curr.duration > 0) activeEvents.push(curr);
+                            if (curr.eventStream.schemeIdUri == MPD_RELOAD_SCHEME && curr.eventStream.value == MPD_RELOAD_VALUE) refreshManifest.call(this);
+                            events.splice(j, 1);
+                        }
                     }
                 }
             }
@@ -107,15 +109,16 @@ MediaPlayer.dependencies.EventController = function(){
          * Remove events from the list that are over
          */
         removeEvents = function() {
+            if(activeEvents) {
+                var currentVideoTime = this.videoModel.getCurrentTime();
 
-            var currentVideoTime = this.videoModel.getCurrentTime();
-
-            for(var i = 0; i < activeEvents.length;i++) {
-                var curr = activeEvents[i];
-                if(curr !==null && (curr.duration+curr.presentationTime)/curr.eventStream.timescale < currentVideoTime) {
-                    console.log("Remove Event at time "+currentVideoTime);
-                    curr = null;
-                    activeEvents.splice(i,1);
+                for (var i = 0; i < activeEvents.length; i++) {
+                    var curr = activeEvents[i];
+                    if (curr !== null && (curr.duration + curr.presentationTime) / curr.eventStream.timescale < currentVideoTime) {
+                        console.log("Remove Event at time " + currentVideoTime);
+                        curr = null;
+                        activeEvents.splice(i, 1);
+                    }
                 }
             }
 
