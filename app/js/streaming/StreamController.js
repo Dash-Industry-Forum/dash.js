@@ -22,7 +22,7 @@
     var streams = [],
         activeStream,
         //TODO set correct value for threshold
-        STREAM_BUFFER_END_THRESHOLD = 0.5,
+        STREAM_BUFFER_END_THRESHOLD = 6,
         STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
         isPeriodSwitchingInProgress = false,
