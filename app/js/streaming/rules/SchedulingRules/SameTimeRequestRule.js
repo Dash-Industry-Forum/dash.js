@@ -3,6 +3,26 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
     var LOADING_REQUEST_THRESHOLD = 2,
 
+        findClosestToTime = function(pendingReqs, time) {
+            var req,
+                i = 0,
+                ln = pendingReqs.length;
+
+            for (i; i < ln; i += 1) {
+                req = pendingReqs[i];
+
+                if (isNaN(req.startTime)) {
+                    break;
+                }
+
+                if (req.startTime > time) {
+                    break;
+                }
+            }
+
+            return req || pendingReqs[0];
+        },
+
         sortRequestsByProperty = function(requestsArray, sortProp) {
             var compare = function (req1, req2){
                 if (req1[sortProp] < req2[sortProp] || (isNaN(req1[sortProp]) && req1.action !== "complete")) return -1;
@@ -22,10 +42,12 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 sameTimeReq,
                 mIdx = 0,
                 loadingReqs,
-                req = current,
+                req = null,
+                currentTime,
+                time = null,
+                reqForCurrentTime,
                 mLength = fragmentModels.length,
                 shouldWait = false,
-                firstReq,
                 reqsToExecute = [],
                 isLoadingPostponed,
                 pendingReqs,
@@ -34,6 +56,8 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
             for (mIdx; mIdx < mLength; mIdx += 1) {
                 model = fragmentModels[mIdx];
+                currentTime = model.getContext().playbackController.getTime();
+                reqForCurrentTime = model.getPendingRequestForTime(currentTime);
                 isLoadingPostponed = model.getIsPostponed();
                 loadingReqs = model.getLoadingRequests();
                 pendingReqs = model.getPendingRequests();
@@ -46,19 +70,18 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
                 sortRequestsByProperty.call(this, pendingReqs, "index");
 
-                firstReq = pendingReqs[0];
-                if (!req || (firstReq && (isNaN(firstReq.startTime) || (firstReq.startTime < req.startTime)))) {
-                    req = pendingReqs[0];
-                }
+                req = req || reqForCurrentTime || findClosestToTime(pendingReqs, currentTime) || current;
 
                 if (!req) return new MediaPlayer.rules.SwitchRequest([], p);
+
+                time = time || ((req === reqForCurrentTime) ? currentTime : req.startTime);
 
                 if (pendingReqs.indexOf(req) !== -1) {
                     reqsToExecute.push(req);
                     continue;
                 }
 
-                sameTimeReq = model.getPendingRequestForTime(req.startTime);
+                sameTimeReq = model.getPendingRequestForTime(time);
 
                 if (sameTimeReq) {
                     reqsToExecute.push(sameTimeReq);
