@@ -14,7 +14,10 @@
 Dash.dependencies.TimelineConverter = function () {
     "use strict";
 
-    var calcAvailabilityTimeFromPresentationTime = function (presentationTime, mpd, isDynamic, calculateEnd) {
+    var clientServerTimeShift = 0,
+        isClientServerTimeSyncCompleted = false,
+
+        calcAvailabilityTimeFromPresentationTime = function (presentationTime, mpd, isDynamic, calculateEnd) {
             var availabilityTime = NaN;
 
             if (calculateEnd) {
@@ -108,8 +111,7 @@ Dash.dependencies.TimelineConverter = function () {
         },
 
         calcSegmentAvailabilityRange = function(representation, isDynamic) {
-            var clientServerTimeShift = representation.adaptation.period.clientServerTimeShift * 1000,
-                duration = representation.segmentDuration,
+            var duration = representation.segmentDuration,
                 start = 0,
                 end = representation.adaptation.period.duration,
                 range = {start: start, end: end},
@@ -118,7 +120,7 @@ Dash.dependencies.TimelineConverter = function () {
 
             if (!isDynamic) return range;
 
-            if ((!representation.adaptation.period.isClientServerTimeSyncCompleted || isNaN(duration)) && representation.segmentAvailabilityRange) {
+            if ((!isClientServerTimeSyncCompleted || isNaN(duration)) && representation.segmentAvailabilityRange) {
                 return representation.segmentAvailabilityRange;
             }
 
@@ -128,7 +130,7 @@ Dash.dependencies.TimelineConverter = function () {
             // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
             // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.
             start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth - duration), 0);
-            checkTime -= duration;
+            checkTime -= duration - clientServerTimeShift;
             now -= duration;
             end = isNaN(checkTime) ? now : Math.min(checkTime, now);
             range = {start: start, end: end};
@@ -143,6 +145,8 @@ Dash.dependencies.TimelineConverter = function () {
             // and server time as well
             period.clientServerTimeShift = actualLiveEdge - expectedLiveEdge;
             period.isClientServerTimeSyncCompleted = true;
+            clientServerTimeShift = period.clientServerTimeShift * 1000;
+            isClientServerTimeSyncCompleted = true;
         },
 
         calcMSETimeOffset = function (representation) {
