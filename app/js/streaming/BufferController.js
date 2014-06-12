@@ -229,7 +229,7 @@ MediaPlayer.dependencies.BufferController = function () {
 		onMediaLoaded = function (request, response) {
 			var self = this,
                 currentRepresentation = getRepresentationForQuality.call(self, request.quality),
-                eventStreamAdaption = this.manifestExt.getEventStreamForAdaption(self.getData()),
+                eventStreamAdaption = this.manifestExt.getEventStreamForAdaptationSet(self.getData()),
                 eventStreamRepresentation = this.manifestExt.getEventStreamForRepresentation(self.getData(),currentRepresentation);
 
 			//self.debug.log(type + " Bytes finished loading: " + request.streamType + ":" + request.startTime);
@@ -241,7 +241,6 @@ MediaPlayer.dependencies.BufferController = function () {
 			self.fragmentController.process(response.data).then(
 				function (data) {
 					if (data !== null && deferredInitAppend !== null) {
-
                         if(eventStreamAdaption.length > 0 || eventStreamRepresentation.length > 0) {
                             handleInbandEvents.call(self,data,request,eventStreamAdaption,eventStreamRepresentation).then(
                                 function(events) {
@@ -427,7 +426,6 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         handleInbandEvents = function(data,request,adaptionSetInbandEvents,representationInbandEvents) {
-
             var events = [],
                 i = 0,
                 stop = false,
@@ -441,31 +439,25 @@ MediaPlayer.dependencies.BufferController = function () {
 
             /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
             inbandEvents = adaptionSetInbandEvents.concat(representationInbandEvents);
-
             for(var loop = 0; loop < inbandEvents.length; loop++) {
                 eventStreams[inbandEvents[loop].schemeIdUri] = inbandEvents[loop];
             }
-
             while(i<data.length) {
-
                 identifier = String.fromCharCode(data[i+4],data[i+5],data[i+6],data[i+7]) // box identifier
                 size = data[i]*expThree + data[i+1]*expTwo + data[i+2]*256 + data[i+3]*1; // size of the box
-
-
                 if( identifier == "moov" || identifier == "moof") {
                     break;
                 } else if(identifier == "emsg") {
-                    var  eventBox = ["","",0,0,0,0,""],
+                    var eventBox = ["","",0,0,0,0,""],
                         arrIndex = 0,
-                        j = i+12; //Ignore zero bytes before the scheme_id_uri. Thats why we start at 12
-
+                        j = i+12; //fullbox header is 12 bytes, thats why we start at 12
 
                     while(j < size+i) {
-                        /* == Zero in a string indicating next attribute coming == */
+                        /* == string terminates with 0, this indicates end of attribute == */
                         if(arrIndex == 0 || arrIndex == 1 || arrIndex == 6) {
-                            if(data[j] != 0){
+                            if(data[j] != 0) {
                                 eventBox[arrIndex] += String.fromCharCode(data[j]);
-                            } else{
+                            } else {
                                 arrIndex += 1;
                             }
                             j += 1;
@@ -474,8 +466,6 @@ MediaPlayer.dependencies.BufferController = function () {
                             j += 4;
                             arrIndex += 1;
                         }
-
-
                     }
                     var schemeIdUri = eventBox[0],
                         value = eventBox[1],
@@ -485,7 +475,6 @@ MediaPlayer.dependencies.BufferController = function () {
                         id = eventBox[5],
                         messageData = eventBox[6],
                         presentationTime = segmentStarttime*timescale+presentationTimeDelta;
-
 
                     if(eventStreams[schemeIdUri]) {
                         var event = new Dash.vo.Event();
@@ -502,8 +491,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 }
                 i += size;
             }
-
-
             return Q.when(events);
         },
 
