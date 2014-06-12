@@ -48,6 +48,8 @@ MediaPlayer.dependencies.Stream = function () {
         keyAddedListener,
         keyErrorListener,
 
+        eventController = null,
+
         play = function () {
             //this.debug.log("Attempting play...");
 
@@ -213,6 +215,9 @@ MediaPlayer.dependencies.Stream = function () {
             if (!!textController) {
                 textController.reset(errored);
             }
+            if(!!eventController) {
+                eventController.reset();
+            }
 
             if (!!mediaSource) {
                 self.mediaSourceExt.detachMediaSource(self.videoModel);
@@ -258,6 +263,8 @@ MediaPlayer.dependencies.Stream = function () {
                 textTrackReady = false,
                 self = this;
 
+            eventController = self.system.getObject("eventController");
+            eventController.initialize(self.videoModel);
             // Figure out some bits about the stream before building anything.
             //self.debug.log("Gathering information for buffers. (1)");
             self.manifestExt.getDuration(manifest, periodInfo).then(
@@ -312,7 +319,7 @@ MediaPlayer.dependencies.Stream = function () {
                                             // TODO : Pass to controller and then pass to each method on handler?
 
                                             videoController = self.system.getObject("bufferController");
-                                            videoController.initialize("video", periodInfo, videoData, buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource);
+                                            videoController.initialize("video", periodInfo, videoData, buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource, eventController);
                                             //self.debug.log("Video is ready!");
                                         }
 
@@ -384,7 +391,7 @@ MediaPlayer.dependencies.Stream = function () {
                                                     // TODO : How to tell index handler live/duration?
                                                     // TODO : Pass to controller and then pass to each method on handler?
                                                     audioController = self.system.getObject("bufferController");
-                                                    audioController.initialize("audio", periodInfo, primaryAudioData, buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource);
+                                                    audioController.initialize("audio", periodInfo, primaryAudioData, buffer, self.videoModel, self.requestScheduler, self.fragmentController, mediaSource, eventController);
                                                     //self.debug.log("Audio is ready!");
                                                 }
 
@@ -451,6 +458,11 @@ MediaPlayer.dependencies.Stream = function () {
                                 textTrackReady = true;
                                 checkIfInitialized.call(self, videoReady, audioReady,textTrackReady,  initialize);
                             }
+                            return  self.manifestExt.getEventsForPeriod(manifest,periodInfo);
+                        }
+                    ).then(
+                        function (events) {
+                            eventController.addInlineEvents(events);
                         }
                     );
                 }
@@ -662,6 +674,7 @@ MediaPlayer.dependencies.Stream = function () {
                     self.debug.log("element loaded!");
                     // only first period stream must be played automatically during playback initialization
                     if (periodInfo.index === 0) {
+                        eventController.start();
                         if (autoPlay) {
                             play.call(self);
                         }
@@ -704,7 +717,8 @@ MediaPlayer.dependencies.Stream = function () {
                 deferred = Q.defer(),
                 deferredVideoUpdate = Q.defer(),
                 deferredAudioUpdate = Q.defer(),
-                deferredTextUpdate = Q.defer();
+                deferredTextUpdate = Q.defer(),
+                deferredEventUpdate = Q.defer();
 
             manifest = self.manifestModel.getValue();
             periodInfo = updatedPeriodInfo;
@@ -770,6 +784,15 @@ MediaPlayer.dependencies.Stream = function () {
                                 deferredTextUpdate.resolve();
                             }
                         );
+                    }
+                );
+            }
+
+            if(eventController) {
+                self.manifestExt.getEventsForPeriod(manifest,periodInfo).then(
+                    function(events) {
+                        eventController.addInlineEvents(events);
+                        deferredEventUpdate.resolve();
                     }
                 );
             }
@@ -922,6 +945,12 @@ MediaPlayer.dependencies.Stream = function () {
 
         getPeriodInfo: function() {
             return periodInfo;
+        },
+        startEventController: function() {
+            eventController.start();
+        },
+        resetEventController: function() {
+            eventController.reset();
         },
 
         updateData: updateData,
