@@ -132,7 +132,7 @@
 
     <div id="info_area">
         <div id="info_item" style="width: 550px; height: 300px;">
-            <b>Advert-Insertion with DASH + W3C MediaSource Extensions + Inline Event MPD Reload</b>
+            <b>Post-Roll Advert-Insertion with DASH + W3C MediaSource Extensions + Inline Event MPD Reload</b>
 
             <ol>
                 <li>The server provides a MPD  containing an InlineEventStream element on Period Level. The schmeIdUri and the value of the Eventstream are set according to ISO/IEC
@@ -145,33 +145,21 @@
                    </li>
 
                 <li>MPD reload is scheduled at 5 seconds of the playback </li>
-                <li>The new MPD contains an additional period with ad content which will be played after 15 seconds</li>
+                <li>The new MPD contains an additional period with ad content (51 seconds) which will be played after 15 seconds</li>
 
             </ol>
-
             Important:
             <ul>
                 <li>Cookies have to be activated</li>
                 <li>Due to missing Multiperiod implementation a workaround has to be used to enable multiperiod playback. The second period will therefore have a starttime set to PT0M0S.</li>
             </ul>
+            <div><a href="index.html">Back to selection</a></div>
         </div>
+
     </div>
-
-
-
-
-
-
-
     <div class="dash-video-player" style="position:absolute; left:700px;top:170px; width:640px" >
         <video controls="true" id="vid" width="640" height="360"></video>
     </div>
-
-
-
-
-
-
 </div>
 
 <div class="footer-area">
