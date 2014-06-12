@@ -338,7 +338,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 rate = self.playbackController.getPlaybackRate(),
                 currentTime = new Date();
 
-            if (playListTraceMetricsClosed === true && currentRepresentation) {
+            if (playListTraceMetricsClosed === true && currentRepresentation && playListMetrics) {
                 playListTraceMetricsClosed = false;
                 playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, currentRepresentation.id, null, currentTime, currentVideoTime, null, rate, null);
             }
