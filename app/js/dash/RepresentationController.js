@@ -31,6 +31,14 @@ Dash.dependencies.RepresentationController = function () {
             return availableRepresentations[quality];
         },
 
+        isAllRepresentationsUpdated = function() {
+            for (var i = 0, ln = availableRepresentations.length; i < ln; i += 1) {
+                if (availableRepresentations[i].segmentAvailabilityRange === null) return false;
+            }
+
+            return true;
+        },
+
         updateRepresentations = function(data, periodInfo) {
             var self = this,
                 reps,
@@ -45,8 +53,8 @@ Dash.dependencies.RepresentationController = function () {
             return reps;
         },
 
-        onRepresentationUpdated = function(sender, representation) {
-            if (representation === currentRepresentation) {
+        onRepresentationUpdated = function(/*sender, representation*/) {
+            if (isAllRepresentationsUpdated()) {
                 updating = false;
                 this.notify(this.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
             }
