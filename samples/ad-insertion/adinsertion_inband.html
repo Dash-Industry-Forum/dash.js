@@ -22,9 +22,6 @@
     <!-- http://getbootstrap.com/ -->
     <script src="../../app/lib/bootstrap/js/bootstrap.min.js"></script>
 
-    <!-- https://github.com/kriskowal/q -->
-    <script src="../../app/lib/q.js"></script>
-
     <!-- https://github.com/creynders/dijon-framework -->
     <script src="../../app/lib/dijon.js"></script>
 
@@ -50,6 +47,7 @@
     <script src="../../app/js/streaming/Capabilities.js"></script>
     <script src="../../app/js/streaming/EventBus.js"></script>
     <script src="../../app/js/streaming/Debug.js"></script>
+    <script src="../../app/js/streaming/TokenAuthentication.js"></script>
     <script src="../../app/js/streaming/VideoModel.js"></script>
     <script src="../../app/js/streaming/vo/SegmentRequest.js"></script>
     <script src="../../app/js/streaming/ManifestLoader.js"></script>
@@ -59,25 +57,36 @@
     <script src="../../app/js/streaming/SourceBufferExtensions.js"></script>
     <script src="../../app/js/streaming/VideoModelExtensions.js"></script>
     <script src="../../app/js/streaming/BufferExtensions.js"></script>
+    <script src="../../app/js/streaming/PlaybackController.js"></script>
     <script src="../../app/js/streaming/FragmentController.js"></script>
     <script src="../../app/js/streaming/AbrController.js"></script>
     <script src="../../app/js/streaming/FragmentLoader.js"></script>
     <script src="../../app/js/streaming/FragmentModel.js"></script>
     <script src="../../app/js/streaming/StreamController.js"></script>
     <script src="../../app/js/streaming/RequestScheduler.js"></script>
+    <script src="../../app/js/streaming/StreamProcessor.js"></script>
     <script src="../../app/js/streaming/SchedulerExtensions.js"></script>
     <script src="../../app/js/streaming/SchedulerModel.js"></script>
+    <script src="../../app/js/streaming/ScheduleController.js"></script>
     <script src="../../app/js/streaming/Stream.js"></script>
     <script src="../../app/js/streaming/BufferController.js"></script>
+    <script src="../../app/js/streaming/LiveEdgeFinder.js"></script>
     <script src="../../app/js/streaming/ProtectionModel.js"></script>
     <script src="../../app/js/streaming/ProtectionController.js"></script>
     <script src="../../app/js/streaming/ProtectionExtensions.js"></script>
+    <script src="../../app/js/streaming/Notifier.js"></script>
     <script src="../../app/js/streaming/rules/SwitchRequest.js"></script>
     <script src="../../app/js/streaming/rules/DownloadRatioRule.js"></script>
     <script src="../../app/js/streaming/rules/InsufficientBufferRule.js"></script>
     <script src="../../app/js/streaming/rules/LimitSwitchesRule.js"></script>
     <script src="../../app/js/streaming/rules/BaseRulesCollection.js"></script>
     <script src="../../app/js/streaming/EventController.js"></script>
+
+    <script src="../../app/js/streaming/rules/SchedulingRules/ScheduleRulesCollection.js"></script>
+    <script src="../../app/js/streaming/rules/SchedulingRules/BufferLevelRule.js"></script>
+    <script src="../../app/js/streaming/rules/SchedulingRules/PendingRequestsRule.js"></script>
+    <script src="../../app/js/streaming/rules/SchedulingRules/SameTimeRequestRule.js"></script>
+    <script src="../../app/js/streaming/rules/SchedulingRules/PlaybackTimeRule.js"></script>
 
     <!--Captioning-->
     <script src="../../app/js/streaming/captioning/VTTParser.js"></script>
@@ -108,6 +117,7 @@
     <script src="../../app/js/dash/vo/EventStream.js"></script>
     <script src="../../app/js/dash/DashParser.js"></script>
     <script src="../../app/js/dash/DashHandler.js"></script>
+    <script src="../../app/js/dash/RepresentationController.js"></script>
     <script src="../../app/js/dash/BaseURLExtensions.js"></script>
     <script src="../../app/js/dash/FragmentExtensions.js"></script>
     <script src="../../app/js/dash/DashManifestExtensions.js"></script>
