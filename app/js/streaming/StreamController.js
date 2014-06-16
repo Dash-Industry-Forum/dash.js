@@ -22,8 +22,8 @@
     var streams = [],
         activeStream,
         //TODO set correct value for threshold
-        STREAM_BUFFER_END_THRESHOLD = 4,
-        STREAM_END_THRESHOLD = 3,
+        STREAM_BUFFER_END_THRESHOLD = 6,
+        STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
         isPeriodSwitchingInProgress = false,
         timeupdateListener,
@@ -229,6 +229,8 @@
             }
 
             play();
+            from.resetEventController();
+            activeStream.startEventController();
             isPeriodSwitchingInProgress = false;
         },
 

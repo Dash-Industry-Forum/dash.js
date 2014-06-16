@@ -1,0 +1,104 @@
+html {
+    margin: 0;
+    padding: 0;
+    background-color : #294f6b;
+}
+
+#pageContent {
+    width : 1280px;
+    height : 720px;
+    position : absolute;
+    top : 0px;
+    left : 0px;
+
+
+    background-image: url("images/121122_famium_inforaph_02_fwe.png");
+    background-image: url("images/background.png");
+
+    background-position : 0px 0px;
+    background-repeat : no-repeat;
+}
+
+body {
+    font-family: arial, helvetica, sans-serif;
+    color: #666;
+}
+a {
+    text-decoration: none;
+    /*color: #0174A7;*/
+    color: #59b4d4;
+}
+a:hover {
+    text-decoration: underline;
+}
+
+#videoContainer {
+    position : absolute;
+    left: 560px;
+    top : 110px;
+}
+
+#outerChartdiv {
+    /* background : #182f3f;*/
+    height:110px;
+    width:600px;
+    padding : 0px;
+
+    color: white;
+
+    margin-top : -5px;
+    margin-bottom: 37px;
+}
+
+.dygraph-axis-label {
+    color : white;
+}
+
+#chartdiv {
+    height:120px;
+    width:580px;
+}
+
+#btDown {
+    position : relative;
+    width : 116px;
+    height: 68px;
+    display: block;
+    background-image: url("images/bitrate minus_passiv.png");
+    float: left;
+}
+
+#btDown:hover {
+    background-image: url("images/bitrate minus_aktiv.png");
+}
+
+#btUp {
+    margin-left: 15px;
+
+    width : 116px;
+    height: 68px;
+    display: block;
+    float: left;
+    background-image: url("images/bitrate plus_passiv.png");
+}
+
+#btUp:hover {
+    background-image: url("images/bitrate plus_aktiv.png");
+}
+
+p {
+    padding : 0;
+    margin : 0;
+    margin-bottom : 15px;
+}
+
+#info_area {
+    position : absolute;
+    top : 110px;
+    left: 50px;
+    color: #eee;
+}
+
+.big {
+    font-size: 24px;
+}
