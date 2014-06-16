@@ -98,7 +98,7 @@ MediaPlayer.dependencies.EventController = function(){
 
                     if (curr !== undefined) {
                         presentationTime = curr.presentationTime / curr.eventStream.timescale;
-                        if (presentationTime == 0 || (presentationTime <= currentVideoTime && presentationTime + presentationTimeThreshold > currentVideoTime)) {
+                        if (presentationTime === 0 || (presentationTime <= currentVideoTime && presentationTime + presentationTimeThreshold > currentVideoTime)) {
                             self.debug.log("Start Event at " + currentVideoTime);
                             if (curr.duration > 0) activeEvents.push(curr);
                             if (curr.eventStream.schemeIdUri == MPD_RELOAD_SCHEME && curr.eventStream.value == MPD_RELOAD_VALUE) refreshManifest.call(this);
@@ -164,7 +164,7 @@ MediaPlayer.dependencies.EventController = function(){
         initialize:function(videoModel) {
             this.setVideoModel(videoModel);
         }
-    }
+    };
 
 };
 
