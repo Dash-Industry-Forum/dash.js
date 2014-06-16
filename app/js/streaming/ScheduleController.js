@@ -52,22 +52,16 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         startOnReady = function(time) {
             getInitRequest.call(this, currentRepresentation.index);
-            this.seek(time);
+            doSeek.call(this, time);
         },
 
         doSeek = function (time) {
-            var currentTime,
-                range = this.sourceBufferExt.getBufferRange(this.bufferController.getBuffer(), time);
+            var currentTime;
 
             this.debug.log("ScheduleController " + type + " seek: " + time);
             currentTime = new Date();
             clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
             playListMetrics = this.metricsModel.addPlayList(type, currentTime, time, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
-
-            if (!range && !initialPlayback) {
-                this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
-            }
-
             doStart.call(this);
         },
 
@@ -268,12 +262,12 @@ MediaPlayer.dependencies.ScheduleController = function () {
             doStop.call(this);
         },
 
-        onBytesAppended = function(/*sender*/) {
+        onBytesAppended = function(/*sender, quality, index*/) {
             addPlaylistTraceMetrics.call(this);
         },
 
         onDataUpdateStarted = function(/*sender*/) {
-            doStop.call(this, true);
+            doStop.call(this, false);
         },
 
         onInitRequested = function(sender, quality) {
@@ -356,6 +350,12 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onPlaybackSeeking = function(sender, time) {
+            var range = this.sourceBufferExt.getBufferRange(this.bufferController.getBuffer(), time);
+
+            if (!range && !initialPlayback) {
+                this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
+            }
+
             doSeek.call(this, time);
         },
 
