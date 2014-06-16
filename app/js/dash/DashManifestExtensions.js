@@ -741,9 +741,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
         var periodArray = manifest.Period_asArray,
             eventStreams = periodArray[period.index].EventStream_asArray,
-            events = [],
-            value,
-            timescale;
+            events = [];
 
         if(eventStreams) {
             for(var i = 0; i < eventStreams.length; i += 1) {
@@ -776,7 +774,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                     if(eventStreams[i].Event_asArray[j].hasOwnProperty("id")) {
                         event.id = eventStreams[i].Event_asArray[j].id;
                     }
-                    events.push(event)
+                    events.push(event);
                 }
             }
         }
@@ -795,7 +793,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 eventStream.timescale = 1;
 
                 if(inbandStreams[i].hasOwnProperty("schemeIdUri")) {
-                    eventStream.schemeIdUri = inbandStreams[i].schemeIdUri
+                    eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
                 } else {
                     throw "Invalid EventStream. SchemeIdUri has to be set";
                 }

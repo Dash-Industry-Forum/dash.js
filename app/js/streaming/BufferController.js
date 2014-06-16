@@ -271,7 +271,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                             }
                                         );
                                     }
-                                )}
+                                );}
                         );
 					} else {
 						self.debug.log("No " + type + " bytes to push.");
@@ -428,7 +428,6 @@ MediaPlayer.dependencies.BufferController = function () {
         handleInbandEvents = function(data,request,adaptionSetInbandEvents,representationInbandEvents) {
             var events = [],
                 i = 0,
-                stop = false,
                 identifier,
                 size,
                 expTwo = Math.pow(256,2),
@@ -443,7 +442,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 eventStreams[inbandEvents[loop].schemeIdUri] = inbandEvents[loop];
             }
             while(i<data.length) {
-                identifier = String.fromCharCode(data[i+4],data[i+5],data[i+6],data[i+7]) // box identifier
+                identifier = String.fromCharCode(data[i+4],data[i+5],data[i+6],data[i+7]); // box identifier
                 size = data[i]*expThree + data[i+1]*expTwo + data[i+2]*256 + data[i+3]*1; // size of the box
                 if( identifier == "moov" || identifier == "moof") {
                     break;
@@ -454,8 +453,8 @@ MediaPlayer.dependencies.BufferController = function () {
 
                     while(j < size+i) {
                         /* == string terminates with 0, this indicates end of attribute == */
-                        if(arrIndex == 0 || arrIndex == 1 || arrIndex == 6) {
-                            if(data[j] != 0) {
+                        if(arrIndex === 0 || arrIndex == 1 || arrIndex == 6) {
+                            if(data[j] !== 0) {
                                 eventBox[arrIndex] += String.fromCharCode(data[j]);
                             } else {
                                 arrIndex += 1;
@@ -508,7 +507,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             while(i<length) {
 
-                identifier = String.fromCharCode(data[i+4],data[i+5],data[i+6],data[i+7])
+                identifier = String.fromCharCode(data[i+4],data[i+5],data[i+6],data[i+7]);
                 size = data[i]*expThree + data[i+1]*expTwo + data[i+2]*256 + data[i+3]*1;
 
 
