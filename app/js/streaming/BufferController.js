@@ -152,7 +152,7 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             onAppendToBufferCompleted.call(self, appendedBytesInfo.quality, appendedBytesInfo.index);
-            self.notify(self.eventList.ENAME_BYTES_APPENDED, appendedBytesInfo.index);
+            self.notify(self.eventList.ENAME_BYTES_APPENDED, appendedBytesInfo.quality, appendedBytesInfo.index);
         },
 
         updateBufferLevel = function() {
