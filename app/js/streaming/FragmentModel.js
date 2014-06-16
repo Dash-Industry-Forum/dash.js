@@ -46,12 +46,13 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 req = null,
                 i;
 
+            time = parseFloat(time.toFixed(1));
             // loop through the executed requests and pick the one for which the playback interval matches the given time
             for (i = lastIdx; i >= 0; i -=1) {
                 req = arr[i];
                 start = req.startTime;
                 end = start + req.duration;
-                if ((!isNaN(start) && !isNaN(end) && (time >= start) && (time < end)) || (isNaN(start) && isNaN(time))) {
+                if ((!isNaN(start) && !isNaN(end) && (time >= parseFloat(start.toFixed(1))) && (time < end)) || (isNaN(start) && isNaN(time))) {
                     return req;
                 }
             }
