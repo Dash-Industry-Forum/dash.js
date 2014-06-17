@@ -18,6 +18,7 @@ Dash.dependencies.DashHandler = function () {
         requestedTime,
         isDynamic,
         type,
+        currentTime = 0,
 
         replaceNumberForTemplate = function (url, value) {
             var v = value.toString();
@@ -777,30 +778,6 @@ Dash.dependencies.DashHandler = function () {
             return segmentCount;
         },
 
-        getCurrentTime = function (representation) {
-            var self = this,
-                time,
-                bufferedIndex,
-                segments;
-
-            if (!representation) {
-                throw new Error("no represenation");
-            }
-
-            bufferedIndex = index;
-
-            segments = getSegments.call(self, representation);
-
-            if (bufferedIndex < 0) {
-                time = self.timelineConverter.calcPresentationStartTime(representation.adaptation.period);
-            } else {
-                bufferedIndex = bufferedIndex < segments[0].availabilityIdx ? segments[0].availabilityIdx : Math.min(segments[segments.length - 1].availabilityIdx, bufferedIndex);
-                time = getSegmentByIndex(bufferedIndex, representation).presentationStartTime;
-            }
-
-            return time;
-        },
-
         onInitializationLoaded = function(sender, representation) {
             //self.debug.log("Got an initialization.");
             if (!representation.segments) return;
@@ -878,10 +855,17 @@ Dash.dependencies.DashHandler = function () {
             isDynamic = value;
         },
 
+        setCurrentTime: function(value) {
+            currentTime = value;
+        },
+
+        getCurrentTime: function() {
+            return currentTime;
+        },
+
         getInitRequest: getInit,
         getSegmentRequestForTime: getForTime,
         getNextSegmentRequest: getNext,
-        getCurrentTime: getCurrentTime,
         getSegmentCountForDuration: getSegmentCountForDuration,
         updateRepresentation: updateRepresentation
     };

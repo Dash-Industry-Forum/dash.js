@@ -42,6 +42,10 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 request = scheduleController.indexHandler.getNextSegmentRequest(representation);
             }
 
+            if (request) {
+                scheduleController.indexHandler.setCurrentTime(request.startTime + request.duration);
+            }
+
             return new MediaPlayer.rules.SwitchRequest(request, p);
         }
     };
