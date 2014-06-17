@@ -88,7 +88,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                     continue;
                 }
 
-                sameTimeReq = model.getLoadingRequestForTime(req.startTime) || model.getExecutedRequestForTime(req.startTime);
+                sameTimeReq = model.getLoadingRequestForTime(time) || model.getExecutedRequestForTime(time);
 
                 if (!sameTimeReq) {
                     shouldWait = true;
