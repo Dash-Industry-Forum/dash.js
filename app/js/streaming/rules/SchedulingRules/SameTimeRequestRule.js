@@ -38,6 +38,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
         getRequestsToLoad: function(current, fragmentModels) {
             var p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
+                type,
                 model,
                 sameTimeReq,
                 mIdx = 0,
@@ -56,6 +57,10 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
             for (mIdx; mIdx < mLength; mIdx += 1) {
                 model = fragmentModels[mIdx];
+                type = model.getContext().streamProcessor.getType();
+
+                if (type !== "video" && type !== "audio") continue;
+
                 currentTime = model.getContext().playbackController.getTime();
                 reqForCurrentTime = model.getPendingRequestForTime(currentTime);
                 isLoadingPostponed = model.getIsPostponed();
@@ -72,7 +77,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
                 req = req || reqForCurrentTime || findClosestToTime(pendingReqs, currentTime) || current;
 
-                if (!req) return new MediaPlayer.rules.SwitchRequest([], p);
+                if (!req) continue;
 
                 time = time || ((req === reqForCurrentTime) ? currentTime : req.startTime);
 
