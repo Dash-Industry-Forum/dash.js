@@ -17,11 +17,15 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 p = seekTarget ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
                 rejected = scheduleController.getFragmentModel().getRejectedRequests().shift(),
                 keepIdx = !!rejected && !seekTarget,
+                currentTime = scheduleController.indexHandler.getCurrentTime(representation),
+                playbackTime = scheduleController.playbackController.getTime(),
+                rejectedEnd = rejected ? rejected.startTime + rejected.duration : null,
+                useRejected = rejected && (rejectedEnd > playbackTime) && (rejected.startTime <= currentTime),
                 range,
                 time,
                 request;
 
-            time = seekTarget || (rejected ? rejected.startTime : null) || scheduleController.indexHandler.getCurrentTime(representation);
+            time = seekTarget || (useRejected ? rejected.startTime : currentTime);
 
             seekTarget = null;
 
@@ -42,7 +46,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 request = scheduleController.indexHandler.getNextSegmentRequest(representation);
             }
 
-            if (request) {
+            if (request && !useRejected) {
                 scheduleController.indexHandler.setCurrentTime(request.startTime + request.duration);
             }
 
