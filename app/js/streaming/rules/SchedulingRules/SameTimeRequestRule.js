@@ -24,7 +24,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                         break;
                     }
 
-                    if ((req.startTime > time) && (!r || r.startTime < time)) {
+                    if ((req.startTime > time) && (!r || req.startTime < r.startTime)) {
                         r = req;
                     }
                 }
@@ -36,17 +36,18 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
         getForTime = function(fragmentModels, currentTime) {
             var ln = fragmentModels.length,
                 req,
+                r = null,
                 i;
 
             for (i = 0; i < ln; i += 1) {
                 req = fragmentModels[i].getPendingRequestForTime(currentTime);
 
-                if (req) {
-                    return req;
+                if (req && (!r || req.startTime > r.startTime)) {
+                    r = req;
                 }
             }
 
-            return null;
+            return r;
         },
 
         sortRequestsByProperty = function(requestsArray, sortProp) {
@@ -80,7 +81,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
             if (!fragmentModels || !mLength) return new MediaPlayer.rules.SwitchRequest([], p);
 
-            currentTime = fragmentModels[0].getContext().playbackController.getTime();
+            currentTime = Math.round(fragmentModels[0].getContext().playbackController.getTime() * 100) / 100;
             reqForCurrentTime = getForTime(fragmentModels, currentTime);
             req = reqForCurrentTime || findClosestToTime(fragmentModels, currentTime) || current;
 
@@ -95,7 +96,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 pendingReqs = model.getPendingRequests();
                 loadingLength = model.getLoadingRequests().length;
 
-                if (model.getIsPostponed()) continue;
+                if (model.getIsPostponed() && !isNaN(req.startTime)) continue;
 
                 if (loadingLength > LOADING_REQUEST_THRESHOLD) return new MediaPlayer.rules.SwitchRequest([], p);
 
