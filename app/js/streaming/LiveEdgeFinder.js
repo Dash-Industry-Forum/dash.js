@@ -2,159 +2,78 @@
 MediaPlayer.dependencies.LiveEdgeFinder = function () {
     "use strict";
 
-    var SEARCH_TIME_SPAN = 12 * 60 * 60, // set the time span that limits our search range to a 12 hours in seconds
+    var rulesCount,
         isSearchStarted = false,
-        liveEdgeInitialSearchPosition = NaN,
-        liveEdgeSearchRange = null,
-        liveEdgeSearchStep = NaN,
-        currentRepresentation = null,
-        useBinarySearch = false,
-        fragmentDuration = NaN,
+        rules,
+        values = {},
 
-        searchForLiveEdge = function () {
-            var self = this,
-                request,
-                availabilityRange; // all segments are supposed to be available in this interval
+        onSearchCompleted = function(req) {
+            var liveEdge = null,
+                confidence;
 
-            currentRepresentation = self.streamProcessor.getCurrentRepresentation();
-            fragmentDuration = currentRepresentation.segmentDuration;
-            availabilityRange = currentRepresentation.segmentAvailabilityRange; // all segments are supposed to be available in this interval
+            if (req.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                values[req.priority] = req.value;
+            }
 
-            // start position of the search, it is supposed to be a live edge - the last available segment for the current mpd
-            liveEdgeInitialSearchPosition = availabilityRange.end;
-            // we should search for a live edge in a time range which is limited by SEARCH_TIME_SPAN.
-            liveEdgeSearchRange = {start: Math.max(0, (liveEdgeInitialSearchPosition - SEARCH_TIME_SPAN)), end: liveEdgeInitialSearchPosition + SEARCH_TIME_SPAN};
-            // we have to use half of the availability interval (window) as a search step to ensure that we find a segment in the window
-            liveEdgeSearchStep = Math.floor((availabilityRange.end - availabilityRange.start) / 2);
-            // start search from finding a request for the initial search time
-            request = self.indexHandler.getSegmentRequestForTime(currentRepresentation, liveEdgeInitialSearchPosition);
-            findLiveEdge.call(self, liveEdgeInitialSearchPosition, onSearchForSegmentSucceeded, onSearchForSegmentFailed, request);
-            isSearchStarted = true;
-        },
+            if (--rulesCount) return;
 
-        findLiveEdge = function (searchTime, onSuccess, onError, request) {
-            var self = this,
-                req;
-            if (request === null) {
-                // request can be null because it is out of the generated list of request. In this case we need to
-                // update the list and the segmentAvailabilityRange
-                currentRepresentation.segments = null;
-                currentRepresentation.segmentAvailabilityRange = {start: searchTime - liveEdgeSearchStep, end: searchTime + liveEdgeSearchStep};
-                // try to get request object again
-                req = self.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime);
-                findLiveEdge.call(self, searchTime, onSuccess, onError, req);
+            if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                confidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
+                liveEdge = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
+            }
+
+            if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+                liveEdge = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
+            }
+
+            if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                confidence = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
+                liveEdge = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
+            }
+
+            if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
+                confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
+                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+            }
+
+            if (liveEdge !== null) {
+                this.notify(this.eventList.ENAME_LIVE_EDGE_FOUND, liveEdge, this.streamProcessor.getCurrentRepresentation().adaptation.period);
             } else {
-                var handler = function(sender, isExist, request) {
-                    self.fragmentLoader.unsubscribe(self.fragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
-                    if (isExist) {
-                        onSuccess.call(self, request, searchTime);
-                    } else {
-                        onError.call(self, request, searchTime);
-                    }
-                };
-
-                self.fragmentLoader.subscribe(self.fragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
-                self.fragmentLoader.checkForExistence(request);
-            }
-        },
-
-        onSearchForSegmentFailed = function(request, lastSearchTime) {
-            var searchTime,
-                req,
-                searchInterval;
-
-            if (useBinarySearch) {
-                binarySearch.call(this, false, lastSearchTime);
-                return;
-            }
-
-            // we have not found any available segments yet, update the search interval
-            searchInterval = lastSearchTime - liveEdgeInitialSearchPosition;
-            // we search forward and backward from the start position, increasing the search interval by the value of the half of the availability interavl - liveEdgeSearchStep
-            searchTime = searchInterval > 0 ? (liveEdgeInitialSearchPosition - searchInterval) : (liveEdgeInitialSearchPosition + Math.abs(searchInterval) + liveEdgeSearchStep);
-
-            // if the search time is out of the range bounds we have not be able to find live edge, stop trying
-            if (searchTime < liveEdgeSearchRange.start && searchTime > liveEdgeSearchRange.end) {
-                this.notify(this.eventList.ENAME_FRAGMENT_LOADING_FAILED, request);
-            } else {
-                // continue searching for a first available segment
-                req = this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime);
-                findLiveEdge.call(this, searchTime, onSearchForSegmentSucceeded, onSearchForSegmentFailed, req);
-            }
-        },
-
-        onSearchForSegmentSucceeded = function (request, lastSearchTime) {
-            var startTime = request.startTime,
-                self = this,
-                req,
-                searchTime;
-
-            if (!useBinarySearch) {
-                // if the fragment duration is unknown we cannot use binary search because we will not be able to
-                // decide when to stop the search, so let the start time of the current segment be a liveEdge
-                if (!fragmentDuration) {
-                    self.notify(self.eventList.ENAME_LIVE_EDGE_FOUND, startTime, currentRepresentation.adaptation.period);
-                    return;
-                }
-                useBinarySearch = true;
-                liveEdgeSearchRange.end = startTime + (2 * liveEdgeSearchStep);
-
-                //if the first request has succeeded we should check next segment - if it does not exist we have found live edge,
-                // otherwise start binary search to find live edge
-                if (lastSearchTime === liveEdgeInitialSearchPosition) {
-                    searchTime = lastSearchTime + fragmentDuration;
-                    req = this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime);
-                    findLiveEdge.call(self, searchTime, function() {
-                        binarySearch.call(self, true, searchTime);
-                    }, function(){
-                        self.notify(self.eventList.ENAME_LIVE_EDGE_FOUND, searchTime, currentRepresentation.adaptation.period);
-                    }, req);
-
-                    return;
-                }
-            }
-
-            binarySearch.call(this, true, lastSearchTime);
-        },
-
-        binarySearch = function(lastSearchSucceeded, lastSearchTime) {
-            var isSearchCompleted,
-                req,
-                searchTime;
-
-            if (lastSearchSucceeded) {
-                liveEdgeSearchRange.start = lastSearchTime;
-            } else {
-                liveEdgeSearchRange.end = lastSearchTime;
-            }
-
-            isSearchCompleted = (Math.floor(liveEdgeSearchRange.end - liveEdgeSearchRange.start)) <= fragmentDuration;
-
-            if (isSearchCompleted) {
-                // search completed, we should take the time of the last found segment. If the last search succeded we
-                // take this time. Otherwise, we should subtract the time of the search step which is equal to fragment duaration
-                this.notify(this.eventList.ENAME_LIVE_EDGE_FOUND, (lastSearchSucceeded ? lastSearchTime : (lastSearchTime - fragmentDuration)), currentRepresentation.adaptation.period);
-            } else {
-                // update the search time and continue searching
-                searchTime = ((liveEdgeSearchRange.start + liveEdgeSearchRange.end) / 2);
-                req = this.indexHandler.getSegmentRequestForTime(currentRepresentation, searchTime);
-                findLiveEdge.call(this, searchTime, onSearchForSegmentSucceeded, onSearchForSegmentFailed, req);
+                this.notify(this.eventList.ENAME_LIVE_EDGE_SEARCH_ERROR);
             }
         },
 
         onDataUpdateCompleted = function(/*sender, data, representation*/) {
             if (!this.streamProcessor.isDynamic() || isSearchStarted) return;
 
-            searchForLiveEdge.call(this);
+            var self =this,
+                metrics = this.metricsModel.getReadOnlyMetricsFor(this.streamProcessor.getType()),
+                ln,
+                i;
+
+            rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.LIVE_EDGE_RULES);
+            isSearchStarted = true;
+            rulesCount = ln = rules.length;
+            values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
+            values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
+            values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
+
+            for (i = 0; i < ln; i += 1) {
+                rules[i].searchForLiveEdge(self, metrics, onSearchCompleted.bind(self));
+            }
         };
 
     return {
         system: undefined,
+        metricsModel: undefined,
+        scheduleRulesCollection: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
         eventList: {
-            ENAME_LIVE_EDGE_FOUND: "liveEdgeFound"
+            ENAME_LIVE_EDGE_FOUND: "liveEdgeFound",
+            ENAME_LIVE_EDGE_SEARCH_ERROR: "liveEdgeSearchError"
         },
 
         setup: function() {
@@ -169,12 +88,10 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
         abortSearch: function() {
             isSearchStarted = false;
-            liveEdgeInitialSearchPosition = NaN;
-            liveEdgeSearchRange = null;
-            liveEdgeSearchStep = NaN;
-            currentRepresentation = null;
-            useBinarySearch = false;
-            fragmentDuration = NaN;
+
+            for (var i = 0, ln = rules.length; i < ln; i += 1) {
+                rules[i].abortSearch();
+            }
         }
     };
 };

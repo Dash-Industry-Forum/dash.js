@@ -51,6 +51,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('limitSwitchesRule', MediaPlayer.rules.LimitSwitchesRule);
             this.system.mapClass('abrRulesCollection', MediaPlayer.rules.BaseRulesCollection);
 
+            this.system.mapClass('liveEdgeBinarySearchRule', MediaPlayer.rules.LiveEdgeBinarySearchRule);
             this.system.mapClass('bufferLevelRule', MediaPlayer.rules.BufferLevelRule);
             this.system.mapClass('pendingRequestsRule', MediaPlayer.rules.PendingRequestsRule);
             this.system.mapClass('playbackTimeRule', MediaPlayer.rules.PlaybackTimeRule);

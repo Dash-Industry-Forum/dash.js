@@ -16,6 +16,7 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
 
     var segmentsToScheduleRules = [],
         segmentsToExecuteRules = [],
+        liveEdgeRules = [],
         nextSegmentRules = [];
 
     return {
@@ -23,6 +24,7 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
         pendingRequestsRule: undefined,
         playbackTimeRule: undefined,
         sameTimeRequestRule: undefined,
+        liveEdgeBinarySearchRule: undefined,
 
         getRules: function (type) {
             switch (type) {
@@ -32,6 +34,8 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
                     return nextSegmentRules;
                 case MediaPlayer.rules.ScheduleRulesCollection.prototype.SEGMENTS_TO_EXECUTE_RULES:
                     return segmentsToExecuteRules;
+                case MediaPlayer.rules.ScheduleRulesCollection.prototype.LIVE_EDGE_RULES:
+                    return liveEdgeRules;
                 default:
                     return null;
             }
@@ -42,6 +46,7 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
             segmentsToScheduleRules.push(this.pendingRequestsRule);
             nextSegmentRules.push(this.playbackTimeRule);
             segmentsToExecuteRules.push(this.sameTimeRequestRule);
+            liveEdgeRules.push(this.liveEdgeBinarySearchRule);
         }
     };
 };
@@ -50,5 +55,6 @@ MediaPlayer.rules.ScheduleRulesCollection.prototype = {
     constructor: MediaPlayer.rules.ScheduleRulesCollection,
     SEGMENTS_TO_SCHEDULE_RULES: 1,
     NEXT_SEGMENT_RULES: 2,
-    SEGMENTS_TO_EXECUTE_RULES: 3
+    SEGMENTS_TO_EXECUTE_RULES: 3,
+    LIVE_EDGE_RULES: 4
 };
