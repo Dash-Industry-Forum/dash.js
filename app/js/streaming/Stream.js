@@ -581,7 +581,10 @@ MediaPlayer.dependencies.Stream = function () {
                 this.protectionController.teardownKeySystem(kid);
             }
 
-            this.protectionExt.unsubscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this.protectionModel);
+            if (this.protectionModel) {
+                this.protectionExt.unsubscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this.protectionModel);
+            }
+
             this.protectionExt.unsubscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this);
             this.protectionController = undefined;
             this.protectionModel = undefined;
