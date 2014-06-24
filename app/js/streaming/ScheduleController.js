@@ -132,14 +132,13 @@ MediaPlayer.dependencies.ScheduleController = function () {
             fragmentsToLoad = getRequiredFragmentCount.call(self).count;
 
             if (fragmentsToLoad > 0) {
+                self.abrController.getPlaybackQuality(type, self.streamProcessor.getData());
                 request = loadNextFragment.call(self).request;
 
                 if (request) {
                     fragmentsToLoad--;
                     //self.debug.log("Loading fragment: " + request.streamType + ":" + request.startTime);
                     self.fragmentController.prepareFragmentForLoading(self, request);
-                } else {
-                    doStop.call(self);
                 }
             }
         },
@@ -212,7 +211,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             if (!isEnoughTimeSinceLastValidation || isStopped || (this.playbackController.isPaused() && (!this.scheduleWhilePaused || isDynamic))) return;
 
             lastValidationTime = now;
-            this.abrController.getPlaybackQuality(type, this.streamProcessor.getData());
             requestNewFragment.call(this);
         },
 

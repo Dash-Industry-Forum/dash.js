@@ -27,6 +27,8 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
 
             time = seekTarget || (useRejected ? rejected.startTime : currentTime);
 
+            if (isNaN(time)) return new MediaPlayer.rules.SwitchRequest(null, p);
+
             seekTarget = null;
 
             range = scheduleController.sourceBufferExt.getBufferRange(scheduleController.bufferController.getBuffer(), time);
@@ -40,6 +42,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             while (request && scheduleController.fragmentController.isFragmentLoadedOrPending(scheduleController, request)) {
                 if (request.action === "complete") {
                     request = null;
+                    scheduleController.indexHandler.setCurrentTime(NaN);
                     break;
                 }
 
