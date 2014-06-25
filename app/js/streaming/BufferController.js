@@ -35,7 +35,24 @@ MediaPlayer.dependencies.BufferController = function () {
         pendingMedia = [],
 
         waitingForInit = function() {
+            var loadingReqs = this.streamProcessor.getFragmentModel().getLoadingRequests();
+
+            if ((currentQuality > requiredQuality) && (hasReqsForQuality(pendingMedia, currentQuality) || hasReqsForQuality(loadingReqs, currentQuality))) {
+                return false;
+            }
+
             return (currentQuality !== requiredQuality);
+        },
+
+        hasReqsForQuality = function(arr, quality){
+            var i = 0,
+                ln = arr.length;
+
+            for (i; i < ln; i +=1) {
+                if (arr[i].quality === quality) return true;
+            }
+
+            return false;
         },
 
         sortArrayByProperty = function(array, sortProp) {
@@ -60,7 +77,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             // if this is the initialization data for current quality we need to push it to the buffer
 
-            if (quality !== requiredQuality || !waitingForInit()) return;
+            if (quality !== requiredQuality || !waitingForInit.call(self)) return;
 
             switchInitData.call(self);
         },
@@ -386,7 +403,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         appendNext = function() {
-            if (waitingForInit()) {
+            if (waitingForInit.call(this)) {
                 switchInitData.call(this);
             } else {
                 appendNextMedia.call(this);
@@ -423,7 +440,7 @@ MediaPlayer.dependencies.BufferController = function () {
         appendNextMedia = function() {
             var data;
 
-            if (pendingMedia.length === 0 || isBufferLevelOutrun || isAppendingInProgress || waitingForInit() || !hasEnoughSpaceToAppend.call(this)) return;
+            if (pendingMedia.length === 0 || isBufferLevelOutrun || isAppendingInProgress || waitingForInit.call(this) || !hasEnoughSpaceToAppend.call(this)) return;
 
             data = pendingMedia.shift();
             appendToBuffer.call(this, data.bytes, data.quality, data.index);
@@ -464,6 +481,8 @@ MediaPlayer.dependencies.BufferController = function () {
             updateBufferTimestampOffset.call(self, self.representationController.getRepresentationForQuality(newQuality).MSETimeOffset);
 
             requiredQuality = newQuality;
+            if (!waitingForInit.call(self)) return;
+
             switchInitData.call(self);
         },
 
