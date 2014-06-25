@@ -32,7 +32,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 bufferedDuration = bufferLevel / Math.max(rate, 1),
                 segmentDuration = representation.segments[0].duration,
                 currentTime = scheduleController.playbackController.getTime(),
-                requiredBufferLength = Math.min(this.bufferExt.getRequiredBufferLength(isDynamic, duration), duration - currentTime),
+                requiredBufferLength = Math.min(this.bufferExt.getRequiredBufferLength(isDynamic, duration), isDynamic ? Number.POSITIVE_INFINITY : (duration - currentTime)),
                 remainingDuration = Math.max(requiredBufferLength - bufferedDuration, 0),
                 segmentCount;
 
