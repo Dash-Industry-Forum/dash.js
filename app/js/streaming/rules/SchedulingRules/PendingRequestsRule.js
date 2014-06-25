@@ -1,6 +1,8 @@
 MediaPlayer.rules.PendingRequestsRule = function () {
     "use strict";
 
+    var LIMIT = 3;
+
     return {
         metricsExt: undefined,
         manifestExt: undefined,
@@ -12,7 +14,7 @@ MediaPlayer.rules.PendingRequestsRule = function () {
                 ln = pendingRequests.length + loadingRequests.length,
                 count = current - ln;
 
-            if (count > 0) return new MediaPlayer.rules.SwitchRequest(count, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
+            if (ln > LIMIT) return new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
 
             if (current === 0) return new MediaPlayer.rules.SwitchRequest(count, MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE);
 
