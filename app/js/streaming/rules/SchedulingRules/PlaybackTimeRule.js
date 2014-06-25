@@ -20,7 +20,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 currentTime = scheduleController.indexHandler.getCurrentTime(representation),
                 playbackTime = scheduleController.playbackController.getTime(),
                 rejectedEnd = rejected ? rejected.startTime + rejected.duration : null,
-                useRejected = rejected && (rejectedEnd > playbackTime) && (rejected.startTime <= currentTime),
+                useRejected = rejected && ((rejectedEnd > playbackTime) && (rejected.startTime <= currentTime) || isNaN(currentTime)),
                 range,
                 time,
                 request;
