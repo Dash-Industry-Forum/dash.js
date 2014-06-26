@@ -348,9 +348,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onPlaybackSeeking = function(sender, time) {
-            var range = this.sourceBufferExt.getBufferRange(this.bufferController.getBuffer(), time);
-
-            if (!range && !initialPlayback) {
+            if (!initialPlayback) {
                 this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
             }
 
