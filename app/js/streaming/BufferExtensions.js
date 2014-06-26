@@ -82,7 +82,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
             return topQualityIndex;
         },
 
-        decideBufferLength: function (minBufferTime, duration/*, waitingForBuffer*/) {
+        decideBufferLength: function (minBufferTime, duration, isDynamic) {
             if (isNaN(duration) || MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
                 minBufferTarget = Math.max(MediaPlayer.dependencies.BufferExtensions.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
             } else if (minBufferTime >= duration) {
@@ -91,7 +91,7 @@ MediaPlayer.dependencies.BufferExtensions = function () {
                 minBufferTarget = Math.min(duration, minBufferTime);
             }
 
-            return minBufferTarget;
+            return isDynamic ? (minBufferTarget / 2) : minBufferTarget;
         },
 
         getLeastBufferLevel: function() {

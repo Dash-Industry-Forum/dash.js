@@ -452,7 +452,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             updateBufferTimestampOffset.call(self, newRepresentation.MSETimeOffset);
 
-            bufferLength = self.bufferExt.decideBufferLength(self.manifestModel.getValue().minBufferTime, self.playbackController.getPeriodDuration());
+            bufferLength = self.bufferExt.decideBufferLength(self.manifestModel.getValue().minBufferTime, self.playbackController.getPeriodDuration(), self.streamProcessor.isDynamic());
             //self.debug.log("Min Buffer time: " + bufferLength);
             if (minBufferTime !== bufferLength) {
                 self.setMinBufferTime(bufferLength);

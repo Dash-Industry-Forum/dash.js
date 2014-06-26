@@ -367,7 +367,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             // step back from a found live edge time to be able to buffer some data
             var self = this,
                 fragmentDuration = currentRepresentation.segmentDuration || 0,
-                startTime = Math.max((liveEdgeTime - self.bufferController.getMinBufferTime()), currentRepresentation.segmentAvailabilityRange.start),
+                startTime = Math.max((liveEdgeTime - self.bufferController.getMinBufferTime() * 2), currentRepresentation.segmentAvailabilityRange.start),
                 request,
                 segmentStart;
             // get a request for a start time
