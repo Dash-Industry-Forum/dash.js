@@ -302,6 +302,7 @@
         debug: undefined,
         metricsModel: undefined,
         videoExt: undefined,
+        timelineConverter: undefined,
         errHandler: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -362,6 +363,7 @@
             streams = [];
             this.manifestUpdater.stop();
             this.manifestModel.setValue(null);
+            this.timelineConverter.reset();
             isPeriodSwitchingInProgress = false;
             activeStream = null;
         },

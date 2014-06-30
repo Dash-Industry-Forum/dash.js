@@ -154,6 +154,11 @@ Dash.dependencies.TimelineConverter = function () {
                 presentationOffset = representation.presentationTimeOffset;
 
             return (periodStart - presentationOffset);
+        },
+
+        reset = function() {
+            clientServerTimeShift = 0;
+            isClientServerTimeSyncCompleted = false;
         };
 
     return {
@@ -172,7 +177,8 @@ Dash.dependencies.TimelineConverter = function () {
         calcMediaTimeFromPresentationTime: calcMediaTimeFromPresentationTime,
         calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
         calcWallTimeForSegment: calcWallTimeForSegment,
-        calcMSETimeOffset: calcMSETimeOffset
+        calcMSETimeOffset: calcMSETimeOffset,
+        reset: reset
     };
 };
 
