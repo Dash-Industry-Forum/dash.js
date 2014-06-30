@@ -364,9 +364,7 @@ Dash.dependencies.DashHandler = function () {
         },
 
         decideSegmentListRangeForTimeline = function(representation) {
-            var originAvailabilityIdx = NaN,
-                currentSegmentList = representation.segments,
-                availabilityLowerLimit = 2,
+            var availabilityLowerLimit = 2,
                 availabilityUpperLimit = 10,
                 firstIdx = 0,
                 lastIdx = Number.POSITIVE_INFINITY,
@@ -379,23 +377,11 @@ Dash.dependencies.DashHandler = function () {
                 return range;
             }
 
-            if(!isDynamic && requestedTime) return null;
-
-            // if segments exist use the current index as an origin index for a new range
-            if (currentSegmentList) {
-                // if the index is negative we can't calculate the range right now
-                if (index < 0) return null;
-                originAvailabilityIdx = index;
-            } else {
-                // If no segments exist, but index > 0, it means that we switch to the other representation, so
-                // we should proceed from this index.
-                // Otherwise we should start from the beginning for static mpds or from the end (live edge) for dynamic mpds
-                originAvailabilityIdx = (index > 0) ? index : (isDynamic ? lastIdx : firstIdx);
-            }
+            if((!isDynamic && requestedTime) || index < 0) return null;
 
             // segment list should not be out of the availability window range
-            start = Math.max(originAvailabilityIdx - availabilityLowerLimit, firstIdx);
-            end = Math.min(originAvailabilityIdx + availabilityUpperLimit, lastIdx);
+            start = Math.max(index - availabilityLowerLimit, firstIdx);
+            end = Math.min(index + availabilityUpperLimit, lastIdx);
 
             range = {start: start, end: end};
 
@@ -532,12 +518,14 @@ Dash.dependencies.DashHandler = function () {
             return representation;
         },
 
-        updateRepresentation = function(representation) {
+        updateRepresentation = function(representation, keepIdx) {
             var self = this,
                 hasInitialization = representation.initialization,
                 hasSegments = representation.segmentInfoType !== "BaseURL" && representation.segmentInfoType !== "SegmentBase";
 
             representation.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
+
+            if (!keepIdx) index = -1;
 
             updateSegmentList.call(self, representation);
             if (!hasInitialization) {

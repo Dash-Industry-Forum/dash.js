@@ -23,7 +23,7 @@ Dash.dependencies.RepresentationController = function () {
             }
 
             for (var i = 0; i < availableRepresentations.length; i += 1) {
-                self.indexHandler.updateRepresentation(availableRepresentations[i]);
+                self.indexHandler.updateRepresentation(availableRepresentations[i], true);
             }
         },
 
@@ -53,6 +53,16 @@ Dash.dependencies.RepresentationController = function () {
             return reps;
         },
 
+        updateAvailabilityWindow = function(isDynamic) {
+            var self = this,
+                rep;
+
+            for (var i = 0, ln = availableRepresentations.length; i < ln; i +=1) {
+                rep = availableRepresentations[i];
+                rep.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(rep, isDynamic);
+            }
+        },
+
         onRepresentationUpdated = function(/*sender, representation*/) {
             if (isAllRepresentationsUpdated()) {
                 updating = false;
@@ -61,13 +71,12 @@ Dash.dependencies.RepresentationController = function () {
         },
 
         onWallclockTimeUpdated = function(sender, isDynamic/*, wallclockTime*/) {
-            var self = this,
-                rep;
+            updateAvailabilityWindow.call(this, isDynamic);
+        },
 
-            for (var i = 0, ln = availableRepresentations.length; i < ln; i +=1) {
-                rep = availableRepresentations[i];
-                rep.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(rep, isDynamic);
-            }
+        onLiveEdgeFound = function(/*sender, liveEdgeTime, periodInfo*/) {
+            updateAvailabilityWindow.call(this, true);
+            this.indexHandler.updateRepresentation(currentRepresentation, false);
         },
 
         onQualityChanged = function(sender, type, oldQuality, newQuality/*, dataChanged*/) {
@@ -98,6 +107,7 @@ Dash.dependencies.RepresentationController = function () {
             this.qualityChanged = onQualityChanged;
             this.representationUpdated = onRepresentationUpdated;
             this.wallclockTimeUpdated = onWallclockTimeUpdated;
+            this.liveEdgeFound = onLiveEdgeFound;
         },
 
         initialize: function(streamProcessor) {
