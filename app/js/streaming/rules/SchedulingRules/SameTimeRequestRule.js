@@ -71,6 +71,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 mIdx,
                 req,
                 currentTime,
+                wallclockTime = new Date(),
                 time = null,
                 reqForCurrentTime,
                 mLength = fragmentModels ? fragmentModels.length : null,
@@ -121,6 +122,10 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                     break;
                 }
             }
+
+            reqsToExecute = reqsToExecute.filter( function(req) {
+                return wallclockTime.getTime() >= req.availabilityStartTime.getTime();
+            });
 
             if (shouldWait) return new MediaPlayer.rules.SwitchRequest([], p);
 

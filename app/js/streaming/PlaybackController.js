@@ -27,6 +27,12 @@ MediaPlayer.dependencies.PlaybackController = function () {
             wallclockTimeIntervalId = null;
         },
 
+        initialStart = function() {
+            var initialSeekTime = this.timelineConverter.calcPresentationStartTime(period);
+            this.debug.log("Starting playback at offset: " + initialSeekTime);
+            this.seek(initialSeekTime);
+        },
+
         updateCurrentTime = function() {
             if (this.isPaused()) return;
 
@@ -44,6 +50,12 @@ MediaPlayer.dependencies.PlaybackController = function () {
             period = representation.adaptation.period;
             isDynamic = sender.streamProcessor.isDynamic();
             updateCurrentTime.call(this);
+        },
+
+        onLiveEdgeFound = function(/*sender, liveEdgeTime, periodInfo*/) {
+            if (videoModel.getElement().readyState !== 0) {
+                initialStart.call(this);
+            }
         },
 
         removeAllListeners = function() {
@@ -111,9 +123,11 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         onPlaybackMetaDataLoaded = function() {
             this.debug.log("Got loadmetadata event.");
-            var initialSeekTime = this.timelineConverter.calcPresentationStartTime(period);
-            this.debug.log("Starting playback at offset: " + initialSeekTime);
-            this.seek(initialSeekTime);
+
+            if (!isDynamic || period.isClientServerTimeSyncCompleted) {
+                initialStart.call(this);
+            }
+
             this.notify(this.eventList.ENAME_PLAYBACK_METADATA_LOADED);
         },
 
@@ -161,6 +175,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         setup: function() {
             this.dataUpdateCompleted = onDataUpdateCompleted;
+            this.liveEdgeFound = onLiveEdgeFound;
             onPlaybackStart = onPlaybackStart.bind(this);
             onPlaybackPaused = onPlaybackPaused.bind(this);
             onPlaybackError = onPlaybackError.bind(this);

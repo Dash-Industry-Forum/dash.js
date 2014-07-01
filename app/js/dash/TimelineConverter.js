@@ -31,7 +31,7 @@ Dash.dependencies.TimelineConverter = function () {
                 }
             } else {
                 if (isDynamic) {
-                    availabilityTime = new Date(mpd.availabilityStartTime.getTime() + (presentationTime * 1000));
+                    availabilityTime = new Date(mpd.availabilityStartTime.getTime() + (presentationTime * 1000) - clientServerTimeShift);
                 } else {
                 // in static mpd, all segments are available at the same time
                     availabilityTime = mpd.availabilityStartTime;
@@ -125,12 +125,12 @@ Dash.dependencies.TimelineConverter = function () {
             }
 
             checkTime = representation.adaptation.period.mpd.checkTime;
-            now = calcPresentationTimeFromWallTime(new Date((new Date().getTime()) + clientServerTimeShift), representation.adaptation.period);
+            now = calcPresentationTimeFromWallTime(new Date((new Date().getTime())), representation.adaptation.period);
             //the Media Segment list is further restricted by the CheckTime together with the MPD attribute
             // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
             // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.
             start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth - duration), 0);
-            checkTime -= duration - (clientServerTimeShift / 1000);
+            checkTime -= duration;
             now -= duration;
             end = isNaN(checkTime) ? now : Math.min(checkTime, now);
             range = {start: start, end: end};
@@ -140,10 +140,11 @@ Dash.dependencies.TimelineConverter = function () {
 
         onLiveEdgeFound = function(sender, actualLiveEdge, period) {
             if (period.isClientServerTimeSyncCompleted) return;
+            var searchTime = (new Date().getTime() - period.mpd.manifest.mpdLoadedTime.getTime()) / 1000;
 
             // the difference between expected and actual live edge time is supposed to be a difference between client
             // and server time as well
-            period.clientServerTimeShift = actualLiveEdge - period.liveEdge;
+            period.clientServerTimeShift = actualLiveEdge - (period.liveEdge + searchTime);
             period.isClientServerTimeSyncCompleted = true;
             clientServerTimeShift = period.clientServerTimeShift * 1000;
             isClientServerTimeSyncCompleted = true;

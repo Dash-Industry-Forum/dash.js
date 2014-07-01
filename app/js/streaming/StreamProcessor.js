@@ -67,6 +67,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.timelineConverter);
                 liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, scheduleController);
                 liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, representationController);
+                liveEdgeFinder.subscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, playbackController);
 
                 representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_STARTED, scheduleController);
 
@@ -210,6 +211,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.timelineConverter);
             liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, scheduleController);
             liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, representationController);
+            liveEdgeFinder.unsubscribe(liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, playbackController);
 
             representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_STARTED, scheduleController);
             representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, bufferController);
