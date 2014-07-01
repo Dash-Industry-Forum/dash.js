@@ -124,7 +124,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
             }
 
             reqsToExecute = reqsToExecute.filter( function(req) {
-                return wallclockTime.getTime() >= req.availabilityStartTime.getTime();
+                return (req.action === "complete") || (wallclockTime.getTime() >= req.availabilityStartTime.getTime());
             });
 
             if (shouldWait) return new MediaPlayer.rules.SwitchRequest([], p);
