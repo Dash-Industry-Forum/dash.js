@@ -689,6 +689,7 @@ Dash.dependencies.DashHandler = function () {
                 request = new MediaPlayer.vo.SegmentRequest();
                 request.action = request.ACTION_COMPLETE;
                 request.index = index;
+                request.streamType = type;
                 self.debug.log("Signal complete.");
                 self.debug.log(request);
             } else {
@@ -735,6 +736,7 @@ Dash.dependencies.DashHandler = function () {
                 request = new MediaPlayer.vo.SegmentRequest();
                 request.action = request.ACTION_COMPLETE;
                 request.index = idx;
+                request.streamType = type;
                 self.debug.log("Signal complete.");
                 //self.debug.log(request);
             } else {

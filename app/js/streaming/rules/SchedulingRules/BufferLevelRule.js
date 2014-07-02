@@ -2,6 +2,11 @@ MediaPlayer.rules.BufferLevelRule = function () {
     "use strict";
 
     var isBufferLevelOutran = false,
+        isCompleted = {},
+
+        onStreamCompleted = function(sender, model , request) {
+            isCompleted[request.streamType] = true;
+        },
 
         onBufferLevelOutrun = function(/*sender*/) {
             isBufferLevelOutran = true;
@@ -19,6 +24,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
         setup: function() {
             this.bufferLevelOutrun = onBufferLevelOutrun;
             this.bufferLevelBalanced = onBufferLevelBalanced;
+            this.streamCompleted = onStreamCompleted;
         },
 
         getSegmentNumberToSchedule: function(current, metrics, scheduleController) {
@@ -32,11 +38,16 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 bufferedDuration = bufferLevel / Math.max(rate, 1),
                 segmentDuration = representation.segments[0].duration,
                 currentTime = scheduleController.playbackController.getTime(),
-                requiredBufferLength = Math.min(this.bufferExt.getRequiredBufferLength(isDynamic, duration), isDynamic ? Number.POSITIVE_INFINITY : (duration - currentTime)),
+                timeToEnd = isDynamic ? Number.POSITIVE_INFINITY : duration - currentTime,
+                requiredBufferLength = Math.min(this.bufferExt.getRequiredBufferLength(isDynamic, duration), timeToEnd),
                 remainingDuration = Math.max(requiredBufferLength - bufferedDuration, 0),
                 segmentCount;
 
             segmentCount = Math.ceil(remainingDuration/segmentDuration);
+
+            if (bufferedDuration >= timeToEnd  && !isCompleted[scheduleController.streamProcessor.getType()]) {
+                segmentCount = segmentCount || 1;
+            }
 
             return new MediaPlayer.rules.SwitchRequest(segmentCount, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
         }
