@@ -407,6 +407,9 @@ MediaPlayer.dependencies.BufferController = function () {
                 deferred = Q.defer(),
                 currentTime = getWorkingTime.call(self);
 
+            var range = self.timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, this.indexHandler.getIsDynamic());
+            this.metricsModel.addDVRInfo(currentTime, self.manifestModel.getValue(), range);
+
             self.sourceBufferExt.getBufferLength(buffer, currentTime).then(
                 function(bufferLength) {
                     if (!hasData()) {
@@ -1097,7 +1100,7 @@ MediaPlayer.dependencies.BufferController = function () {
         errHandler: undefined,
         scheduleWhilePaused: undefined,
         eventController : undefined,
-
+        timelineConverter:undefined,
         initialize: function (type, periodInfo, data, buffer, videoModel, scheduler, fragmentController, source, eventController) {
             var self = this,
                 manifest = self.manifestModel.getValue();
