@@ -112,8 +112,8 @@ Dash.dependencies.TimelineConverter = function () {
 
         calcSegmentAvailabilityRange = function(representation, isDynamic) {
             var duration = representation.segmentDuration,
-                start = 0,
-                end = representation.adaptation.period.duration,
+                start = representation.adaptation.period.start,
+                end = start + representation.adaptation.period.duration,
                 range = {start: start, end: end},
                 checkTime,
                 now;
