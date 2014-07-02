@@ -131,15 +131,18 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             fragmentsToLoad = getRequiredFragmentCount.call(self).count;
 
-            if (fragmentsToLoad > 0) {
-                self.abrController.getPlaybackQuality(type, self.streamProcessor.getData());
-                request = loadNextFragment.call(self).request;
+            if (fragmentsToLoad <= 0) {
+                self.fragmentController.executePendingRequests();
+                return;
+            }
 
-                if (request) {
-                    fragmentsToLoad--;
-                    //self.debug.log("Loading fragment: " + request.streamType + ":" + request.startTime);
-                    self.fragmentController.prepareFragmentForLoading(self, request);
-                }
+            self.abrController.getPlaybackQuality(type, self.streamProcessor.getData());
+            request = loadNextFragment.call(self).request;
+
+            if (request) {
+                fragmentsToLoad--;
+                //self.debug.log("Loading fragment: " + request.streamType + ":" + request.startTime);
+                self.fragmentController.prepareFragmentForLoading(self, request);
             }
         },
 
@@ -299,7 +302,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onQuotaExceeded = function(/*sender, criticalBufferLevel*/) {
-            doStop.call(this, true);
+            doStop.call(this, false);
         },
 
         onQualityChanged = function(sender, typeValue, oldQuality, newQuality) {

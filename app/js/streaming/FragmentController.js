@@ -281,6 +281,10 @@ MediaPlayer.dependencies.FragmentController = function () {
             }
         },
 
+        executePendingRequests: function() {
+            executeRequests.call(this);
+        },
+
         resetModel: function(model) {
             this.abortRequestsForModel(model);
             this.cancelPendingRequestsForModel(model);
