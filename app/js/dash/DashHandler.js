@@ -154,6 +154,7 @@ Dash.dependencies.DashHandler = function () {
                 seg,
                 duration,
                 presentationStartTime,
+                idx,
                 presentationEndTime;
 
             duration = representation.segmentDuration;
@@ -174,7 +175,8 @@ Dash.dependencies.DashHandler = function () {
             // at this wall clock time, the video element currentTime should be seg.presentationStartTime
             seg.wallStartTime = self.timelineConverter.calcWallTimeForSegment(seg, isDynamic);
 
-            seg.replacementNumber = getNumberForSegment(seg, index);
+            idx = (presentationStartTime - representation.adaptation.period.start) / duration;
+            seg.replacementNumber = getNumberForSegment(seg, idx);
             seg.availabilityIdx = index;
 
             return seg;
