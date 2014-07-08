@@ -38,7 +38,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
             }
 
             if (liveEdge !== null) {
-                this.notify(this.eventList.ENAME_LIVE_EDGE_FOUND, liveEdge, this.streamProcessor.getCurrentRepresentation().adaptation.period);
+                this.notify(this.eventList.ENAME_LIVE_EDGE_FOUND, liveEdge);
             } else {
                 this.notify(this.eventList.ENAME_LIVE_EDGE_SEARCH_ERROR);
             }

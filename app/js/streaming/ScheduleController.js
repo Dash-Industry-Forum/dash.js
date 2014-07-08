@@ -366,7 +366,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             validate.call(this);
         },
 
-        onLiveEdgeFound = function(sender, liveEdgeTime, periodInfo) {
+        onLiveEdgeFound = function(sender, liveEdgeTime) {
             // step back from a found live edge time to be able to buffer some data
             var self = this,
                 startTime = Math.max((liveEdgeTime - self.bufferController.getMinBufferTime() * 2), currentRepresentation.segmentAvailabilityRange.start),
@@ -377,7 +377,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             segmentStart = request.startTime;
             // set liveEdge to be in the middle of the segment time to avoid a possible gap between
             // currentTime and buffered.start(0)
-            periodInfo.liveEdge = segmentStart + (request.duration / 2);
+            currentRepresentation.adaptation.period.liveEdge = segmentStart + (request.duration / 2);
             ready = true;
             startOnReady.call(self, segmentStart);
         };

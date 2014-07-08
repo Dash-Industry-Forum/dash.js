@@ -52,7 +52,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             updateCurrentTime.call(this);
         },
 
-        onLiveEdgeFound = function(/*sender, liveEdgeTime, periodInfo*/) {
+        onLiveEdgeFound = function(/*sender, liveEdgeTime*/) {
             if (videoModel.getElement().readyState !== 0) {
                 initialStart.call(this);
             }
