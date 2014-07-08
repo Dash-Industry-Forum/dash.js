@@ -256,7 +256,9 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
         getCurrentDVRInfo = function (metrics) {
 
-            if (metrics === null) {return null;}
+            if (metrics === null) {
+                return null;
+            }
 
             var dvrInfo = metrics.DVRInfo,
                 dvrInfoLastIndex,
@@ -267,10 +269,9 @@ Dash.dependencies.DashMetricsExtensions = function () {
             }
 
             dvrInfoLastIndex = dvrInfo.length - 1;
-
             curentDVRInfo = dvrInfo[dvrInfoLastIndex];
 
-            return curentDVRInfo
+            return curentDVRInfo;
         };
 
     return {

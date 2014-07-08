@@ -14,12 +14,9 @@ MediaPlayer.vo.metrics.DVRInfo = function () {
         },
         setDvrWindowTime = function(value) {
             dvrWindow = value;
-        }
+        };
 
     return {
-
-        manifestModel:undefined,
-
         setTime : setTime,
         setRange : setRange,
         setDvrWindowTime : setDvrWindowTime,
@@ -35,16 +32,18 @@ MediaPlayer.vo.metrics.DVRInfo = function () {
         },
 
         duration : function() {
+            // I will want to return duration from video element for VOD streams so player dev can just call this one spot to drive a custom video UI
             return range.end < dvrWindow ? range.end : dvrWindow;
         },
 
         time : function () {
+            // I will want to return currentTime from video element for VOD streams so player dev can just call this one spot to drive a custom video UI
             // This will produce a relative time withing the DVR range.
             return Math.round(this.duration() - (range.end - time));
         },
 
         getSeekValue:function (value) {
-
+            // I will want to return value without modification if called from a VOD stream.
             var val = range.start + parseInt(value);
 
             if (val > range.end)
@@ -66,15 +65,19 @@ MediaPlayer.vo.metrics.DVRInfo = function () {
             var h = Math.floor(sec/3600);
             var m = Math.floor((sec%3600)/60);
             var s = Math.floor((sec%3600)%60);
-            return (h == 0 ? "":(h<10 ? "0"+h.toString()+":" : h.toString()+":"))+(m<10 ? "0"+m.toString() : m.toString())+":"+(s<10 ? "0"+s.toString() : s.toString());
+            return (h === 0 ? "":(h<10 ? "0"+h.toString()+":" : h.toString()+":"))+(m<10 ? "0"+m.toString() : m.toString())+":"+(s<10 ? "0"+s.toString() : s.toString());
+        },
+
+        timeAsUTC: function () {
+
+                
+
         }
+//      durationAsUTC: function () {
 
-//        timeAsUTC: function () {
-//        },
-//        durationAsUTC: function () {
-//        },
+//      },
 
-    }
+    };
 
 };
 
