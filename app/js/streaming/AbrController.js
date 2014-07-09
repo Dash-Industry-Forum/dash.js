@@ -223,7 +223,7 @@ MediaPlayer.dependencies.AbrController = function () {
         setPlaybackQuality: function (type, newPlaybackQuality) {
             var quality = getInternalQuality(type);
 
-            if (newPlaybackQuality !== quality) {
+            if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && topQualities.hasOwnProperty(type) && newPlaybackQuality <= topQualities[type]) {
                 setInternalQuality(type, newPlaybackQuality);
                 this.notify(this.eventList.ENAME_QUALITY_CHANGED, type, quality, newPlaybackQuality);
             }
