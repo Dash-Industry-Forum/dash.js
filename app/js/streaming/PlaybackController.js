@@ -129,6 +129,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             }
 
             this.notify(this.eventList.ENAME_PLAYBACK_METADATA_LOADED);
+            startUpdatingWallclockTime.call(this);
         },
 
         onPlaybackError = function(event) {
@@ -185,8 +186,6 @@ MediaPlayer.dependencies.PlaybackController = function () {
             onPlaybackProgress = onPlaybackProgress.bind(this);
             onPlaybackRateChanged = onPlaybackRateChanged.bind(this);
             onPlaybackMetaDataLoaded = onPlaybackMetaDataLoaded.bind(this);
-
-            startUpdatingWallclockTime.call(this);
         },
 
         initialize: function(periodInfo, model) {
