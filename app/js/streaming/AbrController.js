@@ -235,6 +235,13 @@ MediaPlayer.dependencies.AbrController = function () {
 
         getConfidenceFor: function(type) {
             return getInternalConfidence(type);
+        },
+
+        reset: function() {
+            autoSwitchBitrate = true;
+            topQualities = {};
+            qualityDict = {};
+            confidenceDict = {};
         }
     };
 };

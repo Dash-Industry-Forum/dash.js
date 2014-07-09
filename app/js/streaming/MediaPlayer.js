@@ -108,6 +108,7 @@ MediaPlayer = function (aContext) {
                 manifestLoader.unsubscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, manifestUpdater);
                 abrController.unsubscribe(abrController.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, bufferExt);
                 streamController.reset();
+                abrController.reset();
                 streamController = null;
                 playing = false;
             }
