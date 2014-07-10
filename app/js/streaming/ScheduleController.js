@@ -50,18 +50,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
             validate.call(this);
         },
 
-        startOnReady = function(time) {
-            getInitRequest.call(this, currentRepresentation.index);
-            doSeek.call(this, time);
-        },
+        startOnReady = function() {
+            if (initialPlayback) {
+                getInitRequest.call(this, currentRepresentation.index);
+            }
 
-        doSeek = function (time) {
-            var currentTime;
-
-            this.debug.log("ScheduleController " + type + " seek: " + time);
-            currentTime = new Date();
-            clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
-            playListMetrics = this.metricsModel.addPlayList(type, currentTime, time, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
             doStart.call(this);
         },
 
@@ -346,8 +339,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             fragmentModel.executeRequest(req);
         },
 
-        onPlaybackStarted = function(sender, startTime) {
-            doSeek.call(this, startTime);
+        onPlaybackStarted = function(/*sender, startTime*/) {
+            doStart.call(this);
         },
 
         onPlaybackSeeking = function(sender, time) {
@@ -355,7 +348,13 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
             }
 
-            doSeek.call(this, time);
+            var currentTime;
+
+            this.debug.log("ScheduleController " + type + " seek: " + time);
+            currentTime = new Date();
+            clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
+            playListMetrics = this.metricsModel.addPlayList(type, currentTime, time, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
+            doStart.call(this);
         },
 
         onPlaybackRateChanged = function() {
@@ -379,7 +378,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             // currentTime and buffered.start(0)
             currentRepresentation.adaptation.period.liveEdge = segmentStart + (request.duration / 2);
             ready = true;
-            startOnReady.call(self, segmentStart);
+            startOnReady.call(self);
         };
 
     return {
@@ -455,7 +454,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         start: doStart,
-        seek: doSeek,
         stop: doStop
     };
 };

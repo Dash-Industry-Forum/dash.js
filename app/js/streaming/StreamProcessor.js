@@ -169,10 +169,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             this.scheduleController.start();
         },
 
-        seek: function(time) {
-            this.scheduleController.seek(time);
-        },
-
         stop: function() {
             this.scheduleController.stop();
         },
