@@ -109,6 +109,7 @@ MediaPlayer = function (aContext) {
                 abrController.unsubscribe(abrController.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, bufferExt);
                 streamController.reset();
                 abrController.reset();
+                bufferExt.reset();
                 streamController = null;
                 playing = false;
             }

@@ -14,8 +14,8 @@
 MediaPlayer.dependencies.BufferExtensions = function () {
     "use strict";
 
-    var minBufferTarget,
-        currentBufferTarget,
+    var minBufferTarget = null,
+        currentBufferTarget = null,
         topAudioQualityIndex = 0,
         topVideoQualityIndex = 0,
         criticalBufferLevel = Number.POSITIVE_INFINITY,
@@ -146,7 +146,15 @@ MediaPlayer.dependencies.BufferExtensions = function () {
 
         //TODO: need to add this info to MediaPlayer.vo.metrics.BufferLevel or create new metric?
         getBufferTarget: function() {
-            return currentBufferTarget === undefined ? minBufferTarget : currentBufferTarget;
+            return currentBufferTarget === null ? minBufferTarget : currentBufferTarget;
+        },
+
+        reset: function() {
+            minBufferTarget = null;
+            currentBufferTarget = null;
+            topAudioQualityIndex = 0;
+            topVideoQualityIndex = 0;
+            criticalBufferLevel = Number.POSITIVE_INFINITY;
         }
     };
 };
