@@ -10,7 +10,8 @@ MediaPlayer.rules.PendingRequestsRule = function () {
 
         getSegmentNumberToSchedule: function(current, metrics, scheduleController) {
             var pendingRequests = scheduleController.fragmentController.getPendingRequests(scheduleController),
-                ln = pendingRequests.length,
+                loadingRequests = scheduleController.fragmentController.getLoadingRequests(scheduleController),
+                ln = pendingRequests.length + loadingRequests.length,
                 count = Math.max(current - ln, 0);
 
             if (ln > LIMIT) return new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
