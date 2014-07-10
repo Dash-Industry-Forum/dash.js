@@ -162,12 +162,12 @@ MediaPlayer.models.MetricsModel = function () {
         {
             var vo = new MediaPlayer.vo.metrics.DVRInfo();
 
-            vo.setTime(currentTime);
-            vo.setMPD(mpd);
-            vo.setRange(range);
+            vo.time = currentTime ;
+            vo.range = range;
+            vo.mpd= mpd;
 
-            this.getMetricsFor("video").DVRInfo.push(vo);
-            this.metricAdded("video", "DVRInfo", vo);
+            this.getMetricsFor('video').DVRInfo.push(vo);
+            this.metricAdded('video', "DVRInfo", vo);
 
             return vo;
         },

@@ -1,87 +1,21 @@
-
+/*
+ * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2014, Akamai Technologies
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 MediaPlayer.vo.metrics.DVRInfo = function () {
     "use strict";
-
-    var time = null,
-        range = null,
-        mpd=null,
-
-        setRange = function(value) {
-            range = value;
-        },
-        setTime = function(value) {
-            time = value;
-        },
-        setMPD = function(value) {
-            mpd = value;
-        };
-
-    return {
-        setTime : setTime,
-        setRange : setRange,
-        setMPD : setMPD,
-
-        isDVR : function ()
-        {
-            return !isNaN(mpd.timeShiftBufferDepth);
-        },
-
-        dvrWindowTime : function() {
-            return mpd.timeShiftBufferDepth;
-        },
-
-        duration : function() {
-            // I will want to return duration from video element for VOD streams so player dev can just call this one spot to drive a custom video UI
-            return range.end < mpd.timeShiftBufferDepth ? range.end : mpd.timeShiftBufferDepth;
-        },
-
-        time : function () {
-            // I will want to return currentTime from video element for VOD streams so player dev can just call this one spot to drive a custom video UI
-            // This will produce a relative time withing the DVR range.
-            return Math.round(this.duration() - (range.end - time));
-        },
-
-        getSeekValue : function (value) {
-            // I will want to return value without modification if called from a VOD stream.
-            var val = range.start + parseInt(value);
-
-            if (val > range.end)
-            {
-                val = range.end; //should we add -10 for safety?
-            }
-
-            return val;
-        },
-
-        totalRunningTime : function () {
-            return time;
-        },
-
-        timeCode : function (sec)
-        {
-            sec = Math.max(sec, 0);
-
-            var h = Math.floor(sec/3600);
-            var m = Math.floor((sec%3600)/60);
-            var s = Math.floor((sec%3600)%60);
-            return (h === 0 ? "":(h<10 ? "0"+h.toString()+":" : h.toString()+":"))+(m<10 ? "0"+m.toString() : m.toString())+":"+(s<10 ? "0"+s.toString() : s.toString());
-        },
-
-        timeAsUTC : function () {
-
-
-
-            return (mpd.availabilityStartTime.getTime() / 1000) + this.time();
-        },
-
-        durationAsUTC : function () {
-            return mpd.availabilityEndTime !== Number.POSITIVE_INFINITY ? mpd.availabilityEndTime.getTime() : (mpd.availabilityStartTime.getTime() / 1000) + this.dvrWindowTime();
-        },
-
-        convertUTCToDate : function (t) {
-            return new Date(t*1000);
-        }
-    };
+    this.time = null;
+    this.range = null;
+    this.mpd=null;
 };
 
 MediaPlayer.vo.metrics.DVRInfo.prototype = {

@@ -108,7 +108,7 @@ MediaPlayer = function (aContext) {
         bufferExt: undefined,
         errHandler: undefined,
         tokenAuthentication:undefined,
-
+        videoElementExt:undefined,
         addEventListener: function (type, listener, useCapture) {
             this.eventBus.addEventListener(type, listener, useCapture);
         },
@@ -158,7 +158,9 @@ MediaPlayer = function (aContext) {
         setBufferMax: function(value) {
             bufferMax = value;
         },
-
+        getVideoElementExt:function() {
+            return this.videoElementExt;
+        },
         getBufferMax: function() {
             return bufferMax;
         },
