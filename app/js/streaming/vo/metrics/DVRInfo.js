@@ -4,7 +4,7 @@ MediaPlayer.vo.metrics.DVRInfo = function () {
 
     var time = null,
         range = null,
-        dvrWindow= null,
+        mpd=null,
 
         setRange = function(value) {
             range = value;
@@ -12,28 +12,27 @@ MediaPlayer.vo.metrics.DVRInfo = function () {
         setTime = function(value) {
             time = value;
         },
-        setDvrWindowTime = function(value) {
-            dvrWindow = value;
+        setMPD = function(value) {
+            mpd = value;
         };
 
     return {
         setTime : setTime,
         setRange : setRange,
-        setDvrWindowTime : setDvrWindowTime,
-
+        setMPD : setMPD,
 
         isDVR : function ()
         {
-            return !isNaN(dvrWindow);
+            return !isNaN(mpd.timeShiftBufferDepth);
         },
 
         dvrWindowTime : function() {
-            return dvrWindow;
+            return mpd.timeShiftBufferDepth;
         },
 
         duration : function() {
             // I will want to return duration from video element for VOD streams so player dev can just call this one spot to drive a custom video UI
-            return range.end < dvrWindow ? range.end : dvrWindow;
+            return range.end < mpd.timeShiftBufferDepth ? range.end : mpd.timeShiftBufferDepth;
         },
 
         time : function () {
@@ -42,7 +41,7 @@ MediaPlayer.vo.metrics.DVRInfo = function () {
             return Math.round(this.duration() - (range.end - time));
         },
 
-        getSeekValue:function (value) {
+        getSeekValue : function (value) {
             // I will want to return value without modification if called from a VOD stream.
             var val = range.start + parseInt(value);
 
@@ -54,7 +53,7 @@ MediaPlayer.vo.metrics.DVRInfo = function () {
             return val;
         },
 
-        totalRunningTime: function () {
+        totalRunningTime : function () {
             return time;
         },
 
@@ -68,17 +67,21 @@ MediaPlayer.vo.metrics.DVRInfo = function () {
             return (h === 0 ? "":(h<10 ? "0"+h.toString()+":" : h.toString()+":"))+(m<10 ? "0"+m.toString() : m.toString())+":"+(s<10 ? "0"+s.toString() : s.toString());
         },
 
-        timeAsUTC: function () {
+        timeAsUTC : function () {
 
-                
 
+
+            return (mpd.availabilityStartTime.getTime() / 1000) + this.time();
+        },
+
+        durationAsUTC : function () {
+            return mpd.availabilityEndTime !== Number.POSITIVE_INFINITY ? mpd.availabilityEndTime.getTime() : (mpd.availabilityStartTime.getTime() / 1000) + this.dvrWindowTime();
+        },
+
+        convertUTCToDate : function (t) {
+            return new Date(t*1000);
         }
-//      durationAsUTC: function () {
-
-//      },
-
     };
-
 };
 
 MediaPlayer.vo.metrics.DVRInfo.prototype = {

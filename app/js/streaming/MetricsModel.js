@@ -158,13 +158,13 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
 
-        addDVRInfo: function (currentTime, manifest, range)
+        addDVRInfo: function (currentTime, mpd, range)
         {
             var vo = new MediaPlayer.vo.metrics.DVRInfo();
 
             vo.setTime(currentTime);
+            vo.setMPD(mpd);
             vo.setRange(range);
-            vo.setDvrWindowTime(manifest.timeShiftBufferDepth);
 
             this.getMetricsFor("video").DVRInfo.push(vo);
             this.metricAdded("video", "DVRInfo", vo);

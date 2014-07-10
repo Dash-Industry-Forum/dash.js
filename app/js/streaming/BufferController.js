@@ -407,8 +407,14 @@ MediaPlayer.dependencies.BufferController = function () {
                 deferred = Q.defer(),
                 currentTime = getWorkingTime.call(self);
 
-            var range = self.timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, this.indexHandler.getIsDynamic());
-            this.metricsModel.addDVRInfo(currentTime, self.manifestModel.getValue(), range);
+
+
+            self.manifestExt.getMpd(self.manifestModel.getValue()).then(
+                function(mpd) {
+                    var range = self.timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, self.indexHandler.getIsDynamic());
+                    self.metricsModel.addDVRInfo(currentTime, mpd, range);
+                }
+            );
 
             self.sourceBufferExt.getBufferLength(buffer, currentTime).then(
                 function(bufferLength) {
