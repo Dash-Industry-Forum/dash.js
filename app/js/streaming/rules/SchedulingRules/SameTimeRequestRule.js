@@ -1,7 +1,7 @@
 MediaPlayer.rules.SameTimeRequestRule = function () {
     "use strict";
 
-    var LOADING_REQUEST_THRESHOLD = 2,
+    var LOADING_REQUEST_THRESHOLD = 4,
 
         findClosestToTime = function(fragmentModels, time) {
             var req,
