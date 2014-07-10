@@ -33,7 +33,7 @@ Dash.dependencies.RepresentationController = function () {
 
         isAllRepresentationsUpdated = function() {
             for (var i = 0, ln = availableRepresentations.length; i < ln; i += 1) {
-                if (availableRepresentations[i].segmentAvailabilityRange === null) return false;
+                if (availableRepresentations[i].segmentAvailabilityRange === null || availableRepresentations[i].initialization === null) return false;
             }
 
             return true;
