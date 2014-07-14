@@ -24,7 +24,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         abrController: undefined,
         baseURLExt: undefined,
 
-        initialize: function (typeValue, buffer, videoModel, requestScheduler, fragmentController, playbackController, mediaSource, data, periodInfo, streamValue, eventControllerValue) {
+        initialize: function (typeValue, buffer, videoModel, fragmentController, playbackController, mediaSource, data, periodInfo, streamValue, eventControllerValue) {
 
             var self = this,
                 manifest = self.manifestModel.getValue(),
@@ -51,7 +51,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             self.representationController = representationController;
             self.videoModel = videoModel;
             self.fragmentController = fragmentController;
-            self.requestScheduler = requestScheduler;
             self.fragmentLoader = fragmentLoader;
             self.liveEdgeFinder.initialize(this);
 
@@ -84,7 +83,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 fragmentController.subscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController.scheduleRulesCollection.bufferLevelRule);
 
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, videoModel);
-                bufferController.subscribe(bufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, requestScheduler);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, scheduleController);
@@ -192,7 +190,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 scheduleController = self.scheduleController,
                 liveEdgeFinder = self.liveEdgeFinder,
                 fragmentController = self.fragmentController,
-                requestScheduler = self.requestScheduler,
                 abrController = self.abrController,
                 playbackController = self.playbackController,
                 indexHandler = this.indexHandler,
@@ -226,7 +223,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             fragmentController.unsubscribe(fragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController.scheduleRulesCollection.bufferLevelRule);
 
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, videoModel);
-            bufferController.unsubscribe(bufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, requestScheduler);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BYTES_REJECTED, scheduleController);
@@ -273,7 +269,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             this.representationController = null;
             this.videoModel = null;
             this.fragmentController = null;
-            this.requestScheduler = null;
         }
 
     };

@@ -279,7 +279,7 @@ MediaPlayer.dependencies.Stream = function () {
                     // TODO : Pass to controller and then pass to each method on handler?
 
                     processor = self.system.getObject("streamProcessor");
-                    processor.initialize(mimeType || type, buffer, self.videoModel, self.requestScheduler, self.fragmentController, self.playbackController, mediaSource, mediaData, periodInfo, self, eventController);
+                    processor.initialize(mimeType || type, buffer, self.videoModel, self.fragmentController, self.playbackController, mediaSource, mediaData, periodInfo, self, eventController);
                     streamProcessors.push(processor);
                     //self.debug.log(type + " is ready!");
                 }
@@ -511,7 +511,6 @@ MediaPlayer.dependencies.Stream = function () {
         debug: undefined,
         errHandler: undefined,
         timelineConverter: undefined,
-        requestScheduler: undefined,
         abrController: undefined,
         notify: undefined,
         subscribe: undefined,

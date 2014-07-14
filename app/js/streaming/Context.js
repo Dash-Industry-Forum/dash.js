@@ -69,9 +69,6 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('fragmentModel', MediaPlayer.dependencies.FragmentModel);
             this.system.mapSingleton('streamController', MediaPlayer.dependencies.StreamController);
             this.system.mapClass('stream', MediaPlayer.dependencies.Stream);
-            this.system.mapClass('requestScheduler', MediaPlayer.dependencies.RequestScheduler);
-            this.system.mapSingleton('schedulerExt', MediaPlayer.dependencies.SchedulerExtensions);
-            this.system.mapClass('schedulerModel', MediaPlayer.dependencies.SchedulerModel);
             this.system.mapClass('scheduleController', MediaPlayer.dependencies.ScheduleController);
 
             this.system.mapSingleton('notifier', MediaPlayer.dependencies.Notifier);
