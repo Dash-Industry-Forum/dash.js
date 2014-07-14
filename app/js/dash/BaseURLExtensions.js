@@ -216,9 +216,10 @@ Dash.dependencies.BaseURLExtensions = function () {
                     callback.call(self, null, new Error("Error loading initialization."));
                 };
 
-                request.open("GET", info.url);
+                request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
                 request.responseType = "arraybuffer";
                 request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
+                request = self.tokenAuthentication.setTokenInRequestHeader(request);
                 request.send(null);
             } else {
                 // Case 2
@@ -277,9 +278,10 @@ Dash.dependencies.BaseURLExtensions = function () {
                 self.notify(self.eventList.ENAME_INITIALIZATION_LOADED, representation);
             };
 
-            request.open("GET", info.url);
+            request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
             request.responseType = "arraybuffer";
             request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
+            request = self.tokenAuthentication.setTokenInRequestHeader(request);
             request.send(null);
             self.debug.log("Perform init search: " + info.url);
         },
@@ -363,9 +365,10 @@ Dash.dependencies.BaseURLExtensions = function () {
                     callback.call(self);
                 };
 
-                request.open("GET", info.url);
+                request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
                 request.responseType = "arraybuffer";
                 request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
+                request = self.tokenAuthentication.setTokenInRequestHeader(request);
                 request.send(null);
             } else {
                 // Case 3
