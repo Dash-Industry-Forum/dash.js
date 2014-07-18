@@ -14,7 +14,8 @@
 MediaPlayer.dependencies.VideoElementExtensions = function () {
     "use strict";
 
-    var getDVRInfoMetric = function() {
+
+     var getDVRInfoMetric = function() {
             return this.metricsExt.getCurrentDVRInfo(this.metricsModel.getReadOnlyMetricsFor('video'));
         },
 
@@ -52,21 +53,30 @@ MediaPlayer.dependencies.VideoElementExtensions = function () {
 
         duration  = function() {
             // I will want to return duration from video element for VOD streams so player dev can just call this one spot to drive a custom video UI
-            var metric = getDVRInfoMetric.call(this);
-            return metric.range.end < metric.mpd.timeShiftBufferDepth ? metric.range.end : metric.mpd.timeShiftBufferDepth;
+            var metric = getDVRInfoMetric.call(this),
+                range = metric.range.end - metric.range.start;
+
+            return Math.round(range < metric.mpd.timeShiftBufferDepth ? range : metric.mpd.timeShiftBufferDepth);
         },
 
         timeAsUTC = function () {
-            var metric = getDVRInfoMetric.call(this);
-            return (metric.mpd.availabilityStartTime.getTime() / 1000) + this.time();
+            var metric = getDVRInfoMetric.call(this),
+                availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000 ,
+                currentUTCTime = this.time() + (availabilityStartTime + metric.range.start);
+
+            return Math.round(currentUTCTime);
         },
 
         durationAsUTC = function () {
-            var metric = getDVRInfoMetric.call(this);
-            return metric.mpd.availabilityEndTime !== Number.POSITIVE_INFINITY ? metric.mpd.availabilityEndTime.getTime() : (metric.mpd.availabilityStartTime.getTime() / 1000) + this.dvrWindowTime();
+            var metric = getDVRInfoMetric.call(this),
+                availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000 ,
+                currentUTCDuration = (availabilityStartTime + metric.range.start) + this.duration();
+
+            return Math.round(currentUTCDuration);
         },
 
         convertUTCToDate = function (t) {
+            //we can add in a lot of formatting options here.  12h vs 24h, date and time formatting.... need to discuss what level we want to handle in dash.js this may be more a player level responsibility
             return new Date(t*1000);
         },
 
