@@ -221,9 +221,13 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onBufferLevelUpdated = function(sender, newBufferLevel) {
-            var self = this;
+            var self = this,
+                range = self.timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, isDynamic);
 
             self.metricsModel.addBufferLevel(type, new Date(), newBufferLevel);
+
+            self.metricsModel.addDVRInfo(type, self.playbackController.getTime(), currentRepresentation.adaptation.period.mpd, range);
+
             validate.call(this);
         },
 
@@ -330,6 +334,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         metricsExt: undefined,
         bufferExt: undefined,
         scheduleWhilePaused: undefined,
+        timelineConverter: undefined,
         sourceBufferExt: undefined,
         abrController: undefined,
         scheduleRulesCollection: undefined,

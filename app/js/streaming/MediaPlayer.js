@@ -143,6 +143,7 @@ MediaPlayer = function (aContext) {
         metricsModel: undefined,
         errHandler: undefined,
         tokenAuthentication:undefined,
+        videoElementExt:undefined,
         abrRulesCollection: undefined,
         scheduleRulesCollection: undefined,
 
@@ -204,7 +205,9 @@ MediaPlayer = function (aContext) {
         setBufferMax: function(value) {
             bufferMax = value;
         },
-
+        getVideoElementExt:function() {
+            return this.videoElementExt;
+        },
         getBufferMax: function() {
             return bufferMax;
         },

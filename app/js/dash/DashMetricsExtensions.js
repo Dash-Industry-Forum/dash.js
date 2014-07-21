@@ -288,6 +288,26 @@ Dash.dependencies.DashMetricsExtensions = function () {
             currentManifestUpdate = manifestUpdate[lastIdx];
 
             return currentManifestUpdate;
+        },
+
+        getCurrentDVRInfo = function (metrics) {
+
+            if (metrics === null) {
+                return null;
+            }
+
+            var dvrInfo = metrics.DVRInfo,
+                dvrInfoLastIndex,
+                curentDVRInfo =  null;
+
+            if (dvrInfo === null || dvrInfo.length <= 0) {
+                return null;
+            }
+
+            dvrInfoLastIndex = dvrInfo.length - 1;
+            curentDVRInfo = dvrInfo[dvrInfoLastIndex];
+
+            return curentDVRInfo;
         };
 
     return {
@@ -303,6 +323,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getHttpRequests : getHttpRequests,
         getCurrentDroppedFrames : getCurrentDroppedFrames,
         getCurrentSchedulingInfo: getCurrentSchedulingInfo,
+        getCurrentDVRInfo : getCurrentDVRInfo,
         getCurrentManifestUpdate: getCurrentManifestUpdate
     };
 };
