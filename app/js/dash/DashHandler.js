@@ -18,6 +18,7 @@ Dash.dependencies.DashHandler = function () {
         requestedTime,
         isDynamic,
         type,
+        offset = null,
 
         replaceNumberForTemplate = function (url, value) {
             var v = value.toString();
@@ -124,6 +125,10 @@ Dash.dependencies.DashHandler = function () {
                 seg,
                 fTime;
 
+            if(offset === null || offset > representation.segments[0].availabilityIdx) {
+                offset = representation.segments[0].availabilityIdx;
+            }
+
             //this.debug.log("Checking for stream end...");
             if (isDynamic) {
                 //this.debug.log("Live never ends! (TODO)");
@@ -132,7 +137,7 @@ Dash.dependencies.DashHandler = function () {
             } else {
                 if (index < 0) {
                     isFinished = false;
-                } else if (index < representation.availableSegmentsNumber) {
+                } else if (index < representation.availableSegmentsNumber + offset) {
                     seg = getSegmentByIndex(index, representation);
 
                     if (seg) {
