@@ -72,7 +72,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
             if (!useBinarySearch) {
                 // if the fragment duration is unknown we cannot use binary search because we will not be able to
                 // decide when to stop the search, so let the start time of the current segment be a liveEdge
-                if (!fragmentDuration) {
+                if (!currentRepresentation.segmentDuration) {
                     callback(new MediaPlayer.rules.SwitchRequest(startTime, p));
                     return;
                 }

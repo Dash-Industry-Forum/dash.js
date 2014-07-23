@@ -173,6 +173,7 @@ Dash.dependencies.DashHandler = function () {
                 repeatEndTime,
                 nextFrag,
                 time = 0,
+                scaledTime = 0,
                 availabilityIdx = -1,
                 calculatedRange,
                 hasEnoughSegments,
@@ -217,14 +218,26 @@ Dash.dependencies.DashHandler = function () {
                 //For a repeated S element, t belongs only to the first segment
                 if (frag.hasOwnProperty("t")) {
                     time = frag.t;
+                    scaledTime = time / fTimescale;
                 }
 
                 //This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the 
                 // next MPD update."
                 if (repeat < 0) {
                     nextFrag = fragments[i+1];
-                    repeatEndTime = (nextFrag && nextFrag.hasOwnProperty("t")) ? (nextFrag.t / fTimescale) : representation.adaptation.period.duration;
-                    repeat = Math.ceil((repeatEndTime - time/fTimescale)/(frag.d/fTimescale)) - 1;
+
+                    if (nextFrag && nextFrag.hasOwnProperty("t")) {
+                        repeatEndTime = nextFrag.t / fTimescale;
+                    } else {
+                        if (isDynamic) {
+                            repeatEndTime = representation.segmentAvailabilityRange.end;
+                            representation.segmentDuration = frag.d / fTimescale;
+                        } else {
+                            repeatEndTime = representation.adaptation.period.duration;
+                        }
+                    }
+
+                    repeat = Math.ceil((repeatEndTime - self.timelineConverter.calcPresentationTimeFromMediaTime(scaledTime, representation))/(frag.d/fTimescale)) - 1;
                 }
 
                 // if we have enough segments in the list, but we have not calculated the total number of the segments yet we
@@ -255,12 +268,13 @@ Dash.dependencies.DashHandler = function () {
                             continue;
                         }
 
-                        if (time/fTimescale >= (requiredMediaTime - (frag.d / fTimescale))) {
+                        if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale))) {
                             segments.push(createSegment.call(self, frag));
                         }
                     }
 
                     time += frag.d;
+                    scaledTime = time / fTimescale;
                 }
             }
 
