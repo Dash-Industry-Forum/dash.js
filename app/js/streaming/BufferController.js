@@ -411,7 +411,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             self.manifestExt.getMpd(self.manifestModel.getValue()).then(
                 function(mpd) {
-                    var range = self.timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, self.indexHandler.getIsDynamic());
+                    var range = self.timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, isDynamic);
                     self.metricsModel.addDVRInfo(currentTime, mpd, range);
                 }
             );
