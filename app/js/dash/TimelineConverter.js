@@ -111,7 +111,7 @@ Dash.dependencies.TimelineConverter = function () {
         },
 
         calcSegmentAvailabilityRange = function(representation, isDynamic) {
-            var duration = representation.segmentDuration || 0,
+            var duration = representation.segmentDuration,
                 start = representation.adaptation.period.start,
                 end = start + representation.adaptation.period.duration,
                 range = {start: start, end: end},
@@ -120,7 +120,7 @@ Dash.dependencies.TimelineConverter = function () {
 
             if (!isDynamic) return range;
 
-            if (!isClientServerTimeSyncCompleted && representation.segmentAvailabilityRange) {
+            if ((!isClientServerTimeSyncCompleted || isNaN(duration)) && representation.segmentAvailabilityRange) {
                 return representation.segmentAvailabilityRange;
             }
 
