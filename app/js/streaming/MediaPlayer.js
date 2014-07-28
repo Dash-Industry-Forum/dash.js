@@ -104,6 +104,77 @@ MediaPlayer = function (aContext) {
             }
         },
 
+        getDVRInfoMetric = function() {
+            return metricsExt.getCurrentDVRInfo(this.metricsModel.getReadOnlyMetricsFor('video'));
+        },
+
+        getDVRWindowSize = function() {
+            return getDVRInfoMetric.call(this).mpd.timeShiftBufferDepth;
+        },
+
+        getDVRSeekOffset = function (value) {
+            var metric = getDVRInfoMetric.call(this),
+                val = metric.range.start + parseInt(value);
+
+            if (val > metric.range.end)
+            {
+                val = metric.range.end;
+            }
+
+            return val;
+        },
+
+        seek = function(value) {
+
+            videoModel.getElement().currentTime = this.getDVRSeekOffset(value);
+        },
+
+        time = function () {
+            // I will want to return currentTime from video element for VOD streams so player dev can just call this one spot to drive a custom video UI
+            // This will produce a relative time withing the DVR range.
+            var metric = getDVRInfoMetric.call(this);
+            return Math.round(this.duration() - (metric.range.end - metric.time));
+        },
+
+        duration  = function() {
+            // I will want to return duration from video element for VOD streams so player dev can just call this one spot to drive a custom video UI
+            var metric = getDVRInfoMetric.call(this),
+                range = metric.range.end - metric.range.start;
+
+            return Math.round(range < metric.mpd.timeShiftBufferDepth ? range : metric.mpd.timeShiftBufferDepth);
+        },
+
+        timeAsUTC = function () {
+            var metric = getDVRInfoMetric.call(this),
+                availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000 ,
+                currentUTCTime = this.time() + (availabilityStartTime + metric.range.start);
+
+            return Math.round(currentUTCTime);
+        },
+
+        durationAsUTC = function () {
+            var metric = getDVRInfoMetric.call(this),
+                availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000 ,
+                currentUTCDuration = (availabilityStartTime + metric.range.start) + this.duration();
+
+            return Math.round(currentUTCDuration);
+        },
+
+        convertUTCToDate = function (t) {
+            //we can add in a lot of formatting options here.  12h vs 24h, date and time formatting....
+            //need to discuss what level we want to handle in dash.js this may be more a player level responsibility
+            return new Date(t*1000);
+        },
+
+        convertToTimeCode = function (value) {
+            value = Math.max(value, 0);
+
+            var h = Math.floor(value/3600);
+            var m = Math.floor((value%3600)/60);
+            var s = Math.floor((value%3600)%60);
+            return (h === 0 ? "":(h<10 ? "0"+h.toString()+":" : h.toString()+":"))+(m<10 ? "0"+m.toString() : m.toString())+":"+(s<10 ? "0"+s.toString() : s.toString());
+        },
+
         updateRules = function(type, rules, override) {
             if (!rules || (type === undefined) || type === null) return;
 
@@ -205,9 +276,7 @@ MediaPlayer = function (aContext) {
         setBufferMax: function(value) {
             bufferMax = value;
         },
-        getVideoElementExt:function() {
-            return this.videoElementExt;
-        },
+
         getBufferMax: function() {
             return bufferMax;
         },
@@ -297,7 +366,17 @@ MediaPlayer = function (aContext) {
         },
 
         play: play,
-        isReady: isReady
+        isReady: isReady,
+        seek : seek,
+        time : time,
+        duration : duration,
+        timeAsUTC : timeAsUTC,
+        durationAsUTC : durationAsUTC,
+        getDVRWindowSize : getDVRWindowSize,
+        getDVRSeekOffset : getDVRSeekOffset,
+        convertUTCToDate : convertUTCToDate,
+        convertToTimeCode : convertToTimeCode
+
     };
 };
 
