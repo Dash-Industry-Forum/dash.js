@@ -105,7 +105,8 @@ MediaPlayer = function (aContext) {
         },
 
         getDVRInfoMetric = function() {
-            return metricsExt.getCurrentDVRInfo(this.metricsModel.getReadOnlyMetricsFor('video'));
+            var metric = this.metricsModel.getReadOnlyMetricsFor('video') || this.metricsModel.getReadOnlyMetricsFor('audio');
+            return this.metricsExt.getCurrentDVRInfo(metric);
         },
 
         getDVRWindowSize = function() {
