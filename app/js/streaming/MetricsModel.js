@@ -158,7 +158,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
 
-        addDVRInfo: function (currentTime, mpd, range)
+        addDVRInfo: function (streamType, currentTime, mpd, range)
         {
             var vo = new MediaPlayer.vo.metrics.DVRInfo();
 
@@ -166,8 +166,8 @@ MediaPlayer.models.MetricsModel = function () {
             vo.range = range;
             vo.mpd= mpd;
 
-            this.getMetricsFor('video').DVRInfo.push(vo);
-            this.metricAdded('video', "DVRInfo", vo);
+            this.getMetricsFor(streamType).DVRInfo.push(vo);
+            this.metricAdded(streamType, "DVRInfo", vo);
 
             return vo;
         },
