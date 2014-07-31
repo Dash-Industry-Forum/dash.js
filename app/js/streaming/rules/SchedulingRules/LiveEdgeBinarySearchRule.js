@@ -126,12 +126,15 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
         metricsExt: undefined,
         manifestExt: undefined,
 
-        searchForLiveEdge: function(liveEdgeFinder, metrics, callbackFunc) {
+        setFinder: function(liveEdgeFinder) {
+            finder = liveEdgeFinder;
+        },
+
+        execute: function(streamType, callbackFunc/*, current*/) {
             var self = this,
                 request,
                 availabilityRange; // all segments are supposed to be available in this interval
 
-            finder = liveEdgeFinder;
             callback = callbackFunc;
             currentRepresentation = finder.streamProcessor.getCurrentRepresentation();
             fragmentDuration = currentRepresentation.segmentDuration;
@@ -148,13 +151,14 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
             findLiveEdge.call(self, liveEdgeInitialSearchPosition, onSearchForSegmentSucceeded, onSearchForSegmentFailed, request);
         },
 
-        abortSearch: function() {
+        reset: function() {
             liveEdgeInitialSearchPosition = NaN;
             liveEdgeSearchRange = null;
             liveEdgeSearchStep = NaN;
             currentRepresentation = null;
             useBinarySearch = false;
             fragmentDuration = NaN;
+            finder = null;
         }
     };
 };

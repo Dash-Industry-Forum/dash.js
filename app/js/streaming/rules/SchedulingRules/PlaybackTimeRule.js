@@ -1,10 +1,12 @@
 MediaPlayer.rules.PlaybackTimeRule = function () {
     "use strict";
 
-    var seekTarget,
+    var seekTarget = {},
+        scheduleController = {},
 
         onPlaybackSeeking = function(sender, time) {
-            seekTarget = time;
+            seekTarget.audio = time;
+            seekTarget.video = time;
         };
 
     return {
@@ -12,48 +14,62 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             this.playbackSeeking = onPlaybackSeeking;
         },
 
-        getNextRequest: function(metrics, scheduleController) {
-            var representation = scheduleController.streamProcessor.getCurrentRepresentation(),
-                p = seekTarget ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
-                rejected = scheduleController.getFragmentModel().getRejectedRequests().shift(),
-                keepIdx = !!rejected && !seekTarget,
-                currentTime = scheduleController.indexHandler.getCurrentTime(representation),
-                playbackTime = scheduleController.playbackController.getTime(),
+        setScheduleController: function(scheduleControllerValue) {
+            scheduleController[scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
+        },
+
+        execute: function(streamType, callback/*, current*/) {
+            var sc = scheduleController[streamType],
+                representation = sc.streamProcessor.getCurrentRepresentation(),
+                st = seekTarget[streamType],
+                p = st ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
+                rejected = sc.getFragmentModel().getRejectedRequests().shift(),
+                keepIdx = !!rejected && !st,
+                currentTime = sc.indexHandler.getCurrentTime(representation),
+                playbackTime = sc.playbackController.getTime(),
                 rejectedEnd = rejected ? rejected.startTime + rejected.duration : null,
                 useRejected = rejected && ((rejectedEnd > playbackTime) && (rejected.startTime <= currentTime) || isNaN(currentTime)),
                 range,
                 time,
                 request;
 
-            time = seekTarget || (useRejected ? rejected.startTime : currentTime);
+            time = st || (useRejected ? rejected.startTime : currentTime);
 
-            if (isNaN(time)) return new MediaPlayer.rules.SwitchRequest(null, p);
+            if (isNaN(time)) {
+                callback(new MediaPlayer.rules.SwitchRequest(null, p));
+                return;
+            }
 
-            seekTarget = null;
+            seekTarget[streamType] = null;
 
-            range = scheduleController.sourceBufferExt.getBufferRange(scheduleController.bufferController.getBuffer(), time);
+            range = sc.sourceBufferExt.getBufferRange(sc.bufferController.getBuffer(), time);
 
             if (range !== null) {
                 time = range.end;
             }
 
-            request = scheduleController.indexHandler.getSegmentRequestForTime(representation, time, keepIdx);
+            request = sc.indexHandler.getSegmentRequestForTime(representation, time, keepIdx);
 
-            while (request && scheduleController.fragmentController.isFragmentLoadedOrPending(scheduleController, request)) {
+            while (request && sc.fragmentController.isFragmentLoadedOrPending(sc, request)) {
                 if (request.action === "complete") {
                     request = null;
-                    scheduleController.indexHandler.setCurrentTime(NaN);
+                    sc.indexHandler.setCurrentTime(NaN);
                     break;
                 }
 
-                request = scheduleController.indexHandler.getNextSegmentRequest(representation);
+                request = sc.indexHandler.getNextSegmentRequest(representation);
             }
 
             if (request && !useRejected) {
-                scheduleController.indexHandler.setCurrentTime(request.startTime + request.duration);
+                sc.indexHandler.setCurrentTime(request.startTime + request.duration);
             }
 
-            return new MediaPlayer.rules.SwitchRequest(request, p);
+            callback(new MediaPlayer.rules.SwitchRequest(request, p));
+        },
+
+        reset: function() {
+            seekTarget = {};
+            scheduleController = {};
         }
     };
 };

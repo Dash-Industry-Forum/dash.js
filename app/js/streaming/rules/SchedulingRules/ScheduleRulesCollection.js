@@ -53,8 +53,8 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
 
 MediaPlayer.rules.ScheduleRulesCollection.prototype = {
     constructor: MediaPlayer.rules.ScheduleRulesCollection,
-    SEGMENTS_TO_SCHEDULE_RULES: 1,
-    NEXT_SEGMENT_RULES: 2,
-    SEGMENTS_TO_EXECUTE_RULES: 3,
-    LIVE_EDGE_RULES: 4
+    SEGMENTS_TO_SCHEDULE_RULES: "segmentsToScheduleRules",
+    NEXT_SEGMENT_RULES: "nextSegmentRules",
+    SEGMENTS_TO_EXECUTE_RULES: "segmentsToExecuteRules",
+    LIVE_EDGE_RULES: "liveEdgeRules"
 };

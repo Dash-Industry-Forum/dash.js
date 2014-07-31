@@ -24,7 +24,9 @@ MediaPlayer.rules.DownloadRatioRule = function () {
      * Be sure to use this rule in conjuction with the InsufficientBufferRule.
      */
 
-    var checkRatio = function (newIdx, currentBandwidth, data) {
+    var adaptation = {},
+
+        checkRatio = function (newIdx, currentBandwidth, data) {
             var self = this,
                 newBandwidth,
                 rep;
@@ -39,9 +41,18 @@ MediaPlayer.rules.DownloadRatioRule = function () {
         debug: undefined,
         manifestExt: undefined,
         metricsExt: undefined,
+        metricsModel: undefined,
 
-        checkIndex: function (current, metrics, data) {
+        setData: function(value) {
+            var type = this.manifestExt.getIsAudio(value) ? "audio" : (this.manifestExt.getIsVideo(value) ? "video" : "stream");
+
+            adaptation[type] = value;
+        },
+
+        execute: function (streamType, callback, current) {
             var self = this,
+                data = adaptation[streamType],
+                metrics = self.metricsModel.getReadOnlyMetricsFor(streamType),
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
                 downloadTime,
                 totalTime,
@@ -62,12 +73,14 @@ MediaPlayer.rules.DownloadRatioRule = function () {
 
             if (!metrics) {
                 //self.debug.log("No metrics, bailing.");
-                return new MediaPlayer.rules.SwitchRequest();
+                callback(new MediaPlayer.rules.SwitchRequest());
+                return;
             }
 
             if (lastRequest === null) {
                 //self.debug.log("No requests made for this stream yet, bailing.");
-                return new MediaPlayer.rules.SwitchRequest();
+                callback(new MediaPlayer.rules.SwitchRequest());
+                return;
             }
 
             totalTime = (lastRequest.tfinish.getTime() - lastRequest.trequest.getTime()) / 1000;
@@ -75,7 +88,8 @@ MediaPlayer.rules.DownloadRatioRule = function () {
 
             if (totalTime <= 0) {
                 //self.debug.log("Don't know how long the download of the last fragment took, bailing.");
-                return new MediaPlayer.rules.SwitchRequest();
+                callback(new MediaPlayer.rules.SwitchRequest());
+                return;
             }
 
             if (lastRequest.mediaduration === null ||
@@ -83,7 +97,8 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 lastRequest.mediaduration <= 0 ||
                 isNaN(lastRequest.mediaduration)) {
                 //self.debug.log("Don't know the duration of the last media fragment, bailing.");
-                return new MediaPlayer.rules.SwitchRequest();
+                callback(new MediaPlayer.rules.SwitchRequest());
+                return;
             }
 
             // TODO : I structured this all goofy and messy.  fix plz
@@ -95,7 +110,8 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 //self.debug.log("Total time: " + totalTime + "s");
                 //self.debug.log("Download time: " + downloadTime + "s");
                 self.debug.log("The ratios are NaN, bailing.");
-                return new MediaPlayer.rules.SwitchRequest();
+                callback(new MediaPlayer.rules.SwitchRequest());
+                return;
             }
 
             //self.debug.log("Total ratio: " + totalRatio);
@@ -170,7 +186,11 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 }
             }
 
-            return switchRequest;
+            callback(switchRequest);
+        },
+
+        reset: function() {
+            adaptation = {};
         }
     };
 };

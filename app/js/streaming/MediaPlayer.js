@@ -50,6 +50,7 @@ MediaPlayer = function (aContext) {
         element,
         source,
         streamController,
+        rulesController,
         manifestUpdater,
         metricsExt,
         videoModel,
@@ -93,11 +94,23 @@ MediaPlayer = function (aContext) {
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
             system.mapValue("bufferMax", bufferMax);
             system.injectInto(bufferExt, "bufferMax");
+
+            rulesController.initialize();
         },
 
         doAutoPlay = function () {
             if (isReady()) {
                 play.call(this);
+            }
+        },
+
+        updateRules = function(type, rules, override) {
+            if (!rules || (type === undefined) || type === null) return;
+
+            if (override) {
+                rulesController.setRules(type, rules);
+            } else {
+                rulesController.addRules(type, rules);
             }
         },
 
@@ -110,6 +123,7 @@ MediaPlayer = function (aContext) {
                 streamController.reset();
                 abrController.reset();
                 bufferExt.reset();
+                rulesController.reset();
                 streamController = null;
                 playing = false;
             }
@@ -129,6 +143,8 @@ MediaPlayer = function (aContext) {
         metricsModel: undefined,
         errHandler: undefined,
         tokenAuthentication:undefined,
+        abrRulesCollection: undefined,
+        scheduleRulesCollection: undefined,
 
         setup: function() {
             metricsExt = system.getObject("metricsExt");
@@ -136,6 +152,7 @@ MediaPlayer = function (aContext) {
             manifestUpdater = system.getObject("manifestUpdater");
             bufferExt = system.getObject("bufferExt");
             abrController = system.getObject("abrController");
+            rulesController = system.getObject("rulesController");
         },
 
         addEventListener: function (type, listener, useCapture) {
@@ -215,6 +232,22 @@ MediaPlayer = function (aContext) {
 
         setAutoSwitchQuality : function (value) {
             abrController.setAutoSwitchBitrate(value);
+        },
+
+        setSchedulingRules: function(newRulesCollection) {
+            updateRules.call(this, rulesController.SCHEDULING_RULE, newRulesCollection, true);
+        },
+
+        addSchedulingRules: function(newRulesCollection) {
+            updateRules.call(this, rulesController.SCHEDULING_RULE, newRulesCollection, false);
+        },
+
+        setABRRules: function(newRulesCollection) {
+            updateRules.call(this, rulesController.ABR_RULE, newRulesCollection, true);
+        },
+
+        addABRRules: function(newRulesCollection) {
+            updateRules.call(this, rulesController.ABR_RULE, newRulesCollection, false);
         },
 
         attachView: function (view) {

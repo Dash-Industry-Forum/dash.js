@@ -25,9 +25,11 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
     return {
         debug: undefined,
         manifestModel: undefined,
+        metricsModel: undefined,
 
-        checkIndex: function (current, metrics /*, data*/) {
+        execute: function (streamType, callback, current) {
             var self = this,
+                metrics = this.metricsModel.getReadOnlyMetricsFor(streamType),
                 manifest = self.manifestModel.getValue(),
                 minBufferTime,
                 maxSegmentDuration = Number.POSITIVE_INFINITY,
@@ -52,12 +54,13 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
 
             if (delay < qualitySwitchThreshold && (now - rs.t.getTime()) < qualitySwitchThreshold) {
                 self.debug.log("Wait some time before allowing another switch.");
-                return new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
+                callback(new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
+                return;
             }
 
             lastCheckTime = now;
 
-            return new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
+            callback(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
         }
     };
 };

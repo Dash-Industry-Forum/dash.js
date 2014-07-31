@@ -72,71 +72,13 @@ MediaPlayer.dependencies.ScheduleController = function () {
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
         },
 
-        loadNextFragment = function () {
+        getNextFragment = function (callback) {
             var self =this,
-                metrics = this.metricsModel.getReadOnlyMetricsFor(type),
-                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.NEXT_SEGMENT_RULES),
-                request,
-                req,
-                i,len,
-                confidence,
-                values;
+                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.NEXT_SEGMENT_RULES);
 
-            values = {};
-            values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-            values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-            values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-
-            for (i = 0, len = rules.length; i < len; i += 1) {
-                req = rules[i].getNextRequest(metrics, self);
-
-                if (req.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                    values[req.priority] = req.value;
-                }
-            }
-
-            if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
-                request = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
-            }
-
-            if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-                request = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
-            }
-
-            if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
-                request = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
-            }
-
-            if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
-                confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-            }
-
-            return {request: request, confidence: confidence};
-        },
-
-        requestNewFragment = function() {
-            var self = this,
-                request;
-
-            fragmentsToLoad = getRequiredFragmentCount.call(self).count;
-
-            if (fragmentsToLoad <= 0) {
-                self.fragmentController.executePendingRequests();
-                return;
-            }
-
-            self.abrController.getPlaybackQuality(type, self.streamProcessor.getData());
-            request = loadNextFragment.call(self).request;
-
-            if (request) {
-                fragmentsToLoad--;
-                //self.debug.log("Loading fragment: " + request.streamType + ":" + request.startTime);
-                self.fragmentController.prepareFragmentForLoading(self, request);
-            }
+            self.rulesController.applyRules(rules, type, callback, null, function(currentValue, newValue) {
+                return newValue;
+            });
         },
 
         getInitRequest = function(quality) {
@@ -154,50 +96,41 @@ MediaPlayer.dependencies.ScheduleController = function () {
             return request;
         },
 
-        getRequiredFragmentCount = function() {
+        getRequiredFragmentCount = function(callback) {
             var self =this,
-                metrics = this.metricsModel.getReadOnlyMetricsFor(type),
-                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.SEGMENTS_TO_SCHEDULE_RULES),
-                count,
-                req,
-                i,len,
-                confidence,
-                values;
+                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.SEGMENTS_TO_SCHEDULE_RULES);
 
-            values = {};
-            values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-            values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-            values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
+            self.rulesController.applyRules(rules, type, callback, fragmentsToLoad, function(currentValue, newValue) {
+                return Math.min(currentValue, newValue);
+            });
+        },
 
-            for (i = 0, len = rules.length; i < len; i += 1) {
-                req = rules[i].getSegmentNumberToSchedule(fragmentsToLoad, metrics, self);
+        onGetRequiredFragmentCount = function(result) {
+            var self = this;
 
-                if (req.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                    values[req.priority] = Math.min(values[req.priority], req.value);
-                }
+            fragmentsToLoad = result.value;
+
+            if (fragmentsToLoad <= 0) {
+                self.fragmentController.executePendingRequests();
+                return;
             }
 
-            if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
-                count = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
+            self.abrController.getPlaybackQuality(type, self.streamProcessor.getData());
+            getNextFragment.call(self, onNextFragment.bind(self));
+        },
+
+        onNextFragment = function(result) {
+            var request = result.value;
+
+            if ((request !== null) && !(request instanceof MediaPlayer.vo.SegmentRequest)) {
+                request = this.indexHandler.getSegmentRequestForTime(currentRepresentation, request.startTime);
             }
 
-            if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-                count = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
+            if (request) {
+                fragmentsToLoad--;
+                //self.debug.log("Loading fragment: " + request.streamType + ":" + request.startTime);
+                this.fragmentController.prepareFragmentForLoading(this, request);
             }
-
-            if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
-                count = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
-            }
-
-            if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
-                confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-            }
-
-            return {count: count, confidence: confidence};
         },
 
         validate = function () {
@@ -207,7 +140,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             if (!isEnoughTimeSinceLastValidation || isStopped || (this.playbackController.isPaused() && (!this.scheduleWhilePaused || isDynamic))) return;
 
             lastValidationTime = now;
-            requestNewFragment.call(this);
+            getRequiredFragmentCount.call(this, onGetRequiredFragmentCount.bind(this));
         },
 
         clearMetrics = function () {
@@ -390,6 +323,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         sourceBufferExt: undefined,
         abrController: undefined,
         scheduleRulesCollection: undefined,
+        rulesController: undefined,
         eventList: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -435,6 +369,18 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.indexHandler = streamProcessor.indexHandler;
             isDynamic = streamProcessor.isDynamic();
             fragmentModel = this.fragmentController.getModel(this);
+
+            if (self.scheduleRulesCollection.bufferLevelRule) {
+                self.scheduleRulesCollection.bufferLevelRule.setScheduleController(self);
+            }
+
+            if (self.scheduleRulesCollection.pendingRequestsRule) {
+                self.scheduleRulesCollection.pendingRequestsRule.setScheduleController(self);
+            }
+
+            if (self.scheduleRulesCollection.playbackTimeRule) {
+                self.scheduleRulesCollection.playbackTimeRule.setScheduleController(self);
+            }
         },
 
         getFragmentModel: function() {

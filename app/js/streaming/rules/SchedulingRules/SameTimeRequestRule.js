@@ -63,8 +63,13 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
     return {
 
-        getRequestsToLoad: function(current, fragmentModels) {
+        setFragmentModels: function(fragmentModels) {
+            this.fragmentModels = fragmentModels;
+        },
+
+        execute: function(streamType, callback, current) {
             var p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
+                fragmentModels = this.fragmentModels,
                 type,
                 model,
                 sameTimeReq,
@@ -80,13 +85,19 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 pendingReqs,
                 loadingLength;
 
-            if (!fragmentModels || !mLength) return new MediaPlayer.rules.SwitchRequest([], p);
+            if (!fragmentModels || !mLength) {
+                callback(new MediaPlayer.rules.SwitchRequest([], p));
+                return;
+            }
 
             currentTime = Math.round(fragmentModels[0].getContext().playbackController.getTime() * 100) / 100;
             reqForCurrentTime = getForTime(fragmentModels, currentTime);
             req = reqForCurrentTime || findClosestToTime(fragmentModels, currentTime) || current;
 
-            if (!req) return new MediaPlayer.rules.SwitchRequest([], p);
+            if (!req) {
+                callback(new MediaPlayer.rules.SwitchRequest([], p));
+                return;
+            }
 
             for (mIdx = 0; mIdx < mLength; mIdx += 1) {
                 model = fragmentModels[mIdx];
@@ -99,7 +110,10 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
                 if (model.getIsPostponed() && !isNaN(req.startTime)) continue;
 
-                if (loadingLength > LOADING_REQUEST_THRESHOLD) return new MediaPlayer.rules.SwitchRequest([], p);
+                if (loadingLength > LOADING_REQUEST_THRESHOLD) {
+                    callback(new MediaPlayer.rules.SwitchRequest([], p));
+                    return;
+                }
 
                 time = time || ((req === reqForCurrentTime) ? currentTime : req.startTime);
 
@@ -127,9 +141,12 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 return (req.action === "complete") || (wallclockTime.getTime() >= req.availabilityStartTime.getTime());
             });
 
-            if (shouldWait) return new MediaPlayer.rules.SwitchRequest([], p);
+            if (shouldWait) {
+                callback(new MediaPlayer.rules.SwitchRequest([], p));
+                return;
+            }
 
-            return new MediaPlayer.rules.SwitchRequest(reqsToExecute, p);
+            callback(new MediaPlayer.rules.SwitchRequest(reqsToExecute, p));
         }
     };
 };

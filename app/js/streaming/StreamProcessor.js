@@ -52,7 +52,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             self.videoModel = videoModel;
             self.fragmentController = fragmentController;
             self.fragmentLoader = fragmentLoader;
-            self.liveEdgeFinder.initialize(this);
 
             representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, bufferController);
             fragmentController.subscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADED, bufferController);
@@ -73,7 +72,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, scheduleController);
                 representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, abrController);
                 representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, stream);
-                representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, liveEdgeFinder);
                 representationController.subscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, playbackController);
 
                 fragmentController.subscribe(fragmentController.eventList.ENAME_MEDIA_SEGMENT_LOADED, bufferController);
@@ -212,7 +210,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, scheduleController);
             representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, abrController);
             representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, stream);
-            representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, liveEdgeFinder);
             representationController.unsubscribe(representationController.eventList.ENAME_DATA_UPDATE_COMPLETED, playbackController);
 
             fragmentController.unsubscribe(fragmentController.eventList.ENAME_INIT_SEGMENT_LOADED, bufferController);
@@ -261,7 +258,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             fragmentLoader.unsubscribe(fragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
             fragmentController.resetModel(fragmentModel);
 
-            this.liveEdgeFinder.abortSearch();
             this.bufferController.reset(errored);
             this.scheduleController.reset();
             this.bufferController = null;

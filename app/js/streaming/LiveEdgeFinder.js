@@ -2,40 +2,11 @@
 MediaPlayer.dependencies.LiveEdgeFinder = function () {
     "use strict";
 
-    var rulesCount,
-        isSearchStarted = false,
+    var isSearchStarted = false,
         rules,
-        values = {},
 
         onSearchCompleted = function(req) {
-            var liveEdge = null,
-                confidence;
-
-            if (req.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                values[req.priority] = req.value;
-            }
-
-            if (--rulesCount) return;
-
-            if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
-                liveEdge = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
-            }
-
-            if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-                liveEdge = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
-            }
-
-            if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
-                liveEdge = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
-            }
-
-            if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
-                confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-            }
+            var liveEdge = req.value;
 
             if (liveEdge !== null) {
                 this.notify(this.eventList.ENAME_LIVE_EDGE_FOUND, liveEdge);
@@ -44,30 +15,24 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
             }
         },
 
-        onDataUpdateCompleted = function(/*sender, data, representation*/) {
+        onStreamUpdated = function(/*sender*/) {
             if (!this.streamProcessor.isDynamic() || isSearchStarted) return;
 
             var self =this,
-                metrics = this.metricsModel.getReadOnlyMetricsFor(this.streamProcessor.getType()),
-                ln,
-                i;
+                streamType = this.streamProcessor.getType();
 
             rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.LIVE_EDGE_RULES);
             isSearchStarted = true;
-            rulesCount = ln = rules.length;
-            values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-            values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-            values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
 
-            for (i = 0; i < ln; i += 1) {
-                rules[i].searchForLiveEdge(self, metrics, onSearchCompleted.bind(self));
-            }
+            this.rulesController.applyRules(rules, streamType, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
+                return newValue;
+            });
         };
 
     return {
         system: undefined,
-        metricsModel: undefined,
         scheduleRulesCollection: undefined,
+        rulesController: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
@@ -77,13 +42,17 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
         },
 
         setup: function() {
-            this.dataUpdateCompleted = onDataUpdateCompleted;
+            this.streamUpdated = onStreamUpdated;
         },
 
         initialize: function(streamProcessor) {
             this.streamProcessor = streamProcessor;
             this.indexHandler = streamProcessor.indexHandler;
             this.fragmentLoader = streamProcessor.fragmentLoader;
+
+            if (this.scheduleRulesCollection.liveEdgeBinarySearchRule) {
+                this.scheduleRulesCollection.liveEdgeBinarySearchRule.setFinder(this);
+            }
         },
 
         abortSearch: function() {
@@ -92,7 +61,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
             if (!rules) return;
 
             for (var i = 0, ln = rules.length; i < ln; i += 1) {
-                rules[i].abortSearch();
+                rules[i].reset();
             }
         }
     };

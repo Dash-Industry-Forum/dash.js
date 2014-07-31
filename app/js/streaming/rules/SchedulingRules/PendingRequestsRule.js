@@ -1,24 +1,40 @@
 MediaPlayer.rules.PendingRequestsRule = function () {
     "use strict";
 
-    var LIMIT = 3;
+    var LIMIT = 3,
+        scheduleController = {};
 
     return {
         metricsExt: undefined,
         manifestExt: undefined,
         bufferExt: undefined,
 
-        getSegmentNumberToSchedule: function(current, metrics, scheduleController) {
-            var pendingRequests = scheduleController.fragmentController.getPendingRequests(scheduleController),
-                loadingRequests = scheduleController.fragmentController.getLoadingRequests(scheduleController),
+        setScheduleController: function(scheduleControllerValue) {
+            scheduleController[scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
+        },
+
+        execute: function(streamType, callback, current) {
+            var sc = scheduleController[streamType],
+                pendingRequests = sc.fragmentController.getPendingRequests(sc),
+                loadingRequests = sc.fragmentController.getLoadingRequests(sc),
                 ln = pendingRequests.length + loadingRequests.length,
                 count = Math.max(current - ln, 0);
 
-            if (ln > LIMIT) return new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
+            if (ln > LIMIT) {
+                callback(new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
+                return;
+            }
 
-            if (current === 0) return new MediaPlayer.rules.SwitchRequest(count, MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE);
+            if (current === 0) {
+                callback(new MediaPlayer.rules.SwitchRequest(count, MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE));
+                return;
+            }
 
-            return new MediaPlayer.rules.SwitchRequest(count, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
+            callback(new MediaPlayer.rules.SwitchRequest(count, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
+        },
+
+        reset: function() {
+            scheduleController = {};
         }
     };
 };

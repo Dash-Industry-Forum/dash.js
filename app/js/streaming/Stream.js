@@ -279,8 +279,8 @@ MediaPlayer.dependencies.Stream = function () {
                     // TODO : Pass to controller and then pass to each method on handler?
 
                     processor = self.system.getObject("streamProcessor");
-                    processor.initialize(mimeType || type, buffer, self.videoModel, self.fragmentController, self.playbackController, mediaSource, mediaData, periodInfo, self, eventController);
                     streamProcessors.push(processor);
+                    processor.initialize(mimeType || type, buffer, self.videoModel, self.fragmentController, self.playbackController, mediaSource, mediaData, periodInfo, self, eventController);
                     //self.debug.log(type + " is ready!");
                 }
 
@@ -311,6 +311,8 @@ MediaPlayer.dependencies.Stream = function () {
                 var msg = "No streams to play.";
                 this.errHandler.manifestError(msg, "nostreams", manifest);
                 this.debug.log(msg);
+            } else {
+                self.liveEdgeFinder.initialize(streamProcessors[0]);
             }
             //this.debug.log("MediaSource initialized!");
         },
@@ -326,6 +328,7 @@ MediaPlayer.dependencies.Stream = function () {
             mediaDuration = self.mediaSourceExt.setDuration(mediaSource, manifestDuration);
             self.debug.log("Duration successfully set to: " + mediaDuration);
             initialized = true;
+            checkIfInitializationCompleted.call(self);
         },
 
         onLoad = function () {
@@ -344,6 +347,21 @@ MediaPlayer.dependencies.Stream = function () {
                     play.call(this);
                 }
             }
+        },
+
+        checkIfInitializationCompleted = function() {
+            var self = this,
+                ln = streamProcessors.length,
+                i = 0;
+
+            if (!initialized) return;
+
+            for (i; i < ln; i += 1) {
+                if (streamProcessors[i].isUpdating()) return;
+            }
+
+            updating = false;
+            self.notify(self.eventList.ENAME_STREAM_UPDATED);
         },
 
         onError = function (sender, error) {
@@ -420,18 +438,7 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         onDataUpdateCompleted = function(/*sender, data, representation*/) {
-            var self = this,
-                ln = streamProcessors.length,
-                i = 0;
-
-            if (!initialized) return;
-
-            for (i; i < ln; i += 1) {
-                if (streamProcessors[i].isUpdating()) return;
-            }
-
-            updating = false;
-            self.notify(self.eventList.ENAME_STREAM_UPDATED);
+            checkIfInitializationCompleted.call(this);
         },
 
         onKeySystemUpdateCompleted = function(sender, data, error) {
@@ -511,6 +518,7 @@ MediaPlayer.dependencies.Stream = function () {
         debug: undefined,
         errHandler: undefined,
         timelineConverter: undefined,
+        liveEdgeFinder: undefined,
         abrController: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -591,6 +599,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.playbackController.unsubscribe(this.playbackController.eventList.ENAME_PLAYBACK_ERROR, this);
             this.playbackController.unsubscribe(this.playbackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, this);
             this.playbackController.reset();
+            this.liveEdgeFinder.abortSearch();
 
             // streamcontroller expects this to be valid
             //this.videoModel = null;

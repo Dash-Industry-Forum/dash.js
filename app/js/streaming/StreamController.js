@@ -262,6 +262,7 @@
                 if (!activeStream) {
                     activeStream = streams[0];
                     attachVideoEvents.call(self, activeStream);
+                    activeStream.subscribe(activeStream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
                 }
             } catch(e) {
                 self.errHandler.manifestError(e.message, "nostreamscomposed", self.manifestModel.getValue());
@@ -302,6 +303,7 @@
         debug: undefined,
         metricsModel: undefined,
         videoExt: undefined,
+        liveEdgeFinder: undefined,
         timelineConverter: undefined,
         errHandler: undefined,
         notify: undefined,

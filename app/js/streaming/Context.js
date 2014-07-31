@@ -43,20 +43,21 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('protectionController', MediaPlayer.dependencies.ProtectionController);
             this.system.mapClass('playbackController', MediaPlayer.dependencies.PlaybackController);
 
-            this.system.mapClass('liveEdgeFinder', MediaPlayer.dependencies.LiveEdgeFinder);
+            this.system.mapSingleton('liveEdgeFinder', MediaPlayer.dependencies.LiveEdgeFinder);
 
             this.system.mapClass('metrics', MediaPlayer.models.MetricsList);
             this.system.mapClass('downloadRatioRule', MediaPlayer.rules.DownloadRatioRule);
             this.system.mapClass('insufficientBufferRule', MediaPlayer.rules.InsufficientBufferRule);
             this.system.mapClass('limitSwitchesRule', MediaPlayer.rules.LimitSwitchesRule);
-            this.system.mapClass('abrRulesCollection', MediaPlayer.rules.BaseRulesCollection);
+            this.system.mapSingleton('abrRulesCollection', MediaPlayer.rules.ABRRulesCollection);
 
+            this.system.mapSingleton('rulesController', MediaPlayer.rules.RulesController);
             this.system.mapClass('liveEdgeBinarySearchRule', MediaPlayer.rules.LiveEdgeBinarySearchRule);
             this.system.mapClass('bufferLevelRule', MediaPlayer.rules.BufferLevelRule);
             this.system.mapClass('pendingRequestsRule', MediaPlayer.rules.PendingRequestsRule);
             this.system.mapClass('playbackTimeRule', MediaPlayer.rules.PlaybackTimeRule);
             this.system.mapClass('sameTimeRequestRule', MediaPlayer.rules.SameTimeRequestRule);
-            this.system.mapClass('scheduleRulesCollection', MediaPlayer.rules.ScheduleRulesCollection);
+            this.system.mapSingleton('scheduleRulesCollection', MediaPlayer.rules.ScheduleRulesCollection);
 
             this.system.mapClass('streamProcessor', MediaPlayer.dependencies.StreamProcessor);
 			this.system.mapClass('eventController', MediaPlayer.dependencies.EventController);

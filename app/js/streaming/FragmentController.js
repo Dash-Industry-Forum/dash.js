@@ -30,49 +30,18 @@ MediaPlayer.dependencies.FragmentController = function () {
             return null;
         },
 
-        getRequestsToLoad = function(current) {
+        getRequestsToLoad = function(current, callback) {
             var self =this,
-                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.SEGMENTS_TO_EXECUTE_RULES),
-                switchReq,
-                reqsToExecute,
-                i,len,
-                confidence,
-                values;
+                streamType = fragmentModels[0].getContext().streamProcessor.getType(),
+                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.SEGMENTS_TO_EXECUTE_RULES);
 
-            values = {};
-            values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-            values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-            values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-
-            for (i = 0, len = rules.length; i < len; i += 1) {
-                switchReq = rules[i].getRequestsToLoad(current, fragmentModels);
-
-                if (switchReq.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                    values[switchReq.priority] = switchReq.value;
-                }
+            if (rules.indexOf(this.scheduleRulesCollection.sameTimeRequestRule) !== -1) {
+                this.scheduleRulesCollection.sameTimeRequestRule.setFragmentModels(fragmentModels);
             }
 
-            if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
-                reqsToExecute = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
-            }
-
-            if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-                reqsToExecute = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
-            }
-
-            if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
-                reqsToExecute = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
-            }
-
-            if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
-                confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
-                confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-            }
-
-            return {reqs: reqsToExecute, confidence: confidence};
+            self.rulesController.applyRules(rules, streamType, callback, current, function(currentValue, newValue) {
+                return newValue;
+            });
         },
 
         onFragmentLoadingStart = function(sender, request) {
@@ -111,33 +80,49 @@ MediaPlayer.dependencies.FragmentController = function () {
             executeRequests.call(this);
         },
 
-        executeRequests = function(request) {
-            if (inProgress) return;
-
-            inProgress = true;
-
-            var reqsToExecute = getRequestsToLoad.call(this, request).reqs,
+        onGetRequests = function(result) {
+            var reqsToExecute = result.value,
+                streamType,
                 r,
                 m,
                 i,
                 j;
 
             for (i = 0; i < reqsToExecute.length; i += 1) {
-               r = reqsToExecute[i];
+                r = reqsToExecute[i];
 
-               for (j = 0; j < fragmentModels.length; j += 1) {
-                   m = fragmentModels[j];
-                   m.executeRequest(r);
-               }
+                if (!r) continue;
+
+                for (j = 0; j < fragmentModels.length; j += 1) {
+                    m = fragmentModels[j];
+                    streamType = m.getContext().streamProcessor.getType();
+
+                    if (r.streamType !== streamType) continue;
+
+                    if (!(r instanceof MediaPlayer.vo.SegmentRequest)) {
+                        r = m.getPendingRequestForTime(r.startTime);
+                    }
+
+                    m.executeRequest(r);
+                }
             }
 
             inProgress = false;
+        },
+
+        executeRequests = function(request) {
+            if (inProgress) return;
+
+            inProgress = true;
+
+            getRequestsToLoad.call(this, request, onGetRequests.bind(this));
         };
 
     return {
         system: undefined,
         debug: undefined,
         scheduleRulesCollection: undefined,
+        rulesController: undefined,
         fragmentLoader: undefined,
         notify: undefined,
         subscribe: undefined,
