@@ -119,14 +119,11 @@ MediaPlayer = function (aContext) {
         },
 
         time = function () {
-            // I will want to return currentTime from video element for VOD streams so player dev can just call this one spot to drive a custom video UI
-            // This will produce a relative time withing the DVR range.
             var metric = getDVRInfoMetric.call(this);
             return Math.round(this.duration() - (metric.range.end - metric.time));
         },
 
         duration  = function() {
-            // I will want to return duration from video element for VOD streams so player dev can just call this one spot to drive a custom video UI
             var metric = getDVRInfoMetric.call(this),
                 range = metric.range.end - metric.range.start;
 
@@ -149,10 +146,11 @@ MediaPlayer = function (aContext) {
             return Math.round(currentUTCDuration);
         },
 
-        convertUTCToDate = function (t) {
-            //we can add in a lot of formatting options here.  12h vs 24h, date and time formatting....
-            //need to discuss what level we want to handle in dash.js this may be more a player level responsibility
-            return new Date(t*1000);
+        formatUTC = function (time, locales, hour12) {
+            var dt = new Date(time*1000);
+            var d = dt.toLocaleDateString(locales);
+            var t = dt.toLocaleTimeString(locales, {hour12:hour12});
+            return t +' '+d;
         },
 
         convertToTimeCode = function (value) {
@@ -323,7 +321,7 @@ MediaPlayer = function (aContext) {
         durationAsUTC : durationAsUTC,
         getDVRWindowSize : getDVRWindowSize,
         getDVRSeekOffset : getDVRSeekOffset,
-        convertUTCToDate : convertUTCToDate,
+        formatUTC : formatUTC,
         convertToTimeCode : convertToTimeCode
 
     };
