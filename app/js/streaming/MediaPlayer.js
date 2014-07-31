@@ -213,6 +213,7 @@ MediaPlayer = function (aContext) {
         metricsModel: undefined,
         errHandler: undefined,
         tokenAuthentication:undefined,
+        uriQueryFragModel:undefined,
         videoElementExt:undefined,
         abrRulesCollection: undefined,
         scheduleRulesCollection: undefined,
@@ -348,7 +349,7 @@ MediaPlayer = function (aContext) {
                 throw "MediaPlayer not initialized!";
             }
 
-            source = url;
+            source = this.uriQueryFragModel.parseURI(url);
 
             // TODO : update
 

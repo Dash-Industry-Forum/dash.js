@@ -61,6 +61,17 @@ Dash.dependencies.TimelineConverter = function () {
                 presentationStartTime = period.start;
             }
 
+            var vo = this.uriQueryFragModel.getURIFragmentData;
+            if (vo.s !== null) {
+                //TODO: Does not work with UTC value for live yet Need to figure out what that value translates into .
+                if (!isDynamic)
+                {
+                    presentationStartTime = parseInt(vo.s);
+                }
+            }
+
+
+
             return presentationStartTime;
         },
 
@@ -168,6 +179,7 @@ Dash.dependencies.TimelineConverter = function () {
 
     return {
         notifier: undefined,
+        uriQueryFragModel:undefined,
 
         setup: function() {
             this.liveEdgeFound = onLiveEdgeFound;
