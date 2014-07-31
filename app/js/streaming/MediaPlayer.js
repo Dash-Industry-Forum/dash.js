@@ -180,6 +180,8 @@ MediaPlayer = function (aContext) {
         bufferExt: undefined,
         errHandler: undefined,
         tokenAuthentication:undefined,
+        uriQueryFragModel:undefined,
+
         addEventListener: function (type, listener, useCapture) {
             this.eventBus.addEventListener(type, listener, useCapture);
         },
@@ -290,7 +292,7 @@ MediaPlayer = function (aContext) {
                 throw "MediaPlayer not initialized!";
             }
 
-            source = url;
+            source = this.uriQueryFragModel.parseURI(url);
             this.setQualityFor('video', 0);
             this.setQualityFor('audio', 0);
 
