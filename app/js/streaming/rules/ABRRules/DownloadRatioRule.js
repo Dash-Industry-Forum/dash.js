@@ -44,9 +44,13 @@ MediaPlayer.rules.DownloadRatioRule = function () {
         metricsModel: undefined,
 
         setData: function(value) {
-            var type = this.manifestExt.getIsAudio(value) ? "audio" : (this.manifestExt.getIsVideo(value) ? "video" : "stream");
+            if (this.manifestExt.getIsAudio(value)) {
+                adaptation["audio"] = value;
+            }
 
-            adaptation[type] = value;
+            if (this.manifestExt.getIsVideo(value)) {
+                adaptation["video"] = value;
+            }
         },
 
         execute: function (streamType, callback, current) {
