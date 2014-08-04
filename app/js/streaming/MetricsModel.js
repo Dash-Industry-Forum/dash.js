@@ -175,6 +175,27 @@ MediaPlayer.models.MetricsModel = function () {
             return vo;
         },
 
+        addSchedulingInfo: function(streamType, t, type, startTime, availabilityStartTime, duration, quality, range, state) {
+            var vo = new MediaPlayer.vo.metrics.SchedulingInfo();
+
+            vo.stream = streamType;
+            vo.t = t;
+
+            vo.type = type;
+            vo.startTime = startTime;
+            vo.availabilityStartTime = availabilityStartTime;
+            vo.duration = duration;
+            vo.quality = quality;
+            vo.range = range;
+
+            vo.state = state;
+
+            this.getMetricsFor(streamType).SchedulingInfo.push(vo);
+
+            this.metricAdded(streamType, "SchedulingInfo", vo);
+            return vo;
+        },
+
         addPlayList: function (streamType, start, mstart, starttype) {
             var vo = new MediaPlayer.vo.metrics.PlayList();
 

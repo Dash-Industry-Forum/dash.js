@@ -20,7 +20,8 @@ MediaPlayer.models.MetricsList = function () {
         RepSwitchList: [],
         BufferLevel: [],
         PlayList: [],
-        DroppedFrames: []
+        DroppedFrames: [],
+        SchedulingInfo: []
     };
 };
 

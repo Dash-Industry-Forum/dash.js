@@ -248,6 +248,26 @@ Dash.dependencies.DashMetricsExtensions = function () {
             currentDroppedFrames = droppedFrames[droppedFramesLastIndex];
 
             return currentDroppedFrames;
+        },
+
+        getCurrentSchedulingInfo = function(metrics) {
+            if (metrics === null) return null;
+
+            var schedulingInfo = metrics.SchedulingInfo,
+                ln,
+                lastIdx,
+                currentSchedulingInfo;
+
+            if (schedulingInfo === null || schedulingInfo.length <= 0) {
+                return null;
+            }
+
+            ln = schedulingInfo.length;
+            lastIdx = ln - 1;
+
+            currentSchedulingInfo = schedulingInfo[lastIdx];
+
+            return currentSchedulingInfo;
         };
 
     return {
@@ -261,7 +281,8 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getCurrentPlaybackRate: getCurrentPlaybackRate,
         getCurrentHttpRequest : getCurrentHttpRequest,
         getHttpRequests : getHttpRequests,
-        getCurrentDroppedFrames : getCurrentDroppedFrames
+        getCurrentDroppedFrames : getCurrentDroppedFrames,
+        getCurrentSchedulingInfo: getCurrentSchedulingInfo
     };
 };
 

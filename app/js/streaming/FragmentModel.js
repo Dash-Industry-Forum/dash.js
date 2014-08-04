@@ -59,13 +59,30 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return null;
         },
 
+        addSchedulingInfoMetrics = function(request, state) {
+            if (!request) return;
+
+            var streamType = request.streamType,
+                now = new Date(),
+                type = request.type,
+                startTime = request.startTime,
+                availabilityStartTime = request.availabilityStartTime,
+                duration = request.duration,
+                quality = request.quality,
+                range = request.range;
+
+            this.metricsModel.addSchedulingInfo(streamType, now, type, startTime, availabilityStartTime, duration, quality, range, state);
+        },
+
         onLoadingCompleted = function(sender, request, response, error) {
             loadingRequests.splice(loadingRequests.indexOf(request), 1);
 
             if (response && !error) {
                 executedRequests.push(request);
+                addSchedulingInfoMetrics.call(this, request, MediaPlayer.vo.metrics.SchedulingInfo.EXECUTED_STATE);
                 this.notify(this.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, request, response);
             } else {
+                addSchedulingInfoMetrics.call(this, request, MediaPlayer.vo.metrics.SchedulingInfo.FAILED_STATE);
                 this.notify(this.eventList.ENAME_FRAGMENT_LOADING_FAILED, request);
             }
         },
@@ -80,6 +97,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 // If this is init segment do nothing, because it will be requested in loadInitialization method
                 if (!isNaN(index)) {
                     rejectedRequests.push(req);
+                    addSchedulingInfoMetrics.call(this, req, MediaPlayer.vo.metrics.SchedulingInfo.REJECTED_STATE);
                 }
             }
         },
@@ -95,6 +113,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
     return {
         system: undefined,
         debug: undefined,
+        metricsModel: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
@@ -132,6 +151,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             if (!value || this.isFragmentLoadedOrPending(value)) return false;
 
             pendingRequests.push(value);
+            addSchedulingInfoMetrics.call(this, value, MediaPlayer.vo.metrics.SchedulingInfo.PENDING_STATE);
 
             return true;
         },
@@ -254,7 +274,13 @@ MediaPlayer.dependencies.FragmentModel = function () {
         },
 
         cancelPendingRequests: function() {
+            var self = this,
+                reqs = pendingRequests;
             pendingRequests = [];
+
+            reqs.forEach(function(request) {
+                addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.CANCELED_STATE);
+            });
         },
 
         abortRequests: function() {
@@ -279,10 +305,12 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 case "complete":
                     // Stream has completed, execute the correspoinding callback
                     executedRequests.push(request);
+                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.EXECUTED_STATE);
                     self.notify(self.eventList.ENAME_STREAM_COMPLETED, request);
                     break;
                 case "download":
                     loadingRequests.push(request);
+                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.LOADING_STATE);
                     loadCurrentFragment.call(self, request);
                     break;
                 default:
