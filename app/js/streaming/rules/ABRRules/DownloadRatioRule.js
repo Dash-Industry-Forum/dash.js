@@ -45,11 +45,11 @@ MediaPlayer.rules.DownloadRatioRule = function () {
 
         setData: function(value) {
             if (this.manifestExt.getIsAudio(value)) {
-                adaptation["audio"] = value;
+                adaptation.audio = value;
             }
 
             if (this.manifestExt.getIsVideo(value)) {
-                adaptation["video"] = value;
+                adaptation.video = value;
             }
         },
 
