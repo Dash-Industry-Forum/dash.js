@@ -672,9 +672,14 @@ MediaPlayer.dependencies.BufferController = function () {
             // we have to use half of the availability interval (window) as a search step to ensure that we find a segment in the window
             liveEdgeSearchStep = Math.floor((availabilityRange.end - availabilityRange.start) / 2);
             // start search from finding a request for the initial search time
-            self.indexHandler.getSegmentRequestForTime(currentRepresentation, liveEdgeInitialSearchPosition).then(findLiveEdge.bind(self, liveEdgeInitialSearchPosition, onSearchForSegmentSucceeded, onSearchForSegmentFailed));
 
             deferredLiveEdge = Q.defer();
+
+            if (currentRepresentation.useCalculatedLiveEdgeTime) {
+                deferredLiveEdge.resolve(liveEdgeInitialSearchPosition);
+            } else {
+                self.indexHandler.getSegmentRequestForTime(currentRepresentation, liveEdgeInitialSearchPosition).then(findLiveEdge.bind(self, liveEdgeInitialSearchPosition, onSearchForSegmentSucceeded, onSearchForSegmentFailed));
+            }
 
             return deferredLiveEdge.promise;
         },

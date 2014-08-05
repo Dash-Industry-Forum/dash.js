@@ -513,18 +513,20 @@ Dash.dependencies.DashHandler = function () {
                 seg,
                 s,
                 range,
-                startIdx,
-                endIdx,
+                startIdx = 0,
+                endIdx = list.SegmentURL_asArray.length,
                 start;
 
             start = representation.startNumber;
 
             waitForAvailabilityWindow.call(self, representation).then(
                 function(availabilityWindow) {
-                    representation.segmentAvailabilityRange = availabilityWindow;
-                    range = decideSegmentListRangeForTemplate.call(self, representation);
-                    startIdx = range.start;
-                    endIdx = range.end;
+                    if (!isDynamic) {
+                        representation.segmentAvailabilityRange = availabilityWindow;
+                        range = decideSegmentListRangeForTemplate.call(self, representation);
+                        startIdx = range.start;
+                        endIdx = range.end;
+                    }
 
                     for (i = startIdx; i < endIdx; i += 1) {
                         s = list.SegmentURL_asArray[i];
@@ -543,7 +545,7 @@ Dash.dependencies.DashHandler = function () {
                         segments.push(seg);
                         seg = null;
                     }
-
+                    representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end:segments[segments.length-1].presentationStartTime};
                     representation.availableSegmentsNumber = len;
                     deferred.resolve(segments);
             });
