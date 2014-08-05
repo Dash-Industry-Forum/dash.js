@@ -16,7 +16,7 @@ MediaPlayer.vo.URIFragmentData = function () {
     this.t = null;
     this.xywh = null;
     this.track = null;
-    this.id = null
+    this.id = null;
     this.s = null;
 };
 
