@@ -24,7 +24,29 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
                 testFragment = new RegExp(/[#]/),
                 isQuery = testQuery.test(uri),
                 isFragment = testFragment.test(uri),
-                a = uri.split(/[?#]/).map(mapArray);
+                mappedArr;
+
+            function reduceArray(previousValue, currentValue, index, array) {
+                var arr =  array[0].split(/[=]/);
+                array.push({key:arr[0], value:arr[1]});
+                array.shift();
+                return array;
+            }
+
+            function mapArray(currentValue, index, array) {
+                if (index > 0)
+                {
+                    if (isQuery && URIQueryData.length === 0) {
+                        URIQueryData = array[index].split(/[&]/);
+                    } else if (isFragment) {
+                        URIFragmentData = array[index].split(/[&]/);
+                    }
+                }
+
+                return array;
+            }
+
+            mappedArr = uri.split(/[?#]/).map(mapArray);
 
             if (URIQueryData.length > 0) {
                 URIQueryData = URIQueryData.reduce(reduceArray, null);
@@ -34,38 +56,17 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
                 URIFragmentData = URIFragmentData.reduce(reduceArray, null);
                 URIFragmentData.forEach(function (object) {
                     URIFragmentDataVO[object.key] = object.value;
-                })
+                });
             }
 
-            function reduceArray(previousValue, currentValue, index, array) {
-                var arr =  array[0].split(/[=]/);
-                array.push({key:arr[0], value:arr[1]})
-                array.shift();
-                return array;
-            }
-
-            function mapArray(currentValue, index, array) {
-                if (index > 0)
-                {
-                    if (isQuery && URIQueryData.length === 0) {
-                        URIQueryData = array[index].split(/[&]/)
-
-                    } else if (isFragment) {
-                        URIFragmentData = array[index].split(/[&]/);
-                    }
-                }
-
-                return array;
-            }
-
-            return uri
+            return uri;
         };
 
     return {
         parseURI:parseURI,
         getURIFragmentData:URIFragmentDataVO,
         getURIQueryData:URIQueryData
-    }
+    };
 };
 
 MediaPlayer.models.URIQueryAndFragmentModel.prototype = {
