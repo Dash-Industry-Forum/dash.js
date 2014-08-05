@@ -130,7 +130,7 @@ Dash.dependencies.TimelineConverter = function () {
             // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
             // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.
             start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth - duration), 0);
-            checkTime -= duration - clientServerTimeShift;
+            checkTime -= duration - (clientServerTimeShift / 1000);
             now -= duration;
             end = isNaN(checkTime) ? now : Math.min(checkTime, now);
             range = {start: start, end: end};
