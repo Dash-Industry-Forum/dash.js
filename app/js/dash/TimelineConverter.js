@@ -12,8 +12,6 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 Dash.dependencies.TimelineConverter = function () {
-    "use strict";
-
     var clientServerTimeShift = 0,
         isClientServerTimeSyncCompleted = false,
 
@@ -33,7 +31,7 @@ Dash.dependencies.TimelineConverter = function () {
                 if (isDynamic) {
                     availabilityTime = new Date(mpd.availabilityStartTime.getTime() + (presentationTime * 1000));
                 } else {
-                // in static mpd, all segments are available at the same time
+                    // in static mpd, all segments are available at the same time
                     availabilityTime = mpd.availabilityStartTime;
                 }
             }
@@ -50,17 +48,30 @@ Dash.dependencies.TimelineConverter = function () {
         },
 
         calcPresentationStartTime = function (period) {
-            var presentationStartTime,
-                isDynamic,
-                vo = this.uriQueryFragModel.getURIFragmentData;
+            var presentationStartTime = 0,
+                isDynamic = period.mpd.manifest.type === "dynamic",
+                startTimeOffset = parseInt(this.uriQueryFragModel.getURIFragmentData.s);
 
-            isDynamic = period.mpd.manifest.type === "dynamic";
-
-            //TODO: Explicit start time Does not work for live yet. Need to figure out what value to use presentation time vs UTC...
             if (isDynamic) {
-                presentationStartTime = period.liveEdge;
+
+                if (!isNaN(startTimeOffset) && startTimeOffset > 1262304000) {
+
+                    presentationStartTime = startTimeOffset - (period.mpd.availabilityStartTime.getTime()/1000);
+
+                    if (presentationStartTime > period.liveEdge ||
+                        presentationStartTime < (period.liveEdge - period.mpd.timeShiftBufferDepth)) {
+
+                        presentationStartTime = 0;
+                    }
+                }
+                presentationStartTime = presentationStartTime === 0 ? period.liveEdge : presentationStartTime;
+
             } else {
-                presentationStartTime = (vo.s === null) ? period.start : parseInt(vo.s);
+                if (!isNaN(startTimeOffset) && startTimeOffset < period.duration && startTimeOffset >= 0) {
+                    presentationStartTime = startTimeOffset;
+                }else{
+                    presentationStartTime = period.start;
+                }
             }
 
             return presentationStartTime;
