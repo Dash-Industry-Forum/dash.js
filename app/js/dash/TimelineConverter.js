@@ -51,26 +51,17 @@ Dash.dependencies.TimelineConverter = function () {
 
         calcPresentationStartTime = function (period) {
             var presentationStartTime,
-                isDynamic;
+                isDynamic,
+                vo = this.uriQueryFragModel.getURIFragmentData;
 
             isDynamic = period.mpd.manifest.type === "dynamic";
 
+            //TODO: Explicit start time Does not work for live yet. Need to figure out what value to use presentation time vs UTC...
             if (isDynamic) {
                 presentationStartTime = period.liveEdge;
             } else {
-                presentationStartTime = period.start;
+                presentationStartTime = (vo.s === null) ? period.start : parseInt(vo.s);
             }
-
-            var vo = this.uriQueryFragModel.getURIFragmentData;
-            if (vo.s !== null) {
-                //TODO: Does not work with UTC value for live yet Need to figure out what that value translates into .
-                if (!isDynamic)
-                {
-                    presentationStartTime = parseInt(vo.s);
-                }
-            }
-
-
 
             return presentationStartTime;
         },
