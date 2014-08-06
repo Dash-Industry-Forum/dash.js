@@ -20,9 +20,68 @@ Dash.dependencies.DashHandler = function () {
         type,
         currentTime = 0,
 
+        zeroPadToLength = function (numStr, minStrLength) {
+            while (numStr.length < minStrLength) {
+                numStr = "0" + numStr;
+            }
+
+            return numStr;
+        },
+
         replaceNumberForTemplate = function (url, value) {
-            var v = value.toString();
-            return url.split("$Number$").join(v);
+
+            var startPos,
+                endPos,
+                formatTagPos,
+                specifier,
+                width;
+
+            // check that there is a valid $Number...$ identifier
+            startPos = url.indexOf("$Number");
+            if (startPos < 0) {
+                return url;
+            }
+
+            // the next '$' must be the end of the identifer
+            endPos = url.indexOf("$", startPos + 7);
+            if (endPos < 0) {
+                return url;
+            }
+
+            // now see if there is an additional format tag suffixed to
+            // the identifier within the enclosing '$' characters
+            formatTagPos = url.indexOf("%", startPos + 7);
+            if (formatTagPos > startPos && formatTagPos < endPos) {
+
+                specifier = url.charAt(endPos - 1);
+                width = url.substring(formatTagPos + 1, endPos - 1);
+
+                // support the minimum specifiers required by IEEE 1003.1
+                // (d, i , o, u, x, and X) for completeness
+                switch (specifier) {
+                // treat all int types as uint,
+                // hence deliberate fallthrough
+                case 'd':
+                case 'i':
+                case 'u':
+                    value = zeroPadToLength(value.toString(), width);
+                    break;
+                case 'x':
+                    value = zeroPadToLength(value.toString(16), width);
+                    break;
+                case 'X':
+                    value = zeroPadToLength(value.toString(16), width).toUpperCase();
+                    break;
+                case 'o':
+                    value = zeroPadToLength(value.toString(8), width);
+                    break;
+                default:
+                    this.debug.log("Unsupported/invalid IEEE 1003.1 format identifier string in URL");
+                    return url;
+                }
+            }
+
+            return url.substring(0, startPos) + value + url.substring(endPos + 1);
         },
 
         replaceTimeForTemplate = function (url, value) {
