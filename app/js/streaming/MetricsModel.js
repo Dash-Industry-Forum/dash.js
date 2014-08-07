@@ -18,7 +18,6 @@ MediaPlayer.models.MetricsModel = function () {
         system : undefined,
         eventBus: undefined,
         streamMetrics: {},
-
         metricsChanged: function () {
             this.eventBus.dispatchEvent({
                 type: "metricsChanged",
@@ -155,6 +154,21 @@ MediaPlayer.models.MetricsModel = function () {
             this.getMetricsFor(streamType).BufferLevel.push(vo);
 
             this.metricAdded(streamType, "BufferLevel", vo);
+            return vo;
+        },
+
+
+        addDVRInfo: function (streamType, currentTime, mpd, range)
+        {
+            var vo = new MediaPlayer.vo.metrics.DVRInfo();
+
+            vo.time = currentTime ;
+            vo.range = range;
+            vo.mpd= mpd;
+
+            this.getMetricsFor(streamType).DVRInfo.push(vo);
+            this.metricAdded(streamType, "DVRInfo", vo);
+
             return vo;
         },
 

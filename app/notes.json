@@ -5,8 +5,23 @@
             "items": [
                 "Erratic playback at higher bitrates.",
                 "Streams using high profile codecs may not play properly.",
-                "You may get the error 'Media Source Close' when attempting to switch bitrates.",
                 "Only streams with segmentAlignment='true' will work with abr."
+            ]
+        },
+        {
+            "title": "Release Notes v1.2.0",
+            "items": [
+                "Captions - TTML Fallback",
+                "Reduced logging output",
+                "Produce additional stats and show them in index.html",
+                "Token Auth support",
+                "Replace github ribbon with Star and Fork buttons",
+                "Style the new stats display in index.html",
+                "Basic handling of EMSG in segments",
+                "DVR Window support for pages hosting the player to display their own UI",
+                "fixes for multi-period",
+                "fixes for dynamic (Live)",
+                "contrib sample for using video.js with dash.js"
             ]
         },
         {

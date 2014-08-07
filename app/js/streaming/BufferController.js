@@ -407,6 +407,15 @@ MediaPlayer.dependencies.BufferController = function () {
                 deferred = Q.defer(),
                 currentTime = getWorkingTime.call(self);
 
+
+
+            self.manifestExt.getMpd(self.manifestModel.getValue()).then(
+                function(mpd) {
+                    var range = self.timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, isDynamic);
+                    self.metricsModel.addDVRInfo(type, currentTime, mpd, range);
+                }
+            );
+
             self.sourceBufferExt.getBufferLength(buffer, currentTime).then(
                 function(bufferLength) {
                     if (!hasData()) {
@@ -663,9 +672,14 @@ MediaPlayer.dependencies.BufferController = function () {
             // we have to use half of the availability interval (window) as a search step to ensure that we find a segment in the window
             liveEdgeSearchStep = Math.floor((availabilityRange.end - availabilityRange.start) / 2);
             // start search from finding a request for the initial search time
-            self.indexHandler.getSegmentRequestForTime(currentRepresentation, liveEdgeInitialSearchPosition).then(findLiveEdge.bind(self, liveEdgeInitialSearchPosition, onSearchForSegmentSucceeded, onSearchForSegmentFailed));
 
             deferredLiveEdge = Q.defer();
+
+            if (currentRepresentation.useCalculatedLiveEdgeTime) {
+                deferredLiveEdge.resolve(liveEdgeInitialSearchPosition);
+            } else {
+                self.indexHandler.getSegmentRequestForTime(currentRepresentation, liveEdgeInitialSearchPosition).then(findLiveEdge.bind(self, liveEdgeInitialSearchPosition, onSearchForSegmentSucceeded, onSearchForSegmentFailed));
+            }
 
             return deferredLiveEdge.promise;
         },
@@ -1097,7 +1111,7 @@ MediaPlayer.dependencies.BufferController = function () {
         errHandler: undefined,
         scheduleWhilePaused: undefined,
         eventController : undefined,
-
+        timelineConverter:undefined,
         initialize: function (type, periodInfo, data, buffer, videoModel, scheduler, fragmentController, source, eventController) {
             var self = this,
                 manifest = self.manifestModel.getValue();

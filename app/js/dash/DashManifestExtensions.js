@@ -482,6 +482,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             else if (r.hasOwnProperty("SegmentList")) {
                 segmentInfo = r.SegmentList;
                 representation.segmentInfoType = "SegmentList";
+                representation.useCalculatedLiveEdgeTime = true;
             }
             else if (r.hasOwnProperty("SegmentTemplate")) {
                 segmentInfo = r.SegmentTemplate;
