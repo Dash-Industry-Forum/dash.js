@@ -36,13 +36,6 @@ videojs.Dashjs = videojs.Html5.extend({
     // Per DAN - people will need access to the context and mediaPlayer
     player.dashPlayer = dashPlayer;
     player.dashContext = dashContext;
-
-    player.ready(function() {
-      player.on('loadeddata', function() {
-        console.log('got data');
-        console.log(this.dashPlayer.time(), this.dashPlayer.duration());
-      })
-    })
   }
 });
 
