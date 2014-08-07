@@ -37,7 +37,6 @@ MediaPlayer.vo.URIFragmentData.prototype = {
 
     ## Note
     Akamai is purposing to add #s=X to the ISO standard.
-        - (X)Value would be a start time to seek to at startup instead of starting at 0 or live edge
-        - Respected values are relative time withing VOD clip or UTC time that is valid for live stream.
+        - (X) Value would be a start time to seek to at startup instead of starting at 0 or live edge
         - Allows for seeking back before the start time unlike a temporal clipping.
 */
