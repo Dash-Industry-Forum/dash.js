@@ -32,8 +32,45 @@ videojs.Dashjs = videojs.Html5.extend({
     }
 
     dashPlayer.attachSource(source.src);
+
+    // ========
+    // DVR RULES
+    // ========
+    player.dashPlayer = dashPlayer;
+    player.isDVR = false;
+    player.ready(function() {
+      player.on('loadeddata', function() {
+        player.isDVR = player.dashPlayer.getVideoElementExt().isDVR();
+        player.trigger('durationchange');
+      });
+    });
+    // ========
   }
 });
+
+videojs.Dashjs.prototype.currentTime = function() {
+  if(this.player_.isDVR) {
+    return this.player_.dashPlayer.getVideoElementExt().time();
+  } else {
+    return videojs.Html5.prototype.currentTime.call(this);
+  }
+};
+
+videojs.Dashjs.prototype.setCurrentTime = function(time) {
+  if(this.player_.isDVR) {
+    this.el().currentTime = this.player_.dashPlayer.getVideoElementExt().getSeekValue(time);
+  } else {
+    videojs.Html5.prototype.setCurrentTime.call(this, time);
+  }
+};
+
+videojs.Dashjs.prototype.duration = function() {
+  if(this.player_.isDVR) {
+    return this.player_.dashPlayer.getVideoElementExt().duration();
+  } else {
+    return videojs.Html5.prototype.duration.call(this);
+  }
+};
 
 videojs.Dashjs.isSupported = function(){
   return !!window.MediaSource;
