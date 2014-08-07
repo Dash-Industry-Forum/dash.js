@@ -120,28 +120,48 @@ MediaPlayer = function (aContext) {
 
         time = function () {
             var metric = getDVRInfoMetric.call(this);
-            return Math.round(this.duration() - (metric.range.end - metric.time));
+            return (metric === null) ? 0 : Math.round(this.duration() - (metric.range.end - metric.time));
         },
 
         duration  = function() {
             var metric = getDVRInfoMetric.call(this),
-                range = metric.range.end - metric.range.start;
+                range;
+
+            if (metric === null){
+                return 0;
+            }
+
+            range = metric.range.end - metric.range.start;
 
             return Math.round(range < metric.mpd.timeShiftBufferDepth ? range : metric.mpd.timeShiftBufferDepth);
         },
 
         timeAsUTC = function () {
             var metric = getDVRInfoMetric.call(this),
-                availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000 ,
-                currentUTCTime = this.time() + (availabilityStartTime + metric.range.start);
+                availabilityStartTime,
+                currentUTCTime;
+
+            if (metric === null){
+                return 0;
+            }
+
+            availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000;
+            currentUTCTime = this.time() + (availabilityStartTime + metric.range.start);
 
             return Math.round(currentUTCTime);
         },
 
         durationAsUTC = function () {
             var metric = getDVRInfoMetric.call(this),
-                availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000 ,
-                currentUTCDuration = (availabilityStartTime + metric.range.start) + this.duration();
+                availabilityStartTime,
+                currentUTCDuration;
+
+            if (metric === null){
+                return 0;
+            }
+
+            availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000;
+            currentUTCDuration = (availabilityStartTime + metric.range.start) + this.duration();
 
             return Math.round(currentUTCDuration);
         },
