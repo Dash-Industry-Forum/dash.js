@@ -113,7 +113,7 @@
 
 <script>
   // Initalize the video.js player after videojs-tech-dashjs has loaded
-  var myPlayer = videojs('vid1');
+  var myPlayer = videojs('vid1', {context:new Dash.di.DashContext()});
 </script>
 
 <!-- EXAMPLE-SPECIFIC CODE -->
