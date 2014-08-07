@@ -50,7 +50,7 @@ Dash.dependencies.TimelineConverter = function () {
         },
 
         calcPresentationStartTime = function (period) {
-            var presentationStartTime = 0,
+            var presentationStartTime,
                 isDynamic = period.mpd.manifest.type === "dynamic",
                 startTimeOffset = parseInt(this.uriQueryFragModel.getURIFragmentData.s);
 
@@ -63,10 +63,10 @@ Dash.dependencies.TimelineConverter = function () {
                     if (presentationStartTime > period.liveEdge ||
                         presentationStartTime < (period.liveEdge - period.mpd.timeShiftBufferDepth)) {
 
-                        presentationStartTime = 0;
+                        presentationStartTime = null;
                     }
                 }
-                presentationStartTime = presentationStartTime === 0 ? period.liveEdge : presentationStartTime;
+                presentationStartTime = presentationStartTime || period.liveEdge;
 
             } else {
                 if (!isNaN(startTimeOffset) && startTimeOffset < period.duration && startTimeOffset >= 0) {
