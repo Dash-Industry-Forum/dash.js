@@ -32,8 +32,49 @@ videojs.Dashjs = videojs.Html5.extend({
     }
 
     dashPlayer.attachSource(source.src);
+
+    // Per DAN - people will need access to the context and mediaPlayer
+    player.dashPlayer = dashPlayer;
+    player.dashContext = dashContext;
+
+    player.ready(function() {
+      player.on('loadeddata', function() {
+        console.log('got data');
+        console.log(this.dashPlayer.time(), this.dashPlayer.duration());
+      })
+    })
   }
 });
+
+videojs.Dashjs.prototype.currentTime = function() {
+  if(this.player().dashPlayer) {
+    try {
+      return this.player().dashPlayer.time();
+    } catch (err) {
+      // console.log('err', err.stack);
+    }
+  }
+  return videojs.Html5.prototype.currentTime.call(this);
+};
+
+videojs.Dashjs.prototype.setCurrentTime = function(time) {
+  if(this.player().dashPlayer) {
+    this.player().dashPlayer.seek(time);
+  } else {
+    videojs.Html5.prototype.setCurrentTime.call(this, time);
+  }
+};
+
+videojs.Dashjs.prototype.duration = function() {
+  if(this.player().dashPlayer) {
+    try {
+      return this.player().dashPlayer.duration();
+    } catch (err) {
+      // console.log('err', err.stack);
+    }
+  }
+  return videojs.Html5.prototype.duration.call(this);
+};
 
 videojs.Dashjs.isSupported = function(){
   return !!window.MediaSource;
