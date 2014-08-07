@@ -23,6 +23,11 @@
         {
             "name": "Senthil",
             "link": "https://github.com/senthil-codr"
+        },
+        {
+            "name": "Fraunhofer Fokus",
+            "logo": "app/img/fh_fokus.png",
+            "link": "http://www.fokus.fraunhofer.de/en/fame/index.html"
         }
     ]
 }
