@@ -23,6 +23,11 @@
         {
             "name": "Senthil",
             "link": "https://github.com/senthil-codr"
+        },
+        {
+            "name": "Brightcove",
+            "logo": "app/img/brightcove.png",
+            "link": "https://www.brightcove.com"
         }
     ]
 }
