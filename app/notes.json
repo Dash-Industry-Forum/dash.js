@@ -5,7 +5,8 @@
             "items": [
                 "Erratic playback at higher bitrates.",
                 "Streams using high profile codecs may not play properly.",
-                "Only streams with segmentAlignment='true' will work with abr."
+                "Only streams with segmentAlignment='true' will work with abr.",
+				"Seek at start does not support multi-period content at this point."
             ]
         },
         {
@@ -21,7 +22,8 @@
                 "DVR Window support for pages hosting the player to display their own UI",
                 "fixes for multi-period",
                 "fixes for dynamic (Live)",
-                "contrib sample for using video.js with dash.js"
+                "contrib sample for using video.js with dash.js",
+				"Immediately seek to a a location within the media source upon initial load"
             ]
         },
         {
