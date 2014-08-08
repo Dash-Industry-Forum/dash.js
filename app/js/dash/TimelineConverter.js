@@ -33,7 +33,7 @@ Dash.dependencies.TimelineConverter = function () {
                 if (isDynamic) {
                     availabilityTime = new Date(mpd.availabilityStartTime.getTime() + (presentationTime * 1000));
                 } else {
-                // in static mpd, all segments are available at the same time
+                    // in static mpd, all segments are available at the same time
                     availabilityTime = mpd.availabilityStartTime;
                 }
             }
@@ -51,14 +51,29 @@ Dash.dependencies.TimelineConverter = function () {
 
         calcPresentationStartTime = function (period) {
             var presentationStartTime,
-                isDynamic;
-
-            isDynamic = period.mpd.manifest.type === "dynamic";
+                isDynamic = period.mpd.manifest.type === "dynamic",
+                startTimeOffset = parseInt(this.uriQueryFragModel.getURIFragmentData.s);
 
             if (isDynamic) {
-                presentationStartTime = period.liveEdge;
+
+                if (!isNaN(startTimeOffset) && startTimeOffset > 1262304000) {
+
+                    presentationStartTime = startTimeOffset - (period.mpd.availabilityStartTime.getTime()/1000);
+
+                    if (presentationStartTime > period.liveEdge ||
+                        presentationStartTime < (period.liveEdge - period.mpd.timeShiftBufferDepth)) {
+
+                        presentationStartTime = null;
+                    }
+                }
+                presentationStartTime = presentationStartTime || period.liveEdge;
+
             } else {
-                presentationStartTime = period.start;
+                if (!isNaN(startTimeOffset) && startTimeOffset < period.duration && startTimeOffset >= 0) {
+                    presentationStartTime = startTimeOffset;
+                }else{
+                    presentationStartTime = period.start;
+                }
             }
 
             return presentationStartTime;
@@ -159,6 +174,7 @@ Dash.dependencies.TimelineConverter = function () {
     return {
         system: undefined,
         debug: undefined,
+        uriQueryFragModel:undefined,
 
         setup: function() {
             this.system.mapHandler("liveEdgeFound", undefined, liveEdgeFound.bind(this));
