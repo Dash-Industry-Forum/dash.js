@@ -10,30 +10,69 @@
  */
 videojs.Dashjs = videojs.Html5.extend({
   init: function(player, options, ready){
-    var source, dashContext, dashPlayer;
+    var source, context, mediaPlayer;
 
     source = options.source;
     // need to remove the source so the HTML5 controller
     // doesn't try to use it
     delete options.source;
 
+    // Accept externally created context and media player references
+    // or default to baseline
+    context = player.options().context || new Dash.di.DashContext();
+    mediaPlayer = player.options().mediaPlayer || new MediaPlayer(context);
+
     // run the init of the HTML5 controller
     videojs.Html5.call(this, player, options, ready);
 
-    dashContext = new Dash.di.DashContext();
-    dashPlayer = new MediaPlayer(dashContext);
+    // Must run controller before these two lines or else there is no
+    // element to bind to.
+    mediaPlayer.startup();
+    mediaPlayer.attachView(this.el());
 
-    dashPlayer.startup();
-    dashPlayer.attachView(this.el());
-
-    // dash.js autoplays by default
+    // Dash.js autoplays by default
     if (!options.autoplay) {
-      dashPlayer.setAutoPlay(false);
+      mediaPlayer.setAutoPlay(false);
     }
 
-    dashPlayer.attachSource(source.src);
+    // Attach the source
+    mediaPlayer.attachSource(source.src);
+
+    // Per DAN - people will need access to the context and mediaPlayer
+    player.mediaPlayer = mediaPlayer;
+    player.context = context;
   }
 });
+
+videojs.Dashjs.prototype.currentTime = function() {
+  if(this.player().mediaPlayer) {
+    try {
+      return this.player().mediaPlayer.time();
+    } catch (err) {
+      // console.log('err', err.stack);
+    }
+  }
+  return videojs.Html5.prototype.currentTime.call(this);
+};
+
+videojs.Dashjs.prototype.setCurrentTime = function(time) {
+  if(this.player().mediaPlayer) {
+    this.player().mediaPlayer.seek(time);
+  } else {
+    videojs.Html5.prototype.setCurrentTime.call(this, time);
+  }
+};
+
+videojs.Dashjs.prototype.duration = function() {
+  if(this.player().mediaPlayer) {
+    try {
+      return this.player().mediaPlayer.duration();
+    } catch (err) {
+      // console.log('err', err.stack);
+    }
+  }
+  return videojs.Html5.prototype.duration.call(this);
+};
 
 videojs.Dashjs.isSupported = function(){
   return !!window.MediaSource;
