@@ -30,6 +30,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('videoModel', MediaPlayer.models.VideoModel);
             this.system.mapSingleton('manifestModel', MediaPlayer.models.ManifestModel);
             this.system.mapSingleton('metricsModel', MediaPlayer.models.MetricsModel);
+            this.system.mapSingleton('uriQueryFragModel', MediaPlayer.models.URIQueryAndFragmentModel);
             this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel);
 
             this.system.mapSingleton('textSourceBuffer', MediaPlayer.dependencies.TextSourceBuffer);
