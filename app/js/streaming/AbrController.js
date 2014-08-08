@@ -161,7 +161,10 @@ MediaPlayer.dependencies.AbrController = function () {
         },
 
         setPlaybackQuality: function (type, newPlaybackQuality) {
-            var quality = getInternalQuality(type);
+            var quality = getInternalQuality(type),
+                isInt = newPlaybackQuality !== null && !isNaN(newPlaybackQuality) && (newPlaybackQuality % 1 === 0);
+
+            if (!isInt) throw "argument is not an integer";
 
             if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && topQualities.hasOwnProperty(type) && newPlaybackQuality <= topQualities[type]) {
                 setInternalQuality(type, newPlaybackQuality);
