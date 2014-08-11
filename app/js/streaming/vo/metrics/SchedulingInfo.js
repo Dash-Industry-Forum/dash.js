@@ -1,7 +1,7 @@
 MediaPlayer.vo.metrics.SchedulingInfo = function () {
     "use strict";
 
-    this.stream = null;                 // Type of stream ("audio" | "video" etc..)
+    this.streamType = null;                 // Type of stream ("audio" | "video" etc..)
     this.t = null;                      // Real-Time | Time of the scheduling event.
 
     this.type = null;                   // Type of segment ("initialization segment" | "media segment")

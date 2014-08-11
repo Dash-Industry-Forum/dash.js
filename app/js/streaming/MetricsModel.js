@@ -178,7 +178,7 @@ MediaPlayer.models.MetricsModel = function () {
         addSchedulingInfo: function(streamType, t, type, startTime, availabilityStartTime, duration, quality, range, state) {
             var vo = new MediaPlayer.vo.metrics.SchedulingInfo();
 
-            vo.stream = streamType;
+            vo.streamType = streamType;
             vo.t = t;
 
             vo.type = type;
