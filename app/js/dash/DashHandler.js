@@ -222,7 +222,7 @@ Dash.dependencies.DashHandler = function () {
                 presentationEndTime;
 
             duration = representation.segmentDuration;
-            presentationStartTime = index * duration;
+            presentationStartTime = (index + representation.startNumber) * duration;
             presentationEndTime = presentationStartTime + duration;
 
             seg = new Dash.vo.Segment();
