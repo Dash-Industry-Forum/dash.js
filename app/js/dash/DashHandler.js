@@ -659,7 +659,8 @@ Dash.dependencies.DashHandler = function () {
                 frag,
                 ft,
                 fd,
-                i;
+                i,
+                self = this;
 
             if (segments && segments.length > 0) {
                 for (i = segmentLastIdx; i >= 0; i--) {
@@ -681,9 +682,9 @@ Dash.dependencies.DashHandler = function () {
                 if (!isNaN(representation.segmentDuration)) {
                     idx = Math.floor(time / representation.segmentDuration);
                 } else {
-                    console.log("Couldn't figure out a time!");
-                    console.log("Time: " + time);
-                    console.log(segments);
+                    self.debug.log("Couldn't figure out a time!");
+                    self.debug.log("Time: " + time);
+                    self.debug.log(segments);
                 }
             }
 
