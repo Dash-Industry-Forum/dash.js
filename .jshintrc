@@ -27,5 +27,6 @@
         "MSMediaKeys",
         "MediaKeys",
         "Caster",
-        "TextTrackCue"]
+        "TextTrackCue",
+        "HTMLMediaElement"]
 }
