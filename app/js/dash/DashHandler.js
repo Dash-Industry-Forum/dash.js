@@ -584,7 +584,7 @@ Dash.dependencies.DashHandler = function () {
             start = representation.startNumber;
 
             waitForAvailabilityWindow.call(self, representation).then(
-                function(availabilityWindow) {
+                function(/*availabilityWindow*/) {
                     if (!isDynamic) {
                         range = decideSegmentListRangeForTemplate.call(self, representation);
                         startIdx = range.start;

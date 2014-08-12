@@ -21,6 +21,7 @@
         "utils",
         "MediaPlayer",
         "Dash",
+        "HTMLMediaElement",
         "WebKitMediaSource",
         "MediaSource",
         "WebKitMediaKeys",

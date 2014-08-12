@@ -2,12 +2,6 @@ module.exports = function(grunt) {
   grunt.initConfig({
     connect: {
       default_options: {},
-      dev: {
-        options: {
-          port: 9999,
-          keepalive: true
-        }
-      }
     },
     watch: {},
     jshint: {
