@@ -50,11 +50,11 @@ Dash.dependencies.DashHandler = function () {
 
             // now see if there is an additional format tag suffixed to
             // the identifier within the enclosing '$' characters
-            formatTagPos = url.indexOf("%", startPos + 7);
+            formatTagPos = url.indexOf("%0", startPos + 7);
             if (formatTagPos > startPos && formatTagPos < endPos) {
 
                 specifier = url.charAt(endPos - 1);
-                width = url.substring(formatTagPos + 1, endPos - 1);
+                width = parseInt(url.substring(formatTagPos + 2, endPos - 1), 10);
 
                 // support the minimum specifiers required by IEEE 1003.1
                 // (d, i , o, u, x, and X) for completeness
