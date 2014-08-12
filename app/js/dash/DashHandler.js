@@ -28,70 +28,74 @@ Dash.dependencies.DashHandler = function () {
             return numStr;
         },
 
-        replaceNumberForTemplate = function (url, value) {
+        replaceTokenForTemplate = function (url, token, value) {
 
-            var startPos,
-                endPos,
+            var startPos = 0,
+                endPos = 0,
+                tokenLen = token.length,
+                formatTag = "%0",
+                formatTagLen = formatTag.length,
                 formatTagPos,
                 specifier,
-                width;
+                width,
+                paddedValue;
 
-            // check that there is a valid $Number...$ identifier
-            startPos = url.indexOf("$Number");
-            if (startPos < 0) {
-                return url;
-            }
+            // keep looping round until all instances of <token> have been
+            // replaced. once that has happened, startPos below will be -1
+            // and the completed url will be returned.
+            while (true) {
 
-            // the next '$' must be the end of the identifer
-            endPos = url.indexOf("$", startPos + 7);
-            if (endPos < 0) {
-                return url;
-            }
-
-            // now see if there is an additional format tag suffixed to
-            // the identifier within the enclosing '$' characters
-            formatTagPos = url.indexOf("%0", startPos + 7);
-            if (formatTagPos > startPos && formatTagPos < endPos) {
-
-                specifier = url.charAt(endPos - 1);
-                width = parseInt(url.substring(formatTagPos + 2, endPos - 1), 10);
-
-                // support the minimum specifiers required by IEEE 1003.1
-                // (d, i , o, u, x, and X) for completeness
-                switch (specifier) {
-                // treat all int types as uint,
-                // hence deliberate fallthrough
-                case 'd':
-                case 'i':
-                case 'u':
-                    value = zeroPadToLength(value.toString(), width);
-                    break;
-                case 'x':
-                    value = zeroPadToLength(value.toString(16), width);
-                    break;
-                case 'X':
-                    value = zeroPadToLength(value.toString(16), width).toUpperCase();
-                    break;
-                case 'o':
-                    value = zeroPadToLength(value.toString(8), width);
-                    break;
-                default:
-                    this.debug.log("Unsupported/invalid IEEE 1003.1 format identifier string in URL");
+                // check if there is a valid $<token>...$ identifier
+                // if not, return the url as is.
+                startPos = url.indexOf("$" + token);
+                if (startPos < 0) {
                     return url;
                 }
+
+                // the next '$' must be the end of the identifer
+                // if there isn't one, return the url as is.
+                endPos = url.indexOf("$", startPos + tokenLen);
+                if (endPos < 0) {
+                    return url;
+                }
+
+                // now see if there is an additional format tag suffixed to
+                // the identifier within the enclosing '$' characters
+                formatTagPos = url.indexOf(formatTag, startPos + tokenLen);
+                if (formatTagPos > startPos && formatTagPos < endPos) {
+
+                    specifier = url.charAt(endPos - 1);
+                    width = parseInt(url.substring(formatTagPos + formatTagLen, endPos - 1), 10);
+
+                    // support the minimum specifiers required by IEEE 1003.1
+                    // (d, i , o, u, x, and X) for completeness
+                    switch (specifier) {
+                    // treat all int types as uint,
+                    // hence deliberate fallthrough
+                    case 'd':
+                    case 'i':
+                    case 'u':
+                        paddedValue = zeroPadToLength(value.toString(), width);
+                        break;
+                    case 'x':
+                        paddedValue = zeroPadToLength(value.toString(16), width);
+                        break;
+                    case 'X':
+                        paddedValue = zeroPadToLength(value.toString(16), width).toUpperCase();
+                        break;
+                    case 'o':
+                        paddedValue = zeroPadToLength(value.toString(8), width);
+                        break;
+                    default:
+                        this.debug.log("Unsupported/invalid IEEE 1003.1 format identifier string in URL");
+                        return url;
+                    }
+                } else {
+                    paddedValue = value;
+                }
+
+                url = url.substring(0, startPos) + paddedValue + url.substring(endPos + 1);
             }
-
-            return url.substring(0, startPos) + value + url.substring(endPos + 1);
-        },
-
-        replaceTimeForTemplate = function (url, value) {
-            var v = value.toString();
-            return url.split("$Time$").join(v);
-        },
-
-        replaceBandwidthForTemplate = function (url, value) {
-            var v = value.toString();
-            return url.split("$Bandwidth$").join(v);
         },
 
         replaceIDForTemplate = function (url, value) {
@@ -382,8 +386,8 @@ Dash.dependencies.DashHandler = function () {
 
                 seg.replacementTime = (start + i - 1) * representation.segmentDuration;
                 url = template.media;
-                url = replaceNumberForTemplate(url, seg.replacementNumber);
-                url = replaceTimeForTemplate(url, seg.replacementTime);
+                url = replaceTokenForTemplate(url, "Number", seg.replacementNumber);
+                url = replaceTokenForTemplate(url, "Time", seg.replacementTime);
                 seg.media = url;
 
                 segments.push(seg);
@@ -491,8 +495,8 @@ Dash.dependencies.DashHandler = function () {
 
             seg.replacementNumber = getNumberForSegment(seg, index);
 
-            url = replaceNumberForTemplate(url, seg.replacementNumber);
-            url = replaceTimeForTemplate(url, seg.replacementTime);
+            url = replaceTokenForTemplate(url, "Number", seg.replacementNumber);
+            url = replaceTokenForTemplate(url, "Time", seg.replacementTime);
             seg.media = url;
             seg.mediaRange = range;
             seg.availabilityIdx = index;
@@ -710,9 +714,9 @@ Dash.dependencies.DashHandler = function () {
                 url;
 
             url = getRequestUrl(segment.media, representation);
-            url = replaceNumberForTemplate(url, segment.replacementNumber);
-            url = replaceTimeForTemplate(url, segment.replacementTime);
-            url = replaceBandwidthForTemplate(url, bandwidth);
+            url = replaceTokenForTemplate(url, "Number", segment.replacementNumber);
+            url = replaceTokenForTemplate(url, "Time", segment.replacementTime);
+            url = replaceTokenForTemplate(url, "Bandwidth", bandwidth);
             url = replaceIDForTemplate(url, representation.id);
 
             request.streamType = type;
