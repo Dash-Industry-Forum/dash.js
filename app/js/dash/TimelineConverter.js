@@ -15,7 +15,6 @@ Dash.dependencies.TimelineConverter = function () {
     "use strict";
 
     var clientServerTimeShift = 0,
-        isClientServerTimeSyncCompleted = false,
 
         calcAvailabilityTimeFromPresentationTime = function (presentationTime, mpd, isDynamic, calculateEnd) {
             var availabilityTime = NaN;
@@ -135,7 +134,7 @@ Dash.dependencies.TimelineConverter = function () {
 
             if (!isDynamic) return range;
 
-            if ((!isClientServerTimeSyncCompleted || isNaN(duration)) && representation.segmentAvailabilityRange) {
+            if ((!representation.adaptation.period.isClientServerTimeSyncCompleted || isNaN(duration)) && representation.segmentAvailabilityRange) {
                 return representation.segmentAvailabilityRange;
             }
 
@@ -161,7 +160,6 @@ Dash.dependencies.TimelineConverter = function () {
             period.clientServerTimeShift = actualLiveEdge - expectedLiveEdge;
             period.isClientServerTimeSyncCompleted = true;
             clientServerTimeShift = period.clientServerTimeShift * 1000;
-            isClientServerTimeSyncCompleted = true;
         },
 
         calcMSETimeOffset = function (representation) {

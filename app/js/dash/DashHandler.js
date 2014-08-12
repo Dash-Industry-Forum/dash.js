@@ -222,7 +222,7 @@ Dash.dependencies.DashHandler = function () {
                 presentationEndTime;
 
             duration = representation.segmentDuration;
-            presentationStartTime = (index + representation.startNumber) * duration;
+            presentationStartTime = index * duration;
             presentationEndTime = presentationStartTime + duration;
 
             seg = new Dash.vo.Segment();
@@ -420,7 +420,8 @@ Dash.dependencies.DashHandler = function () {
         },
 
         decideSegmentListRangeForTemplate = function(representation) {
-            var duration = representation.segmentDuration,
+            var self = this,
+                duration = representation.segmentDuration,
                 minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime,
                 availabilityWindow = representation.segmentAvailabilityRange,
                 originAvailabilityTime = NaN,
@@ -431,6 +432,10 @@ Dash.dependencies.DashHandler = function () {
                 start,
                 end,
                 range;
+
+            if (!availabilityWindow) {
+                availabilityWindow = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
+            }
 
             if (isDynamic && !representation.adaptation.period.isClientServerTimeSyncCompleted) {
                 start = Math.floor(availabilityWindow.start / duration);
@@ -581,7 +586,6 @@ Dash.dependencies.DashHandler = function () {
             waitForAvailabilityWindow.call(self, representation).then(
                 function(availabilityWindow) {
                     if (!isDynamic) {
-                        representation.segmentAvailabilityRange = availabilityWindow;
                         range = decideSegmentListRangeForTemplate.call(self, representation);
                         startIdx = range.start;
                         endIdx = range.end;
@@ -604,7 +608,7 @@ Dash.dependencies.DashHandler = function () {
                         segments.push(seg);
                         seg = null;
                     }
-                    representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end:segments[segments.length-1].presentationStartTime};
+                    representation.segmentAvailabilityRange = {start: representation.adaptation.period.start + segments[0].presentationStartTime, end: representation.adaptation.period.start + segments[segments.length-1].presentationStartTime};
                     representation.availableSegmentsNumber = len;
                     deferred.resolve(segments);
             });
@@ -684,7 +688,7 @@ Dash.dependencies.DashHandler = function () {
                         lastIdx = segments.length - 1;
                         if (isDynamic && isNaN(representation.adaptation.period.liveEdge)) {
                             // the last segment is supposed to be a live edge
-                            representation.adaptation.period.liveEdge = segments[lastIdx].presentationStartTime;
+                            representation.adaptation.period.liveEdge = segments[lastIdx].presentationStartTime + representation.adaptation.period.start;
                         }
 
                         deferred.resolve(segments);
