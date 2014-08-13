@@ -98,7 +98,7 @@ Dash.dependencies.DashHandler = function () {
             }
         },
 
-        escapeDollarsInTemplate = function (url) {
+        unescapeDollarsInTemplate = function (url) {
             return url.split("$$").join("$");
         },
 
@@ -834,7 +834,7 @@ Dash.dependencies.DashHandler = function () {
             url = replaceTokenForTemplate(url, "Time", segment.replacementTime);
             url = replaceTokenForTemplate(url, "Bandwidth", bandwidth);
             url = replaceIDForTemplate(url, representation.id);
-            url = escapeDollarsInTemplate(url);
+            url = unescapeDollarsInTemplate(url);
 
             request.streamType = type;
             request.type = "Media Segment";
