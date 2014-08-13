@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html ng-app="DashPlayer" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
+
+    <link rel="stylesheet" href="../../app/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../app/lib/bootstrap/css/bootstrap-glyphicons.css">
+    <link rel="stylesheet" href="../../app/lib/angular.treeview/css/angular.treeview.css">
+    <link rel="stylesheet" href="../../app/css/main.css">
+
+    <!-- http://jquery.com/ -->
+    <script src="../../app/lib/jquery/jquery-1.10.2.min.js"></script>
+
+    <!-- http://angularjs.org/ -->
+    <script src="../../app/lib/angular/angular.min.js"></script>
+    <script src="../../app/lib/angular/angular-resource.min.js"></script>
+
+    <!-- http://getbootstrap.com/ -->
+    <script src="../../app/lib/bootstrap/js/bootstrap.min.js"></script>
+
+    <!-- https://github.com/kriskowal/q -->
+    <script src="../../app/lib/q.js"></script>
+
+    <!-- https://github.com/creynders/dijon-framework -->
+    <script src="../../app/lib/dijon.js"></script>
+
+    <!-- http://bannister.us/weblog/2007/06/09/simple-base64-encodedecode-javascript/ -->
+    <script src="../../app/lib/base64.js"></script>
+
+    <!-- Misc Libs -->
+    <script src="../../app/lib/xml2json.js"></script>
+    <script src="../../app/lib/objectiron.js"></script>
+    <script src="../../app/lib/long.js"></script>
+    <script src="../../app/lib/Math.js"></script>
+
+    <!-- http://www.flotcharts.org/ -->
+    <script src="../../app/lib/flot/jquery.flot.js"></script>
+
+    <!-- https://github.com/eu81273/angular.treeview -->
+    <script src="../../app/lib/angular.treeview/angular.treeview.min.js"></script>
+
+    <!-- Player -->
+    <script src="../../app/js/streaming/MediaPlayer.js"></script>
+    <script src="../../app/js/streaming/Context.js"></script>
+    <script src="../../app/js/streaming/ErrorHandler.js"></script>
+    <script src="../../app/js/streaming/Capabilities.js"></script>
+    <script src="../../app/js/streaming/EventBus.js"></script>
+    <script src="../../app/js/streaming/Debug.js"></script>
+    <script src="../../app/js/streaming/TokenAuthentication.js"></script>
+    <script src="../../app/js/streaming/VideoModel.js"></script>
+    <script src="../../app/js/streaming/vo/SegmentRequest.js"></script>
+    <script src="../../app/js/streaming/ManifestLoader.js"></script>
+    <script src="../../app/js/streaming/ManifestUpdater.js"></script>
+    <script src="../../app/js/streaming/ManifestModel.js"></script>
+    <script src="../../app/js/streaming/MediaSourceExtensions.js"></script>
+    <script src="../../app/js/streaming/SourceBufferExtensions.js"></script>
+    <script src="../../app/js/streaming/VideoModelExtensions.js"></script>
+    <script src="../../app/js/streaming/BufferExtensions.js"></script>
+    <script src="../../app/js/streaming/FragmentController.js"></script>
+    <script src="../../app/js/streaming/AbrController.js"></script>
+    <script src="../../app/js/streaming/FragmentLoader.js"></script>
+    <script src="../../app/js/streaming/FragmentModel.js"></script>
+    <script src="../../app/js/streaming/StreamController.js"></script>
+    <script src="../../app/js/streaming/RequestScheduler.js"></script>
+    <script src="../../app/js/streaming/SchedulerExtensions.js"></script>
+    <script src="../../app/js/streaming/SchedulerModel.js"></script>
+    <script src="../../app/js/streaming/Stream.js"></script>
+    <script src="../../app/js/streaming/BufferController.js"></script>
+    <script src="../../app/js/streaming/ProtectionModel.js"></script>
+    <script src="../../app/js/streaming/ProtectionController.js"></script>
+    <script src="../../app/js/streaming/ProtectionExtensions.js"></script>
+    <script src="../../app/js/streaming/rules/SwitchRequest.js"></script>
+    <script src="../../app/js/streaming/rules/DownloadRatioRule.js"></script>
+    <script src="../../app/js/streaming/rules/InsufficientBufferRule.js"></script>
+    <script src="../../app/js/streaming/rules/LimitSwitchesRule.js"></script>
+    <script src="../../app/js/streaming/rules/BaseRulesCollection.js"></script>
+    <script src="../../app/js/streaming/EventController.js"></script>
+    <script src="../../app/js/streaming/URIQueryAndFragmentModel.js"></script>
+    <script src="../../app/js/streaming/vo/URIFragmentData.js"></script>
+
+    <!--Captioning-->
+    <script src="../../app/js/streaming/captioning/VTTParser.js"></script>
+    <script src="../../app/js/streaming/captioning/TTMLParser.js"></script>
+    <script src="../../app/js/streaming/captioning/TextTrackExtensions.js"></script>
+    <script src="../../app/js/streaming/captioning/TextSourceBuffer.js"></script>
+    <script src="../../app/js/streaming/captioning/TextController.js"></script>
+
+    <!-- Metrics -->
+    <script src="../../app/js/streaming/vo/MetricsList.js"></script>
+    <script src="../../app/js/streaming/MetricsModel.js"></script>
+    <script src="../../app/js/streaming/vo/metrics/BufferLevel.js"></script>
+    <script src="../../app/js/streaming/vo/metrics/HTTPRequest.js"></script>
+    <script src="../../app/js/streaming/vo/metrics/PlayList.js"></script>
+    <script src="../../app/js/streaming/vo/metrics/RepresentationSwitch.js"></script>
+    <script src="../../app/js/streaming/vo/metrics/TCPConnection.js"></script>
+    <script src="../../app/js/streaming/vo/metrics/DroppedFrames.js"></script>
+    <script src="../../app/js/streaming/vo/metrics/DVRInfo.js"></script>
+
+    <!-- Webm Dash -->
+    <script src="../../app/js/dash/Dash.js"></script>
+    <script src="app/js/webm/Webm.js"></script>
+    <script src="app/js/webm/WebmContext.js"></script>
+    <script src="app/js/webm/WebmURLExtensions.js"></script>
+    <script src="../../app/js/dash/vo/Mpd.js"></script>
+    <script src="../../app/js/dash/vo/Period.js"></script>
+    <script src="../../app/js/dash/vo/AdaptationSet.js"></script>
+    <script src="../../app/js/dash/vo/Representation.js"></script>
+    <script src="../../app/js/dash/vo/Segment.js"></script>
+    <script src="../../app/js/dash/vo/Event.js"></script>
+    <script src="../../app/js/dash/vo/EventStream.js"></script>
+    <script src="../../app/js/dash/DashParser.js"></script>
+    <script src="../../app/js/dash/DashHandler.js"></script>
+    <script src="../../app/js/dash/BaseURLExtensions.js"></script>
+    <script src="../../app/js/dash/FragmentExtensions.js"></script>
+    <script src="../../app/js/dash/DashManifestExtensions.js"></script>
+    <script src="../../app/js/dash/DashMetricsExtensions.js"></script>
+    <script src="../../app/js/dash/TimelineConverter.js"></script>
+
+    <!-- App -->
+    <script src="../../app/metrics.js"></script>
+    <script src="app/main.js"></script>
+</head>
+<body ng-controller="DashController">
+    <div class="modal fade" id="streamModal">
+        <div class="modal-dialog">
+            <div class="list-group modal-list">
+                <a
+                   ng-repeat="item in availableStreams"
+                   href="#"
+                   class="list-group-item"
+                   ng-click="setStream(item)"
+                   data-dismiss="modal"
+                   ng-show="isStreamAvailable(item.browsers)">
+                    {{item.name}}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row title-header">
+            <a href="http://dashif.org/" target="_blank"><img class="image" src="../../app/img/if.png"/></a>
+            <span id="big-title">Reference Client</span>
+            <span>{{version}}</span>
+
+            <div class="github">
+                <iframe
+                    id="star-button"
+                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=watch&count=true&size=large"
+                    height="30"
+                    width="170"
+                    frameborder="0"
+                    scrolling="0"
+                    allowTransparency="true"
+                    class="hidden-xs github-button">
+                </iframe>
+                <iframe
+                    id="fork-button"
+                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=fork&count=true&size=large"
+                    height="30"
+                    width="170"
+                    frameborder="0"
+                    scrolling="0"
+                    allowTransparency="true github-button">
+                </iframe>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="input-group">
+                <div id="desktop-streams" class="input-group-btn">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                        Stream <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li
+                            ng-repeat="item in availableStreams"
+                            ng-click="setStream(item)"
+                            ng-show="isStreamAvailable(item.browsers)">
+                            <a>{{item.name}}</a>
+                        </li>
+                    </ul>
+                </div>
+                <div id="mobile-streams" class="input-group-btn">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" href="#streamModal">
+                        Stream <span class="caret"></span>
+                    </button>
+                </div>
+                <input type="text" class="form-control" placeholder="manifest" ng-model="selectedItem.url">
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="dash-video-player col-md-9">
+                <video controls="true"></video>
+            </div>
+            <div class="col-md-3">
+                <div class="panel">
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">ABR</span>
+                        <div class="btn-group">
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-class="{active:abrEnabled == false}"
+                                ng-click="setAbrEnabled(false)">
+                                <span>Off</span>
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-default active"
+                                ng-class="{active:abrEnabled == true}"
+                                ng-click="setAbrEnabled(true)">
+                                <span>On</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">Video</span>
+                        <div class="btn-group">
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-click="abrDown('video')">
+                                <span class="glyphicon glyphicon-minus"></span>
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-click="abrUp('video')">
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-body panel-stats">
+                        <p class="text-warning">{{videoBitrate}} kbps</p>
+                        <p class="text-primary">Rep Index: <span class="text-success">{{videoIndex}}</span><span class="text-warning">{{videoPendingIndex}}</span>/<span class="text-success">{{videoMaxIndex}}</span></p>
+                        <p class="text-primary">Buffer Length: <span class="text-success">{{videoBufferLength}}</span></p>
+                        <p class="text-primary">Latency: <span class="text-success">last {{videoRatioCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{videoLatency}}</p>
+                        <p class="text-primary">Download: <span class="text-success">last {{videoRatioCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{videoDownload}}</p>
+                        <p class="text-primary">Ratio: <span class="text-success">last {{videoRatioCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{videoRatio}}</p>
+                        <p class="text-primary">Dropped Frames: <span class="text-success">{{videoDroppedFrames}}</span></p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">Audio</span>
+                        <div class="btn-group">
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-click="abrDown('audio')">
+                                <span class="glyphicon glyphicon-minus"></span>
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-click="abrUp('audio')">
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-body panel-stats">
+                        <p class="text-warning">{{audioBitrate}} kbps</p>
+                        <p class="text-primary">Rep Index: <span class="text-success">{{audioIndex}}</span><span class="text-warning">{{audioPendingIndex}}</span>/<span class="text-success">{{audioMaxIndex}}</span></p>
+                        <p class="text-primary">Buffer Length: <span class="text-success">{{audioBufferLength}}</span></p>
+                        <p class="text-primary">Latency: <span class="text-success">last {{audioLatencyCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{audioLatency}}</p>
+                        <p class="text-primary">Download: <span class="text-success">last {{audioDownloadCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{audioDownload}}</p>
+                        <p class="text-primary">Ratio: <span class="text-success">last {{audioRatioCount}} segments</span></p>
+                        <p class="text-success" title="[low] < [average] < [high]">{{audioRatio}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="panel">
+                <div class="panel-heading panel-top">
+                    <span class="panel-title">Charts</span>
+                    <div class="btn-group">
+                        <button
+                            type="button"
+                            class="btn btn-default"
+                            ng-class="{active:showCharts == false}"
+                            ng-click="setCharts(false)">
+                            Hide
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-default"
+                            ng-class="{active:showCharts == true}"
+                            ng-click="setCharts(true)">
+                            Show
+                        </button>
+                    </div>
+                </div>
+                <div ng-switch on="showCharts">
+                    <div class="panel-body panel-stats" ng-switch-when="true">
+                        <chart ng-model="bufferData"></chart>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="panel">
+                <div class="panel-heading panel-top">
+                    <span class="panel-title">Debug</span>
+                    <div class="btn-group">
+                        <button
+                            type="button"
+                            class="btn btn-default"
+                            ng-class="{active:showDebug == false}"
+                            ng-click="setDebug(false)">
+                            Hide
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-default"
+                            ng-class="{active:showDebug == true}"
+                            ng-click="setDebug(true)">
+                            Show
+                        </button>
+                    </div>
+                </div>
+                <div ng-switch on="showDebug">
+                    <div class="panel-body panel-stats" ng-switch-when="true">
+                        <ul class="nav nav-tabs">
+                            <li class="dropdown">
+                                <a href="#" id="metricsDropdown" class="dropdown-toggle" data-toggle="dropdown">Metrics <b class="caret"></b></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="metricsDropdown">
+                                    <li><a href="#video-metrics" tabindex="-1" data-toggle="tab">Video</a></li>
+                                    <li><a href="#audio-metrics" tabindex="-1" data-toggle="tab">Audio</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#notes" data-toggle="tab">Release Notes</a></li>
+                        </ul>
+                        <div id="debugTabContent" class="tab-content">
+                            <div class="tab-pane" id="video-metrics">
+                                <button
+                                    type="button"
+                                    class="btn btn-default"
+                                    ng-click="getVideoTreeMetrics()">
+                                    Video - Update
+                                </button>
+                                <div
+                                    class="tree"
+                                    data-angular-treeview="true"
+                                    data-tree-model="videoMetrics"
+                                    data-node-label="text"
+                                    data-node-children="items">
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="audio-metrics">
+                                <button
+                                    type="button"
+                                    class="btn btn-default"
+                                    ng-click="getAudioTreeMetrics()">
+                                    Audio - Update
+                                </button>
+                                <div
+                                    class="tree"
+                                    data-angular-treeview="true"
+                                    data-tree-model="audioMetrics"
+                                    data-node-label="text"
+                                    data-node-children="items">
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="notes">
+                                <div ng-repeat="note in releaseNotes" class="note-box">
+                                    <span><b>{{note.title}}</b></span><br/>
+                                    <span ng-repeat="text in note.items">
+                                        {{text}}<br/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-area">
+        <div class="container">
+            <div class="row">
+                <div class="compat-box col-md-5">
+                    <h3>Compatibility Notes:</h3>
+                    <ul class="list-group">
+                        <li class="list-group-item"><a href="https://github.com/Dash-Industry-Forum/dash.js">This project can be forked on GitHub.</a></li>
+                        <li class="list-group-item">Use your browser's JavaScript console to view detailed information about stream playback.</li>
+                        <li class="list-group-item"><a href="baseline.html">See a base implementation here.</a></li>
+                        <li class="list-group-item">A browser that supports MSE (Media Source Extensions) is required.</li>
+                        <li class="list-group-item">As of 8/30/13, Desktop Chrome, Desktop Internet Explorer 11, and Mobile Chrome Beta for Android are the only browsers supported.</li>
+                        <li class="list-group-item">Use the most up-to-date version of your browser for the best compatibility.</li>
+                        <li class="list-group-item">Many of the streams in the dropdown box (with ?version=all) only work in the developer channel or Canary version of Chrome.</li>
+                        <li class="list-group-item"><a href="index.html?version=stable">Stable Chrome Streams</a></li>
+                        <li class="list-group-item"><a href="index.html?version=beta">Beta Chrome Streams</a></li>
+                        <li class="list-group-item"><a href="index.html?version=dev">Dev Chrome Streams</a></li>
+                        <li class="list-group-item"><a href="index.html?version=canary">Canary Chrome Streams</a></li>
+                        <li class="list-group-item"><a href="index.html?version=explorer">Internet Explorer 11 Streams</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="footer-text">Player Libraries:</h3>
+                    <a
+                        ng-repeat="item in playerLibraries"
+                        class="footer-text"
+                        href="{{item.link}}"
+                        target="_blank">
+                        {{item.name}}
+                    </a>
+                    <h3 class="footer-text">Showcase Libraries:</h3>
+                    <a
+                        ng-repeat="item in showcaseLibraries"
+                        class="footer-text"
+                        href="{{item.link}}"
+                        target="_blank">
+                        {{item.name}}
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <h3 class="footer-text">Contributors:</h3>
+                    <a
+                        ng-repeat="item in contributors"
+                        class="footer-text"
+                        href="{{item.link}}"
+                        target="_blank">
+                        <img ng-show="hasLogo(item)" ng-src="{{item.logo}}" alt="{{item.link}}"/>
+                        <span class="contributor" ng-show="!hasLogo(item)">{{item.name}}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
