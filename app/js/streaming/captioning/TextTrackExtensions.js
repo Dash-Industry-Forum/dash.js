@@ -13,7 +13,13 @@
  */
 MediaPlayer.utils.TextTrackExtensions = function () {
     "use strict";
+    var Cue;
+
     return {
+        setup: function() {
+            Cue = window.VTTCue || window.TextTrackCue;
+        },
+
         addTextTrack: function(video, captionData,  label, scrlang, isDefaultTrack) {
 
             //TODO: Ability to define the KIND in the MPD - ie subtitle vs caption....
@@ -26,7 +32,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
             for(var item in captionData) {
                 var currentItem = captionData[item];
-                track.addCue(new TextTrackCue(currentItem.start, currentItem.end, currentItem.data));
+                track.addCue(new Cue(currentItem.start, currentItem.end, currentItem.data));
             }
 
             return Q.when(track);
