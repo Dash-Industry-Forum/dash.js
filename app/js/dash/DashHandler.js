@@ -513,8 +513,11 @@ Dash.dependencies.DashHandler = function () {
             representation.segments = segments;
             lastIdx = segments.length - 1;
             if (isDynamic && isNaN(representation.adaptation.period.liveEdge)) {
+                var liveEdge = segments[lastIdx].presentationStartTime,
+                    metrics = this.metricsModel.getMetricsFor("stream");
                 // the last segment is supposed to be a live edge
-                representation.adaptation.period.liveEdge = segments[lastIdx].presentationStartTime;
+                representation.adaptation.period.liveEdge = liveEdge;
+                this.metricsModel.updateManifestUpdateInfo(this.metricsExt.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
             }
         },
 
@@ -832,6 +835,8 @@ Dash.dependencies.DashHandler = function () {
         debug: undefined,
         baseURLExt: undefined,
         timelineConverter: undefined,
+        metricsModel: undefined,
+        metricsExt: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,

@@ -63,7 +63,27 @@ Dash.dependencies.RepresentationController = function () {
             }
         },
 
-        onRepresentationUpdated = function(/*sender, representation*/) {
+        onRepresentationUpdated = function(sender, representation) {
+            var self = this,
+                r = representation,
+                metrics = self.metricsModel.getMetricsFor("stream"),
+                manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
+                repInfo,
+                alreadyAdded = false;
+
+            for (var i = 0; i < manifestUpdateInfo.representationInfo.length; i += 1) {
+                repInfo = manifestUpdateInfo.representationInfo[i];
+                if (repInfo.index === r.index && repInfo.streamType === self.streamProcessor.getType()) {
+                    alreadyAdded = true;
+                    break;
+                }
+            }
+
+            if (!alreadyAdded) {
+                self.metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
+                    self.streamProcessor.getType(),r.presentationTimeOffset, r.startNumber, r.segmentInfoType);
+            }
+
             if (isAllRepresentationsUpdated()) {
                 updating = false;
                 this.notify(this.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
@@ -92,6 +112,8 @@ Dash.dependencies.RepresentationController = function () {
         debug: undefined,
         manifestExt: undefined,
         manifestModel: undefined,
+        metricsModel: undefined,
+        metricsExt: undefined,
         bufferExt: undefined,
         abrController: undefined,
         timelineConverter: undefined,

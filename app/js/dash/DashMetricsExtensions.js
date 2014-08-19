@@ -268,6 +268,26 @@ Dash.dependencies.DashMetricsExtensions = function () {
             currentSchedulingInfo = schedulingInfo[lastIdx];
 
             return currentSchedulingInfo;
+        },
+
+        getCurrentManifestUpdate = function(metrics) {
+            if (metrics === null) return null;
+
+            var manifestUpdate = metrics.ManifestUpdate,
+                ln,
+                lastIdx,
+                currentManifestUpdate;
+
+            if (manifestUpdate === null || manifestUpdate.length <= 0) {
+                return null;
+            }
+
+            ln = manifestUpdate.length;
+            lastIdx = ln - 1;
+
+            currentManifestUpdate = manifestUpdate[lastIdx];
+
+            return currentManifestUpdate;
         };
 
     return {
@@ -282,7 +302,8 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getCurrentHttpRequest : getCurrentHttpRequest,
         getHttpRequests : getHttpRequests,
         getCurrentDroppedFrames : getCurrentDroppedFrames,
-        getCurrentSchedulingInfo: getCurrentSchedulingInfo
+        getCurrentSchedulingInfo: getCurrentSchedulingInfo,
+        getCurrentManifestUpdate: getCurrentManifestUpdate
     };
 };
 

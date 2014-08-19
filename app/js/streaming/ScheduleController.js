@@ -303,13 +303,18 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this,
                 startTime = Math.max((liveEdgeTime - self.bufferController.getMinBufferTime() * 2), currentRepresentation.segmentAvailabilityRange.start),
                 request,
+                metrics = self.metricsModel.getMetricsFor("stream"),
+                manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
+                actualStartTime,
                 segmentStart;
             // get a request for a start time
             request = self.indexHandler.getSegmentRequestForTime(currentRepresentation, startTime);
             segmentStart = request.startTime;
             // set liveEdge to be in the middle of the segment time to avoid a possible gap between
             // currentTime and buffered.start(0)
-            currentRepresentation.adaptation.period.liveEdge = segmentStart + (request.duration / 2);
+            actualStartTime =segmentStart + (request.duration / 2);
+            currentRepresentation.adaptation.period.liveEdge = actualStartTime;
+            self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: currentRepresentation.adaptation.period.clientServerTimeShift});
             ready = true;
             startOnReady.call(self);
         };
@@ -318,6 +323,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         debug: undefined,
         system: undefined,
         metricsModel: undefined,
+        metricsExt: undefined,
         bufferExt: undefined,
         scheduleWhilePaused: undefined,
         sourceBufferExt: undefined,

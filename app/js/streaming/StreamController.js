@@ -210,6 +210,8 @@
         composeStreams = function() {
             var self = this,
                 manifest = self.manifestModel.getValue(),
+                metrics = self.metricsModel.getMetricsFor("stream"),
+                manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
                 playbackCtrl,
                 pLen,
                 sLen,
@@ -229,6 +231,8 @@
                 if (periods.length === 0) {
                     throw new Error("There are no regular periods");
                 }
+
+                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: self.videoModel.getCurrentTime(), buffered: self.videoModel.getElement().buffered, presentationStartTime: periods[0].start});
 
                 for (pIdx = 0, pLen = periods.length; pIdx < pLen; pIdx += 1) {
                     period = periods[pIdx];
@@ -255,6 +259,7 @@
                         stream.subscribe(stream.eventList.ENAME_STREAM_UPDATED, self);
                         streams.push(stream);
                     }
+                    self.metricsModel.addManifestUpdatePeriodInfo(manifestUpdateInfo, period.id, period.index, period.start, period.duration);
                     stream = null;
                 }
 
@@ -302,6 +307,7 @@
         manifestExt: undefined,
         debug: undefined,
         metricsModel: undefined,
+        metricsExt: undefined,
         videoExt: undefined,
         liveEdgeFinder: undefined,
         timelineConverter: undefined,
@@ -364,6 +370,7 @@
 
             streams = [];
             this.manifestUpdater.stop();
+            this.metricsModel.clearCurrentMetricsForType("stream");
             this.manifestModel.setValue(null);
             this.timelineConverter.reset();
             isPeriodSwitchingInProgress = false;

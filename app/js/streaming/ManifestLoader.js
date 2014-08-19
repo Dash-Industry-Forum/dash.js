@@ -68,6 +68,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 if (manifest) {
                     manifest.mpdUrl = url;
                     manifest.mpdLoadedTime = mpdLoadedTime;
+                    self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, mpdLoadedTime, manifest.availabilityStartTime);
                     self.notify(self.eventList.ENAME_MANIFEST_LOADED, manifest);
                 } else {
                     self.notify(self.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url));
