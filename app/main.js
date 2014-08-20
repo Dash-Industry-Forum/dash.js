@@ -503,6 +503,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         $scope.showCharts = show;
     }
 
+    $scope.setBufferLevelChart = function(show) {
+        $scope.showBufferLevel = show;
+    }
+
     $scope.showDebug = false;
     $scope.setDebug = function (show) {
         $scope.showDebug = show;

@@ -317,15 +317,19 @@
                 <div ng-switch on="showCharts">
                     <div class="panel-body panel-stats" ng-switch-when="true">
                         <ul class="nav nav-tabs">
-                            <li><a href="#bufferLevel" data-toggle="tab">Buffer level</a></li>
+                            <li><a href="#bufferLevel" data-toggle="tab" ng-click="setBufferLevelChart(true)">Buffer level</a></li>
                             <li><a href="#manifestInfo" data-toggle="tab">Manifest update info</a></li>
                         </ul>
                         <div id="chartTabContent" class="tab-content">
-                            <div class="tab-pane" id="bufferLevel">
-                                <chart ng-model="bufferData"></chart>
+                            <div class="tab-pane" id="bufferLevel" ng-class="{active:showBufferLevel == true}">
+                                <div ng-switch on="showBufferLevel">
+                                    <div class="panel-body panel-stats" ng-switch-when="true">
+                                        <chart ng-model="bufferData"></chart>
+                                    </div>
+                                </div>
                             </div>
                             <div class="tab-pane" id="manifestInfo">
-                                <div class="manifest-info-box manifest-info-box-header">
+                                <div class="manifest-info-box manifest-info-box-header" ng-show="manifestUpdateInfo != undefined">
                                     <div class="manifest-info-content"><span class="text-primary">Manifest type</span></div><br/>
                                     <div class="manifest-info-content"><span class="text-primary">Request time (delta)</span></div><br/>
                                     <div class="manifest-info-content"><span class="text-primary">Fetch time (delta)</span></div><br/>
@@ -385,6 +389,7 @@
                                         </span>
                                     </span>
                                 </div>
+                                <span ng-show="manifestUpdateInfo == undefined">No data available</span>
                             </div>
                         </div>
                     </div>
