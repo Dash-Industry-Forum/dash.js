@@ -230,7 +230,7 @@ Dash.dependencies.DashHandler = function () {
                 presentationEndTime;
 
             duration = representation.segmentDuration;
-            presentationStartTime = index * duration;
+            presentationStartTime = representation.adaptation.period.start + (index * duration);
             presentationEndTime = presentationStartTime + duration;
 
             seg = new Dash.vo.Segment();
@@ -429,6 +429,7 @@ Dash.dependencies.DashHandler = function () {
 
         decideSegmentListRangeForTemplate = function(representation) {
             var self = this,
+                periodStart = representation.adaptation.period.start,
                 duration = representation.segmentDuration,
                 minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime,
                 availabilityWindow = representation.segmentAvailabilityRange,
@@ -456,7 +457,7 @@ Dash.dependencies.DashHandler = function () {
             // segment for the current index
             if (currentSegmentList) {
                 originSegment = getSegmentByIndex(index, representation);
-                originAvailabilityTime = originSegment ? (originSegment.presentationStartTime) : (index > 0 ? (index * duration) : requestedTime || currentSegmentList[0].presentationStartTime);
+                originAvailabilityTime = originSegment ? (originSegment.presentationStartTime - periodStart) : (index > 0 ? (index * duration) : (requestedTime - periodStart) || (currentSegmentList[0].presentationStartTime - periodStart));
             } else {
                 // If no segments exist, but index > 0, it means that we switch to the other representation, so
                 // we should proceed from this time.
@@ -616,7 +617,7 @@ Dash.dependencies.DashHandler = function () {
                         segments.push(seg);
                         seg = null;
                     }
-                    representation.segmentAvailabilityRange = {start: representation.adaptation.period.start + segments[0].presentationStartTime, end: representation.adaptation.period.start + segments[segments.length-1].presentationStartTime};
+                    representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[segments.length-1].presentationStartTime};
                     representation.availableSegmentsNumber = len;
                     deferred.resolve(segments);
             });
@@ -696,7 +697,7 @@ Dash.dependencies.DashHandler = function () {
                         lastIdx = segments.length - 1;
                         if (isDynamic && isNaN(representation.adaptation.period.liveEdge)) {
                             // the last segment is supposed to be a live edge
-                            representation.adaptation.period.liveEdge = segments[lastIdx].presentationStartTime + representation.adaptation.period.start;
+                            representation.adaptation.period.liveEdge = segments[lastIdx].presentationStartTime;
                         }
 
                         deferred.resolve(segments);
@@ -744,14 +745,14 @@ Dash.dependencies.DashHandler = function () {
                         break;
                     } else if (idx === -1 && (time - Dash.dependencies.DashHandler.EPSILON) > (ft + fd)) {
                         // time is past the end
-                        idx  = isNaN(representation.segmentDuration) ? (frag.availabilityIdx + 1) : Math.floor(time / representation.segmentDuration);
+                        idx  = isNaN(representation.segmentDuration) ? (frag.availabilityIdx + 1) : Math.floor((time - representation.adaptation.period.start) / representation.segmentDuration);
                     }
                 }
             }
 
             if (idx === -1) {
                 if (!isNaN(representation.segmentDuration)) {
-                    idx = Math.floor(time / representation.segmentDuration);
+                    idx = Math.floor((time - representation.adaptation.period.start) / representation.segmentDuration);
                 } else {
                     self.debug.log("Couldn't figure out a time!");
                     self.debug.log("Time: " + time);
