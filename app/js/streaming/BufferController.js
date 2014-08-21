@@ -1107,6 +1107,7 @@ MediaPlayer.dependencies.BufferController = function () {
     return {
         videoModel: undefined,
         metricsModel: undefined,
+        metricsExt: undefined,
         manifestExt: undefined,
         manifestModel: undefined,
         bufferExt: undefined,
@@ -1145,6 +1146,9 @@ MediaPlayer.dependencies.BufferController = function () {
                         function(liveEdgeTime) {
                             // step back from a found live edge time to be able to buffer some data
                             var startTime = Math.max((liveEdgeTime - minBufferTime), currentRepresentation.segmentAvailabilityRange.start),
+                                metrics = self.metricsModel.getMetricsFor("stream"),
+                                manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
+                                actualStartTime,
                                 segmentStart;
                             // get a request for a start time
                             self.indexHandler.getSegmentRequestForTime(currentRepresentation, startTime).then(function(request) {
@@ -1152,7 +1156,9 @@ MediaPlayer.dependencies.BufferController = function () {
                                 segmentStart = request ? request.startTime : (currentRepresentation.adaptation.period.end - fragmentDuration);
                                 // set liveEdge to be in the middle of the segment time to avoid a possible gap between
                                 // currentTime and buffered.start(0)
-                                periodInfo.liveEdge = segmentStart + (fragmentDuration / 2);
+                                actualStartTime = segmentStart + (request.duration / 2);
+                                periodInfo.liveEdge = actualStartTime;
+                                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: currentRepresentation.adaptation.period.clientServerTimeShift});
                                 ready = true;
                                 startPlayback.call(self);
                                 doSeek.call(self, segmentStart);
@@ -1231,7 +1237,11 @@ MediaPlayer.dependencies.BufferController = function () {
         updateData: function(dataValue, periodInfoValue) {
             var self = this,
                 deferred = Q.defer(),
-                from = data;
+                metrics = self.metricsModel.getMetricsFor("stream"),
+                manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
+                from = data,
+                ln,
+                r;
 
             if (!from) {
                 from = dataValue;
@@ -1242,6 +1252,12 @@ MediaPlayer.dependencies.BufferController = function () {
                 function(representations) {
                     availableRepresentations = representations;
                     periodInfo = periodInfoValue;
+                    ln = representations.length;
+                    for (var i = 0; i < ln; i += 1) {
+                        r = representations[i];
+                        self.metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
+                            type,r.presentationTimeOffset, r.startNumber, r.segmentInfoType);
+                    }
                     self.abrController.getPlaybackQuality(type, from).then(
                         function (result) {
                             if (!currentRepresentation) {

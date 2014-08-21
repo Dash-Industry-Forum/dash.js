@@ -115,6 +115,41 @@ chart {
     overflow: scroll;
 }
 
+#manifestInfo {
+	height: auto;
+	overflow: auto;
+	white-space: nowrap;
+}
+
+.manifest-info-box {
+	display: inline-block;
+	width: 300px;
+	vertical-align: top;
+}
+
+.manifest-info-box-header {
+	position: absolute;
+	background-color: white;
+	width: 250px;
+}
+
+.manifest-info-item:nth-child(2) {
+	margin-left: 250px;
+}
+
+.manifest-info-content {
+	display: inline-block;
+	width: 100%;
+}
+
+.manifest-info-content:nth-of-type(even) {
+	background-color: #e1edf7;
+}
+
+.manifest-nested-info {
+	margin-left: 20px;
+}
+
 #notes {
     height: 340px;
     max-height: 340px;

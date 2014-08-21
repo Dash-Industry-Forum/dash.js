@@ -237,6 +237,8 @@
         composeStreams = function() {
             var self = this,
                 manifest = self.manifestModel.getValue(),
+                metrics = self.metricsModel.getMetricsFor("stream"),
+                manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
                 deferred = Q.defer(),
                 updatedStreams = [],
                 pLen,
@@ -259,6 +261,8 @@
                                 return deferred.reject("There are no regular periods");
                             }
 
+                            self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: self.videoModel.getCurrentTime(), buffered: self.videoModel.getElement().buffered, presentationStartTime: periods[0].start});
+
                             for (pIdx = 0, pLen = periods.length; pIdx < pLen; pIdx += 1) {
                                 period = periods[pIdx];
                                 for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx += 1) {
@@ -278,6 +282,8 @@
                                     stream.load(manifest, period);
                                     streams.push(stream);
                                 }
+
+                                self.metricsModel.addManifestUpdatePeriodInfo(manifestUpdateInfo, period.id, period.index, period.start, period.duration);
                                 stream = null;
                             }
 
@@ -329,6 +335,7 @@
         capabilities: undefined,
         debug: undefined,
         metricsModel: undefined,
+        metricsExt: undefined,
         videoExt: undefined,
         errHandler: undefined,
 

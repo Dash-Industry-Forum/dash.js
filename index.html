@@ -99,6 +99,7 @@
     <script src="app/js/streaming/vo/metrics/TCPConnection.js"></script>
     <script src="app/js/streaming/vo/metrics/DroppedFrames.js"></script>
     <script src="app/js/streaming/vo/metrics/DVRInfo.js"></script>
+    <script src="app/js/streaming/vo/metrics/ManifestUpdate.js"></script>
 
     <!-- Dash -->
     <script src="app/js/dash/Dash.js"></script>
@@ -308,7 +309,82 @@
                 </div>
                 <div ng-switch on="showCharts">
                     <div class="panel-body panel-stats" ng-switch-when="true">
-                        <chart ng-model="bufferData"></chart>
+                        <ul class="nav nav-tabs">
+                            <li><a href="#bufferLevel" data-toggle="tab" ng-click="setBufferLevelChart(true)">Buffer level</a></li>
+                            <li><a href="#manifestInfo" data-toggle="tab">Manifest update info</a></li>
+                        </ul>
+                        <div id="chartTabContent" class="tab-content">
+                            <div class="tab-pane" id="bufferLevel" ng-class="{active:showBufferLevel == true}">
+                                <div ng-switch on="showBufferLevel">
+                                    <div class="panel-body panel-stats" ng-switch-when="true">
+                                        <chart ng-model="bufferData"></chart>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="manifestInfo">
+                                <div class="manifest-info-box manifest-info-box-header" ng-show="manifestUpdateInfo != undefined">
+                                    <div class="manifest-info-content"><span class="text-primary">Manifest type</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-primary">Request time (delta)</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-primary">Fetch time (delta)</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-primary">Availability start time (delta)</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-primary">Presentation start time (delta)</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-primary">Client time offset (delta)</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-primary">Current time (delta)</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-primary">Latency (delta)</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-primary">Period</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-primary manifest-nested-info" >ID</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-primary manifest-nested-info">Start (delta)</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-primary manifest-nested-info">Duration (delta)</span></div><br/>
+                                    <div ng-repeat="range in manifestUpdateInfo[0].buffered">
+                                        <div class="manifest-info-content"><span class="text-primary">Buffered</span></div><br/>
+                                        <div class="manifest-info-content"><span class="text-primary manifest-nested-info">Start</span></div><br/>
+                                        <div class="manifest-info-content"><span class="text-primary manifest-nested-info">End</span></div><br/>
+                                        <div class="manifest-info-content"><span class="text-primary manifest-nested-info">Size</span></div><br/>
+                                    </div>
+                                    <div ng-repeat="representation in manifestUpdateInfo[0].representationInfo">
+                                        <div class="manifest-info-content"><span class="text-primary">Representation</span></div><br/>
+                                        <div class="manifest-info-content"><span class="text-primary manifest-nested-info">ID</span></div><br/>
+                                        <div class="manifest-info-content"><span class="text-primary manifest-nested-info">Period index</span></div><br/>
+                                        <div class="manifest-info-content"><span class="text-primary manifest-nested-info">Stream type</span></div><br/>
+                                        <div class="manifest-info-content"><span class="text-primary manifest-nested-info">Presentation time offset (delta)</span></div><br/>
+                                        <div class="manifest-info-content"><span class="text-primary manifest-nested-info">Start number (delta)</span></div><br/>
+                                        <div class="manifest-info-content"><span class="text-primary manifest-nested-info">Segment info type</span></div><br/>
+                                    </div>
+                                </div>
+                                <div ng-repeat="info in manifestUpdateInfo" class="manifest-info-box manifest-info-item">
+                                    <div class="manifest-info-content"><span class="text-success">{{info.type}}</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-success">{{info.requestTime}}</span><span class="text-warning"> {{info.requestTimeDelta}}</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-success">{{info.fetchTime}}</span><span class="text-warning"> {{info.fetchTimeDelta}}</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-success">{{info.availabilityStartTime}}</span><span class="text-warning"> {{info.availabilityStartTimeDelta}}</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-success">{{info.presentationStartTime}}</span><span class="text-warning"> {{info.presentationStartTimeDelta}}</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-success">{{info.clientTimeOffset}}</span><span class="text-warning"> {{info.clientTimeOffsetDelta}}</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-success">{{info.currentTime}}</span><span class="text-warning"> {{info.currentTimeDelta}}</span></div><br/>
+                                    <div class="manifest-info-content"><span class="text-success">{{info.latency}}</span><span class="text-warning"> {{info.latencyDelta}}</span></div><br/>
+                                    <span class="repeat-container" ng-repeat="period in info.periodInfo">
+                                        <div class="manifest-info-content"><span class="text-success">{{period.index}}</span></div><br/>
+                                        <div class="manifest-info-content"><span class="text-success">{{period.id}}</span></div><br/>
+                                        <div class="manifest-info-content"><span class="text-success">{{period.start}}</span><span class="text-warning"> {{period.startDelta}}</span></div><br/>
+                                        <div class="manifest-info-content"><span class="text-success">{{period.duration}}</span><span class="text-warning"> {{period.durationDelta}}</span></div><br/>
+                                        <span class="repeat-container" ng-repeat="range in info.buffered">
+                                            <div class="manifest-info-content"><span class="text-success"></span></div><br/>
+                                            <div class="manifest-info-content"><span class="text-success">{{range.start}}</span></div><br/>
+                                            <div class="manifest-info-content"><span class="text-success">{{range.end}}</span></div><br/>
+                                            <div class="manifest-info-content"><span class="text-success">{{range.size}}</span></div><br/>
+                                        </span>
+                                        <span class="repeat-container" ng-repeat="representation in info.representationInfo">
+                                            <div class="manifest-info-content"><span class="text-success">{{representation.index}}</span></div><br/>
+                                            <div class="manifest-info-content"><span class="text-success">{{representation.id}}</span></div><br/>
+                                            <div class="manifest-info-content"><span class="text-success">{{representation.periodIndex}}</span></div><br/>
+                                            <div class="manifest-info-content"><span class="text-success">{{representation.streamType}}</span></div><br/>
+                                            <div class="manifest-info-content"><span class="text-success">{{representation.presentationTimeOffset}}</span><span class="text-warning"> {{representation.presentationTimeOffsetDelta}}</span></div><br/>
+                                            <div class="manifest-info-content"><span class="text-success">{{representation.startNumber}}</span><span class="text-warning"> {{representation.startNumberDelta}}</span></div><br/>
+                                            <div class="manifest-info-content"><span class="text-success">{{representation.segmentInfoType}}</span></div><br/>
+                                        </span>
+                                    </span>
+                                </div>
+                                <span ng-show="manifestUpdateInfo == undefined">No data available</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
