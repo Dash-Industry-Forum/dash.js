@@ -384,6 +384,7 @@ Dash.dependencies.DashHandler = function () {
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate,
                 duration = representation.segmentDuration,
                 segmentRange = null,
+                idx = Math.floor(representation.adaptation.period.start / duration),
                 i,
                 startIdx,
                 endIdx,
@@ -406,7 +407,7 @@ Dash.dependencies.DashHandler = function () {
                         seg = getIndexBasedSegment.call(
                             self,
                             representation,
-                            i);
+                            i - idx);
 
                         seg.replacementTime = (start + i - 1) * representation.segmentDuration;
                         url = template.media;
@@ -467,7 +468,7 @@ Dash.dependencies.DashHandler = function () {
 
             // segment list should not be out of the availability window range
             start = Math.floor(Math.max(originAvailabilityTime - availabilityLowerLimit, availabilityWindow.start) / duration);
-            end = Math.floor(Math.min(originAvailabilityTime + availabilityUpperLimit, availabilityWindow.end) / duration);
+            end = Math.floor(Math.min(start + availabilityUpperLimit / duration, availabilityWindow.end / duration));
 
             range = {start: start, end: end};
 
