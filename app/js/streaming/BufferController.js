@@ -1148,15 +1148,17 @@ MediaPlayer.dependencies.BufferController = function () {
                             var startTime = Math.max((liveEdgeTime - minBufferTime), currentRepresentation.segmentAvailabilityRange.start),
                                 metrics = self.metricsModel.getMetricsFor("stream"),
                                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
+                                duration,
                                 actualStartTime,
                                 segmentStart;
                             // get a request for a start time
                             self.indexHandler.getSegmentRequestForTime(currentRepresentation, startTime).then(function(request) {
                                 self.system.notify("liveEdgeFound", periodInfo.liveEdge, liveEdgeTime, periodInfo);
+                                duration = request ? request.duration : fragmentDuration;
                                 segmentStart = request ? request.startTime : (currentRepresentation.adaptation.period.end - fragmentDuration);
                                 // set liveEdge to be in the middle of the segment time to avoid a possible gap between
                                 // currentTime and buffered.start(0)
-                                actualStartTime = segmentStart + (request.duration / 2);
+                                actualStartTime = segmentStart + (duration / 2);
                                 periodInfo.liveEdge = actualStartTime;
                                 self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: currentRepresentation.adaptation.period.clientServerTimeShift});
                                 ready = true;
