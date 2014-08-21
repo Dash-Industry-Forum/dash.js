@@ -593,7 +593,7 @@ Dash.dependencies.DashHandler = function () {
             start = representation.startNumber;
 
             waitForAvailabilityWindow.call(self, representation).then(
-                function(/*availabilityWindow*/) {
+                function(availabilityWindow) {
                     if (!isDynamic) {
                         range = decideSegmentListRangeForTemplate.call(self, representation);
                         startIdx = range.start;
@@ -617,7 +617,7 @@ Dash.dependencies.DashHandler = function () {
                         segments.push(seg);
                         seg = null;
                     }
-                    representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[segments.length-1].presentationStartTime};
+                    representation.segmentAvailabilityRange = availabilityWindow;
                     representation.availableSegmentsNumber = len;
                     deferred.resolve(segments);
             });
