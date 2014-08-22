@@ -1242,6 +1242,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 metrics = self.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
                 from = data,
+                quality,
                 ln,
                 r;
 
@@ -1260,31 +1261,30 @@ MediaPlayer.dependencies.BufferController = function () {
                         self.metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
                             type,r.presentationTimeOffset, r.startNumber, r.segmentInfoType);
                     }
-                    self.abrController.getPlaybackQuality(type, from).then(
-                        function (result) {
-                            if (!currentRepresentation) {
-                                currentRepresentation = getRepresentationForQuality.call(self, result.quality);
-                            }
-                            self.indexHandler.getCurrentTime(currentRepresentation).then(
-                                function (time) {
-                                    dataChanged = true;
-                                    playingTime = time;
-                                    requiredQuality = result.quality;
-                                    currentRepresentation = getRepresentationForQuality.call(self, result.quality);
-                                    buffer.timestampOffset = currentRepresentation.MSETimeOffset;
-                                    if (currentRepresentation.segmentDuration) {
-                                        fragmentDuration = currentRepresentation.segmentDuration;
-                                    }
-                                    data = dataValue;
-                                    self.bufferExt.updateData(data, type);
-                                    self.seek(time);
 
-                                    self.indexHandler.updateSegmentList(currentRepresentation).then(
-                                        function() {
-                                            self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - self.videoModel.getCurrentTime()});
-                                            deferred.resolve();
-                                        }
-                                    );
+                    quality = self.abrController.getQualityFor(type);
+
+                    if (!currentRepresentation) {
+                        currentRepresentation = getRepresentationForQuality.call(self, quality);
+                    }
+                    self.indexHandler.getCurrentTime(currentRepresentation).then(
+                        function (time) {
+                            dataChanged = true;
+                            playingTime = time;
+                            requiredQuality = quality;
+                            currentRepresentation = getRepresentationForQuality.call(self, quality);
+                            buffer.timestampOffset = currentRepresentation.MSETimeOffset;
+                            if (currentRepresentation.segmentDuration) {
+                                fragmentDuration = currentRepresentation.segmentDuration;
+                            }
+                            data = dataValue;
+                            self.bufferExt.updateData(data, type);
+                            self.seek(time);
+
+                            self.indexHandler.updateSegmentList(currentRepresentation).then(
+                                function() {
+                                    self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - self.videoModel.getCurrentTime()});
+                                    deferred.resolve();
                                 }
                             );
                         }
