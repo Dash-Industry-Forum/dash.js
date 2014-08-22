@@ -143,7 +143,9 @@ Dash.dependencies.BaseURLExtensions = function () {
         },
 
         findInit = function (data, info, callback) {
-            var start,
+            var ftyp,
+                moov,
+                start,
                 end,
                 d = new DataView(data),
                 pos = 0,
@@ -170,6 +172,12 @@ Dash.dependencies.BaseURLExtensions = function () {
                     pos += 1;
                 }
 
+                if (type === "ftyp") {
+                    ftyp = pos - 8;
+                }
+                if (type === "moov") {
+                    moov = pos - 8;
+                }
                 if (type !== "moov") {
                     pos += size - 8;
                 }
@@ -215,7 +223,7 @@ Dash.dependencies.BaseURLExtensions = function () {
             } else {
                 // Case 2
                 // We have the entire range, so continue.
-                start = pos - 8;
+                start = ftyp === undefined ? moov : ftyp;
                 end = start + size - 1;
                 irange = start + "-" + end;
 
