@@ -6,7 +6,7 @@
                 "Erratic playback at higher bitrates.",
                 "Streams using high profile codecs may not play properly.",
                 "Only streams with segmentAlignment='true' will work with abr.",
-				"Seek at start does not support multi-period content at this point."
+		"Seek at start does not support multi-period content at this point."
             ]
         },
         {
@@ -23,7 +23,13 @@
                 "fixes for multi-period",
                 "fixes for dynamic (Live)",
                 "contrib sample for using video.js with dash.js",
-				"Immediately seek to a a location within the media source upon initial load"
+                "contrib implementation of webm support",
+                "implement format tag substitution",
+		"Immediately seek to a a location within the media source upon initial load",
+		"add manifest update chart",
+		"fix period@start interpretation",
+		"include ftyp in init segment",
+		"update sources list"
             ]
         },
         {
