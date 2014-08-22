@@ -70,7 +70,7 @@
         },
         {
             "name": "4K",
-            "url": "http://dash.edgesuite.net/akamai/test/tears1/tearsofsteel_4096x1714_14Mbps.mpd",
+            "url": "http://dash.edgesuite.net/akamai/streamroot/050714/Spring_4Ktest.mpd",
             "browsers": "cdsbi"
         },
         {
