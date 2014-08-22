@@ -228,7 +228,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 // Case 2
                 // We have the entire range, so continue.
                 start = ftyp === undefined ? moov : ftyp;
-                end = start + size - 1;
+                end = moov + size - 1;
                 irange = start + "-" + end;
 
                 self.debug.log("Found the initialization.  Range: " + irange);
