@@ -447,7 +447,7 @@ Dash.dependencies.DashHandler = function () {
                 availabilityWindow = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
             }
 
-            if (isDynamic && !representation.adaptation.period.isClientServerTimeSyncCompleted) {
+            if (isDynamic && !representation.adaptation.period.mpd.isClientServerTimeSyncCompleted) {
                 start = Math.floor(availabilityWindow.start / duration);
                 end = Math.floor(availabilityWindow.end / duration);
                 range = {start: start, end: end};
@@ -486,7 +486,7 @@ Dash.dependencies.DashHandler = function () {
                 end,
                 range;
 
-            if (isDynamic && !representation.adaptation.period.isClientServerTimeSyncCompleted) {
+            if (isDynamic && !representation.adaptation.period.mpd.isClientServerTimeSyncCompleted) {
                 range = {start: firstIdx, end: lastIdx};
                 return range;
             }

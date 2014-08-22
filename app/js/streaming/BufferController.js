@@ -1160,7 +1160,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                 // currentTime and buffered.start(0)
                                 actualStartTime = segmentStart + (duration / 2);
                                 periodInfo.liveEdge = actualStartTime;
-                                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: currentRepresentation.adaptation.period.clientServerTimeShift});
+                                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: currentRepresentation.adaptation.period.mpd.clientServerTimeShift});
                                 ready = true;
                                 startPlayback.call(self);
                                 doSeek.call(self, segmentStart);
@@ -1281,6 +1281,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
                                     self.indexHandler.updateSegmentList(currentRepresentation).then(
                                         function() {
+                                            self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - self.videoModel.getCurrentTime()});
                                             deferred.resolve();
                                         }
                                     );

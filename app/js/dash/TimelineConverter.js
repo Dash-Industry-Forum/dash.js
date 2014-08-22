@@ -133,7 +133,7 @@ Dash.dependencies.TimelineConverter = function () {
 
             if (!isDynamic) return range;
 
-            if ((!representation.adaptation.period.isClientServerTimeSyncCompleted || isNaN(duration)) && representation.segmentAvailabilityRange) {
+            if ((!representation.adaptation.period.mpd.isClientServerTimeSyncCompleted || isNaN(duration)) && representation.segmentAvailabilityRange) {
                 return representation.segmentAvailabilityRange;
             }
 
@@ -151,13 +151,13 @@ Dash.dependencies.TimelineConverter = function () {
         },
 
         liveEdgeFound = function(expectedLiveEdge, actualLiveEdge, period) {
-            if (period.isClientServerTimeSyncCompleted) return;
+            if (period.mpd.isClientServerTimeSyncCompleted) return;
 
             // the difference between expected and actual live edge time is supposed to be a difference between client
             // and server time as well
-            period.clientServerTimeShift = actualLiveEdge - expectedLiveEdge;
-            period.isClientServerTimeSyncCompleted = true;
-            clientServerTimeShift = period.clientServerTimeShift * 1000;
+            period.mpd.clientServerTimeShift = actualLiveEdge - expectedLiveEdge;
+            period.mpd.isClientServerTimeSyncCompleted = true;
+            clientServerTimeShift = period.mpd.clientServerTimeShift * 1000;
         },
 
         calcMSETimeOffset = function (representation) {
