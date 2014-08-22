@@ -274,6 +274,112 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         }
     }
 
+    function processManifestUpdateMetrics(metrics) {
+        var data = $scope.manifestUpdateInfo || [],
+            manifestInfo = metrics.ManifestUpdate,
+            propsWithDelta = ["requestTime", "fetchTime", "availabilityStartTime", "presentationStartTime", "clientTimeOffset", "currentTime", "latency"],
+            ln = manifestInfo.length,
+            hasValue,
+            info,
+            prop,
+            value,
+            item,
+            delta,
+            k,
+            ranges,
+            range,
+            rangeLn,
+            prevInfo,
+            period,
+            representation,
+            prevPeriod,
+            prevRepresentation,
+            isUpdate = (data.length === ln),
+            i = Math.max(ln - 1, 0);
+
+        if (ln === 0) return null;
+
+        for (i; i < ln; i += 1) {
+            info = manifestInfo[i];
+            item = {};
+
+            for (prop in info) {
+                prevInfo = data[i - 1];
+
+                if (isUpdate) {
+                    item = data[i];
+                }
+
+                value = info[prop];
+                hasValue = (value !== null) && (value !== undefined);
+
+                if (typeof value === "number") {
+                    value = value.toFixed(2);
+                }
+
+                item[prop] = hasValue ? value : " - ";
+
+                if (propsWithDelta.indexOf(prop) === -1 || !hasValue || !prevInfo) continue;
+
+                delta = value - prevInfo[prop];
+
+                if (value instanceof(Date)) {
+                    delta /= 1000;
+                }
+
+                item[prop + "Delta"] = "(" + delta.toFixed(2) + ")";
+            }
+
+            ranges = item.buffered;
+
+            if (ranges && ranges.length > 0) {
+                rangeLn = ranges.length;
+                item.buffered = [];
+                for (k = 0; k < rangeLn; k += 1) {
+                    range = {};
+                    range.start = ranges.start(k).toFixed(2);
+                    range.end = ranges.end(k).toFixed(2);
+                    range.size = (range.end - range.start).toFixed(2);
+                    item.buffered.push(range);
+                }
+            } else {
+                item.buffered = [{start: "-", end: "-", size: "-"}];
+            }
+
+            for (k = 0; k < info.periodInfo.length; k += 1) {
+                period = item.periodInfo[k];
+
+                if (!prevInfo) break;
+
+                prevPeriod = prevInfo.periodInfo[k];
+
+                if (!prevPeriod) continue;
+
+                period.startDelta = "(" + (period.start - prevPeriod.start).toFixed(2) + ")";
+                period.durationDelta = "(" + (period.duration - prevPeriod.duration).toFixed(2) + ")";
+            }
+
+            for (k = 0; k < info.representationInfo.length; k += 1) {
+                representation = item.representationInfo[k];
+
+                if (!prevInfo) break;
+
+                prevRepresentation = prevInfo.representationInfo[k];
+
+                if (!prevRepresentation) continue;
+
+                representation.startNumberDelta = "(" + (representation.startNumber - prevRepresentation.startNumber) + ")";
+                representation.presentationTimeOffsetDelta = "(" + (representation.presentationTimeOffset - prevRepresentation.presentationTimeOffset).toFixed(2) + ")";
+            }
+
+            if (isUpdate) continue;
+
+            data.push(item);
+        }
+
+        return data;
+    }
+
     function metricChanged(e) {
         var metrics,
             point,
@@ -345,6 +451,21 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         $scope.safeApply();
     }
 
+    function metricUpdated(e) {
+        var metrics = player.getMetricsFor("stream"),
+            data;
+
+        if (!e.data.metric || e.data.metric.indexOf("ManifestUpdate") === -1 || !metrics) return;
+
+        data = processManifestUpdateMetrics(metrics);
+
+        if (!data) return;
+
+        $scope.manifestUpdateInfo = data;
+        $scope.invalidateDisplay(true);
+        $scope.safeApply();
+    }
+
     ////////////////////////////////////////
     //
     // Error Handling
@@ -385,6 +506,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         $scope.showCharts = show;
     }
 
+    $scope.setBufferLevelChart = function(show) {
+        $scope.showBufferLevel = show;
+    }
+
     $scope.showDebug = false;
     $scope.setDebug = function (show) {
         $scope.showDebug = show;
@@ -404,6 +529,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     player.startup();
     player.addEventListener("error", onError.bind(this));
     player.addEventListener("metricChanged", metricChanged.bind(this));
+    player.addEventListener("metricUpdated", metricUpdated.bind(this));
 
     player.attachView(video);
     player.setAutoPlay(true);
@@ -525,6 +651,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     $scope.doLoad = function () {
         player.attachSource($scope.selectedItem.url);
+        $scope.manifestUpdateInfo = null;
     }
 
     $scope.hasLogo = function (item) {

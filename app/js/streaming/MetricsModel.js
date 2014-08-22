@@ -189,6 +189,67 @@ MediaPlayer.models.MetricsModel = function () {
             return vo;
         },
 
+
+        addManifestUpdate: function(streamType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
+            var vo = new MediaPlayer.vo.metrics.ManifestUpdate(),
+                metrics = this.getMetricsFor("stream");
+
+            vo.streamType = streamType;
+            vo.type = type;
+            vo.requestTime = requestTime; // when this manifest update was requested
+            vo.fetchTime = fetchTime; // when this manifest update was received
+            vo.availabilityStartTime = availabilityStartTime;
+            vo.presentationStartTime = presentationStartTime; // the seek point (liveEdge for dynamic, Period[0].startTime for static)
+            vo.clientTimeOffset = clientTimeOffset; // the calculated difference between the server and client wall clock time
+            vo.currentTime = currentTime; // actual element.currentTime
+            vo.buffered = buffered; // actual element.ranges
+            vo.latency = latency; // (static is fixed value of zero. dynamic should be ((Now-@availabilityStartTime) - currentTime)
+
+            metrics.ManifestUpdate.push(vo);
+            this.metricAdded(streamType, "ManifestUpdate", vo);
+
+            return vo;
+        },
+
+        updateManifestUpdateInfo: function(manifestUpdate, updatedFields) {
+            for (var field in updatedFields) {
+                manifestUpdate[field] = updatedFields[field];
+            }
+
+            this.metricUpdated(manifestUpdate.streamType, "ManifestUpdate", manifestUpdate);
+        },
+
+        addManifestUpdatePeriodInfo: function(manifestUpdate, id, index, start, duration) {
+            var vo = new MediaPlayer.vo.metrics.ManifestUpdate.PeriodInfo();
+
+            vo.id = id;
+            vo.index = index;
+            vo.start = start;
+            vo.duration = duration;
+
+            manifestUpdate.periodInfo.push(vo);
+            this.metricUpdated(manifestUpdate.streamType, "ManifestUpdatePeriodInfo", manifestUpdate);
+
+            return vo;
+        },
+
+        addManifestUpdateRepresentationInfo: function(manifestUpdate, id, index, periodIndex, streamType, presentationTimeOffset, startNumber, segmentInfoType) {
+            var vo = new MediaPlayer.vo.metrics.ManifestUpdate.RepresentationInfo();
+
+            vo.id = id;
+            vo.index = index;
+            vo.periodIndex = periodIndex;
+            vo.streamType = streamType;
+            vo.startNumber = startNumber;
+            vo.segmentInfoType = segmentInfoType;
+            vo.presentationTimeOffset = presentationTimeOffset;
+
+            manifestUpdate.representationInfo.push(vo);
+            this.metricUpdated(manifestUpdate.streamType, "ManifestUpdateRepresentationInfo", manifestUpdate);
+
+            return vo;
+        },
+
         addPlayList: function (streamType, start, mstart, starttype) {
             var vo = new MediaPlayer.vo.metrics.PlayList();
 

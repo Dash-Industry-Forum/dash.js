@@ -69,6 +69,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                     function (manifest) {
                         manifest.mpdUrl = url;
                         manifest.mpdLoadedTime = mpdLoadedTime;
+                        self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, mpdLoadedTime, manifest.availabilityStartTime);
                         deferred.resolve(manifest);
                     },
                     function () {

@@ -1107,6 +1107,7 @@ MediaPlayer.dependencies.BufferController = function () {
     return {
         videoModel: undefined,
         metricsModel: undefined,
+        metricsExt: undefined,
         manifestExt: undefined,
         manifestModel: undefined,
         bufferExt: undefined,
@@ -1145,14 +1146,21 @@ MediaPlayer.dependencies.BufferController = function () {
                         function(liveEdgeTime) {
                             // step back from a found live edge time to be able to buffer some data
                             var startTime = Math.max((liveEdgeTime - minBufferTime), currentRepresentation.segmentAvailabilityRange.start),
+                                metrics = self.metricsModel.getMetricsFor("stream"),
+                                manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
+                                duration,
+                                actualStartTime,
                                 segmentStart;
                             // get a request for a start time
                             self.indexHandler.getSegmentRequestForTime(currentRepresentation, startTime).then(function(request) {
                                 self.system.notify("liveEdgeFound", periodInfo.liveEdge, liveEdgeTime, periodInfo);
+                                duration = request ? request.duration : fragmentDuration;
                                 segmentStart = request ? request.startTime : (currentRepresentation.adaptation.period.end - fragmentDuration);
                                 // set liveEdge to be in the middle of the segment time to avoid a possible gap between
                                 // currentTime and buffered.start(0)
-                                periodInfo.liveEdge = segmentStart + (fragmentDuration / 2);
+                                actualStartTime = segmentStart + (duration / 2);
+                                periodInfo.liveEdge = actualStartTime;
+                                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: currentRepresentation.adaptation.period.mpd.clientServerTimeShift});
                                 ready = true;
                                 startPlayback.call(self);
                                 doSeek.call(self, segmentStart);
@@ -1231,7 +1239,12 @@ MediaPlayer.dependencies.BufferController = function () {
         updateData: function(dataValue, periodInfoValue) {
             var self = this,
                 deferred = Q.defer(),
-                from = data;
+                metrics = self.metricsModel.getMetricsFor("stream"),
+                manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
+                from = data,
+                quality,
+                ln,
+                r;
 
             if (!from) {
                 from = dataValue;
@@ -1242,30 +1255,36 @@ MediaPlayer.dependencies.BufferController = function () {
                 function(representations) {
                     availableRepresentations = representations;
                     periodInfo = periodInfoValue;
-                    self.abrController.getPlaybackQuality(type, from).then(
-                        function (result) {
-                            if (!currentRepresentation) {
-                                currentRepresentation = getRepresentationForQuality.call(self, result.quality);
-                            }
-                            self.indexHandler.getCurrentTime(currentRepresentation).then(
-                                function (time) {
-                                    dataChanged = true;
-                                    playingTime = time;
-                                    requiredQuality = result.quality;
-                                    currentRepresentation = getRepresentationForQuality.call(self, result.quality);
-                                    buffer.timestampOffset = currentRepresentation.MSETimeOffset;
-                                    if (currentRepresentation.segmentDuration) {
-                                        fragmentDuration = currentRepresentation.segmentDuration;
-                                    }
-                                    data = dataValue;
-                                    self.bufferExt.updateData(data, type);
-                                    self.seek(time);
+                    ln = representations.length;
+                    for (var i = 0; i < ln; i += 1) {
+                        r = representations[i];
+                        self.metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
+                            type,r.presentationTimeOffset, r.startNumber, r.segmentInfoType);
+                    }
 
-                                    self.indexHandler.updateSegmentList(currentRepresentation).then(
-                                        function() {
-                                            deferred.resolve();
-                                        }
-                                    );
+                    quality = self.abrController.getQualityFor(type);
+
+                    if (!currentRepresentation) {
+                        currentRepresentation = getRepresentationForQuality.call(self, quality);
+                    }
+                    self.indexHandler.getCurrentTime(currentRepresentation).then(
+                        function (time) {
+                            dataChanged = true;
+                            playingTime = time;
+                            requiredQuality = quality;
+                            currentRepresentation = getRepresentationForQuality.call(self, quality);
+                            buffer.timestampOffset = currentRepresentation.MSETimeOffset;
+                            if (currentRepresentation.segmentDuration) {
+                                fragmentDuration = currentRepresentation.segmentDuration;
+                            }
+                            data = dataValue;
+                            self.bufferExt.updateData(data, type);
+                            self.seek(time);
+
+                            self.indexHandler.updateSegmentList(currentRepresentation).then(
+                                function() {
+                                    self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - self.videoModel.getCurrentTime()});
+                                    deferred.resolve();
                                 }
                             );
                         }
