@@ -380,7 +380,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         return data;
     }
 
-    function metricUpdated(e) {
+    function metricChanged(e) {
         var metrics,
             point,
             treeData;
@@ -447,18 +447,21 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             }
         }
 
-        if (e.data.metric && e.data.metric.indexOf("ManifestUpdate") !== -1) {
-            metrics = player.getMetricsFor("stream");
+        $scope.invalidateDisplay(true);
+        $scope.safeApply();
+    }
 
-            if (metrics) {
-                var data = processManifestUpdateMetrics(metrics);
+    function metricUpdated(e) {
+        var metrics = player.getMetricsFor("stream"),
+            data;
 
-                if (data) {
-                    $scope.manifestUpdateInfo = data;
-                }
-            }
-        }
+        if (!e.data.metric || e.data.metric.indexOf("ManifestUpdate") === -1 || !metrics) return;
 
+        data = processManifestUpdateMetrics(metrics);
+
+        if (!data) return;
+
+        $scope.manifestUpdateInfo = data;
         $scope.invalidateDisplay(true);
         $scope.safeApply();
     }
@@ -525,6 +528,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     player.startup();
     player.addEventListener("error", onError.bind(this));
+    player.addEventListener("metricChanged", metricChanged.bind(this));
     player.addEventListener("metricUpdated", metricUpdated.bind(this));
 
     player.attachView(video);
