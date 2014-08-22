@@ -144,6 +144,8 @@ Dash.dependencies.BaseURLExtensions = function () {
 
         findInit = function (data, info) {
             var deferred = Q.defer(),
+                ftyp,
+                moov,
                 start,
                 end,
                 d = new DataView(data),
@@ -171,6 +173,12 @@ Dash.dependencies.BaseURLExtensions = function () {
                     pos += 1;
                 }
 
+                if (type === "ftyp") {
+                    ftyp = pos - 8;
+                }
+                if (type === "moov") {
+                    moov = pos - 8;
+                }
                 if (type !== "moov") {
                     pos += size - 8;
                 }
@@ -219,8 +227,8 @@ Dash.dependencies.BaseURLExtensions = function () {
             } else {
                 // Case 2
                 // We have the entire range, so continue.
-                start = pos - 8;
-                end = start + size - 1;
+                start = ftyp === undefined ? moov : ftyp;
+                end = moov + size - 1;
                 irange = start + "-" + end;
 
                 self.debug.log("Found the initialization.  Range: " + irange);
