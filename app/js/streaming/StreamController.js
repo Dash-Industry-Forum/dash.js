@@ -411,6 +411,7 @@
             streams = [];
             this.manifestUpdater.stop();
             this.manifestModel.setValue(null);
+            this.metricsModel.clearAllCurrentMetrics();
             isPeriodSwitchingInProgress = false;
             activeStream = null;
         },
