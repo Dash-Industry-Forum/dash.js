@@ -380,7 +380,7 @@
 
             streams = [];
             this.manifestUpdater.stop();
-            this.metricsModel.clearCurrentMetricsForType("stream");
+            this.metricsModel.clearAllCurrentMetrics();
             this.manifestModel.setValue(null);
             this.timelineConverter.reset();
             isPeriodSwitchingInProgress = false;
