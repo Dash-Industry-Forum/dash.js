@@ -384,7 +384,7 @@ Dash.dependencies.DashHandler = function () {
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate,
                 duration = representation.segmentDuration,
                 segmentRange = null,
-                idx = Math.floor(representation.adaptation.period.start / duration),
+                periodStartIdx = Math.floor(representation.adaptation.period.start / duration),
                 i,
                 startIdx,
                 endIdx,
@@ -407,7 +407,7 @@ Dash.dependencies.DashHandler = function () {
                         seg = getIndexBasedSegment.call(
                             self,
                             representation,
-                            i - idx);
+                            i - (isDynamic ? periodStartIdx : 0));
 
                         seg.replacementTime = (start + i - 1) * representation.segmentDuration;
                         url = template.media;
@@ -419,7 +419,7 @@ Dash.dependencies.DashHandler = function () {
                         seg = null;
                     }
 
-                    representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
+                    representation.availableSegmentsNumber = periodStartIdx + Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
 
                     deferred.resolve(segments);
                 }
