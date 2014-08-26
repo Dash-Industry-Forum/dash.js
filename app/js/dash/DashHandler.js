@@ -226,7 +226,6 @@ Dash.dependencies.DashHandler = function () {
                 seg,
                 duration,
                 presentationStartTime,
-                idx,
                 presentationEndTime;
 
             duration = representation.segmentDuration;
@@ -247,8 +246,7 @@ Dash.dependencies.DashHandler = function () {
             // at this wall clock time, the video element currentTime should be seg.presentationStartTime
             seg.wallStartTime = self.timelineConverter.calcWallTimeForSegment(seg, isDynamic);
 
-            idx = Math.max(Math.floor((presentationStartTime - representation.adaptation.period.start) / duration), 0);
-            seg.replacementNumber = getNumberForSegment(seg, idx);
+            seg.replacementNumber = getNumberForSegment(seg, index);
             seg.availabilityIdx = index;
 
             return seg;
@@ -384,7 +382,7 @@ Dash.dependencies.DashHandler = function () {
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate,
                 duration = representation.segmentDuration,
                 segmentRange = null,
-                idx = Math.floor(representation.adaptation.period.start / duration),
+                periodStartIdx = Math.floor(representation.adaptation.period.start / duration),
                 i,
                 startIdx,
                 endIdx,
@@ -407,7 +405,7 @@ Dash.dependencies.DashHandler = function () {
                         seg = getIndexBasedSegment.call(
                             self,
                             representation,
-                            i - idx);
+                            i - (isDynamic ? periodStartIdx : 0));
 
                         seg.replacementTime = (start + i - 1) * representation.segmentDuration;
                         url = template.media;
@@ -419,7 +417,7 @@ Dash.dependencies.DashHandler = function () {
                         seg = null;
                     }
 
-                    representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
+                    representation.availableSegmentsNumber = periodStartIdx + Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
 
                     deferred.resolve(segments);
                 }
