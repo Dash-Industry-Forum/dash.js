@@ -119,6 +119,11 @@ chart {
 	height: auto;
 	overflow: auto;
 	white-space: nowrap;
+	position: relative;
+}
+
+#manifestInfo > div {
+	overflow: auto;
 }
 
 .manifest-info-box {
@@ -127,14 +132,12 @@ chart {
 	vertical-align: top;
 }
 
-.manifest-info-box-header {
-	position: absolute;
-	background-color: white;
-	width: 250px;
+.manifest-info-item:first-child {
+	width: 600px;
 }
 
-.manifest-info-item:nth-child(2) {
-	margin-left: 250px;
+.manifest-info-item:first-child span {
+	padding-left: 300px;
 }
 
 .manifest-info-content {
@@ -147,8 +150,35 @@ chart {
 }
 
 .manifest-nested-info {
-	margin-left: 20px;
 }
+
+.manifest-info-content[header]:before {
+	content: attr(header);
+	position: absolute;
+	width: 250px;
+	color: #428BCA;
+	background-color: white;
+	left: 0;
+}
+
+.manifest-info-content.manifest-nested-info[header]:before {
+	padding-left: 20px;
+}
+
+.manifest-info-content[header]:nth-of-type(even):before {
+	background-color: #e1edf7;
+}
+
+.manifest-info-content[header="Period"],
+.manifest-info-content[header="Period"]:before {
+	background-color: #e0ffff;
+}
+
+.manifest-info-content[header="Representation"],
+.manifest-info-content[header="Representation"]:before {
+	background-color: #f5fffa;
+}
+
 
 #notes {
     height: 340px;
