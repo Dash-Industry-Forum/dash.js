@@ -213,6 +213,7 @@
                 metrics = self.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
                 playbackCtrl,
+                periodInfo,
                 pLen,
                 sLen,
                 pIdx,
@@ -225,6 +226,13 @@
             if (!manifest) return;
 
             mpd = self.manifestExt.getMpd(manifest);
+
+            if (activeStream) {
+                periodInfo = activeStream.getPeriodInfo();
+                mpd.isClientServerTimeSyncCompleted = periodInfo.mpd.isClientServerTimeSyncCompleted;
+                mpd.clientServerTimeShift = periodInfo.mpd.clientServerTimeShift;
+            }
+
             periods = self.manifestExt.getRegularPeriods(manifest, mpd);
 
             try {
@@ -232,7 +240,9 @@
                     throw new Error("There are no regular periods");
                 }
 
-                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: self.videoModel.getCurrentTime(), buffered: self.videoModel.getElement().buffered, presentationStartTime: periods[0].start});
+                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: self.videoModel.getCurrentTime(),
+                    buffered: self.videoModel.getElement().buffered, presentationStartTime: periods[0].start,
+                    clientTimeOffset: mpd.clientServerTimeShift});
 
                 for (pIdx = 0, pLen = periods.length; pIdx < pLen; pIdx += 1) {
                     period = periods[pIdx];

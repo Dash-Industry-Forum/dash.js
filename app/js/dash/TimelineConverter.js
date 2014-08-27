@@ -142,15 +142,15 @@ Dash.dependencies.TimelineConverter = function () {
             var period = sender.streamProcessor.getCurrentRepresentation().adaptation.period,
                 searchTime;
 
-            if (period.isClientServerTimeSyncCompleted) return;
+            if (period.mpd.isClientServerTimeSyncCompleted) return;
 
             searchTime = (new Date().getTime() - period.mpd.manifest.mpdLoadedTime.getTime()) / 1000;
 
             // the difference between expected and actual live edge time is supposed to be a difference between client
             // and server time as well
-            period.clientServerTimeShift = actualLiveEdge - (period.liveEdge + searchTime);
-            period.isClientServerTimeSyncCompleted = true;
-            clientServerTimeShift = period.clientServerTimeShift * 1000;
+            period.mpd.clientServerTimeShift = actualLiveEdge - (period.liveEdge + searchTime);
+            period.mpd.isClientServerTimeSyncCompleted = true;
+            clientServerTimeShift = period.mpd.clientServerTimeShift * 1000;
             isClientServerTimeSyncCompleted = true;
         },
 

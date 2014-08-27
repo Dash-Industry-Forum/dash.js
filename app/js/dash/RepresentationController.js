@@ -86,6 +86,7 @@ Dash.dependencies.RepresentationController = function () {
 
             if (isAllRepresentationsUpdated()) {
                 updating = false;
+                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - self.streamProcessor.playbackController.getTime()});
                 this.notify(this.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
             }
         },

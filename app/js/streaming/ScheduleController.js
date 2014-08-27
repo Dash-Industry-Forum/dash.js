@@ -281,13 +281,17 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
             }
 
-            var currentTime;
+            var currentTime,
+                metrics = this.metricsModel.getMetricsFor("stream"),
+                manifestUpdateInfo = this.metricsExt.getCurrentManifestUpdate(metrics);
 
             this.debug.log("ScheduleController " + type + " seek: " + time);
             currentTime = new Date();
             clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
             playListMetrics = this.metricsModel.addPlayList(type, currentTime, time, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
             doStart.call(this);
+
+            this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - this.playbackController.getTime()});
         },
 
         onPlaybackRateChanged = function() {
@@ -314,7 +318,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             // currentTime and buffered.start(0)
             actualStartTime =segmentStart + (request.duration / 2);
             currentRepresentation.adaptation.period.liveEdge = actualStartTime;
-            self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: currentRepresentation.adaptation.period.clientServerTimeShift});
+            self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: currentRepresentation.adaptation.period.mpd.clientServerTimeShift});
             ready = true;
             startOnReady.call(self);
         };
