@@ -221,7 +221,7 @@ Dash.dependencies.DashHandler = function () {
             return Q.when(isFinished);
         },
 
-        getIndexBasedSegment = function (representation, index) {
+        getIndexBasedSegment = function (representation, index, periodStartIdx) {
             var self = this,
                 seg,
                 duration,
@@ -229,7 +229,7 @@ Dash.dependencies.DashHandler = function () {
                 presentationEndTime;
 
             duration = representation.segmentDuration;
-            presentationStartTime = representation.adaptation.period.start + (index * duration);
+            presentationStartTime = (index * duration);
             presentationEndTime = presentationStartTime + duration;
 
             seg = new Dash.vo.Segment();
@@ -246,7 +246,7 @@ Dash.dependencies.DashHandler = function () {
             // at this wall clock time, the video element currentTime should be seg.presentationStartTime
             seg.wallStartTime = self.timelineConverter.calcWallTimeForSegment(seg, isDynamic);
 
-            seg.replacementNumber = getNumberForSegment(seg, index);
+            seg.replacementNumber = getNumberForSegment(seg, index - periodStartIdx);
             seg.availabilityIdx = index;
 
             return seg;
@@ -405,7 +405,7 @@ Dash.dependencies.DashHandler = function () {
                         seg = getIndexBasedSegment.call(
                             self,
                             representation,
-                            i - (isDynamic ? periodStartIdx : 0));
+                            i, periodStartIdx);
 
                         seg.replacementTime = (start + i - 1) * representation.segmentDuration;
                         url = template.media;
@@ -417,7 +417,7 @@ Dash.dependencies.DashHandler = function () {
                         seg = null;
                     }
 
-                    representation.availableSegmentsNumber = periodStartIdx + Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
+                    representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
 
                     deferred.resolve(segments);
                 }
@@ -428,7 +428,6 @@ Dash.dependencies.DashHandler = function () {
 
         decideSegmentListRangeForTemplate = function(representation) {
             var self = this,
-                periodStart = representation.adaptation.period.start,
                 duration = representation.segmentDuration,
                 minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime,
                 availabilityWindow = representation.segmentAvailabilityRange,
@@ -456,7 +455,7 @@ Dash.dependencies.DashHandler = function () {
             // segment for the current index
             if (currentSegmentList) {
                 originSegment = getSegmentByIndex(index, representation);
-                originAvailabilityTime = originSegment ? (originSegment.presentationStartTime - periodStart) : (index > 0 ? (index * duration) : (requestedTime - periodStart) || (currentSegmentList[0].presentationStartTime - periodStart));
+                originAvailabilityTime = originSegment ? originSegment.presentationStartTime : (index > 0 ? (index * duration) : requestedTime || currentSegmentList[0].presentationStartTime);
             } else {
                 // If no segments exist, but index > 0, it means that we switch to the other representation, so
                 // we should proceed from this time.
@@ -581,6 +580,7 @@ Dash.dependencies.DashHandler = function () {
                 list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList,
                 len = list.SegmentURL_asArray.length,
+                periodStartIdx = Math.floor(representation.adaptation.period.start / representation.segmentDuration),
                 i,
                 seg,
                 s,
@@ -593,11 +593,9 @@ Dash.dependencies.DashHandler = function () {
 
             waitForAvailabilityWindow.call(self, representation).then(
                 function(availabilityWindow) {
-                    if (!isDynamic) {
-                        range = decideSegmentListRangeForTemplate.call(self, representation);
-                        startIdx = range.start;
-                        endIdx = range.end;
-                    }
+                    range = decideSegmentListRangeForTemplate.call(self, representation);
+                    startIdx = Math.max(range.start - periodStartIdx, 0);
+                    endIdx = Math.min(range.end - periodStartIdx, list.SegmentURL_asArray.length);
 
                     for (i = startIdx; i < endIdx; i += 1) {
                         s = list.SegmentURL_asArray[i];
@@ -605,7 +603,7 @@ Dash.dependencies.DashHandler = function () {
                         seg = getIndexBasedSegment.call(
                             self,
                             representation,
-                            i);
+                            i + periodStartIdx, periodStartIdx);
 
                         seg.replacementTime = (start + i - 1) * representation.segmentDuration;
                         seg.media = s.media;
@@ -747,14 +745,14 @@ Dash.dependencies.DashHandler = function () {
                         break;
                     } else if (idx === -1 && (time - Dash.dependencies.DashHandler.EPSILON) > (ft + fd)) {
                         // time is past the end
-                        idx  = isNaN(representation.segmentDuration) ? (frag.availabilityIdx + 1) : Math.floor((time - representation.adaptation.period.start) / representation.segmentDuration);
+                        idx  = isNaN(representation.segmentDuration) ? (frag.availabilityIdx + 1) : Math.floor(time / representation.segmentDuration);
                     }
                 }
             }
 
             if (idx === -1) {
                 if (!isNaN(representation.segmentDuration)) {
-                    idx = Math.floor((time - representation.adaptation.period.start) / representation.segmentDuration);
+                    idx = Math.floor(time / representation.segmentDuration);
                 } else {
                     self.debug.log("Couldn't figure out a time!");
                     self.debug.log("Time: " + time);
