@@ -41,7 +41,7 @@ MediaPlayer = function (aContext) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    var VERSION = "1.1.2",
+    var VERSION = "1.2.0",
         context = aContext,
         system,
         element,
@@ -78,6 +78,7 @@ MediaPlayer = function (aContext) {
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.load(source);
+
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "bufferController");
@@ -89,7 +90,99 @@ MediaPlayer = function (aContext) {
             if (isReady()) {
                 play.call(this);
             }
+        },
+
+        getDVRInfoMetric = function() {
+            var metric = this.metricsModel.getReadOnlyMetricsFor('video') || this.metricsModel.getReadOnlyMetricsFor('audio');
+            return this.metricsExt.getCurrentDVRInfo(metric);
+        },
+
+        getDVRWindowSize = function() {
+            return getDVRInfoMetric.call(this).mpd.timeShiftBufferDepth;
+        },
+
+        getDVRSeekOffset = function (value) {
+            var metric = getDVRInfoMetric.call(this),
+                val = metric.range.start + parseInt(value);
+
+            if (val > metric.range.end)
+            {
+                val = metric.range.end;
+            }
+
+            return val;
+        },
+
+        seek = function(value) {
+
+            videoModel.getElement().currentTime = this.getDVRSeekOffset(value);
+        },
+
+        time = function () {
+            var metric = getDVRInfoMetric.call(this);
+            return (metric === null) ? 0 : Math.round(this.duration() - (metric.range.end - metric.time));
+        },
+
+        duration  = function() {
+            var metric = getDVRInfoMetric.call(this),
+                range;
+
+            if (metric === null){
+                return 0;
+            }
+
+            range = metric.range.end - metric.range.start;
+
+            return Math.round(range < metric.mpd.timeShiftBufferDepth ? range : metric.mpd.timeShiftBufferDepth);
+        },
+
+        timeAsUTC = function () {
+            var metric = getDVRInfoMetric.call(this),
+                availabilityStartTime,
+                currentUTCTime;
+
+            if (metric === null){
+                return 0;
+            }
+
+            availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000;
+            currentUTCTime = this.time() + (availabilityStartTime + metric.range.start);
+
+            return Math.round(currentUTCTime);
+        },
+
+        durationAsUTC = function () {
+            var metric = getDVRInfoMetric.call(this),
+                availabilityStartTime,
+                currentUTCDuration;
+
+            if (metric === null){
+                return 0;
+            }
+
+            availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000;
+            currentUTCDuration = (availabilityStartTime + metric.range.start) + this.duration();
+
+            return Math.round(currentUTCDuration);
+        },
+
+        formatUTC = function (time, locales, hour12) {
+            var dt = new Date(time*1000);
+            var d = dt.toLocaleDateString(locales);
+            var t = dt.toLocaleTimeString(locales, {hour12:hour12});
+            return t +' '+d;
+        },
+
+        convertToTimeCode = function (value) {
+            value = Math.max(value, 0);
+
+            var h = Math.floor(value/3600);
+            var m = Math.floor((value%3600)/60);
+            var s = Math.floor((value%3600)%60);
+            return (h === 0 ? "":(h<10 ? "0"+h.toString()+":" : h.toString()+":"))+(m<10 ? "0"+m.toString() : m.toString())+":"+(s<10 ? "0"+s.toString() : s.toString());
         };
+
+
 
     // Set up DI.
     system = new dijon.System();
@@ -105,6 +198,9 @@ MediaPlayer = function (aContext) {
         metricsModel: undefined,
         metricsExt: undefined,
         bufferExt: undefined,
+        errHandler: undefined,
+        tokenAuthentication:undefined,
+        uriQueryFragModel:undefined,
 
         addEventListener: function (type, listener, useCapture) {
             this.eventBus.addEventListener(type, listener, useCapture);
@@ -149,6 +245,9 @@ MediaPlayer = function (aContext) {
             return scheduleWhilePaused;
         },
 
+        setTokenAuthentication:function(name, type) {
+            this.tokenAuthentication.setTokenAuthentication({name:name, type:type});
+        },
         setBufferMax: function(value) {
             bufferMax = value;
         },
@@ -213,7 +312,7 @@ MediaPlayer = function (aContext) {
                 throw "MediaPlayer not initialized!";
             }
 
-            source = url;
+            source = this.uriQueryFragModel.parseURI(url);
             this.setQualityFor('video', 0);
             this.setQualityFor('audio', 0);
 
@@ -236,7 +335,17 @@ MediaPlayer = function (aContext) {
         },
 
         play: play,
-        isReady: isReady
+        isReady: isReady,
+        seek : seek,
+        time : time,
+        duration : duration,
+        timeAsUTC : timeAsUTC,
+        durationAsUTC : durationAsUTC,
+        getDVRWindowSize : getDVRWindowSize,
+        getDVRSeekOffset : getDVRSeekOffset,
+        formatUTC : formatUTC,
+        convertToTimeCode : convertToTimeCode
+
     };
 };
 

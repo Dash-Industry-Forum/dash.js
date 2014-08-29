@@ -45,6 +45,14 @@ MediaPlayer.dependencies.ErrorHandler = function () {
             });
         },
 
+        closedCaptionsError: function (message, id, ccContent) {
+            this.eventBus.dispatchEvent({
+                type: "error",
+                error: "cc",
+                event: {message: message, id: id, cc: ccContent}
+            });
+        },
+
         mediaSourceError: function (err) {
             this.eventBus.dispatchEvent({
                 type: "error",

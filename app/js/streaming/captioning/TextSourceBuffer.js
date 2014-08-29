@@ -11,7 +11,7 @@
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.TextVTTSourceBuffer = function () {
+MediaPlayer.dependencies.TextSourceBuffer = function () {
 
     var video,
         data,
@@ -20,6 +20,7 @@ MediaPlayer.dependencies.TextVTTSourceBuffer = function () {
     return {
         system:undefined,
         eventBus:undefined,
+        errHandler: undefined,
 
         initialize: function (type, bufferController) {
             mimeType = type;
@@ -28,9 +29,10 @@ MediaPlayer.dependencies.TextVTTSourceBuffer = function () {
         },
 
         append: function (bytes) {
-            var self = this;
+            var self = this,
+                ccContent = String.fromCharCode.apply(null, new Uint16Array(bytes));
 
-            self.getParser().parse(String.fromCharCode.apply(null, new Uint16Array(bytes))).then(
+            self.getParser().parse(ccContent).then(
                 function(result)
                 {
                     var label = data.Representation_asArray[0].id,
@@ -42,6 +44,9 @@ MediaPlayer.dependencies.TextVTTSourceBuffer = function () {
                             self.eventBus.dispatchEvent({type:"updateend"});
                         }
                     );
+                },
+                function(errMsg) {
+                    self.errHandler.closedCaptionsError(errMsg, "parse", ccContent);
                 }
             );
         },
@@ -55,6 +60,8 @@ MediaPlayer.dependencies.TextVTTSourceBuffer = function () {
 
             if (mimeType === "text/vtt") {
                 parser = this.system.getObject("vttParser");
+            } else if (mimeType === "application/ttml+xml") {
+                parser = this.system.getObject("ttmlParser");
             }
 
             return parser;
@@ -74,6 +81,6 @@ MediaPlayer.dependencies.TextVTTSourceBuffer = function () {
     };
 };
 
-MediaPlayer.dependencies.TextVTTSourceBuffer.prototype = {
-    constructor: MediaPlayer.dependencies.TextVTTSourceBuffer
+MediaPlayer.dependencies.TextSourceBuffer.prototype = {
+    constructor: MediaPlayer.dependencies.TextSourceBuffer
 };

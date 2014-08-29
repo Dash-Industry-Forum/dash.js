@@ -17,10 +17,16 @@ MediaPlayer.dependencies.ManifestLoader = function () {
     var RETRY_ATTEMPTS = 3,
         RETRY_INTERVAL = 500,
         deferred = null,
-        parseBaseUrl = function (url) {
+
+
+    parseBaseUrl = function (url) {
             var base = null;
 
-            if (url.indexOf("/") !== -1) {
+            if (url.indexOf("/") !== -1)
+            {
+                if (url.indexOf("?") !== -1) {
+                    url = url.substring(0, url.indexOf("?"));
+                }
                 base = url.substring(0, url.lastIndexOf("/") + 1);
             }
 
@@ -46,6 +52,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 needFailureReport = false;
                 mpdLoadedTime = new Date();
 
+                self.tokenAuthentication.checkRequestHeaderForToken(request);
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
                                                  "MPD",
@@ -62,6 +69,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                     function (manifest) {
                         manifest.mpdUrl = url;
                         manifest.mpdLoadedTime = mpdLoadedTime;
+                        self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, mpdLoadedTime, manifest.availabilityStartTime);
                         deferred.resolve(manifest);
                     },
                     function () {
@@ -118,6 +126,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         parser: undefined,
         errHandler: undefined,
         metricsModel: undefined,
+        tokenAuthentication:undefined,
         load: function(url) {
             deferred = Q.defer();
             doLoad.call(this, url, RETRY_ATTEMPTS);

@@ -252,6 +252,46 @@ Dash.dependencies.DashMetricsExtensions = function () {
             currentDroppedFrames = droppedFrames[droppedFramesLastIndex];
 
             return currentDroppedFrames;
+        },
+
+        getCurrentDVRInfo = function (metrics) {
+
+            if (metrics === null) {
+                return null;
+            }
+
+            var dvrInfo = metrics.DVRInfo,
+                dvrInfoLastIndex,
+                curentDVRInfo =  null;
+
+            if (dvrInfo === null || dvrInfo.length <= 0) {
+                return null;
+            }
+
+            dvrInfoLastIndex = dvrInfo.length - 1;
+            curentDVRInfo = dvrInfo[dvrInfoLastIndex];
+
+            return curentDVRInfo;
+        },
+
+        getCurrentManifestUpdate = function(metrics) {
+            if (metrics === null) return null;
+
+            var manifestUpdate = metrics.ManifestUpdate,
+                ln,
+                lastIdx,
+                currentManifestUpdate;
+
+            if (manifestUpdate === null || manifestUpdate.length <= 0) {
+                return null;
+            }
+
+            ln = manifestUpdate.length;
+            lastIdx = ln - 1;
+
+            currentManifestUpdate = manifestUpdate[lastIdx];
+
+            return currentManifestUpdate;
         };
 
     return {
@@ -264,7 +304,9 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getCurrentBufferLevel : getCurrentBufferLevel,
         getCurrentHttpRequest : getCurrentHttpRequest,
         getHttpRequests : getHttpRequests,
-        getCurrentDroppedFrames : getCurrentDroppedFrames
+        getCurrentDroppedFrames : getCurrentDroppedFrames,
+        getCurrentDVRInfo : getCurrentDVRInfo,
+        getCurrentManifestUpdate: getCurrentManifestUpdate
     };
 };
 

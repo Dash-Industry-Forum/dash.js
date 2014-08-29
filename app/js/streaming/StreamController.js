@@ -22,13 +22,15 @@
     var streams = [],
         activeStream,
         //TODO set correct value for threshold
-        STREAM_BUFFER_END_THRESHOLD = 4,
-        STREAM_END_THRESHOLD = 3,
+        STREAM_BUFFER_END_THRESHOLD = 6,
+        STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
         isPeriodSwitchingInProgress = false,
         timeupdateListener,
         seekingListener,
         progressListener,
+        pauseListener,
+        playListener,
 
         play = function () {
             activeStream.play();
@@ -74,12 +76,16 @@
             videoModel.listen("seeking", seekingListener);
             videoModel.listen("progress", progressListener);
             videoModel.listen("timeupdate", timeupdateListener);
+            videoModel.listen("pause", pauseListener);
+            videoModel.listen("play", playListener);
         },
 
         detachVideoEvents = function (videoModel) {
             videoModel.unlisten("seeking", seekingListener);
             videoModel.unlisten("progress", progressListener);
             videoModel.unlisten("timeupdate", timeupdateListener);
+            videoModel.unlisten("pause", pauseListener);
+            videoModel.unlisten("play", playListener);
         },
 
         copyVideoProperties = function (fromVideoElement, toVideoElement) {
@@ -149,6 +155,14 @@
             }
         },
 
+        onPause = function() {
+            this.manifestUpdater.stop();
+        },
+
+        onPlay = function() {
+            this.manifestUpdater.start();
+        },
+
         /*
          * Handles the current stream buffering end moment to start the next stream buffering
          */
@@ -215,12 +229,17 @@
             }
 
             play();
+            from.resetEventController();
+            activeStream.startEventController();
             isPeriodSwitchingInProgress = false;
         },
 
         composeStreams = function() {
             var self = this,
                 manifest = self.manifestModel.getValue(),
+                metrics = self.metricsModel.getMetricsFor("stream"),
+                manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
+                periodInfo,
                 deferred = Q.defer(),
                 updatedStreams = [],
                 pLen,
@@ -236,12 +255,22 @@
 
             self.manifestExt.getMpd(manifest).then(
                 function(mpd) {
+                    if (activeStream) {
+                        periodInfo = activeStream.getPeriodInfo();
+                        mpd.isClientServerTimeSyncCompleted = periodInfo.mpd.isClientServerTimeSyncCompleted;
+                        mpd.clientServerTimeShift = periodInfo.mpd.clientServerTimeShift;
+                    }
+
                     self.manifestExt.getRegularPeriods(manifest, mpd).then(
                         function(periods) {
 
                             if (periods.length === 0) {
                                 return deferred.reject("There are no regular periods");
                             }
+
+                            self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: self.videoModel.getCurrentTime(),
+                                buffered: self.videoModel.getElement().buffered, presentationStartTime: periods[0].start,
+                                clientTimeOffset: mpd.clientServerTimeShift});
 
                             for (pIdx = 0, pLen = periods.length; pIdx < pLen; pIdx += 1) {
                                 period = periods[pIdx];
@@ -262,6 +291,8 @@
                                     stream.load(manifest, period);
                                     streams.push(stream);
                                 }
+
+                                self.metricsModel.addManifestUpdatePeriodInfo(manifestUpdateInfo, period.id, period.index, period.start, period.duration);
                                 stream = null;
                             }
 
@@ -313,6 +344,7 @@
         capabilities: undefined,
         debug: undefined,
         metricsModel: undefined,
+        metricsExt: undefined,
         videoExt: undefined,
         errHandler: undefined,
 
@@ -321,6 +353,8 @@
             timeupdateListener = onTimeupdate.bind(this);
             progressListener = onProgress.bind(this);
             seekingListener = onSeeking.bind(this);
+            pauseListener = onPause.bind(this);
+            playListener = onPlay.bind(this);
         },
 
         getManifestExt: function () {
@@ -351,7 +385,7 @@
                     self.manifestModel.setValue(manifest);
                     self.debug.log("Manifest has loaded.");
                     //self.debug.log(self.manifestModel.getValue());
-                    self.manifestUpdater.init();
+                    self.manifestUpdater.start();
                 },
                 function () {
                     self.reset();
@@ -377,6 +411,7 @@
             streams = [];
             this.manifestUpdater.stop();
             this.manifestModel.setValue(null);
+            this.metricsModel.clearAllCurrentMetrics();
             isPeriodSwitchingInProgress = false;
             activeStream = null;
         },

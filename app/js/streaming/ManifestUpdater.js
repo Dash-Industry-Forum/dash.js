@@ -16,6 +16,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
     var refreshDelay = NaN,
         refreshTimer = null,
+        isStopped = false,
         deferredUpdate,
 
         clear = function () {
@@ -30,18 +31,20 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
             if (!isNaN(refreshDelay)) {
                 this.debug.log("Refresh manifest in " + refreshDelay + " seconds.");
-                refreshTimer = setInterval(onRefreshTimer.bind(this), Math.min(refreshDelay * 1000, Math.pow(2, 31) - 1), this);
+                refreshTimer = setTimeout(onRefreshTimer.bind(this), Math.min(refreshDelay * 1000, Math.pow(2, 31) - 1), this);
             }
         },
 
         update = function () {
             var self = this,
-                manifest = self.manifestModel.getValue();
+                manifest = self.manifestModel.getValue(),
+                timeSinceLastUpdate;
 
             if (manifest !== undefined && manifest !== null) {
                 self.manifestExt.getRefreshDelay(manifest).then(
                     function (t) {
-                        refreshDelay = t;
+                        timeSinceLastUpdate = (new Date().getTime() - manifest.mpdLoadedTime.getTime()) / 1000;
+                        refreshDelay = Math.max(t - timeSinceLastUpdate, 0);
                         start.call(self);
                     }
                 );
@@ -72,6 +75,8 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
                             self.manifestModel.setValue(manifestResult);
                             self.debug.log("Manifest has been refreshed.");
                             //self.debug.log(manifestResult);
+                            if (isStopped) return;
+
                             update.call(self);
                         }
                     );
@@ -99,11 +104,13 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             this.system.mapHandler("streamsComposed", undefined, onStreamsComposed.bind(this));
         },
 
-        init: function () {
+        start: function () {
+            isStopped = false;
             update.call(this);
         },
 
         stop: function() {
+            isStopped = true;
             clear.call(this);
         }
     };

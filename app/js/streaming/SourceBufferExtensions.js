@@ -31,7 +31,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             if (!self.manifestExt.getIsTextTrack(codec)) {
                 deferred.reject(ex.description);
             } else {
-                deferred.resolve(self.system.getObject("textVTTSourceBuffer"));
+                deferred.resolve(self.system.getObject("textSourceBuffer"));
             }
 
         }
@@ -44,7 +44,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         try {
             deferred.resolve(mediaSource.removeSourceBuffer(buffer));
         } catch(ex){
-            deferred.reject(ex.description);
+            if (buffer && typeof(buffer.getTextTrackExtensions) === "function") {
+                deferred.resolve();
+            } else {
+                deferred.reject(ex.description);
+            }
         }
         return deferred.promise;
     },
@@ -147,11 +151,13 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 defer.resolve(true);
             },
             updateEndHandler = function() {
+                if (buffer.updating) return;
+
                 buffer.removeEventListener("updateend", updateEndHandler, false);
                 defer.resolve(true);
             };
         // use updateend event if possible
-        if (buffer.hasOwnProperty("addEventListener")) {
+        if (typeof buffer.addEventListener === "function") {
             try {
                 buffer.addEventListener("updateend", updateEndHandler, false);
             } catch (err) {

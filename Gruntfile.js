@@ -1,7 +1,13 @@
 module.exports = function(grunt) {
   grunt.initConfig({
     connect: {
-      default_options: {}
+      default_options: {},
+      dev: {
+        options: {
+          port: 9999,
+          keepalive: true
+        }
+      }
     },
     watch: {},
     jshint: {
@@ -110,5 +116,5 @@ module.exports = function(grunt) {
 
 
   // Define tasks
-  grunt.registerTask('default', ['jshint','connect','jasmine','uglify']);
+  grunt.registerTask('default', ['jshint','connect:default_options','jasmine','uglify']);
 };

@@ -50,6 +50,7 @@
     <script src="app/js/streaming/Capabilities.js"></script>
     <script src="app/js/streaming/EventBus.js"></script>
     <script src="app/js/streaming/Debug.js"></script>
+    <script src="app/js/streaming/TokenAuthentication.js"></script>
     <script src="app/js/streaming/VideoModel.js"></script>
     <script src="app/js/streaming/vo/SegmentRequest.js"></script>
     <script src="app/js/streaming/ManifestLoader.js"></script>
@@ -77,11 +78,15 @@
     <script src="app/js/streaming/rules/InsufficientBufferRule.js"></script>
     <script src="app/js/streaming/rules/LimitSwitchesRule.js"></script>
     <script src="app/js/streaming/rules/BaseRulesCollection.js"></script>
+    <script src="app/js/streaming/EventController.js"></script>
+    <script src="app/js/streaming/URIQueryAndFragmentModel.js"></script>
+    <script src="app/js/streaming/vo/URIFragmentData.js"></script>
 
     <!--Captioning-->
     <script src="app/js/streaming/captioning/VTTParser.js"></script>
+    <script src="app/js/streaming/captioning/TTMLParser.js"></script>
     <script src="app/js/streaming/captioning/TextTrackExtensions.js"></script>
-    <script src="app/js/streaming/captioning/TextVTTSourceBuffer.js"></script>
+    <script src="app/js/streaming/captioning/TextSourceBuffer.js"></script>
     <script src="app/js/streaming/captioning/TextController.js"></script>
 
     <!-- Metrics -->
@@ -93,6 +98,8 @@
     <script src="app/js/streaming/vo/metrics/RepresentationSwitch.js"></script>
     <script src="app/js/streaming/vo/metrics/TCPConnection.js"></script>
     <script src="app/js/streaming/vo/metrics/DroppedFrames.js"></script>
+    <script src="app/js/streaming/vo/metrics/DVRInfo.js"></script>
+    <script src="app/js/streaming/vo/metrics/ManifestUpdate.js"></script>
 
     <!-- Dash -->
     <script src="app/js/dash/Dash.js"></script>
@@ -102,6 +109,8 @@
     <script src="app/js/dash/vo/AdaptationSet.js"></script>
     <script src="app/js/dash/vo/Representation.js"></script>
     <script src="app/js/dash/vo/Segment.js"></script>
+    <script src="app/js/dash/vo/Event.js"></script>
+    <script src="app/js/dash/vo/EventStream.js"></script>
     <script src="app/js/dash/DashParser.js"></script>
     <script src="app/js/dash/DashHandler.js"></script>
     <script src="app/js/dash/BaseURLExtensions.js"></script>
@@ -133,16 +142,31 @@
 
     <div class="container">
         <div class="row title-header">
-    <a href="https://github.com/Dash-Industry-Forum/dash.js">
-        <img
-            id="ribbon"
-            style="position: absolute; top: 0; right: 0; border: 0; width: 89px; height: 89px;"
-            src="http://aral.github.com/fork-me-on-github-retina-ribbons/right-cerulean@2x.png"
-            alt="Fork me on GitHub">
-    </a>
             <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
             <span id="big-title">Reference Client</span>
             <span>{{version}}</span>
+
+            <div class="github">
+                <iframe
+                    id="star-button"
+                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=watch&count=true&size=large"
+                    height="30"
+                    width="170"
+                    frameborder="0"
+                    scrolling="0"
+                    allowTransparency="true"
+                    class="hidden-xs github-button">
+                </iframe>
+                <iframe
+                    id="fork-button"
+                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=fork&count=true&size=large"
+                    height="30"
+                    width="170"
+                    frameborder="0"
+                    scrolling="0"
+                    allowTransparency="true github-button">
+                </iframe>
+            </div>
         </div>
 
         <div class="row">
@@ -285,7 +309,55 @@
                 </div>
                 <div ng-switch on="showCharts">
                     <div class="panel-body panel-stats" ng-switch-when="true">
-                        <chart ng-model="bufferData"></chart>
+                        <ul class="nav nav-tabs">
+                            <li><a href="#bufferLevel" data-toggle="tab" ng-click="setBufferLevelChart(true)">Buffer level</a></li>
+                            <li><a href="#manifestInfo" data-toggle="tab">Manifest update info</a></li>
+                        </ul>
+                        <div id="chartTabContent" class="tab-content">
+                            <div class="tab-pane" id="bufferLevel" ng-class="{active:showBufferLevel == true}">
+                                <div ng-switch on="showBufferLevel">
+                                    <div class="panel-body panel-stats" ng-switch-when="true">
+                                        <chart ng-model="bufferData"></chart>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="manifestInfo">
+                                <div>
+                                    <div ng-repeat="info in manifestUpdateInfo" class="manifest-info-box manifest-info-item">
+                                        <div class="manifest-info-content" header="Manifest type"><span class="text-success">{{info.type}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Request time (delta)"><span class="text-success">{{info.requestTime}}</span><span class="text-warning"> {{info.requestTimeDelta}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Fetch time (delta)"><span class="text-success">{{info.fetchTime}}</span><span class="text-warning"> {{info.fetchTimeDelta}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Availability start time (delta)"><span class="text-success">{{info.availabilityStartTime}}</span><span class="text-warning"> {{info.availabilityStartTimeDelta}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Presentation start time (delta)"><span class="text-success">{{info.presentationStartTime}}</span><span class="text-warning"> {{info.presentationStartTimeDelta}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Client time offset (delta)"><span class="text-success">{{info.clientTimeOffset}}</span><span class="text-warning"> {{info.clientTimeOffsetDelta}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Current time (delta)"><span class="text-success">{{info.currentTime}}</span><span class="text-warning"> {{info.currentTimeDelta}}</span></div><br/>
+                                        <div class="manifest-info-content" header="Latency (delta)"><span class="text-success">{{info.latency}}</span><span class="text-warning"> {{info.latencyDelta}}</span></div><br/>
+                                        <div class="repeat-container" ng-repeat="period in info.periodInfo">
+                                            <div class="manifest-info-content" header="Period"><span class="text-success">{{period.index}}</span></div><br/>
+                                            <div class="manifest-info-content manifest-nested-info" header="Id"><span class="text-success">{{period.id}}</span></div><br/>
+                                            <div class="manifest-info-content manifest-nested-info" header="Start"><span class="text-success">{{period.start}}</span><span class="text-warning"> {{period.startDelta}}</span></div><br/>
+                                            <div class="manifest-info-content manifest-nested-info" header="Duration"><span class="text-success">{{period.duration}}</span><span class="text-warning"> {{period.durationDelta}}</span></div><br/>
+                                            <div class="repeat-container" ng-repeat="range in info.buffered">
+                                                <div class="manifest-info-content" header="Buffered"><span class="text-success"></span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Start"><span class="text-success">{{range.start}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="End"><span class="text-success">{{range.end}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Size"><span class="text-success">{{range.size}}</span></div><br/>
+                                            </div>
+                                            <div class="repeat-container" ng-repeat="representation in info.representationInfo" ng-show="representation.periodIndex == period.index">
+                                                <div class="manifest-info-content" header="Representation"><span class="text-success">{{representation.index}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Id"><span class="text-success">{{representation.id}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Stream type"><span class="text-success">{{representation.streamType}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Presentation time offset"><span class="text-success">{{representation.presentationTimeOffset}}</span><span class="text-warning"> {{representation.presentationTimeOffsetDelta}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Start number"><span class="text-success">{{representation.startNumber}}</span><span class="text-warning"> {{representation.startNumberDelta}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Segment info type"><span class="text-success">{{representation.segmentInfoType}}</span></div><br/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span ng-show="manifestUpdateInfo == undefined">No data available</span>
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

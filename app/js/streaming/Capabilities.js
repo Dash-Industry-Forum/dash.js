@@ -40,8 +40,8 @@ MediaPlayer.utils.Capabilities.prototype = {
     supportsCodec: function (element, codec) {
         "use strict";
 
-        if (!(element instanceof HTMLVideoElement)) {
-            throw "element must be of type HTMLVideoElement.";
+        if (!(element instanceof HTMLMediaElement)) {
+            throw "element must be of type HTMLMediaElement.";
         }
 
         var canPlay = element.canPlayType(codec);

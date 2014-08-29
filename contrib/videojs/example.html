@@ -1,0 +1,136 @@
+<html>
+
+<head>
+
+  <!-- Loading Video.js CDN-hosted Scripts from videojs.com -->
+  <link href="http://vjs.zencdn.net/4.6/video-js.css" rel="stylesheet">
+  <script src="http://vjs.zencdn.net/4.6/video.js"></script>
+
+<!-- use the full list for debugging
+
+  <!-- https://github.com/kriskowal/q - ->
+  <script src="../../app/lib/q.js"></script>
+
+  <!-- https://github.com/creynders/dijon-framework - ->
+  <script src="../../app/lib/dijon.js"></script>
+
+  <!-- http://bannister.us/weblog/2007/06/09/simple-base64-encodedecode-javascript/ - ->
+  <script src="../../app/lib/base64.js"></script>
+
+  <!-- Misc Libs - ->
+  <script src="../../app/lib/xml2json.js"></script>
+  <script src="../../app/lib/objectiron.js"></script>
+  <script src="../../app/lib/long.js"></script>
+  <script src="../../app/lib/Math.js"></script>
+  
+  <!-- Player - ->
+  <script src="../../app/js/streaming/MediaPlayer.js"></script>
+  <script src="../../app/js/streaming/Context.js"></script>
+  <script src="../../app/js/streaming/ErrorHandler.js"></script>
+  <script src="../../app/js/streaming/Capabilities.js"></script>
+  <script src="../../app/js/streaming/EventBus.js"></script>
+  <script src="../../app/js/streaming/Debug.js"></script>
+  <script src="../../app/js/streaming/TokenAuthentication.js"></script>
+  <script src="../../app/js/streaming/VideoModel.js"></script>
+  <script src="../../app/js/streaming/vo/SegmentRequest.js"></script>
+  <script src="../../app/js/streaming/ManifestLoader.js"></script>
+  <script src="../../app/js/streaming/ManifestUpdater.js"></script>
+  <script src="../../app/js/streaming/ManifestModel.js"></script>
+  <script src="../../app/js/streaming/MediaSourceExtensions.js"></script>
+  <script src="../../app/js/streaming/SourceBufferExtensions.js"></script>
+  <script src="../../app/js/streaming/VideoModelExtensions.js"></script>
+  <script src="../../app/js/streaming/BufferExtensions.js"></script>
+  <script src="../../app/js/streaming/FragmentController.js"></script>
+  <script src="../../app/js/streaming/AbrController.js"></script>
+  <script src="../../app/js/streaming/FragmentLoader.js"></script>
+  <script src="../../app/js/streaming/FragmentModel.js"></script>
+  <script src="../../app/js/streaming/StreamController.js"></script>
+  <script src="../../app/js/streaming/RequestScheduler.js"></script>
+  <script src="../../app/js/streaming/SchedulerExtensions.js"></script>
+  <script src="../../app/js/streaming/SchedulerModel.js"></script>
+  <script src="../../app/js/streaming/Stream.js"></script>
+  <script src="../../app/js/streaming/BufferController.js"></script>
+  <script src="../../app/js/streaming/ProtectionModel.js"></script>
+  <script src="../../app/js/streaming/ProtectionController.js"></script>
+  <script src="../../app/js/streaming/ProtectionExtensions.js"></script>
+  <script src="../../app/js/streaming/rules/SwitchRequest.js"></script>
+  <script src="../../app/js/streaming/rules/DownloadRatioRule.js"></script>
+  <script src="../../app/js/streaming/rules/InsufficientBufferRule.js"></script>
+  <script src="../../app/js/streaming/rules/LimitSwitchesRule.js"></script>
+  <script src="../../app/js/streaming/rules/BaseRulesCollection.js"></script>
+  <script src="../../app/js/streaming/EventController.js"></script>
+
+  <!--Captioning- ->
+  <script src="../../app/js/streaming/captioning/VTTParser.js"></script>
+  <script src="../../app/js/streaming/captioning/TTMLParser.js"></script>
+  <script src="../../app/js/streaming/captioning/TextTrackExtensions.js"></script>
+  <script src="../../app/js/streaming/captioning/TextSourceBuffer.js"></script>
+  <script src="../../app/js/streaming/captioning/TextController.js"></script>
+
+  <!-- Metrics - ->
+  <script src="../../app/js/streaming/vo/MetricsList.js"></script>
+  <script src="../../app/js/streaming/MetricsModel.js"></script>
+  <script src="../../app/js/streaming/vo/metrics/BufferLevel.js"></script>
+  <script src="../../app/js/streaming/vo/metrics/HTTPRequest.js"></script>
+  <script src="../../app/js/streaming/vo/metrics/PlayList.js"></script>
+  <script src="../../app/js/streaming/vo/metrics/RepresentationSwitch.js"></script>
+  <script src="../../app/js/streaming/vo/metrics/TCPConnection.js"></script>
+  <script src="../../app/js/streaming/vo/metrics/DroppedFrames.js"></script>
+  <script src="../../app/js/streaming/vo/metrics/DVRInfo.js"></script>
+
+  <!-- Dash - ->
+  <script src="../../app/js/dash/Dash.js"></script>
+  <script src="../../app/js/dash/DashContext.js"></script>
+  <script src="../../app/js/dash/vo/Mpd.js"></script>
+  <script src="../../app/js/dash/vo/Period.js"></script>
+  <script src="../../app/js/dash/vo/AdaptationSet.js"></script>
+  <script src="../../app/js/dash/vo/Representation.js"></script>
+  <script src="../../app/js/dash/vo/Segment.js"></script>
+  <script src="../../app/js/dash/vo/Event.js"></script>
+  <script src="../../app/js/dash/vo/EventStream.js"></script>
+  <script src="../../app/js/dash/DashParser.js"></script>
+  <script src="../../app/js/dash/DashHandler.js"></script>
+  <script src="../../app/js/dash/BaseURLExtensions.js"></script>
+  <script src="../../app/js/dash/FragmentExtensions.js"></script>
+  <script src="../../app/js/dash/DashManifestExtensions.js"></script>
+  <script src="../../app/js/dash/DashMetricsExtensions.js"></script>
+  <script src="../../app/js/dash/TimelineConverter.js"></script>
+-->
+
+  <!-- Include dash.all.js instead of uncompiled source -->
+  <script src="../../dash.all.js"></script>
+
+  <!-- Load videojs-tech-dashjs after both other projects -->
+  <script src="videojs-tech-dashjs.js"></script>
+
+</head>
+<body>
+
+<h1>videojs-tech-dashjs demo</h1>
+
+<!-- Standard video.js embed with a DASH source -->
+<video id="vid1" class="video-js vjs-default-skin" controls preload="auto" width="640" height="264">
+  <source src="http://54.201.151.65/livesim/tfdt_32/testpic_2s/Manifest.mpd" type='application/dash+xml'>
+</video>
+
+<script>
+  // Initalize the video.js player after videojs-tech-dashjs has loaded
+  var myPlayer = videojs('vid1', {context:new Dash.di.DashContext()});
+</script>
+
+<!-- EXAMPLE-SPECIFIC CODE -->
+<style>
+  #dash-not-supported { width: 618px; border: 1px solid #c00; padding: 10px; margin: 10px 0; background-color: rgba(200,0,0,0.5); }
+</style>
+<script>
+  if (!videojs.Dashjs.isSupported()) {
+    var notSupportedDiv = document.createElement('div');
+    notSupportedDiv.id = 'dash-not-supported';
+    notSupportedDiv.innerHTML = 'DASH (through Media Source Extensions) is not supported in your browser, you are currently viewing a fallback MP4 playing through Flash or HTML5 video. Try using the latest version of <a href="http://windows.microsoft.com/en-us/internet-explorer/download-ie">IE</a> or <a href="https://www.google.com/intl/en/chrome/browser/">Chrome</a>.';
+    document.body.insertBefore(notSupportedDiv, document.body.firstChild);
+  }
+</script>
+<!-- END EXAMPLE-SPECIFIC CODE -->
+
+</body>
+</html>

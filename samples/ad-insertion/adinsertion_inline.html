@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html ng-app="DashPlayer" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
+
+    <link rel="stylesheet" href="../../app/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../app/lib/bootstrap/css/bootstrap-glyphicons.css">
+    <link rel="stylesheet" href="../../app/lib/angular.treeview/css/angular.treeview.css">
+    <link rel="stylesheet" href="../../app/css/main.css">
+
+    <!-- http://jquery.com/ -->
+    <script src="../../app/lib/jquery/jquery-1.10.2.min.js"></script>
+
+    <!-- http://angularjs.org/ -->
+    <script src="../../app/lib/angular/angular.min.js"></script>
+    <script src="../../app/lib/angular/angular-resource.min.js"></script>
+
+    <!-- http://getbootstrap.com/ -->
+    <script src="../../app/lib/bootstrap/js/bootstrap.min.js"></script>
+
+    <!-- https://github.com/kriskowal/q -->
+    <script src="../../app/lib/q.js"></script>
+
+    <!-- https://github.com/creynders/dijon-framework -->
+    <script src="../../app/lib/dijon.js"></script>
+
+    <!-- http://bannister.us/weblog/2007/06/09/simple-base64-encodedecode-javascript/ -->
+    <script src="../../app/lib/base64.js"></script>
+
+    <!-- Misc Libs -->
+    <script src="../../app/lib/xml2json.js"></script>
+    <script src="../../app/lib/objectiron.js"></script>
+    <script src="../../app/lib/long.js"></script>
+    <script src="../../app/lib/Math.js"></script>
+
+    <!-- http://www.flotcharts.org/ -->
+    <script src="../../app/lib/flot/jquery.flot.js"></script>
+
+    <!-- https://github.com/eu81273/angular.treeview -->
+    <script src="../../app/lib/angular.treeview/angular.treeview.min.js"></script>
+
+    <!-- Player -->
+    <script src="../../app/js/streaming/MediaPlayer.js"></script>
+    <script src="../../app/js/streaming/Context.js"></script>
+    <script src="../../app/js/streaming/ErrorHandler.js"></script>
+    <script src="../../app/js/streaming/Capabilities.js"></script>
+    <script src="../../app/js/streaming/EventBus.js"></script>
+    <script src="../../app/js/streaming/Debug.js"></script>
+    <script src="../../app/js/streaming/TokenAuthentication.js"></script>
+    <script src="../../app/js/streaming/VideoModel.js"></script>
+    <script src="../../app/js/streaming/vo/SegmentRequest.js"></script>
+    <script src="../../app/js/streaming/ManifestLoader.js"></script>
+    <script src="../../app/js/streaming/ManifestUpdater.js"></script>
+    <script src="../../app/js/streaming/ManifestModel.js"></script>
+    <script src="../../app/js/streaming/MediaSourceExtensions.js"></script>
+    <script src="../../app/js/streaming/SourceBufferExtensions.js"></script>
+    <script src="../../app/js/streaming/VideoModelExtensions.js"></script>
+    <script src="../../app/js/streaming/BufferExtensions.js"></script>
+    <script src="../../app/js/streaming/FragmentController.js"></script>
+    <script src="../../app/js/streaming/AbrController.js"></script>
+    <script src="../../app/js/streaming/FragmentLoader.js"></script>
+    <script src="../../app/js/streaming/FragmentModel.js"></script>
+    <script src="../../app/js/streaming/StreamController.js"></script>
+    <script src="../../app/js/streaming/RequestScheduler.js"></script>
+    <script src="../../app/js/streaming/SchedulerExtensions.js"></script>
+    <script src="../../app/js/streaming/SchedulerModel.js"></script>
+    <script src="../../app/js/streaming/Stream.js"></script>
+    <script src="../../app/js/streaming/BufferController.js"></script>
+    <script src="../../app/js/streaming/ProtectionModel.js"></script>
+    <script src="../../app/js/streaming/ProtectionController.js"></script>
+    <script src="../../app/js/streaming/ProtectionExtensions.js"></script>
+    <script src="../../app/js/streaming/rules/SwitchRequest.js"></script>
+    <script src="../../app/js/streaming/rules/DownloadRatioRule.js"></script>
+    <script src="../../app/js/streaming/rules/InsufficientBufferRule.js"></script>
+    <script src="../../app/js/streaming/rules/LimitSwitchesRule.js"></script>
+    <script src="../../app/js/streaming/rules/BaseRulesCollection.js"></script>
+    <script src="../../app/js/streaming/EventController.js"></script>
+	<script src="../../app/js/streaming/URIQueryAndFragmentModel.js"></script>
+	<script src="../../app/js/streaming/vo/URIFragmentData.js"></script>
+
+    <!--Captioning-->
+    <script src="../../app/js/streaming/captioning/VTTParser.js"></script>
+    <script src="../../app/js/streaming/captioning/TTMLParser.js"></script>
+    <script src="../../app/js/streaming/captioning/TextTrackExtensions.js"></script>
+    <script src="../../app/js/streaming/captioning/TextSourceBuffer.js"></script>
+    <script src="../../app/js/streaming/captioning/TextController.js"></script>
+
+    <!-- Metrics -->
+    <script src="../../app/js/streaming/vo/MetricsList.js"></script>
+    <script src="../../app/js/streaming/MetricsModel.js"></script>
+    <script src="../../app/js/streaming/vo/metrics/BufferLevel.js"></script>
+    <script src="../../app/js/streaming/vo/metrics/HTTPRequest.js"></script>
+    <script src="../../app/js/streaming/vo/metrics/PlayList.js"></script>
+    <script src="../../app/js/streaming/vo/metrics/RepresentationSwitch.js"></script>
+    <script src="../../app/js/streaming/vo/metrics/TCPConnection.js"></script>
+    <script src="../../app/js/streaming/vo/metrics/DroppedFrames.js"></script>
+	<script src="../../app/js/streaming/vo/metrics/DVRInfo.js"></script>
+
+    <!-- Dash -->
+    <script src="../../app/js/dash/Dash.js"></script>
+    <script src="../../app/js/dash/DashContext.js"></script>
+    <script src="../../app/js/dash/vo/Mpd.js"></script>
+    <script src="../../app/js/dash/vo/Period.js"></script>
+    <script src="../../app/js/dash/vo/AdaptationSet.js"></script>
+    <script src="../../app/js/dash/vo/Representation.js"></script>
+    <script src="../../app/js/dash/vo/Segment.js"></script>
+    <script src="../../app/js/dash/vo/Event.js"></script>
+    <script src="../../app/js/dash/vo/EventStream.js"></script>
+    <script src="../../app/js/dash/DashParser.js"></script>
+    <script src="../../app/js/dash/DashHandler.js"></script>
+    <script src="../../app/js/dash/BaseURLExtensions.js"></script>
+    <script src="../../app/js/dash/FragmentExtensions.js"></script>
+    <script src="../../app/js/dash/DashManifestExtensions.js"></script>
+    <script src="../../app/js/dash/DashMetricsExtensions.js"></script>
+    <script src="../../app/js/dash/TimelineConverter.js"></script>
+
+    <!-- App -->
+    <script src="../../app/metrics.js"></script>
+    <script src="../../app/main.js"></script>
+
+    <link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+<body ng-controller="DashController">
+
+</div>
+
+<div class="container" style="margin-top:20px;">
+
+    <a href="http://www.fokus.fraunhofer.de/go/fame"><img src="images/fame.png" style="position:absolute;top:20px;left:30px;" /></a>
+    <a href="http://www.fokus.fraunhofer.de/go/fame"><img src="images/fokus.png" style="position:absolute;top:20px;left:200px;height:65px;" /></a>
+    <img src="images/famium.png" style="position:absolute;top:20px;left:500px;" />
+
+    <div id="info_area">
+        <div id="info_item" style="width: 550px; height: 300px;">
+            <b>Post-Roll Advert-Insertion with DASH + W3C MediaSource Extensions + Inline Event MPD Reload</b>
+
+            <ol>
+                <li>The server provides a MPD  containing an InlineEventStream element on Period Level. The schmeIdUri and the value of the Eventstream are set according to ISO/IEC
+                    23009-1 5.10.4.1.
+                    <br><br>
+                      <pre>&lt;EventStream schemeIdUri="urn:mpeg:dash:event:2012" value="1"/&gt;
+       &lt;Event presentationTime="5" id="1"/>
+&lt;/EventStream&gt;
+                    </pre>
+                   </li>
+
+                <li>MPD reload is scheduled at 5 seconds of the playback </li>
+                <li>The new MPD contains an additional period with ad content (51 seconds) which will be played after 15 seconds</li>
+
+            </ol>
+            Important:
+            <ul>
+                <li>Cookies have to be activated</li>
+                <li>Due to missing Multiperiod implementation a workaround has to be used to enable multiperiod playback. The second period will therefore have a starttime set to PT0M0S.</li>
+            </ul>
+            <div><a href="index.html">Back to selection</a></div>
+        </div>
+
+    </div>
+    <div class="dash-video-player" style="position:absolute; left:700px;top:170px; width:640px" >
+        <video controls="true" id="vid" width="640" height="360"></video>
+    </div>
+</div>
+
+<div class="footer-area">
+
+</div>
+
+
+
+
+
+</body>
+</html>
