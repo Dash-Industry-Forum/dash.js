@@ -18,7 +18,6 @@ Dash.dependencies.DashHandler = function () {
         requestedTime,
         isDynamic,
         type,
-        offset = null,
 
         zeroPadToLength = function (numStr, minStrLength) {
             while (numStr.length < minStrLength) {
@@ -112,18 +111,6 @@ Dash.dependencies.DashHandler = function () {
             return segment.representation.startNumber + segmentIndex;
         },
 
-        getMpdSegIdxForPeriodSegIdx = function(representation, periodSegmentIndex) {
-            var periodStartIdx = Math.floor(representation.adaptation.period.start / representation.segmentDuration);
-
-            return periodSegmentIndex + periodStartIdx;
-        },
-
-        getPeriodSegIdxForMpdSegIdx = function(representation, mpdSegmentIndex) {
-            var periodStartIdx = Math.floor(representation.adaptation.period.start / representation.segmentDuration);
-
-            return mpdSegmentIndex - periodStartIdx;
-        },
-
         getRequestUrl = function (destination, representation) {
             var baseURL = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
@@ -204,10 +191,6 @@ Dash.dependencies.DashHandler = function () {
                 seg,
                 fTime;
 
-            if(offset === null || offset > representation.segments[0].availabilityIdx) {
-                offset = representation.segments[0].availabilityIdx;
-            }
-
             //this.debug.log("Checking for stream end...");
             if (isDynamic) {
                 //this.debug.log("Live never ends! (TODO)");
@@ -216,7 +199,7 @@ Dash.dependencies.DashHandler = function () {
             } else {
                 if (index < 0) {
                     isFinished = false;
-                } else if (index < representation.availableSegmentsNumber + offset) {
+                } else if (index < representation.availableSegmentsNumber) {
                     seg = getSegmentByIndex(index, representation);
 
                     if (seg) {
@@ -259,7 +242,7 @@ Dash.dependencies.DashHandler = function () {
             seg.wallStartTime = self.timelineConverter.calcWallTimeForSegment(seg, isDynamic);
 
             seg.replacementNumber = getNumberForSegment(seg, index);
-            seg.availabilityIdx = getMpdSegIdxForPeriodSegIdx(representation, index);
+            seg.availabilityIdx = index;
 
             return seg;
         },
@@ -442,6 +425,8 @@ Dash.dependencies.DashHandler = function () {
                 duration = representation.segmentDuration,
                 minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime,
                 availabilityWindow = representation.segmentAvailabilityRange,
+                periodRelativeRange = {start: self.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.start),
+                    end: self.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.end)},
                 originAvailabilityTime = NaN,
                 originSegment = null,
                 currentSegmentList = representation.segments,
@@ -451,15 +436,13 @@ Dash.dependencies.DashHandler = function () {
                 end,
                 range;
 
-            if (!availabilityWindow) {
-                availabilityWindow = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
+            if (!periodRelativeRange) {
+                periodRelativeRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
             }
 
             if (isDynamic && !representation.adaptation.period.mpd.isClientServerTimeSyncCompleted) {
-                start = Math.floor(availabilityWindow.start / duration);
-                start = getPeriodSegIdxForMpdSegIdx(representation, start);
-                end = Math.floor(availabilityWindow.end / duration);
-                end = getPeriodSegIdxForMpdSegIdx(representation, end);
+                start = Math.floor(periodRelativeRange.start / duration);
+                end = Math.floor(periodRelativeRange.end / duration);
                 range = {start: start, end: end};
                 return range;
             }
@@ -468,19 +451,18 @@ Dash.dependencies.DashHandler = function () {
             // segment for the current index
             if (currentSegmentList) {
                 originSegment = getSegmentByIndex(index, representation);
-                originAvailabilityTime = originSegment ? originSegment.presentationStartTime : (index > 0 ? (index * duration) : requestedTime || currentSegmentList[0].presentationStartTime);
+                originAvailabilityTime = originSegment ? self.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, originSegment.presentationStartTime) :
+                    (index > 0 ? (index * duration) : self.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime || currentSegmentList[0].presentationStartTime));
             } else {
                 // If no segments exist, but index > 0, it means that we switch to the other representation, so
                 // we should proceed from this time.
                 // Otherwise we should start from the beginning for static mpds or from the end (live edge) for dynamic mpds
-                originAvailabilityTime = (index > 0) ? (index * duration) : (isDynamic ? availabilityWindow.end : availabilityWindow.start);
+                originAvailabilityTime = (index > 0) ? (index * duration) : (isDynamic ? periodRelativeRange.end : periodRelativeRange.start);
             }
 
             // segment list should not be out of the availability window range
-            start = Math.floor(Math.max(originAvailabilityTime - availabilityLowerLimit, availabilityWindow.start) / duration);
-            end = Math.floor(Math.min(start + availabilityUpperLimit / duration, availabilityWindow.end / duration));
-            start = getPeriodSegIdxForMpdSegIdx(representation, start);
-            end = getPeriodSegIdxForMpdSegIdx(representation, end);
+            start = Math.floor(Math.max(originAvailabilityTime - availabilityLowerLimit, periodRelativeRange.start) / duration);
+            end = Math.floor(Math.min(start + availabilityUpperLimit / duration, periodRelativeRange.end / duration));
 
             range = {start: start, end: end};
 
@@ -607,6 +589,7 @@ Dash.dependencies.DashHandler = function () {
 
             waitForAvailabilityWindow.call(self, representation).then(
                 function(availabilityWindow) {
+                    representation.segmentAvailabilityRange = availabilityWindow;
                     range = decideSegmentListRangeForTemplate.call(self, representation);
                     startIdx = Math.max(range.start, 0);
                     endIdx = Math.min(range.end, list.SegmentURL_asArray.length);
@@ -628,7 +611,6 @@ Dash.dependencies.DashHandler = function () {
                         segments.push(seg);
                         seg = null;
                     }
-                    representation.segmentAvailabilityRange = availabilityWindow;
                     representation.availableSegmentsNumber = len;
                     deferred.resolve(segments);
             });
@@ -741,6 +723,7 @@ Dash.dependencies.DashHandler = function () {
         getIndexForSegments = function (time, representation) {
             var segments = representation.segments,
                 segmentLastIdx = segments.length - 1,
+                periodRelativeTime = this.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, time),
                 idx = -1,
                 frag,
                 ft,
@@ -759,14 +742,14 @@ Dash.dependencies.DashHandler = function () {
                         break;
                     } else if (idx === -1 && (time - Dash.dependencies.DashHandler.EPSILON) > (ft + fd)) {
                         // time is past the end
-                        idx  = isNaN(representation.segmentDuration) ? (frag.availabilityIdx + 1) : Math.floor(time / representation.segmentDuration);
+                        idx  = isNaN(representation.segmentDuration) ? (frag.availabilityIdx + 1) : Math.floor(periodRelativeTime / representation.segmentDuration);
                     }
                 }
             }
 
             if (idx === -1) {
                 if (!isNaN(representation.segmentDuration)) {
-                    idx = Math.floor(time / representation.segmentDuration);
+                    idx = Math.floor(periodRelativeTime / representation.segmentDuration);
                 } else {
                     self.debug.log("Couldn't figure out a time!");
                     self.debug.log("Time: " + time);

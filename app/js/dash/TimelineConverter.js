@@ -149,6 +149,18 @@ Dash.dependencies.TimelineConverter = function () {
             return range;
         },
 
+        calcPeriodRelativeTimeFromMpdRelativeTime = function(representation, mpdRelativeTime) {
+            var periodStartTime = representation.adaptation.period.start;
+
+            return mpdRelativeTime - periodStartTime;
+        },
+
+        calcMpdRelativeTimeFromPeriodRelativeTime = function(representation, periodRelativeTime) {
+            var periodStartTime = representation.adaptation.period.start;
+
+            return periodRelativeTime + periodStartTime;
+        },
+
         liveEdgeFound = function(expectedLiveEdge, actualLiveEdge, period) {
             if (period.mpd.isClientServerTimeSyncCompleted) return;
 
@@ -180,6 +192,8 @@ Dash.dependencies.TimelineConverter = function () {
         calcPresentationTimeFromMediaTime: calcPresentationTimeFromMediaTime,
         calcPresentationStartTime: calcPresentationStartTime,
         calcActualPresentationTime: calcActualPresentationTime,
+        calcPeriodRelativeTimeFromMpdRelativeTime: calcPeriodRelativeTimeFromMpdRelativeTime,
+        calcMpdRelativeTimeFromPeriodRelativeTime: calcMpdRelativeTimeFromPeriodRelativeTime,
         calcMediaTimeFromPresentationTime: calcMediaTimeFromPresentationTime,
         calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
         calcWallTimeForSegment: calcWallTimeForSegment,
