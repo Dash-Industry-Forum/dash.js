@@ -38,20 +38,16 @@ Add dash.all.js to the end of the body.
   <script src="yourPathToDash/dash.all.js"></script>
 </body>
 ```
-Now comes the good stuff. We need to create a dash context. Then from that context we create a media player, initialize it, attach it to our "videoPlayer" and then tell it where to get the video from. We do this like so:
+Now comes the good stuff. We need to create a dash context. Then from that context we create a media player, initialize it, attach it to our "videoPlayer" and then tell it where to get the video from. We will do this in an anonymous self executing function, that way it will run as soon as the page loads. So, here is how we do it:
 ``` js
-function setupPlayer(){
+(function(){
     var url = "http://dash.edgesuite.net/dash264/TestCases/1c/qualcomm/2/MultiRate.mpd";
     var context = new Dash.di.DashContext();
     var player = new MediaPlayer(context);
     player.startup();
     player.attachView(docment.querySelector("videoPlayer"));
     player.attachSource(url);
-}
-```
-All that's left to do is to make sure that we setup the player when we load the page, which we can do by modifying the body tag.
-```
-<body onload="setupPlayer()">
+})();
 ```
 
 When it is all done, it should look similar to this:
@@ -61,20 +57,20 @@ When it is all done, it should look similar to this:
     <head>
         <title>Dash.js Rocks</title>
     </head>
-    <body onload="setupPlayer()">
+    <body>
         <div>
             <video id="videoPlayer" controls="true"></video>
         </div>
         <script src="yourPathToDash/dash.all.js"></script>
         <script>
-            function setupPlayer(){
+            (function(){
                 var url = "http://dash.edgesuite.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd";
                 var context = new Dash.di.DashContext();
                 var player = new MediaPlayer(context);
                 player.startup();
                 player.attachView(document.querySelector("#videoPlayer"));
                 player.attachSource(url);
-            }
+            })();
         </script>
     </body>
 </html>
