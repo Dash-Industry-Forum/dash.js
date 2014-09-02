@@ -23,8 +23,7 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
                 testQuery = new RegExp(/[?]/),
                 testFragment = new RegExp(/[#]/),
                 isQuery = testQuery.test(uri),
-                isFragment = testFragment.test(uri),
-                mappedArr;
+                isFragment = testFragment.test(uri);
 
             function reduceArray(previousValue, currentValue, index, array) {
                 var arr =  array[0].split(/[=]/);
@@ -45,8 +44,6 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
 
                 return array;
             }
-
-            mappedArr = uri.split(/[?#]/).map(mapArray);
 
             if (URIQueryData.length > 0) {
                 URIQueryData = URIQueryData.reduce(reduceArray, null);
