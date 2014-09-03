@@ -76,7 +76,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self =this,
                 rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.NEXT_SEGMENT_RULES);
 
-            self.rulesController.applyRules(rules, type, callback, null, function(currentValue, newValue) {
+            self.rulesController.applyRules(rules, type, self.streamProcessor.getPeriodInfo().id, callback, null, function(currentValue, newValue) {
                 return newValue;
             });
         },
@@ -100,7 +100,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self =this,
                 rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.SEGMENTS_TO_SCHEDULE_RULES);
 
-            self.rulesController.applyRules(rules, type, callback, fragmentsToLoad, function(currentValue, newValue) {
+            self.rulesController.applyRules(rules, type, self.streamProcessor.getPeriodInfo().id, callback, fragmentsToLoad, function(currentValue, newValue) {
                 return Math.min(currentValue, newValue);
             });
         },
@@ -115,7 +115,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 return;
             }
 
-            self.abrController.getPlaybackQuality(type, self.streamProcessor.getData());
+            self.abrController.getPlaybackQuality(type, self.streamProcessor.getPeriodInfo().id, self.streamProcessor.getData());
             getNextFragment.call(self, onNextFragment.bind(self));
         },
 

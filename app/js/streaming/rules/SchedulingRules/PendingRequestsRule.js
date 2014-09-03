@@ -10,11 +10,13 @@ MediaPlayer.rules.PendingRequestsRule = function () {
         bufferExt: undefined,
 
         setScheduleController: function(scheduleControllerValue) {
-            scheduleController[scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
+            var periodId = scheduleControllerValue.streamProcessor.getPeriodInfo().id;
+            scheduleController[periodId] = scheduleController[periodId] || {};
+            scheduleController[periodId][scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
         },
 
-        execute: function(streamType, callback, current) {
-            var sc = scheduleController[streamType],
+        execute: function(streamType, periodId, callback, current) {
+            var sc = scheduleController[periodId][streamType],
                 pendingRequests = sc.fragmentController.getPendingRequests(sc),
                 loadingRequests = sc.fragmentController.getLoadingRequests(sc),
                 ln = pendingRequests.length + loadingRequests.length,

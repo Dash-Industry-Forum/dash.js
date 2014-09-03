@@ -24,7 +24,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
             rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.LIVE_EDGE_RULES);
             isSearchStarted = true;
 
-            this.rulesController.applyRules(rules, streamType, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
+            this.rulesController.applyRules(rules, streamType, this.streamProcessor.getPeriodInfo().id, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
                 return newValue;
             });
         };

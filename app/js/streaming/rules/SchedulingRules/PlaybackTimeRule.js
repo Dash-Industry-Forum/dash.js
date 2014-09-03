@@ -5,8 +5,10 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
         scheduleController = {},
 
         onPlaybackSeeking = function(sender, time) {
-            seekTarget.audio = time;
-            seekTarget.video = time;
+            var periodId = sender.getPeriodId();
+            seekTarget[periodId] = seekTarget[periodId] || {};
+            seekTarget[periodId].audio = time;
+            seekTarget[periodId].video = time;
         };
 
     return {
@@ -15,13 +17,15 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
         },
 
         setScheduleController: function(scheduleControllerValue) {
-            scheduleController[scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
+            var periodId = scheduleControllerValue.streamProcessor.getPeriodInfo().id;
+            scheduleController[periodId] = scheduleController[periodId] || {};
+            scheduleController[periodId][scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
         },
 
-        execute: function(streamType, callback/*, current*/) {
-            var sc = scheduleController[streamType],
+        execute: function(streamType, periodId, callback/*, current*/) {
+            var sc = scheduleController[periodId][streamType],
                 representation = sc.streamProcessor.getCurrentRepresentation(),
-                st = seekTarget[streamType],
+                st = seekTarget[periodId] ? seekTarget[periodId][streamType] : null,
                 p = st ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
                 rejected = sc.getFragmentModel().getRejectedRequests().shift(),
                 keepIdx = !!rejected && !st,
@@ -40,7 +44,9 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 return;
             }
 
-            seekTarget[streamType] = null;
+            if (seekTarget[periodId]) {
+                seekTarget[periodId][streamType] = null;
+            }
 
             range = sc.sourceBufferExt.getBufferRange(sc.bufferController.getBuffer(), time);
 

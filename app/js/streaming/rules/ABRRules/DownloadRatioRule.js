@@ -43,19 +43,21 @@ MediaPlayer.rules.DownloadRatioRule = function () {
         metricsExt: undefined,
         metricsModel: undefined,
 
-        setData: function(value) {
+        setData: function(value, periodId) {
+            adaptation[periodId] = adaptation[periodId] || {};
+
             if (this.manifestExt.getIsAudio(value)) {
-                adaptation.audio = value;
+                adaptation[periodId].audio = value;
             }
 
             if (this.manifestExt.getIsVideo(value)) {
-                adaptation.video = value;
+                adaptation[periodId].video = value;
             }
         },
 
-        execute: function (streamType, callback, current) {
+        execute: function (streamType, periodId, callback, current) {
             var self = this,
-                data = adaptation[streamType],
+                data = adaptation[periodId][streamType],
                 metrics = self.metricsModel.getReadOnlyMetricsFor(streamType),
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
                 downloadTime,

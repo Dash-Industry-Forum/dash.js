@@ -130,7 +130,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
             finder = liveEdgeFinder;
         },
 
-        execute: function(streamType, callbackFunc/*, current*/) {
+        execute: function(streamType, periodId, callbackFunc/*, current*/) {
             var self = this,
                 request,
                 availabilityRange; // all segments are supposed to be available in this interval

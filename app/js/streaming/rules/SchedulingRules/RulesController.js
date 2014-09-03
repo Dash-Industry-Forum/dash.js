@@ -96,7 +96,7 @@ MediaPlayer.rules.RulesController = function () {
             updateRules.call(this, rules[ruleType], rulesCollection, false);
         },
 
-        applyRules: function(rulesArr, streamType, callback, current, overrideFunc) {
+        applyRules: function(rulesArr, streamType, periodId, callback, current, overrideFunc) {
             var rulesCount = rulesArr.length,
                 ln = rulesCount,
                 values = {},
@@ -148,7 +148,7 @@ MediaPlayer.rules.RulesController = function () {
                     continue;
                 }
 
-                rule.execute(streamType, callbackFunc, current);
+                rule.execute(streamType, periodId, callbackFunc, current);
             }
         },
 

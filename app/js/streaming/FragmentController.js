@@ -32,14 +32,16 @@ MediaPlayer.dependencies.FragmentController = function () {
 
         getRequestsToLoad = function(current, callback) {
             var self =this,
-                streamType = fragmentModels[0].getContext().streamProcessor.getType(),
+                st = fragmentModels[0].getContext().streamProcessor,
+                periodId = st.getPeriodInfo().id,
+                streamType = st.getType(),
                 rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.SEGMENTS_TO_EXECUTE_RULES);
 
             if (rules.indexOf(this.scheduleRulesCollection.sameTimeRequestRule) !== -1) {
-                this.scheduleRulesCollection.sameTimeRequestRule.setFragmentModels(fragmentModels);
+                this.scheduleRulesCollection.sameTimeRequestRule.setFragmentModels(fragmentModels, periodId);
             }
 
-            self.rulesController.applyRules(rules, streamType, callback, current, function(currentValue, newValue) {
+            self.rulesController.applyRules(rules, streamType, periodId, callback, current, function(currentValue, newValue) {
                 return newValue;
             });
         },

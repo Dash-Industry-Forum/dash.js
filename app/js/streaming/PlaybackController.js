@@ -203,6 +203,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
             return ((this.timelineConverter.calcPresentationStartTime(period) + period.duration) - currentTime);
         },
 
+        getPeriodId: function() {
+            return period.id;
+        },
+
         getPeriodDuration: function() {
             return period.duration;
         },
