@@ -142,6 +142,12 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
 
             // start position of the search, it is supposed to be a live edge - the last available segment for the current mpd
             liveEdgeInitialSearchPosition = availabilityRange.end;
+
+            if (currentRepresentation.useCalculatedLiveEdgeTime) {
+                callback(new MediaPlayer.rules.SwitchRequest(liveEdgeInitialSearchPosition, p));
+                return;
+            }
+
             // we should search for a live edge in a time range which is limited by SEARCH_TIME_SPAN.
             liveEdgeSearchRange = {start: Math.max(0, (liveEdgeInitialSearchPosition - SEARCH_TIME_SPAN)), end: liveEdgeInitialSearchPosition + SEARCH_TIME_SPAN};
             // we have to use half of the availability interval (window) as a search step to ensure that we find a segment in the window

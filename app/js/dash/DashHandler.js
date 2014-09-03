@@ -200,7 +200,7 @@ Dash.dependencies.DashHandler = function () {
                 presentationEndTime;
 
             duration = representation.segmentDuration;
-            presentationStartTime = index * duration;
+            presentationStartTime = representation.adaptation.period.start + (index * duration);
             presentationEndTime = presentationStartTime + duration;
 
             seg = new Dash.vo.Segment();
@@ -296,15 +296,11 @@ Dash.dependencies.DashHandler = function () {
                     if (nextFrag && nextFrag.hasOwnProperty("t")) {
                         repeatEndTime = nextFrag.t / fTimescale;
                     } else {
-                        if (isDynamic) {
-                            repeatEndTime = representation.segmentAvailabilityRange.end;
-                            representation.segmentDuration = frag.d / fTimescale;
-                        } else {
-                            repeatEndTime = representation.adaptation.period.duration;
-                        }
+                        repeatEndTime = self.timelineConverter.calcMediaTimeFromPresentationTime(representation.segmentAvailabilityRange.end, representation);
+                        representation.segmentDuration = frag.d / fTimescale;
                     }
 
-                    repeat = Math.ceil((repeatEndTime - self.timelineConverter.calcPresentationTimeFromMediaTime(scaledTime, representation))/(frag.d/fTimescale)) - 1;
+                    repeat = Math.ceil((repeatEndTime - scaledTime)/(frag.d/fTimescale)) - 1;
                 }
 
                 // if we have enough segments in the list, but we have not calculated the total number of the segments yet we
@@ -367,7 +363,7 @@ Dash.dependencies.DashHandler = function () {
                 duration = representation.segmentDuration,
                 availabilityWindow = representation.segmentAvailabilityRange,
                 segmentRange,
-                i,
+                periodSegIdx,
                 startIdx,
                 endIdx,
                 seg = null,
@@ -381,14 +377,14 @@ Dash.dependencies.DashHandler = function () {
             startIdx = segmentRange.start;
             endIdx = segmentRange.end;
 
-            for (i = startIdx;i <= endIdx; i += 1) {
+            for (periodSegIdx = startIdx;periodSegIdx <= endIdx; periodSegIdx += 1) {
 
                 seg = getIndexBasedSegment.call(
                     self,
                     representation,
-                    i);
+                    periodSegIdx);
 
-                seg.replacementTime = (start + i - 1) * representation.segmentDuration;
+                seg.replacementTime = (start + periodSegIdx - 1) * representation.segmentDuration;
                 url = template.media;
                 url = replaceTokenForTemplate(url, "Number", seg.replacementNumber);
                 url = replaceTokenForTemplate(url, "Time", seg.replacementTime);
@@ -404,9 +400,12 @@ Dash.dependencies.DashHandler = function () {
         },
 
         decideSegmentListRangeForTemplate = function(representation) {
-            var duration = representation.segmentDuration,
+            var self = this,
+                duration = representation.segmentDuration,
                 minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime,
                 availabilityWindow = representation.segmentAvailabilityRange,
+                periodRelativeRange = {start: self.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.start),
+                    end: self.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.end)},
                 originAvailabilityTime = NaN,
                 originSegment = null,
                 currentSegmentList = representation.segments,
@@ -416,9 +415,13 @@ Dash.dependencies.DashHandler = function () {
                 end,
                 range;
 
+            if (!periodRelativeRange) {
+                periodRelativeRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
+            }
+            
             if (isDynamic && !representation.adaptation.period.mpd.isClientServerTimeSyncCompleted) {
-                start = Math.floor(availabilityWindow.start / duration);
-                end = Math.floor(availabilityWindow.end / duration);
+                start = Math.floor(periodRelativeRange.start / duration);
+                end = Math.floor(periodRelativeRange.end / duration);
                 range = {start: start, end: end};
                 return range;
             }
@@ -427,17 +430,18 @@ Dash.dependencies.DashHandler = function () {
             // segment for the current index
             if (currentSegmentList) {
                 originSegment = getSegmentByIndex(index, representation);
-                originAvailabilityTime = originSegment ? (originSegment.presentationStartTime) : (index > 0 ? (index * duration) : requestedTime || currentSegmentList[0].presentationStartTime);
+                originAvailabilityTime = originSegment ? self.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, originSegment.presentationStartTime) :
+                    (index > 0 ? (index * duration) : self.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime || currentSegmentList[0].presentationStartTime));
             } else {
                 // If no segments exist, but index > 0, it means that we switch to the other representation, so
                 // we should proceed from this time.
                 // Otherwise we should start from the beginning for static mpds or from the end (live edge) for dynamic mpds
-                originAvailabilityTime = (index > 0) ? (index * duration) : (isDynamic ? availabilityWindow.end : availabilityWindow.start);
+                originAvailabilityTime = (index > 0) ? (index * duration) : (isDynamic ? periodRelativeRange.end : periodRelativeRange.start);
             }
 
             // segment list should not be out of the availability window range
-            start = Math.floor(Math.max(originAvailabilityTime - availabilityLowerLimit, availabilityWindow.start) / duration);
-            end = Math.floor(Math.min(originAvailabilityTime + availabilityUpperLimit, availabilityWindow.end) / duration);
+            start = Math.floor(Math.max(originAvailabilityTime - availabilityLowerLimit, periodRelativeRange.start) / duration);
+            end = Math.floor(Math.min(start + availabilityUpperLimit / duration, periodRelativeRange.end / duration));
 
             range = {start: start, end: end};
 
@@ -514,29 +518,29 @@ Dash.dependencies.DashHandler = function () {
                 list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList,
                 len = list.SegmentURL_asArray.length,
-                i,
+                periodSegIdx,
                 seg,
                 s,
                 range,
-                startIdx,
-                endIdx,
+                startIdx = 0,
+                endIdx = list.SegmentURL_asArray.length,
                 start;
 
             start = representation.startNumber;
 
             range = decideSegmentListRangeForTemplate.call(self, representation);
-            startIdx = range.start;
-            endIdx = range.end;
+            startIdx = Math.max(range.start, 0);
+            endIdx = Math.min(range.end, list.SegmentURL_asArray.length);
 
-            for (i = startIdx; i < endIdx; i += 1) {
-                s = list.SegmentURL_asArray[i];
+            for (periodSegIdx = startIdx; periodSegIdx < endIdx; periodSegIdx += 1) {
+                s = list.SegmentURL_asArray[periodSegIdx];
 
                 seg = getIndexBasedSegment.call(
                     self,
                     representation,
-                    i);
+                    periodSegIdx);
 
-                seg.replacementTime = (start + i - 1) * representation.segmentDuration;
+                seg.replacementTime = (start + periodSegIdx - 1) * representation.segmentDuration;
                 seg.media = s.media;
                 seg.mediaRange = s.mediaRange;
                 seg.index = s.index;

@@ -80,21 +80,19 @@ Dash.dependencies.TimelineConverter = function () {
         },
 
         calcPresentationTimeFromWallTime = function (wallTime, period) {
-            return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime()) / 1000) + period.start;
+            return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime()) / 1000);
         },
 
         calcPresentationTimeFromMediaTime = function (mediaTime, representation) {
-            var periodStart = representation.adaptation.period.start,
-                presentationOffset = representation.presentationTimeOffset;
+            var presentationOffset = representation.presentationTimeOffset;
 
-            return (periodStart - presentationOffset) + mediaTime;
+            return mediaTime - presentationOffset;
         },
 
         calcMediaTimeFromPresentationTime = function (presentationTime, representation) {
-            var periodStart = representation.adaptation.period.start,
-                presentationOffset = representation.presentationTimeOffset;
+            var presentationOffset = representation.presentationTimeOffset;
 
-            return (periodStart + presentationOffset + presentationTime);
+            return (presentationOffset + presentationTime);
         },
 
         calcWallTimeForSegment = function (segment, isDynamic) {
@@ -144,13 +142,23 @@ Dash.dependencies.TimelineConverter = function () {
             //the Media Segment list is further restricted by the CheckTime together with the MPD attribute
             // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
             // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.
-            start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth - duration), 0);
-            checkTime -= duration;
-            now -= duration;
+            start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth), 0);
             end = isNaN(checkTime) ? now : Math.min(checkTime, now);
             range = {start: start, end: end};
 
             return range;
+        },
+
+        calcPeriodRelativeTimeFromMpdRelativeTime = function(representation, mpdRelativeTime) {
+            var periodStartTime = representation.adaptation.period.start;
+
+            return mpdRelativeTime - periodStartTime;
+        },
+
+        calcMpdRelativeTimeFromPeriodRelativeTime = function(representation, periodRelativeTime) {
+            var periodStartTime = representation.adaptation.period.start;
+
+            return periodRelativeTime + periodStartTime;
         },
 
         onLiveEdgeFound = function(sender, actualLiveEdge) {
@@ -170,10 +178,9 @@ Dash.dependencies.TimelineConverter = function () {
         },
 
         calcMSETimeOffset = function (representation) {
-            var periodStart = representation.adaptation.period.start,
-                presentationOffset = representation.presentationTimeOffset;
+            var presentationOffset = representation.presentationTimeOffset;
 
-            return (periodStart - presentationOffset);
+            return (-presentationOffset);
         },
 
         reset = function() {
@@ -195,6 +202,8 @@ Dash.dependencies.TimelineConverter = function () {
         calcPresentationTimeFromMediaTime: calcPresentationTimeFromMediaTime,
         calcPresentationStartTime: calcPresentationStartTime,
         calcActualPresentationTime: calcActualPresentationTime,
+        calcPeriodRelativeTimeFromMpdRelativeTime: calcPeriodRelativeTimeFromMpdRelativeTime,
+        calcMpdRelativeTimeFromPeriodRelativeTime: calcMpdRelativeTimeFromPeriodRelativeTime,
         calcMediaTimeFromPresentationTime: calcMediaTimeFromPresentationTime,
         calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
         calcWallTimeForSegment: calcWallTimeForSegment,

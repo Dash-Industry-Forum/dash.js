@@ -124,7 +124,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         onPlaybackMetaDataLoaded = function() {
             this.debug.log("Got loadmetadata event.");
 
-            if (!isDynamic || period.isClientServerTimeSyncCompleted) {
+            if (!isDynamic || period.mpd.isClientServerTimeSyncCompleted) {
                 initialStart.call(this);
             }
 
