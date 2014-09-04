@@ -76,17 +76,21 @@
         },
 
         detachVideoEvents = function (stream) {
-            var playbackCtrl = stream.getPlaybackController();
-
-            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
-            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
-            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKING, this);
-            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_TIME_UPDATED, this);
-            playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PROGRESS, this);
+            var self = this,
+                playbackCtrl = stream.getPlaybackController();
+            // setTimeout is used to avoid an exception caused by unsubscibing from PLAYBACK_TIME_UPDATED event
+            // inside the event handler
+            setTimeout(function(){
+                playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_STARTED, self.manifestUpdater);
+                playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PAUSED, self.manifestUpdater);
+                playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKING, self);
+                playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_TIME_UPDATED, self);
+                playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PROGRESS, self);
+            },1);
         },
 
         copyVideoProperties = function (fromVideoElement, toVideoElement) {
-            ["controls", "loop", "muted", "playbackRate", "volume"].forEach( function(prop) {
+            ["controls", "loop", "muted", "volume"].forEach( function(prop) {
                 toVideoElement[prop] = fromVideoElement[prop];
             });
         },
@@ -168,6 +172,8 @@
                     return stream;
                 }
             }
+
+            return null;
         },
 
         //  TODO move to ???Extensions class
