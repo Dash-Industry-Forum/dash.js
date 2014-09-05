@@ -369,6 +369,7 @@ MediaPlayer = function (aContext) {
                 throw "MediaPlayer not initialized!";
             }
 
+            this.uriQueryFragModel.reset();
             source = this.uriQueryFragModel.parseURI(url);
 
             // TODO : update
