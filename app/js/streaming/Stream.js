@@ -313,6 +313,7 @@ MediaPlayer.dependencies.Stream = function () {
                 this.debug.log(msg);
             } else {
                 self.liveEdgeFinder.initialize(streamProcessors[0]);
+                self.liveEdgeFinder.subscribe(self.liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.playbackController);
             }
             //this.debug.log("MediaSource initialized!");
         },
@@ -600,6 +601,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.playbackController.unsubscribe(this.playbackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, this);
             this.playbackController.reset();
             this.liveEdgeFinder.abortSearch();
+            this.liveEdgeFinder.unsubscribe(this.liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, this.playbackController);
 
             // streamcontroller expects this to be valid
             //this.videoModel = null;
