@@ -15,8 +15,11 @@ MediaPlayer.rules.PendingRequestsRule = function () {
             scheduleController[periodId][scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
         },
 
-        execute: function(streamType, periodId, callback, current) {
-            var sc = scheduleController[periodId][streamType],
+        execute: function(context, callback) {
+            var streamType = context.getStreamType(),
+                periodId = context.getPeriodInfo().id,
+                current = context.getCurrentValue(),
+                sc = scheduleController[periodId][streamType],
                 pendingRequests = sc.fragmentController.getPendingRequests(sc),
                 loadingRequests = sc.fragmentController.getLoadingRequests(sc),
                 ln = pendingRequests.length + loadingRequests.length,

@@ -41,7 +41,7 @@ MediaPlayer.dependencies.FragmentController = function () {
                 this.scheduleRulesCollection.sameTimeRequestRule.setFragmentModels(fragmentModels, periodId);
             }
 
-            self.rulesController.applyRules(rules, streamType, periodId, callback, current, function(currentValue, newValue) {
+            self.rulesController.applyRules(rules, streamType, st.getCurrentRepresentation(), callback, current, function(currentValue, newValue) {
                 return newValue;
             });
         },

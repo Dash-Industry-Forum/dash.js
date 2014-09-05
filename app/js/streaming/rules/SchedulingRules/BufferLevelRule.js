@@ -49,7 +49,10 @@ MediaPlayer.rules.BufferLevelRule = function () {
             scheduleController[id][scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
         },
 
-        execute: function(streamType, periodId, callback/*, current*/) {
+        execute: function(context, callback) {
+            var periodId = context.getPeriodInfo().id,
+                streamType = context.getStreamType();
+
             if (isBufferLevelOutranT(periodId, streamType)) {
                 callback(new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
                 return;

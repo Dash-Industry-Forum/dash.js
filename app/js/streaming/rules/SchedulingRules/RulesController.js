@@ -20,6 +20,10 @@ MediaPlayer.rules.RulesController = function () {
             return true;
         },
 
+        getRulesContext = function(streamType, representation, currentValue) {
+            return new MediaPlayer.rules.RulesContext(streamType, representation, currentValue);
+        },
+
         normalizeRule = function(rule) {
             var exec = rule.execute.bind(rule);
 
@@ -96,10 +100,11 @@ MediaPlayer.rules.RulesController = function () {
             updateRules.call(this, rules[ruleType], rulesCollection, false);
         },
 
-        applyRules: function(rulesArr, streamType, periodId, callback, current, overrideFunc) {
+        applyRules: function(rulesArr, streamType, representation, callback, current, overrideFunc) {
             var rulesCount = rulesArr.length,
                 ln = rulesCount,
                 values = {},
+                rulesContext = getRulesContext.call(this, streamType, representation, current),
                 rule,
                 i,
 
@@ -148,7 +153,7 @@ MediaPlayer.rules.RulesController = function () {
                     continue;
                 }
 
-                rule.execute(streamType, periodId, callbackFunc, current);
+                rule.execute(rulesContext, callbackFunc);
             }
         },
 

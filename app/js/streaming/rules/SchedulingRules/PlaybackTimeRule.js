@@ -22,8 +22,10 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             scheduleController[periodId][scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
         },
 
-        execute: function(streamType, periodId, callback/*, current*/) {
-            var sc = scheduleController[periodId][streamType],
+        execute: function(context, callback) {
+            var streamType = context.getStreamType(),
+                periodId = context.getPeriodInfo().id,
+                sc = scheduleController[periodId][streamType],
                 representation = sc.streamProcessor.getCurrentRepresentation(),
                 st = seekTarget[periodId] ? seekTarget[periodId][streamType] : null,
                 p = st ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,

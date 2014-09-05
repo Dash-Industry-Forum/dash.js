@@ -105,7 +105,7 @@ MediaPlayer.dependencies.AbrController = function () {
             autoSwitchBitrate = value;
         },
 
-        getPlaybackQuality: function (type, periodId, data) {
+        getPlaybackQuality: function (type, representation, data) {
             var self = this,
                 quality,
                 oldQuality,
@@ -150,12 +150,12 @@ MediaPlayer.dependencies.AbrController = function () {
             //self.debug.log("Check ABR rules.");
 
             if (self.abrRulesCollection.downloadRatioRule) {
-                self.abrRulesCollection.downloadRatioRule.setData(data, periodId);
+                self.abrRulesCollection.downloadRatioRule.setData(data, representation.adaptation.period.id);
             }
 
             rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES);
 
-            self.rulesController.applyRules(rules, type, periodId, callback.bind(self), quality, function(currentValue, newValue) {
+            self.rulesController.applyRules(rules, type, representation, callback.bind(self), quality, function(currentValue, newValue) {
                 return Math.min(currentValue, newValue);
             });
         },

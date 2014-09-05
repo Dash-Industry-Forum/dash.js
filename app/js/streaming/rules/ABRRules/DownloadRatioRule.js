@@ -55,8 +55,11 @@ MediaPlayer.rules.DownloadRatioRule = function () {
             }
         },
 
-        execute: function (streamType, periodId, callback, current) {
+        execute: function (context, callback) {
             var self = this,
+                periodId = context.getPeriodInfo().id,
+                streamType = context.getStreamType(),
+                current = context.getCurrentValue,
                 data = adaptation[periodId][streamType],
                 metrics = self.metricsModel.getReadOnlyMetricsFor(streamType),
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),

@@ -27,8 +27,10 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
         manifestModel: undefined,
         metricsModel: undefined,
 
-        execute: function (streamType, periodId, callback, current) {
+        execute: function (context, callback) {
             var self = this,
+                streamType = context.getStreamType(),
+                current = context.getCurrentValue(),
                 metrics = this.metricsModel.getReadOnlyMetricsFor(streamType),
                 manifest = self.manifestModel.getValue(),
                 minBufferTime,
