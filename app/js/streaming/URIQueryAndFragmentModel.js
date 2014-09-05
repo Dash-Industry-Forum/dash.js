@@ -18,6 +18,7 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
         URIQueryData = [],
 
         parseURI = function (uri) {
+            if (!uri) return null;
 
             var URIFragmentData = [],
                 testQuery = new RegExp(/[?]/),
