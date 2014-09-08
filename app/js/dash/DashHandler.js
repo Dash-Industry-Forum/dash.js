@@ -522,17 +522,17 @@ Dash.dependencies.DashHandler = function () {
                 seg,
                 s,
                 range,
-                startIdx = 0,
-                endIdx = list.SegmentURL_asArray.length,
+                startIdx,
+                endIdx,
                 start;
 
             start = representation.startNumber;
 
             range = decideSegmentListRangeForTemplate.call(self, representation);
             startIdx = Math.max(range.start, 0);
-            endIdx = Math.min(range.end, list.SegmentURL_asArray.length);
+            endIdx = Math.min(range.end, list.SegmentURL_asArray.length - 1);
 
-            for (periodSegIdx = startIdx; periodSegIdx < endIdx; periodSegIdx += 1) {
+            for (periodSegIdx = startIdx; periodSegIdx <= endIdx; periodSegIdx += 1) {
                 s = list.SegmentURL_asArray[periodSegIdx];
 
                 seg = getIndexBasedSegment.call(
