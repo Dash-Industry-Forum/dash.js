@@ -312,7 +312,9 @@ MediaPlayer = function (aContext) {
                 throw "MediaPlayer not initialized!";
             }
 
+            this.uriQueryFragModel.reset();
             source = this.uriQueryFragModel.parseURI(url);
+
             this.setQualityFor('video', 0);
             this.setQualityFor('audio', 0);
 
