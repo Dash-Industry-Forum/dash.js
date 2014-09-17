@@ -554,7 +554,9 @@ MediaPlayer.dependencies.Stream = function () {
             //this.debug.log("Got seeking event.");
             var time = this.videoModel.getCurrentTime();
 
-            startBuffering(time);
+            updateBuffer.call(this).then(function () {
+                startBuffering(time);
+            });
         },
 
         onSeeked = function () {
@@ -583,13 +585,17 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         updateBuffer = function() {
+            var promises = [];
+
             if (videoController) {
-                videoController.updateBufferState();
+                promises.push(videoController.updateBufferState());
             }
 
             if (audioController) {
-               audioController.updateBufferState();
+               promises.push(audioController.updateBufferState());
             }
+
+            return Q.all(promises);
         },
 
         startBuffering = function(time) {
