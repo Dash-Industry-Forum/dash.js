@@ -32,16 +32,15 @@ MediaPlayer.dependencies.FragmentController = function () {
 
         getRequestsToLoad = function(current, callback) {
             var self =this,
-                st = fragmentModels[0].getContext().streamProcessor,
-                periodId = st.getPeriodInfo().id,
-                streamType = st.getType(),
-                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.SEGMENTS_TO_EXECUTE_RULES);
+                streamProcessor = fragmentModels[0].getContext().streamProcessor,
+                streamId = streamProcessor.getStreamInfo().id,
+                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_EXECUTE_RULES);
 
             if (rules.indexOf(this.scheduleRulesCollection.sameTimeRequestRule) !== -1) {
-                this.scheduleRulesCollection.sameTimeRequestRule.setFragmentModels(fragmentModels, periodId);
+                this.scheduleRulesCollection.sameTimeRequestRule.setFragmentModels(fragmentModels, streamId);
             }
 
-            self.rulesController.applyRules(rules, streamType, st.getCurrentRepresentation(), callback, current, function(currentValue, newValue) {
+            self.rulesController.applyRules(rules, streamProcessor, callback, current, function(currentValue, newValue) {
                 return newValue;
             });
         },
@@ -50,9 +49,9 @@ MediaPlayer.dependencies.FragmentController = function () {
             var self = this;
 
             if (self.isInitializationRequest(request)) {
-                self.notify(self.eventList.ENAME_INIT_SEGMENT_LOADING_START, sender, request);
+                self.notify(self.eventList.ENAME_INIT_FRAGMENT_LOADING_START, sender, request);
             }else {
-                self.notify(self.eventList.ENAME_MEDIA_SEGMENT_LOADING_START, sender, request);
+                self.notify(self.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START, sender, request);
             }
         },
 
@@ -61,14 +60,14 @@ MediaPlayer.dependencies.FragmentController = function () {
                 bytes = self.process(response);
 
             if (bytes === null) {
-                self.debug.log("No " + request.streamType + " bytes to push.");
+                self.debug.log("No " + request.mediaType + " bytes to push.");
                 return;
             }
 
             if (self.isInitializationRequest(request)) {
-                self.notify(self.eventList.ENAME_INIT_SEGMENT_LOADED, sender, bytes, request.quality);
+                self.notify(self.eventList.ENAME_INIT_FRAGMENT_LOADED, sender, bytes, request.quality);
             }else {
-                self.notify(self.eventList.ENAME_MEDIA_SEGMENT_LOADED, sender, bytes, request.quality, request.index);
+                self.notify(self.eventList.ENAME_MEDIA_FRAGMENT_LOADED, sender, bytes, request.quality, request.index);
             }
 
             executeRequests.call(this);
@@ -84,7 +83,7 @@ MediaPlayer.dependencies.FragmentController = function () {
 
         onGetRequests = function(result) {
             var reqsToExecute = result.value,
-                streamType,
+                mediaType,
                 r,
                 m,
                 i,
@@ -97,11 +96,11 @@ MediaPlayer.dependencies.FragmentController = function () {
 
                 for (j = 0; j < fragmentModels.length; j += 1) {
                     m = fragmentModels[j];
-                    streamType = m.getContext().streamProcessor.getType();
+                    mediaType = m.getContext().streamProcessor.getType();
 
-                    if (r.streamType !== streamType) continue;
+                    if (r.mediaType !== mediaType) continue;
 
-                    if (!(r instanceof MediaPlayer.vo.SegmentRequest)) {
+                    if (!(r instanceof MediaPlayer.vo.FragmentRequest)) {
                         r = m.getPendingRequestForTime(r.startTime);
                     }
 
@@ -131,10 +130,10 @@ MediaPlayer.dependencies.FragmentController = function () {
         unsubscribe: undefined,
         eventList: {
             ENAME_STREAM_COMPLETED: "streamCompleted",
-            ENAME_INIT_SEGMENT_LOADING_START: "initSegmentLoadingStart",
-            ENAME_MEDIA_SEGMENT_LOADING_START: "mediaSegmentLoadingStart",
-            ENAME_INIT_SEGMENT_LOADED: "initSegmentLoaded",
-            ENAME_MEDIA_SEGMENT_LOADED: "mediaSegmentLoaded"
+            ENAME_INIT_FRAGMENT_LOADING_START: "initFragmentLoadingStart",
+            ENAME_MEDIA_FRAGMENT_LOADING_START: "mediaFragmentLoadingStart",
+            ENAME_INIT_FRAGMENT_LOADED: "initFragmentLoaded",
+            ENAME_MEDIA_FRAGMENT_LOADED: "mediaFragmentLoaded"
         },
 
         setup: function() {
@@ -211,7 +210,7 @@ MediaPlayer.dependencies.FragmentController = function () {
         },
 
 		isInitializationRequest: function(request){
-			return (request && request.type && request.type.toLowerCase() === "initialization segment");
+			return (request && request.type && request.type.toLowerCase().indexOf("initialization") !== -1);
 		},
 
         getLoadingTime: function(context) {

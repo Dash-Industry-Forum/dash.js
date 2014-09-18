@@ -49,7 +49,11 @@
     <script src="app/js/streaming/Debug.js"></script>
     <script src="app/js/streaming/TokenAuthentication.js"></script>
     <script src="app/js/streaming/VideoModel.js"></script>
-    <script src="app/js/streaming/vo/SegmentRequest.js"></script>
+    <script src="app/js/streaming/vo/FragmentRequest.js"></script>
+    <script src="app/js/streaming/vo/TrackInfo.js"></script>
+    <script src="app/js/streaming/vo/MediaInfo.js"></script>
+    <script src="app/js/streaming/vo/StreamInfo.js"></script>
+    <script src="app/js/streaming/vo/ManifestInfo.js"></script>
     <script src="app/js/streaming/ManifestLoader.js"></script>
     <script src="app/js/streaming/ManifestUpdater.js"></script>
     <script src="app/js/streaming/ManifestModel.js"></script>
@@ -128,6 +132,7 @@
     <script src="app/js/dash/DashManifestExtensions.js"></script>
     <script src="app/js/dash/DashMetricsExtensions.js"></script>
     <script src="app/js/dash/TimelineConverter.js"></script>
+    <script src="app/js/dash/DashAdapter.js"></script>
 
     <!-- App -->
     <script src="app/metrics.js"></script>
@@ -342,24 +347,24 @@
                                         <div class="manifest-info-content" header="Client time offset (delta)"><span class="text-success">{{info.clientTimeOffset}}</span><span class="text-warning"> {{info.clientTimeOffsetDelta}}</span></div><br/>
                                         <div class="manifest-info-content" header="Current time (delta)"><span class="text-success">{{info.currentTime}}</span><span class="text-warning"> {{info.currentTimeDelta}}</span></div><br/>
                                         <div class="manifest-info-content" header="Latency (delta)"><span class="text-success">{{info.latency}}</span><span class="text-warning"> {{info.latencyDelta}}</span></div><br/>
-                                        <div class="repeat-container" ng-repeat="period in info.periodInfo">
-                                            <div class="manifest-info-content" header="Period"><span class="text-success">{{period.index}}</span></div><br/>
-                                            <div class="manifest-info-content manifest-nested-info" header="Id"><span class="text-success">{{period.id}}</span></div><br/>
-                                            <div class="manifest-info-content manifest-nested-info" header="Start"><span class="text-success">{{period.start}}</span><span class="text-warning"> {{period.startDelta}}</span></div><br/>
-                                            <div class="manifest-info-content manifest-nested-info" header="Duration"><span class="text-success">{{period.duration}}</span><span class="text-warning"> {{period.durationDelta}}</span></div><br/>
+                                        <div class="repeat-container" ng-repeat="stream in info.streamInfo">
+                                            <div class="manifest-info-content" header="Period"><span class="text-success">{{stream.index}}</span></div><br/>
+                                            <div class="manifest-info-content manifest-nested-info" header="Id"><span class="text-success">{{stream.id}}</span></div><br/>
+                                            <div class="manifest-info-content manifest-nested-info" header="Start"><span class="text-success">{{stream.start}}</span><span class="text-warning"> {{stream.startDelta}}</span></div><br/>
+                                            <div class="manifest-info-content manifest-nested-info" header="Duration"><span class="text-success">{{stream.duration}}</span><span class="text-warning"> {{stream.durationDelta}}</span></div><br/>
                                             <div class="repeat-container" ng-repeat="range in info.buffered">
                                                 <div class="manifest-info-content" header="Buffered"><span class="text-success"></span></div><br/>
                                                 <div class="manifest-info-content manifest-nested-info" header="Start"><span class="text-success">{{range.start}}</span></div><br/>
                                                 <div class="manifest-info-content manifest-nested-info" header="End"><span class="text-success">{{range.end}}</span></div><br/>
                                                 <div class="manifest-info-content manifest-nested-info" header="Size"><span class="text-success">{{range.size}}</span></div><br/>
                                             </div>
-                                            <div class="repeat-container" ng-repeat="representation in info.representationInfo" ng-show="representation.periodIndex == period.index">
-                                                <div class="manifest-info-content" header="Representation"><span class="text-success">{{representation.index}}</span></div><br/>
-                                                <div class="manifest-info-content manifest-nested-info" header="Id"><span class="text-success">{{representation.id}}</span></div><br/>
-                                                <div class="manifest-info-content manifest-nested-info" header="Stream type"><span class="text-success">{{representation.streamType}}</span></div><br/>
-                                                <div class="manifest-info-content manifest-nested-info" header="Presentation time offset"><span class="text-success">{{representation.presentationTimeOffset}}</span><span class="text-warning"> {{representation.presentationTimeOffsetDelta}}</span></div><br/>
-                                                <div class="manifest-info-content manifest-nested-info" header="Start number"><span class="text-success">{{representation.startNumber}}</span><span class="text-warning"> {{representation.startNumberDelta}}</span></div><br/>
-                                                <div class="manifest-info-content manifest-nested-info" header="Segment info type"><span class="text-success">{{representation.segmentInfoType}}</span></div><br/>
+                                            <div class="repeat-container" ng-repeat="track in info.trackInfo" ng-show="track.streamIndex == stream.index">
+                                                <div class="manifest-info-content" header="Representation"><span class="text-success">{{track.index}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Id"><span class="text-success">{{track.id}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Stream type"><span class="text-success">{{track.mediaType}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Presentation time offset"><span class="text-success">{{track.presentationTimeOffset}}</span><span class="text-warning"> {{track.presentationTimeOffsetDelta}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Start number"><span class="text-success">{{track.startNumber}}</span><span class="text-warning"> {{track.startNumberDelta}}</span></div><br/>
+                                                <div class="manifest-info-content manifest-nested-info" header="Segment info type"><span class="text-success">{{track.fragmentInfoType}}</span></div><br/>
                                             </div>
                                         </div>
                                     </div>

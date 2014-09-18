@@ -86,6 +86,16 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return (type === "text/vtt" || type === "application/ttml+xml");
     },
 
+    getLanguageForData: function(adaptation) {
+        var lang = "";
+
+        if (adaptation.hasOwnProperty("lang")) {
+            lang = adaptation.lang;
+        }
+
+        return lang;
+    },
+
     getIsMain: function (/*adaptation*/) {
         "use strict";
         // TODO : Check "Role" node.
@@ -291,7 +301,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             representation,
             initialization,
             segmentInfo,
-            r;
+            r,
+            s;
 
         for (var i = 0; i < a.Representation_asArray.length; i += 1) {
             r = a.Representation_asArray[i];
@@ -317,6 +328,10 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
                 if (segmentInfo.hasOwnProperty("SegmentTimeline")) {
                     representation.segmentInfoType = "SegmentTimeline";
+                    s = segmentInfo.SegmentTimeline.S_asArray[segmentInfo.SegmentTimeline.S_asArray.length -1];
+                    if (!s.hasOwnProperty("r") || s.r >= 0) {
+                        representation.useCalculatedLiveEdgeTime = true;
+                    }
                 } else {
                     representation.segmentInfoType = "SegmentTemplate";
                 }
@@ -374,12 +389,20 @@ Dash.dependencies.DashManifestExtensions.prototype = {
     getAdaptationsForPeriod: function(manifest, period) {
         var p = manifest.Period_asArray[period.index],
             adaptations = [],
-            adaptationSet;
+            adaptationSet,
+            a;
 
         for (var i = 0; i < p.AdaptationSet_asArray.length; i += 1) {
+            a = p.AdaptationSet_asArray[i];
             adaptationSet = new Dash.vo.AdaptationSet();
+
+            if (a.hasOwnProperty("id")) {
+                adaptationSet.id = a.id;
+            }
+
             adaptationSet.index = i;
             adaptationSet.period = period;
+            adaptationSet.type = this.getIsAudio(a) ? "audio" : (this.getIsVideo(a) ? "video" : "text");
             adaptations.push(adaptationSet);
         }
 
@@ -477,7 +500,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         if (manifest.hasOwnProperty("availabilityStartTime")) {
             mpd.availabilityStartTime = new Date(manifest.availabilityStartTime.getTime());
         } else {
-            mpd.availabilityStartTime = new Date(manifest.mpdLoadedTime.getTime());
+            mpd.availabilityStartTime = new Date(manifest.loadedTime.getTime());
         }
 
         if (manifest.hasOwnProperty("availabilityEndTime")) {
@@ -504,7 +527,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         // TODO The client typically should not use the time at which it actually successfully received the MPD, but should
         // take into account delay due to MPD delivery and processing. The fetch is considered successful fetching
         // either if the client obtains an updated MPD or the client verifies that the MPD has not been updated since the previous fetching.
-        var fetchTime = this.timelineConverter.calcPresentationTimeFromWallTime(manifest.mpdLoadedTime, period);
+        var fetchTime = this.timelineConverter.calcPresentationTimeFromWallTime(manifest.loadedTime, period);
 
         return fetchTime;
     },
@@ -590,10 +613,11 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return events;
     },
 
-    getEventStreamForAdaptationSet : function (data) {
+    getEventStreamForAdaptationSet : function (manifest, adaptation) {
 
         var eventStreams = [],
-            inbandStreams = data.InbandEventStream_asArray;
+            inbandStreams = manifest.Period_asArray[adaptation.period.index].
+                AdaptationSet_asArray[adaptation.index].InbandEventStream_asArray;
 
         if(inbandStreams) {
             for(var i = 0; i < inbandStreams.length ; i += 1 ) {
@@ -617,10 +641,11 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return eventStreams;
     },
 
-    getEventStreamForRepresentation : function (data,representation) {
+    getEventStreamForRepresentation : function (manifest, representation) {
 
         var eventStreams = [],
-            inbandStreams = data.Representation_asArray[representation.index].InbandEventStream_asArray;
+            inbandStreams = manifest.Period_asArray[representation.adaptation.period.index].
+                AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].InbandEventStream_asArray;
 
         if(inbandStreams) {
             for(var i = 0; i < inbandStreams.length ; i++ ) {

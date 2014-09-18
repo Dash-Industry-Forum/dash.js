@@ -24,33 +24,21 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
 
     return {
         debug: undefined,
-        manifestModel: undefined,
         metricsModel: undefined,
 
         execute: function (context, callback) {
             var self = this,
-                streamType = context.getStreamType(),
+                mediaType = context.getMediaInfo().type,
                 current = context.getCurrentValue(),
-                metrics = this.metricsModel.getReadOnlyMetricsFor(streamType),
-                manifest = self.manifestModel.getValue(),
-                minBufferTime,
-                maxSegmentDuration = Number.POSITIVE_INFINITY,
+                metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
+                manifestInfo = context.getManifestInfo(),
                 lastIdx = metrics.RepSwitchList.length - 1,
                 rs = metrics.RepSwitchList[lastIdx],
                 now = new Date().getTime(),
                 delay;
 
             //self.debug.log("Checking limit switches rule...");
-
-            if (manifest) {
-                minBufferTime = manifest.minBufferTime;
-
-                if (manifest.hasOwnProperty("maxSegmentDuration")) {
-                    maxSegmentDuration = manifest.maxSegmentDuration;
-                }
-
-                qualitySwitchThreshold = Math.min(minBufferTime, maxSegmentDuration) * 1000;
-            }
+            qualitySwitchThreshold = Math.min(manifestInfo.minBufferTime, manifestInfo.maxFragmentDuration) * 1000;
 
             delay = now - lastCheckTime;
 

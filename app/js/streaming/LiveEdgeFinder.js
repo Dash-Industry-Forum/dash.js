@@ -18,13 +18,12 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
         onStreamUpdated = function(/*sender*/) {
             if (!this.streamProcessor.isDynamic() || isSearchStarted) return;
 
-            var self =this,
-                streamType = this.streamProcessor.getType();
+            var self = this;
 
             rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.LIVE_EDGE_RULES);
             isSearchStarted = true;
 
-            this.rulesController.applyRules(rules, streamType, this.streamProcessor.getCurrentRepresentation(), onSearchCompleted.bind(self), null, function(currentValue, newValue) {
+            this.rulesController.applyRules(rules, self.streamProcessor, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
                 return newValue;
             });
         };

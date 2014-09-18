@@ -10,7 +10,7 @@
 
             mpd.type = type;
             mpd.minimumUpdatePeriod = 10;
-            mpd.mpdLoadedTime = specHelper.getUnixTime();
+            mpd.loadedTime = specHelper.getUnixTime();
             mpd.Period_asArray = [composePeriod()];
 
             return mpd;

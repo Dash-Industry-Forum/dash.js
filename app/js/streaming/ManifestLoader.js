@@ -34,7 +34,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
             var baseUrl = parseBaseUrl(url),
                 request = new XMLHttpRequest(),
                 requestTime = new Date(),
-                mpdLoadedTime = null,
+                loadedTime = null,
                 needFailureReport = true,
                 manifest,
                 onload = null,
@@ -48,7 +48,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                   return;
                 }
                 needFailureReport = false;
-                mpdLoadedTime = new Date();
+                loadedTime = new Date();
 
                 self.tokenAuthentication.checkRequestHeaderForToken(request);
                 self.metricsModel.addHttpRequest("stream",
@@ -58,7 +58,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  null,
                                                  null,
                                                  requestTime,
-                                                 mpdLoadedTime,
+                                                 loadedTime,
                                                  request.status,
                                                  null,
                                                  null);
@@ -66,9 +66,9 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 manifest = self.parser.parse(request.responseText, baseUrl);
 
                 if (manifest) {
-                    manifest.mpdUrl = url;
-                    manifest.mpdLoadedTime = mpdLoadedTime;
-                    self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, mpdLoadedTime, manifest.availabilityStartTime);
+                    manifest.url = url;
+                    manifest.loadedTime = loadedTime;
+                    self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, loadedTime, manifest.availabilityStartTime);
                     self.notify(self.eventList.ENAME_MANIFEST_LOADED, manifest);
                 } else {
                     self.notify(self.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url));

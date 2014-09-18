@@ -3,11 +3,57 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
     var WALLCLOCK_TIME_UPDATE_INTERVAL = 1000,
         currentTime = 0,
+        liveStartTime = NaN,
         wallclockTimeIntervalId,
-        period,
+        streamInfo,
         videoModel,
-        representation,
+        trackInfo,
         isDynamic,
+
+        getStreamStartTime = function (streamInfo) {
+            var presentationStartTime,
+                startTimeOffset = parseInt(this.uriQueryFragModel.getURIFragmentData.s);
+
+            if (isDynamic) {
+
+                if (!isNaN(startTimeOffset) && startTimeOffset > 1262304000) {
+
+                    presentationStartTime = startTimeOffset - (streamInfo.manifestInfo.availableFrom.getTime()/1000);
+
+                    if (presentationStartTime > liveStartTime ||
+                        presentationStartTime < (liveStartTime - streamInfo.manifestInfo.DVRWindowSize)) {
+
+                        presentationStartTime = null;
+                    }
+                }
+                presentationStartTime = presentationStartTime || liveStartTime;
+
+            } else {
+                if (!isNaN(startTimeOffset) && startTimeOffset < streamInfo.duration && startTimeOffset >= 0) {
+                    presentationStartTime = startTimeOffset;
+                }else{
+                    presentationStartTime = streamInfo.start;
+                }
+            }
+
+            return presentationStartTime;
+        },
+
+        getActualPresentationTime = function() {
+            var self = this,
+                currentTime = self.getTime(),
+                metrics = self.metricsModel.getMetricsFor(trackInfo.mediaInfo.type),
+                DVRWindow = self.metricsExt.getCurrentDVRInfo(metrics).range,
+                actualTime;
+
+            if ((currentTime >= DVRWindow.start) && (currentTime <= DVRWindow.end)) {
+                return currentTime;
+            }
+
+            actualTime = Math.max(DVRWindow.end - streamInfo.manifestInfo.minBufferTime * 2, DVRWindow.start);
+
+            return actualTime;
+        },
 
         startUpdatingWallclockTime = function() {
             var self = this,
@@ -28,7 +74,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         initialStart = function() {
-            var initialSeekTime = this.timelineConverter.calcPresentationStartTime(period);
+            var initialSeekTime = getStreamStartTime.call(this, streamInfo);
             this.debug.log("Starting playback at offset: " + initialSeekTime);
             this.seek(initialSeekTime);
         },
@@ -37,7 +83,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (this.isPaused()) return;
 
             var currentTime = this.getTime(),
-                actualTime = this.timelineConverter.calcActualPresentationTime(representation, currentTime, isDynamic),
+                actualTime = getActualPresentationTime.call(this),
                 timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
 
             if (timeChanged) {
@@ -45,9 +91,9 @@ MediaPlayer.dependencies.PlaybackController = function () {
             }
         },
 
-        onDataUpdateCompleted = function(sender, data, representationValue) {
-            representation = representationValue;
-            period = representation.adaptation.period;
+        onDataUpdateCompleted = function(sender, mediaData, TrackData) {
+            trackInfo = this.adapter.convertDataToTrack(TrackData);
+            streamInfo = trackInfo.mediaInfo.streamInfo;
             isDynamic = sender.streamProcessor.isDynamic();
             updateCurrentTime.call(this);
         },
@@ -99,7 +145,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (time === currentTime) return;
 
             currentTime = time;
-            this.notify(this.eventList.ENAME_PLAYBACK_TIME_UPDATED, this.getTimeToPeriodEnd());
+            this.notify(this.eventList.ENAME_PLAYBACK_TIME_UPDATED, this.getTimeToStreamEnd());
         },
 
         onPlaybackProgress = function() {
@@ -111,7 +157,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (ranges.length) {
                 lastRange = ranges.length -1;
                 bufferEndTime = ranges.end(lastRange);
-                remainingUnbufferedDuration = this.timelineConverter.calcPresentationStartTime(period) + period.duration - bufferEndTime;
+                remainingUnbufferedDuration = getStreamStartTime.call(this, streamInfo) + streamInfo.duration - bufferEndTime;
             }
 
             this.notify(this.eventList.ENAME_PLAYBACK_PROGRESS, videoModel.getElement().buffered, remainingUnbufferedDuration);
@@ -124,7 +170,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         onPlaybackMetaDataLoaded = function() {
             this.debug.log("Got loadmetadata event.");
 
-            if (!isDynamic || period.mpd.isClientServerTimeSyncCompleted) {
+            if (!isDynamic || this.timelineConverter.isTimeSyncCompleted()) {
                 initialStart.call(this);
             }
 
@@ -157,9 +203,14 @@ MediaPlayer.dependencies.PlaybackController = function () {
     return {
         debug: undefined,
         timelineConverter: undefined,
+        uriQueryFragModel: undefined,
+        metricsModel: undefined,
+        metricsExt: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        adapter: undefined,
+
         eventList: {
             ENAME_PLAYBACK_STARTED: "playbackStarted",
             ENAME_PLAYBACK_STOPPED: "playbackStopped",
@@ -188,8 +239,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
             onPlaybackMetaDataLoaded = onPlaybackMetaDataLoaded.bind(this);
         },
 
-        initialize: function(periodInfo, model) {
-            period = periodInfo;
+        initialize: function(streamInfoValue, model) {
+            streamInfo = streamInfoValue;
 
             if (videoModel === model) return;
 
@@ -197,18 +248,18 @@ MediaPlayer.dependencies.PlaybackController = function () {
             setupVideoModel.call(this, model);
         },
 
-        getTimeToPeriodEnd: function() {
+        getTimeToStreamEnd: function() {
             var currentTime = videoModel.getCurrentTime();
 
-            return ((this.timelineConverter.calcPresentationStartTime(period) + period.duration) - currentTime);
+            return ((getStreamStartTime.call(this, streamInfo) + streamInfo.duration) - currentTime);
         },
 
-        getPeriodId: function() {
-            return period.id;
+        getStreamId: function() {
+            return streamInfo.id;
         },
 
-        getPeriodDuration: function() {
-            return period.duration;
+        getStreamDuration: function() {
+            return streamInfo.duration;
         },
 
         getTime: function() {
@@ -217,6 +268,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         getPlaybackRate: function() {
             return videoModel.getPlaybackRate();
+        },
+
+        setLiveStartTime: function(value) {
+            liveStartTime = value;
         },
 
         start: function() {
@@ -247,8 +302,9 @@ MediaPlayer.dependencies.PlaybackController = function () {
             stopUpdatingWallclockTime.call(this);
             removeAllListeners.call(this);
             videoModel = null;
-            period = null;
+            streamInfo = null;
             currentTime = 0;
+            liveStartTime = NaN;
         }
     };
 };

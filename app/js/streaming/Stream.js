@@ -16,8 +16,7 @@ MediaPlayer.dependencies.Stream = function () {
 
     var manifest,
         mediaSource,
-        codecs = {},
-        contentProtection = null,
+        mediaInfos = {},
         streamProcessors = [],
         autoPlay = true,
         initialized = false,
@@ -26,7 +25,7 @@ MediaPlayer.dependencies.Stream = function () {
         kid = null,
         initData = [],
         updating = true,
-        periodInfo = null,
+        streamInfo = null,
 
         needKeyListener,
         keyMessageListener,
@@ -67,7 +66,8 @@ MediaPlayer.dependencies.Stream = function () {
 
         onMediaSourceNeedsKey = function (event) {
             var self = this,
-                videoCodec = codecs.video,
+                mediaInfo = mediaInfos.video,
+                videoCodec = mediaInfos ? mediaInfos.video.codec : null,
                 type;
 
             type = (event.type !== "msneedkey") ? event.type : videoCodec;
@@ -76,10 +76,10 @@ MediaPlayer.dependencies.Stream = function () {
             this.debug.log("DRM: Key required for - " + type);
             //this.debug.log("DRM: Generating key request...");
             //this.protectionModel.generateKeyRequest(DEFAULT_KEY_TYPE, event.initData);
-            if (!!contentProtection && !!videoCodec && !kid) {
+            if (mediaInfo && !!videoCodec && !kid) {
                 try
                 {
-                    kid = self.protectionController.selectKeySystem(videoCodec, contentProtection);
+                    kid = self.protectionController.selectKeySystem(mediaInfo);
                 }
                 catch (error)
                 {
@@ -203,58 +203,53 @@ MediaPlayer.dependencies.Stream = function () {
 
             kid = null;
             initData = [];
-            contentProtection = null;
 
-            codecs = {};
+            mediaInfos = {};
 
             mediaSource = null;
             manifest = null;
         },
 
-        initializeMediaForType = function(type, manifest, periodIndex) {
+        initializeMediaForType = function(type, manifest) {
             var self = this,
                 mimeType,
                 codec,
-                getCodecOrMimeType = function(mediaData) {
-                    return self.manifestExt.getCodec(mediaData);
+                getCodecOrMimeType = function(mediaInfo) {
+                    return mediaInfo.codec;
                 },
                 processor,
-                mediaData;
+                mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, type);
 
             if (type === "text") {
-                getCodecOrMimeType = function(mediaData) {
-                    mimeType = self.manifestExt.getMimeType(mediaData);
+                getCodecOrMimeType = function(mediaInfo) {
+                    mimeType = mediaInfo.mimeType;
 
                     return mimeType;
                 };
             }
 
-            mediaData = self.manifestExt.getDataForType(manifest, periodIndex, type);
-
-            if (mediaData !== null) {
+            if (mediaInfo !== null) {
                 //self.debug.log("Create " + type + " buffer.");
-                var codecOrMime = getCodecOrMimeType.call(self, mediaData),
+                var codecOrMime = getCodecOrMimeType.call(self, mediaInfo),
                     contentProtectionData,
                     buffer = null;
 
                 if (codecOrMime === mimeType) {
                     try{
-                        buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mimeType);
+                        buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
                     } catch (e) {
                         self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
                     }
                 } else {
                     codec = codecOrMime;
                     self.debug.log(type + " codec: " + codec);
-                    codecs[type] = codec;
+                    mediaInfos[type] = mediaInfo;
 
-                    contentProtectionData = self.manifestExt.getContentProtectionData(mediaData);
+                    contentProtectionData = mediaInfo.contentProtection;
 
                     if (!!contentProtectionData && !self.capabilities.supportsMediaKeys()) {
                         self.errHandler.capabilityError("mediakeys");
                     } else {
-                        contentProtection = contentProtectionData;
-
                         //kid = self.protectionController.selectKeySystem(codec, contentProtection);
                         //self.protectionController.ensureKeySession(kid, codec, null);
 
@@ -264,7 +259,7 @@ MediaPlayer.dependencies.Stream = function () {
                             self.debug.log(msg);
                         } else {
                             try {
-                                buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, codec);
+                                buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
                             } catch (e) {
                                 self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
                             }
@@ -280,7 +275,9 @@ MediaPlayer.dependencies.Stream = function () {
 
                     processor = self.system.getObject("streamProcessor");
                     streamProcessors.push(processor);
-                    processor.initialize(mimeType || type, buffer, self.videoModel, self.fragmentController, self.playbackController, mediaSource, mediaData, periodInfo, self, eventController);
+                    processor.initialize(mimeType || type, buffer, self.videoModel, self.fragmentController, self.playbackController, mediaSource, self, eventController);
+                    processor.setMediaInfo(mediaInfo);
+                    self.adapter.updateData(processor);
                     //self.debug.log(type + " is ready!");
                 }
 
@@ -298,14 +295,14 @@ MediaPlayer.dependencies.Stream = function () {
 
             eventController = self.system.getObject("eventController");
             eventController.initialize(self.videoModel);
-            events = self.manifestExt.getEventsForPeriod(manifest,periodInfo);
+            events = self.adapter.getEventsFor(streamInfo);
             eventController.addInlineEvents(events);
             // Figure out some bits about the stream before building anything.
             //self.debug.log("Gathering information for buffers. (1)");
 
-            initializeMediaForType.call(self, "video", manifest, periodInfo.index);
-            initializeMediaForType.call(self, "audio", manifest, periodInfo.index);
-            initializeMediaForType.call(self, "text", manifest, periodInfo.index);
+            initializeMediaForType.call(self, "video", manifest);
+            initializeMediaForType.call(self, "audio", manifest);
+            initializeMediaForType.call(self, "text", manifest);
 
             if (streamProcessors.length === 0) {
                 var msg = "No streams to play.";
@@ -325,7 +322,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             //self.debug.log("Getting ready for playback...");
 
-            manifestDuration = self.manifestExt.getDuration(self.manifestModel.getValue(), periodInfo);
+            manifestDuration = streamInfo.manifestInfo.duration;
             mediaDuration = self.mediaSourceExt.setDuration(mediaSource, manifestDuration);
             self.debug.log("Duration successfully set to: " + mediaDuration);
             initialized = true;
@@ -341,8 +338,8 @@ MediaPlayer.dependencies.Stream = function () {
         startAutoPlay = function() {
             if (!initialized || !loaded) return;
 
-            // only first period stream must be played automatically during playback initialization
-            if (periodInfo.index === 0) {
+            // only first stream must be played automatically during playback initialization
+            if (streamInfo.index === 0) {
                 eventController.start();
                 if (autoPlay) {
                     play.call(this);
@@ -438,7 +435,7 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
-        onDataUpdateCompleted = function(/*sender, data, representation*/) {
+        onDataUpdateCompleted = function(/*sender, mediaData, trackData*/) {
             checkIfInitializationCompleted.call(this);
         },
 
@@ -469,38 +466,29 @@ MediaPlayer.dependencies.Stream = function () {
             return arr;
         },
 
-        updateData = function (updatedPeriodInfo) {
+        updateData = function (updatedStreamInfo) {
             var self = this,
                 ln = streamProcessors.length,
                 i = 0,
-                idx,
-                oldData,
-                newData,
+                mediaInfo,
                 events,
                 processor;
 
             updating = true;
             manifest = self.manifestModel.getValue();
-            periodInfo = updatedPeriodInfo;
+            streamInfo = updatedStreamInfo;
             self.debug.log("Manifest updated... set new data on buffers.");
 
             if (eventController) {
-                events = self.manifestExt.getEventsForPeriod(manifest,periodInfo);
+                events = self.adapter.getEventsFor(streamInfo);
                 eventController.addInlineEvents(events);
             }
 
             for (i; i < ln; i +=1) {
                 processor = streamProcessors[i];
-                oldData = processor.getData();
-                idx = processor.getDataIndex();
-
-                if (!!oldData && oldData.hasOwnProperty("id")) {
-                    newData = self.manifestExt.getDataForId(oldData.id, manifest, periodInfo.index);
-                } else {
-                    newData = self.manifestExt.getDataForIndex(idx, manifest, periodInfo.index);
-                }
-
-                processor.updateData(newData, periodInfo);
+                mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, processor.getType());
+                processor.setMediaInfo(mediaInfo);
+                this.adapter.updateData(processor);
             }
         };
 
@@ -509,7 +497,7 @@ MediaPlayer.dependencies.Stream = function () {
         manifestModel: undefined,
         mediaSourceExt: undefined,
         sourceBufferExt: undefined,
-        manifestExt: undefined,
+        adapter: undefined,
         fragmentController: undefined,
         playbackController: undefined,
         protectionModel: undefined,
@@ -518,7 +506,6 @@ MediaPlayer.dependencies.Stream = function () {
         capabilities: undefined,
         debug: undefined,
         errHandler: undefined,
-        timelineConverter: undefined,
         liveEdgeFinder: undefined,
         abrController: undefined,
         notify: undefined,
@@ -568,11 +555,6 @@ MediaPlayer.dependencies.Stream = function () {
             return this.videoModel;
         },
 
-        getManifestExt: function () {
-            var self = this;
-            return self.manifestExt;
-        },
-
         setAutoPlay: function (value) {
             autoPlay = value;
         },
@@ -610,27 +592,27 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         getDuration: function () {
-            return periodInfo.duration;
+            return streamInfo.duration;
         },
 
         getStartTime: function() {
-            return periodInfo.start;
+            return streamInfo.start;
         },
 
-        getPeriodIndex: function() {
-            return periodInfo.index;
+        getStreamIndex: function() {
+            return streamInfo.index;
         },
 
         getId: function() {
-            return periodInfo.id;
+            return streamInfo.id;
         },
 
-        setPeriodInfo: function(period) {
-            periodInfo = period;
+        setStreamInfo: function(stream) {
+            streamInfo = stream;
         },
 
-        getPeriodInfo: function() {
-            return periodInfo;
+        getStreamInfo: function() {
+            return streamInfo;
         },
         startEventController: function() {
             eventController.start();
@@ -641,7 +623,7 @@ MediaPlayer.dependencies.Stream = function () {
 
         setPlaybackController: function(value) {
             this.playbackController = value;
-            value.initialize(periodInfo, this.videoModel);
+            value.initialize(streamInfo, this.videoModel);
         },
 
         getPlaybackController: function() {

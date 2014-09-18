@@ -18,7 +18,7 @@ MediaPlayer.dependencies.TextController = function () {
          buffer,
          type,
 
-         onDataUpdateCompleted = function(/*sender ,data, newRepresentation*/) {
+         onDataUpdateCompleted = function(/*sender ,data, trackData*/) {
              if (!initialized) {
                  if (buffer.hasOwnProperty('initialize')) {
                      buffer.initialize(type, this);
@@ -28,7 +28,7 @@ MediaPlayer.dependencies.TextController = function () {
              this.notify(this.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, 0);
          },
 
-         onInitSegmentLoaded = function (sender, model, bytes/*, quality*/) {
+         onInitFragmentLoaded = function (sender, model, bytes/*, quality*/) {
              var self = this;
 
              if (model !== self.streamProcessor.getFragmentModel()) return;
@@ -52,7 +52,7 @@ MediaPlayer.dependencies.TextController = function () {
 
         setup: function() {
             this.dataUpdateCompleted = onDataUpdateCompleted;
-            this.initSegmentLoaded = onInitSegmentLoaded;
+            this.initFragmentLoaded = onInitFragmentLoaded;
         },
 
         initialize: function (typeValue, buffer, source, streamProcessor) {
@@ -62,7 +62,7 @@ MediaPlayer.dependencies.TextController = function () {
             self.setBuffer(buffer);
             self.setMediaSource(source);
             self.videoModel = streamProcessor.videoModel;
-            self.representationController = streamProcessor.representationController;
+            self.trackController = streamProcessor.trackController;
             self.streamProcessor = streamProcessor;
         },
 

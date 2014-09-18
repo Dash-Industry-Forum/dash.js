@@ -23,7 +23,7 @@
                 getType: function() {
                     return type;
                 },
-                getCurrentRepresentation: function() {
+                getCurrentTrack: function() {
                     return {};
                 }
             }
@@ -44,8 +44,8 @@
             return createObject("abrController");
         },
 
-        getRepresentationController: function(type) {
-            var ctrl = createObject("representationController");
+        getTrackController: function(type) {
+            var ctrl = createObject("trackController");
             ctrl.streamProcessor = getDummyStreamProcessor(type);
 
             return ctrl;

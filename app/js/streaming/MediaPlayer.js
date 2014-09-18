@@ -110,7 +110,7 @@ MediaPlayer = function (aContext) {
         },
 
         getDVRWindowSize = function() {
-            return getDVRInfoMetric.call(this).mpd.timeShiftBufferDepth;
+            return getDVRInfoMetric.call(this).manifestInfo.DVRWindowSize;
         },
 
         getDVRSeekOffset = function (value) {
@@ -145,35 +145,35 @@ MediaPlayer = function (aContext) {
 
             range = metric.range.end - metric.range.start;
 
-            return Math.round(range < metric.mpd.timeShiftBufferDepth ? range : metric.mpd.timeShiftBufferDepth);
+            return Math.round(range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize);
         },
 
         timeAsUTC = function () {
             var metric = getDVRInfoMetric.call(this),
-                availabilityStartTime,
+                availableFrom,
                 currentUTCTime;
 
             if (metric === null){
                 return 0;
             }
 
-            availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000;
-            currentUTCTime = this.time() + (availabilityStartTime + metric.range.start);
+            availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
+            currentUTCTime = this.time() + (availableFrom + metric.range.start);
 
             return Math.round(currentUTCTime);
         },
 
         durationAsUTC = function () {
             var metric = getDVRInfoMetric.call(this),
-                availabilityStartTime,
+                availableFrom,
                 currentUTCDuration;
 
             if (metric === null){
                 return 0;
             }
 
-            availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000;
-            currentUTCDuration = (availabilityStartTime + metric.range.start) + this.duration();
+            availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
+            currentUTCDuration = (availableFrom + metric.range.start) + this.duration();
 
             return Math.round(currentUTCDuration);
         },

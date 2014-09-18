@@ -29,7 +29,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 xhrs.push(req);
                 request.requestStartDate = new Date();
 
-                httpRequestMetrics = self.metricsModel.addHttpRequest(request.streamType,
+                httpRequestMetrics = self.metricsModel.addHttpRequest(request.mediaType,
                                                                       null,
                                                                       request.type,
                                                                       request.url,
@@ -96,7 +96,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime());
                     download = (request.requestEndDate.getTime() - request.firstByteDate.getTime());
 
-                    self.debug.log("loaded " + request.streamType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
+                    self.debug.log("loaded " + request.mediaType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
 
                     httpRequestMetrics.tresponse = request.firstByteDate;
                     httpRequestMetrics.tfinish = request.requestEndDate;
@@ -137,7 +137,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime());
                     download = (request.requestEndDate.getTime() - request.firstByteDate.getTime());
 
-                    self.debug.log("failed " + request.streamType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
+                    self.debug.log("failed " + request.mediaType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
 
                     httpRequestMetrics.tresponse = request.firstByteDate;
                     httpRequestMetrics.tfinish = request.requestEndDate;
@@ -151,15 +151,15 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
 
                     if (remainingAttempts > 0) {
-                        self.debug.log("Failed loading segment: " + request.streamType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                        self.debug.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
                         remainingAttempts--;
                         setTimeout(function() {
                             doLoad.call(self, request, remainingAttempts);
                         }, RETRY_INTERVAL);
                     } else {
-                        self.debug.log("Failed loading segment: " + request.streamType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
+                        self.debug.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
                         self.errHandler.downloadError("content", request.url, req);
-                        self.notify(self.eventList.ENAME_LOADING_COMPLETED, request, null, new Error("failed loading segment"));
+                        self.notify(self.eventList.ENAME_LOADING_COMPLETED, request, null, new Error("failed loading fragment"));
                     }
                 };
 

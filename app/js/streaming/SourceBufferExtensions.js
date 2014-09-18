@@ -14,7 +14,6 @@
 MediaPlayer.dependencies.SourceBufferExtensions = function () {
     "use strict";
     this.system = undefined;
-    this.manifestExt = undefined;
     this.errHandler = undefined;
     this.notify = undefined;
     this.subscribe = undefined;
@@ -29,14 +28,15 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
     constructor: MediaPlayer.dependencies.SourceBufferExtensions,
 
-    createSourceBuffer: function (mediaSource, codec) {
+    createSourceBuffer: function (mediaSource, mediaInfo) {
         "use strict";
         var self = this,
+            codec = mediaInfo.codec,
             buffer = null;
         try {
             buffer = mediaSource.addSourceBuffer(codec);
         } catch(ex) {
-            if (self.manifestExt.getIsTextTrack(codec)) {
+            if (mediaInfo.isText) {
                 buffer = self.system.getObject("textSourceBuffer");
             } else {
                 throw ex;

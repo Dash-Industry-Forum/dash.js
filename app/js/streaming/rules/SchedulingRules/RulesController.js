@@ -20,19 +20,19 @@ MediaPlayer.rules.RulesController = function () {
             return true;
         },
 
-        getRulesContext = function(streamType, representation, currentValue) {
-            return new MediaPlayer.rules.RulesContext(streamType, representation, currentValue);
+        getRulesContext = function(streamProcessor, currentValue) {
+            return new MediaPlayer.rules.RulesContext(streamProcessor, currentValue);
         },
 
         normalizeRule = function(rule) {
             var exec = rule.execute.bind(rule);
 
-            rule.execute = function(streamType, callback, current) {
+            rule.execute = function(context, callback) {
                 var normalizedCallback = function(result) {
                     callback.call(rule, new MediaPlayer.rules.SwitchRequest(result.value, result.priority));
                 };
 
-                exec(streamType, normalizedCallback, current);
+                exec(context, normalizedCallback);
             };
 
             if (typeof(rule.reset) !== "function") {
@@ -100,11 +100,11 @@ MediaPlayer.rules.RulesController = function () {
             updateRules.call(this, rules[ruleType], rulesCollection, false);
         },
 
-        applyRules: function(rulesArr, streamType, representation, callback, current, overrideFunc) {
+        applyRules: function(rulesArr, streamProcessor, callback, current, overrideFunc) {
             var rulesCount = rulesArr.length,
                 ln = rulesCount,
                 values = {},
-                rulesContext = getRulesContext.call(this, streamType, representation, current),
+                rulesContext = getRulesContext.call(this, streamProcessor, current),
                 rule,
                 i,
 

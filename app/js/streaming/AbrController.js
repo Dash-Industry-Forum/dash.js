@@ -67,12 +67,13 @@ MediaPlayer.dependencies.AbrController = function () {
             return idx;
         },
 
-        onDataUpdateCompleted = function(sender, data/*, representation*/) {
+        onDataUpdateCompleted = function(sender, data, trackData) {
             var self = this,
-                type = sender.streamProcessor.getType(),
+                mediaInfo = this.adapter.convertDataToTrack(trackData).mediaInfo,
+                type = mediaInfo.type,
                 max;
 
-            max = self.manifestExt.getRepresentationCount(data) - 1;
+            max = mediaInfo.trackCount - 1;
 
             if (getTopQualityIndex(type) === max) return;
 
@@ -82,8 +83,8 @@ MediaPlayer.dependencies.AbrController = function () {
 
     return {
         debug: undefined,
+        adapter: undefined,
         abrRulesCollection: undefined,
-        manifestExt: undefined,
         rulesController: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -105,8 +106,9 @@ MediaPlayer.dependencies.AbrController = function () {
             autoSwitchBitrate = value;
         },
 
-        getPlaybackQuality: function (type, representation, data) {
+        getPlaybackQuality: function (streamProcessor) {
             var self = this,
+                type = streamProcessor.getType(),
                 quality,
                 oldQuality,
                 rules,
@@ -150,12 +152,12 @@ MediaPlayer.dependencies.AbrController = function () {
             //self.debug.log("Check ABR rules.");
 
             if (self.abrRulesCollection.downloadRatioRule) {
-                self.abrRulesCollection.downloadRatioRule.setData(data, representation.adaptation.period.id);
+                self.abrRulesCollection.downloadRatioRule.setStreamProcessor(streamProcessor);
             }
 
             rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES);
 
-            self.rulesController.applyRules(rules, type, representation, callback.bind(self), quality, function(currentValue, newValue) {
+            self.rulesController.applyRules(rules, streamProcessor, callback.bind(self), quality, function(currentValue, newValue) {
                 return Math.min(currentValue, newValue);
             });
         },

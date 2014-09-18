@@ -5,33 +5,35 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
         scheduleController = {},
 
         onPlaybackSeeking = function(sender, time) {
-            var periodId = sender.getPeriodId();
-            seekTarget[periodId] = seekTarget[periodId] || {};
-            seekTarget[periodId].audio = time;
-            seekTarget[periodId].video = time;
+            var streamId = sender.getStreamId();
+            seekTarget[streamId] = seekTarget[streamId] || {};
+            seekTarget[streamId].audio = time;
+            seekTarget[streamId].video = time;
         };
 
     return {
+        adapter: undefined,
+
         setup: function() {
             this.playbackSeeking = onPlaybackSeeking;
         },
 
         setScheduleController: function(scheduleControllerValue) {
-            var periodId = scheduleControllerValue.streamProcessor.getPeriodInfo().id;
-            scheduleController[periodId] = scheduleController[periodId] || {};
-            scheduleController[periodId][scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
+            var streamId = scheduleControllerValue.streamProcessor.getStreamInfo().id;
+            scheduleController[streamId] = scheduleController[streamId] || {};
+            scheduleController[streamId][scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
         },
 
         execute: function(context, callback) {
-            var streamType = context.getStreamType(),
-                periodId = context.getPeriodInfo().id,
-                sc = scheduleController[periodId][streamType],
-                representation = sc.streamProcessor.getCurrentRepresentation(),
-                st = seekTarget[periodId] ? seekTarget[periodId][streamType] : null,
+            var mediaType = context.getMediaInfo().type,
+                streamId = context.getStreamInfo().id,
+                sc = scheduleController[streamId][mediaType],
+                track = sc.streamProcessor.getCurrentTrack(),
+                st = seekTarget[streamId] ? seekTarget[streamId][mediaType] : null,
                 p = st ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
                 rejected = sc.getFragmentModel().getRejectedRequests().shift(),
                 keepIdx = !!rejected && !st,
-                currentTime = sc.indexHandler.getCurrentTime(representation),
+                currentTime = sc.indexHandler.getCurrentTime(track),
                 playbackTime = sc.playbackController.getTime(),
                 rejectedEnd = rejected ? rejected.startTime + rejected.duration : null,
                 useRejected = rejected && ((rejectedEnd > playbackTime) && (rejected.startTime <= currentTime) || isNaN(currentTime)),
@@ -46,8 +48,8 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 return;
             }
 
-            if (seekTarget[periodId]) {
-                seekTarget[periodId][streamType] = null;
+            if (seekTarget[streamId]) {
+                seekTarget[streamId][mediaType] = null;
             }
 
             range = sc.sourceBufferExt.getBufferRange(sc.bufferController.getBuffer(), time);
@@ -56,7 +58,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 time = range.end;
             }
 
-            request = sc.indexHandler.getSegmentRequestForTime(representation, time, keepIdx);
+            request = this.adapter.getFragmentRequestForTime(sc.streamProcessor, track, time, keepIdx);
 
             while (request && sc.fragmentController.isFragmentLoadedOrPending(sc, request)) {
                 if (request.action === "complete") {
@@ -65,7 +67,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                     break;
                 }
 
-                request = sc.indexHandler.getNextSegmentRequest(representation);
+                request = this.adapter.getNextFragmentRequest(sc.streamProcessor, track);
             }
 
             if (request && !useRejected) {

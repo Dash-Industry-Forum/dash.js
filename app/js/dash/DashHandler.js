@@ -128,15 +128,15 @@ Dash.dependencies.DashHandler = function () {
             return url;
         },
 
-        generateInitRequest = function(representation, streamType) {
+        generateInitRequest = function(representation, mediaType) {
             var self = this,
                 period,
-                request = new MediaPlayer.vo.SegmentRequest(),
+                request = new MediaPlayer.vo.FragmentRequest(),
                 presentationStartTime;
 
             period = representation.adaptation.period;
 
-            request.streamType = streamType;
+            request.mediaType = mediaType;
             request.type = "Initialization Segment";
             request.url = getRequestUrl(representation.initialization, representation);
             request.range = representation.range;
@@ -419,7 +419,7 @@ Dash.dependencies.DashHandler = function () {
                 periodRelativeRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
             }
             
-            if (isDynamic && !representation.adaptation.period.mpd.isClientServerTimeSyncCompleted) {
+            if (isDynamic && !self.timelineConverter.isTimeSyncCompleted()) {
                 start = Math.floor(periodRelativeRange.start / duration);
                 end = Math.floor(periodRelativeRange.end / duration);
                 range = {start: start, end: end};
@@ -448,7 +448,7 @@ Dash.dependencies.DashHandler = function () {
             return range;
         },
 
-        decideSegmentListRangeForTimeline = function(representation) {
+        decideSegmentListRangeForTimeline = function(/*representation*/) {
             var availabilityLowerLimit = 2,
                 availabilityUpperLimit = 10,
                 firstIdx = 0,
@@ -457,7 +457,7 @@ Dash.dependencies.DashHandler = function () {
                 end,
                 range;
 
-            if (isDynamic && !representation.adaptation.period.mpd.isClientServerTimeSyncCompleted) {
+            if (isDynamic && !this.timelineConverter.isTimeSyncCompleted()) {
                 range = {start: firstIdx, end: lastIdx};
                 return range;
             }
@@ -492,8 +492,8 @@ Dash.dependencies.DashHandler = function () {
 
             seg.presentationStartTime = presentationStartTime;
 
-            // For SegmentTimeline every segment is available at mpdLoadedTime
-            seg.availabilityStartTime = representation.adaptation.period.mpd.manifest.mpdLoadedTime;
+            // For SegmentTimeline every segment is available at loadedTime
+            seg.availabilityStartTime = representation.adaptation.period.mpd.manifest.loadedTime;
             seg.availabilityEndTime = self.timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation.adaptation.period.mpd, isDynamic);
 
             // at this wall clock time, the video element currentTime should be seg.presentationStartTime
@@ -583,11 +583,11 @@ Dash.dependencies.DashHandler = function () {
 
             representation.segments = segments;
             lastIdx = segments.length - 1;
-            if (isDynamic && isNaN(representation.adaptation.period.liveEdge)) {
+            if (isDynamic && isNaN(this.timelineConverter.getExpectedLiveEdge())) {
                 var liveEdge = segments[lastIdx].presentationStartTime,
                     metrics = this.metricsModel.getMetricsFor("stream");
                 // the last segment is supposed to be a live edge
-                representation.adaptation.period.liveEdge = liveEdge;
+                this.timelineConverter.setExpectedLiveEdge(liveEdge);
                 this.metricsModel.updateManifestUpdateInfo(this.metricsExt.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
             }
         },
@@ -715,7 +715,7 @@ Dash.dependencies.DashHandler = function () {
                 return null;
             }
 
-            var request = new MediaPlayer.vo.SegmentRequest(),
+            var request = new MediaPlayer.vo.FragmentRequest(),
                 representation = segment.representation,
                 bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth,
@@ -728,7 +728,7 @@ Dash.dependencies.DashHandler = function () {
             url = replaceIDForTemplate(url, representation.id);
             url = unescapeDollarsInTemplate(url);
 
-            request.streamType = type;
+            request.mediaType = type;
             request.type = "Media Segment";
             request.url = url;
             request.range = segment.mediaRange;
@@ -775,10 +775,10 @@ Dash.dependencies.DashHandler = function () {
 
             //self.debug.log("Stream finished? " + finished);
             if (finished) {
-                request = new MediaPlayer.vo.SegmentRequest();
+                request = new MediaPlayer.vo.FragmentRequest();
                 request.action = request.ACTION_COMPLETE;
                 request.index = index;
-                request.streamType = type;
+                request.mediaType = type;
                 self.debug.log("Signal complete.");
                 self.debug.log(request);
             } else {
@@ -793,6 +793,14 @@ Dash.dependencies.DashHandler = function () {
             }
 
             return request;
+        },
+
+        generateForTime = function(representation, time) {
+            var step = (representation.segmentAvailabilityRange.end - representation.segmentAvailabilityRange.start) / 2;
+
+            representation.segments = null;
+            representation.segmentAvailabilityRange = {start: time - step, end: time + step};
+            return getForTime.call(this, representation, time, false);
         },
 
         getNext = function (representation) {
@@ -822,10 +830,10 @@ Dash.dependencies.DashHandler = function () {
 
             //self.debug.log("Stream finished? " + finished);
             if (finished) {
-                request = new MediaPlayer.vo.SegmentRequest();
+                request = new MediaPlayer.vo.FragmentRequest();
                 request.action = request.ACTION_COMPLETE;
                 request.index = idx;
-                request.streamType = type;
+                request.mediaType = type;
                 self.debug.log("Signal complete.");
                 //self.debug.log(request);
             } else {
@@ -837,24 +845,6 @@ Dash.dependencies.DashHandler = function () {
             }
 
             return request;
-        },
-
-        getSegmentCountForDuration = function (representation, requiredDuration, bufferedDuration) {
-            var self = this,
-                remainingDuration = Math.max(requiredDuration - bufferedDuration, 0),
-                segmentDuration,
-                segments,
-                segmentCount;
-
-            if (!representation) {
-                throw new Error("no represenation");
-            }
-
-            segments = getSegments.call(self, representation);
-            segmentDuration = segments[0].duration;
-            segmentCount = Math.ceil(remainingDuration/segmentDuration);
-
-            return segmentCount;
         },
 
         onInitializationLoaded = function(sender, representation) {
@@ -947,7 +937,7 @@ Dash.dependencies.DashHandler = function () {
         getInitRequest: getInit,
         getSegmentRequestForTime: getForTime,
         getNextSegmentRequest: getNext,
-        getSegmentCountForDuration: getSegmentCountForDuration,
+        generateSegmentRequestForTime: generateForTime,
         updateRepresentation: updateRepresentation
     };
 };

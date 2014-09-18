@@ -24,15 +24,10 @@ MediaPlayer.rules.DownloadRatioRule = function () {
      * Be sure to use this rule in conjuction with the InsufficientBufferRule.
      */
 
-    var adaptation = {},
+    var streamProcessors = {},
 
-        checkRatio = function (newIdx, currentBandwidth, data) {
-            var self = this,
-                newBandwidth,
-                rep;
-
-            rep = self.manifestExt.getRepresentationFor(newIdx, data);
-            newBandwidth = self.manifestExt.getBandwidth(rep);
+        checkRatio = function (sp, newIdx, currentBandwidth) {
+            var newBandwidth = sp.getTrackForQuality(newIdx).bandwidth;
 
             return (newBandwidth / currentBandwidth);
         };
@@ -43,25 +38,22 @@ MediaPlayer.rules.DownloadRatioRule = function () {
         metricsExt: undefined,
         metricsModel: undefined,
 
-        setData: function(value, periodId) {
-            adaptation[periodId] = adaptation[periodId] || {};
+        setStreamProcessor: function(streamProcessorValue) {
+            var type = streamProcessorValue.getType(),
+                id = streamProcessorValue.getStreamInfo().id;
 
-            if (this.manifestExt.getIsAudio(value)) {
-                adaptation[periodId].audio = value;
-            }
-
-            if (this.manifestExt.getIsVideo(value)) {
-                adaptation[periodId].video = value;
-            }
+            streamProcessors[id] = streamProcessors[id] || {};
+            streamProcessors[id][type] = streamProcessorValue;
         },
 
         execute: function (context, callback) {
             var self = this,
-                periodId = context.getPeriodInfo().id,
-                streamType = context.getStreamType(),
-                current = context.getCurrentValue,
-                data = adaptation[periodId][streamType],
-                metrics = self.metricsModel.getReadOnlyMetricsFor(streamType),
+                streamId = context.getStreamInfo().id,
+                mediaInfo = context.getMediaInfo(),
+                mediaType = mediaInfo.type,
+                current = context.getCurrentValue(),
+                sp = streamProcessors[streamId][mediaType],
+                metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
                 downloadTime,
                 totalTime,
@@ -71,8 +63,6 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 oneDownBandwidth,
                 oneUpBandwidth,
                 currentBandwidth,
-                representation1,
-                representation2,
                 i,
                 max,
                 switchRequest,
@@ -133,10 +123,8 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 //self.debug.log("Download ratio is poor.");
                 if (current > 0) {
                     self.debug.log("We are not at the lowest bitrate, so switch down.");
-                    representation1 = self.manifestExt.getRepresentationFor(current - 1, data);
-                    oneDownBandwidth = self.manifestExt.getBandwidth(representation1);
-                    representation2 = self.manifestExt.getRepresentationFor(current, data);
-                    currentBandwidth = self.manifestExt.getBandwidth(representation2);
+                    oneDownBandwidth = sp.getTrackForQuality(current - 1).bandwidth;
+                    currentBandwidth = sp.getTrackForQuality(current).bandwidth;
                     switchRatio = oneDownBandwidth / currentBandwidth;
                     //self.debug.log("Switch ratio: " + switchRatio);
 
@@ -153,14 +141,12 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 }
             } else {
                 //self.debug.log("Download ratio is good.");
-                max = self.manifestExt.getRepresentationCount(data) - 1; // 0 based
+                max = mediaInfo.trackCount - 1; // 0 based
 
                 if (current < max) {
                     //self.debug.log("We are not at the highest bitrate, so switch up.");
-                    representation1 = self.manifestExt.getRepresentationFor(current + 1, data);
-                    oneUpBandwidth = self.manifestExt.getBandwidth(representation1);
-                    representation2 = self.manifestExt.getRepresentationFor(current, data);
-                    currentBandwidth = self.manifestExt.getBandwidth(representation2);
+                    oneUpBandwidth = sp.getTrackForQuality(current + 1).bandwidth;
+                    currentBandwidth = sp.getTrackForQuality(current).bandwidth;
                     switchRatio = oneUpBandwidth / currentBandwidth;
                     //self.debug.log("Switch ratio: " + switchRatio);
 
@@ -177,7 +163,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                             //self.debug.log("Not exactly sure where to go, so do some math.");
                             i = -1;
                             while ((i += 1) < max) {
-                                if (downloadRatio < checkRatio.call(self, i, currentBandwidth, data)) {
+                                if (downloadRatio < checkRatio.call(self, sp, i, currentBandwidth)) {
                                     break;
                                 }
                             }
@@ -199,7 +185,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
         },
 
         reset: function() {
-            adaptation = {};
+            streamProcessors = {};
         }
     };
 };

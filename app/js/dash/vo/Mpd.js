@@ -20,8 +20,6 @@ Dash.vo.Mpd = function () {
     this.timeShiftBufferDepth = Number.POSITIVE_INFINITY;
     this.maxSegmentDuration = Number.POSITIVE_INFINITY;
     this.checkTime = NaN;
-    this.clientServerTimeShift = 0;
-    this.isClientServerTimeSyncCompleted = false;
 };
 
 Dash.vo.Mpd.prototype = {

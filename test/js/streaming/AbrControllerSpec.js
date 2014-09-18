@@ -4,10 +4,11 @@ describe("AbrController", function () {
         abrCtrl = objectsHelper.getAbrController(),
         testedType = "video",
         defaultQuality = helper.getDefaultQuality(),
-        representationCtrl = objectsHelper.getRepresentationController(testedType),
-        onDataUpdateCompletedEventName = representationCtrl.eventList.ENAME_DATA_UPDATE_COMPLETED,
+        trackCtrl = objectsHelper.getTrackController(testedType),
+        onDataUpdateCompletedEventName = trackCtrl.eventList.ENAME_DATA_UPDATE_COMPLETED,
         onTopQualityIndexChangedEventName = abrCtrl.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED,
         dummyAdaptation = window.Helpers.getMpdHelper().getAdaptationWithSegmentTemplate(testedType),
+        dummyRepresentation = window.Helpers.getVOHelper().getDummyRepresentation(testedType),
         repsCount = dummyAdaptation.Representation_asArray.length;
 
     it("should have a handler for RepcresentationController.onDataUpdateCompleted event", function () {
@@ -23,7 +24,7 @@ describe("AbrController", function () {
             updateCompleted = false;
 
             setTimeout(function(){
-                abrCtrl[onDataUpdateCompletedEventName](representationCtrl, dummyAdaptation);
+                abrCtrl[onDataUpdateCompletedEventName](trackCtrl, dummyAdaptation, dummyRepresentation);
                 updateCompleted = true;
             }, eventDelay);
         });

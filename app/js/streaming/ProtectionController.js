@@ -21,8 +21,10 @@ MediaPlayer.dependencies.ProtectionController = function () {
             self.protectionModel.removeKeySystem(kid);
         },
 
-        selectKeySystem = function (codec, contentProtection) {
-            var self = this;
+        selectKeySystem = function (mediaInfo) {
+            var self = this,
+                codec = mediaInfo.codec,
+                contentProtection = mediaInfo.contentProtection;
 
             for(var ks = 0; ks < keySystems.length; ++ks) {
                 for(var cp = 0; cp < contentProtection.length; ++cp) {

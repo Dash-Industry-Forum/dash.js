@@ -88,12 +88,12 @@ MediaPlayer.dependencies.BufferController = function () {
 
             var events,
                 request = this.streamProcessor.getFragmentModel().getExecutedRequestForQualityAndIndex(quality, index),
-                currentRepresentation = this.representationController.getRepresentationForQuality(quality),
-                eventStreamAdaption = this.manifestExt.getEventStreamForAdaptationSet(this.streamProcessor.getData()),
-                eventStreamRepresentation = this.manifestExt.getEventStreamForRepresentation(this.streamProcessor.getData(),currentRepresentation);
+                currentTrack = this.streamProcessor.getTrackForQuality(quality),
+                eventStreamMedia = this.adapter.getEventsFor(currentTrack.mediaInfo, this.streamProcessor),
+                eventStreamTrack = this.adapter.getEventsFor(currentTrack, this.streamProcessor);
 
-            if(eventStreamAdaption.length > 0 || eventStreamRepresentation.length > 0) {
-                events = handleInbandEvents.call(this, bytes, request, eventStreamAdaption, eventStreamRepresentation);
+            if(eventStreamMedia.length > 0 || eventStreamTrack.length > 0) {
+                events = handleInbandEvents.call(this, bytes, request, eventStreamMedia, eventStreamTrack);
                 this.streamProcessor.getEventController().addInbandEvents(events);
             }
 
@@ -112,10 +112,10 @@ MediaPlayer.dependencies.BufferController = function () {
             var self = this,
                 isInit = isNaN(index);
 
-            // The segment should be rejected if this an init segment and its quality does not match
-            // the required quality or if this a media segment and its quality does not match the
-            // quality of the last appended init segment. This means that media segment of the old
-            // quality can be appended providing init segment for a new required quality has not been
+            // The fragment should be rejected if this an init fragment and its quality does not match
+            // the required quality or if this a media fragment and its quality does not match the
+            // quality of the last appended init fragment. This means that media fragment of the old
+            // quality can be appended providing init fragment for a new required quality has not been
             // appended yet.
             if ((quality !== requiredQuality && isInit) || (quality !== currentQuality && !isInit)) {
                 onMediaRejected.call(self, quality, index);
@@ -189,20 +189,20 @@ MediaPlayer.dependencies.BufferController = function () {
             return true;
         },
 
-        handleInbandEvents = function(data,request,adaptionSetInbandEvents,representationInbandEvents) {
+        handleInbandEvents = function(data,request,mediaInbandEvents,trackInbandEvents) {
             var events = [],
                 i = 0,
                 identifier,
                 size,
                 expTwo = Math.pow(256,2),
                 expThree = Math.pow(256,3),
-                segmentStarttime = Math.max(isNaN(request.startTime) ? 0 : request.startTime,0),
+                fragmentStarttime = Math.max(isNaN(request.startTime) ? 0 : request.startTime,0),
                 eventStreams = [],
                 inbandEvents;
 
             inbandEventFound = false;
             /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
-            inbandEvents = adaptionSetInbandEvents.concat(representationInbandEvents);
+            inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
             for(var loop = 0; loop < inbandEvents.length; loop++) {
                 eventStreams[inbandEvents[loop].schemeIdUri] = inbandEvents[loop];
             }
@@ -239,7 +239,7 @@ MediaPlayer.dependencies.BufferController = function () {
                         duration = eventBox[4],
                         id = eventBox[5],
                         messageData = eventBox[6],
-                        presentationTime = segmentStarttime*timescale+presentationTimeDelta;
+                        presentationTime = fragmentStarttime*timescale+presentationTimeDelta;
 
                     if(eventStreams[schemeIdUri]) {
                         var event = new Dash.vo.Event();
@@ -299,7 +299,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 actualGap = bufferLevel - leastLevel;
 
             // if the gap betweeen buffers is too big we should create a promise that prevents appending data to the current
-            // buffer and requesting new segments until the gap will be reduced to the suitable size.
+            // buffer and requesting new fragments until the gap will be reduced to the suitable size.
             if (actualGap >= acceptableGap && !isBufferLevelOutrun) {
                 isBufferLevelOutrun = true;
                 this.notify(this.eventList.ENAME_BUFFER_LEVEL_OUTRUN);
@@ -327,7 +327,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             if (!buffer) return;
 
-            // we need to remove data that is more than one segment before the video currentTime
+            // we need to remove data that is more than one fragment before the video currentTime
             req = self.fragmentController.getExecutedRequestForTime(self.streamProcessor.getFragmentModel(), currentTime);
             removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
 
@@ -377,7 +377,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         checkIfSufficientBuffer = function () {
-            var timeToEnd = this.playbackController.getTimeToPeriodEnd();
+            var timeToEnd = this.playbackController.getTimeToStreamEnd();
 
             if ((bufferLevel < minBufferTime) && ((minBufferTime < timeToEnd) || (minBufferTime >= timeToEnd && !isBufferingCompleted))) {
                 notifyIfSufficientBufferStateChanged.call(this, false);
@@ -396,7 +396,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         updateBufferTimestampOffset = function(MSETimeOffset) {
-            // each representation can have its own @presentationTimeOffset, so we should set the offset
+            // each track can have its own @presentationTimeOffset, so we should set the offset
             // if it has changed after switching the quality or updating an mpd
             if (buffer.timestampOffset !== MSETimeOffset) {
                 buffer.timestampOffset = MSETimeOffset;
@@ -454,13 +454,13 @@ MediaPlayer.dependencies.BufferController = function () {
             appendToBuffer.call(this, data.bytes, data.quality, data.index);
         },
 
-        onDataUpdateCompleted = function(sender, data, newRepresentation) {
+        onDataUpdateCompleted = function(sender, data, trackData) {
             var self = this,
                 bufferLength;
 
-            updateBufferTimestampOffset.call(self, newRepresentation.MSETimeOffset);
+            updateBufferTimestampOffset.call(self, trackData.MSETimeOffset);
 
-            bufferLength = self.bufferExt.decideBufferLength(self.manifestModel.getValue().minBufferTime, self.playbackController.getPeriodDuration(), self.streamProcessor.isDynamic());
+            bufferLength = self.bufferExt.decideBufferLength(self.manifestModel.getValue().minBufferTime, self.playbackController.getStreamDuration(), self.streamProcessor.isDynamic());
             //self.debug.log("Min Buffer time: " + bufferLength);
             if (minBufferTime !== bufferLength) {
                 self.setMinBufferTime(bufferLength);
@@ -486,7 +486,7 @@ MediaPlayer.dependencies.BufferController = function () {
             // from the cached array instead of sending a new request
             if (requiredQuality === newQuality) return;
 
-            updateBufferTimestampOffset.call(self, self.representationController.getRepresentationForQuality(newQuality).MSETimeOffset);
+            updateBufferTimestampOffset.call(self, self.streamProcessor.getTrackForQuality(newQuality).MSETimeOffset);
 
             requiredQuality = newQuality;
             if (!waitingForInit.call(self)) return;
@@ -502,7 +502,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
                 appendToBuffer.call(self, initializationData[requiredQuality], requiredQuality);
             } else {
-                // if we have not loaded the init segment for the current quality, do it
+                // if we have not loaded the init fragment for the current quality, do it
                 self.notify(self.eventList.ENAME_INIT_REQUESTED, requiredQuality);
             }
         },
@@ -516,10 +516,10 @@ MediaPlayer.dependencies.BufferController = function () {
         };
 
     return {
-        manifestExt: undefined,
         manifestModel: undefined,
         bufferExt: undefined,
         sourceBufferExt: undefined,
+        adapter: undefined,
         debug: undefined,
         system: undefined,
         notify: undefined,
@@ -543,8 +543,8 @@ MediaPlayer.dependencies.BufferController = function () {
         setup: function() {
             this.dataUpdateCompleted = onDataUpdateCompleted;
 
-            this.initSegmentLoaded = onInitializationLoaded;
-            this.mediaSegmentLoaded =  onMediaLoaded;
+            this.initFragmentLoaded = onInitializationLoaded;
+            this.mediaFragmentLoaded =  onMediaLoaded;
             this.streamCompleted = onStreamCompleted;
 
             this.qualityChanged = onQualityChanged;
@@ -570,7 +570,6 @@ MediaPlayer.dependencies.BufferController = function () {
             self.streamProcessor = streamProcessor;
             self.fragmentController = streamProcessor.fragmentController;
             self.scheduleController = streamProcessor.scheduleController;
-            self.representationController = streamProcessor.representationController;
             self.playbackController = streamProcessor.playbackController;
         },
 

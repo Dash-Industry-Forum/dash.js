@@ -14,10 +14,10 @@
 MediaPlayer.rules.ScheduleRulesCollection = function () {
     "use strict";
 
-    var segmentsToScheduleRules = [],
-        segmentsToExecuteRules = [],
+    var fragmentsToScheduleRules = [],
+        fragmentsToExecuteRules = [],
         liveEdgeRules = [],
-        nextSegmentRules = [];
+        nextFragmentRules = [];
 
     return {
         bufferLevelRule: undefined,
@@ -28,12 +28,12 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
 
         getRules: function (type) {
             switch (type) {
-                case MediaPlayer.rules.ScheduleRulesCollection.prototype.SEGMENTS_TO_SCHEDULE_RULES:
-                    return segmentsToScheduleRules;
-                case MediaPlayer.rules.ScheduleRulesCollection.prototype.NEXT_SEGMENT_RULES:
-                    return nextSegmentRules;
-                case MediaPlayer.rules.ScheduleRulesCollection.prototype.SEGMENTS_TO_EXECUTE_RULES:
-                    return segmentsToExecuteRules;
+                case MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES:
+                    return fragmentsToScheduleRules;
+                case MediaPlayer.rules.ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES:
+                    return nextFragmentRules;
+                case MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_EXECUTE_RULES:
+                    return fragmentsToExecuteRules;
                 case MediaPlayer.rules.ScheduleRulesCollection.prototype.LIVE_EDGE_RULES:
                     return liveEdgeRules;
                 default:
@@ -42,10 +42,10 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
         },
 
         setup: function () {
-            segmentsToScheduleRules.push(this.bufferLevelRule);
-            segmentsToScheduleRules.push(this.pendingRequestsRule);
-            nextSegmentRules.push(this.playbackTimeRule);
-            segmentsToExecuteRules.push(this.sameTimeRequestRule);
+            fragmentsToScheduleRules.push(this.bufferLevelRule);
+            fragmentsToScheduleRules.push(this.pendingRequestsRule);
+            nextFragmentRules.push(this.playbackTimeRule);
+            fragmentsToExecuteRules.push(this.sameTimeRequestRule);
             liveEdgeRules.push(this.liveEdgeBinarySearchRule);
         }
     };
@@ -53,8 +53,8 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
 
 MediaPlayer.rules.ScheduleRulesCollection.prototype = {
     constructor: MediaPlayer.rules.ScheduleRulesCollection,
-    SEGMENTS_TO_SCHEDULE_RULES: "segmentsToScheduleRules",
-    NEXT_SEGMENT_RULES: "nextSegmentRules",
-    SEGMENTS_TO_EXECUTE_RULES: "segmentsToExecuteRules",
+    FRAGMENTS_TO_SCHEDULE_RULES: "fragmentsToScheduleRules",
+    NEXT_FRAGMENT_RULES: "nextFragmentRules",
+    FRAGMENTS_TO_EXECUTE_RULES: "fragmentsToExecuteRules",
     LIVE_EDGE_RULES: "liveEdgeRules"
 };

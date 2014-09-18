@@ -40,6 +40,8 @@
         createAdaptation = function(type) {
             var adaptation = {};
             adaptation.period = createPeriod();
+            adaptation.index = 0;
+            adaptation.type = type;
 
             return adaptation;
         },
@@ -49,9 +51,9 @@
                 data = adaptation || mpdHelper.getAdaptationWithSegmentTemplate(type);
 
             rep.id = null;
-            rep.index = -1;
+            rep.index = 0;
             rep.adaptation = createAdaptation(type);
-            rep.segmentInfoType = null;
+            rep.fragmentInfoType = null;
             rep.initialization = {};
             rep.segmentDuration = 1;
             rep.timescale = 1;
@@ -71,7 +73,7 @@
             var req = {};
             req.action = "download";
             req.quality = 0;
-            req.streamType = "video";
+            req.mediaType = "video";
             req.type = type;
             req.url = "http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s";
             req.startTime = NaN;

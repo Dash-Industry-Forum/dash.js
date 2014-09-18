@@ -1,29 +1,26 @@
-MediaPlayer.rules.RulesContext = function (streamTypeValue, representationValue, currentValue) {
+MediaPlayer.rules.RulesContext = function (streamProcessor, currentValue) {
     "use strict";
-
-    var streamType = streamTypeValue,
-    representation = representationValue,
-    current = currentValue;
+    var trackInfo = streamProcessor.getCurrentTrack();
 
     return {
-        getPeriodInfo: function() {
-            return representation.adaptation.period;
+        getStreamInfo: function() {
+            return trackInfo.mediaInfo.streamInfo;
         },
 
-        getAdaptationInfo: function() {
-            return representation.adaptation;
+        getMediaInfo: function() {
+            return trackInfo.mediaInfo;
         },
 
-        getRepresentationInfo: function() {
-            return representation;
-        },
-
-        getStreamType: function() {
-            return streamType;
+        getTrackInfo: function() {
+            return trackInfo;
         },
 
         getCurrentValue: function() {
-            return current;
+            return currentValue;
+        },
+
+        getManifestInfo: function() {
+            return trackInfo.mediaInfo.streamInfo.manifestInfo;
         }
     };
 };

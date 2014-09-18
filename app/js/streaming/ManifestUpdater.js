@@ -43,7 +43,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
             if (manifest !== undefined && manifest !== null) {
                 delay = self.manifestExt.getRefreshDelay(manifest);
-                timeSinceLastUpdate = (new Date().getTime() - manifest.mpdLoadedTime.getTime()) / 1000;
+                timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;
                 refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
                 start.call(self);
             }
@@ -58,7 +58,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
             isUpdating = true;
             manifest = self.manifestModel.getValue();
-            url = manifest.mpdUrl;
+            url = manifest.url;
 
             if (manifest.hasOwnProperty("Location")) {
                 url = manifest.Location;

@@ -63,16 +63,16 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
     return {
 
-        setFragmentModels: function(fragmentModels, periodId) {
+        setFragmentModels: function(fragmentModels, streamid) {
             this.fragmentModels = this.fragmentModels || {};
-            this.fragmentModels[periodId] = fragmentModels;
+            this.fragmentModels[streamid] = fragmentModels;
         },
 
         execute: function(context, callback) {
-            var periodId = context.getPeriodInfo().id,
+            var streamId = context.getStreamInfo().id,
                 current = context.getCurrentValue(),
                 p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
-                fragmentModels = this.fragmentModels[periodId],
+                fragmentModels = this.fragmentModels[streamId],
                 type,
                 model,
                 sameTimeReq,

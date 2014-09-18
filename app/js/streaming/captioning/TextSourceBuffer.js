@@ -13,7 +13,7 @@
  */
 MediaPlayer.dependencies.TextSourceBuffer = function () {
 
-    var data,
+    var mediaInfo,
         mimeType;
 
     return {
@@ -24,7 +24,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         initialize: function (type, bufferController) {
             mimeType = type;
             this.videoModel = bufferController.videoModel;
-            data = bufferController.streamProcessor.getData();
+            mediaInfo = bufferController.streamProcessor.getCurrentTrack().mediaInfo;
         },
 
         append: function (bytes) {
@@ -36,8 +36,8 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
 
             try {
                 result = self.getParser().parse(ccContent);
-                label = data.Representation_asArray[0].id;
-                lang = data.lang;
+                label = mediaInfo.id;
+                lang = mediaInfo.lang;
 
                 self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, true);
                 self.eventBus.dispatchEvent({type:"updateend"});

@@ -11,11 +11,11 @@
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.SegmentRequest = function () {
+MediaPlayer.vo.FragmentRequest = function () {
     "use strict";
     this.action = "download";
     this.startTime = NaN;
-    this.streamType = null;
+    this.mediaType = null;
     this.type = null;
     this.duration = NaN;
     this.timescale = NaN;
@@ -31,8 +31,8 @@ MediaPlayer.vo.SegmentRequest = function () {
     this.wallStartTime = null;
 };
 
-MediaPlayer.vo.SegmentRequest.prototype = {
-    constructor: MediaPlayer.vo.SegmentRequest,
+MediaPlayer.vo.FragmentRequest.prototype = {
+    constructor: MediaPlayer.vo.FragmentRequest,
     ACTION_DOWNLOAD: "download",
     ACTION_COMPLETE: "complete"
 };

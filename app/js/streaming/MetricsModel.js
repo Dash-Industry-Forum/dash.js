@@ -25,28 +25,28 @@ MediaPlayer.models.MetricsModel = function () {
             });
         },
 
-        metricChanged: function (streamType) {
+        metricChanged: function (mediaType) {
             this.eventBus.dispatchEvent({
                 type: "metricChanged",
-                data: {stream: streamType}
+                data: {stream: mediaType}
             });
             this.metricsChanged();
         },
 
-        metricUpdated: function (streamType, metricType, vo) {
+        metricUpdated: function (mediaType, metricType, vo) {
             this.eventBus.dispatchEvent({
                 type: "metricUpdated",
-                data: {stream: streamType, metric: metricType, value: vo}
+                data: {stream: mediaType, metric: metricType, value: vo}
             });
-            this.metricChanged(streamType);
+            this.metricChanged(mediaType);
         },
 
-        metricAdded: function (streamType, metricType, vo) {
+        metricAdded: function (mediaType, metricType, vo) {
             this.eventBus.dispatchEvent({
                 type: "metricAdded",
-                data: {stream: streamType, metric: metricType, value: vo}
+                data: {stream: mediaType, metric: metricType, value: vo}
             });
-            this.metricChanged(streamType);
+            this.metricChanged(mediaType);
         },
 
         clearCurrentMetricsForType: function (type) {
@@ -81,7 +81,7 @@ MediaPlayer.models.MetricsModel = function () {
             return metrics;
         },
 
-        addTcpConnection: function (streamType, tcpid, dest, topen, tclose, tconnect) {
+        addTcpConnection: function (mediaType, tcpid, dest, topen, tclose, tconnect) {
             var vo = new MediaPlayer.vo.metrics.TCPConnection();
 
             vo.tcpid = tcpid;
@@ -90,16 +90,16 @@ MediaPlayer.models.MetricsModel = function () {
             vo.tclose = tclose;
             vo.tconnect = tconnect;
 
-            this.getMetricsFor(streamType).TcpList.push(vo);
+            this.getMetricsFor(mediaType).TcpList.push(vo);
 
-            this.metricAdded(streamType, "TcpConnection", vo);
+            this.metricAdded(mediaType, "TcpConnection", vo);
             return vo;
         },
 
-        addHttpRequest: function (streamType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, interval, mediaduration) {
+        addHttpRequest: function (mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, interval, mediaduration) {
             var vo = new MediaPlayer.vo.metrics.HTTPRequest();
 
-            vo.stream = streamType;
+            vo.stream = mediaType;
             vo.tcpid = tcpid;
             vo.type = type;
             vo.url = url;
@@ -112,9 +112,9 @@ MediaPlayer.models.MetricsModel = function () {
             vo.interval = interval;
             vo.mediaduration = mediaduration;
 
-            this.getMetricsFor(streamType).HttpList.push(vo);
+            this.getMetricsFor(mediaType).HttpList.push(vo);
 
-            this.metricAdded(streamType, "HttpRequest", vo);
+            this.metricAdded(mediaType, "HttpRequest", vo);
             return vo;
         },
 
@@ -131,7 +131,7 @@ MediaPlayer.models.MetricsModel = function () {
             return vo;
         },
 
-        addRepresentationSwitch: function (streamType, t, mt, to, lto) {
+        addRepresentationSwitch: function (mediaType, t, mt, to, lto) {
             var vo = new MediaPlayer.vo.metrics.RepresentationSwitch();
 
             vo.t = t;
@@ -139,42 +139,42 @@ MediaPlayer.models.MetricsModel = function () {
             vo.to = to;
             vo.lto = lto;
 
-            this.getMetricsFor(streamType).RepSwitchList.push(vo);
+            this.getMetricsFor(mediaType).RepSwitchList.push(vo);
 
-            this.metricAdded(streamType, "RepresentationSwitch", vo);
+            this.metricAdded(mediaType, "RepresentationSwitch", vo);
             return vo;
         },
 
-        addBufferLevel: function (streamType, t, level) {
+        addBufferLevel: function (mediaType, t, level) {
             var vo = new MediaPlayer.vo.metrics.BufferLevel();
 
             vo.t = t;
             vo.level = level;
 
-            this.getMetricsFor(streamType).BufferLevel.push(vo);
+            this.getMetricsFor(mediaType).BufferLevel.push(vo);
 
-            this.metricAdded(streamType, "BufferLevel", vo);
+            this.metricAdded(mediaType, "BufferLevel", vo);
             return vo;
         },
 
 
-        addDVRInfo: function (streamType, currentTime, mpd, range)
+        addDVRInfo: function (mediaType, currentTime, mpd, range)
         {
             var vo = new MediaPlayer.vo.metrics.DVRInfo();
 
             vo.time = currentTime ;
             vo.range = range;
-            vo.mpd= mpd;
+            vo.manifestInfo = mpd;
 
-            this.getMetricsFor(streamType).DVRInfo.push(vo);
-            this.metricAdded(streamType, "DVRInfo", vo);
+            this.getMetricsFor(mediaType).DVRInfo.push(vo);
+            this.metricAdded(mediaType, "DVRInfo", vo);
 
             return vo;
         },
 
-        addDroppedFrames: function (streamType, quality) {
+        addDroppedFrames: function (mediaType, quality) {
             var vo = new MediaPlayer.vo.metrics.DroppedFrames(),
-                list = this.getMetricsFor(streamType).DroppedFrames;
+                list = this.getMetricsFor(mediaType).DroppedFrames;
 
             vo.time = quality.creationTime;
             vo.droppedFrames = quality.droppedVideoFrames;
@@ -185,14 +185,14 @@ MediaPlayer.models.MetricsModel = function () {
 
             list.push(vo);
 
-            this.metricAdded(streamType, "DroppedFrames", vo);
+            this.metricAdded(mediaType, "DroppedFrames", vo);
             return vo;
         },
 
-        addSchedulingInfo: function(streamType, t, type, startTime, availabilityStartTime, duration, quality, range, state) {
+        addSchedulingInfo: function(mediaType, t, type, startTime, availabilityStartTime, duration, quality, range, state) {
             var vo = new MediaPlayer.vo.metrics.SchedulingInfo();
 
-            vo.streamType = streamType;
+            vo.mediaType = mediaType;
             vo.t = t;
 
             vo.type = type;
@@ -204,29 +204,29 @@ MediaPlayer.models.MetricsModel = function () {
 
             vo.state = state;
 
-            this.getMetricsFor(streamType).SchedulingInfo.push(vo);
+            this.getMetricsFor(mediaType).SchedulingInfo.push(vo);
 
-            this.metricAdded(streamType, "SchedulingInfo", vo);
+            this.metricAdded(mediaType, "SchedulingInfo", vo);
             return vo;
         },
 
-        addManifestUpdate: function(streamType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
+        addManifestUpdate: function(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
             var vo = new MediaPlayer.vo.metrics.ManifestUpdate(),
                 metrics = this.getMetricsFor("stream");
 
-            vo.streamType = streamType;
+            vo.mediaType = mediaType;
             vo.type = type;
             vo.requestTime = requestTime; // when this manifest update was requested
             vo.fetchTime = fetchTime; // when this manifest update was received
             vo.availabilityStartTime = availabilityStartTime;
-            vo.presentationStartTime = presentationStartTime; // the seek point (liveEdge for dynamic, Period[0].startTime for static)
+            vo.presentationStartTime = presentationStartTime; // the seek point (liveEdge for dynamic, Stream[0].startTime for static)
             vo.clientTimeOffset = clientTimeOffset; // the calculated difference between the server and client wall clock time
             vo.currentTime = currentTime; // actual element.currentTime
             vo.buffered = buffered; // actual element.ranges
             vo.latency = latency; // (static is fixed value of zero. dynamic should be ((Now-@availabilityStartTime) - currentTime)
 
             metrics.ManifestUpdate.push(vo);
-            this.metricAdded(streamType, "ManifestUpdate", vo);
+            this.metricAdded(mediaType, "ManifestUpdate", vo);
 
             return vo;
         },
@@ -236,58 +236,58 @@ MediaPlayer.models.MetricsModel = function () {
                 manifestUpdate[field] = updatedFields[field];
             }
 
-            this.metricUpdated(manifestUpdate.streamType, "ManifestUpdate", manifestUpdate);
+            this.metricUpdated(manifestUpdate.mediaType, "ManifestUpdate", manifestUpdate);
         },
 
-        addManifestUpdatePeriodInfo: function(manifestUpdate, id, index, start, duration) {
-            var vo = new MediaPlayer.vo.metrics.ManifestUpdate.PeriodInfo();
+        addManifestUpdateStreamInfo: function(manifestUpdate, id, index, start, duration) {
+            var vo = new MediaPlayer.vo.metrics.ManifestUpdate.StreamInfo();
 
             vo.id = id;
             vo.index = index;
             vo.start = start;
             vo.duration = duration;
 
-            manifestUpdate.periodInfo.push(vo);
-            this.metricUpdated(manifestUpdate.streamType, "ManifestUpdatePeriodInfo", manifestUpdate);
+            manifestUpdate.streamInfo.push(vo);
+            this.metricUpdated(manifestUpdate.mediaType, "ManifestUpdateStreamInfo", manifestUpdate);
 
             return vo;
         },
 
-        addManifestUpdateRepresentationInfo: function(manifestUpdate, id, index, periodIndex, streamType, presentationTimeOffset, startNumber, segmentInfoType) {
-            var vo = new MediaPlayer.vo.metrics.ManifestUpdate.RepresentationInfo();
+        addManifestUpdateTrackInfo: function(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
+            var vo = new MediaPlayer.vo.metrics.ManifestUpdate.TrackInfo();
 
             vo.id = id;
             vo.index = index;
-            vo.periodIndex = periodIndex;
-            vo.streamType = streamType;
+            vo.streamIndex = streamIndex;
+            vo.mediaType = mediaType;
             vo.startNumber = startNumber;
-            vo.segmentInfoType = segmentInfoType;
+            vo.fragmentInfoType = fragmentInfoType;
             vo.presentationTimeOffset = presentationTimeOffset;
 
-            manifestUpdate.representationInfo.push(vo);
-            this.metricUpdated(manifestUpdate.streamType, "ManifestUpdateRepresentationInfo", manifestUpdate);
+            manifestUpdate.trackInfo.push(vo);
+            this.metricUpdated(manifestUpdate.mediaType, "ManifestUpdateTrackInfo", manifestUpdate);
 
             return vo;
         },
 
-        addPlayList: function (streamType, start, mstart, starttype) {
+        addPlayList: function (mediaType, start, mstart, starttype) {
             var vo = new MediaPlayer.vo.metrics.PlayList();
 
-            vo.stream = streamType;
+            vo.stream = mediaType;
             vo.start = start;
             vo.mstart = mstart;
             vo.starttype = starttype;
 
-            this.getMetricsFor(streamType).PlayList.push(vo);
+            this.getMetricsFor(mediaType).PlayList.push(vo);
 
-            this.metricAdded(streamType, "PlayList", vo);
+            this.metricAdded(mediaType, "PlayList", vo);
             return vo;
         },
 
-        appendPlayListTrace: function (playList, representationid, subreplevel, start, mstart, duration, playbackspeed, stopreason) {
+        appendPlayListTrace: function (playList, trackId, subreplevel, start, mstart, duration, playbackspeed, stopreason) {
             var vo = new MediaPlayer.vo.metrics.PlayList.Trace();
 
-            vo.representationid = representationid;
+            vo.representationid = trackId;
             vo.subreplevel = subreplevel;
             vo.start = start;
             vo.mstart = mstart;

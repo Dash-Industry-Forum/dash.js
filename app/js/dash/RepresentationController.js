@@ -7,13 +7,13 @@ Dash.dependencies.RepresentationController = function () {
         availableRepresentations = [],
         currentRepresentation,
 
-        updateData = function(dataValue, periodInfoValue, type) {
+        updateData = function(dataValue, adaptation, type) {
             var self = this;
 
             updating = true;
             self.notify(self.eventList.ENAME_DATA_UPDATE_STARTED);
 
-            availableRepresentations = updateRepresentations.call(self, dataValue, periodInfoValue);
+            availableRepresentations = updateRepresentations.call(self, adaptation);
             currentRepresentation = getRepresentationForQuality.call(self, self.abrController.getQualityFor(type));
             data = dataValue;
 
@@ -39,16 +39,13 @@ Dash.dependencies.RepresentationController = function () {
             return true;
         },
 
-        updateRepresentations = function(data, periodInfo) {
+        updateRepresentations = function(adaptation) {
             var self = this,
                 reps,
-                adaptations,
                 manifest = self.manifestModel.getValue();
 
-            dataIndex = self.manifestExt.getDataIndex(data, manifest, periodInfo.index);
-
-            adaptations = self.manifestExt.getAdaptationsForPeriod(manifest, periodInfo);
-            reps = self.manifestExt.getRepresentationsForAdaptation(manifest, adaptations[dataIndex]);
+            dataIndex = self.manifestExt.getDataIndex(data, manifest, adaptation.period.index);
+            reps = self.manifestExt.getRepresentationsForAdaptation(manifest, adaptation);
 
             return reps;
         },
@@ -71,16 +68,16 @@ Dash.dependencies.RepresentationController = function () {
                 repInfo,
                 alreadyAdded = false;
 
-            for (var i = 0; i < manifestUpdateInfo.representationInfo.length; i += 1) {
-                repInfo = manifestUpdateInfo.representationInfo[i];
-                if (repInfo.index === r.index && repInfo.streamType === self.streamProcessor.getType()) {
+            for (var i = 0; i < manifestUpdateInfo.trackInfo.length; i += 1) {
+                repInfo = manifestUpdateInfo.trackInfo[i];
+                if (repInfo.index === r.index && repInfo.mediaType === self.streamProcessor.getType()) {
                     alreadyAdded = true;
                     break;
                 }
             }
 
             if (!alreadyAdded) {
-                self.metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
+                self.metricsModel.addManifestUpdateTrackInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
                     self.streamProcessor.getType(),r.presentationTimeOffset, r.startNumber, r.segmentInfoType);
             }
 
@@ -98,6 +95,14 @@ Dash.dependencies.RepresentationController = function () {
         onLiveEdgeFound = function(/*sender, liveEdgeTime*/) {
             updateAvailabilityWindow.call(this, true);
             this.indexHandler.updateRepresentation(currentRepresentation, false);
+        },
+
+        onBufferLevelUpdated = function(sender/*, bufferLevel*/) {
+            var streamProcessor = sender.streamProcessor,
+                self = this,
+                range = self.timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, streamProcessor.isDynamic());
+
+            self.metricsModel.addDVRInfo(streamProcessor.getType(), streamProcessor.playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
         },
 
         onQualityChanged = function(sender, type, oldQuality, newQuality/*, dataChanged*/) {
@@ -131,6 +136,7 @@ Dash.dependencies.RepresentationController = function () {
             this.representationUpdated = onRepresentationUpdated;
             this.wallclockTimeUpdated = onWallclockTimeUpdated;
             this.liveEdgeFound = onLiveEdgeFound;
+            this.bufferLevelUpdated = onBufferLevelUpdated;
         },
 
         initialize: function(streamProcessor) {

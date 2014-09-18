@@ -62,7 +62,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
         addSchedulingInfoMetrics = function(request, state) {
             if (!request) return;
 
-            var streamType = request.streamType,
+            var mediaType = request.mediaType,
                 now = new Date(),
                 type = request.type,
                 startTime = request.startTime,
@@ -71,7 +71,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 quality = request.quality,
                 range = request.range;
 
-            this.metricsModel.addSchedulingInfo(streamType, now, type, startTime, availabilityStartTime, duration, quality, range, state);
+            this.metricsModel.addSchedulingInfo(mediaType, now, type, startTime, availabilityStartTime, duration, quality, range, state);
         },
 
         onLoadingCompleted = function(sender, request, response, error) {
@@ -92,9 +92,9 @@ MediaPlayer.dependencies.FragmentModel = function () {
             // if request for an unappropriate quality has not been removed yet, do it now
             if (req) {
                 this.removeExecutedRequest(req);
-                // if index is not a number it means that this is a media segment, so we should
-                // request the segment for the same time but with an appropriate quality
-                // If this is init segment do nothing, because it will be requested in loadInitialization method
+                // if index is not a number it means that this is a media fragment, so we should
+                // request the fragment for the same time but with an appropriate quality
+                // If this is init fragment do nothing, because it will be requested in loadInitialization method
                 if (!isNaN(index)) {
                     rejectedRequests.push(req);
                     addSchedulingInfoMetrics.call(this, req, MediaPlayer.vo.metrics.SchedulingInfo.REJECTED_STATE);
@@ -121,7 +121,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             ENAME_STREAM_COMPLETED: "streamCompleted",
             ENAME_FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted",
             ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted",
-            ENAME_FRAGMENT_LOADING_FAILED: "segmentLoadingFailed"
+            ENAME_FRAGMENT_LOADING_FAILED: "fragmentLoadingFailed"
         },
 
         setup: function() {
@@ -179,7 +179,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                         req = arr[i];
 
                         if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
-                            //self.debug.log(request.streamType + " Fragment already loaded for time: " + request.startTime);
+                            //self.debug.log(request.mediaType + " Fragment already loaded for time: " + request.startTime);
                             isLoaded = true;
                             break;
                         }

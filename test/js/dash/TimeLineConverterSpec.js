@@ -8,8 +8,12 @@ describe("TimelineConverter", function () {
         representation = window.Helpers.getVOHelper().getDummyRepresentation(testType),
         onLiveEdgeFoundEventName = liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND;
 
-        liveEdgeFinder.streamProcessor.getCurrentRepresentation = function() {
+        liveEdgeFinder.streamProcessor.getCurrentTrack = function() {
             return representation;
+        };
+
+        liveEdgeFinder.streamProcessor.getStreamInfo = function() {
+            return {manifestInfo: {loadedTime: representation.adaptation.period.mpd.manifest.loadedTime}};
         };
 
     it("should have a handler for LiveEdgeFinder.onLiveEdgeFound event", function () {
@@ -34,19 +38,6 @@ describe("TimelineConverter", function () {
             representationTime = 0;
 
         expect(timelineConverter.calcMediaTimeFromPresentationTime(representationTime, representation)).toEqual(expectedValue);
-    });
-
-    it("should calculate presentation start time", function () {
-        //representation.adaptation.period.start = 10;
-        //representation.adaptation.period.mpd.manifest.type = "static";
-        var expectedValue = representation.adaptation.period.start;
-
-        expect(timelineConverter.calcPresentationStartTime(representation.adaptation.period)).toEqual(expectedValue);
-        representation.adaptation.period.mpd.manifest.type = "dynamic";
-        //representation.adaptation.period.liveEdge = 50;
-        expectedValue = representation.adaptation.period.liveEdge;
-        expect(timelineConverter.calcPresentationStartTime(representation.adaptation.period)).toEqual(expectedValue);
-
     });
 
     it("should calculate presentation time from wall-clock time", function () {
@@ -84,13 +75,13 @@ describe("TimelineConverter", function () {
             }, eventDelay);
         });
 
-        it("should set isClientServerTimeSyncCompleted flag for Period", function () {
+        it("should set isTimeSyncCompleted", function () {
             waitsFor(function (/*argument*/) {
                 return updateCompleted;
             }, 'Timeout', timeoutDelay);
 
             runs(function() {
-                expect(representation.adaptation.period.mpd.isClientServerTimeSyncCompleted).toBeTruthy();
+                expect(timelineConverter.isTimeSyncCompleted()).toBeTruthy();
             });
         });
 

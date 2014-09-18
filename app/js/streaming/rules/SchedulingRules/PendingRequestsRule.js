@@ -6,20 +6,19 @@ MediaPlayer.rules.PendingRequestsRule = function () {
 
     return {
         metricsExt: undefined,
-        manifestExt: undefined,
         bufferExt: undefined,
 
         setScheduleController: function(scheduleControllerValue) {
-            var periodId = scheduleControllerValue.streamProcessor.getPeriodInfo().id;
-            scheduleController[periodId] = scheduleController[periodId] || {};
-            scheduleController[periodId][scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
+            var streamId = scheduleControllerValue.streamProcessor.getStreamInfo().id;
+            scheduleController[streamId] = scheduleController[streamId] || {};
+            scheduleController[streamId][scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
         },
 
         execute: function(context, callback) {
-            var streamType = context.getStreamType(),
-                periodId = context.getPeriodInfo().id,
+            var mediaType = context.getMediaInfo().type,
+                streamId = context.getStreamInfo().id,
                 current = context.getCurrentValue(),
-                sc = scheduleController[periodId][streamType],
+                sc = scheduleController[streamId][mediaType],
                 pendingRequests = sc.fragmentController.getPendingRequests(sc),
                 loadingRequests = sc.fragmentController.getLoadingRequests(sc),
                 ln = pendingRequests.length + loadingRequests.length,

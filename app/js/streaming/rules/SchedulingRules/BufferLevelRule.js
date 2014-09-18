@@ -5,35 +5,34 @@ MediaPlayer.rules.BufferLevelRule = function () {
         isCompleted = {},
         scheduleController = {},
 
-        isCompletedT = function(periodId, type) {
-            return (isCompleted[periodId] && isCompleted[periodId][type]);
+        isCompletedT = function(streamId, type) {
+            return (isCompleted[streamId] && isCompleted[streamId][type]);
         },
 
-        isBufferLevelOutranT = function(periodId, type) {
-            return (isBufferLevelOutran[periodId] && isBufferLevelOutran[periodId][type]);
+        isBufferLevelOutranT = function(streamId, type) {
+            return (isBufferLevelOutran[streamId] && isBufferLevelOutran[streamId][type]);
         },
 
         onStreamCompleted = function(sender, model , request) {
-            var periodId = model.getContext().streamProcessor.getPeriodInfo().id;
-            isCompleted[periodId] = isCompleted[periodId] || {};
-            isCompleted[periodId][request.streamType] = true;
+            var streamId = model.getContext().streamProcessor.getStreamInfo().id;
+            isCompleted[streamId] = isCompleted[streamId] || {};
+            isCompleted[streamId][request.mediaType] = true;
         },
 
         onBufferLevelOutrun = function(sender) {
-            var periodId = sender.streamProcessor.getPeriodInfo().id;
-            isBufferLevelOutran[periodId] = isBufferLevelOutran[periodId] || {};
-            isBufferLevelOutran[periodId][sender.streamProcessor.getType()] = true;
+            var streamId = sender.streamProcessor.getStreamInfo().id;
+            isBufferLevelOutran[streamId] = isBufferLevelOutran[streamId] || {};
+            isBufferLevelOutran[streamId][sender.streamProcessor.getType()] = true;
         },
 
         onBufferLevelBalanced = function(sender) {
-            var periodId = sender.streamProcessor.getPeriodInfo().id;
-            isBufferLevelOutran[periodId] = isBufferLevelOutran[periodId] || {};
-            isBufferLevelOutran[periodId][sender.streamProcessor.getType()] = false;
+            var streamId = sender.streamProcessor.getStreamInfo().id;
+            isBufferLevelOutran[streamId] = isBufferLevelOutran[streamId] || {};
+            isBufferLevelOutran[streamId][sender.streamProcessor.getType()] = false;
         };
 
     return {
         metricsExt: undefined,
-        manifestExt: undefined,
         bufferExt: undefined,
         metricsModel: undefined,
 
@@ -44,41 +43,42 @@ MediaPlayer.rules.BufferLevelRule = function () {
         },
 
         setScheduleController: function(scheduleControllerValue) {
-            var id = scheduleControllerValue.streamProcessor.getPeriodInfo().id;
+            var id = scheduleControllerValue.streamProcessor.getStreamInfo().id;
             scheduleController[id] = scheduleController[id] || {};
             scheduleController[id][scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
         },
 
         execute: function(context, callback) {
-            var periodId = context.getPeriodInfo().id,
-                streamType = context.getStreamType();
+            var streamInfo = context.getStreamInfo(),
+                streamId = streamInfo.id,
+                mediaType = context.getMediaInfo().type;
 
-            if (isBufferLevelOutranT(periodId, streamType)) {
+            if (isBufferLevelOutranT(streamId, mediaType)) {
                 callback(new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
                 return;
             }
 
-            var metrics = this.metricsModel.getReadOnlyMetricsFor(streamType),
+            var metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
                 bufferLevel = this.metricsExt.getCurrentBufferLevel(metrics) ? this.metricsExt.getCurrentBufferLevel(metrics).level : 0,
-                representation = scheduleController[periodId][streamType].streamProcessor.getCurrentRepresentation(),
-                isDynamic = this.manifestExt.getIsDynamic(representation.adaptation.period.mpd.manifest),
+                track = scheduleController[streamId][mediaType].streamProcessor.getCurrentTrack(),
+                isDynamic = scheduleController[streamId][mediaType].streamProcessor.isDynamic(),
                 rate = this.metricsExt.getCurrentPlaybackRate(metrics),
-                duration = representation.adaptation.period.duration,
+                duration = streamInfo.duration,
                 bufferedDuration = bufferLevel / Math.max(rate, 1),
-                segmentDuration = representation.segments[0].duration,
-                currentTime = scheduleController[periodId][streamType].playbackController.getTime(),
+                fragmentDuration = track.fragmentDuration,
+                currentTime = scheduleController[streamId][mediaType].playbackController.getTime(),
                 timeToEnd = isDynamic ? Number.POSITIVE_INFINITY : duration - currentTime,
                 requiredBufferLength = Math.min(this.bufferExt.getRequiredBufferLength(isDynamic, duration), timeToEnd),
                 remainingDuration = Math.max(requiredBufferLength - bufferedDuration, 0),
-                segmentCount;
+                fragmentCount;
 
-            segmentCount = Math.ceil(remainingDuration/segmentDuration);
+            fragmentCount = Math.ceil(remainingDuration/fragmentDuration);
 
-            if (bufferedDuration >= timeToEnd  && !isCompletedT(periodId,streamType)) {
-                segmentCount = segmentCount || 1;
+            if (bufferedDuration >= timeToEnd  && !isCompletedT(streamId,mediaType)) {
+                fragmentCount = fragmentCount || 1;
             }
 
-            callback(new MediaPlayer.rules.SwitchRequest(segmentCount, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
+            callback(new MediaPlayer.rules.SwitchRequest(fragmentCount, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
         },
 
         reset: function() {

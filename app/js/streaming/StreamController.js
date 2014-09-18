@@ -15,7 +15,7 @@
     "use strict";
 
     /*
-     * StreamController aggregates all streams defined as Period sections in the manifest file
+     * StreamController aggregates all streams defined in the manifest file
      * and implements corresponding logic to switch between them.
      */
 
@@ -25,7 +25,7 @@
         STREAM_BUFFER_END_THRESHOLD = 6,
         STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
-        isPeriodSwitchingInProgress = false,
+        isStreamSwitchingInProgress = false,
 
         play = function () {
             activeStream.play();
@@ -111,19 +111,19 @@
          * Used to determine the time current stream is finished and we should switch to the next stream.
          * TODO move to ???Extensions class
          */
-        onTimeupdate = function(sender, timeToPeriodEnd) {
+        onTimeupdate = function(sender, timeToStreamEnd) {
             var self = this;
 
             self.metricsModel.addDroppedFrames("video", self.videoExt.getPlaybackQuality(activeStream.getVideoModel().getElement()));
 
             if (!getNextStream()) return;
 
-            // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new period starts
+            // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new stream starts
             // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
             if (activeStream.getVideoModel().getElement().seeking) return;
 
             // check if stream end is reached
-            if (timeToPeriodEnd < STREAM_END_THRESHOLD) {
+            if (timeToStreamEnd < STREAM_END_THRESHOLD) {
                 switchStream.call(this, activeStream, getNextStream());
             }
         },
@@ -151,7 +151,7 @@
         },
 
         getNextStream = function() {
-            var nextIndex = activeStream.getPeriodIndex() + 1;
+            var nextIndex = activeStream.getStreamIndex() + 1;
             return (nextIndex < streams.length) ? streams[nextIndex] : null;
         },
 
@@ -192,9 +192,9 @@
 
         switchStream = function(from, to, seekTo) {
 
-            if(isPeriodSwitchingInProgress || !from || !to || from === to) return;
+            if(isStreamSwitchingInProgress || !from || !to || from === to) return;
 
-            isPeriodSwitchingInProgress = true;
+            isStreamSwitchingInProgress = true;
 
             from.pause();
             activeStream = to;
@@ -210,7 +210,7 @@
             play();
             from.resetEventController();
             activeStream.startEventController();
-            isPeriodSwitchingInProgress = false;
+            isStreamSwitchingInProgress = false;
         },
 
         composeStreams = function() {
@@ -219,44 +219,34 @@
                 metrics = self.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
                 playbackCtrl,
-                periodInfo,
+                streamInfo,
                 pLen,
                 sLen,
                 pIdx,
                 sIdx,
-                period,
-                periods,
-                mpd,
+                streamsInfo,
                 stream;
 
             if (!manifest) return;
 
-            mpd = self.manifestExt.getMpd(manifest);
-
-            if (activeStream) {
-                periodInfo = activeStream.getPeriodInfo();
-                mpd.isClientServerTimeSyncCompleted = periodInfo.mpd.isClientServerTimeSyncCompleted;
-                mpd.clientServerTimeShift = periodInfo.mpd.clientServerTimeShift;
-            }
-
-            periods = self.manifestExt.getRegularPeriods(manifest, mpd);
+            streamsInfo = self.adapter.getStreamsInfo(manifest);
 
             try {
-                if (periods.length === 0) {
-                    throw new Error("There are no regular periods");
+                if (streamsInfo.length === 0) {
+                    throw new Error("There are no streams");
                 }
 
                 self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: self.videoModel.getCurrentTime(),
-                    buffered: self.videoModel.getElement().buffered, presentationStartTime: periods[0].start,
-                    clientTimeOffset: mpd.clientServerTimeShift});
+                    buffered: self.videoModel.getElement().buffered, presentationStartTime: streamsInfo[0].start,
+                    clientTimeOffset: self.timelineConverter.getClientTimeOffset()});
 
-                for (pIdx = 0, pLen = periods.length; pIdx < pLen; pIdx += 1) {
-                    period = periods[pIdx];
+                for (pIdx = 0, pLen = streamsInfo.length; pIdx < pLen; pIdx += 1) {
+                    streamInfo = streamsInfo[pIdx];
                     for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx += 1) {
                         // If the stream already exists we just need to update the values we got from the updated manifest
-                        if (streams[sIdx].getId() === period.id) {
+                        if (streams[sIdx].getId() === streamInfo.id) {
                             stream = streams[sIdx];
-                            stream.updateData(period);
+                            stream.updateData(streamInfo);
                         }
                     }
                     // If the Stream object does not exist we probably loaded the manifest the first time or it was
@@ -264,7 +254,7 @@
                     if (!stream) {
                         stream = self.system.getObject("stream");
                         playbackCtrl = self.system.getObject("playbackController");
-                        stream.setPeriodInfo(period);
+                        stream.setStreamInfo(streamInfo);
                         stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
                         stream.setPlaybackController(playbackCtrl);
                         playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_ERROR, stream);
@@ -275,7 +265,7 @@
                         stream.subscribe(stream.eventList.ENAME_STREAM_UPDATED, self);
                         streams.push(stream);
                     }
-                    self.metricsModel.addManifestUpdatePeriodInfo(manifestUpdateInfo, period.id, period.index, period.start, period.duration);
+                    self.metricsModel.addManifestUpdateStreamInfo(manifestUpdateInfo, streamInfo.id, streamInfo.index, streamInfo.start, streamInfo.duration);
                     stream = null;
                 }
 
@@ -320,7 +310,7 @@
         manifestLoader: undefined,
         manifestUpdater: undefined,
         manifestModel: undefined,
-        manifestExt: undefined,
+        adapter: undefined,
         debug: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
@@ -342,10 +332,6 @@
             this.playbackSeeking = onSeeking;
             this.playbackProgress = onProgress;
             this.playbackTimeUpdated = onTimeupdate;
-        },
-
-        getManifestExt: function () {
-            return activeStream.getManifestExt();
         },
 
         setAutoPlay: function (value) {
@@ -389,7 +375,8 @@
             this.metricsModel.clearAllCurrentMetrics();
             this.manifestModel.setValue(null);
             this.timelineConverter.reset();
-            isPeriodSwitchingInProgress = false;
+            this.adapter.reset();
+            isStreamSwitchingInProgress = false;
             activeStream = null;
         },
 

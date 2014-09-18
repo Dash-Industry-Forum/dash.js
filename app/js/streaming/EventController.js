@@ -133,7 +133,7 @@ MediaPlayer.dependencies.EventController = function(){
         refreshManifest = function () {
             var self = this,
                 manifest = self.manifestModel.getValue(),
-                url = manifest.mpdUrl;
+                url = manifest.url;
 
             if (manifest.hasOwnProperty("Location")) {
                 url = manifest.Location;
@@ -144,7 +144,6 @@ MediaPlayer.dependencies.EventController = function(){
 
     return {
         manifestModel: undefined,
-        manifestExt:undefined,
         manifestLoader:undefined,
         debug: undefined,
         system: undefined,

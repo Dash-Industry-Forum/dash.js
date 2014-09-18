@@ -1,17 +1,17 @@
 MediaPlayer.vo.metrics.SchedulingInfo = function () {
     "use strict";
 
-    this.streamType = null;                 // Type of stream ("audio" | "video" etc..)
+    this.mediaType = null;                 // Type of stream ("audio" | "video" etc..)
     this.t = null;                      // Real-Time | Time of the scheduling event.
 
-    this.type = null;                   // Type of segment ("initialization segment" | "media segment")
-    this.startTime = null;              // Presentation start time of segment
-    this.availabilityStartTime = null;  // Availability start time of segment
-    this.duration = null;               // Duration of segment
-    this.quality = null;                // Quality of segment
-    this.range = null;                  // Range of segment
+    this.type = null;                   // Type of fragment (initialization | media)
+    this.startTime = null;              // Presentation start time of fragment
+    this.availabilityStartTime = null;  // Availability start time of fragment
+    this.duration = null;               // Duration of fragment
+    this.quality = null;                // Quality of fragment
+    this.range = null;                  // Range of fragment
 
-    this.state = null;                  // Current state of segment
+    this.state = null;                  // Current state of fragment
 };
 
 MediaPlayer.vo.metrics.SchedulingInfo.prototype = {

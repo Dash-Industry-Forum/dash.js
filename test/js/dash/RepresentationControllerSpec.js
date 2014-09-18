@@ -5,19 +5,19 @@ describe("RepresentationController", function () {
         testType = "video",
         voHelper = window.Helpers.getVOHelper(),
         timeoutDelay = helper.getTimeoutDelay(),
-        period = voHelper.getDummyPeriod(),
+        adaptation = voHelper.getDummyRepresentation(testType).adaptation,
         mpd = mpdHelper.getMpd("static"),
         data = mpd.Period_asArray[0].AdaptationSet_asArray[0],
-        representationCtrl = objHelper.getRepresentationController(),
+        trackCtrl = objHelper.getTrackController(),
         indexHandler = objHelper.getIndexHandler(),
-        onDataUpdateStartedEventName = representationCtrl.eventList.ENAME_DATA_UPDATE_STARTED,
-        onDataUpdateCompletedEventName = representationCtrl.eventList.ENAME_DATA_UPDATE_COMPLETED;
+        onDataUpdateStartedEventName = trackCtrl.eventList.ENAME_DATA_UPDATE_STARTED,
+        onDataUpdateCompletedEventName = trackCtrl.eventList.ENAME_DATA_UPDATE_COMPLETED;
 
-    representationCtrl.manifestModel.setValue(mpd);
-    representationCtrl.indexHandler = indexHandler;
+    trackCtrl.manifestModel.setValue(mpd);
+    trackCtrl.indexHandler = indexHandler;
 
     it("should not contain data before it is set", function () {
-        expect(representationCtrl.getData()).toEqual(null);
+        expect(trackCtrl.getData()).toEqual(null);
     });
 
     describe("when data update started", function () {
@@ -25,7 +25,7 @@ describe("RepresentationController", function () {
 
         beforeEach(function () {
             setTimeout(function(){
-                representationCtrl.updateData(data, period, testType);
+                trackCtrl.updateData(data, adaptation, testType);
             }, helper.getExecutionDelay());
         });
 
@@ -40,7 +40,7 @@ describe("RepresentationController", function () {
                 isCompleted = true;
             };
 
-            representationCtrl.subscribe(onDataUpdateStartedEventName, observer);
+            trackCtrl.subscribe(onDataUpdateStartedEventName, observer);
 
             waitsFor(function (/*argument*/) {
                 return isCompleted;
@@ -58,7 +58,7 @@ describe("RepresentationController", function () {
                 isCompleted = true;
             };
 
-            representationCtrl.subscribe(onDataUpdateCompletedEventName, observer);
+            trackCtrl.subscribe(onDataUpdateCompletedEventName, observer);
 
             waitsFor(function (/*argument*/) {
                 return isCompleted;
@@ -75,7 +75,7 @@ describe("RepresentationController", function () {
         var updatedCompleted = false;
 
         beforeEach(function () {
-            representationCtrl.updateData(data, period, testType);
+            trackCtrl.updateData(data, adaptation, testType);
             setTimeout(function(){
                 updatedCompleted = true;
             }, helper.getExecutionDelay());
@@ -87,7 +87,7 @@ describe("RepresentationController", function () {
             }, 'Timeout', timeoutDelay);
 
             runs(function() {
-                expect(representationCtrl.getData()).toEqual(data);
+                expect(trackCtrl.getData()).toEqual(data);
             });
         });
 
@@ -99,7 +99,7 @@ describe("RepresentationController", function () {
             }, 'Timeout', timeoutDelay);
 
             runs(function() {
-                expect(representationCtrl.getDataIndex()).toEqual(expectedValue);
+                expect(trackCtrl.getDataIndex()).toEqual(expectedValue);
             });
         });
 
@@ -112,7 +112,7 @@ describe("RepresentationController", function () {
             }, 'Timeout', timeoutDelay);
 
             runs(function() {
-                expect(representationCtrl.getRepresentationForQuality(quality).index).toEqual(expectedValue);
+                expect(trackCtrl.getRepresentationForQuality(quality).index).toEqual(expectedValue);
             });
         });
     });
