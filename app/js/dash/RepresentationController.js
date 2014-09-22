@@ -92,7 +92,7 @@ Dash.dependencies.RepresentationController = function () {
             updateAvailabilityWindow.call(this, isDynamic);
         },
 
-        onLiveEdgeFound = function(/*sender, liveEdgeTime*/) {
+        onLiveEdgeFound = function(/*sender, liveEdgeTime, searchTime*/) {
             updateAvailabilityWindow.call(this, true);
             this.indexHandler.updateRepresentation(currentRepresentation, false);
         },

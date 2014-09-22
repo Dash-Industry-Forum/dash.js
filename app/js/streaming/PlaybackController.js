@@ -98,7 +98,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             updateCurrentTime.call(this);
         },
 
-        onLiveEdgeFound = function(/*sender, liveEdgeTime*/) {
+        onLiveEdgeFound = function(/*sender, liveEdgeTime, searchTime*/) {
             if (videoModel.getElement().readyState !== 0) {
                 initialStart.call(this);
             }

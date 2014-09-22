@@ -6,12 +6,13 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
         rules,
 
         onSearchCompleted = function(req) {
-            var liveEdge = req.value;
+            var liveEdge = req.value,
+                searchTime = (new Date().getTime() - this.streamProcessor.getStreamInfo().manifestInfo.loadedTime.getTime()) / 1000;
 
             if (liveEdge !== null) {
-                this.notify(this.eventList.ENAME_LIVE_EDGE_FOUND, liveEdge);
+                this.notify(this.eventList.ENAME_LIVE_EDGE_FOUND, liveEdge, searchTime);
             } else {
-                this.notify(this.eventList.ENAME_LIVE_EDGE_SEARCH_ERROR);
+                this.notify(this.eventList.ENAME_LIVE_EDGE_SEARCH_ERROR, searchTime);
             }
         },
 

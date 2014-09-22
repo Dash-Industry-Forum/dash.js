@@ -4,6 +4,7 @@ describe("TimelineConverter", function () {
         timelineConverter = objHelper.getTimelineConverter(),
         liveEdgeFinder = objHelper.getLiveEdgeFinder(),
         testActualLiveEdge = 100,
+        searchTime = 0,
         testType = "video",
         representation = window.Helpers.getVOHelper().getDummyRepresentation(testType),
         onLiveEdgeFoundEventName = liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND;
@@ -24,6 +25,13 @@ describe("TimelineConverter", function () {
         var expectedValue = -10;
 
         expect(timelineConverter.calcMSETimeOffset(representation)).toEqual(expectedValue);
+    });
+
+    it("should set an expected live edge", function () {
+        var expectedValue = 10;
+
+        timelineConverter.setExpectedLiveEdge(expectedValue);
+        expect(timelineConverter.getExpectedLiveEdge()).toEqual(expectedValue);
     });
 
     it("should calculate presentation time from media time", function () {
@@ -68,9 +76,10 @@ describe("TimelineConverter", function () {
 
         beforeEach(function () {
             updateCompleted = false;
+            timelineConverter.setExpectedLiveEdge(100);
 
             setTimeout(function(){
-                timelineConverter[onLiveEdgeFoundEventName](liveEdgeFinder, testActualLiveEdge);
+                timelineConverter[onLiveEdgeFoundEventName](liveEdgeFinder, testActualLiveEdge, searchTime);
                 updateCompleted = true;
             }, eventDelay);
         });
@@ -90,6 +99,7 @@ describe("TimelineConverter", function () {
             //representation.adaptation.period.duration = 100;
             //representation.adaptation.period.mpd.manifest.type = "static";
             representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+            timelineConverter.setExpectedLiveEdge(100);
 
             var expectedValue = 0,
                 isDynamic = true,

@@ -118,13 +118,8 @@ Dash.dependencies.TimelineConverter = function () {
             return periodRelativeTime + periodStartTime;
         },
 
-        onLiveEdgeFound = function(sender, actualLiveEdge) {
-            var streamInfo = sender.streamProcessor.getStreamInfo(),
-                searchTime;
-
+        onLiveEdgeFound = function(sender, actualLiveEdge, searchTime) {
             if (isClientServerTimeSyncCompleted) return;
-
-            searchTime = (new Date().getTime() - streamInfo.manifestInfo.loadedTime.getTime()) / 1000;
 
             // the difference between expected and actual live edge time is supposed to be a difference between client
             // and server time as well

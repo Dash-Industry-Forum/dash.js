@@ -303,7 +303,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             validate.call(this);
         },
 
-        onLiveEdgeFound = function(sender, liveEdgeTime) {
+        onLiveEdgeFound = function(sender, liveEdgeTime/*, searchTime*/) {
             // step back from a found live edge time to be able to buffer some data
             var self = this,
                 startTime = liveEdgeTime - Math.min((self.bufferController.getMinBufferTime() * 2), currentTrackInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2),
