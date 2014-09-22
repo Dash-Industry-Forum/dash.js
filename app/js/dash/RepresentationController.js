@@ -19,12 +19,21 @@ Dash.dependencies.RepresentationController = function () {
 
             if (type !== "video" && type !== "audio") {
                 self.notify(self.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
+                addRepresentationSwitch.call(self);
                 return;
             }
 
             for (var i = 0; i < availableRepresentations.length; i += 1) {
                 self.indexHandler.updateRepresentation(availableRepresentations[i], true);
             }
+        },
+
+        addRepresentationSwitch = function() {
+            var now = new Date(),
+                currentRepresentation = this.getCurrentRepresentation(),
+                currentVideoTime = this.streamProcessor.playbackController.getTime();
+
+            this.metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
         },
 
         getRepresentationForQuality = function(quality) {
@@ -85,6 +94,7 @@ Dash.dependencies.RepresentationController = function () {
                 updating = false;
                 self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - self.streamProcessor.playbackController.getTime()});
                 this.notify(this.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
+                addRepresentationSwitch.call(self);
             }
         },
 
@@ -111,6 +121,7 @@ Dash.dependencies.RepresentationController = function () {
             if (type !== self.streamProcessor.getType()) return;
 
             currentRepresentation = self.getRepresentationForQuality(newQuality);
+            addRepresentationSwitch.call(self);
         };
 
     return {

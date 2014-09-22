@@ -160,7 +160,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             time = self.indexHandler.getCurrentTime(currentTrackInfo || trackInfo);
             currentTrackInfo = trackInfo;
-            addRepresentationSwitch.call(self);
 
             if (!isDynamic) {
                 ready = true;
@@ -244,14 +243,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
 
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
-            addRepresentationSwitch.call(self);
-        },
-
-        addRepresentationSwitch = function() {
-            var now = new Date(),
-                currentVideoTime = this.playbackController.getTime();
-
-            this.metricsModel.addRepresentationSwitch(type, now, currentVideoTime, currentTrackInfo.id);
         },
 
         addPlaylistTraceMetrics = function() {

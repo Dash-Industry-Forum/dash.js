@@ -911,6 +911,13 @@ Dash.dependencies.DashHandler = function () {
             this.segmentsLoaded = onSegmentsLoaded;
         },
 
+        initialize: function(streamProcessor) {
+            this.subscribe(this.eventList.ENAME_REPRESENTATION_UPDATED, streamProcessor.trackController);
+            type = streamProcessor.getType();
+            isDynamic = streamProcessor.isDynamic();
+            this.streamProcessor = streamProcessor;
+        },
+
         getType: function () {
             return type;
         },
@@ -932,6 +939,13 @@ Dash.dependencies.DashHandler = function () {
 
         getCurrentTime: function() {
             return currentTime;
+        },
+
+        reset: function() {
+            currentTime = 0;
+            requestedTime = undefined;
+            index = -1;
+            this.unsubscribe(this.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.trackController);
         },
 
         getInitRequest: getInit,

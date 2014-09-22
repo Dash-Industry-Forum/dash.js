@@ -42,8 +42,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             eventController = eventControllerValue;
 
             isDynamic = stream.getStreamInfo().manifestInfo.isDynamic;
-            indexHandler.setType(type);
-            indexHandler.setIsDynamic(isDynamic);
             self.bufferController = bufferController;
             self.playbackController = playbackController;
             self.scheduleController = scheduleController;
@@ -110,11 +108,11 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 playbackController.subscribe(playbackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, bufferController);
                 playbackController.subscribe(playbackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, scheduleController);
 
-                indexHandler.subscribe(indexHandler.eventList.ENAME_REPRESENTATION_UPDATED, trackController);
                 baseUrlExt.subscribe(baseUrlExt.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
                 baseUrlExt.subscribe(baseUrlExt.eventList.ENAME_SEGMENTS_LOADED, indexHandler);
             }
 
+            indexHandler.initialize(this);
             bufferController.initialize(type, buffer, mediaSource, self);
             scheduleController.initialize(type, this);
 
@@ -249,7 +247,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             playbackController.unsubscribe(playbackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, scheduleController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController.scheduleRulesCollection.playbackTimeRule);
 
-            indexHandler.unsubscribe(indexHandler.eventList.ENAME_REPRESENTATION_UPDATED, trackController);
             baseUrlExt.unsubscribe(baseUrlExt.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
             baseUrlExt.unsubscribe(baseUrlExt.eventList.ENAME_SEGMENTS_LOADED, indexHandler);
 
@@ -264,6 +261,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             fragmentLoader.unsubscribe(fragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
             fragmentController.resetModel(fragmentModel);
 
+            indexHandler.reset();
             this.bufferController.reset(errored);
             this.scheduleController.reset();
             this.bufferController = null;
