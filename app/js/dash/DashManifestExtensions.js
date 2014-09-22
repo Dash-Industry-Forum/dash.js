@@ -86,7 +86,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return (type === "text/vtt" || type === "application/ttml+xml");
     },
 
-    getLanguageForData: function(adaptation) {
+    getLanguageForAdaptation: function(adaptation) {
         var lang = "";
 
         if (adaptation.hasOwnProperty("lang")) {
@@ -114,7 +114,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return adaptation;
     },
 
-    getDataForId: function (id, manifest, periodIndex) {
+    getAdaptationForId: function (id, manifest, periodIndex) {
         "use strict";
         var adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
             i,
@@ -129,14 +129,14 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return null;
     },
 
-    getDataForIndex: function (index, manifest, periodIndex) {
+    getAdaptationForIndex: function (index, manifest, periodIndex) {
         "use strict";
         var adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
 
         return adaptations[index];
     },
 
-    getDataIndex: function (data, manifest, periodIndex) {
+    getIndexForAdaptation: function (adaptation, manifest, periodIndex) {
         "use strict";
 
         var adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
@@ -144,7 +144,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             len;
 
         for (i = 0, len = adaptations.length; i < len; i += 1) {
-            if (adaptations[i] === data) {
+            if (adaptations[i] === adaptation) {
                 return i;
             }
         }
@@ -152,70 +152,70 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return -1;
     },
 
-    getDatasForType: function (manifest, periodIndex, type) {
+    getAdaptationsForType: function (manifest, periodIndex, type) {
         "use strict";
 
         var self = this,
-            adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
+            adaptationSet = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
             i,
             len,
-            datas = [];
+            adaptations = [];
 
-        for (i = 0, len = adaptations.length; i < len; i += 1) {
-            if (this.getIsTypeOf(adaptations[i], type)) {
-                datas.push(self.processAdaptation(adaptations[i]));
+        for (i = 0, len = adaptationSet.length; i < len; i += 1) {
+            if (this.getIsTypeOf(adaptationSet[i], type)) {
+                adaptations.push(self.processAdaptation(adaptationSet[i]));
             }
         }
 
-        return datas;
+        return adaptations;
     },
 
-    getDataForType: function (manifest, periodIndex, type) {
+    getAdaptationForType: function (manifest, periodIndex, type) {
         "use strict";
         var i,
             len,
-            datas,
+            adaptations,
             self = this;
 
-        datas = this.getDatasForType(manifest, periodIndex, type);
+        adaptations = this.getAdaptationsForType(manifest, periodIndex, type);
 
-        if (!datas || datas.length === 0) return null;
+        if (!adaptations || adaptations.length === 0) return null;
 
-        for (i = 0, len = datas.length; i < len; i += 1) {
-            if (self.getIsMain(datas[i])) return datas[i];
+        for (i = 0, len = adaptations.length; i < len; i += 1) {
+            if (self.getIsMain(adaptations[i])) return adaptations[i];
         }
 
-        return datas[0];
+        return adaptations[0];
     },
 
-    getCodec: function (data) {
+    getCodec: function (adaptation) {
         "use strict";
-        var representation = data.Representation_asArray[0],
+        var representation = adaptation.Representation_asArray[0],
             codec = (representation.mimeType + ';codecs="' + representation.codecs + '"');
 
         return codec;
     },
 
-    getMimeType: function (data) {
+    getMimeType: function (adaptation) {
         "use strict";
-        return data.Representation_asArray[0].mimeType;
+        return adaptation.Representation_asArray[0].mimeType;
     },
 
-    getKID: function (data) {
+    getKID: function (adaptation) {
         "use strict";
 
-        if (!data || !data.hasOwnProperty("cenc:default_KID")) {
+        if (!adaptation || !adaptation.hasOwnProperty("cenc:default_KID")) {
             return null;
         }
-        return data["cenc:default_KID"];
+        return adaptation["cenc:default_KID"];
     },
 
-    getContentProtectionData: function (data) {
+    getContentProtectionData: function (adaptation) {
         "use strict";
-        if (!data || !data.hasOwnProperty("ContentProtection_asArray") || data.ContentProtection_asArray.length === 0) {
+        if (!adaptation || !adaptation.hasOwnProperty("ContentProtection_asArray") || adaptation.ContentProtection_asArray.length === 0) {
             return null;
         }
-        return data.ContentProtection_asArray;
+        return adaptation.ContentProtection_asArray;
     },
 
     getIsDynamic: function (manifest) {
@@ -289,9 +289,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return adaptation.Representation_asArray.length;
     },
 
-    getRepresentationFor: function (index, data) {
+    getRepresentationFor: function (index, adaptation) {
         "use strict";
-        return data.Representation_asArray[index];
+        return adaptation.Representation_asArray[index];
     },
 
     getRepresentationsForAdaptation: function(manifest, adaptation) {

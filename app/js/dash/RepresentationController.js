@@ -44,7 +44,7 @@ Dash.dependencies.RepresentationController = function () {
                 reps,
                 manifest = self.manifestModel.getValue();
 
-            dataIndex = self.manifestExt.getDataIndex(data, manifest, adaptation.period.index);
+            dataIndex = self.manifestExt.getIndexForAdaptation(data, manifest, adaptation.period.index);
             reps = self.manifestExt.getRepresentationsForAdaptation(manifest, adaptation);
 
             return reps;

@@ -51,7 +51,7 @@ Dash.dependencies.DashAdapter = function () {
             mediaInfo.type = adaptation.type;
             mediaInfo.streamInfo = convertPeriodToStreamInfo.call(this, adaptation.period);
             mediaInfo.trackCount = this.manifestExt.getRepresentationCount(a);
-            mediaInfo.lang = this.manifestExt.getLanguageForData(a);
+            mediaInfo.lang = this.manifestExt.getLanguageForAdaptation(a);
             mediaInfo.codec = this.manifestExt.getCodec(a);
             mediaInfo.mimeType = this.manifestExt.getMimeType(a);
             mediaInfo.contentProtection = this.manifestExt.getContentProtectionData(a);
@@ -90,12 +90,12 @@ Dash.dependencies.DashAdapter = function () {
 
         getMediaInfoForType = function(manifest, streamInfo, type) {
             var periodInfo = getPeriodForStreamInfo(streamInfo),
-                data = this.manifestExt.getDataForType(manifest, streamInfo.index, type),
+                data = this.manifestExt.getAdaptationForType(manifest, streamInfo.index, type),
                 idx;
 
             if (!data) return null;
 
-            idx = this.manifestExt.getDataIndex(data, manifest, streamInfo.index);
+            idx = this.manifestExt.getIndexForAdaptation(data, manifest, streamInfo.index);
 
             adaptations = adaptations || this.manifestExt.getAdaptationsForPeriod(manifest, periodInfo);
 
@@ -163,7 +163,7 @@ Dash.dependencies.DashAdapter = function () {
                 data;
 
             id = mediaInfo.id;
-            data = id ? this.manifestExt.getDataForId(id, manifest, periodInfo.index) : this.manifestExt.getDataForIndex(mediaInfo.index, manifest, periodInfo.index);
+            data = id ? this.manifestExt.getAdaptationForId(id, manifest, periodInfo.index) : this.manifestExt.getAdaptationForIndex(mediaInfo.index, manifest, periodInfo.index);
             streamProcessor.setMediaInfo(mediaInfo);
             streamProcessor.trackController.updateData(data, adaptation, type);
         },
