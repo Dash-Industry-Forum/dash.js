@@ -120,7 +120,6 @@ Dash.dependencies.RepresentationController = function () {
         manifestModel: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
-        bufferExt: undefined,
         abrController: undefined,
         timelineConverter: undefined,
         notify: undefined,

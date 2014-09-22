@@ -46,7 +46,6 @@ MediaPlayer = function (aContext) {
         system,
         manifestLoader,
         abrController,
-        bufferExt,
         element,
         source,
         streamController,
@@ -58,7 +57,7 @@ MediaPlayer = function (aContext) {
         playing = false,
         autoPlay = true,
         scheduleWhilePaused = false,
-        bufferMax = MediaPlayer.dependencies.BufferExtensions.BUFFER_SIZE_REQUIRED,
+        bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
 
         isReady = function () {
             return (!!element && !!source);
@@ -84,7 +83,6 @@ MediaPlayer = function (aContext) {
             streamController.subscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
             manifestLoader.subscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
             manifestLoader.subscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, manifestUpdater);
-            abrController.subscribe(abrController.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, bufferExt);
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.load(source);
@@ -93,7 +91,7 @@ MediaPlayer = function (aContext) {
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
             system.mapValue("bufferMax", bufferMax);
-            system.injectInto(bufferExt, "bufferMax");
+            system.mapOutlet("bufferMax", "bufferController");
 
             rulesController.initialize();
         },
@@ -209,10 +207,8 @@ MediaPlayer = function (aContext) {
                 streamController.unsubscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
                 manifestLoader.unsubscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
                 manifestLoader.unsubscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, manifestUpdater);
-                abrController.unsubscribe(abrController.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, bufferExt);
                 streamController.reset();
                 abrController.reset();
-                bufferExt.reset();
                 rulesController.reset();
                 streamController = null;
                 playing = false;
@@ -242,7 +238,6 @@ MediaPlayer = function (aContext) {
             metricsExt = system.getObject("metricsExt");
             manifestLoader = system.getObject("manifestLoader");
             manifestUpdater = system.getObject("manifestUpdater");
-            bufferExt = system.getObject("bufferExt");
             abrController = system.getObject("abrController");
             rulesController = system.getObject("rulesController");
         },

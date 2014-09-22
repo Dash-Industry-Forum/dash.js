@@ -182,6 +182,18 @@ MediaPlayer.dependencies.AbrController = function () {
             return getInternalConfidence(type);
         },
 
+        isPlayingAtTopQuality: function() {
+            var self = this,
+                isAtTop,
+                audioQuality = self.getQualityFor("audio"),
+                videoQuality = self.getQualityFor("video");
+
+            isAtTop = (audioQuality === getTopQualityIndex("audio")) &&
+                (videoQuality === getTopQualityIndex("video"));
+
+            return isAtTop;
+        },
+
         reset: function() {
             var rules = this.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES),
                 rule,

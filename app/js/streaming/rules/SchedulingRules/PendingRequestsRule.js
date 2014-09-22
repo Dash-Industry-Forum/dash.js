@@ -6,7 +6,6 @@ MediaPlayer.rules.PendingRequestsRule = function () {
 
     return {
         metricsExt: undefined,
-        bufferExt: undefined,
 
         setScheduleController: function(scheduleControllerValue) {
             var streamId = scheduleControllerValue.streamProcessor.getStreamInfo().id;

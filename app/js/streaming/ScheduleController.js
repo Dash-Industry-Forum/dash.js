@@ -306,7 +306,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
         onLiveEdgeFound = function(sender, liveEdgeTime/*, searchTime*/) {
             // step back from a found live edge time to be able to buffer some data
             var self = this,
-                startTime = liveEdgeTime - Math.min((self.bufferController.getMinBufferTime() * 2), currentTrackInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2),
+                manifestInfo = currentTrackInfo.mediaInfo.streamInfo.manifestInfo,
+                startTime = liveEdgeTime - Math.min((manifestInfo.minBufferTime * 2), manifestInfo.DVRWindowSize / 2),
                 request,
                 metrics = self.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
@@ -327,9 +328,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         system: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
-        bufferExt: undefined,
         scheduleWhilePaused: undefined,
-        sourceBufferExt: undefined,
         timelineConverter: undefined,
         abrController: undefined,
         adapter: undefined,

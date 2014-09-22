@@ -139,7 +139,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 if (error.code === QUOTA_EXCEEDED_ERROR_CODE) {
                     pendingMedia.unshift({bytes: data, quality: appendedBytesInfo.quality, index: appendedBytesInfo.index});
                     criticalBufferLevel = getTotalBufferedTime.call(self) * 0.8;
-                    self.bufferExt.setCriticalBufferLevel(criticalBufferLevel);
                     self.notify(self.eventList.ENAME_QUOTA_EXCEEDED, criticalBufferLevel);
                     clearBuffer.call(self);
                 }
@@ -294,7 +293,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         checkGapBetweenBuffers= function() {
-            var leastLevel = this.bufferExt.getLeastBufferLevel(),
+            var leastLevel = getLeastBufferLevel.call(this),
                 acceptableGap = minBufferTime * 2,
                 actualGap = bufferLevel - leastLevel;
 
@@ -308,6 +307,22 @@ MediaPlayer.dependencies.BufferController = function () {
                 isBufferLevelOutrun = false;
                 appendNext.call(this);
             }
+        },
+
+        getLeastBufferLevel = function() {
+            var videoMetrics = this.metricsModel.getReadOnlyMetricsFor("video"),
+                videoBufferLevel = this.metricsExt.getCurrentBufferLevel(videoMetrics),
+                audioMetrics = this.metricsModel.getReadOnlyMetricsFor("audio"),
+                audioBufferLevel = this.metricsExt.getCurrentBufferLevel(audioMetrics),
+                leastLevel = null;
+
+            if (videoBufferLevel === null || audioBufferLevel === null) {
+                leastLevel = (audioBufferLevel !== null) ? audioBufferLevel.level : ((videoBufferLevel !== null) ? videoBufferLevel.level : null);
+            } else {
+                leastLevel = Math.min(audioBufferLevel.level, videoBufferLevel.level);
+            }
+
+            return leastLevel;
         },
 
         hasEnoughSpaceToAppend = function() {
@@ -377,9 +392,10 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         checkIfSufficientBuffer = function () {
-            var timeToEnd = this.playbackController.getTimeToStreamEnd();
+            var timeToEnd = this.playbackController.getTimeToStreamEnd(),
+                minLevel = this.streamProcessor.isDynamic() ? minBufferTime / 2 : minBufferTime;
 
-            if ((bufferLevel < minBufferTime) && ((minBufferTime < timeToEnd) || (minBufferTime >= timeToEnd && !isBufferingCompleted))) {
+            if ((bufferLevel < minLevel) && ((minBufferTime < timeToEnd) || (minBufferTime >= timeToEnd && !isBufferingCompleted))) {
                 notifyIfSufficientBufferStateChanged.call(this, false);
             } else {
                 notifyIfSufficientBufferStateChanged.call(this, true);
@@ -460,7 +476,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             updateBufferTimestampOffset.call(self, trackData.MSETimeOffset);
 
-            bufferLength = self.bufferExt.decideBufferLength(self.manifestModel.getValue().minBufferTime, self.playbackController.getStreamDuration(), self.streamProcessor.isDynamic());
+            bufferLength = self.streamProcessor.getStreamInfo().manifestInfo.minBufferTime;
             //self.debug.log("Min Buffer time: " + bufferLength);
             if (minBufferTime !== bufferLength) {
                 self.setMinBufferTime(bufferLength);
@@ -517,8 +533,10 @@ MediaPlayer.dependencies.BufferController = function () {
 
     return {
         manifestModel: undefined,
-        bufferExt: undefined,
         sourceBufferExt: undefined,
+        bufferMax: undefined,
+        metricsModel: undefined,
+        metricsExt: undefined,
         adapter: undefined,
         debug: undefined,
         system: undefined,
@@ -601,6 +619,10 @@ MediaPlayer.dependencies.BufferController = function () {
             minBufferTime = value;
         },
 
+        getCriticalBufferLevel: function(){
+            return criticalBufferLevel;
+        },
+
         setMediaSource: function(value) {
             mediaSource = value;
         },
@@ -614,8 +636,8 @@ MediaPlayer.dependencies.BufferController = function () {
 
             initializationData = [];
             criticalBufferLevel = Number.POSITIVE_INFINITY;
-            self.bufferExt.setCriticalBufferLevel(criticalBufferLevel);
             hasSufficientBuffer = null;
+            minBufferTime = null;
             currentQuality = -1;
             requiredQuality = 0;
             self.sourceBufferExt.unsubscribe(self.sourceBufferExt.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, onAppended);
@@ -635,6 +657,14 @@ MediaPlayer.dependencies.BufferController = function () {
         }
     };
 };
+
+MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED = "required";
+MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN = "min";
+MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY = "infinity";
+MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME = 8;
+MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY = 30;
+MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 300;
+MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
 
 MediaPlayer.dependencies.BufferController.prototype = {
     constructor: MediaPlayer.dependencies.BufferController

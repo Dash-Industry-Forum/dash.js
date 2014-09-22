@@ -13,6 +13,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
 
     return {
         adapter: undefined,
+        sourceBufferExt: undefined,
 
         setup: function() {
             this.playbackSeeking = onPlaybackSeeking;
@@ -52,7 +53,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 seekTarget[streamId][mediaType] = null;
             }
 
-            range = sc.sourceBufferExt.getBufferRange(sc.bufferController.getBuffer(), time);
+            range = this.sourceBufferExt.getBufferRange(sc.bufferController.getBuffer(), time);
 
             if (range !== null) {
                 time = range.end;

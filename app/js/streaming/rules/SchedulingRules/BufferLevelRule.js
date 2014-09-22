@@ -5,6 +5,59 @@ MediaPlayer.rules.BufferLevelRule = function () {
         isCompleted = {},
         scheduleController = {},
 
+        getCurrentHttpRequestLatency = function(metrics) {
+            var httpRequest = this.metricsExt.getCurrentHttpRequest(metrics);
+            if (httpRequest !== null) {
+                return (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) / 1000;
+            }
+            return 0;
+        },
+
+        decideBufferLength = function (minBufferTime, duration) {
+            var minBufferTarget;
+
+            if (isNaN(duration) || MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
+                minBufferTarget = Math.max(MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
+            } else if (minBufferTime >= duration) {
+                minBufferTarget = Math.min(duration, MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME);
+            } else {
+                minBufferTarget = Math.min(duration, minBufferTime);
+            }
+
+            return minBufferTarget;
+        },
+
+        getRequiredBufferLength = function (isDynamic, duration, streamProcessor) {
+            var self = this,
+                criticalBufferLevel = streamProcessor.bufferController.getCriticalBufferLevel(),
+                minBufferTarget = decideBufferLength.call(this, streamProcessor.bufferController.getMinBufferTime(), duration),
+                currentBufferTarget = minBufferTarget,
+                bufferMax = streamProcessor.bufferController.bufferMax,
+                vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
+                ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"),
+                isLongFormContent = (duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
+                requiredBufferLength = 0;
+
+            if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN) {
+                requiredBufferLength = minBufferTarget;
+            } else if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY) {
+                requiredBufferLength = duration;
+            } else if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED) {
+                if (!isDynamic && self.abrController.isPlayingAtTopQuality()) {
+                    currentBufferTarget = isLongFormContent ?
+                        MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :
+                        MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY;
+                }
+
+                requiredBufferLength = currentBufferTarget + Math.max(getCurrentHttpRequestLatency.call(self, vmetrics),
+                    getCurrentHttpRequestLatency.call(self, ametrics));
+            }
+
+            requiredBufferLength = Math.min(requiredBufferLength, criticalBufferLevel);
+
+            return requiredBufferLength;
+        },
+
         isCompletedT = function(streamId, type) {
             return (isCompleted[streamId] && isCompleted[streamId][type]);
         },
@@ -33,8 +86,8 @@ MediaPlayer.rules.BufferLevelRule = function () {
 
     return {
         metricsExt: undefined,
-        bufferExt: undefined,
         metricsModel: undefined,
+        abrController: undefined,
 
         setup: function() {
             this.bufferLevelOutrun = onBufferLevelOutrun;
@@ -60,15 +113,16 @@ MediaPlayer.rules.BufferLevelRule = function () {
 
             var metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
                 bufferLevel = this.metricsExt.getCurrentBufferLevel(metrics) ? this.metricsExt.getCurrentBufferLevel(metrics).level : 0,
-                track = scheduleController[streamId][mediaType].streamProcessor.getCurrentTrack(),
-                isDynamic = scheduleController[streamId][mediaType].streamProcessor.isDynamic(),
+                scheduleCtrl = scheduleController[streamId][mediaType],
+                track = scheduleCtrl.streamProcessor.getCurrentTrack(),
+                isDynamic = scheduleCtrl.streamProcessor.isDynamic(),
                 rate = this.metricsExt.getCurrentPlaybackRate(metrics),
                 duration = streamInfo.duration,
                 bufferedDuration = bufferLevel / Math.max(rate, 1),
                 fragmentDuration = track.fragmentDuration,
-                currentTime = scheduleController[streamId][mediaType].playbackController.getTime(),
+                currentTime = scheduleCtrl.playbackController.getTime(),
                 timeToEnd = isDynamic ? Number.POSITIVE_INFINITY : duration - currentTime,
-                requiredBufferLength = Math.min(this.bufferExt.getRequiredBufferLength(isDynamic, duration), timeToEnd),
+                requiredBufferLength = Math.min(getRequiredBufferLength.call(this, isDynamic, duration, scheduleCtrl), timeToEnd),
                 remainingDuration = Math.max(requiredBufferLength - bufferedDuration, 0),
                 fragmentCount;
 
