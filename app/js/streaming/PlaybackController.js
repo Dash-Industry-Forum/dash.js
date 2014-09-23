@@ -43,8 +43,11 @@ MediaPlayer.dependencies.PlaybackController = function () {
             var self = this,
                 currentTime = self.getTime(),
                 metrics = self.metricsModel.getMetricsFor(trackInfo.mediaInfo.type),
-                DVRWindow = self.metricsExt.getCurrentDVRInfo(metrics).range,
+                DVRMetrics = self.metricsExt.getCurrentDVRInfo(metrics),
+                DVRWindow = DVRMetrics ? DVRMetrics.range : null,
                 actualTime;
+
+            if (!DVRWindow) return NaN;
 
             if ((currentTime >= DVRWindow.start) && (currentTime <= DVRWindow.end)) {
                 return currentTime;
@@ -80,7 +83,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         updateCurrentTime = function() {
-            if (this.isPaused()) return;
+            if (this.isPaused() || !isDynamic) return;
 
             var currentTime = this.getTime(),
                 actualTime = getActualPresentationTime.call(this),
