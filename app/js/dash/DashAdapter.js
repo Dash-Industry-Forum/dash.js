@@ -1,14 +1,14 @@
 Dash.dependencies.DashAdapter = function () {
     "use strict";
     var periods = [],
-        adaptations = null,
+        adaptations = {},
 
         getRepresentationForTrackInfo = function(trackInfo, representationController) {
             return representationController.getRepresentationForQuality(trackInfo.quality);
         },
 
         getAdaptationForMediaInfo = function(mediaInfo) {
-            return adaptations[mediaInfo.index];
+            return adaptations[mediaInfo.streamInfo.id][mediaInfo.index];
         },
 
         getPeriodForStreamInfo = function(streamInfo) {
@@ -90,6 +90,7 @@ Dash.dependencies.DashAdapter = function () {
 
         getMediaInfoForType = function(manifest, streamInfo, type) {
             var periodInfo = getPeriodForStreamInfo(streamInfo),
+                periodId = periodInfo.id,
                 data = this.manifestExt.getAdaptationForType(manifest, streamInfo.index, type),
                 idx;
 
@@ -97,9 +98,9 @@ Dash.dependencies.DashAdapter = function () {
 
             idx = this.manifestExt.getIndexForAdaptation(data, manifest, streamInfo.index);
 
-            adaptations = adaptations || this.manifestExt.getAdaptationsForPeriod(manifest, periodInfo);
+            adaptations[periodId] = adaptations[periodId] || this.manifestExt.getAdaptationsForPeriod(manifest, periodInfo);
 
-            return convertAdaptationToMediaInfo.call(this, adaptations[idx]);
+            return convertAdaptationToMediaInfo.call(this, adaptations[periodId][idx]);
         },
 
         getStreamsInfoFromManifest = function(manifest) {
@@ -112,7 +113,7 @@ Dash.dependencies.DashAdapter = function () {
 
             mpd = this.manifestExt.getMpd(manifest);
             periods = this.manifestExt.getRegularPeriods(manifest, mpd);
-            adaptations = null;
+            adaptations = {};
             ln = periods.length;
 
             for(i = 0; i < ln; i += 1) {
@@ -225,7 +226,7 @@ Dash.dependencies.DashAdapter = function () {
 
         reset: function(){
             periods = [];
-            adaptations = null;
+            adaptations = {};
         }
     };
 };
