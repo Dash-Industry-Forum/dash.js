@@ -197,6 +197,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 expThree = Math.pow(256,3),
                 fragmentStarttime = Math.max(isNaN(request.startTime) ? 0 : request.startTime,0),
                 eventStreams = [],
+                event,
                 inbandEvents;
 
             inbandEventFound = false;
@@ -231,25 +232,10 @@ MediaPlayer.dependencies.BufferController = function () {
                             arrIndex += 1;
                         }
                     }
-                    var schemeIdUri = eventBox[0],
-                        value = eventBox[1],
-                        timescale = eventBox[2],
-                        presentationTimeDelta = eventBox[3],
-                        duration = eventBox[4],
-                        id = eventBox[5],
-                        messageData = eventBox[6],
-                        presentationTime = fragmentStarttime*timescale+presentationTimeDelta;
 
-                    if(eventStreams[schemeIdUri]) {
-                        var event = new Dash.vo.Event();
-                        event.eventStream = eventStreams[schemeIdUri];
-                        event.eventStream.value = value;
-                        event.eventStream.timescale = timescale;
-                        event.duration = duration;
-                        event.id = id;
-                        event.presentationTime = presentationTime;
-                        event.messageData = messageData;
-                        event.presentationTimeDelta = presentationTimeDelta;
+                    event = this.adapter.getEvent(eventBox, eventStreams, fragmentStarttime);
+
+                    if (event) {
                         events.push(event);
                     }
                 }

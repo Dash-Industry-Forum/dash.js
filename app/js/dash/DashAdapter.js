@@ -181,6 +181,31 @@ Dash.dependencies.DashAdapter = function () {
             return representation ? convertRepresentationToTrackInfo.call(this, representation): null;
         },
 
+        getEvent = function(eventBox, eventStreams, startTime) {
+            var event = new Dash.vo.Event(),
+                schemeIdUri = eventBox[0],
+                value = eventBox[1],
+                timescale = eventBox[2],
+                presentationTimeDelta = eventBox[3],
+                duration = eventBox[4],
+                id = eventBox[5],
+                messageData = eventBox[6],
+                presentationTime = startTime*timescale+presentationTimeDelta;
+
+            if (!eventStreams[schemeIdUri]) return null;
+
+            event.eventStream = eventStreams[schemeIdUri];
+            event.eventStream.value = value;
+            event.eventStream.timescale = timescale;
+            event.duration = duration;
+            event.id = id;
+            event.presentationTime = presentationTime;
+            event.messageData = messageData;
+            event.presentationTimeDelta = presentationTimeDelta;
+
+            return event;
+        },
+
         getEventsFor = function(info, streamProcessor) {
             var manifest = this.manifestModel.getValue(),
                 events = [];
@@ -223,6 +248,7 @@ Dash.dependencies.DashAdapter = function () {
         generateFragmentRequestForTime: generateFragmentRequestForTime,
 
         getEventsFor: getEventsFor,
+        getEvent: getEvent,
 
         reset: function(){
             periods = [];
