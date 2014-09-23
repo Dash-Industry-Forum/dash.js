@@ -231,8 +231,6 @@ MediaPlayer = function (aContext) {
         tokenAuthentication:undefined,
         uriQueryFragModel:undefined,
         videoElementExt:undefined,
-        abrRulesCollection: undefined,
-        scheduleRulesCollection: undefined,
 
         setup: function() {
             metricsExt = system.getObject("metricsExt");
