@@ -154,6 +154,14 @@ Dash.dependencies.DashAdapter = function () {
             return request;
         },
 
+        getIndexHandlerTime = function(streamProcessor) {
+            return streamProcessor.indexHandler.getCurrentTime();
+        },
+
+        setIndexHandlerTime = function(streamProcessor, value) {
+            return streamProcessor.indexHandler.setCurrentTime(value);
+        },
+
         updateData = function(streamProcessor) {
             var periodInfo = getPeriodForStreamInfo(streamProcessor.getStreamInfo()),
                 mediaInfo = streamProcessor.getMediaInfo(),
@@ -246,6 +254,8 @@ Dash.dependencies.DashAdapter = function () {
         getNextFragmentRequest: getNextFragmentRequest,
         getFragmentRequestForTime: getFragmentRequestForTime,
         generateFragmentRequestForTime: generateFragmentRequestForTime,
+        getIndexHandlerTime: getIndexHandlerTime,
+        setIndexHandlerTime: setIndexHandlerTime,
 
         getEventsFor: getEventsFor,
         getEvent: getEvent,

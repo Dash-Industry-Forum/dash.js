@@ -29,13 +29,14 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             var mediaType = context.getMediaInfo().type,
                 streamId = context.getStreamInfo().id,
                 sc = scheduleController[streamId][mediaType],
-                track = sc.streamProcessor.getCurrentTrack(),
+                streamProcessor = scheduleController[streamId][mediaType].streamProcessor,
+                track = streamProcessor.getCurrentTrack(),
                 st = seekTarget[streamId] ? seekTarget[streamId][mediaType] : null,
                 p = st ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
                 rejected = sc.getFragmentModel().getRejectedRequests().shift(),
                 keepIdx = !!rejected && !st,
-                currentTime = sc.indexHandler.getCurrentTime(track),
-                playbackTime = sc.playbackController.getTime(),
+                currentTime = this.adapter.getIndexHandlerTime(streamProcessor),
+                playbackTime = streamProcessor.playbackController.getTime(),
                 rejectedEnd = rejected ? rejected.startTime + rejected.duration : null,
                 useRejected = rejected && ((rejectedEnd > playbackTime) && (rejected.startTime <= currentTime) || isNaN(currentTime)),
                 range,
@@ -53,26 +54,26 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 seekTarget[streamId][mediaType] = null;
             }
 
-            range = this.sourceBufferExt.getBufferRange(sc.bufferController.getBuffer(), time);
+            range = this.sourceBufferExt.getBufferRange(streamProcessor.bufferController.getBuffer(), time);
 
             if (range !== null) {
                 time = range.end;
             }
 
-            request = this.adapter.getFragmentRequestForTime(sc.streamProcessor, track, time, keepIdx);
+            request = this.adapter.getFragmentRequestForTime(streamProcessor, track, time, keepIdx);
 
-            while (request && sc.fragmentController.isFragmentLoadedOrPending(sc, request)) {
+            while (request && streamProcessor.fragmentController.isFragmentLoadedOrPending(sc, request)) {
                 if (request.action === "complete") {
                     request = null;
-                    sc.indexHandler.setCurrentTime(NaN);
+                    this.adapter.setIndexHandlerTime(streamProcessor, NaN);
                     break;
                 }
 
-                request = this.adapter.getNextFragmentRequest(sc.streamProcessor, track);
+                request = this.adapter.getNextFragmentRequest(streamProcessor, track);
             }
 
             if (request && !useRejected) {
-                sc.indexHandler.setCurrentTime(request.startTime + request.duration);
+                this.adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
             }
 
             callback(new MediaPlayer.rules.SwitchRequest(request, p));

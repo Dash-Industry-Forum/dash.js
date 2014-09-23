@@ -154,19 +154,14 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onDataUpdateCompleted = function(sender, mediaData, trackData) {
-            var self = this,
-                trackInfo = this.adapter.convertDataToTrack(trackData),
-                time;
-
-            time = self.indexHandler.getCurrentTime(currentTrackInfo || trackInfo);
-            currentTrackInfo = trackInfo;
+            currentTrackInfo = this.adapter.convertDataToTrack(trackData);
 
             if (!isDynamic) {
                 ready = true;
             }
 
             if (ready) {
-                startOnReady.call(self, time);
+                startOnReady.call(this);
             }
         },
 
@@ -366,7 +361,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.fragmentController = streamProcessor.fragmentController;
             self.liveEdgeFinder = streamProcessor.liveEdgeFinder;
             self.bufferController = streamProcessor.bufferController;
-            self.indexHandler = streamProcessor.indexHandler;
             isDynamic = streamProcessor.isDynamic();
             fragmentModel = this.fragmentController.getModel(this);
 

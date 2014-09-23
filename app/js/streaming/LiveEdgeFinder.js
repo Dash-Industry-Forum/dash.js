@@ -47,7 +47,6 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
         initialize: function(streamProcessor) {
             this.streamProcessor = streamProcessor;
-            this.indexHandler = streamProcessor.indexHandler;
             this.fragmentLoader = streamProcessor.fragmentLoader;
 
             if (this.scheduleRulesCollection.liveEdgeBinarySearchRule) {
