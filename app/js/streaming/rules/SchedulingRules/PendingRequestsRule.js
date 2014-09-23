@@ -18,10 +18,18 @@ MediaPlayer.rules.PendingRequestsRule = function () {
                 streamId = context.getStreamInfo().id,
                 current = context.getCurrentValue(),
                 sc = scheduleController[streamId][mediaType],
-                pendingRequests = sc.fragmentController.getPendingRequests(sc),
-                loadingRequests = sc.fragmentController.getLoadingRequests(sc),
+                model = sc.getFragmentModel(),
+                pendingRequests = model.getPendingRequests(),
+                loadingRequests = model.getLoadingRequests(),
+                rejectedRequests = model.getRejectedRequests(),
+                rLn = rejectedRequests.length,
                 ln = pendingRequests.length + loadingRequests.length,
                 count = Math.max(current - ln, 0);
+
+            if (rLn > 0) {
+                callback(new MediaPlayer.rules.SwitchRequest(rLn, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
+                return;
+            }
 
             if (ln > LIMIT) {
                 callback(new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
