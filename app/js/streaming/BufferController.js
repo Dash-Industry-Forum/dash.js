@@ -1352,7 +1352,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     }
                 );
             } else {
-                updateBufferLevel.call(self);
+                return updateBufferLevel.call(self);
             }
         },
 
