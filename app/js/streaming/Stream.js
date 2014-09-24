@@ -304,14 +304,6 @@ MediaPlayer.dependencies.Stream = function () {
             initializeMediaForType.call(self, "audio", manifest);
             initializeMediaForType.call(self, "text", manifest);
 
-            if (streamProcessors.length === 0) {
-                var msg = "No streams to play.";
-                this.errHandler.manifestError(msg, "nostreams", manifest);
-                this.debug.log(msg);
-            } else {
-                self.liveEdgeFinder.initialize(streamProcessors[0]);
-                self.liveEdgeFinder.subscribe(self.liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.playbackController);
-            }
             //this.debug.log("MediaSource initialized!");
         },
 
@@ -404,9 +396,18 @@ MediaPlayer.dependencies.Stream = function () {
                     mediaSource = mediaSourceResult;
                     //self.debug.log("MediaSource set up.");
                     initializeMediaSource.call(self);
-                    initializePlayback.call(self);
-                    //self.debug.log("Playback initialized!");
-                    startAutoPlay.call(self);
+
+                    if (streamProcessors.length === 0) {
+                        var msg = "No streams to play.";
+                        self.errHandler.manifestError(msg, "nostreams", manifest);
+                        self.debug.log(msg);
+                    } else {
+                        self.liveEdgeFinder.initialize(streamProcessors[0]);
+                        self.liveEdgeFinder.subscribe(self.liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.playbackController);
+                        initializePlayback.call(self);
+                        //self.debug.log("Playback initialized!");
+                        startAutoPlay.call(self);
+                    }
                 },
                 mediaSourceResult;
 
