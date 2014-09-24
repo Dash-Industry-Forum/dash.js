@@ -31,7 +31,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                     if (keySystems[ks].isSupported(contentProtection[cp]) &&
                         self.protectionExt.supportsCodec(keySystems[ks].keysTypeString, codec)) {
 
-                        var kid = self.manifestExt.getKID(contentProtection[cp]);
+                        var kid = contentProtection[cp].KID;
                         if (!kid) {
                             kid = "unknown";
                         }
@@ -82,7 +82,6 @@ MediaPlayer.dependencies.ProtectionController = function () {
     return {
         system : undefined,
         debug : undefined,
-        manifestExt : undefined,
         capabilities : undefined,
         protectionModel : undefined,
         protectionExt : undefined,

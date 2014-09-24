@@ -44,6 +44,7 @@ Dash.dependencies.DashAdapter = function () {
 
         convertAdaptationToMediaInfo = function(adaptation) {
             var mediaInfo = new MediaPlayer.vo.MediaInfo(),
+                self = this,
                 a = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
 
             mediaInfo.id = adaptation.id;
@@ -55,8 +56,14 @@ Dash.dependencies.DashAdapter = function () {
             mediaInfo.codec = this.manifestExt.getCodec(a);
             mediaInfo.mimeType = this.manifestExt.getMimeType(a);
             mediaInfo.contentProtection = this.manifestExt.getContentProtectionData(a);
+
+            if (mediaInfo.contentProtection) {
+                mediaInfo.contentProtection.forEach(function(item){
+                    item.KID = self.manifestExt.getKID(item);
+                });
+            }
+
             mediaInfo.isText = this.manifestExt.getIsTextTrack(mediaInfo.mimeType);
-            mediaInfo.KID = this.manifestExt.getKID(a);
 
             return mediaInfo;
         },
