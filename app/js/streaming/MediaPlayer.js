@@ -52,6 +52,7 @@ MediaPlayer = function (aContext) {
         rulesController,
         manifestUpdater,
         metricsExt,
+        metricsModel,
         videoModel,
         initialized = false,
         playing = false,
@@ -103,7 +104,7 @@ MediaPlayer = function (aContext) {
         },
 
         getDVRInfoMetric = function() {
-            var metric = this.metricsModel.getReadOnlyMetricsFor('video') || this.metricsModel.getReadOnlyMetricsFor('audio');
+            var metric = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
             return this.metricsExt.getCurrentDVRInfo(metric);
         },
 
@@ -226,7 +227,7 @@ MediaPlayer = function (aContext) {
         debug: undefined,
         eventBus: undefined,
         capabilities: undefined,
-        metricsModel: undefined,
+        adapter: undefined,
         errHandler: undefined,
         tokenAuthentication:undefined,
         uriQueryFragModel:undefined,
@@ -238,6 +239,7 @@ MediaPlayer = function (aContext) {
             manifestUpdater = system.getObject("manifestUpdater");
             abrController = system.getObject("abrController");
             rulesController = system.getObject("rulesController");
+            metricsModel = system.getObject("metricsModel");
         },
 
         addEventListener: function (type, listener, useCapture) {
@@ -299,7 +301,7 @@ MediaPlayer = function (aContext) {
         },
 
         getMetricsFor: function (type) {
-            var metrics = this.metricsModel.getReadOnlyMetricsFor(type);
+            var metrics = metricsModel.getReadOnlyMetricsFor(type);
             return metrics;
         },
 

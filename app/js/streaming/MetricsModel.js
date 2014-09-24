@@ -17,6 +17,7 @@ MediaPlayer.models.MetricsModel = function () {
     return {
         system : undefined,
         eventBus: undefined,
+        adapter: undefined,
         streamMetrics: {},
         metricsChanged: function () {
             this.eventBus.dispatchEvent({
@@ -92,7 +93,7 @@ MediaPlayer.models.MetricsModel = function () {
 
             this.getMetricsFor(mediaType).TcpList.push(vo);
 
-            this.metricAdded(mediaType, "TcpConnection", vo);
+            this.metricAdded(mediaType, this.adapter.metricsList.TCP_CONNECTION, vo);
             return vo;
         },
 
@@ -114,7 +115,7 @@ MediaPlayer.models.MetricsModel = function () {
 
             this.getMetricsFor(mediaType).HttpList.push(vo);
 
-            this.metricAdded(mediaType, "HttpRequest", vo);
+            this.metricAdded(mediaType, this.adapter.metricsList.HTTP_REQUEST, vo);
             return vo;
         },
 
@@ -127,12 +128,12 @@ MediaPlayer.models.MetricsModel = function () {
 
             httpRequest.trace.push(vo);
 
-            this.metricUpdated(httpRequest.stream, "HttpRequestTrace", httpRequest);
+            this.metricUpdated(httpRequest.stream, this.adapter.metricsList.HTTP_REQUEST_TRACE, httpRequest);
             return vo;
         },
 
-        addRepresentationSwitch: function (mediaType, t, mt, to, lto) {
-            var vo = new MediaPlayer.vo.metrics.RepresentationSwitch();
+        addTrackSwitch: function (mediaType, t, mt, to, lto) {
+            var vo = new MediaPlayer.vo.metrics.TrackSwitch();
 
             vo.t = t;
             vo.mt = mt;
@@ -141,7 +142,7 @@ MediaPlayer.models.MetricsModel = function () {
 
             this.getMetricsFor(mediaType).RepSwitchList.push(vo);
 
-            this.metricAdded(mediaType, "RepresentationSwitch", vo);
+            this.metricAdded(mediaType, this.adapter.metricsList.TRACK_SWITCH, vo);
             return vo;
         },
 
@@ -153,7 +154,7 @@ MediaPlayer.models.MetricsModel = function () {
 
             this.getMetricsFor(mediaType).BufferLevel.push(vo);
 
-            this.metricAdded(mediaType, "BufferLevel", vo);
+            this.metricAdded(mediaType, this.adapter.metricsList.BUFFER_LEVEL, vo);
             return vo;
         },
 
@@ -167,7 +168,7 @@ MediaPlayer.models.MetricsModel = function () {
             vo.manifestInfo = mpd;
 
             this.getMetricsFor(mediaType).DVRInfo.push(vo);
-            this.metricAdded(mediaType, "DVRInfo", vo);
+            this.metricAdded(mediaType, this.adapter.metricsList.DVR_INFO, vo);
 
             return vo;
         },
@@ -185,7 +186,7 @@ MediaPlayer.models.MetricsModel = function () {
 
             list.push(vo);
 
-            this.metricAdded(mediaType, "DroppedFrames", vo);
+            this.metricAdded(mediaType, this.adapter.metricsList.DROPPED_FRAMES, vo);
             return vo;
         },
 
@@ -206,7 +207,7 @@ MediaPlayer.models.MetricsModel = function () {
 
             this.getMetricsFor(mediaType).SchedulingInfo.push(vo);
 
-            this.metricAdded(mediaType, "SchedulingInfo", vo);
+            this.metricAdded(mediaType, this.adapter.metricsList.SCHEDULING_INFO, vo);
             return vo;
         },
 
@@ -226,7 +227,7 @@ MediaPlayer.models.MetricsModel = function () {
             vo.latency = latency; // (static is fixed value of zero. dynamic should be ((Now-@availabilityStartTime) - currentTime)
 
             metrics.ManifestUpdate.push(vo);
-            this.metricAdded(mediaType, "ManifestUpdate", vo);
+            this.metricAdded(mediaType, this.adapter.metricsList.MANIFEST_UPDATE, vo);
 
             return vo;
         },
@@ -236,7 +237,7 @@ MediaPlayer.models.MetricsModel = function () {
                 manifestUpdate[field] = updatedFields[field];
             }
 
-            this.metricUpdated(manifestUpdate.mediaType, "ManifestUpdate", manifestUpdate);
+            this.metricUpdated(manifestUpdate.mediaType, this.adapter.metricsList.MANIFEST_UPDATE, manifestUpdate);
         },
 
         addManifestUpdateStreamInfo: function(manifestUpdate, id, index, start, duration) {
@@ -248,7 +249,7 @@ MediaPlayer.models.MetricsModel = function () {
             vo.duration = duration;
 
             manifestUpdate.streamInfo.push(vo);
-            this.metricUpdated(manifestUpdate.mediaType, "ManifestUpdateStreamInfo", manifestUpdate);
+            this.metricUpdated(manifestUpdate.mediaType, this.adapter.metricsList.MANIFEST_UPDATE_STREAM_INFO, manifestUpdate);
 
             return vo;
         },
@@ -265,7 +266,7 @@ MediaPlayer.models.MetricsModel = function () {
             vo.presentationTimeOffset = presentationTimeOffset;
 
             manifestUpdate.trackInfo.push(vo);
-            this.metricUpdated(manifestUpdate.mediaType, "ManifestUpdateTrackInfo", manifestUpdate);
+            this.metricUpdated(manifestUpdate.mediaType, this.adapter.metricsList.MANIFEST_UPDATE_TRACK_INFO, manifestUpdate);
 
             return vo;
         },
@@ -280,7 +281,7 @@ MediaPlayer.models.MetricsModel = function () {
 
             this.getMetricsFor(mediaType).PlayList.push(vo);
 
-            this.metricAdded(mediaType, "PlayList", vo);
+            this.metricAdded(mediaType, this.adapter.metricsList.PLAY_LIST, vo);
             return vo;
         },
 
@@ -297,7 +298,7 @@ MediaPlayer.models.MetricsModel = function () {
 
             playList.trace.push(vo);
 
-            this.metricUpdated(playList.stream, "PlayListTrace", playList);
+            this.metricUpdated(playList.stream, this.adapter.metricsList.PLAY_LIST_TRACE, playList);
             return vo;
         }
     };

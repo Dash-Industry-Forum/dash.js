@@ -235,6 +235,22 @@ Dash.dependencies.DashAdapter = function () {
         manifestModel: undefined,
         timelineConverter: undefined,
 
+        metricsList: {
+            TCP_CONNECTION: "TcpConnection",
+            HTTP_REQUEST: "HttpRequest",
+            HTTP_REQUEST_TRACE: "HttpRequestTrace",
+            TRACK_SWITCH : "RepresentationSwitch",
+            BUFFER_LEVEL: "BufferLevel",
+            DVR_INFO: "DVRInfo",
+            DROPPED_FRAMES: "DroppedFrames",
+            SCHEDULING_INFO: "SchedulingInfo",
+            MANIFEST_UPDATE: "ManifestUpdate",
+            MANIFEST_UPDATE_STREAM_INFO: "ManifestUpdatePeriodInfo",
+            MANIFEST_UPDATE_TRACK_INFO: "ManifestUpdateRepresentationInfo",
+            PLAY_LIST: "PlayList",
+            PLAY_LIST_TRACE: "PlayListTrace"
+        },
+
         convertDataToTrack: convertRepresentationToTrackInfo,
         convertDataToMedia: convertAdaptationToMediaInfo,
         convertDataToStream: convertPeriodToStreamInfo,

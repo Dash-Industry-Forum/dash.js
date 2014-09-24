@@ -33,7 +33,7 @@ Dash.dependencies.RepresentationController = function () {
                 currentRepresentation = this.getCurrentRepresentation(),
                 currentVideoTime = this.streamProcessor.playbackController.getTime();
 
-            this.metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
+            this.metricsModel.addTrackSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
         },
 
         getRepresentationForQuality = function(quality) {
