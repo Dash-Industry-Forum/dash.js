@@ -13,13 +13,13 @@ module.exports = function(grunt) {
     jshint: {
       all: ["../../app/js/*/**/*.js", "./app/js/webm/*.js"],
       options: {
-        jshintrc: ".jshintrc"
+        jshintrc: "../../.jshintrc"
       }
     },
     uglify : {
       min : {
         files: {
-          "dash.min.js" : [
+          "dash.webm.min.js" : [
             "../../app/js/streaming/MediaPlayer.js",
             "../../app/js/streaming/Context.js",
             "../../app/js/dash/Dash.js",
@@ -36,7 +36,7 @@ module.exports = function(grunt) {
       },
       all : {
         files: {
-          "dash.all.js" : [
+          "dash.webm.all.js" : [
             "../../app/lib/q.js",
             "../../app/lib/xml2json.js",
             "../../app/lib/objectiron.js",
