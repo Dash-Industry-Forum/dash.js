@@ -933,9 +933,16 @@ MediaPlayer.dependencies.BufferController = function () {
                     }
                 } else {
                     this.debug.log("Got enough " + type + " buffer to start.");
+
                     waitingForBuffer = false;
                     stalled = false;
                     this.videoModel.stallStream(type, stalled);
+                    this.eventBus.dispatchEvent({
+                        type: "bufferLoaded",
+                        data: {
+                            bufferType: type
+                        }
+                    });
                 }
             }
         },
@@ -1030,6 +1037,13 @@ MediaPlayer.dependencies.BufferController = function () {
                 stalled = true;
                 waitingForBuffer = true;
                 self.videoModel.stallStream(type, stalled);
+                this.eventBus.dispatchEvent({
+                    type: "bufferStalled",
+                    data: {
+                        bufferType: type
+                    }
+                });
+
             }
 
             if (state === READY) {
@@ -1105,6 +1119,7 @@ MediaPlayer.dependencies.BufferController = function () {
         };
 
     return {
+        eventBus: undefined,
         videoModel: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
