@@ -226,11 +226,13 @@ EbmlParser.prototype.skipOverElement = function (tag, test) {
  * specification from the bitstream.
  *
  * @this {EbmlParser}
+ * @param {boolean} whether or not to retain the Most Significant Bit (the
+ * first 1). this is usually true when reading Tag IDs.
  * @return {number} the decoded number
  * @throws will throw an exception if the bit stream is malformed or there is
  * not enough data
  */
-EbmlParser.prototype.getMatroskaCodedNum = function () {
+EbmlParser.prototype.getMatroskaCodedNum = function (retainMSB) {
     "use strict";
     var bytesUsed = 1,
         mask = 0x80,
@@ -242,7 +244,7 @@ EbmlParser.prototype.getMatroskaCodedNum = function () {
 
     for (i = 0; i < maxBytes; i += 1) {
         if ((ch & mask) === mask) {
-            num = ch & ~mask;
+            num = (retainMSB === undefined) ? ch & ~mask : ch;
             extraBytes = i;
             break;
         }
@@ -456,9 +458,19 @@ Webm.dependencies.WebmURLExtensions = function () {
                     throw "no valid top level element found";
                 }
             }
-            // we only need two things in segment info, timecodeScale and duration
-            d.skipOverElement(WebM.Segment.Info.TimecodeScale);
-            duration = d.parseTag(WebM.Segment.Info.Duration);
+            // we only need one thing in segment info, duration
+            while (duration === undefined) {
+              var infoTag = d.getMatroskaCodedNum(true);
+              var infoElementSize = d.getMatroskaCodedNum();
+              switch (infoTag) {
+                case WebM.Segment.Info.Duration.tag:
+                  duration = d[WebM.Segment.Info.Duration.parse](infoElementSize);
+                  break;
+                default:
+                  d.pos += infoElementSize;
+                  break;
+              }
+            }
 
             // once we have what we need from segment info, we jump right to the
             // cues
