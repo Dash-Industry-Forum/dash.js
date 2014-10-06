@@ -110,11 +110,10 @@ Dash.dependencies.TimelineConverter = function () {
 
         calcActualPresentationTime = function(representation, currentTime, isDynamic) {
             var self = this,
-                periodStart = representation.adaptation.period.start,
                 availabilityWindow = self.calcSegmentAvailabilityRange(representation, isDynamic),
                 actualTime;
 
-            if ((currentTime >= (availabilityWindow.start + periodStart)) && (currentTime <= (availabilityWindow.end + periodStart))) {
+            if ((currentTime >= availabilityWindow.start) && (currentTime <= availabilityWindow.end)) {
                 return currentTime;
             }
 
@@ -125,8 +124,8 @@ Dash.dependencies.TimelineConverter = function () {
 
         calcSegmentAvailabilityRange = function(representation, isDynamic) {
             var duration = representation.segmentDuration,
-                start = 0,
-                end = representation.adaptation.period.duration,
+                start = representation.adaptation.period.start,
+                end = start + representation.adaptation.period.duration,
                 range = {start: start, end: end},
                 checkTime,
                 now;
@@ -148,6 +147,18 @@ Dash.dependencies.TimelineConverter = function () {
             range = {start: start, end: end};
 
             return range;
+        },
+
+        calcPeriodRelativeTimeFromMpdRelativeTime = function(representation, mpdRelativeTime) {
+            var periodStartTime = representation.adaptation.period.start;
+
+            return mpdRelativeTime - periodStartTime;
+        },
+
+        calcMpdRelativeTimeFromPeriodRelativeTime = function(representation, periodRelativeTime) {
+            var periodStartTime = representation.adaptation.period.start;
+
+            return periodRelativeTime + periodStartTime;
         },
 
         liveEdgeFound = function(expectedLiveEdge, actualLiveEdge, period) {
@@ -181,6 +192,8 @@ Dash.dependencies.TimelineConverter = function () {
         calcPresentationTimeFromMediaTime: calcPresentationTimeFromMediaTime,
         calcPresentationStartTime: calcPresentationStartTime,
         calcActualPresentationTime: calcActualPresentationTime,
+        calcPeriodRelativeTimeFromMpdRelativeTime: calcPeriodRelativeTimeFromMpdRelativeTime,
+        calcMpdRelativeTimeFromPeriodRelativeTime: calcMpdRelativeTimeFromPeriodRelativeTime,
         calcMediaTimeFromPresentationTime: calcMediaTimeFromPresentationTime,
         calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
         calcWallTimeForSegment: calcWallTimeForSegment,
