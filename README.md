@@ -1,5 +1,7 @@
 # dash.js
 
+JSHint and Jasmine status: [![JSHint and Jasmine](http://img.shields.io/travis/Dash-Industry-Forum/dash.js.svg?style=flat-square)](https://travis-ci.org/Dash-Industry-Forum/dash.js)
+
 A reference client implementation for the playback of MPEG DASH via JavaScript and compliant browsers. Learn more about DASH IF Reference Client.
 
 If your intent is to use the player code without contributing back to this project, then use the MASTER branch which holds the approved and stable public releases.
