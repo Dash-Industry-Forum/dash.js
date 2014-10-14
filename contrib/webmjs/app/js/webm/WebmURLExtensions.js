@@ -508,12 +508,13 @@ Webm.dependencies.WebmURLExtensions = function () {
                 needFailureReport = true,
                 media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
+                bytesToLoad = 8192,
                 info = {
                     bytesLoaded: 0,
-                    bytesToLoad: 8192,
+                    bytesToLoad: bytesToLoad,
                     range: {
                         start: 0,
-                        end: this.bytesToLoad
+                        end: bytesToLoad
                     },
                     request: request,
                     url: media
