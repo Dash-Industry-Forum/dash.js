@@ -17,12 +17,8 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
     var URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData(),
         URIQueryData = [],
 
-        reset = function () {
-            URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData()
-            URIQueryData = []
-        },
-
         parseURI = function (uri) {
+            if (!uri) return null;
 
             var URIFragmentData = [],
                 testQuery = new RegExp(/[?]/),
@@ -69,9 +65,13 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
 
     return {
         parseURI:parseURI,
-        reset:reset,
         getURIFragmentData:URIFragmentDataVO,
-        getURIQueryData:URIQueryData
+        getURIQueryData:URIQueryData,
+
+        reset: function() {
+            URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData();
+            URIQueryData = [];
+        }
     };
 };
 

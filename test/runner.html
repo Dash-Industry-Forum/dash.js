@@ -6,57 +6,127 @@
 	<link rel="stylesheet" href="lib/jasmine-1.3.1/jasmine.css"/>
 </head>
 <body>
-	<!-- Libraries -->
-	
-    <script src="../app/lib/jquery/js/jquery-1.8.3.min.js"></script>
-    <script src="../app/lib/jquery/js/jquery-ui-1.9.2.custom.min.js"></script>
-    <script src="../app/lib/highcharts/highcharts.js"></script>
-    <script src="../app/lib/highcharts/modules/exporting.js"></script>
-    <script src="../app/lib/datatables/media/js/jquery.dataTables.js"></script>
-	<script src="../app/lib/q.min.js"></script>
-	<script src="../app/lib/xml2json.js"></script>
-	<script src="../app/lib/objectiron.js"></script>
-	
-	<!-- Player -->
-	
-	<script src="../app/js/streaming/MediaPlayer.js"></script>
-	<script src="../app/js/streaming/Capabilities.js"></script>
-	<script src="../app/js/streaming/Debug.js"></script>
-	<script src="../app/js/streaming/VideoModel.js"></script>
-	<script src="../app/js/streaming/ManifestLoader.js"></script>
-	<script src="../app/js/streaming/MediaSourceExtensions.js"></script>
-	<script src="../app/js/streaming/SourceBufferExtensions.js"></script>
-	<script src="../app/js/streaming/BufferExtensions.js"></script>
-	<script src="../app/js/streaming/ManifestExtensions.js"></script>
-	<script src="../app/js/streaming/FragmentController.js"></script>
-	<script src="../app/js/streaming/AbrController.js"></script>
-	<script src="../app/js/streaming/FragmentLoader.js"></script>
-	<script src="../app/js/streaming/Stream.js"></script>
-	<script src="../app/js/streaming/BufferController.js"></script>
-	
-	<!-- Dash -->
-	
-	<script src="../app/js/dash/Dash.js"></script>
-	<script src="../app/js/dash/DashParser.js"></script>
+<!-- http://jquery.com/ -->
+<script src="../app/lib/jquery/jquery-1.10.2.min.js"></script>
+<script src="../app/lib/dijon.js"></script>
+<script src="../app/lib/base64.js"></script>
+<script src="../app/lib/xml2json.js"></script>
+<script src="../app/lib/objectiron.js"></script>
+<script src="../app/lib/long.js"></script>
+<script src="../app/lib/Math.js"></script>
+
+<!-- Player -->
+<script src="../app/js/streaming/MediaPlayer.js"></script>
+<script src="../app/js/streaming/Context.js"></script>
+<script src="../app/js/streaming/ErrorHandler.js"></script>
+<script src="../app/js/streaming/Capabilities.js"></script>
+<script src="../app/js/streaming/EventBus.js"></script>
+<script src="../app/js/streaming/Debug.js"></script>
+<script src="../app/js/streaming/TokenAuthentication.js"></script>
+<script src="../app/js/streaming/VideoModel.js"></script>
+<script src="../app/js/streaming/vo/FragmentRequest.js"></script>
+<script src="../app/js/streaming/vo/TrackInfo.js"></script>
+<script src="../app/js/streaming/vo/MediaInfo.js"></script>
+<script src="../app/js/streaming/vo/StreamInfo.js"></script>
+<script src="../app/js/streaming/vo/ManifestInfo.js"></script>
+<script src="../app/js/streaming/ManifestLoader.js"></script>
+<script src="../app/js/streaming/ManifestUpdater.js"></script>
+<script src="../app/js/streaming/ManifestModel.js"></script>
+<script src="../app/js/streaming/MediaSourceExtensions.js"></script>
+<script src="../app/js/streaming/SourceBufferExtensions.js"></script>
+<script src="../app/js/streaming/VideoModelExtensions.js"></script>
+<script src="../app/js/streaming/PlaybackController.js"></script>
+<script src="../app/js/streaming/FragmentController.js"></script>
+<script src="../app/js/streaming/AbrController.js"></script>
+<script src="../app/js/streaming/FragmentLoader.js"></script>
+<script src="../app/js/streaming/FragmentModel.js"></script>
+<script src="../app/js/streaming/StreamController.js"></script>
+<script src="../app/js/streaming/StreamProcessor.js"></script>
+<script src="../app/js/streaming/ScheduleController.js"></script>
+<script src="../app/js/streaming/Stream.js"></script>
+<script src="../app/js/streaming/BufferController.js"></script>
+<script src="../app/js/streaming/LiveEdgeFinder.js"></script>
+<script src="../app/js/streaming/ProtectionModel.js"></script>
+<script src="../app/js/streaming/ProtectionController.js"></script>
+<script src="../app/js/streaming/ProtectionExtensions.js"></script>
+<script src="../app/js/streaming/Notifier.js"></script>
+<script src="../app/js/streaming/rules/SwitchRequest.js"></script>
+<script src="../app/js/streaming/rules/RulesContext.js"></script>
+<script src="../app/js/streaming/rules/ABRRules/DownloadRatioRule.js"></script>
+<script src="../app/js/streaming/rules/ABRRules/InsufficientBufferRule.js"></script>
+<script src="../app/js/streaming/rules/ABRRules/LimitSwitchesRule.js"></script>
+<script src="../app/js/streaming/rules/ABRRules/ABRRulesCollection.js"></script>
+<script src="../app/js/streaming/EventController.js"></script>
+<script src="../app/js/streaming/URIQueryAndFragmentModel.js"></script>
+<script src="../app/js/streaming/vo/URIFragmentData.js"></script>
+
+<script src="../app/js/streaming/rules/SchedulingRules/RulesController.js"></script>
+<script src="../app/js/streaming/rules/SchedulingRules/ScheduleRulesCollection.js"></script>
+<script src="../app/js/streaming/rules/SchedulingRules/BufferLevelRule.js"></script>
+<script src="../app/js/streaming/rules/SchedulingRules/PendingRequestsRule.js"></script>
+<script src="../app/js/streaming/rules/SchedulingRules/SameTimeRequestRule.js"></script>
+<script src="../app/js/streaming/rules/SchedulingRules/PlaybackTimeRule.js"></script>
+<script src="../app/js/streaming/rules/SchedulingRules/LiveEdgeBinarySearchRule.js"></script>
+
+<!--Captioning-->
+<script src="../app/js/streaming/captioning/VTTParser.js"></script>
+<script src="../app/js/streaming/captioning/TTMLParser.js"></script>
+<script src="../app/js/streaming/captioning/TextTrackExtensions.js"></script>
+<script src="../app/js/streaming/captioning/TextSourceBuffer.js"></script>
+<script src="../app/js/streaming/captioning/TextController.js"></script>
+
+<!-- Metrics -->
+<script src="../app/js/streaming/vo/MetricsList.js"></script>
+<script src="../app/js/streaming/MetricsModel.js"></script>
+<script src="../app/js/streaming/vo/metrics/BufferLevel.js"></script>
+<script src="../app/js/streaming/vo/metrics/HTTPRequest.js"></script>
+<script src="../app/js/streaming/vo/metrics/PlayList.js"></script>
+<script src="../app/js/streaming/vo/metrics/RepresentationSwitch.js"></script>
+<script src="../app/js/streaming/vo/metrics/TCPConnection.js"></script>
+<script src="../app/js/streaming/vo/metrics/DroppedFrames.js"></script>
+<script src="../app/js/streaming/vo/metrics/SchedulingInfo.js"></script>
+<script src="../app/js/streaming/vo/metrics/ManifestUpdate.js"></script>
+<script src="../app/js/streaming/vo/metrics/DVRInfo.js"></script>
+
+<!-- Dash -->
+<script src="../app/js/dash/Dash.js"></script>
+<script src="../app/js/dash/DashContext.js"></script>
+<script src="../app/js/dash/vo/Mpd.js"></script>
+<script src="../app/js/dash/vo/Period.js"></script>
+<script src="../app/js/dash/vo/AdaptationSet.js"></script>
+<script src="../app/js/dash/vo/Representation.js"></script>
+<script src="../app/js/dash/vo/Segment.js"></script>
+<script src="../app/js/dash/vo/Event.js"></script>
+<script src="../app/js/dash/vo/EventStream.js"></script>
+<script src="../app/js/dash/DashParser.js"></script>
+<script src="../app/js/dash/DashHandler.js"></script>
+<script src="../app/js/dash/RepresentationController.js"></script>
+<script src="../app/js/dash/BaseURLExtensions.js"></script>
+<script src="../app/js/dash/FragmentExtensions.js"></script>
+<script src="../app/js/dash/DashManifestExtensions.js"></script>
+<script src="../app/js/dash/DashMetricsExtensions.js"></script>
+<script src="../app/js/dash/TimelineConverter.js"></script>
+<script src="../app/js/dash/DashAdapter.js"></script>
 	
 	<!-- Unit Testing -->
 	
 	<script src="lib/jasmine-1.3.1/jasmine.js"></script>
 	<script src="lib/jasmine-1.3.1/jasmine-html.js"></script>
-	
+
+    <script src="js/utils/Helpers.js"></script>
+    <script src="js/utils/SpecHelper.js"></script>
+    <script src="js/utils/ObjectsHelper.js"></script>
+    <script src="js/utils/MPDHelper.js"></script>
+    <script src="js/utils/VOHelper.js"></script>
+
 	<!-- TESTS -->
-	<script src="js/streaming/ParserSuite.js"></script>
-	<!--
-	<script src="js/streaming/MediaPlayerSuite.js"></script>
-	<script src="js/streaming/SourceBufferExtensionsSuite.js"></script>
-	<script src="js/streaming/BufferLengthControllerSuite.js"></script>
-	<script src="js/streaming/CapabilitiesSuite.js"></script>
-	<script src="js/streaming/MediaSourceExtensionsSuite.js"></script>
-	<script src="js/streaming/ParserSuite.js"></script>
-	<script src="js/streaming/LoaderSuite.js"></script>
-	<script src="js/streaming/ManifestLoaderSuite.js"></script>
-	-->
-	
+    <script src="js/dash/TimeLineConverterSpec.js"></script>
+    <script src="js/dash/RepresentationControllerSpec.js"></script>
+	<script src="js/streaming/AbrControllerSpec.js"></script>
+    <script src="js/streaming/MediaPlayerSpec.js"></script>
+    <script src="js/streaming/FragmentControllerSpec.js"></script>
+    <script src="js/streaming/FragmentModelSpec.js"></script>
+
 	<script type="text/javascript">
 		var jasmineEnv = jasmine.getEnv();
 		jasmineEnv.updateInterval = 250;
@@ -70,7 +140,7 @@
 		
 		function executeJasmine() {
 			jasmineEnv.execute();
-		};
+		}
 	</script>
 	
 </body>

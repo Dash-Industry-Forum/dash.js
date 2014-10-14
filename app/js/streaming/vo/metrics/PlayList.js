@@ -15,14 +15,14 @@ MediaPlayer.vo.metrics.PlayList = function () {
     "use strict";
 
     this.stream = null;     // type of stream ("audio" | "video" etc..)
-    this.start = null;      // Real-Time | Timestamp of the user action that starts the playback period...
+    this.start = null;      // Real-Time | Timestamp of the user action that starts the playback stream...
     this.mstart = null;     // Media-Time | Presentation time at which playout was requested by the user...
     this.starttype = null;  // Type of user action which triggered playout
                             //      - New playout request (e.g. initial playout or seeking)
                             //      - Resume from pause
                             //        - Other user request (e.g. user-requested quality change)
-                            //        - Start of a metrics collection period (hence earlier entries in the play list not collected)
-    this.trace = [];        // List of periods of continuous rendering of decoded samples.
+                            //        - Start of a metrics collection stream (hence earlier entries in the play list not collected)
+    this.trace = [];        // List of streams of continuous rendering of decoded samples.
 };
 
 MediaPlayer.vo.metrics.PlayList.Trace = function () {
@@ -40,9 +40,9 @@ MediaPlayer.vo.metrics.PlayList.Trace = function () {
      *                    representation switch
      *                    rebuffering
      *                    user request
-     *                    end of Period
+     *                    end of Stream
      *                    end of content
-     *                    end of a metrics collection period
+     *                    end of a metrics collection stream
      */
     this.representationid = null;
     this.subreplevel = null;

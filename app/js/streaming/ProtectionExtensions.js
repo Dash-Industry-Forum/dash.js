@@ -16,6 +16,12 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
 
 MediaPlayer.dependencies.ProtectionExtensions.prototype = {
     constructor: MediaPlayer.dependencies.ProtectionExtensions,
+    notify: undefined,
+    subscribe: undefined,
+    unsubscribe: undefined,
+    eventList: {
+        ENAME_KEY_SYSTEM_UPDATE_COMPLETED: "keySystemUpdateCompleted"
+    },
 
     supportsCodec: function (mediaKeysString, codec) {
         "use strict";
@@ -74,9 +80,9 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
     },
 
     getKeySystems: function () {
-        var playreadyGetUpdate = function (msg, laURL) {
-                var deferred = Q.defer(),
-                    decodedChallenge = null,
+        var self = this,
+            playreadyGetUpdate = function (msg, laURL) {
+                var decodedChallenge = null,
                     headers = [],
                     parser = new DOMParser(),
                     xmlDoc = parser.parseFromString(msg, "application/xml");
@@ -88,16 +94,14 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                     }
                 }
                 else {
-                    deferred.reject('DRM: playready update, can not find Challenge in keyMessage');
-                    return deferred.promise;
+                    self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new Error('DRM: playready update, can not find Challenge in keyMessage'));
                 }
 
                 var headerNameList = xmlDoc.getElementsByTagName("name");
                 var headerValueList = xmlDoc.getElementsByTagName("value");
 
                 if (headerNameList.length != headerValueList.length) {
-                    deferred.reject('DRM: playready update, invalid header name/value pair in keyMessage');
-                    return deferred.promise;
+                    self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new Error('DRM: playready update, invalid header name/value pair in keyMessage'));
                 }
 
                 for (var i = 0; i < headerNameList.length; i++) {
@@ -110,16 +114,16 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 var xhr = new XMLHttpRequest();
                 xhr.onload = function () {
                     if (xhr.status == 200) {
-                        deferred.resolve(new Uint8Array(xhr.response));
+                        self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, new Uint8Array(xhr.response));
                     } else {
-                        deferred.reject('DRM: playready update, XHR status is "' + xhr.statusText + '" (' + xhr.status + '), expected to be 200. readyState is ' + xhr.readyState);
+                        self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new Error('DRM: playready update, XHR status is "' + xhr.statusText + '" (' + xhr.status + '), expected to be 200. readyState is ' + xhr.readyState));
                     }
                 };
                 xhr.onabort = function () {
-                    deferred.reject('DRM: playready update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState);
+                    self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new Error('DRM: playready update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                 };
                 xhr.onerror = function () {
-                    deferred.reject('DRM: playready update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState);
+                    self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new Error('DRM: playready update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                 };
 
                 xhr.open('POST', laURL);
@@ -130,8 +134,6 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                     });
                 }
                 xhr.send(decodedChallenge);
-
-                return deferred.promise;
             },
             playReadyNeedToAddKeySession = function (initData, keySessions) {
                 return initData === null && keySessions.length === 0;
@@ -226,7 +228,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 getInitData: function (/*data*/) {
                     return null;},
                 getUpdate: function (msg/*, laURL*/) {
-                    return Q.when(msg);
+                    return msg;
                 }
             }
         ];

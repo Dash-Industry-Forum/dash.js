@@ -15,7 +15,7 @@ MediaPlayer.vo.metrics.DVRInfo = function () {
     "use strict";
     this.time = null;
     this.range = null;
-    this.mpd=null;
+    this.manifestInfo = null;
 };
 
 MediaPlayer.vo.metrics.DVRInfo.prototype = {

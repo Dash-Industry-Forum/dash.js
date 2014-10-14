@@ -21,15 +21,17 @@ MediaPlayer.dependencies.ProtectionController = function () {
             self.protectionModel.removeKeySystem(kid);
         },
 
-        selectKeySystem = function (codec, contentProtection) {
-            var self = this;
+        selectKeySystem = function (mediaInfo) {
+            var self = this,
+                codec = mediaInfo.codec,
+                contentProtection = mediaInfo.contentProtection;
 
             for(var ks = 0; ks < keySystems.length; ++ks) {
                 for(var cp = 0; cp < contentProtection.length; ++cp) {
                     if (keySystems[ks].isSupported(contentProtection[cp]) &&
                         self.protectionExt.supportsCodec(keySystems[ks].keysTypeString, codec)) {
 
-                        var kid = self.manifestExt.getKID(contentProtection[cp]);
+                        var kid = contentProtection[cp].KID;
                         if (!kid) {
                             kid = "unknown";
                         }
@@ -74,22 +76,13 @@ MediaPlayer.dependencies.ProtectionController = function () {
         },
 
         updateFromMessage = function (kid, session, msg, laURL) {
-            var self = this,
-                result;
-            result = self.protectionModel.updateFromMessage(kid, msg, laURL);
-            result.then(
-                function (data) {
-                    session.update(data);
-            });
-            return result;
+            this.protectionModel.updateFromMessage(kid, session, msg, laURL);
         };
 
     return {
         system : undefined,
         debug : undefined,
-        manifestExt : undefined,
         capabilities : undefined,
-        videoModel : undefined,
         protectionModel : undefined,
         protectionExt : undefined,
 

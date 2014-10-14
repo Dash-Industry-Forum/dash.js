@@ -290,10 +290,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             range,
             rangeLn,
             prevInfo,
-            period,
-            representation,
-            prevPeriod,
-            prevRepresentation,
+            stream,
+            track,
+            prevStream,
+            prevTrack,
             isUpdate = (data.length === ln),
             i = Math.max(ln - 1, 0);
 
@@ -346,30 +346,30 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 item.buffered = [{start: "-", end: "-", size: "-"}];
             }
 
-            for (k = 0; k < info.periodInfo.length; k += 1) {
-                period = item.periodInfo[k];
+            for (k = 0; k < info.streamInfo.length; k += 1) {
+                stream = item.streamInfo[k];
 
                 if (!prevInfo) break;
 
-                prevPeriod = prevInfo.periodInfo[k];
+                prevStream = prevInfo.streamInfo[k];
 
-                if (!prevPeriod) continue;
+                if (!prevStream) continue;
 
-                period.startDelta = "(" + (period.start - prevPeriod.start).toFixed(2) + ")";
-                period.durationDelta = "(" + (period.duration - prevPeriod.duration).toFixed(2) + ")";
+                stream.startDelta = "(" + (stream.start - prevStream.start).toFixed(2) + ")";
+                stream.durationDelta = "(" + (stream.duration - prevStream.duration).toFixed(2) + ")";
             }
 
-            for (k = 0; k < info.representationInfo.length; k += 1) {
-                representation = item.representationInfo[k];
+            for (k = 0; k < info.trackInfo.length; k += 1) {
+                track = item.trackInfo[k];
 
                 if (!prevInfo) break;
 
-                prevRepresentation = prevInfo.representationInfo[k];
+                prevTrack = prevInfo.trackInfo[k];
 
-                if (!prevRepresentation) continue;
+                if (!prevTrack) continue;
 
-                representation.startNumberDelta = "(" + (representation.startNumber - prevRepresentation.startNumber) + ")";
-                representation.presentationTimeOffsetDelta = "(" + (representation.presentationTimeOffset - prevRepresentation.presentationTimeOffset).toFixed(2) + ")";
+                track.startNumberDelta = "(" + (track.startNumber - prevTrack.startNumber) + ")";
+                track.presentationTimeOffsetDelta = "(" + (track.presentationTimeOffset - prevTrack.presentationTimeOffset).toFixed(2) + ")";
             }
 
             if (isUpdate) continue;

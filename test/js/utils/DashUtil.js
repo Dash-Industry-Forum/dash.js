@@ -136,7 +136,7 @@ function initialisation(rowID) {
 	if (testMode == 'Automation') {
 		(element).removeAttribute('controls');
 	} else {
-		(element).setAttribute("controls");
+		(element).setAttribute("controls", "true");
 	}
 
 	var videoDiv = document.querySelector('.ClassVideo' + (rowID));

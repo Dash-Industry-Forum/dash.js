@@ -17,16 +17,21 @@ MediaPlayer.models.ProtectionModel = function () {
         keyAddedListener = null,
         keyErrorListener = null,
         keyMessageListener = null,
-        keySystems = [];
+        session,
+        keySystems = [],
+
+        onKeySystemUpdateCompleted = function(sender, data, error) {
+            if (error) return;
+
+            session.update(data);
+        };
 
     return {
         system : undefined,
-        videoModel : undefined,
         protectionExt : undefined,
 
-        setup : function () {
-            //this.system.mapHandler("setCurrentTime", undefined, handleSetCurrentTimeNotification.bind(this));
-            element = this.videoModel.getElement();
+        setup: function() {
+            this.keySystemUpdateCompleted = onKeySystemUpdateCompleted;
         },
 
         init: function (videoModel) {
@@ -93,8 +98,9 @@ MediaPlayer.models.ProtectionModel = function () {
             return keySystem.keySystem.getInitData(keySystem.contentProtection);
         },
 
-        updateFromMessage: function (kid, msg, laURL) {
-            return keySystems[kid].keySystem.getUpdate(msg, laURL);
+        updateFromMessage: function (kid, sessionValue, msg, laURL) {
+            session = sessionValue;
+            keySystems[kid].keySystem.getUpdate(msg, laURL);
         },
 /*
         addKey: function (type, key, data, id) {

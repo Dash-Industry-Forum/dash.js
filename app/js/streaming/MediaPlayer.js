@@ -41,18 +41,24 @@ MediaPlayer = function (aContext) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    var VERSION = "1.2.0",
+    var VERSION = "1.3.0 (refactor)",
         context = aContext,
         system,
+        manifestLoader,
+        abrController,
         element,
         source,
         streamController,
+        rulesController,
+        manifestUpdater,
+        metricsExt,
+        metricsModel,
         videoModel,
         initialized = false,
         playing = false,
         autoPlay = true,
         scheduleWhilePaused = false,
-        bufferMax = MediaPlayer.dependencies.BufferExtensions.BUFFER_SIZE_REQUIRED,
+        bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
 
         isReady = function () {
             return (!!element && !!source);
@@ -75,15 +81,20 @@ MediaPlayer = function (aContext) {
             playing = true;
             //this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
+            streamController.subscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
+            manifestLoader.subscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
+            manifestLoader.subscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, manifestUpdater);
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.load(source);
 
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
-            system.mapOutlet("scheduleWhilePaused", "bufferController");
+            system.mapOutlet("scheduleWhilePaused", "scheduleController");
             system.mapValue("bufferMax", bufferMax);
-            system.injectInto(this.bufferExt, "bufferMax");
+            system.mapOutlet("bufferMax", "bufferController");
+
+            rulesController.initialize();
         },
 
         doAutoPlay = function () {
@@ -93,12 +104,12 @@ MediaPlayer = function (aContext) {
         },
 
         getDVRInfoMetric = function() {
-            var metric = this.metricsModel.getReadOnlyMetricsFor('video') || this.metricsModel.getReadOnlyMetricsFor('audio');
-            return this.metricsExt.getCurrentDVRInfo(metric);
+            var metric = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
+            return metricsExt.getCurrentDVRInfo(metric);
         },
 
         getDVRWindowSize = function() {
-            return getDVRInfoMetric.call(this).mpd.timeShiftBufferDepth;
+            return getDVRInfoMetric.call(this).manifestInfo.DVRWindowSize;
         },
 
         getDVRSeekOffset = function (value) {
@@ -133,35 +144,35 @@ MediaPlayer = function (aContext) {
 
             range = metric.range.end - metric.range.start;
 
-            return Math.round(range < metric.mpd.timeShiftBufferDepth ? range : metric.mpd.timeShiftBufferDepth);
+            return Math.round(range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize);
         },
 
         timeAsUTC = function () {
             var metric = getDVRInfoMetric.call(this),
-                availabilityStartTime,
+                availableFrom,
                 currentUTCTime;
 
             if (metric === null){
                 return 0;
             }
 
-            availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000;
-            currentUTCTime = this.time() + (availabilityStartTime + metric.range.start);
+            availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
+            currentUTCTime = this.time() + (availableFrom + metric.range.start);
 
             return Math.round(currentUTCTime);
         },
 
         durationAsUTC = function () {
             var metric = getDVRInfoMetric.call(this),
-                availabilityStartTime,
+                availableFrom,
                 currentUTCDuration;
 
             if (metric === null){
                 return 0;
             }
 
-            availabilityStartTime = metric.mpd.availabilityStartTime.getTime() / 1000;
-            currentUTCDuration = (availabilityStartTime + metric.range.start) + this.duration();
+            availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
+            currentUTCDuration = (availableFrom + metric.range.start) + this.duration();
 
             return Math.round(currentUTCDuration);
         },
@@ -180,9 +191,30 @@ MediaPlayer = function (aContext) {
             var m = Math.floor((value%3600)/60);
             var s = Math.floor((value%3600)%60);
             return (h === 0 ? "":(h<10 ? "0"+h.toString()+":" : h.toString()+":"))+(m<10 ? "0"+m.toString() : m.toString())+":"+(s<10 ? "0"+s.toString() : s.toString());
+        },
+
+        updateRules = function(type, rules, override) {
+            if (!rules || (type === undefined) || type === null) return;
+
+            if (override) {
+                rulesController.setRules(type, rules);
+            } else {
+                rulesController.addRules(type, rules);
+            }
+        },
+
+        doReset = function() {
+            if (playing && streamController) {
+                streamController.unsubscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
+                manifestLoader.unsubscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
+                manifestLoader.unsubscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, manifestUpdater);
+                streamController.reset();
+                abrController.reset();
+                rulesController.reset();
+                streamController = null;
+                playing = false;
+            }
         };
-
-
 
     // Set up DI.
     system = new dijon.System();
@@ -191,16 +223,24 @@ MediaPlayer = function (aContext) {
     system.injectInto(context);
 
     return {
+        notifier: undefined,
         debug: undefined,
         eventBus: undefined,
         capabilities: undefined,
-        abrController: undefined,
-        metricsModel: undefined,
-        metricsExt: undefined,
-        bufferExt: undefined,
+        adapter: undefined,
         errHandler: undefined,
         tokenAuthentication:undefined,
         uriQueryFragModel:undefined,
+        videoElementExt:undefined,
+
+        setup: function() {
+            metricsExt = system.getObject("metricsExt");
+            manifestLoader = system.getObject("manifestLoader");
+            manifestUpdater = system.getObject("manifestUpdater");
+            abrController = system.getObject("abrController");
+            rulesController = system.getObject("rulesController");
+            metricsModel = system.getObject("metricsModel");
+        },
 
         addEventListener: function (type, listener, useCapture) {
             this.eventBus.addEventListener(type, listener, useCapture);
@@ -257,28 +297,44 @@ MediaPlayer = function (aContext) {
         },
 
         getMetricsExt: function () {
-            return this.metricsExt;
+            return metricsExt;
         },
 
         getMetricsFor: function (type) {
-            var metrics = this.metricsModel.getReadOnlyMetricsFor(type);
+            var metrics = metricsModel.getReadOnlyMetricsFor(type);
             return metrics;
         },
 
         getQualityFor: function (type) {
-            return this.abrController.getQualityFor(type);
+            return abrController.getQualityFor(type);
         },
 
         setQualityFor: function (type, value) {
-            this.abrController.setPlaybackQuality(type, value);
+            abrController.setPlaybackQuality(type, value);
         },
 
         getAutoSwitchQuality : function () {
-            return this.abrController.getAutoSwitchBitrate();
+            return abrController.getAutoSwitchBitrate();
         },
 
         setAutoSwitchQuality : function (value) {
-            this.abrController.setAutoSwitchBitrate(value);
+            abrController.setAutoSwitchBitrate(value);
+        },
+
+        setSchedulingRules: function(newRulesCollection) {
+            updateRules.call(this, rulesController.SCHEDULING_RULE, newRulesCollection, true);
+        },
+
+        addSchedulingRules: function(newRulesCollection) {
+            updateRules.call(this, rulesController.SCHEDULING_RULE, newRulesCollection, false);
+        },
+
+        setABRRules: function(newRulesCollection) {
+            updateRules.call(this, rulesController.ABR_RULE, newRulesCollection, true);
+        },
+
+        addABRRules: function(newRulesCollection) {
+            updateRules.call(this, rulesController.ABR_RULE, newRulesCollection, false);
         },
 
         attachView: function (view) {
@@ -296,11 +352,7 @@ MediaPlayer = function (aContext) {
 
             // TODO : update
 
-            if (playing && streamController) {
-                streamController.reset();
-                streamController = null;
-                playing = false;
-            }
+            doReset.call(this);
 
             if (isReady.call(this)) {
                 doAutoPlay.call(this);
@@ -315,16 +367,9 @@ MediaPlayer = function (aContext) {
             this.uriQueryFragModel.reset();
             source = this.uriQueryFragModel.parseURI(url);
 
-            this.setQualityFor('video', 0);
-            this.setQualityFor('audio', 0);
-
             // TODO : update
 
-            if (playing && streamController) {
-                streamController.reset();
-                streamController = null;
-                playing = false;
-            }
+            doReset.call(this);
 
             if (isReady.call(this)) {
                 doAutoPlay.call(this);
