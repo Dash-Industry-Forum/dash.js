@@ -418,13 +418,13 @@ Webm.dependencies.WebmURLExtensions = function () {
             }
 
             this.debug.log("Parsed cues: " + segments.length + " cues.");
-            return Q.when(segments);
+            return segments;
         },
 
-        parseEbmlHeader = function (data, media, theRange) {
+        parseEbmlHeader = function (data, media, theRange, callback) {
             var d = new EbmlParser(data),
-                deferred = Q.defer(),
                 duration,
+                segments,
                 parts = theRange.split("-"),
                 request = new XMLHttpRequest(),
                 self = this,
@@ -479,11 +479,8 @@ Webm.dependencies.WebmURLExtensions = function () {
                     return;
                 }
                 needFailureReport = false;
-                parseSegments.call(self, request.response, info.url, segmentStart, segmentEnd, duration).then(
-                    function (segments) {
-                        deferred.resolve(segments);
-                    }
-                );
+                segments = parseSegments.call(self, request.response, info.url, segmentStart, segmentEnd, duration);
+                callback.call(self, segments);
             };
 
             request.onloadend = request.onerror = function () {
@@ -493,7 +490,7 @@ Webm.dependencies.WebmURLExtensions = function () {
                 needFailureReport = false;
 
                 self.errHandler.downloadError("Cues ", info.url, request);
-                deferred.reject(request);
+                callback.call(self, null);
             };
 
 
@@ -503,14 +500,14 @@ Webm.dependencies.WebmURLExtensions = function () {
             request.send(null);
 
             self.debug.log("Perform cues load: " + info.url + " bytes=" + info.range.start + "-" + info.range.end);
-            return deferred.promise;
         },
 
-        loadSegments = function (media, theRange) {
-            var deferred = Q.defer(),
-                request = new XMLHttpRequest(),
+        loadSegments = function (representation, type, theRange, callback) {
+            var request = new XMLHttpRequest(),
                 self = this,
                 needFailureReport = true,
+                media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+                    AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
                 info = {
                     bytesLoaded: 0,
                     bytesToLoad: 8192,
@@ -531,12 +528,9 @@ Webm.dependencies.WebmURLExtensions = function () {
                     return;
                 }
                 needFailureReport = false;
-                parseEbmlHeader.call(self, request.response, media, theRange).then(
-                    function (segments) {
-                        deferred.resolve(segments);
-                    }
-                );
-
+                parseEbmlHeader.call(self, request.response, media, theRange, function (segments) {
+                    callback.call(self, segments, representation, type);
+                });
             };
 
             request.onloadend = request.onerror = function () {
@@ -546,7 +540,7 @@ Webm.dependencies.WebmURLExtensions = function () {
                 needFailureReport = false;
 
                 self.errHandler.downloadError("EBML Header", info.url, request);
-                deferred.reject(request);
+                callback.call(self, null, representation, type);
             };
 
             request.open("GET", info.url);
@@ -554,14 +548,33 @@ Webm.dependencies.WebmURLExtensions = function () {
             request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
             request.send(null);
             self.debug.log("Parse EBML header: " + info.url);
+        },
 
-            return deferred.promise;
+        onLoaded = function(segments, representation, type) {
+            var self = this;
+
+            if(segments) {
+                self.notify(self.eventList.ENAME_SEGMENTS_LOADED, segments, representation, type);
+            } else {
+                self.notify(self.eventList.ENAME_SEGMENTS_LOADED, null, representation, type, new Error("error loading segments"));
+            }
         };
 
     return {
         debug: undefined,
         errHandler: undefined,
-        loadSegments: loadSegments,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
+        eventList: {
+            ENAME_INITIALIZATION_LOADED: "initializationLoaded",
+            ENAME_SEGMENTS_LOADED: "segmentsLoaded"
+        },
+
+        loadSegments: function(representation, type, range) {
+            loadSegments.call(this, representation, type, range, onLoaded.bind(this));
+        },
+
         parseEbmlHeader: parseEbmlHeader,
         parseSegments: parseSegments,
         parseSIDX: parseCues
