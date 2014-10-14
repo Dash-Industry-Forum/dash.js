@@ -511,12 +511,13 @@ Webm.dependencies.WebmURLExtensions = function () {
                 request = new XMLHttpRequest(),
                 self = this,
                 needFailureReport = true,
+                bytesToLoad = 8192,
                 info = {
                     bytesLoaded: 0,
-                    bytesToLoad: 8192,
+                    bytesToLoad: bytesToLoad,
                     range: {
                         start: 0,
-                        end: this.bytesToLoad
+                        end: bytesToLoad
                     },
                     request: request,
                     url: media
