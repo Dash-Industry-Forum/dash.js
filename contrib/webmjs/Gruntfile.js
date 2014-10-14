@@ -13,31 +13,29 @@ module.exports = function(grunt) {
     jshint: {
       all: ["../../app/js/*/**/*.js", "./app/js/webm/*.js"],
       options: {
-        jshintrc: ".jshintrc"
+        jshintrc: "../../.jshintrc"
       }
     },
     uglify : {
       min : {
         files: {
-          "dash.min.js" : [
+          "dash.webm.min.js" : [
             "../../app/js/streaming/MediaPlayer.js",
             "../../app/js/streaming/Context.js",
             "../../app/js/dash/Dash.js",
             "../../app/js/dash/DashContext.js",
-            "../../app/lib/q.js",
             "../../app/lib/xml2json.js",
             "../../app/lib/objectiron.js",
             "../../app/lib/dijon.js",
             "app/js/webm/Webm.js",
             "app/js/webm/WebmContext.js",
             "app/js/webm/WebmURLExtensions.js",
-            "../../app/js/*/**/*.js"],
+            "../../app/js/*/**/*.js"]
         }
       },
       all : {
         files: {
-          "dash.all.js" : [
-            "../../app/lib/q.js",
+          "dash.webm.all.js" : [
             "../../app/lib/xml2json.js",
             "../../app/lib/objectiron.js",
             "../../app/lib/dijon.js",
@@ -76,8 +74,7 @@ module.exports = function(grunt) {
              './test/js/webm/WebmURLExtensions_Suite.js'
      			],
           vendor: [
-            "../../app/lib/q.js",
-    	  		"../../app/lib/dijon.js",
+                "../../app/lib/dijon.js"
             ],
           template : require('grunt-template-jasmine-istanbul'),
           templateOptions: {

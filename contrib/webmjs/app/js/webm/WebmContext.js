@@ -23,10 +23,12 @@ Webm.di.WebmContext = function () {
 
             this.system.mapClass('parser', Dash.dependencies.DashParser);
             this.system.mapClass('indexHandler', Dash.dependencies.DashHandler);
-            this.system.mapClass('baseURLExt', Webm.dependencies.WebmURLExtensions);
+            this.system.mapSingleton('baseURLExt', Webm.dependencies.WebmURLExtensions);
+            this.system.mapClass('trackController', Dash.dependencies.RepresentationController);
             this.system.mapSingleton('manifestExt', Dash.dependencies.DashManifestExtensions);
             this.system.mapSingleton('metricsExt', Dash.dependencies.DashMetricsExtensions);
             this.system.mapSingleton('timelineConverter', Dash.dependencies.TimelineConverter);
+            this.system.mapSingleton('adapter', Dash.dependencies.DashAdapter);
         }
     };
 };
