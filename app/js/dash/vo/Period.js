@@ -18,7 +18,6 @@ Dash.vo.Period = function () {
     this.duration = NaN;
     this.start = NaN;
     this.mpd = null;
-    this.liveEdge = NaN;
 };
 
 Dash.vo.Period.prototype = {

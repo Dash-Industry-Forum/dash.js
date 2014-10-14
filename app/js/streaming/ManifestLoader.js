@@ -16,10 +16,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
 
     var RETRY_ATTEMPTS = 3,
         RETRY_INTERVAL = 500,
-        deferred = null,
-
-
-    parseBaseUrl = function (url) {
+        parseBaseUrl = function (url) {
             var base = null;
 
             if (url.indexOf("/") !== -1)
@@ -37,8 +34,9 @@ MediaPlayer.dependencies.ManifestLoader = function () {
             var baseUrl = parseBaseUrl(url),
                 request = new XMLHttpRequest(),
                 requestTime = new Date(),
-                mpdLoadedTime = null,
+                loadedTime = null,
                 needFailureReport = true,
+                manifest,
                 onload = null,
                 report = null,
                 self = this;
@@ -50,7 +48,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                   return;
                 }
                 needFailureReport = false;
-                mpdLoadedTime = new Date();
+                loadedTime = new Date();
 
                 self.tokenAuthentication.checkRequestHeaderForToken(request);
                 self.metricsModel.addHttpRequest("stream",
@@ -60,22 +58,21 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  null,
                                                  null,
                                                  requestTime,
-                                                 mpdLoadedTime,
+                                                 loadedTime,
                                                  request.status,
                                                  null,
                                                  null);
 
-                self.parser.parse(request.responseText, baseUrl).then(
-                    function (manifest) {
-                        manifest.mpdUrl = url;
-                        manifest.mpdLoadedTime = mpdLoadedTime;
-                        self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, mpdLoadedTime, manifest.availabilityStartTime);
-                        deferred.resolve(manifest);
-                    },
-                    function () {
-                        deferred.reject(request);
-                    }
-                );
+                manifest = self.parser.parse(request.responseText, baseUrl);
+
+                if (manifest) {
+                    manifest.url = url;
+                    manifest.loadedTime = loadedTime;
+                    self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, loadedTime, manifest.availabilityStartTime);
+                    self.notify(self.eventList.ENAME_MANIFEST_LOADED, manifest);
+                } else {
+                    self.notify(self.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url));
+                }
             };
 
             report = function () {
@@ -105,7 +102,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 } else {
                     self.debug.log("Failed loading manifest: " + url + " no retry attempts left");
                     self.errHandler.downloadError("manifest", url, request);
-                    deferred.reject(request);
+                    self.notify(self.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url + " no retry attempts left"));
                 }
             };
 
@@ -127,11 +124,15 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         errHandler: undefined,
         metricsModel: undefined,
         tokenAuthentication:undefined,
-        load: function(url) {
-            deferred = Q.defer();
-            doLoad.call(this, url, RETRY_ATTEMPTS);
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
+        eventList: {
+            ENAME_MANIFEST_LOADED: "manifestLoaded"
+        },
 
-            return deferred.promise;
+        load: function(url) {
+            doLoad.call(this, url, RETRY_ATTEMPTS);
         }
     };
 };

@@ -62,7 +62,7 @@ MediaPlayer.utils.VTTParser = function () {
                 }
             }
 
-            return Q.when(captionArray);
+            return captionArray;
         }
     };
 };

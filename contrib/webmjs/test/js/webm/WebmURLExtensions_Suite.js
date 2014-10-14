@@ -41,6 +41,7 @@ describe("Webm url Extensions Test Suite", function(){
         context = new Webm.di.WebmContext();
         system.injectInto(context);
 
+        system.getObject("notifier");
         webmUrlExt = system.getObject("baseURLExt");
     });
     if(window.location.href.indexOf("_SpecRunner.html")>0) {
@@ -50,11 +51,15 @@ describe("Webm url Extensions Test Suite", function(){
                       c,
                       i,
                       flag=false,
+                      media,
+                      representation,
                       verify;
                   for (i = 0; i < files.length; i++) {
                       flag = false;
                       verify = function(result, index) {
                         successResult = result;
+                          expect(result).not.toBeNull();
+
                           for (c = 0; c < result.length; c++) {
                             expect(result[c].mediaRange).toEqual(validCues[index][c].mediaRange);
                             expect(result[c].media).toEqual(validCues[index][c].media);
@@ -68,8 +73,12 @@ describe("Webm url Extensions Test Suite", function(){
                       (function (index) {
                           runs(function () {
                             flag = false;
-                            webmUrlExt.loadSegments(webmTestUrl + files[index].name, files[index].range)
-                              .then((function (result) { verify(result, index) }));
+                            media = webmTestUrl + files[index].name;
+                            representation = {index: 0, adaptation: {index: 0, period: {index: 0, mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{Representation_asArray: [{BaseURL: media}]}]}]}}}}};
+                            webmUrlExt.subscribe(webmUrlExt.eventList.ENAME_SEGMENTS_LOADED, {segmentsLoaded: function(sender, fragments/*, representation, type, error*/) {
+                                verify(fragments, index);
+                            }});
+                            webmUrlExt.loadSegments(representation, "video", files[index].range);
                           });
                       })(i);
 

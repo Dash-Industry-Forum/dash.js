@@ -19,6 +19,12 @@ MediaPlayer.models.ManifestModel = function () {
     return {
         system: undefined,
         eventBus: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
+        eventList: {
+            ENAME_MANIFEST_UPDATED: "manifestUpdated"
+        },
 
         getValue:  function () {
             return manifest;
@@ -26,12 +32,13 @@ MediaPlayer.models.ManifestModel = function () {
 
         setValue: function (value) {
             manifest = value;
-            this.system.notify("manifestUpdated");
 
             this.eventBus.dispatchEvent({
                 type: "manifestLoaded",
                 data: value
             });
+
+            this.notify(this.eventList.ENAME_MANIFEST_UPDATED, value);
         }
     };
 };

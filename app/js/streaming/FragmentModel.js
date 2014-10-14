@@ -19,47 +19,16 @@ MediaPlayer.dependencies.FragmentModel = function () {
         executedRequests = [],
         pendingRequests = [],
         loadingRequests = [],
-        startLoadingCallback,
-        successLoadingCallback,
-        errorLoadingCallback,
-        streamEndCallback,
+        rejectedRequests = [],
 
-        LOADING_REQUEST_THRESHOLD = 2,
+        isLoadingPostponed = false,
 
         loadCurrentFragment = function(request) {
-            var onSuccess,
-                onError,
-                self = this;
+            var self = this;
 
             // We are about to start loading the fragment, so execute the corresponding callback
-            startLoadingCallback.call(context, request);
-
-            onSuccess = function(request, response) {
-                loadingRequests.splice(loadingRequests.indexOf(request), 1);
-                executedRequests.push(request);
-                successLoadingCallback.call(context, request, response);
-                request.deferred = null;
-            };
-
-            onError = function(request) {
-                loadingRequests.splice(loadingRequests.indexOf(request), 1);
-                errorLoadingCallback.call(context, request);
-                request.deferred = null;
-            };
-
-            self.fragmentLoader.load(request).then(onSuccess.bind(context, request),
-                onError.bind(context, request));
-        },
-
-        sortRequestsByProperty = function(requestsArray, sortProp) {
-            var compare = function (req1, req2){
-                if (req1[sortProp] < req2[sortProp]) return -1;
-                if (req1[sortProp] > req2[sortProp]) return 1;
-                return 0;
-            };
-
-            requestsArray.sort(compare);
-
+            self.notify(self.eventList.ENAME_FRAGMENT_LOADING_STARTED, request);
+            self.fragmentLoader.load(request);
         },
 
         removeExecutedRequest = function(request) {
@@ -68,12 +37,103 @@ MediaPlayer.dependencies.FragmentModel = function () {
             if (idx !== -1) {
                 executedRequests.splice(idx, 1);
             }
+        },
+
+        getRequestForTime = function(arr, time) {
+            var lastIdx = arr.length - 1,
+                start = NaN,
+                end = NaN,
+                req = null,
+                i;
+
+            // loop through the executed requests and pick the one for which the playback interval matches the given time
+            for (i = lastIdx; i >= 0; i -=1) {
+                req = arr[i];
+                start = req.startTime;
+                end = start + req.duration;
+                if ((!isNaN(start) && !isNaN(end) && (time >= start) && (time < end)) || (isNaN(start) && isNaN(time))) {
+                    return req;
+                }
+            }
+
+            return null;
+        },
+
+        addSchedulingInfoMetrics = function(request, state) {
+            if (!request) return;
+
+            var mediaType = request.mediaType,
+                now = new Date(),
+                type = request.type,
+                startTime = request.startTime,
+                availabilityStartTime = request.availabilityStartTime,
+                duration = request.duration,
+                quality = request.quality,
+                range = request.range;
+
+            this.metricsModel.addSchedulingInfo(mediaType, now, type, startTime, availabilityStartTime, duration, quality, range, state);
+        },
+
+        onLoadingCompleted = function(sender, request, response, error) {
+            loadingRequests.splice(loadingRequests.indexOf(request), 1);
+
+            if (response && !error) {
+                executedRequests.push(request);
+                addSchedulingInfoMetrics.call(this, request, MediaPlayer.vo.metrics.SchedulingInfo.EXECUTED_STATE);
+                this.notify(this.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, request, response);
+            } else {
+                addSchedulingInfoMetrics.call(this, request, MediaPlayer.vo.metrics.SchedulingInfo.FAILED_STATE);
+                this.notify(this.eventList.ENAME_FRAGMENT_LOADING_FAILED, request);
+            }
+        },
+
+        onBytesRejected = function(sender, quality, index) {
+            var req = this.getExecutedRequestForQualityAndIndex(quality, index);
+            // if request for an unappropriate quality has not been removed yet, do it now
+            if (req) {
+                this.removeExecutedRequest(req);
+                // if index is not a number it means that this is a media fragment, so we should
+                // request the fragment for the same time but with an appropriate quality
+                // If this is init fragment do nothing, because it will be requested in loadInitialization method
+                if (!isNaN(index)) {
+                    rejectedRequests.push(req);
+                    addSchedulingInfoMetrics.call(this, req, MediaPlayer.vo.metrics.SchedulingInfo.REJECTED_STATE);
+                }
+            }
+        },
+
+        onBufferLevelOutrun = function() {
+            isLoadingPostponed = true;
+        },
+
+        onBufferLevelBalanced = function() {
+            isLoadingPostponed = false;
         };
 
     return {
         system: undefined,
         debug: undefined,
-        fragmentLoader: undefined,
+        metricsModel: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
+        eventList: {
+            ENAME_STREAM_COMPLETED: "streamCompleted",
+            ENAME_FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted",
+            ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted",
+            ENAME_FRAGMENT_LOADING_FAILED: "fragmentLoadingFailed"
+        },
+
+        setup: function() {
+            this.bufferLevelOutrun = onBufferLevelOutrun;
+            this.bufferLevelBalanced = onBufferLevelBalanced;
+            this.bytesRejected = onBytesRejected;
+            this.loadingCompleted = onLoadingCompleted;
+        },
+
+        setLoader: function(value) {
+            this.fragmentLoader = value;
+        },
 
         setContext: function(value) {
             context = value;
@@ -83,67 +143,52 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return context;
         },
 
-        addRequest: function(value) {
-            if (value) {
-                if (this.isFragmentLoadedOrPending(value)) return;
-
-                pendingRequests.push(value);
-                sortRequestsByProperty.call(this, pendingRequests, "index");
-            }
+        getIsPostponed: function() {
+            return isLoadingPostponed;
         },
 
-        setCallbacks: function(onLoadingStart, onLoadingSuccess, onLoadingError, onStreamEnd) {
-            startLoadingCallback = onLoadingStart;
-            streamEndCallback = onStreamEnd;
-            errorLoadingCallback = onLoadingError;
-            successLoadingCallback = onLoadingSuccess;
+        addRequest: function(value) {
+            if (!value || this.isFragmentLoadedOrPending(value)) return false;
+
+            pendingRequests.push(value);
+            addSchedulingInfoMetrics.call(this, value, MediaPlayer.vo.metrics.SchedulingInfo.PENDING_STATE);
+
+            return true;
         },
 
         isFragmentLoadedOrPending: function(request) {
-            var isLoaded = false,
-                ln = executedRequests.length,
-                req;
+            var isEqualComplete = function(req1, req2) {
+                    return ((req1.action === "complete") && (req1.action === req2.action));
+                },
 
-            // First, check if the fragment has already been loaded
-            for (var i = 0; i < ln; i++) {
-                req = executedRequests[i];
-                if (request.startTime === req.startTime || ((req.action === "complete") && request.action === req.action)) {
-                    //self.debug.log(request.streamType + " Fragment already loaded for time: " + request.startTime);
-                    if (request.url === req.url) {
-                        //self.debug.log(request.streamType + " Fragment url already loaded: " + request.url);
-                        isLoaded = true;
-                        break;
-                    } else {
-                        // remove overlapping segement of a different quality
-                        removeExecutedRequest(request);
+                isEqualMedia = function(req1, req2) {
+                    return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
+                },
+
+                isEqualInit = function(req1, req2) {
+                    return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
+                },
+
+                check = function(arr) {
+                    var req,
+                        isLoaded = false,
+                        ln = arr.length,
+                        i;
+
+                    for (i = 0; i < ln; i += 1) {
+                        req = arr[i];
+
+                        if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
+                            //self.debug.log(request.mediaType + " Fragment already loaded for time: " + request.startTime);
+                            isLoaded = true;
+                            break;
+                        }
                     }
-                }
-            }
 
-            // if it has not been loaded check if it is going to be loaded
-            if (!isLoaded) {
-                for (i = 0, ln = pendingRequests.length; i < ln; i += 1) {
-                    req = pendingRequests[i];
-                    if ((request.url === req.url) && (request.startTime === req.startTime)) {
-                        isLoaded = true;
-                    }
-                }
-            }
+                    return isLoaded;
+                };
 
-            if (!isLoaded) {
-                for (i = 0, ln = loadingRequests.length; i < ln; i += 1) {
-                    req = loadingRequests[i];
-                    if ((request.url === req.url) && (request.startTime === req.startTime)) {
-                        isLoaded = true;
-                    }
-                }
-            }
-
-            return isLoaded;
-        },
-
-        isReady: function() {
-            return context.isReady();
+            return (check(pendingRequests) || check(loadingRequests) || check(executedRequests));
         },
 
         getPendingRequests: function() {
@@ -152,6 +197,14 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         getLoadingRequests: function() {
             return loadingRequests;
+        },
+
+        getExecutedRequests: function() {
+            return executedRequests;
+        },
+
+        getRejectedRequests: function() {
+            return rejectedRequests;
         },
 
         getLoadingTime: function() {
@@ -174,23 +227,15 @@ MediaPlayer.dependencies.FragmentModel = function () {
         },
 
         getExecutedRequestForTime: function(time) {
-            var lastIdx = executedRequests.length - 1,
-                start = NaN,
-                end = NaN,
-                req = null,
-                i;
+            return getRequestForTime(executedRequests, time);
+        },
 
-            // loop through the executed requests and pick the one for which the playback interval matches the given time
-            for (i = lastIdx; i >= 0; i -=1) {
-                req = executedRequests[i];
-                start = req.startTime;
-                end = start + req.duration;
-                if (!isNaN(start) && !isNaN(end) && (time > start) && (time < end)) {
-                    return req;
-                }
-            }
+        getPendingRequestForTime: function(time) {
+            return getRequestForTime(pendingRequests, time);
+        },
 
-            return null;
+        getLoadingRequestForTime: function(time) {
+            return getRequestForTime(loadingRequests, time);
         },
 
         getExecutedRequestForQualityAndIndex: function(quality, index) {
@@ -200,7 +245,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
             for (i = lastIdx; i >= 0; i -=1) {
                 req = executedRequests[i];
-                if (req.quality === quality && req.index === index) {
+                if ((req.quality === quality) && (req.index === index)) {
                     return req;
                 }
             }
@@ -229,46 +274,47 @@ MediaPlayer.dependencies.FragmentModel = function () {
         },
 
         cancelPendingRequests: function() {
+            var self = this,
+                reqs = pendingRequests;
             pendingRequests = [];
+
+            reqs.forEach(function(request) {
+                addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.CANCELED_STATE);
+            });
         },
 
         abortRequests: function() {
             this.fragmentLoader.abort();
+
+            for (var i = 0, ln = loadingRequests.length; i < ln; i += 1) {
+                this.removeExecutedRequest(loadingRequests[i]);
+            }
+
             loadingRequests = [];
         },
 
-        executeCurrentRequest: function() {
+        executeRequest: function(request) {
             var self = this,
-                currentRequest;
+                idx = pendingRequests.indexOf(request);
 
-            if (pendingRequests.length === 0) return;
+            if (!request || idx === -1) return;
 
-            if (loadingRequests.length >= LOADING_REQUEST_THRESHOLD) {
-                // too many requests have been loading, do nothing until some of them are loaded or aborted
-                return;
-            }
+            pendingRequests.splice(idx, 1);
 
-            // take the next request to execute and remove it from the list of pending requests
-            currentRequest = pendingRequests.shift();
-
-            switch (currentRequest.action) {
+            switch (request.action) {
                 case "complete":
                     // Stream has completed, execute the correspoinding callback
-                    executedRequests.push(currentRequest);
-                    streamEndCallback.call(context, currentRequest);
+                    executedRequests.push(request);
+                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.EXECUTED_STATE);
+                    self.notify(self.eventList.ENAME_STREAM_COMPLETED, request);
                     break;
                 case "download":
-                    loadingRequests.push(currentRequest);
-                    loadCurrentFragment.call(self, currentRequest);
+                    loadingRequests.push(request);
+                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.LOADING_STATE);
+                    loadCurrentFragment.call(self, request);
                     break;
                 default:
                     this.debug.log("Unknown request action.");
-                    if (currentRequest.deferred) {
-                        currentRequest.deferred.reject();
-                        currentRequest.deferred = null;
-                    } else {
-                        errorLoadingCallback.call(context, currentRequest);
-                    }
             }
         }
     };

@@ -15,6 +15,7 @@ Dash.vo.AdaptationSet = function () {
     "use strict";
     this.period = null;
     this.index = -1;
+    this.type = null;
 };
 
 Dash.vo.AdaptationSet.prototype = {

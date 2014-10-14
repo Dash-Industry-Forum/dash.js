@@ -35,7 +35,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                 track.addCue(new Cue(currentItem.start, currentItem.end, currentItem.data));
             }
 
-            return Q.when(track);
+            return track;
         },
         deleteCues: function(video) {
             //when multiple tracks are supported - iterate through and delete all cues from all tracks.

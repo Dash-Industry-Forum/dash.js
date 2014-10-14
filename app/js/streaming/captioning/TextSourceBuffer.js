@@ -13,8 +13,7 @@
  */
 MediaPlayer.dependencies.TextSourceBuffer = function () {
 
-    var video,
-        data,
+    var mediaInfo,
         mimeType;
 
     return {
@@ -24,35 +23,31 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
 
         initialize: function (type, bufferController) {
             mimeType = type;
-            video = bufferController.getVideoModel().getElement();
-            data = bufferController.getData();
+            this.videoModel = bufferController.videoModel;
+            mediaInfo = bufferController.streamProcessor.getCurrentTrack().mediaInfo;
         },
 
         append: function (bytes) {
             var self = this,
+                result,
+                label,
+                lang,
                 ccContent = String.fromCharCode.apply(null, new Uint16Array(bytes));
 
-            self.getParser().parse(ccContent).then(
-                function(result)
-                {
-                    var label = data.Representation_asArray[0].id,
-                        lang = data.lang;
+            try {
+                result = self.getParser().parse(ccContent);
+                label = mediaInfo.id;
+                lang = mediaInfo.lang;
 
-                    self.getTextTrackExtensions().addTextTrack(video, result, label, lang, true).then(
-                        function(/*track*/)
-                        {
-                            self.eventBus.dispatchEvent({type:"updateend"});
-                        }
-                    );
-                },
-                function(errMsg) {
-                    self.errHandler.closedCaptionsError(errMsg, "parse", ccContent);
-                }
-            );
+                self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, true);
+                self.eventBus.dispatchEvent({type:"updateend"});
+            } catch(e) {
+                self.errHandler.closedCaptionsError(e, "parse", ccContent);
+            }
         },
 
         abort:function() {
-            this.getTextTrackExtensions().deleteCues(video);
+            this.getTextTrackExtensions().deleteCues(this.videoModel.getElement());
         },
 
         getParser:function() {

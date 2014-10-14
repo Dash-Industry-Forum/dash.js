@@ -29,7 +29,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 xhrs.push(req);
                 request.requestStartDate = new Date();
 
-                httpRequestMetrics = self.metricsModel.addHttpRequest(request.streamType,
+                httpRequestMetrics = self.metricsModel.addHttpRequest(request.mediaType,
                                                                       null,
                                                                       request.type,
                                                                       request.url,
@@ -96,7 +96,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime());
                     download = (request.requestEndDate.getTime() - request.firstByteDate.getTime());
 
-                    self.debug.log("loaded " + request.streamType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
+                    self.debug.log("loaded " + request.mediaType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
 
                     httpRequestMetrics.tresponse = request.firstByteDate;
                     httpRequestMetrics.tfinish = request.requestEndDate;
@@ -108,10 +108,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                       [bytes ? bytes.byteLength : 0]);
                     lastTraceTime = currentTime;
 
-                    request.deferred.resolve({
-                        data: bytes,
-                        request: request
-                    });
+                    self.notify(self.eventList.ENAME_LOADING_COMPLETED, request, bytes);
                 };
 
                 req.onloadend = req.onerror = function () {
@@ -140,7 +137,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime());
                     download = (request.requestEndDate.getTime() - request.firstByteDate.getTime());
 
-                    self.debug.log("failed " + request.streamType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
+                    self.debug.log("failed " + request.mediaType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
 
                     httpRequestMetrics.tresponse = request.firstByteDate;
                     httpRequestMetrics.tfinish = request.requestEndDate;
@@ -154,15 +151,15 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
 
                     if (remainingAttempts > 0) {
-                        self.debug.log("Failed loading segment: " + request.streamType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                        self.debug.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
                         remainingAttempts--;
                         setTimeout(function() {
                             doLoad.call(self, request, remainingAttempts);
                         }, RETRY_INTERVAL);
                     } else {
-                        self.debug.log("Failed loading segment: " + request.streamType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
+                        self.debug.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
                         self.errHandler.downloadError("content", request.url, req);
-                        request.deferred.reject(req);
+                        self.notify(self.eventList.ENAME_LOADING_COMPLETED, request, null, new Error("failed loading fragment"));
                     }
                 };
 
@@ -170,7 +167,8 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         },
 
         checkForExistence = function(request) {
-            var req = new XMLHttpRequest(),
+            var self = this,
+                req = new XMLHttpRequest(),
                 isSuccessful = false;
 
             req.open("HEAD", request.url, true);
@@ -180,13 +178,13 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
                 isSuccessful = true;
 
-                request.deferred.resolve(request);
+                self.notify(self.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, true, request);
             };
 
             req.onloadend = req.onerror = function () {
                 if (isSuccessful) return;
 
-                request.deferred.reject(req);
+                self.notify(self.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, false, request);
             };
 
             req.send();
@@ -197,28 +195,30 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         errHandler: undefined,
         debug: undefined,
         tokenAuthentication:undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
+        eventList: {
+            ENAME_LOADING_COMPLETED: "loadingCompleted",
+            ENAME_CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted"
+        },
 
         load: function (req) {
 
             if (!req) {
-                return Q.when(null);
+                this.notify(this.eventList.ENAME_LOADING_COMPLETED, req, null, new Error("request is null"));
+            } else {
+                doLoad.call(this, req, RETRY_ATTEMPTS);
             }
-
-            req.deferred = Q.defer();
-            doLoad.call(this, req, RETRY_ATTEMPTS);
-
-            return req.deferred.promise;
         },
 
         checkForExistence: function(req) {
             if (!req) {
-                return Q.when(null);
+                this.notify(this.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, false, req);
+                return;
             }
 
-            req.deferred = Q.defer();
             checkForExistence.call(this, req);
-
-            return req.deferred.promise;
         },
 
         abort: function() {

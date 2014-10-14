@@ -139,12 +139,11 @@ Dash.dependencies.BaseURLExtensions = function () {
             }
 
             this.debug.log("Parsed SIDX box: " + segments.length + " segments.");
-            return Q.when(segments);
+            return segments;
         },
 
-        findInit = function (data, info) {
-            var deferred = Q.defer(),
-                ftyp,
+        findInit = function (data, info, callback) {
+            var ftyp,
                 moov,
                 start,
                 end,
@@ -201,22 +200,20 @@ Dash.dependencies.BaseURLExtensions = function () {
 
                 request.onloadend = function () {
                     if (!loaded) {
-                        deferred.reject("Error loading initialization.");
+                        callback.call(self, null, new Error("Error loading initialization."));
                     }
                 };
 
                 request.onload = function () {
                     loaded = true;
                     info.bytesLoaded = info.range.end;
-                    findInit.call(self, request.response).then(
-                        function (segments) {
-                            deferred.resolve(segments);
-                        }
-                    );
+                    findInit.call(self, request.response, function (segments) {
+                        callback.call(self, segments);
+                    });
                 };
 
                 request.onerror = function () {
-                    deferred.reject("Error loading initialization.");
+                    callback.call(self, null, new Error("Error loading initialization."));
                 };
 
                 request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
@@ -232,17 +229,16 @@ Dash.dependencies.BaseURLExtensions = function () {
                 irange = start + "-" + end;
 
                 self.debug.log("Found the initialization.  Range: " + irange);
-                deferred.resolve(irange);
+                callback.call(self, irange);
             }
-
-            return deferred.promise;
         },
 
-        loadInit = function (media) {
-            var deferred = Q.defer(),
-                request = new XMLHttpRequest(),
+        loadInit = function (representation) {
+            var request = new XMLHttpRequest(),
                 needFailureReport = true,
                 self = this,
+                media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+                    AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
                 info = {
                     url: media,
                     range: {},
@@ -264,11 +260,11 @@ Dash.dependencies.BaseURLExtensions = function () {
                 needFailureReport = false;
 
                 info.bytesLoaded = info.range.end;
-                findInit.call(self, request.response, info).then(
-                    function (range) {
-                        deferred.resolve(range);
-                    }
-                );
+                findInit.call(self, request.response, info, function (range) {
+                    representation.range = range;
+                    representation.initialization = media;
+                    self.notify(self.eventList.ENAME_INITIALIZATION_LOADED, representation);
+                });
             };
 
             request.onloadend = request.onerror = function () {
@@ -279,7 +275,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 needFailureReport = false;
 
                 self.errHandler.downloadError("initialization", info.url, request);
-                deferred.reject(request);
+                self.notify(self.eventList.ENAME_INITIALIZATION_LOADED, representation);
             };
 
             request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
@@ -288,12 +284,10 @@ Dash.dependencies.BaseURLExtensions = function () {
             request = self.tokenAuthentication.setTokenInRequestHeader(request);
             request.send(null);
             self.debug.log("Perform init search: " + info.url);
-
-            return deferred.promise;
         },
 
-        findSIDX = function (data, info) {
-            var deferred = Q.defer(),
+        findSIDX = function (data, info, representation, callback) {
+            var segments,
                 d = new DataView(data),
                 request = new XMLHttpRequest(),
                 pos = 0,
@@ -339,7 +333,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 //        Be sure to detect EOF.
                 //        Throw error is no sidx is found in the entire file.
                 //        Protection from loading the entire file?
-                deferred.reject();
+                callback.call(self);
             } else if (bytesAvailable < (size - 8)) {
                 // Case 2
                 // We don't have the entire box.
@@ -357,11 +351,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                     needFailureReport = false;
 
                     info.bytesLoaded = info.range.end;
-                    findSIDX.call(self, request.response, info).then(
-                        function (segments) {
-                            deferred.resolve(segments);
-                        }
-                    );
+                    findSIDX.call(self, request.response, info, representation, callback);
                 };
 
                 request.onloadend = request.onerror = function () {
@@ -372,7 +362,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                     needFailureReport = false;
 
                     self.errHandler.downloadError("SIDX", info.url, request);
-                    deferred.reject(request);
+                    callback.call(self);
                 };
 
                 request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
@@ -408,46 +398,43 @@ Dash.dependencies.BaseURLExtensions = function () {
                 if (loadMultiSidx) {
                     self.debug.log("Initiate multiple SIDX load.");
 
-                    var j, len, ss, se, r, funcs = [], segs;
+                    var j, len, ss, se, r, segs = [],
+                        count = 0,
+                        tmpCallback = function(segments) {
+                            if (segments) {
+                                segs = segs.concat(segments);
+                                count += 1;
+
+                                if (count >= len) {
+                                    callback.call(self, segs);
+                                }
+                            } else {
+                                callback.call(self);
+                            }
+                        };
 
                     for (j = 0, len = ref.length; j < len; j += 1) {
                         ss = ref[j].offset;
                         se = ref[j].offset + ref[j].size - 1;
                         r = ss + "-" + se;
 
-                        funcs.push(this.loadSegments.call(self, info.url, r));
+                        loadSegments.call(self, representation, null, r, tmpCallback);
                     }
-
-                    Q.all(funcs).then(
-                        function (results) {
-                            segs = [];
-                            for (j = 0, len = results.length; j < len; j += 1) {
-                                segs = segs.concat(results[j]);
-                            }
-                            deferred.resolve(segs);
-                        },
-                        function (httprequest) {
-                            deferred.reject(httprequest);
-                        }
-                    );
 
                 } else {
                     self.debug.log("Parsing segments from SIDX.");
-                    parseSegments.call(self, sidxBytes, info.url, info.range.start).then(
-                        function (segments) {
-                            deferred.resolve(segments);
-                        }
-                    );
+                    segments = parseSegments.call(self, sidxBytes, info.url, info.range.start);
+                    callback.call(self, segments);
                 }
             }
-
-            return deferred.promise;
         },
 
-        loadSegments = function (media, theRange) {
-            var deferred = Q.defer(),
-                request = new XMLHttpRequest(),
+        loadSegments = function (representation, type, theRange, callback) {
+            var request = new XMLHttpRequest(),
+                segments,
                 parts,
+                media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+                    AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
                 needFailureReport = true,
                 self = this,
                 info = {
@@ -479,22 +466,18 @@ Dash.dependencies.BaseURLExtensions = function () {
                 }
                 needFailureReport = false;
 
-
                 // If we didn't know where the SIDX box was, we have to look for it.
                 // Iterate over the data checking out the boxes to find it.
                 if (info.searching) {
                     info.bytesLoaded = info.range.end;
-                    findSIDX.call(self, request.response, info).then(
-                        function (segments) {
-                            deferred.resolve(segments);
+                    findSIDX.call(self, request.response, info, representation, function (segments) {
+                        if (segments) {
+                            callback.call(self, segments, representation, type);
                         }
-                    );
+                    });
                 } else {
-                    parseSegments.call(self, request.response, info.url, info.range.start).then(
-                        function (segments) {
-                            deferred.resolve(segments);
-                        }
-                    );
+                    segments = parseSegments.call(self, request.response, info.url, info.range.start);
+                    callback.call(self, segments, representation, type);
                 }
             };
 
@@ -506,7 +489,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 needFailureReport = false;
 
                 self.errHandler.downloadError("SIDX", info.url, request);
-                deferred.reject(request);
+                callback.call(self, null, representation, type);
             };
 
             request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
@@ -515,15 +498,34 @@ Dash.dependencies.BaseURLExtensions = function () {
             request = self.tokenAuthentication.setTokenInRequestHeader(request);
             request.send(null);
             self.debug.log("Perform SIDX load: " + info.url);
+        },
 
-            return deferred.promise;
+        onLoaded = function(segments, representation, type) {
+            var self = this;
+
+            if( segments) {
+                self.notify(self.eventList.ENAME_SEGMENTS_LOADED, segments, representation, type);
+            } else {
+                self.notify(self.eventList.ENAME_SEGMENTS_LOADED, null, representation, type, new Error("error loading segments"));
+            }
         };
 
     return {
         debug: undefined,
         errHandler: undefined,
         tokenAuthentication:undefined,
-        loadSegments: loadSegments,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
+        eventList: {
+            ENAME_INITIALIZATION_LOADED: "initializationLoaded",
+            ENAME_SEGMENTS_LOADED: "segmentsLoaded"
+        },
+
+        loadSegments: function(representation, type, range) {
+            loadSegments.call(this, representation, type, range, onLoaded.bind(this));
+        },
+
         loadInitialization: loadInit,
         parseSegments: parseSegments,
         parseSIDX: parseSIDX,
