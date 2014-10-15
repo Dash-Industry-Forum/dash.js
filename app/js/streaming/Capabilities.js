@@ -45,6 +45,6 @@ MediaPlayer.utils.Capabilities.prototype = {
         }
 
         var canPlay = element.canPlayType(codec);
-        return (canPlay === "probably");
+        return (canPlay === "probably" || canPlay === "maybe");
     }
 };

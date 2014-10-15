@@ -39,15 +39,32 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         },
         deleteCues: function(video) {
             //when multiple tracks are supported - iterate through and delete all cues from all tracks.
-            var track = video.textTracks[0],
+
+            var i = 0,
+                firstValidTrack = false;
+
+            while (!firstValidTrack)
+            {
+                if (video.textTracks[i].cues !== null)
+                {
+                    firstValidTrack = true;
+                    break;
+                }
+                i++
+            }
+
+            var track = video.textTracks[i],
                 cues = track.cues,
                 lastIdx = cues.length - 1;
 
-            for (var i = lastIdx; i >= 0 ; i -= 1) {
+            for (var i = lastIdx; i >= 0 ; i--) {
                 track.removeCue(cues[i]);
             }
 
             track.mode = "disabled";
+            // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
+            /*jshint -W024 */
+            track.default = false;
         }
 
     };
