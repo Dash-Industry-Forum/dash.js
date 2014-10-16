@@ -47,7 +47,7 @@ Now comes the good stuff. We need to create a dash context. Then from that conte
     var context = new Dash.di.DashContext();
     var player = new MediaPlayer(context);
     player.startup();
-    player.attachView(docment.querySelector("videoPlayer"));
+    player.attachView(document.querySelector("#videoPlayer"));
     player.attachSource(url);
 })();
 ```
