@@ -54,7 +54,7 @@
             rep.index = 0;
             rep.adaptation = createAdaptation(type);
             rep.fragmentInfoType = null;
-            rep.initialization = {};
+            rep.initialization = "http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s";
             rep.segmentDuration = 1;
             rep.timescale = 1;
             rep.startNumber = 1;

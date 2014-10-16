@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>Dash JS Test Runner</title>
-	<link rel="stylesheet" href="lib/jasmine-1.3.1/jasmine.css"/>
+	<link rel="stylesheet" href="lib/jasmine-2.0.2/jasmine.css"/>
 </head>
 <body>
 <!-- http://jquery.com/ -->
@@ -110,8 +110,9 @@
 	
 	<!-- Unit Testing -->
 	
-	<script src="lib/jasmine-1.3.1/jasmine.js"></script>
-	<script src="lib/jasmine-1.3.1/jasmine-html.js"></script>
+	<script src="lib/jasmine-2.0.2/jasmine.js"></script>
+	<script src="lib/jasmine-2.0.2/jasmine-html.js"></script>
+	<script src="lib/jasmine-2.0.2/boot.js"></script>
 
     <script src="js/utils/Helpers.js"></script>
     <script src="js/utils/SpecHelper.js"></script>
@@ -121,27 +122,11 @@
 
 	<!-- TESTS -->
     <script src="js/dash/TimeLineConverterSpec.js"></script>
+    <script src="js/dash/DashHandlerSpec.js"></script>
     <script src="js/dash/RepresentationControllerSpec.js"></script>
 	<script src="js/streaming/AbrControllerSpec.js"></script>
     <script src="js/streaming/MediaPlayerSpec.js"></script>
     <script src="js/streaming/FragmentControllerSpec.js"></script>
     <script src="js/streaming/FragmentModelSpec.js"></script>
-
-	<script type="text/javascript">
-		var jasmineEnv = jasmine.getEnv();
-		jasmineEnv.updateInterval = 250;
-		
-		var htmlReporter = new jasmine.HtmlReporter();
-		jasmineEnv.addReporter(htmlReporter);
-		
-		window.onload = function() {
-			executeJasmine();
-		};
-		
-		function executeJasmine() {
-			jasmineEnv.execute();
-		}
-	</script>
-	
 </body>
 </html>

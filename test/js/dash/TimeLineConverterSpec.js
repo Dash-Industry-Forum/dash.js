@@ -71,27 +71,21 @@ describe("TimelineConverter", function () {
 
     describe("when the live edge is found", function () {
         var updateCompleted,
-            eventDelay = helper.getExecutionDelay(),
-            timeoutDelay = helper.getTimeoutDelay();
+            eventDelay = helper.getExecutionDelay();
 
-        beforeEach(function () {
+        beforeEach(function (done) {
             updateCompleted = false;
             timelineConverter.setExpectedLiveEdge(100);
 
             setTimeout(function(){
                 timelineConverter[onLiveEdgeFoundEventName](liveEdgeFinder, testActualLiveEdge, searchTime);
                 updateCompleted = true;
+                done();
             }, eventDelay);
         });
 
         it("should set isTimeSyncCompleted", function () {
-            waitsFor(function (/*argument*/) {
-                return updateCompleted;
-            }, 'Timeout', timeoutDelay);
-
-            runs(function() {
-                expect(timelineConverter.isTimeSyncCompleted()).toBeTruthy();
-            });
+            expect(timelineConverter.isTimeSyncCompleted()).toBeTruthy();
         });
 
         it("should calculate availability window for dynamic mpd", function () {
