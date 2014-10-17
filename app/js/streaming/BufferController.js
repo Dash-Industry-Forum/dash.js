@@ -394,6 +394,14 @@ MediaPlayer.dependencies.BufferController = function () {
             hasSufficientBuffer = state;
 
             this.debug.log(hasSufficientBuffer ? ("Got enough " + type + " buffer to start.") : ("Waiting for more " + type + " buffer before starting playback."));
+
+            this.eventBus.dispatchEvent({
+                type: hasSufficientBuffer ? "bufferLoaded" : "bufferStalled",
+                data: {
+                    bufferType: type
+                }
+            });
+
             this.notify(this.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, state);
         },
 
@@ -520,6 +528,7 @@ MediaPlayer.dependencies.BufferController = function () {
     return {
         manifestModel: undefined,
         sourceBufferExt: undefined,
+        eventBus: undefined,
         bufferMax: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
