@@ -82,33 +82,33 @@ describe("FragmentModel", function () {
             expect(fragmentModel.getPendingRequests().length).toBe(2);
             expect(fragmentModel.getExecutedRequests().length).toBe(1);
 
-            waitsFor(function (/*argument*/) {
-                return isFired;
-            }, 'Timeout', timeout);
-
-            runs(function() {
-                expect(isFired).toBeTruthy();
-            });
+            expect(isFired).toBeTruthy();
         });
 
         describe("when a request has been passed for executing", function () {
             var loader = {load: function(){}, abort: function(){}},
+                delay = helper.getExecutionDelay(),
                 isCompleted = false;
 
             beforeEach(function () {
                 isCompleted = false;
                 fragmentModel.setLoader(loader);
+                jasmine.clock().install();
 
                 setTimeout(function(){
                     fragmentModel.executeRequest(initRequest);
                     fragmentModel.executeRequest(mediaRequest);
                     isCompleted = true;
-                }, helper.getExecutionDelay());
+                }, delay);
+            });
+
+            afterEach(function(){
+                jasmine.clock().uninstall();
             });
 
             it("should fire loadingStarted event a request", function () {
                 var observer = {},
-                    isFired;
+                    isFired = false;
 
                 observer[fragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = function(sender, request) {
                     isFired = true;
@@ -116,52 +116,36 @@ describe("FragmentModel", function () {
 
                 fragmentModel.subscribe(fragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, observer);
 
-                waitsFor(function (/*argument*/) {
-                    return isCompleted;
-                }, 'Timeout', timeout);
+                jasmine.clock().tick(delay + 1);
 
-                runs(function() {
-                    expect(isFired).toBeTruthy();
-                });
+                expect(isFired).toBeTruthy();
             });
 
             it("should remove the request from pending requests", function () {
-                waitsFor(function (/*argument*/) {
-                    return isCompleted;
-                }, 'Timeout', timeout);
+                jasmine.clock().tick(delay + 1);
 
-                runs(function() {
-                    var expectedValue = 0,
-                        pendingRequests = fragmentModel.getPendingRequests();
-                    expect(pendingRequests.length).toEqual(expectedValue);
-                });
+                var expectedValue = 0,
+                    pendingRequests = fragmentModel.getPendingRequests();
+                expect(pendingRequests.length).toEqual(expectedValue);
             });
 
             it("should add the request to loading requests", function () {
-                waitsFor(function (/*argument*/) {
-                    return isCompleted;
-                }, 'Timeout', timeout);
+                jasmine.clock().tick(delay + 1);
 
-                runs(function() {
-                    var expectedValue = 2,
-                        loadingRequests = fragmentModel.getLoadingRequests();
+                var expectedValue = 2,
+                    loadingRequests = fragmentModel.getLoadingRequests();
 
-                    expect(loadingRequests.length).toEqual(expectedValue);
-                });
+                expect(loadingRequests.length).toEqual(expectedValue);
             });
 
             it("should be able to abort loading requests", function () {
-                waitsFor(function (/*argument*/) {
-                    return isCompleted;
-                }, 'Timeout', timeout);
+                jasmine.clock().tick(delay + 1);
 
-                runs(function() {
-                    var expectedValue = 0,
-                        loadingRequests;
-                    fragmentModel.abortRequests();
-                    loadingRequests = fragmentModel.getLoadingRequests();
-                    expect(loadingRequests.length).toEqual(expectedValue);
-                });
+                var expectedValue = 0,
+                    loadingRequests;
+                fragmentModel.abortRequests();
+                loadingRequests = fragmentModel.getLoadingRequests();
+                expect(loadingRequests.length).toEqual(expectedValue);
             });
         });
     });
