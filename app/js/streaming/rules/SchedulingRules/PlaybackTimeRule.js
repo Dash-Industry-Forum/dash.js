@@ -43,7 +43,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 time,
                 request;
 
-            time = st || (useRejected ? rejected.startTime : currentTime);
+            time = st || (useRejected ? (rejected.startTime + rejected.duration / 2) : currentTime);
 
             if (isNaN(time)) {
                 callback(new MediaPlayer.rules.SwitchRequest(null, p));
