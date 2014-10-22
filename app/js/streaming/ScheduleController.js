@@ -105,6 +105,20 @@ MediaPlayer.dependencies.ScheduleController = function () {
             });
         },
 
+        replaceCanceledPendingRequests = function(canceledRequests) {
+            var ln = canceledRequests.length,
+                request,
+                time,
+                i;
+
+            for (i = 0; i < ln; i += 1) {
+                request = canceledRequests[i];
+                time = request.startTime + (request.duration / 2);
+                request = this.adapter.getFragmentRequestForTime(this.streamProcessor, currentTrackInfo, time, false);
+                this.fragmentController.prepareFragmentForLoading(this, request);
+            }
+        },
+
         onGetRequiredFragmentCount = function(result) {
             var self = this;
 
@@ -229,14 +243,17 @@ MediaPlayer.dependencies.ScheduleController = function () {
         onQualityChanged = function(sender, typeValue, oldQuality, newQuality) {
             if (type !== typeValue) return;
 
-            var self = this;
+            var self = this,
+                canceledReqs;
 
+            canceledReqs = fragmentModel.cancelPendingRequests(oldQuality);
             currentTrackInfo = self.streamProcessor.getTrackForQuality(newQuality);
 
             if (currentTrackInfo === null || currentTrackInfo === undefined) {
                 throw "Unexpected error!";
             }
 
+            replaceCanceledPendingRequests.call(self, canceledReqs);
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
         },
 
