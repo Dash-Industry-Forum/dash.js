@@ -273,14 +273,29 @@ MediaPlayer.dependencies.FragmentModel = function () {
             }
         },
 
-        cancelPendingRequests: function() {
+        cancelPendingRequests: function(quality) {
             var self = this,
-                reqs = pendingRequests;
+                reqs = pendingRequests,
+                canceled = reqs;
+
             pendingRequests = [];
 
-            reqs.forEach(function(request) {
+            if (quality !== undefined) {
+                pendingRequests = reqs.filter(function(request) {
+                    if (request.quality === quality) {
+                        return false;
+                    }
+
+                    canceled.splice(canceled.indexOf(request), 1);
+                    return true;
+                });
+            }
+
+            canceled.forEach(function(request) {
                 addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.CANCELED_STATE);
             });
+
+            return canceled;
         },
 
         abortRequests: function() {
