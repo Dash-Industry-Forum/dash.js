@@ -128,6 +128,10 @@ MediaPlayer.dependencies.BufferController = function () {
         onAppended = function(sender, sourceBuffer, data, error) {
             if (buffer !== sourceBuffer) return;
 
+            if (this.isBufferingCompleted()) {
+                this.mediaSourceExt.signalEndOfStream(mediaSource);
+            }
+
             var self = this,
                 ranges;
 
@@ -530,6 +534,7 @@ MediaPlayer.dependencies.BufferController = function () {
         sourceBufferExt: undefined,
         eventBus: undefined,
         bufferMax: undefined,
+        mediaSourceExt: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
         adapter: undefined,

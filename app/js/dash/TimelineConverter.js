@@ -55,15 +55,17 @@ Dash.dependencies.TimelineConverter = function () {
         },
 
         calcPresentationTimeFromMediaTime = function (mediaTime, representation) {
-            var presentationOffset = representation.presentationTimeOffset;
+            var periodStart = representation.adaptation.period.start,
+                presentationOffset = representation.presentationTimeOffset;
 
-            return mediaTime - presentationOffset;
+            return mediaTime + (periodStart - presentationOffset);
         },
 
         calcMediaTimeFromPresentationTime = function (presentationTime, representation) {
-            var presentationOffset = representation.presentationTimeOffset;
+            var periodStart = representation.adaptation.period.start,
+                presentationOffset = representation.presentationTimeOffset;
 
-            return (presentationOffset + presentationTime);
+            return presentationTime - periodStart + presentationOffset;
         },
 
         calcWallTimeForSegment = function (segment, isDynamic) {
