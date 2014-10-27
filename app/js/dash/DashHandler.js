@@ -639,12 +639,12 @@ Dash.dependencies.DashHandler = function () {
                 i;
 
             if (segments && segments.length > 0) {
-                for (i = segmentLastIdx; i >= 0; i--) {
+                for (i = 0; i < segmentLastIdx; i += 1) {
                     frag = segments[i];
                     ft = frag.presentationStartTime;
                     fd = frag.duration;
-                    if ((time + Dash.dependencies.DashHandler.EPSILON) >= ft &&
-                        (time - Dash.dependencies.DashHandler.EPSILON) <= (ft + fd)) {
+                    if ((time + fd/2) >= ft &&
+                        (time - fd/2) < (ft + fd)) {
                         idx = frag.availabilityIdx;
                         break;
                     }
@@ -955,8 +955,6 @@ Dash.dependencies.DashHandler = function () {
         updateRepresentation: updateRepresentation
     };
 };
-
-Dash.dependencies.DashHandler.EPSILON = 0.003;
 
 Dash.dependencies.DashHandler.prototype = {
     constructor: Dash.dependencies.DashHandler
