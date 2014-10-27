@@ -114,7 +114,7 @@ MediaPlayer = function (aContext) {
 
         getDVRSeekOffset = function (value) {
             var metric = getDVRInfoMetric.call(this),
-                val = metric.range.start + parseInt(value);
+                val  = metric.range.start + value;
 
             if (val > metric.range.end)
             {
@@ -131,7 +131,7 @@ MediaPlayer = function (aContext) {
 
         time = function () {
             var metric = getDVRInfoMetric.call(this);
-            return (metric === null) ? 0 : Math.round(this.duration() - (metric.range.end - metric.time));
+            return (metric === null) ? 0 : this.duration() - (metric.range.end - metric.time);
         },
 
         duration  = function() {
