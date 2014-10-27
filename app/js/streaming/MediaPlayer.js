@@ -144,7 +144,7 @@ MediaPlayer = function (aContext) {
 
             range = metric.range.end - metric.range.start;
 
-            return Math.round(range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize);
+            return range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize;
         },
 
         timeAsUTC = function () {
@@ -159,7 +159,7 @@ MediaPlayer = function (aContext) {
             availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
             currentUTCTime = this.time() + (availableFrom + metric.range.start);
 
-            return Math.round(currentUTCTime);
+            return currentUTCTime;
         },
 
         durationAsUTC = function () {
@@ -174,7 +174,7 @@ MediaPlayer = function (aContext) {
             availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
             currentUTCDuration = (availableFrom + metric.range.start) + this.duration();
 
-            return Math.round(currentUTCDuration);
+            return currentUTCDuration;
         },
 
         formatUTC = function (time, locales, hour12) {
