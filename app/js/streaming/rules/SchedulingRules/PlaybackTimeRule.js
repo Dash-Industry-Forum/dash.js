@@ -43,7 +43,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 time,
                 request;
 
-            time = st || (useRejected ? (rejected.startTime + rejected.duration / 2) : currentTime);
+            time = st || (useRejected ? (rejected.startTime) : currentTime);
 
             if (isNaN(time)) {
                 callback(new MediaPlayer.rules.SwitchRequest(null, p));
@@ -61,6 +61,10 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             }
 
             request = this.adapter.getFragmentRequestForTime(streamProcessor, track, time, keepIdx);
+
+            if (useRejected && request && request.index !== rejected.index) {
+                request = this.adapter.getFragmentRequestForTime(streamProcessor, track, rejected.startTime + rejected.duration / 2, keepIdx);
+            }
 
             while (request && streamProcessor.fragmentController.isFragmentLoadedOrPending(sc, request)) {
                 if (request.action === "complete") {
