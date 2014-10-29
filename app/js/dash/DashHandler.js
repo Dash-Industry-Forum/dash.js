@@ -631,15 +631,15 @@ Dash.dependencies.DashHandler = function () {
 
         getIndexForSegments = function (time, representation) {
             var segments = representation.segments,
-                segmentLastIdx = segments ? (segments.length - 1) : null,
+                ln = segments ? segments.length : null,
                 idx = -1,
                 frag,
                 ft,
                 fd,
                 i;
 
-            if (segments && segments.length > 0) {
-                for (i = 0; i < segmentLastIdx; i += 1) {
+            if (segments && ln > 0) {
+                for (i = 0; i < ln; i += 1) {
                     frag = segments[i];
                     ft = frag.presentationStartTime;
                     fd = frag.duration;
