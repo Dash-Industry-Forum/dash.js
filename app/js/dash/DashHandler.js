@@ -699,7 +699,7 @@ Dash.dependencies.DashHandler = function () {
                 upperIdx,
                 lowerIdx;
 
-            if (!segments) {
+            if (!segments || segments.length === 0) {
                 updateRequired = true;
             } else {
                 lowerIdx = segments[0].availabilityIdx;
