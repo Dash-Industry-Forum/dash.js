@@ -50,14 +50,14 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     firstValidTrack = true;
                     break;
                 }
-                i++
+                i++;
             }
 
             var track = video.textTracks[i],
                 cues = track.cues,
                 lastIdx = cues.length - 1;
 
-            for (var i = lastIdx; i >= 0 ; i--) {
+            for (i = lastIdx; i >= 0 ; i--) {
                 track.removeCue(cues[i]);
             }
 
