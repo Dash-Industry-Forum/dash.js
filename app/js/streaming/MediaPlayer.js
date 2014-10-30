@@ -1,5 +1,5 @@
-/*
- * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
+/**
+ * @copyright The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
  *
  * Copyright (c) 2013, Digital Primates
  * All rights reserved.
@@ -9,11 +9,14 @@
  * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
  * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * @license THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @class MediaPlayer
+ * @param aContext - Context to me implemented defined at the player level to instantiates the MediaPlayer object.
  */
-
 /*jshint -W020 */
 MediaPlayer = function (aContext) {
+
     "use strict";
 
 /*
@@ -242,18 +245,40 @@ MediaPlayer = function (aContext) {
             metricsModel = system.getObject("metricsModel");
         },
 
+        /**
+         *
+         *
+         * @param type
+         * @param listener
+         * @param useCapture
+         * @memberof MediaPlayer#
+         *
+         */
         addEventListener: function (type, listener, useCapture) {
             this.eventBus.addEventListener(type, listener, useCapture);
         },
 
+        /**
+         * @param type
+         * @param listener
+         * @param useCapture
+         * @memberof MediaPlayer#
+         */
         removeEventListener: function (type, listener, useCapture) {
             this.eventBus.removeEventListener(type, listener, useCapture);
         },
 
+        /**
+         * @returns {string} the current dash.js version string.
+         * @memberof MediaPlayer#
+         */
         getVersion: function () {
             return VERSION;
         },
 
+        /**
+         * @memberof MediaPlayer#
+         */
         startup: function () {
             if (!initialized) {
                 system.injectInto(this);
@@ -261,82 +286,167 @@ MediaPlayer = function (aContext) {
             }
         },
 
+        /**
+         * @returns {@link Debug}
+         * @memberof MediaPlayer#
+         */
         getDebug: function () {
             return this.debug;
         },
 
+        /**
+         * @returns {@link VideoModel}
+         * @memberof MediaPlayer#
+         */
         getVideoModel: function () {
             return videoModel;
         },
 
+        /**
+         * @param value
+         * @memberof MediaPlayer#
+         */
         setAutoPlay: function (value) {
             autoPlay = value;
         },
 
+        /**
+         * @returns {boolean} The current autoPlay state.
+         * @memberof MediaPlayer#
+         */
         getAutoPlay: function () {
             return autoPlay;
         },
 
+        /**
+         * @param value
+         * @memberof MediaPlayer#
+         */
         setScheduleWhilePaused: function(value) {
             scheduleWhilePaused = value;
         },
 
+        /**
+         * @returns {boolean}
+         * @memberof MediaPlayer#
+         */
         getScheduleWhilePaused: function() {
             return scheduleWhilePaused;
         },
 
+        /**
+         * @param name
+         * @param type
+         * @memberof MediaPlayer#
+         */
         setTokenAuthentication:function(name, type) {
             this.tokenAuthentication.setTokenAuthentication({name:name, type:type});
         },
+
+        /**
+         * @param value
+         * @memberof MediaPlayer#
+         */
         setBufferMax: function(value) {
             bufferMax = value;
         },
 
+        /**
+         * @returns {string}
+         * @memberof MediaPlayer#
+         */
         getBufferMax: function() {
             return bufferMax;
         },
 
+        /**
+         * @returns {object}
+         * @memberof MediaPlayer#
+         */
         getMetricsExt: function () {
             return metricsExt;
         },
 
+        /**
+         * @param type
+         * @returns {object}
+         * @memberof MediaPlayer#
+         */
         getMetricsFor: function (type) {
             var metrics = metricsModel.getReadOnlyMetricsFor(type);
             return metrics;
         },
 
+        /**
+         * @param type
+         * @returns {object}
+         * @memberof MediaPlayer#
+         */
         getQualityFor: function (type) {
             return abrController.getQualityFor(type);
         },
 
+        /**
+         * @param type
+         * @param value
+         * @memberof MediaPlayer#
+         */
         setQualityFor: function (type, value) {
             abrController.setPlaybackQuality(type, value);
         },
 
+        /**
+         * @returns {object}
+         * @memberof MediaPlayer#
+         */
         getAutoSwitchQuality : function () {
             return abrController.getAutoSwitchBitrate();
         },
 
+        /**
+         * @param value
+         * @memberof MediaPlayer#
+         */
         setAutoSwitchQuality : function (value) {
             abrController.setAutoSwitchBitrate(value);
         },
 
+        /**
+         * @param newRulesCollection
+         * @memberof MediaPlayer#
+         */
         setSchedulingRules: function(newRulesCollection) {
             updateRules.call(this, rulesController.SCHEDULING_RULE, newRulesCollection, true);
         },
 
+        /**
+         * @param newRulesCollection
+         * @memberof MediaPlayer#
+         */
         addSchedulingRules: function(newRulesCollection) {
             updateRules.call(this, rulesController.SCHEDULING_RULE, newRulesCollection, false);
         },
 
+        /**
+         * @param newRulesCollection
+         * @memberof MediaPlayer#
+         */
         setABRRules: function(newRulesCollection) {
             updateRules.call(this, rulesController.ABR_RULE, newRulesCollection, true);
         },
 
+        /**
+         * @param newRulesCollection
+         * @memberof MediaPlayer#
+         */
         addABRRules: function(newRulesCollection) {
             updateRules.call(this, rulesController.ABR_RULE, newRulesCollection, false);
         },
 
+        /**
+         * @param view
+         * @memberof MediaPlayer#
+         */
         attachView: function (view) {
             if (!initialized) {
                 throw "MediaPlayer not initialized!";
@@ -359,6 +469,10 @@ MediaPlayer = function (aContext) {
             }
         },
 
+        /**
+         * @param url
+         * @memberof MediaPlayer#
+         */
         attachSource: function (url) {
             if (!initialized) {
                 throw "MediaPlayer not initialized!";
@@ -376,21 +490,91 @@ MediaPlayer = function (aContext) {
             }
         },
 
+        /**
+         * @memberof MediaPlayer#
+         */
         reset: function() {
             this.attachSource(null);
             this.attachView(null);
         },
 
+        /**
+         * @memberof MediaPlayer#
+         * @method
+         */
         play: play,
+
+        /**
+         * @memberof MediaPlayer#
+         * @method
+         */
         isReady: isReady,
+
+        /**
+         * Sets the currentTime property of the attached video element.  If it is a live stream with a
+         * timeShiftBufferLength, then the DVR window offset will be automatically calculated.
+         *
+         * @param {number} value A relative time, in seconds, based on the return value of the {@method duration} is expected
+         * @see {@link MediaPlayer#getDVRSeekOffset getDVRSeekOffset()}
+         * @memberof MediaPlayer#
+         * @method
+         */
         seek : seek,
+
+        /**
+         *
+         * @memberof MediaPlayer#
+         * @method
+         */
         time : time,
+
+        /**
+         * @memberof MediaPlayer#
+         * @method
+         */
         duration : duration,
+
+        /**
+         * @memberof MediaPlayer#
+         * @method
+         */
         timeAsUTC : timeAsUTC,
+
+        /**
+         * @memberof MediaPlayer#
+         * @method
+         */
         durationAsUTC : durationAsUTC,
+
+        /**
+         * @memberof MediaPlayer#
+         * @method
+         */
         getDVRWindowSize : getDVRWindowSize,
+
+        /**
+         * This method should only be used with a live streams that has a valid timeShiftBufferLength (DVR Window).
+         * NOTE - If you do not need the raw offset value (ie media analytics, etc) consider using the seek method
+         * which will calculate this value for you and set the video elements property in one call.
+         *
+         * @memberof MediaPlayer#
+         * @param {number} value A relative time, in seconds, based on the return value of the {@link MediaPlayer#duration duration method} is expected.
+         * @returns A value that is relative the available range within the timeShiftBufferLength (DVR Window).
+         * @see {@link MediaPlayer#seek seek()}
+         * @method
+         */
         getDVRSeekOffset : getDVRSeekOffset,
+
+        /**
+         * @memberof MediaPlayer#
+         * @method
+         */
         formatUTC : formatUTC,
+
+        /**
+         * @memberof MediaPlayer#
+         * @method
+         */
         convertToTimeCode : convertToTimeCode
 
     };
