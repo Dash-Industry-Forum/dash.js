@@ -12,7 +12,7 @@
  * @license THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @class MediaPlayer
- * @param aContext - Context to me implemented defined at the player level to instantiates the MediaPlayer object.
+ * @param aContext - New instance of a dijon.js context (i.e. new Dash.di.DashContext()).  You can pass a custom context that extends Dash.di.DashContext to override item(s) in the DashContext.
  */
 /*jshint -W020 */
 MediaPlayer = function (aContext) {
@@ -287,7 +287,7 @@ MediaPlayer = function (aContext) {
         },
 
         /**
-         * @returns {@link Debug}
+         * @returns {@link Debug Debug.js}
          * @memberof MediaPlayer#
          */
         getDebug: function () {
@@ -514,7 +514,7 @@ MediaPlayer = function (aContext) {
          * Sets the currentTime property of the attached video element.  If it is a live stream with a
          * timeShiftBufferLength, then the DVR window offset will be automatically calculated.
          *
-         * @param {number} value A relative time, in seconds, based on the return value of the {@method duration} is expected
+         * @param {number} value A relative time, in seconds, based on the return value of the {@link MediaPlayer#duration duration()} method is expected
          * @see {@link MediaPlayer#getDVRSeekOffset getDVRSeekOffset()}
          * @memberof MediaPlayer#
          * @method
@@ -553,12 +553,12 @@ MediaPlayer = function (aContext) {
         getDVRWindowSize : getDVRWindowSize,
 
         /**
-         * This method should only be used with a live streams that has a valid timeShiftBufferLength (DVR Window).
-         * NOTE - If you do not need the raw offset value (ie media analytics, etc) consider using the seek method
-         * which will calculate this value for you and set the video elements property in one call.
+         * This method should only be used with a live stream that has a valid timeShiftBufferLength (DVR Window).
+         * NOTE - If you do not need the raw offset value (i.e. media analytics, tracking, etc) consider using the {@link MediaPlayer#seek seek()} method
+         * which will calculate this value for you and set the video elements currentTime property all in one simple call.
          *
          * @memberof MediaPlayer#
-         * @param {number} value A relative time, in seconds, based on the return value of the {@link MediaPlayer#duration duration method} is expected.
+         * @param {number} value A relative time, in seconds, based on the return value of the {@link MediaPlayer#duration duration()} method is expected.
          * @returns A value that is relative the available range within the timeShiftBufferLength (DVR Window).
          * @see {@link MediaPlayer#seek seek()}
          * @method
