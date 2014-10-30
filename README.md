@@ -21,7 +21,7 @@ Download 'master' or latest tagged release, extract and open main folder dash.js
 3. [install grunt-template-jasmine-istanbul](https://github.com/maenu/grunt-template-jasmine-istanbul)
     * npm install grunt-template-jasmine-istanbul --save-dev
 4. install some other dependencies:
-    * npm install grunt-contrib-connect grunt-contrib-watch grunt-contrib-jshint grunt-contrib-uglify
+    * npm install grunt-contrib-connect grunt-contrib-watch grunt-contrib-jshint grunt-contrib-uglify grunt-jsdoc-plugin
 
 ### Build / Run tests:
 ```

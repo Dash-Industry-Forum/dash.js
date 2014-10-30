@@ -6,7 +6,7 @@
 
 ### Build JSDocs only
 ```
-grunt jsdocs
+grunt jsdoc
 ```
 
 
