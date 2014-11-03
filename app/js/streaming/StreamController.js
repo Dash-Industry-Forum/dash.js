@@ -25,6 +25,7 @@
         STREAM_BUFFER_END_THRESHOLD = 6,
         STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
+        protectionData,
         isStreamSwitchingInProgress = false,
 
         play = function () {
@@ -259,7 +260,7 @@
                         stream.setPlaybackController(playbackCtrl);
                         playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, stream);
                         playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, stream);
-                        stream.initProtection();
+                        stream.initProtection(protectionData);
                         stream.setAutoPlay(autoPlay);
                         stream.load(manifest);
                         stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, self);
@@ -337,6 +338,10 @@
 
         getAutoPlay: function () {
             return autoPlay;
+        },
+
+        setProtectionData: function (value) {
+            protectionData = value;
         },
 
         getVideoModel: function () {
