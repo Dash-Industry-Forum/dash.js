@@ -10,7 +10,6 @@
  * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
  *
  * @license THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
  * @class MediaPlayer
  * @param aContext - New instance of a dijon.js context (i.e. new Dash.di.DashContext()).  You can pass a custom context that extends Dash.di.DashContext to override item(s) in the DashContext.
  */
@@ -119,8 +118,7 @@ MediaPlayer = function (aContext) {
             var metric = getDVRInfoMetric.call(this),
                 val  = metric.range.start + value;
 
-            if (val > metric.range.end)
-            {
+            if (val > metric.range.end) {
                 val = metric.range.end;
             }
 
@@ -137,11 +135,11 @@ MediaPlayer = function (aContext) {
             return (metric === null) ? 0 : this.duration() - (metric.range.end - metric.time);
         },
 
-        duration  = function() {
+        duration  = function () {
             var metric = getDVRInfoMetric.call(this),
                 range;
 
-            if (metric === null){
+            if (metric === null) {
                 return 0;
             }
 
@@ -155,7 +153,7 @@ MediaPlayer = function (aContext) {
                 availableFrom,
                 currentUTCTime;
 
-            if (metric === null){
+            if (metric === null) {
                 return 0;
             }
 
@@ -287,7 +285,9 @@ MediaPlayer = function (aContext) {
         },
 
         /**
-         * @returns {@link Debug Debug.js}
+         * Use this method to access the dash.js debugger.
+         *
+         * @returns {@link MediaPlayer.utils.Debug Debug.js (Singleton)}
          * @memberof MediaPlayer#
          */
         getDebug: function () {
@@ -444,7 +444,10 @@ MediaPlayer = function (aContext) {
         },
 
         /**
-         * @param view
+         * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
+         *
+         * @param {VideoElement} view An HTML5 VideoElement that has already defined in the DOM.
+         *
          * @memberof MediaPlayer#
          */
         attachView: function (view) {
@@ -470,7 +473,11 @@ MediaPlayer = function (aContext) {
         },
 
         /**
-         * @param url
+         * Use this method to set a source URL to a valid MPD manifest file.
+         *
+         * @param {string} url A URL to a valid MPD manifest file.
+         * @throw "MediaPlayer not initialized!"
+         *
          * @memberof MediaPlayer#
          */
         attachSource: function (url) {
@@ -491,6 +498,8 @@ MediaPlayer = function (aContext) {
         },
 
         /**
+         * Sets the MPD source and the video element to null.
+         *
          * @memberof MediaPlayer#
          */
         reset: function() {
@@ -499,12 +508,22 @@ MediaPlayer = function (aContext) {
         },
 
         /**
+         * The play method initiates playback of the media defined by the {@link MediaPlayer#attachSource attachSource()} method.
+         *
+         * @see {@link MediaPlayer#attachSource attachSource()}
+         *
          * @memberof MediaPlayer#
          * @method
          */
         play: play,
 
         /**
+         * The ready state of the MediaPlayer based on both the video element and MPD source being defined.
+         *
+         * @returns {boolean} The current ready state of the MediaPlayer
+         * @see {@link MediaPlayer#attachView attachView()}
+         * @see {@link MediaPlayer#attachSource attachSource()}
+         *
          * @memberof MediaPlayer#
          * @method
          */
@@ -516,12 +535,16 @@ MediaPlayer = function (aContext) {
          *
          * @param {number} value A relative time, in seconds, based on the return value of the {@link MediaPlayer#duration duration()} method is expected
          * @see {@link MediaPlayer#getDVRSeekOffset getDVRSeekOffset()}
+         *
          * @memberof MediaPlayer#
          * @method
          */
         seek : seek,
 
         /**
+         * Current time of the playhead, in seconds.
+         *
+         * @returns {number} Returns the current playhead time of the media.
          *
          * @memberof MediaPlayer#
          * @method
@@ -529,24 +552,42 @@ MediaPlayer = function (aContext) {
         time : time,
 
         /**
+         * Duration of the media's playback, in seconds.
+         *
+         * @returns {number} Returns the current duration of the media.
+         *
          * @memberof MediaPlayer#
          * @method
          */
         duration : duration,
 
         /**
+         * Use this method to get the current playhead time as an absolute value, the time in seconds since midnight UTC, Jan 1 1970.
+         * Note - this property only has meaning for live streams
+         *
+         * @returns {number} Returns the current playhead time as UTC timestamp.
+         *
          * @memberof MediaPlayer#
          * @method
          */
         timeAsUTC : timeAsUTC,
 
         /**
+         * Use this method to get the current duration as an absolute value, the time in seconds since midnight UTC, Jan 1 1970.
+         * Note - this property only has meaning for live streams.
+         *
+         * @returns {number} Returns the current duration as UTC timestamp.
+         *
          * @memberof MediaPlayer#
          * @method
          */
         durationAsUTC : durationAsUTC,
 
         /**
+         * The timeShiftBufferLength (DVR Window), in seconds.
+         *
+         * @returns {number} The window of allowable play time behind the live point of a live stream.
+         *
          * @memberof MediaPlayer#
          * @method
          */
@@ -555,23 +596,37 @@ MediaPlayer = function (aContext) {
         /**
          * This method should only be used with a live stream that has a valid timeShiftBufferLength (DVR Window).
          * NOTE - If you do not need the raw offset value (i.e. media analytics, tracking, etc) consider using the {@link MediaPlayer#seek seek()} method
-         * which will calculate this value for you and set the video elements currentTime property all in one simple call.
+         * which will calculate this value for you and set the video element's currentTime property all in one simple call.
          *
-         * @memberof MediaPlayer#
          * @param {number} value A relative time, in seconds, based on the return value of the {@link MediaPlayer#duration duration()} method is expected.
          * @returns A value that is relative the available range within the timeShiftBufferLength (DVR Window).
+         *
          * @see {@link MediaPlayer#seek seek()}
+         *
+         * @memberof MediaPlayer#
          * @method
          */
         getDVRSeekOffset : getDVRSeekOffset,
 
         /**
+         * A utility methods which converts UTC timestamp value into a valid time and date string.
+         *
+         * @param {number} time - UTC timestamp to be converted into date and time.
+         * @param {string} locales - a region identifier (i.e. en_US).
+         * @param {boolean} hour12 - 12 vs 24 hour. Set to true for 12 hour time formatting.
+         * @returns {string} a formatted time and date string.
+         *
          * @memberof MediaPlayer#
          * @method
          */
         formatUTC : formatUTC,
 
         /**
+         * A utility method which converts seconds into TimeCode (i.e. 300 --> 05:00).
+         *
+         * @param value - A number in seconds to be converted into a time code format.
+         * @returns {string} A formatted time code string.
+         *
          * @memberof MediaPlayer#
          * @method
          */
