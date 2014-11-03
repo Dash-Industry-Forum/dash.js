@@ -83,19 +83,14 @@ MediaPlayer.dependencies.BufferController = function () {
             switchInitData.call(self);
         },
 
-		onMediaLoaded = function (sender, model, bytes, quality, index) {
+        onMediaLoaded = function (sender, model, bytes, quality, index) {
             if (model !== this.streamProcessor.getFragmentModel()) return;
 
             var events,
-                request = this.streamProcessor.getFragmentModel().getExecutedRequestForQualityAndIndex(quality, index),
-                currentTrack = this.streamProcessor.getTrackForQuality(quality),
-                eventStreamMedia = this.adapter.getEventsFor(currentTrack.mediaInfo, this.streamProcessor),
-                eventStreamTrack = this.adapter.getEventsFor(currentTrack, this.streamProcessor);
+                request = this.streamProcessor.getFragmentModel().getExecutedRequestForQualityAndIndex(quality, index);
 
-            if(eventStreamMedia.length > 0 || eventStreamTrack.length > 0) {
-                events = handleInbandEvents.call(this, bytes, request, eventStreamMedia, eventStreamTrack);
-                this.streamProcessor.getEventController().addInbandEvents(events);
-            }
+            events = handleInbandEvents.call(this, bytes, request);
+            this.streamProcessor.getEventController().addInbandEvents(events);
 
             bytes = deleteInbandEvents.call(this, bytes);
 
@@ -103,7 +98,7 @@ MediaPlayer.dependencies.BufferController = function () {
             sortArrayByProperty(pendingMedia, "index");
 
             appendNext.call(this);
-		},
+        },
 
         appendToBuffer = function(data, quality, index) {
             isAppendingInProgress = true;
@@ -192,7 +187,7 @@ MediaPlayer.dependencies.BufferController = function () {
             return true;
         },
 
-        handleInbandEvents = function(data,request,mediaInbandEvents,trackInbandEvents) {
+        handleInbandEvents = function(data, request) {
             var events = [],
                 i = 0,
                 identifier,
@@ -200,16 +195,10 @@ MediaPlayer.dependencies.BufferController = function () {
                 expTwo = Math.pow(256,2),
                 expThree = Math.pow(256,3),
                 fragmentStarttime = Math.max(isNaN(request.startTime) ? 0 : request.startTime,0),
-                eventStreams = [],
-                event,
-                inbandEvents;
+                event;
 
             inbandEventFound = false;
-            /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
-            inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
-            for(var loop = 0; loop < inbandEvents.length; loop++) {
-                eventStreams[inbandEvents[loop].schemeIdUri] = inbandEvents[loop];
-            }
+
             while(i<data.length) {
                 identifier = String.fromCharCode(data[i+4],data[i+5],data[i+6],data[i+7]); // box identifier
                 size = data[i]*expThree + data[i+1]*expTwo + data[i+2]*256 + data[i+3]*1; // size of the box
@@ -237,7 +226,7 @@ MediaPlayer.dependencies.BufferController = function () {
                         }
                     }
 
-                    event = this.adapter.getEvent(eventBox, eventStreams, fragmentStarttime);
+                    event = this.adapter.getEvent(eventBox, fragmentStarttime);
 
                     if (event) {
                         events.push(event);

@@ -33,8 +33,6 @@ MediaPlayer.dependencies.Stream = function () {
         keyAddedListener,
         keyErrorListener,
 
-        eventController = null,
-
         play = function () {
             //this.debug.log("Attempting play...");
 
@@ -190,9 +188,8 @@ MediaPlayer.dependencies.Stream = function () {
                 processor.reset(errored);
                 processor = null;
             }
-            if(!!eventController) {
-                eventController.reset();
-            }
+
+            self.eventController.reset();
 
             streamProcessors = [];
 
@@ -276,9 +273,8 @@ MediaPlayer.dependencies.Stream = function () {
 
                     processor = self.system.getObject("streamProcessor");
                     streamProcessors.push(processor);
-                    processor.initialize(mimeType || type, buffer, self.videoModel, self.fragmentController, self.playbackController, mediaSource, self, eventController);
-                    processor.setMediaInfo(mediaInfo);
-                    self.adapter.updateData(processor);
+                    processor.initialize(mimeType || type, buffer, self.videoModel, self.fragmentController, self.playbackController, mediaSource, self, self.eventController);
+                    self.adapter.updateData(processor, mediaInfo);
                     //self.debug.log(type + " is ready!");
                 }
 
@@ -292,12 +288,10 @@ MediaPlayer.dependencies.Stream = function () {
             //this.debug.log("Getting MediaSource ready...");
 
             var self = this,
-                events;
+                eventStreams = self.adapter.getEventStreamsFor(streamInfo);
 
-            eventController = self.system.getObject("eventController");
-            eventController.initialize(self.videoModel);
-            events = self.adapter.getEventsFor(streamInfo);
-            eventController.addInlineEvents(events);
+            self.eventController.addEventStreams(eventStreams);
+
             // Figure out some bits about the stream before building anything.
             //self.debug.log("Gathering information for buffers. (1)");
 
@@ -333,7 +327,6 @@ MediaPlayer.dependencies.Stream = function () {
 
             // only first stream must be played automatically during playback initialization
             if (streamInfo.index === 0) {
-                eventController.start();
                 if (autoPlay) {
                     play.call(this);
                 }
@@ -479,24 +472,23 @@ MediaPlayer.dependencies.Stream = function () {
                 ln = streamProcessors.length,
                 i = 0,
                 mediaInfo,
-                events,
-                processor;
+                processor,
+                previousStreamInfo = streamInfo;
 
             updating = true;
             manifest = self.manifestModel.getValue();
             streamInfo = updatedStreamInfo;
             self.debug.log("Manifest updated... set new data on buffers.");
 
-            if (eventController) {
-                events = self.adapter.getEventsFor(streamInfo);
-                eventController.addInlineEvents(events);
-            }
+            self.eventController.handlePeriodSwitch(
+                self.adapter.getEventStreamsFor(previousStreamInfo),
+                self.adapter.getEventStreamsFor(streamInfo)
+            );
 
             for (i; i < ln; i +=1) {
                 processor = streamProcessors[i];
                 mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, processor.getType());
-                processor.setMediaInfo(mediaInfo);
-                this.adapter.updateData(processor);
+                this.adapter.updateData(processor, mediaInfo);
             }
         };
 
@@ -508,6 +500,7 @@ MediaPlayer.dependencies.Stream = function () {
         adapter: undefined,
         fragmentController: undefined,
         playbackController: undefined,
+        eventController: undefined,
         protectionModel: undefined,
         protectionController: undefined,
         protectionExt: undefined,
@@ -623,11 +616,18 @@ MediaPlayer.dependencies.Stream = function () {
         getStreamInfo: function() {
             return streamInfo;
         },
-        startEventController: function() {
-            eventController.start();
-        },
+
         resetEventController: function() {
-            eventController.reset();
+            this.eventController.reset();
+        },
+
+        setEventController: function(value) {
+            this.eventController = value;
+            value.initialize(this.videoModel);
+        },
+
+        getEventController: function() {
+            return this.eventController;
         },
 
         setPlaybackController: function(value) {

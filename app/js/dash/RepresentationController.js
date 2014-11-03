@@ -7,8 +7,11 @@ Dash.dependencies.RepresentationController = function () {
         availableRepresentations = [],
         currentRepresentation,
 
-        updateData = function(dataValue, adaptation, type) {
-            var self = this;
+        updateData = function (dataValue, adaptation, type) {
+            var self = this,
+                previousRepresentation = currentRepresentation,
+                manifest = this.manifestModel.getValue(),
+                i;
 
             updating = true;
             self.notify(self.eventList.ENAME_DATA_UPDATE_STARTED);
@@ -17,13 +20,19 @@ Dash.dependencies.RepresentationController = function () {
             currentRepresentation = getRepresentationForQuality.call(self, self.abrController.getQualityFor(type, self.streamProcessor.getStreamInfo()));
             data = dataValue;
 
+            // stop raising events for the old representation
+            self.streamProcessor.getEventController().handleRepresentationSwitch(
+                self.manifestExt.getEventStreamsForRepresentation(manifest, previousRepresentation),
+                self.manifestExt.getEventStreamsForRepresentation(manifest, currentRepresentation)
+            );
+
             if (type !== "video" && type !== "audio") {
                 self.notify(self.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
                 addRepresentationSwitch.call(self);
                 return;
             }
 
-            for (var i = 0; i < availableRepresentations.length; i += 1) {
+            for (i = 0; i < availableRepresentations.length; i += 1) {
                 self.indexHandler.updateRepresentation(availableRepresentations[i], true);
             }
         },
@@ -144,12 +153,20 @@ Dash.dependencies.RepresentationController = function () {
         },
 
         onQualityChanged = function(sender, type, streamInfo, oldQuality, newQuality) {
-            var self = this;
+            var self = this,
+                manifest = this.manifestModel.getValue(),
+                previousRepresentation = currentRepresentation;
 
             if (type !== self.streamProcessor.getType() || self.streamProcessor.getStreamInfo().id !== streamInfo.id) return;
 
             currentRepresentation = self.getRepresentationForQuality(newQuality);
             addRepresentationSwitch.call(self);
+
+            // stop raising events for the old representation
+            self.streamProcessor.getEventController().handleRepresentationSwitch(
+                self.manifestExt.getEventStreamsForRepresentation(manifest, previousRepresentation),
+                self.manifestExt.getEventStreamsForRepresentation(manifest, currentRepresentation)
+            );
         };
 
     return {
