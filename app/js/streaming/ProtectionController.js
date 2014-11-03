@@ -96,6 +96,32 @@ MediaPlayer.dependencies.ProtectionController = function () {
             element = this.videoModel.getElement();
         },
 
+        getBearerToken: function(keySystem) {
+            var i = 0,
+                ln = keySystems.length,
+                ks;
+
+            for (i; i < ln; i += 1) {
+                ks = keySystems[i];
+                if (ks.keysTypeString === keySystem) return ks.bearerToken;
+            }
+
+            return null;
+        },
+
+        setBearerToken: function(tokenObj) {
+            var i = 0,
+                ln = keySystems.length,
+                ks;
+
+            for (i; i < ln; i += 1) {
+                ks = keySystems[i];
+                if (ks.keysTypeString === tokenObj.keySystem){
+                    ks.bearerToken = tokenObj.token;
+                }
+            }
+        },
+
         selectKeySystem : selectKeySystem,
         ensureKeySession : ensureKeySession,
         updateFromMessage : updateFromMessage,
