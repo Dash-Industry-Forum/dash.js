@@ -573,7 +573,8 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             if (this.protectionModel) {
-                this.protectionModel.unlistenToNeedKey(needKeyListener);                this.protectionExt.unsubscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this.protectionModel);
+                this.protectionModel.unlistenToNeedKey(needKeyListener);
+                this.protectionExt.unsubscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this.protectionModel);
             }
 
             this.protectionExt.unsubscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this);
