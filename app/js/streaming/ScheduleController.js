@@ -107,13 +107,16 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         replaceCanceledPendingRequests = function(canceledRequests) {
             var ln = canceledRequests.length,
+            // EPSILON is used to avoid javascript floating point issue, e.g. if request.startTime = 19.2,
+            // request.duration = 3.83, than request.startTime + request.startTime = 19.2 + 1.92 = 21.119999999999997
+                EPSILON = 0.1,
                 request,
                 time,
                 i;
 
             for (i = 0; i < ln; i += 1) {
                 request = canceledRequests[i];
-                time = request.startTime + (request.duration / 2);
+                time = request.startTime + (request.duration / 2) + EPSILON;
                 request = this.adapter.getFragmentRequestForTime(this.streamProcessor, currentTrackInfo, time, false);
                 this.fragmentController.prepareFragmentForLoading(this, request);
             }

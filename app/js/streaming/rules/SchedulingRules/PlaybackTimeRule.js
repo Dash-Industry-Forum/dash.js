@@ -29,6 +29,9 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             var mediaType = context.getMediaInfo().type,
                 streamId = context.getStreamInfo().id,
                 sc = scheduleController[streamId][mediaType],
+                // EPSILON is used to avoid javascript floating point issue, e.g. if request.startTime = 19.2,
+                // request.duration = 3.83, than request.startTime + request.startTime = 19.2 + 1.92 = 21.119999999999997
+                EPSILON = 0.1,
                 streamProcessor = scheduleController[streamId][mediaType].streamProcessor,
                 track = streamProcessor.getCurrentTrack(),
                 st = seekTarget[streamId] ? seekTarget[streamId][mediaType] : null,
@@ -63,7 +66,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             request = this.adapter.getFragmentRequestForTime(streamProcessor, track, time, keepIdx);
 
             if (useRejected && request && request.index !== rejected.index) {
-                request = this.adapter.getFragmentRequestForTime(streamProcessor, track, rejected.startTime + rejected.duration / 2, keepIdx);
+                request = this.adapter.getFragmentRequestForTime(streamProcessor, track, rejected.startTime + (rejected.duration / 2) + EPSILON, keepIdx);
             }
 
             while (request && streamProcessor.fragmentController.isFragmentLoadedOrPending(sc, request)) {
