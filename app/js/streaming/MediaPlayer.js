@@ -53,6 +53,7 @@ MediaPlayer = function (aContext) {
         streamController,
         rulesController,
         manifestUpdater,
+        protectionController,
         metricsExt,
         metricsModel,
         videoModel,
@@ -241,6 +242,7 @@ MediaPlayer = function (aContext) {
             abrController = system.getObject("abrController");
             rulesController = system.getObject("rulesController");
             metricsModel = system.getObject("metricsModel");
+            protectionController = system.getObject("protectionController");
         },
 
         /**
@@ -341,6 +343,15 @@ MediaPlayer = function (aContext) {
          */
         setTokenAuthentication:function(name, type) {
             this.tokenAuthentication.setTokenAuthentication({name:name, type:type});
+        },
+
+        /**
+         * @param keySystem
+         * @param value
+         * @memberof MediaPlayer#
+         */
+        setBearerToken: function(keySystem, value) {
+            protectionController.setBearerToken({keySystem: keySystem, token: value});
         },
 
         /**
