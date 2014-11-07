@@ -342,13 +342,6 @@ Dash.dependencies.DashHandler = function () {
             }
 
             if (!isAvailableSegmentNumberCalculated) {
-                var availabilityStartTime,
-                    availabilityEndTime,
-                    f = fragments[0];
-
-                availabilityStartTime = (f.t === undefined) ? 0 : self.timelineConverter.calcPresentationTimeFromMediaTime(f.t / fTimescale, representation);
-                availabilityEndTime = self.timelineConverter.calcPresentationTimeFromMediaTime((time - frag.d) / fTimescale, representation);
-                representation.segmentAvailabilityRange = {start: availabilityStartTime, end: availabilityEndTime};
                 representation.availableSegmentsNumber = availabilityIdx + 1;
             }
 
