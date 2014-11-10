@@ -105,6 +105,11 @@ Dash.dependencies.RepresentationController = function () {
         onLiveEdgeFound = function(/*sender, liveEdgeTime, searchTime*/) {
             updateAvailabilityWindow.call(this, true);
             this.indexHandler.updateRepresentation(currentRepresentation, false);
+
+            // we need to update checkTime after we have found the live edge because its initial value
+            // does not take into account clientServerTimeShift
+            var manifest = this.manifestModel.getValue();
+            currentRepresentation.adaptation.period.mpd.checkTime = this.manifestExt.getCheckTime(manifest, currentRepresentation.adaptation.period);
         },
 
         onBufferLevelUpdated = function(sender/*, bufferLevel*/) {

@@ -342,13 +342,6 @@ Dash.dependencies.DashHandler = function () {
             }
 
             if (!isAvailableSegmentNumberCalculated) {
-                var availabilityStartTime,
-                    availabilityEndTime,
-                    f = fragments[0];
-
-                availabilityStartTime = (f.t === undefined) ? 0 : self.timelineConverter.calcPresentationTimeFromMediaTime(f.t / fTimescale, representation);
-                availabilityEndTime = self.timelineConverter.calcPresentationTimeFromMediaTime((time - frag.d) / fTimescale, representation);
-                representation.segmentAvailabilityRange = {start: availabilityStartTime, end: availabilityEndTime};
                 representation.availableSegmentsNumber = availabilityIdx + 1;
             }
 
@@ -579,13 +572,17 @@ Dash.dependencies.DashHandler = function () {
         },
 
         onSegmentListUpdated = function(representation, segments) {
-            var lastIdx;
+            var lastIdx,
+                liveEdge,
+                metrics,
+                lastSegment;
 
             representation.segments = segments;
             lastIdx = segments.length - 1;
             if (isDynamic && isNaN(this.timelineConverter.getExpectedLiveEdge())) {
-                var liveEdge = segments[lastIdx].presentationStartTime,
-                    metrics = this.metricsModel.getMetricsFor("stream");
+                lastSegment = segments[lastIdx];
+                liveEdge = lastSegment.presentationStartTime + lastSegment.duration;
+                metrics = this.metricsModel.getMetricsFor("stream");
                 // the last segment is supposed to be a live edge
                 this.timelineConverter.setExpectedLiveEdge(liveEdge);
                 this.metricsModel.updateManifestUpdateInfo(this.metricsExt.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
