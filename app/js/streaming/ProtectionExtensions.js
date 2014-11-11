@@ -28,7 +28,8 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
 
         var hasWebKit = ("WebKitMediaKeys" in window),
             hasMs = ("MSMediaKeys" in window),
-            hasMediaSource = ("MediaKeys" in window);
+            hasMediaSource = ("MediaKeys" in window),
+            hasWebkitGenerateKeyRequest = ('webkitGenerateKeyRequest' in document.createElement('video'));
 
         if (hasMediaSource) {
             return MediaKeys.isTypeSupported(mediaKeysString, codec);
@@ -36,6 +37,9 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
             return WebKitMediaKeys.isTypeSupported(mediaKeysString, codec);
         } else if (hasMs) {
             return MSMediaKeys.isTypeSupported(mediaKeysString, codec);
+        } else if (hasWebkitGenerateKeyRequest) {
+            // Chrome doesn't currently support a way to check for isTypeSupported, so we are assuming it is
+            return true;
         }
 
         return false;
@@ -62,7 +66,8 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
     setMediaKey: function (element, mediaKeys) {
         var hasWebKit = ("WebKitSetMediaKeys" in element),
             hasMs = ("msSetMediaKeys" in element),
-            hasStd = ("SetMediaKeys" in element);
+            hasStd = ("SetMediaKeys" in element),
+            hasWebkitGenerateKeyRequest = ('webkitGenerateKeyRequest' in document.createElement('video'));
 
         if (hasStd) {
             return element.SetMediaKeys(mediaKeys);
@@ -70,6 +75,9 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
             return element.WebKitSetMediaKeys(mediaKeys);
         } else if (hasMs) {
             return element.msSetMediaKeys(mediaKeys);
+        } else if (hasWebkitGenerateKeyRequest) {
+            // Not yet supported by Chrome, and not necessary for the current Widevine implementation
+            return true;
         } else {
             this.debug.log("no setmediakeys function in element");
         }
@@ -81,7 +89,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
 
     getKeySystems: function () {
         var self = this,
-            playreadyGetUpdate = function (msg, laURL) {
+            playreadyGetUpdate = function (msg, laURL, event) {
                 var decodedChallenge = null,
                     headers = [],
                     parser = new DOMParser(),
@@ -135,7 +143,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 }
                 xhr.send(decodedChallenge);
             },
-            playReadyNeedToAddKeySession = function (initData, keySessions) {
+            playReadyNeedToAddKeySession = function (initData, keySessions, event) {
                 return initData === null && keySessions.length === 0;
             },
             playreadyGetInitData = function (data) {
@@ -191,7 +199,25 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                     byteCursor += PROSize;
 
                     return PSSHBox;
-            };
+            },
+            widevineNeedToAddKeySession = function(initData, keySession, event){
+                event.target.webkitGenerateKeyRequest("com.widevine.alpha", event.initData);
+
+                return true;
+            },
+            widevineGetUpdate =  function (msg, laURL, event) {
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", laURL, true);
+                xhr.responseType = 'arraybuffer';
+                xhr.onload = function(e) {
+                    if (this.status == 200) {
+                        var key = new Uint8Array(this.response);
+                        event.target.webkitAddKey("com.widevine.alpha", key, event.initData, event.sessionId);
+                    } else {
+                    }
+                }
+                xhr.send(event.message);
+            }
 
         //
         // order by priority. if an mpd contains more than one the first match will win.
@@ -208,6 +234,17 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 getUpdate: playreadyGetUpdate
             },
             {
+                schemeIdUri: "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
+                keysTypeString: "com.widevine.alpha",
+                isSupported: function (data) {
+                    return this.schemeIdUri === data.schemeIdUri.toLowerCase();},
+                needToAddKeySession: widevineNeedToAddKeySession,
+                getInitData: function (/*data*/) {
+                    // the cenc element in mpd does not contain initdata
+                    return null;},
+                getUpdate: widevineGetUpdate
+            },
+            {
                 schemeIdUri: "urn:mpeg:dash:mp4protection:2011",
                 keysTypeString: "com.microsoft.playready",
                 isSupported: function (data) {
@@ -217,6 +254,17 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                     // the cenc element in mpd does not contain initdata
                     return null;},
                 getUpdate: playreadyGetUpdate
+            },
+            {
+                schemeIdUri: "urn:mpeg:dash:mp4protection:2011",
+                keysTypeString: "com.widevine.alpha",
+                isSupported: function (data) {
+                    return this.schemeIdUri === data.schemeIdUri.toLowerCase() && data.value.toLowerCase() === "cenc";},
+                needToAddKeySession: widevineNeedToAddKeySession,
+                getInitData: function (/*data*/) {
+                    // the cenc element in mpd does not contain initdata
+                    return null;},
+                getUpdate: widevineGetUpdate
             },
             {
                 schemeIdUri: "urn:uuid:00000000-0000-0000-0000-000000000000",

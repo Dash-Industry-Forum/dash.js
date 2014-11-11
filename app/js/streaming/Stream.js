@@ -19,6 +19,7 @@ MediaPlayer.dependencies.Stream = function () {
         mediaInfos = {},
         streamProcessors = [],
         autoPlay = true,
+        laURL,
         initialized = false,
         loaded = false,
         errored = false,
@@ -90,7 +91,7 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             if (!!kid) {
-                self.protectionController.ensureKeySession(kid, type, event.initData);
+                self.protectionController.ensureKeySession(kid, type, event);
             }
         },
 
@@ -103,12 +104,16 @@ MediaPlayer.dependencies.Stream = function () {
 
             this.debug.log("DRM: Got a key message...");
 
-            session = event.target;
-            bytes = new Uint16Array(event.message.buffer);
-            msg = String.fromCharCode.apply(null, bytes);
-            laURL = event.destinationURL;
+            if (event.type != "webkitkeymessage") {
+                session = event.target;
+                bytes = new Uint16Array(event.message.buffer);
+                msg = String.fromCharCode.apply(null, bytes);
+                laURL = event.destinationURL;
 
-            self.protectionController.updateFromMessage(kid, session, msg, laURL);
+                self.protectionController.updateFromMessage(kid, session, msg, laURL, event);
+            } else {
+                self.protectionController.updateFromMessage(kid, null, null, this.getLaURL(), event);
+            }
 
             //if (event.keySystem !== DEFAULT_KEY_TYPE) {
             //    this.debug.log("DRM: Key type not supported!");
@@ -562,6 +567,14 @@ MediaPlayer.dependencies.Stream = function () {
 
         getAutoPlay: function () {
             return autoPlay;
+        },
+
+        setLaURL: function (value) {
+            laURL = value;
+        },
+
+        getLaURL: function () {
+            return laURL;
         },
 
         reset: function () {

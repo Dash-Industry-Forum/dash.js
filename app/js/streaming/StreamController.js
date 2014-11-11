@@ -25,6 +25,7 @@
         STREAM_BUFFER_END_THRESHOLD = 6,
         STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
+        laURL,
         isStreamSwitchingInProgress = false,
 
         play = function () {
@@ -261,6 +262,7 @@
                         playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_METADATA_LOADED, stream);
                         stream.initProtection();
                         stream.setAutoPlay(autoPlay);
+                        stream.setLaURL(laURL);
                         stream.load(manifest);
                         stream.subscribe(stream.eventList.ENAME_STREAM_UPDATED, self);
                         streams.push(stream);
@@ -340,6 +342,14 @@
 
         getAutoPlay: function () {
             return autoPlay;
+        },
+
+        setLaURL: function (value) {
+            laURL = value;
+        },
+
+        getLaURL: function () {
+            return laURL;
         },
 
         getVideoModel: function () {

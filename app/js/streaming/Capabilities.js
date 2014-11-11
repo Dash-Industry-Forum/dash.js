@@ -32,9 +32,10 @@ MediaPlayer.utils.Capabilities.prototype = {
 
         var hasWebKit = ("WebKitMediaKeys" in window),
             hasMs = ("MSMediaKeys" in window),
-            hasMediaSource = ("MediaKeys" in window);
+            hasMediaSource = ("MediaKeys" in window),
+            hasWebkitGenerateKeyRequest = ('webkitGenerateKeyRequest' in document.createElement('video'));
 
-        return (hasWebKit || hasMs || hasMediaSource);
+        return (hasWebKit || hasMs || hasMediaSource || hasWebkitGenerateKeyRequest);
     },
 
     supportsCodec: function (element, codec) {
