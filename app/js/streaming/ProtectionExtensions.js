@@ -119,6 +119,10 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                     };
                 }
 
+                if (this.bearerToken) {
+                    headers.push({name: "Authorization", value: this.bearerToken});
+                }
+
                 var xhr = new XMLHttpRequest();
                 xhr.onload = function () {
                     if (xhr.status == 200) {

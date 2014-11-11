@@ -123,6 +123,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
     return {
         metricsExt: undefined,
         adapter: undefined,
+        timelineConverter: undefined,
 
         setFinder: function(liveEdgeFinder) {
             finder = liveEdgeFinder;
@@ -142,7 +143,15 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
             liveEdgeInitialSearchPosition = DVRWindow.end;
 
             if (trackInfo.useCalculatedLiveEdgeTime) {
-                callback(new MediaPlayer.rules.SwitchRequest(liveEdgeInitialSearchPosition, p));
+                //By default an expected live edge is the end of the last segment.
+                // A calculated live edge ('end' property of a range returned by TimelineConverter.calcSegmentAvailabilityRange)
+                // is used as an initial point for finding the actual live edge.
+                // But for SegmentTimeline mpds (w/o a negative @r) the end of the
+                // last segment is the actual live edge. At the same time, calculated live edge is an expected live edge.
+                // Thus, we need to switch an expected live edge and actual live edge for SegmentTimelne streams.
+                var actualLiveEdge = self.timelineConverter.getExpectedLiveEdge();
+                self.timelineConverter.setExpectedLiveEdge(liveEdgeInitialSearchPosition);
+                callback(new MediaPlayer.rules.SwitchRequest(actualLiveEdge, p));
                 return;
             }
 
