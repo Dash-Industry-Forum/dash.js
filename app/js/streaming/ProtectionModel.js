@@ -42,11 +42,15 @@ MediaPlayer.models.ProtectionModel = function () {
         addKeySession: function (kid, mediaCodec, initData) {
             var session = null;
 
-            session = this.protectionExt.createSession(keySystems[kid].keys, mediaCodec, initData);
+            if (keySystems[kid].keySystem.keysTypeString != "com.widevine.alpha") {
+                session = this.protectionExt.createSession(keySystems[kid].keys, mediaCodec, initData);
 
-            this.protectionExt.listenToKeyAdded(session, keyAddedListener);
-            this.protectionExt.listenToKeyError(session, keyErrorListener);
-            this.protectionExt.listenToKeyMessage(session, keyMessageListener);
+                this.protectionExt.listenToKeyAdded(session, keyAddedListener);
+                this.protectionExt.listenToKeyError(session, keyErrorListener);
+                this.protectionExt.listenToKeyMessage(session, keyMessageListener);
+            } else {
+                this.protectionExt.listenToKeyMessage(this.videoModel.getElement(), keyMessageListener);
+            }
 
             keySystems[kid].initData = initData;
             keySystems[kid].keySessions.push(session);
@@ -86,10 +90,10 @@ MediaPlayer.models.ProtectionModel = function () {
             }
         },
 
-        needToAddKeySession: function (kid) {
+        needToAddKeySession: function (kid, event) {
             var keySystem = null;
             keySystem = keySystems[kid];
-            return keySystem.keySystem.needToAddKeySession(keySystem.initData, keySystem.keySessions);
+            return keySystem.keySystem.needToAddKeySession(keySystem.initData, keySystem.keySessions, event);
         },
 
         getInitData: function (kid) {
@@ -98,9 +102,9 @@ MediaPlayer.models.ProtectionModel = function () {
             return keySystem.keySystem.getInitData(keySystem.contentProtection);
         },
 
-        updateFromMessage: function (kid, sessionValue, msg, laURL) {
+        updateFromMessage: function (kid, sessionValue, msg, laURL, event) {
             session = sessionValue;
-            keySystems[kid].keySystem.getUpdate(msg, laURL);
+            keySystems[kid].keySystem.getUpdate(msg, laURL, event);
         },
 /*
         addKey: function (type, key, data, id) {

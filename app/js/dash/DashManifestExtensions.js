@@ -212,10 +212,18 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
     getContentProtectionData: function (adaptation) {
         "use strict";
-        if (!adaptation || !adaptation.hasOwnProperty("ContentProtection_asArray") || adaptation.ContentProtection_asArray.length === 0) {
-            return null;
+        var contentProtection = null;
+
+        if (adaptation && adaptation.hasOwnProperty("ContentProtection_asArray") && adaptation.ContentProtection_asArray.length !== 0) {
+            contentProtection = adaption.ContentProtection_asArray;
         }
-        return adaptation.ContentProtection_asArray;
+        for (var i = 0; i < adaptation.Representation_asArray.length; i += 1) {
+            if (adaptation.Representation_asArray[i].hasOwnProperty("ContentProtection_asArray") && adaptation.Representation_asArray[i].length !== 0) {
+                contentProtection = adaptation.Representation_asArray[i].ContentProtection_asArray;
+            }
+        }
+
+        return contentProtection;
     },
 
     getIsDynamic: function (manifest) {
