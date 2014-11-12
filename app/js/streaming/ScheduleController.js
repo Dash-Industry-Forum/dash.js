@@ -201,7 +201,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             doStop.call(this);
         },
 
-        onBytesAppended = function(/*sender, quality, index*/) {
+        onBytesAppended = function(/*sender, quality, index, ranges*/) {
             addPlaylistTraceMetrics.call(this);
         },
 
@@ -320,9 +320,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 actualStartTime;
             // get a request for a start time
             request = self.adapter.getFragmentRequestForTime(self.streamProcessor, currentTrackInfo, startTime);
-            // set liveEdge to be in the middle of the fragment time to avoid a possible gap between
-            // currentTime and buffered.start(0)
-            actualStartTime = request.startTime + (request.duration / 2);
+            actualStartTime = request.startTime;
             self.playbackController.setLiveStartTime(actualStartTime);
             self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: self.timelineConverter.getClientTimeOffset()});
             ready = true;

@@ -189,6 +189,28 @@ MediaPlayer.dependencies.PlaybackController = function () {
             this.notify(this.eventList.ENAME_WALLCLOCK_TIME_UPDATED,isDynamic, new Date());
         },
 
+        onBytesAppended = function(sender, quality, index, ranges) {
+            var bufferedStart,
+                playbackStart = getStreamStartTime.call(this, streamInfo),
+                req;
+
+            if (!ranges || !ranges.length) return;
+
+            bufferedStart = ranges.start(0);
+
+            // we need to seek only if the currentTime or initial playback position is out of the buffered range
+            if ((playbackStart > bufferedStart) || (this.getTime() > bufferedStart)) return;
+
+            // since segments are appended out of order, we cannot blindly seek after the first appended segment.
+            // Do nothing till we make sure that the segment for initial time has been appended.
+            req = this.adapter.getFragmentRequestForTime(sender.streamProcessor, trackInfo, playbackStart, false);
+
+            if (!req || req.index !== index) return;
+
+            // seek to the start of buffered range to avoid stalling caused by a shift between audio and video media time
+            this.seek(bufferedStart);
+        },
+
         setupVideoModel = function(model) {
             videoModel = model;
 
@@ -231,6 +253,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
         setup: function() {
             this.dataUpdateCompleted = onDataUpdateCompleted;
             this.liveEdgeFound = onLiveEdgeFound;
+            this.bytesAppended = onBytesAppended;
+
             onPlaybackStart = onPlaybackStart.bind(this);
             onPlaybackPaused = onPlaybackPaused.bind(this);
             onPlaybackError = onPlaybackError.bind(this);
