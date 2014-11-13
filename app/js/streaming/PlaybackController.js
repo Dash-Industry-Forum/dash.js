@@ -5,6 +5,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         currentTime = 0,
         liveStartTime = NaN,
         wallclockTimeIntervalId,
+        commonEarliestTime = null,
         streamInfo,
         videoModel,
         trackInfo,
@@ -189,6 +190,29 @@ MediaPlayer.dependencies.PlaybackController = function () {
             this.notify(this.eventList.ENAME_WALLCLOCK_TIME_UPDATED,isDynamic, new Date());
         },
 
+        onBytesAppended = function(sender, quality, index, ranges) {
+            var bufferedStart,
+                currentEarliestTime = commonEarliestTime,
+                playbackStart = getStreamStartTime.call(this, streamInfo),
+                req;
+
+            if (!ranges || !ranges.length) return;
+
+            // since segments are appended out of order, we cannot blindly seek after the first appended segment.
+            // Do nothing till we make sure that the segment for initial time has been appended.
+            req = this.adapter.getFragmentRequestForTime(sender.streamProcessor, trackInfo, playbackStart, false);
+
+            if (!req || req.index !== index) return;
+
+            bufferedStart = ranges.start(0);
+            commonEarliestTime = (commonEarliestTime === null) ? bufferedStart : Math.max(commonEarliestTime, bufferedStart);
+
+            if (currentEarliestTime === commonEarliestTime) return;
+
+            // seek to the start of buffered range to avoid stalling caused by a shift between audio and video media time
+            this.seek(commonEarliestTime);
+        },
+
         setupVideoModel = function(model) {
             videoModel = model;
 
@@ -231,6 +255,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
         setup: function() {
             this.dataUpdateCompleted = onDataUpdateCompleted;
             this.liveEdgeFound = onLiveEdgeFound;
+            this.bytesAppended = onBytesAppended;
+
             onPlaybackStart = onPlaybackStart.bind(this);
             onPlaybackPaused = onPlaybackPaused.bind(this);
             onPlaybackError = onPlaybackError.bind(this);
@@ -308,6 +334,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             streamInfo = null;
             currentTime = 0;
             liveStartTime = NaN;
+            commonEarliestTime = null;
         }
     };
 };
