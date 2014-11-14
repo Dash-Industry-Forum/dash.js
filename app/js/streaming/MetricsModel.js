@@ -146,12 +146,12 @@ MediaPlayer.models.MetricsModel = function () {
             return vo;
         },
 
-        addBufferLevel: function (mediaType, t, level) {
+        addBufferLevel: function (mediaType, t, level, target) {
             var vo = new MediaPlayer.vo.metrics.BufferLevel();
 
             vo.t = t;
             vo.level = level;
-
+            vo.target = target;
             this.getMetricsFor(mediaType).BufferLevel.push(vo);
 
             this.metricAdded(mediaType, this.adapter.metricsList.BUFFER_LEVEL, vo);

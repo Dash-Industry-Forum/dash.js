@@ -403,7 +403,7 @@ MediaPlayer.dependencies.BufferController = function () {
             this.debug.log(hasSufficientBuffer ? ("Got enough " + type + " buffer to start.") : ("Waiting for more " + type + " buffer before starting playback."));
 
             this.eventBus.dispatchEvent({
-                type: hasSufficientBuffer ? "bufferLoaded" : "bufferStalled",
+                type: hasSufficientBuffer ? MediaPlayer.dependencies.BufferController.BUFFER_LOADED : MediaPlayer.dependencies.BufferController.BUFFER_EMPTY,
                 data: {
                     bufferType: type
                 }
@@ -653,10 +653,17 @@ MediaPlayer.dependencies.BufferController = function () {
 MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED = "required";
 MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN = "min";
 MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY = "infinity";
+MediaPlayer.dependencies.BufferController.DEFAULT_STARTUP_BUFFER_TIME = 3;
 MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME = 8;
 MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY = 30;
 MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 300;
 MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD = 20;
+MediaPlayer.dependencies.BufferController.BUFFER_LOADED = "bufferLoaded";
+MediaPlayer.dependencies.BufferController.BUFFER_EMPTY = "bufferStalled";
+
+
+
 
 MediaPlayer.dependencies.BufferController.prototype = {
     constructor: MediaPlayer.dependencies.BufferController

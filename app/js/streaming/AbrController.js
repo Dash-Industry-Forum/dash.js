@@ -151,21 +151,14 @@ MediaPlayer.dependencies.AbrController = function () {
                 };
 
             quality = getInternalQuality(type, streamId);
-
             confidence = getInternalConfidence(type, streamId);
 
-            //self.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
 
+            //self.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
             if (!autoSwitchBitrate) return;
 
             //self.debug.log("Check ABR rules.");
-
-            if (self.abrRulesCollection.downloadRatioRule) {
-                self.abrRulesCollection.downloadRatioRule.setStreamProcessor(streamProcessor);
-            }
-
             rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES);
-
             self.rulesController.applyRules(rules, streamProcessor, callback.bind(self), quality, function(currentValue, newValue) {
                 return Math.min(currentValue, newValue);
             });

@@ -4,6 +4,8 @@ MediaPlayer.rules.BufferLevelRule = function () {
     var isBufferLevelOutran = {},
         isCompleted = {},
         scheduleController = {},
+        bufferTarget = 0,
+        bufferState = MediaPlayer.dependencies.BufferController.BUFFER_EMPTY,
 
         getCurrentHttpRequestLatency = function(metrics) {
             var httpRequest = this.metricsExt.getCurrentHttpRequest(metrics);
@@ -16,7 +18,9 @@ MediaPlayer.rules.BufferLevelRule = function () {
         decideBufferLength = function (minBufferTime, duration) {
             var minBufferTarget;
 
-            if (isNaN(duration) || MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
+            if (bufferState === MediaPlayer.dependencies.BufferController.BUFFER_EMPTY) {
+                minBufferTarget = Math.max(MediaPlayer.dependencies.BufferController.DEFAULT_STARTUP_BUFFER_TIME, minBufferTime);
+            } else if (isNaN(duration) || MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
                 minBufferTarget = Math.max(MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
             } else if (minBufferTime >= duration) {
                 minBufferTarget = Math.min(duration, MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME);
@@ -36,7 +40,8 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
                 ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"),
                 isLongFormContent = (duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
-                requiredBufferLength = 0;
+                requiredBufferLength = 0,
+                additionalBuffer = (bufferState === MediaPlayer.dependencies.BufferController.BUFFER_LOADED) ? MediaPlayer.rules.BufferLevelRule.ADDITIONAL_BUFFER : 0;
 
             if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN) {
                 requiredBufferLength = minBufferTarget;
@@ -48,12 +53,11 @@ MediaPlayer.rules.BufferLevelRule = function () {
                         MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :
                         MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY;
                 }
-
                 requiredBufferLength = currentBufferTarget + Math.max(getCurrentHttpRequestLatency.call(self, vmetrics),
                     getCurrentHttpRequestLatency.call(self, ametrics));
             }
 
-            requiredBufferLength = Math.min(requiredBufferLength, criticalBufferLevel);
+            requiredBufferLength = Math.min(requiredBufferLength, criticalBufferLevel) + additionalBuffer;
 
             return requiredBufferLength;
         },
@@ -82,17 +86,32 @@ MediaPlayer.rules.BufferLevelRule = function () {
             var streamId = e.sender.streamProcessor.getStreamInfo().id;
             isBufferLevelOutran[streamId] = isBufferLevelOutran[streamId] || {};
             isBufferLevelOutran[streamId][e.sender.streamProcessor.getType()] = false;
+        },
+
+        onBufferChange = function (event) {
+            bufferState = event.type;
         };
 
     return {
         metricsExt: undefined,
         metricsModel: undefined,
         abrController: undefined,
+        eventBus:undefined,
 
         setup: function() {
+<<<<<<< HEAD
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
             this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
+=======
+            this.bufferLevelOutrun = onBufferLevelOutrun;
+            this.bufferLevelBalanced = onBufferLevelBalanced;
+
+            this.streamCompleted = onStreamCompleted;
+
+            this.eventBus.addEventListener(MediaPlayer.dependencies.BufferController.BUFFER_EMPTY, onBufferChange);
+            this.eventBus.addEventListener(MediaPlayer.dependencies.BufferController.BUFFER_LOADED, onBufferChange);
+>>>>>>> first round of switching rule modifications to make more robust and more tunable
         },
 
         setScheduleController: function(scheduleControllerValue) {
@@ -132,6 +151,8 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 fragmentCount = fragmentCount || 1;
             }
 
+            bufferTarget = requiredBufferLength;
+
             callback(new MediaPlayer.rules.SwitchRequest(fragmentCount, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
         },
 
@@ -139,10 +160,15 @@ MediaPlayer.rules.BufferLevelRule = function () {
             isBufferLevelOutran = {};
             isCompleted = {};
             scheduleController = {};
+        },
+
+        getBufferTarget:function () {
+            return bufferTarget;
         }
     };
 };
 
+MediaPlayer.rules.BufferLevelRule.ADDITIONAL_BUFFER = 4;
 MediaPlayer.rules.BufferLevelRule.prototype = {
     constructor: MediaPlayer.rules.BufferLevelRule
 };

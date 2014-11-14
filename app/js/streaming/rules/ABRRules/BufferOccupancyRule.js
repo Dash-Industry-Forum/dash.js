@@ -1,7 +1,7 @@
 ﻿/*
  * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
  * 
- * Copyright (c) 2013, Digital Primates
+ * Copyright (c) 2014, Akamai Technologies
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -11,16 +11,8 @@
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.LimitSwitchesRule = function () {
+MediaPlayer.rules.BufferOccupancyRule = function () {
     "use strict";
-
-    /*
-     * This rule is intended to limit the number of switches that can happen.
-     * We might get into a situation where there quality is bouncing around a ton.
-     * This can create an unpleasant experience, so let the stream settle down.
-     */
-    var lastCheckTime = 0,
-        qualitySwitchThreshold = 2000;
 
     return {
         debug: undefined,
@@ -28,32 +20,44 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
 
         execute: function (context, callback) {
             var self = this,
-                mediaType = context.getMediaInfo().type,
                 current = context.getCurrentValue(),
-                metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
                 manifestInfo = context.getManifestInfo(),
-                lastIdx = metrics.RepSwitchList.length - 1,
-                rs = metrics.RepSwitchList[lastIdx],
-                now = new Date().getTime(),
-                delay;
+                mediaInfo = context.getMediaInfo(),
+                mediaType = mediaInfo.type,
+                metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
+                lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
+                isBufferRich = false,
+                lowBufferMark = 8,
+                maxIndex = mediaInfo.trackCount - 1,
+                switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
 
-            self.debug.log("Checking limit switches rule...");
-            qualitySwitchThreshold = Math.min(manifestInfo.minBufferTime, manifestInfo.maxFragmentDuration) * 1000;
+            if (lastBufferLevelVO !== null) {
+                if (lastBufferLevelVO.level > lastBufferLevelVO.target)
+                {
+                    isBufferRich =  (lastBufferLevelVO.level - lastBufferLevelVO.target) > MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD;
 
-            delay = now - lastCheckTime;
+                    if (isBufferRich) {
+                        switchRequest = new MediaPlayer.rules.SwitchRequest(maxIndex, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
+                    } else {
+                        // not buffer rich but not low either.
+                    }
 
-            if (delay < qualitySwitchThreshold && rs !== undefined && (now - rs.t.getTime()) < qualitySwitchThreshold) {
-                self.debug.log("Wait some time before allowing another switch.");
-                callback(new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
-                return;
+                } else {
+                    // getting low should we do something or let the insufficientBufferRule take over in this case?
+                }
             }
 
-            lastCheckTime = now;
-            callback(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
+            if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                self.debug.log("xxx BufferOccupancyRule requesting switch to index: ", switchRequest.value, " priority: ",
+                    switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "default" :
+                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "strong" : "weak");
+            }
+
+            callback(switchRequest);
         }
     };
 };
 
-MediaPlayer.rules.LimitSwitchesRule.prototype = {
-    constructor: MediaPlayer.rules.LimitSwitchesRule
+MediaPlayer.rules.BufferOccupancyRule.prototype = {
+    constructor: MediaPlayer.rules.BufferOccupancyRule
 };

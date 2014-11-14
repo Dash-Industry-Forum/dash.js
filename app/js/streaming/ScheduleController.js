@@ -9,7 +9,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         currentTrackInfo,
         initialPlayback = true,
         lastValidationTime = null,
-
+        lastABRRuleApplyTime = 0,
         isStopped = false,
 
         playListMetrics = null,
@@ -123,13 +123,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             fragmentsToLoad = result.value;
-
             if (fragmentsToLoad <= 0) {
                 self.fragmentController.executePendingRequests();
                 return;
             }
 
-            self.abrController.getPlaybackQuality(self.streamProcessor);
             getNextFragment.call(self, onNextFragment.bind(self));
         },
 
@@ -151,12 +149,22 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         validate = function () {
             var now = new Date().getTime(),
-                isEnoughTimeSinceLastValidation = lastValidationTime ? (now - lastValidationTime > this.fragmentController.getLoadingTime(this)) : true;
+                isEnoughTimeSinceLastValidation = lastValidationTime ? (now - lastValidationTime > this.fragmentController.getLoadingTime(this)) : true,
+                manifestInfo = currentTrackInfo.mediaInfo.streamInfo.manifestInfo,
+                qualitySwitchThreshold = 1000//Math.min(manifestInfo.minBufferTime, manifestInfo.maxFragmentDuration) * 1000;
+
+
+            if (now - lastABRRuleApplyTime > qualitySwitchThreshold) {
+                lastABRRuleApplyTime = now;
+                this.abrController.getPlaybackQuality(this.streamProcessor);
+            }
+
 
             if (!isEnoughTimeSinceLastValidation || isStopped || (this.playbackController.isPaused() && (!this.scheduleWhilePaused || isDynamic))) return;
 
             lastValidationTime = now;
             getRequiredFragmentCount.call(this, onGetRequiredFragmentCount.bind(this));
+
         },
 
         clearMetrics = function () {
@@ -237,7 +245,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onBufferLevelUpdated = function(e) {
             var self = this;
-
             self.metricsModel.addBufferLevel(type, new Date(), e.data.bufferLevel);
             validate.call(this);
         },
