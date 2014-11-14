@@ -244,7 +244,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onQualityChanged = function(sender, typeValue, streamInfo, oldQuality, newQuality) {
-            if (type !== typeValue || this.streamProcessor.getStreamInfo() !== streamInfo) return;
+            if (type !== typeValue || this.streamProcessor.getStreamInfo().id !== streamInfo.id) return;
 
             var self = this,
                 canceledReqs;

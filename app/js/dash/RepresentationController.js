@@ -123,7 +123,7 @@ Dash.dependencies.RepresentationController = function () {
         onQualityChanged = function(sender, type, streamInfo, oldQuality, newQuality) {
             var self = this;
 
-            if (type !== self.streamProcessor.getType() || self.streamProcessor.getStreamInfo() !== streamInfo) return;
+            if (type !== self.streamProcessor.getType() || self.streamProcessor.getStreamInfo().id !== streamInfo.id) return;
 
             currentRepresentation = self.getRepresentationForQuality(newQuality);
             addRepresentationSwitch.call(self);
