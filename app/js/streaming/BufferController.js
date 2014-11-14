@@ -491,8 +491,8 @@ MediaPlayer.dependencies.BufferController = function () {
             checkIfBufferingCompleted.call(self);
         },
 
-        onQualityChanged = function(sender, typeValue, oldQuality, newQuality) {
-            if (type !== typeValue) return;
+        onQualityChanged = function(sender, typeValue, streamInfo, oldQuality, newQuality) {
+            if (type !== typeValue || this.streamProcessor.getStreamInfo().id !== streamInfo.id) return;
 
             var self = this;
 

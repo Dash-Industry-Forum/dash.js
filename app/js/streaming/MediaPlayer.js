@@ -394,7 +394,7 @@ MediaPlayer = function (aContext) {
          * @memberof MediaPlayer#
          */
         getQualityFor: function (type) {
-            return abrController.getQualityFor(type);
+            return abrController.getQualityFor(type, streamController.getActiveStreamInfo());
         },
 
         /**
@@ -403,7 +403,7 @@ MediaPlayer = function (aContext) {
          * @memberof MediaPlayer#
          */
         setQualityFor: function (type, value) {
-            abrController.setPlaybackQuality(type, value);
+            abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value);
         },
 
         /**
