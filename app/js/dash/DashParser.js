@@ -251,7 +251,7 @@ Dash.dependencies.DashParser = function () {
                         var mergedValue;
 
                         // child is absolute, don't merge
-                        if (childValue.indexOf("http://") === 0) {
+                        if (childValue.indexOf("http://") === 0 || childValue.indexOf("https://") === 0) {
                             mergedValue = childValue;
                         } else {
                             mergedValue = parentValue + childValue;

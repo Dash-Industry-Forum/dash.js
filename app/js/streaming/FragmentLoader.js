@@ -14,8 +14,8 @@
 MediaPlayer.dependencies.FragmentLoader = function () {
     "use strict";
 
-    var RETRY_ATTEMPTS = 3,
-        RETRY_INTERVAL = 500,
+    var RETRY_ATTEMPTS = 10,
+        RETRY_INTERVAL = 750,
         xhrs = [],
 
         doLoad = function (request, remainingAttempts) {
@@ -151,14 +151,17 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
 
                     if (remainingAttempts > 0) {
-                        self.debug.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                        var interval = RETRY_INTERVAL * (RETRY_ATTEMPTS - remainingAttempts + 1);
+                        self.debug.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + interval + "ms" + " attempts: " + remainingAttempts);
                         remainingAttempts--;
                         setTimeout(function() {
                             doLoad.call(self, request, remainingAttempts);
-                        }, RETRY_INTERVAL);
+                        }, interval);
                     } else {
                         self.debug.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
                         self.errHandler.downloadError("content", request.url, req);
+                        // @TODO: SMP Should bind to this to throw something
+                        // However, this could mean network not available, finished live stream or (as in my case) the encoder is delivering late
                         self.notify(self.eventList.ENAME_LOADING_COMPLETED, request, null, new Error("failed loading fragment"));
                     }
                 };
@@ -204,7 +207,6 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         },
 
         load: function (req) {
-
             if (!req) {
                 this.notify(this.eventList.ENAME_LOADING_COMPLETED, req, null, new Error("request is null"));
             } else {

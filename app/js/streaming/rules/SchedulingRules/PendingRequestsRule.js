@@ -1,7 +1,7 @@
 MediaPlayer.rules.PendingRequestsRule = function () {
     "use strict";
 
-    var LIMIT = 3,
+    var LIMIT = 1,
         scheduleController = {};
 
     return {

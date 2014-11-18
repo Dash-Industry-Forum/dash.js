@@ -63,20 +63,20 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 oneUpBandwidth,
                 currentBandwidth,
                 i,
-                max,
+                max = mediaInfo.trackCount - 1, //0 based
                 switchRequest,
                 DOWNLOAD_RATIO_SAFETY_FACTOR = 0.75;
+
+            if (lastRequest == null) {
+                // This is the first request
+                callback(new MediaPlayer.rules.SwitchRequest(Math.floor(max/2)));
+                return;
+            }
 
             //self.debug.log("Checking download ratio rule...");
 
             if (!metrics) {
                 //self.debug.log("No metrics, bailing.");
-                callback(new MediaPlayer.rules.SwitchRequest());
-                return;
-            }
-
-            if (lastRequest === null) {
-                //self.debug.log("No requests made for this stream yet, bailing.");
                 callback(new MediaPlayer.rules.SwitchRequest());
                 return;
             }
@@ -140,7 +140,6 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 }
             } else {
                 //self.debug.log("Download ratio is good.");
-                max = mediaInfo.trackCount - 1; // 0 based
 
                 if (current < max) {
                     //self.debug.log("We are not at the highest bitrate, so switch up.");

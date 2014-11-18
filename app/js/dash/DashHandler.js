@@ -119,7 +119,7 @@ Dash.dependencies.DashHandler = function () {
 
             if (destination === baseURL) {
                 url = destination;
-            } else if (destination.indexOf("http://") !== -1) {
+            } else if (destination.indexOf("http://") !== -1 || destination.indexOf("https://") !== -1) {
                 url = destination;
             } else {
                 url = baseURL + destination;
@@ -151,6 +151,8 @@ Dash.dependencies.DashHandler = function () {
         getInit = function (representation) {
             var self = this,
                 request;
+
+            console.log(representation);
 
             if (!representation) return null;
 
@@ -440,8 +442,10 @@ Dash.dependencies.DashHandler = function () {
             }
 
             // segment list should not be out of the availability window range
-            start = Math.floor(Math.max(originAvailabilityTime - availabilityLowerLimit, periodRelativeRange.start) / duration);
-            end = Math.floor(Math.min(start + availabilityUpperLimit / duration, periodRelativeRange.end / duration));
+            //start = Math.floor(Math.max(originAvailabilityTime - availabilityLowerLimit, periodRelativeRange.start) / duration);
+            //end = Math.floor(Math.min(start + availabilityUpperLimit / duration, periodRelativeRange.end / duration));
+            start = Math.floor(periodRelativeRange.start / duration);
+            end = Math.floor(periodRelativeRange.end / duration);
 
             range = {start: start, end: end};
 
@@ -580,7 +584,6 @@ Dash.dependencies.DashHandler = function () {
 
         onSegmentListUpdated = function(representation, segments) {
             var lastIdx;
-
             representation.segments = segments;
             lastIdx = segments.length - 1;
             if (isDynamic && isNaN(this.timelineConverter.getExpectedLiveEdge())) {
@@ -630,6 +633,7 @@ Dash.dependencies.DashHandler = function () {
         },
 
         getIndexForSegments = function (time, representation) {
+            time = Math.floor(time);
             var segments = representation.segments,
                 segmentLastIdx = segments ? (segments.length - 1) : null,
                 idx = -1,
@@ -650,27 +654,6 @@ Dash.dependencies.DashHandler = function () {
                     }
                 }
             }
-
-            // TODO : This is horrible.
-            // Temp fix for SegmentTimeline refreshes.
-            //if (idx === -1) {
-            //    idx = 0;
-            //}
-
-            /*
-            if (segments && segments.length > 0) {
-                idx = 0;
-                ft = segments[0].startTime / segments[0].timescale;
-                frag = null;
-
-                while (ft <= time && (idx + 1) < segments.length) {
-                    frag = segments[idx];
-                    ft += frag.duration / frag.timescale;
-                    idx += 1;
-                }
-                idx -= 1;
-            }
-            */
 
             return idx;
         },
@@ -849,6 +832,8 @@ Dash.dependencies.DashHandler = function () {
 
         onInitializationLoaded = function(sender, representation) {
             //self.debug.log("Got an initialization.");
+            console.log("INIT LOADED");
+            console.log(representation);
             if (!representation.segments) return;
 
             this.notify(this.eventList.ENAME_REPRESENTATION_UPDATED, representation);

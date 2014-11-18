@@ -177,6 +177,11 @@ MediaPlayer.models.MetricsModel = function () {
             var vo = new MediaPlayer.vo.metrics.DroppedFrames(),
                 list = this.getMetricsFor(mediaType).DroppedFrames;
 
+            if (!quality) {
+                console.warn('No quality information provided');
+                return vo;
+            }
+
             vo.time = quality.creationTime;
             vo.droppedFrames = quality.droppedVideoFrames;
 

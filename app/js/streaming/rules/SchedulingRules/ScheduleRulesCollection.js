@@ -25,6 +25,7 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
         playbackTimeRule: undefined,
         sameTimeRequestRule: undefined,
         liveEdgeBinarySearchRule: undefined,
+        liveEdgeBBCSearchRule: undefined,
 
         getRules: function (type) {
             switch (type) {
@@ -46,7 +47,8 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
             fragmentsToScheduleRules.push(this.pendingRequestsRule);
             nextFragmentRules.push(this.playbackTimeRule);
             fragmentsToExecuteRules.push(this.sameTimeRequestRule);
-            liveEdgeRules.push(this.liveEdgeBinarySearchRule);
+            //liveEdgeRules.push(this.liveEdgeBinarySearchRule);
+            liveEdgeRules.push(this.liveEdgeBBCSearchRule);
         }
     };
 };

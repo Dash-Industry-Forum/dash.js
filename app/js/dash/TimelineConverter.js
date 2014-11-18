@@ -94,13 +94,14 @@ Dash.dependencies.TimelineConverter = function () {
                 return representation.segmentAvailabilityRange;
             }
 
-            checkTime = representation.adaptation.period.mpd.checkTime;
+            //checkTime = representation.adaptation.period.mpd.checkTime;
             now = calcPresentationTimeFromWallTime(new Date((new Date().getTime())), representation.adaptation.period);
             //the Media Segment list is further restricted by the CheckTime together with the MPD attribute
             // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
             // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.
             start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth), 0);
-            end = isNaN(checkTime) ? now : Math.min(checkTime, now);
+            //end = isNaN(checkTime) ? now : Math.min(checkTime, now);
+            end = now;
             range = {start: start, end: end};
 
             return range;

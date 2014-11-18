@@ -221,6 +221,10 @@ MediaPlayer.dependencies.Stream = function () {
                 mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, type);
 
             if (type === "text") {
+                console.log('Skipping');
+                console.log(type);
+                console.log(manifest);
+                return;
                 getCodecOrMimeType = function(mediaInfo) {
                     mimeType = mediaInfo.mimeType;
 
@@ -347,6 +351,7 @@ MediaPlayer.dependencies.Stream = function () {
             if (!initialized) return;
 
             for (i; i < ln; i += 1) {
+                console.log(streamProcessors[i]);
                 if (streamProcessors[i].isUpdating()) return;
             }
 
@@ -402,6 +407,8 @@ MediaPlayer.dependencies.Stream = function () {
                         self.errHandler.manifestError(msg, "nostreams", manifest);
                         self.debug.log(msg);
                     } else {
+                        console.log('Starting ');
+                        console.log(streamProcessors[0].getType());
                         self.liveEdgeFinder.initialize(streamProcessors[0]);
                         self.liveEdgeFinder.subscribe(self.liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.playbackController);
                         initializePlayback.call(self);

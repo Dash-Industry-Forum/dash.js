@@ -53,6 +53,7 @@ MediaPlayer.di.Context = function () {
 
             this.system.mapSingleton('rulesController', MediaPlayer.rules.RulesController);
             this.system.mapClass('liveEdgeBinarySearchRule', MediaPlayer.rules.LiveEdgeBinarySearchRule);
+            this.system.mapClass('liveEdgeBBCSearchRule', MediaPlayer.rules.LiveEdgeBBCSearchRule);
             this.system.mapClass('bufferLevelRule', MediaPlayer.rules.BufferLevelRule);
             this.system.mapClass('pendingRequestsRule', MediaPlayer.rules.PendingRequestsRule);
             this.system.mapClass('playbackTimeRule', MediaPlayer.rules.PlaybackTimeRule);

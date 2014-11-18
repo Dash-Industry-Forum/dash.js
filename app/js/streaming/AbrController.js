@@ -23,7 +23,7 @@ MediaPlayer.dependencies.AbrController = function () {
             var quality;
 
             if (!qualityDict.hasOwnProperty(type)) {
-                qualityDict[type] = 0;
+                qualityDict[type] = Math.floor(getTopQualityIndex(type) / 2);
             }
 
             quality = qualityDict[type];
@@ -72,7 +72,6 @@ MediaPlayer.dependencies.AbrController = function () {
                 mediaInfo = this.adapter.convertDataToTrack(trackData).mediaInfo,
                 type = mediaInfo.type,
                 max;
-
             max = mediaInfo.trackCount - 1;
 
             if (getTopQualityIndex(type) === max) return;

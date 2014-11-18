@@ -150,7 +150,6 @@ Dash.dependencies.DashAdapter = function () {
 
         getFragmentRequestForTime = function(streamProcessor, trackInfo, time, keepIdx) {
             var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.trackController);
-
             return streamProcessor.indexHandler.getSegmentRequestForTime(representation, time, keepIdx);
         },
 

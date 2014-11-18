@@ -353,10 +353,12 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                     representation.initialization = r.BaseURL;
                     representation.range = initialization.range;
                 }
-            } else if (r.hasOwnProperty("mimeType") && self.getIsTextTrack(r.mimeType)) {
+            }
+
+            /* else if (r.hasOwnProperty("mimeType") && self.getIsTextTrack(r.mimeType)) {
                 representation.initialization = r.BaseURL;
                 representation.range = 0;
-            }
+            }*/
 
             if (segmentInfo.hasOwnProperty("timescale")) {
                 representation.timescale = segmentInfo.timescale;

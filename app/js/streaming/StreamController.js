@@ -255,6 +255,10 @@
                         stream = self.system.getObject("stream");
                         playbackCtrl = self.system.getObject("playbackController");
                         stream.setStreamInfo(streamInfo);
+                        /**
+                        * lpw - potential bug? A newly introduced stream at the top of the manifest would
+                        * create a new video model?
+                        */
                         stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
                         stream.setPlaybackController(playbackCtrl);
                         playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_ERROR, stream);

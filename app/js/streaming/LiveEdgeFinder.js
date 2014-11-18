@@ -52,6 +52,10 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
             if (this.scheduleRulesCollection.liveEdgeBinarySearchRule) {
                 this.scheduleRulesCollection.liveEdgeBinarySearchRule.setFinder(this);
             }
+
+            if (this.scheduleRulesCollection.liveEdgeBBCSearchRule) {
+                this.scheduleRulesCollection.liveEdgeBBCSearchRule.setFinder(this);
+            }
         },
 
         abortSearch: function() {

@@ -14,7 +14,7 @@
 MediaPlayer.utils.Debug = function () {
     "use strict";
 
-    var logToBrowserConsole = true;
+    var logToBrowserConsole = true
 
     return {
         eventBus: undefined,
