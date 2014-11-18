@@ -147,6 +147,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 fragmentsToLoad--;
                 //self.debug.log("Loading fragment: " + request.mediaType + ":" + request.startTime);
                 this.fragmentController.prepareFragmentForLoading(this, request);
+            } else {
+                this.fragmentController.executePendingRequests();
             }
         },
 
