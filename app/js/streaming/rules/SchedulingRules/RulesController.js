@@ -138,7 +138,7 @@ MediaPlayer.rules.RulesController = function () {
                         confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
                     }
 
-                    callback({value: value || current, confidence: confidence});
+                    callback({value: (value !== undefined) ? value : current, confidence: confidence});
                 };
 
             values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
