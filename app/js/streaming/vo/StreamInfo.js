@@ -5,6 +5,7 @@ MediaPlayer.vo.StreamInfo = function () {
     this.start = NaN;
     this.duration = NaN;
     this.manifestInfo = null;
+    this.isLast = true;
 };
 
 MediaPlayer.vo.StreamInfo.prototype = {
