@@ -354,6 +354,10 @@
             this.videoModel = value;
         },
 
+        getActiveStreamInfo: function() {
+            return activeStream ? activeStream.getStreamInfo() : null;
+        },
+
         load: function (url) {
             this.manifestLoader.load(url);
         },

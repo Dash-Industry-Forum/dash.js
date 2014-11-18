@@ -128,6 +128,10 @@ MediaPlayer.dependencies.BufferController = function () {
         onAppended = function(sender, sourceBuffer, data, error) {
             if (buffer !== sourceBuffer) return;
 
+            if (this.isBufferingCompleted()) {
+                this.mediaSourceExt.signalEndOfStream(mediaSource);
+            }
+
             var self = this,
                 ranges;
 
@@ -169,7 +173,7 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             onAppendToBufferCompleted.call(self, appendedBytesInfo.quality, appendedBytesInfo.index);
-            self.notify(self.eventList.ENAME_BYTES_APPENDED, appendedBytesInfo.quality, appendedBytesInfo.index);
+            self.notify(self.eventList.ENAME_BYTES_APPENDED, appendedBytesInfo.quality, appendedBytesInfo.index, ranges);
         },
 
         updateBufferLevel = function() {
@@ -487,8 +491,8 @@ MediaPlayer.dependencies.BufferController = function () {
             checkIfBufferingCompleted.call(self);
         },
 
-        onQualityChanged = function(sender, typeValue, oldQuality, newQuality) {
-            if (type !== typeValue) return;
+        onQualityChanged = function(sender, typeValue, streamInfo, oldQuality, newQuality) {
+            if (type !== typeValue || this.streamProcessor.getStreamInfo().id !== streamInfo.id) return;
 
             var self = this;
 
@@ -530,6 +534,7 @@ MediaPlayer.dependencies.BufferController = function () {
         sourceBufferExt: undefined,
         eventBus: undefined,
         bufferMax: undefined,
+        mediaSourceExt: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
         adapter: undefined,

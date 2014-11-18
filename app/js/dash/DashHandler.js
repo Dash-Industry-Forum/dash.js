@@ -152,8 +152,6 @@ Dash.dependencies.DashHandler = function () {
             var self = this,
                 request;
 
-            console.log(representation);
-
             if (!representation) return null;
 
             request = generateInitRequest.call(self, representation, type);
@@ -344,13 +342,6 @@ Dash.dependencies.DashHandler = function () {
             }
 
             if (!isAvailableSegmentNumberCalculated) {
-                var availabilityStartTime,
-                    availabilityEndTime,
-                    f = fragments[0];
-
-                availabilityStartTime = (f.t === undefined) ? 0 : self.timelineConverter.calcPresentationTimeFromMediaTime(f.t / fTimescale, representation);
-                availabilityEndTime = self.timelineConverter.calcPresentationTimeFromMediaTime((time - frag.d) / fTimescale, representation);
-                representation.segmentAvailabilityRange = {start: availabilityStartTime, end: availabilityEndTime};
                 representation.availableSegmentsNumber = availabilityIdx + 1;
             }
 
@@ -583,12 +574,16 @@ Dash.dependencies.DashHandler = function () {
         },
 
         onSegmentListUpdated = function(representation, segments) {
-            var lastIdx;
+            var lastIdx,
+                liveEdge,
+                metrics,
+                lastSegment;
             representation.segments = segments;
             lastIdx = segments.length - 1;
             if (isDynamic && isNaN(this.timelineConverter.getExpectedLiveEdge())) {
-                var liveEdge = segments[lastIdx].presentationStartTime,
-                    metrics = this.metricsModel.getMetricsFor("stream");
+                lastSegment = segments[lastIdx];
+                liveEdge = lastSegment.presentationStartTime + lastSegment.duration;
+                metrics = this.metricsModel.getMetricsFor("stream");
                 // the last segment is supposed to be a live edge
                 this.timelineConverter.setExpectedLiveEdge(liveEdge);
                 this.metricsModel.updateManifestUpdateInfo(this.metricsExt.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
@@ -635,20 +630,20 @@ Dash.dependencies.DashHandler = function () {
         getIndexForSegments = function (time, representation) {
             time = Math.floor(time);
             var segments = representation.segments,
-                segmentLastIdx = segments ? (segments.length - 1) : null,
+                ln = segments ? segments.length : null,
                 idx = -1,
                 frag,
                 ft,
                 fd,
                 i;
 
-            if (segments && segments.length > 0) {
-                for (i = segmentLastIdx; i >= 0; i--) {
+            if (segments && ln > 0) {
+                for (i = 0; i < ln; i += 1) {
                     frag = segments[i];
                     ft = frag.presentationStartTime;
                     fd = frag.duration;
-                    if ((time + Dash.dependencies.DashHandler.EPSILON) >= ft &&
-                        (time - Dash.dependencies.DashHandler.EPSILON) <= (ft + fd)) {
+                    if ((time + fd/2) >= ft &&
+                        (time - fd/2) < (ft + fd)) {
                         idx = frag.availabilityIdx;
                         break;
                     }
@@ -682,7 +677,7 @@ Dash.dependencies.DashHandler = function () {
                 upperIdx,
                 lowerIdx;
 
-            if (!segments) {
+            if (!segments || segments.length === 0) {
                 updateRequired = true;
             } else {
                 lowerIdx = segments[0].availabilityIdx;
@@ -940,8 +935,6 @@ Dash.dependencies.DashHandler = function () {
         updateRepresentation: updateRepresentation
     };
 };
-
-Dash.dependencies.DashHandler.EPSILON = 0.003;
 
 Dash.dependencies.DashHandler.prototype = {
     constructor: Dash.dependencies.DashHandler

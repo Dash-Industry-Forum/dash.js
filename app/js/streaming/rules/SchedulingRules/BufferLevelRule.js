@@ -27,12 +27,12 @@ MediaPlayer.rules.BufferLevelRule = function () {
             return minBufferTarget;
         },
 
-        getRequiredBufferLength = function (isDynamic, duration, streamProcessor) {
+        getRequiredBufferLength = function (isDynamic, duration, scheduleController) {
             var self = this,
-                criticalBufferLevel = streamProcessor.bufferController.getCriticalBufferLevel(),
-                minBufferTarget = decideBufferLength.call(this, streamProcessor.bufferController.getMinBufferTime(), duration),
+                criticalBufferLevel = scheduleController.bufferController.getCriticalBufferLevel(),
+                minBufferTarget = decideBufferLength.call(this, scheduleController.bufferController.getMinBufferTime(), duration),
                 currentBufferTarget = minBufferTarget,
-                bufferMax = streamProcessor.bufferController.bufferMax,
+                bufferMax = scheduleController.bufferController.bufferMax,
                 vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
                 ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"),
                 isLongFormContent = (duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
@@ -43,7 +43,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
             } else if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY) {
                 requiredBufferLength = duration;
             } else if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED) {
-                if (!isDynamic && self.abrController.isPlayingAtTopQuality()) {
+                if (!isDynamic && self.abrController.isPlayingAtTopQuality(scheduleController.streamProcessor.getStreamInfo())) {
                     currentBufferTarget = isLongFormContent ?
                         MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :
                         MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY;

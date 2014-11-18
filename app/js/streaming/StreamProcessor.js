@@ -91,6 +91,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 bufferController.subscribe(bufferController.eventList.ENAME_QUOTA_EXCEEDED, scheduleController);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, scheduleController.scheduleRulesCollection.bufferLevelRule);
                 bufferController.subscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, scheduleController.scheduleRulesCollection.bufferLevelRule);
+                bufferController.subscribe(bufferController.eventList.ENAME_BYTES_APPENDED, playbackController);
 
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
                 playbackController.subscribe(playbackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);
@@ -234,6 +235,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             bufferController.unsubscribe(bufferController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, scheduleController.scheduleRulesCollection.bufferLevelRule);
             bufferController.unsubscribe(bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, scheduleController.scheduleRulesCollection.bufferLevelRule);
+            bufferController.unsubscribe(bufferController.eventList.ENAME_BYTES_APPENDED, playbackController);
 
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
             playbackController.unsubscribe(playbackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);

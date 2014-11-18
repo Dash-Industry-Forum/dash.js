@@ -14,7 +14,7 @@ Dash.dependencies.RepresentationController = function () {
             self.notify(self.eventList.ENAME_DATA_UPDATE_STARTED);
 
             availableRepresentations = updateRepresentations.call(self, adaptation);
-            currentRepresentation = getRepresentationForQuality.call(self, self.abrController.getQualityFor(type));
+            currentRepresentation = getRepresentationForQuality.call(self, self.abrController.getQualityFor(type, self.streamProcessor.getStreamInfo()));
             data = dataValue;
 
             if (type !== "video" && type !== "audio") {
@@ -105,6 +105,11 @@ Dash.dependencies.RepresentationController = function () {
         onLiveEdgeFound = function(/*sender, liveEdgeTime, searchTime*/) {
             updateAvailabilityWindow.call(this, true);
             this.indexHandler.updateRepresentation(currentRepresentation, false);
+
+            // we need to update checkTime after we have found the live edge because its initial value
+            // does not take into account clientServerTimeShift
+            var manifest = this.manifestModel.getValue();
+            currentRepresentation.adaptation.period.mpd.checkTime = this.manifestExt.getCheckTime(manifest, currentRepresentation.adaptation.period);
         },
 
         onBufferLevelUpdated = function(sender/*, bufferLevel*/) {
@@ -115,10 +120,10 @@ Dash.dependencies.RepresentationController = function () {
             self.metricsModel.addDVRInfo(streamProcessor.getType(), streamProcessor.playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
         },
 
-        onQualityChanged = function(sender, type, oldQuality, newQuality/*, dataChanged*/) {
+        onQualityChanged = function(sender, type, streamInfo, oldQuality, newQuality) {
             var self = this;
 
-            if (type !== self.streamProcessor.getType()) return;
+            if (type !== self.streamProcessor.getType() || self.streamProcessor.getStreamInfo().id !== streamInfo.id) return;
 
             currentRepresentation = self.getRepresentationForQuality(newQuality);
             addRepresentationSwitch.call(self);

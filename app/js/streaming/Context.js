@@ -40,7 +40,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('errHandler', MediaPlayer.dependencies.ErrorHandler);
             this.system.mapSingleton('protectionExt', MediaPlayer.dependencies.ProtectionExtensions);
             this.system.mapSingleton('videoExt', MediaPlayer.dependencies.VideoModelExtensions);
-            this.system.mapClass('protectionController', MediaPlayer.dependencies.ProtectionController);
+            this.system.mapSingleton('protectionController', MediaPlayer.dependencies.ProtectionController);
             this.system.mapClass('playbackController', MediaPlayer.dependencies.PlaybackController);
 
             this.system.mapSingleton('liveEdgeFinder', MediaPlayer.dependencies.LiveEdgeFinder);

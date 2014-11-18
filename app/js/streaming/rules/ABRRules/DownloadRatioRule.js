@@ -151,7 +151,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                     if (downloadRatio >= switchRatio) {
                         if (downloadRatio > 100.0) {
                             self.debug.log("Tons of bandwidth available, go all the way up.");
-                            switchRequest = new MediaPlayer.rules.SwitchRequest(max - 1);
+                            switchRequest = new MediaPlayer.rules.SwitchRequest(max);
                         }
                         else if (downloadRatio > 10.0) {
                             self.debug.log("Just enough bandwidth available, switch up one.");
