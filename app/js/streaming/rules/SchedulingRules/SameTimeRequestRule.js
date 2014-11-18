@@ -93,7 +93,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 return;
             }
 
-            currentTime = Math.round(fragmentModels[0].getContext().playbackController.getTime() * 100) / 100;
+            currentTime = fragmentModels[0].getContext().playbackController.getTime();
             reqForCurrentTime = getForTime(fragmentModels, currentTime);
             req = reqForCurrentTime || findClosestToTime(fragmentModels, currentTime) || current;
 
