@@ -28,7 +28,8 @@ Dash.dependencies.DashParser = function () {
             {
                 type: "duration",
                 test: function (attr) {
-                    var attributeList = ["minBufferTime", "mediaPresentationDuration"],
+
+                    var attributeList = ["minBufferTime", "mediaPresentationDuration", "start", "minimumUpdatePeriod","timeShiftBufferDepth"],
                         i,
                         len = attributeList.length;
 
