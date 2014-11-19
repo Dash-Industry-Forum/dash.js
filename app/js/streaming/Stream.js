@@ -431,7 +431,7 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             // buffering has been complted, now we can signal end of stream
-            if (mediaSource) {
+            if (mediaSource && streamInfo.isLast) {
                 this.mediaSourceExt.signalEndOfStream(mediaSource);
             }
         },

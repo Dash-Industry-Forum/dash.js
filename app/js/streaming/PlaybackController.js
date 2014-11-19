@@ -303,6 +303,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
             liveStartTime = value;
         },
 
+        getLiveStartTime: function() {
+            return liveStartTime;
+        },
+
         start: function() {
             videoModel.play();
         },

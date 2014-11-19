@@ -147,6 +147,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 fragmentsToLoad--;
                 //self.debug.log("Loading fragment: " + request.mediaType + ":" + request.startTime);
                 this.fragmentController.prepareFragmentForLoading(this, request);
+            } else {
+                this.fragmentController.executePendingRequests();
             }
         },
 
@@ -317,11 +319,16 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 request,
                 metrics = self.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
+                currentLiveStart = self.playbackController.getLiveStartTime(),
                 actualStartTime;
             // get a request for a start time
             request = self.adapter.getFragmentRequestForTime(self.streamProcessor, currentTrackInfo, startTime);
             actualStartTime = request.startTime;
-            self.playbackController.setLiveStartTime(actualStartTime);
+
+            if (isNaN(currentLiveStart) || (actualStartTime > currentLiveStart)) {
+                self.playbackController.setLiveStartTime(actualStartTime);
+            }
+
             self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: self.timelineConverter.getClientTimeOffset()});
             ready = true;
             startOnReady.call(self);

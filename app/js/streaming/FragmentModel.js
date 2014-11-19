@@ -41,6 +41,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         getRequestForTime = function(arr, time) {
             var lastIdx = arr.length - 1,
+                THRESHOLD = 0.001,
                 start = NaN,
                 end = NaN,
                 req = null,
@@ -51,7 +52,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 req = arr[i];
                 start = req.startTime;
                 end = start + req.duration;
-                if ((!isNaN(start) && !isNaN(end) && (time >= start) && (time < end)) || (isNaN(start) && isNaN(time))) {
+                if ((!isNaN(start) && !isNaN(end) && ((time + THRESHOLD) >= start) && (time < end)) || (isNaN(start) && isNaN(time))) {
                     return req;
                 }
             }

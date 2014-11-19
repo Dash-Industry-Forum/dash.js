@@ -27,7 +27,7 @@
             period.mpd = createMpd();
             period.start = 0;
 
-            period.id = null;
+            period.id = "id1";
             period.index = 0;
             period.duration = 100;
             period.liveEdge = 50;
