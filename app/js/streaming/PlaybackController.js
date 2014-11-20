@@ -328,7 +328,6 @@ MediaPlayer.dependencies.PlaybackController = function () {
         seek: function(time) {
             if (time === this.getTime()) return;
             videoModel.setCurrentTime(time);
-            this.notify(this.eventList.ENAME_PLAYBACK_SEEKING, time, true);
         },
 
         reset: function() {
