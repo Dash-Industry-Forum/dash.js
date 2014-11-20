@@ -40,9 +40,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
             return presentationStartTime;
         },
 
-        getActualPresentationTime = function() {
+        getActualPresentationTime = function(currentTime) {
             var self = this,
-                currentTime = self.getTime(),
                 metrics = self.metricsModel.getMetricsFor(trackInfo.mediaInfo.type),
                 DVRMetrics = self.metricsExt.getCurrentDVRInfo(metrics),
                 DVRWindow = DVRMetrics ? DVRMetrics.range : null,
@@ -87,7 +86,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (this.isPaused() || !isDynamic) return;
 
             var currentTime = this.getTime(),
-                actualTime = getActualPresentationTime.call(this),
+                actualTime = getActualPresentationTime.call(this, currentTime),
                 timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
 
             if (timeChanged) {
