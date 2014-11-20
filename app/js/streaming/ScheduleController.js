@@ -36,10 +36,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             isStopped = false;
 
-            var currentTime = new Date();
-            clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
-            playListMetrics = this.metricsModel.addPlayList(type, currentTime, 0, MediaPlayer.vo.metrics.PlayList.INITIAL_PLAY_START_REASON);
-
             if (initialPlayback) {
                 initialPlayback = false;
             }
@@ -53,6 +49,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         startOnReady = function() {
             if (initialPlayback) {
                 getInitRequest.call(this, currentTrackInfo.quality);
+                addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.INITIAL_PLAY_START_REASON);
             }
 
             doStart.call(this);
@@ -262,6 +259,13 @@ MediaPlayer.dependencies.ScheduleController = function () {
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
         },
 
+        addPlaylistMetrics = function(stopReason) {
+            var currentTime = new Date(),
+                presentationTime = this.playbackController.getTime();
+            clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
+            playListMetrics = this.metricsModel.addPlayList(type, currentTime, presentationTime, stopReason);
+        },
+
         addPlaylistTraceMetrics = function() {
             var self = this,
                 currentVideoTime = self.playbackController.getTime(),
@@ -290,15 +294,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
             }
 
-            var currentTime,
-                metrics = this.metricsModel.getMetricsFor("stream"),
+            var metrics = this.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = this.metricsExt.getCurrentManifestUpdate(metrics);
 
             this.debug.log("ScheduleController " + type + " seek: " + time);
-            currentTime = new Date();
-            clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
-            playListMetrics = this.metricsModel.addPlayList(type, currentTime, time, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
-            doStart.call(this);
+            addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
 
             this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentTrackInfo.DVRWindow.end - this.playbackController.getTime()});
         },
