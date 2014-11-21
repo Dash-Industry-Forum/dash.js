@@ -101,7 +101,6 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
         manifestLoader: undefined,
 
         setup: function () {
-            update.call(this);
             // Listen to streamsComposed event to be aware that the streams have been composed
             this.streamsComposed = onStreamsComposed;
             this.manifestLoaded = onManifestLoaded;
