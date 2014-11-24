@@ -88,7 +88,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             this.stop();
         },
 
-        onStreamsComposed = function() {
+        onStreamsComposed = function(/*sender, error*/) {
             // When streams are ready we can consider manifest update completed. Resolve the update promise.
             isUpdating = false;
         };

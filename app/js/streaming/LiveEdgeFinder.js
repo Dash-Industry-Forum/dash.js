@@ -16,8 +16,8 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
             }
         },
 
-        onStreamUpdated = function(/*sender*/) {
-            if (!this.streamProcessor.isDynamic() || isSearchStarted) return;
+        onStreamUpdated = function(sender, error) {
+            if (!this.streamProcessor.isDynamic() || isSearchStarted || error) return;
 
             var self = this;
 

@@ -76,7 +76,9 @@ MediaPlayer.dependencies.AbrController = function () {
             return idx;
         },
 
-        onDataUpdateCompleted = function(sender, data, trackData) {
+        onDataUpdateCompleted = function(sender, data, trackData, error) {
+            if (error) return;
+
             var self = this,
                 mediaInfo = this.adapter.convertDataToTrack(trackData).mediaInfo,
                 type = mediaInfo.type,

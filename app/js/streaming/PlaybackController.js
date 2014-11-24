@@ -94,7 +94,9 @@ MediaPlayer.dependencies.PlaybackController = function () {
             }
         },
 
-        onDataUpdateCompleted = function(sender, mediaData, TrackData) {
+        onDataUpdateCompleted = function(sender, mediaData, TrackData, error) {
+            if (error) return;
+
             trackInfo = this.adapter.convertDataToTrack(TrackData);
             streamInfo = trackInfo.mediaInfo.streamInfo;
             isDynamic = sender.streamProcessor.isDynamic();

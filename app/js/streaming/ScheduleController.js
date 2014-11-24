@@ -169,7 +169,9 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.metricsModel.clearCurrentMetricsForType(type);
         },
 
-        onDataUpdateCompleted = function(sender, mediaData, trackData) {
+        onDataUpdateCompleted = function(sender, mediaData, trackData, error) {
+            if (error) return;
+
             currentTrackInfo = this.adapter.convertDataToTrack(trackData);
 
             if (!isDynamic) {
