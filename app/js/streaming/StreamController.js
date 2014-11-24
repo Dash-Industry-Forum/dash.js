@@ -112,9 +112,12 @@
          * TODO move to ???Extensions class
          */
         onTimeupdate = function(sender, timeToStreamEnd) {
-            var self = this;
+            var self = this,
+                playbackQuality = self.videoExt.getPlaybackQuality(activeStream.getVideoModel().getElement());
 
-            self.metricsModel.addDroppedFrames("video", self.videoExt.getPlaybackQuality(activeStream.getVideoModel().getElement()));
+            if (playbackQuality) {
+                self.metricsModel.addDroppedFrames("video", playbackQuality);
+            }
 
             if (!getNextStream()) return;
 
