@@ -402,7 +402,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
             adaptationSet.index = i;
             adaptationSet.period = period;
-            adaptationSet.type = this.getIsAudio(a) ? "audio" : (this.getIsVideo(a) ? "video" : "text");
+            adaptationSet.type = this.getIsVideo(a) ? "video" : (this.getIsAudio(a) ? "audio" : "text");
             adaptations.push(adaptationSet);
         }
 
