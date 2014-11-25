@@ -210,19 +210,6 @@ MediaPlayer.dependencies.AbrController = function () {
         },
 
         reset: function() {
-            var rules = this.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES),
-                rule,
-                ln = rules.length,
-                i = 0;
-
-            for (i; i < ln; i += 1) {
-                rule = rules[i];
-
-                if (typeof(rule.reset) === "function") {
-                    rule.reset();
-                }
-            }
-
             autoSwitchBitrate = true;
             topQualities = {};
             qualityDict = {};

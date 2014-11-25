@@ -56,12 +56,6 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
         abortSearch: function() {
             isSearchStarted = false;
-
-            if (!rules) return;
-
-            for (var i = 0, ln = rules.length; i < ln; i += 1) {
-                rules[i].reset();
-            }
         }
     };
 };

@@ -158,6 +158,25 @@ MediaPlayer.rules.RulesController = function () {
         },
 
         reset: function() {
+            var abrRules = rules[this.ABR_RULE],
+                schedulingRules = rules[this.SCHEDULING_RULE],
+                allRules = (abrRules.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES)|| []).
+                    concat(schedulingRules.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES) || []).
+                    concat(schedulingRules.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES) || []).
+                    concat(schedulingRules.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_EXECUTE_RULES) || []).
+                    concat(schedulingRules.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.LIVE_EDGE_RULES) || []),
+                ln = allRules.length,
+                rule,
+                i;
+
+            for (i = 0; i < ln; i += 1) {
+                rule = allRules[i];
+
+                if (typeof (rule.reset) !== "function") continue;
+
+                rule.reset();
+            }
+
             rules = {};
         }
     };
