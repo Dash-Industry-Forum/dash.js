@@ -36,6 +36,13 @@ Dash.dependencies.RepresentationController = function () {
             this.metricsModel.addTrackSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
         },
 
+        addDVRMetric = function() {
+            var streamProcessor = this.streamProcessor,
+                range = this.timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, streamProcessor.isDynamic());
+
+            this.metricsModel.addDVRInfo(streamProcessor.getType(), streamProcessor.playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
+        },
+
         getRepresentationForQuality = function(quality) {
             return availableRepresentations[quality];
         },
@@ -69,13 +76,33 @@ Dash.dependencies.RepresentationController = function () {
             }
         },
 
-        onRepresentationUpdated = function(sender, representation) {
+        reset = function() {
+            data = null;
+            dataIndex = -1;
+            updating = false;
+            availableRepresentations = [];
+            currentRepresentation = null;
+        },
+
+        onRepresentationUpdated = function(sender, representation, error) {
+            if (!data) return;
+
             var self = this,
                 r = representation,
                 metrics = self.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
                 repInfo,
+                err,
                 alreadyAdded = false;
+
+            if (error && error.code === Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE) {
+                addDVRMetric.call(this);
+                reset.call(this);
+                err = {code: Dash.dependencies.RepresentationController.SEGMENTS_UPDATE_FAILED_ERROR_CODE};
+                this.notify(this.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation, err);
+
+                return;
+            }
 
             for (var i = 0; i < manifestUpdateInfo.trackInfo.length; i += 1) {
                 repInfo = manifestUpdateInfo.trackInfo[i];
@@ -112,12 +139,8 @@ Dash.dependencies.RepresentationController = function () {
             currentRepresentation.adaptation.period.mpd.checkTime = this.manifestExt.getCheckTime(manifest, currentRepresentation.adaptation.period);
         },
 
-        onBufferLevelUpdated = function(sender/*, bufferLevel*/) {
-            var streamProcessor = sender.streamProcessor,
-                self = this,
-                range = self.timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, streamProcessor.isDynamic());
-
-            self.metricsModel.addDVRInfo(streamProcessor.getType(), streamProcessor.playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
+        onBufferLevelUpdated = function(/*sender, bufferLevel*/) {
+            addDVRMetric.call(this);
         },
 
         onQualityChanged = function(sender, type, streamInfo, oldQuality, newQuality) {
@@ -183,3 +206,5 @@ Dash.dependencies.RepresentationController = function () {
 Dash.dependencies.RepresentationController.prototype = {
     constructor: Dash.dependencies.RepresentationController
 };
+
+Dash.dependencies.RepresentationController.SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;

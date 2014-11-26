@@ -16,8 +16,8 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
             }
         },
 
-        onStreamUpdated = function(/*sender*/) {
-            if (!this.streamProcessor.isDynamic() || isSearchStarted) return;
+        onStreamUpdated = function(sender, error) {
+            if (!this.streamProcessor.isDynamic() || isSearchStarted || error) return;
 
             var self = this;
 
@@ -56,12 +56,6 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
         abortSearch: function() {
             isSearchStarted = false;
-
-            if (!rules) return;
-
-            for (var i = 0, ln = rules.length; i < ln; i += 1) {
-                rules[i].reset();
-            }
         }
     };
 };

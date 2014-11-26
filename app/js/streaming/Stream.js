@@ -26,6 +26,7 @@ MediaPlayer.dependencies.Stream = function () {
         initData = [],
         updating = true,
         streamInfo = null,
+        updateError = {},
 
         needKeyListener,
         keyMessageListener,
@@ -342,6 +343,8 @@ MediaPlayer.dependencies.Stream = function () {
         checkIfInitializationCompleted = function() {
             var self = this,
                 ln = streamProcessors.length,
+                hasError = !!updateError.audio || !!updateError.video,
+                error = hasError ? {code: MediaPlayer.dependencies.Stream.DATA_UPDATE_FAILED_ERROR_CODE} : null,
                 i = 0;
 
             if (!initialized) return;
@@ -351,7 +354,7 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             updating = false;
-            self.notify(self.eventList.ENAME_STREAM_UPDATED);
+            self.notify(self.eventList.ENAME_STREAM_UPDATED, error);
         },
 
         onError = function (sender, error) {
@@ -436,7 +439,11 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
-        onDataUpdateCompleted = function(/*sender, mediaData, trackData*/) {
+        onDataUpdateCompleted = function(sender, mediaData, trackData, error) {
+            var type = sender.streamProcessor.getType();
+
+            updateError[type] = error;
+
             checkIfInitializationCompleted.call(this);
         },
 
@@ -590,6 +597,7 @@ MediaPlayer.dependencies.Stream = function () {
             //this.videoModel = null;
 
             loaded = false;
+            updateError = {};
         },
 
         getDuration: function () {
@@ -645,3 +653,5 @@ MediaPlayer.dependencies.Stream = function () {
 MediaPlayer.dependencies.Stream.prototype = {
     constructor: MediaPlayer.dependencies.Stream
 };
+
+MediaPlayer.dependencies.Stream.DATA_UPDATE_FAILED_ERROR_CODE = 1;

@@ -468,7 +468,9 @@ MediaPlayer.dependencies.BufferController = function () {
             appendToBuffer.call(this, data.bytes, data.quality, data.index);
         },
 
-        onDataUpdateCompleted = function(sender, data, trackData) {
+        onDataUpdateCompleted = function(sender, data, trackData, error) {
+            if (error) return;
+
             var self = this,
                 bufferLength;
 
