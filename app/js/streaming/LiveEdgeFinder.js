@@ -3,11 +3,12 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
     "use strict";
 
     var isSearchStarted = false,
+        searchStartTime = NaN,
         rules,
 
         onSearchCompleted = function(req) {
             var liveEdge = req.value,
-                searchTime = (new Date().getTime() - this.streamProcessor.getStreamInfo().manifestInfo.loadedTime.getTime()) / 1000;
+                searchTime = (new Date().getTime() - searchStartTime) / 1000;
 
             if (liveEdge !== null) {
                 this.notify(this.eventList.ENAME_LIVE_EDGE_FOUND, liveEdge, searchTime);
@@ -23,6 +24,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
             rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.LIVE_EDGE_RULES);
             isSearchStarted = true;
+            searchStartTime = new Date().getTime();
 
             this.rulesController.applyRules(rules, self.streamProcessor, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
                 return newValue;
@@ -56,6 +58,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
         abortSearch: function() {
             isSearchStarted = false;
+            searchStartTime = NaN;
         }
     };
 };
