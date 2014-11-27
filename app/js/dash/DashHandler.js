@@ -609,10 +609,11 @@ Dash.dependencies.DashHandler = function () {
                 hasSegments = representation.segmentInfoType !== "BaseURL" && representation.segmentInfoType !== "SegmentBase",
                 error;
 
+            representation.segmentAvailabilityRange = null;
             representation.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
             if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
-                error = {code: Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE};
+                error = {code: Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE, availabilityDelay: Math.abs(representation.segmentAvailabilityRange.end)};
                 self.notify(self.eventList.ENAME_REPRESENTATION_UPDATED, representation, error);
                 return;
             }

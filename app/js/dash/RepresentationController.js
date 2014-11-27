@@ -76,16 +76,25 @@ Dash.dependencies.RepresentationController = function () {
             }
         },
 
-        reset = function() {
-            data = null;
-            dataIndex = -1;
+        postponeUpdate = function(availabilityDelay) {
+            var self = this,
+                delay = (availabilityDelay + (currentRepresentation.segmentDuration * 3)) * 1000,
+                update = function() {
+                    if (this.isUpdating()) return;
+
+                    updating = true;
+
+                    for (var i = 0; i < availableRepresentations.length; i += 1) {
+                        self.indexHandler.updateRepresentation(availableRepresentations[i], true);
+                    }
+                };
+
             updating = false;
-            availableRepresentations = [];
-            currentRepresentation = null;
+            setTimeout(update.bind(this), delay);
         },
 
         onRepresentationUpdated = function(sender, representation, error) {
-            if (!data) return;
+            if (!this.isUpdating()) return;
 
             var self = this,
                 r = representation,
@@ -97,7 +106,7 @@ Dash.dependencies.RepresentationController = function () {
 
             if (error && error.code === Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE) {
                 addDVRMetric.call(this);
-                reset.call(this);
+                postponeUpdate.call(this, error.availabilityDelay);
                 err = {code: Dash.dependencies.RepresentationController.SEGMENTS_UPDATE_FAILED_ERROR_CODE};
                 this.notify(this.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation, err);
 
