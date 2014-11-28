@@ -209,7 +209,6 @@
 
             play();
             from.resetEventController();
-            activeStream.startEventController();
             isStreamSwitchingInProgress = false;
         },
 
@@ -219,6 +218,7 @@
                 metrics = self.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
                 playbackCtrl,
+                eventCtrl,
                 streamInfo,
                 pLen,
                 sLen,
@@ -254,9 +254,11 @@
                     if (!stream) {
                         stream = self.system.getObject("stream");
                         playbackCtrl = self.system.getObject("playbackController");
+                        eventCtrl = self.system.getObject("eventController");
                         stream.setStreamInfo(streamInfo);
                         stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
                         stream.setPlaybackController(playbackCtrl);
+                        stream.setEventController(eventCtrl);
                         playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_ERROR, stream);
                         playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_METADATA_LOADED, stream);
                         stream.initProtection();

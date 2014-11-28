@@ -28,6 +28,11 @@
                 },
                 getStreamInfo: function() {
                     return {};
+                },
+                getEventController: function () {
+                    return {
+                        handleRepresentationSwitch: function () {}
+                    };
                 }
             }
         },

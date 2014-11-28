@@ -12,6 +12,7 @@ module.exports = function(grunt) {
     watch: {},
     jshint: {
       all: ["app/js/*/**/*.js"],
+      samples: ["samples/*/**/*.js"],
       options: {
         jshintrc: ".jshintrc"
       }
@@ -73,15 +74,15 @@ module.exports = function(grunt) {
             './test/js/streaming/FragmentControllerSpec.js',
             './test/js/streaming/FragmentModelSpec.js',
             './test/js/streaming/AbrControllerSpec.js'
-			],
+            ],
           vendor: [
-			"./app/lib/jquery/jquery-1.10.2.min.js",
+            "./app/lib/jquery/jquery-1.10.2.min.js",
             "./app/lib/xml2json.js",
-            "./app/lib/objectiron.js",			
+            "./app/lib/objectiron.js",
             "./app/lib/Math.js",
             "./app/lib/long.js",
-            "./app/lib/kendo/kendo.web.min.js", 
-			"./app/lib/dijon.js",
+            "./app/lib/kendo/kendo.web.min.js",
+            "./app/lib/dijon.js",
             "./app/lib/base64.js"],
           template : require('grunt-template-jasmine-istanbul'),
           templateOptions: {
@@ -93,11 +94,11 @@ module.exports = function(grunt) {
         }
       }
     },
-	jsdoc: {
+    jsdoc: {
         dist: {
             options: {
                 destination: 'jsdoc/JSDoc',
-				configure : "jsdoc/jsdoc_conf.json"
+                configure : "jsdoc/jsdoc_conf.json"
             }
         }
     }

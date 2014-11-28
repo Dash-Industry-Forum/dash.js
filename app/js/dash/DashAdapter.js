@@ -171,10 +171,10 @@ Dash.dependencies.DashAdapter = function () {
             return streamProcessor.indexHandler.setCurrentTime(value);
         },
 
-        updateData = function(streamProcessor) {
+        updateData = function(streamProcessor, mediaInfo) {
             var periodInfo = getPeriodForStreamInfo(streamProcessor.getStreamInfo()),
-                mediaInfo = streamProcessor.getMediaInfo(),
                 adaptation = getAdaptationForMediaInfo(mediaInfo),
+                previousMediaInfo = streamProcessor.getMediaInfo(),
                 manifest = this.manifestModel.getValue(),
                 type = streamProcessor.getType(),
                 id,
@@ -182,6 +182,12 @@ Dash.dependencies.DashAdapter = function () {
 
             id = mediaInfo.id;
             data = id ? this.manifestExt.getAdaptationForId(id, manifest, periodInfo.index) : this.manifestExt.getAdaptationForIndex(mediaInfo.index, manifest, periodInfo.index);
+
+            streamProcessor.getEventController().handleAdaptationSetSwitch(
+                getEventStreamsFor.call(this, previousMediaInfo, streamProcessor),
+                getEventStreamsFor.call(this, mediaInfo, streamProcessor)
+            );
+
             streamProcessor.setMediaInfo(mediaInfo);
             streamProcessor.trackController.updateData(data, adaptation, type);
         },
@@ -198,8 +204,8 @@ Dash.dependencies.DashAdapter = function () {
             return representation ? convertRepresentationToTrackInfo.call(this, representation): null;
         },
 
-        getEvent = function(eventBox, eventStreams, startTime) {
-            var event = new Dash.vo.Event(),
+        getEvent = function(eventBox, startTime) {
+            var event = new Dash.vo.InbandEvent(),
                 schemeIdUri = eventBox[0],
                 value = eventBox[1],
                 timescale = eventBox[2],
@@ -209,30 +215,27 @@ Dash.dependencies.DashAdapter = function () {
                 messageData = eventBox[6],
                 presentationTime = startTime*timescale+presentationTimeDelta;
 
-            if (!eventStreams[schemeIdUri]) return null;
-
-            event.eventStream = eventStreams[schemeIdUri];
-            event.eventStream.value = value;
-            event.eventStream.timescale = timescale;
+            event.schemeIdUri = schemeIdUri;
+            event.value = value;
+            event.timescale = timescale;
             event.duration = duration;
             event.id = id;
             event.presentationTime = presentationTime;
             event.messageData = messageData;
-            event.presentationTimeDelta = presentationTimeDelta;
 
             return event;
         },
 
-        getEventsFor = function(info, streamProcessor) {
+        getEventStreamsFor = function(info, streamProcessor) {
             var manifest = this.manifestModel.getValue(),
                 events = [];
 
             if (info instanceof MediaPlayer.vo.StreamInfo) {
-                events = this.manifestExt.getEventsForPeriod(manifest, getPeriodForStreamInfo(info));
+                events = this.manifestExt.getEventStreamsForPeriod(manifest, getPeriodForStreamInfo(info));
             } else if (info instanceof MediaPlayer.vo.MediaInfo) {
-                events = this.manifestExt.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info));
+                events = this.manifestExt.getEventStreamsForAdaptationSet(manifest, getAdaptationForMediaInfo(info));
             } else if (info instanceof MediaPlayer.vo.TrackInfo) {
-                events = this.manifestExt.getEventStreamForRepresentation(manifest, getRepresentationForTrackInfo(info, streamProcessor.trackController));
+                events = this.manifestExt.getEventStreamsForRepresentation(manifest, getRepresentationForTrackInfo(info, streamProcessor.trackController));
             }
 
             return events;
@@ -282,7 +285,7 @@ Dash.dependencies.DashAdapter = function () {
         getIndexHandlerTime: getIndexHandlerTime,
         setIndexHandlerTime: setIndexHandlerTime,
 
-        getEventsFor: getEventsFor,
+        getEventStreamsFor: getEventStreamsFor,
         getEvent: getEvent,
 
         reset: function(){
