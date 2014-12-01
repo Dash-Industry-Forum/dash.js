@@ -606,9 +606,17 @@ Dash.dependencies.DashHandler = function () {
         updateRepresentation = function(representation, keepIdx) {
             var self = this,
                 hasInitialization = representation.initialization,
-                hasSegments = representation.segmentInfoType !== "BaseURL" && representation.segmentInfoType !== "SegmentBase";
+                hasSegments = representation.segmentInfoType !== "BaseURL" && representation.segmentInfoType !== "SegmentBase",
+                error;
 
+            representation.segmentAvailabilityRange = null;
             representation.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
+
+            if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
+                error = {code: Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE, availabilityDelay: Math.abs(representation.segmentAvailabilityRange.end)};
+                self.notify(self.eventList.ENAME_REPRESENTATION_UPDATED, representation, error);
+                return;
+            }
 
             if (!keepIdx) index = -1;
 
@@ -956,3 +964,5 @@ Dash.dependencies.DashHandler = function () {
 Dash.dependencies.DashHandler.prototype = {
     constructor: Dash.dependencies.DashHandler
 };
+
+Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
