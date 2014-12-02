@@ -16,6 +16,9 @@
 Dash.dependencies.DashManifestExtensions = function () {
     "use strict";
     this.timelineConverter = undefined;
+    this.audioLanguages = undefined;
+    this.preferredAudioLanguage = undefined;
+    this.currentAudioLanguage = undefined;
 };
 
 Dash.dependencies.DashManifestExtensions.prototype = {
@@ -96,11 +99,19 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return lang;
     },
 
-    getIsMain: function (/*adaptation*/) {
+    getIsMain: function (adaptation) {
         "use strict";
         // TODO : Check "Role" node.
         // TODO : Use this somewhere.
-        return false;
+        if (this.getIsTypeOf(adaptation, "audio")) {
+            if (this.preferredAudioLanguage !== undefined) {
+                return this.isPreferredLanguage(adaptation);
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     },
 
     processAdaptation: function (adaptation) {
@@ -196,6 +207,33 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return codec;
     },
 
+    getLanguage: function (adaptation) {
+        "use strict";
+        return adaptation.Representation_asArray[0].lang;
+    },
+
+    isPreferredLanguage: function (adaptation) {
+        "use strict";
+        return (adaptation.Representation_asArray[0].lang === this.preferredAudioLanguage);
+    },
+
+    initAudioLanguages: function (manifest, periodIndex) {
+        "use strict";
+        var i,
+            len,
+            langs = [],
+            adaptations,
+            self = this;
+        this.audioLanguages = undefined;
+        adaptations = this.getAdaptationsForType(manifest, periodIndex, "audio");
+        if (adaptations && adaptations.length !== 0) {
+            for (i = 0, len = adaptations.length; i < len; i += 1) {
+                langs.push(self.getLanguage(adaptations[i]));
+            }
+        }
+        this.audioLanguages = langs;
+    },
+
     getMimeType: function (adaptation) {
         "use strict";
         return adaptation.Representation_asArray[0].mimeType;
@@ -208,6 +246,36 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             return null;
         }
         return adaptation["cenc:default_KID"];
+    },
+
+    setAudioLanguages: function(languageArray) {
+        "use strict";
+        this.audioLanguages = languageArray;
+    },
+
+    getAudioLanguages: function() {
+        "use strict";
+        return this.audioLanguages;
+    },
+
+    setPreferredAudioLanguage: function(language) {
+        "use strict";
+        this.preferredAudioLanguage = language;
+    },
+
+    getPreferredAudioLanguage: function() {
+        "use strict";
+        return this.preferredAudioLanguage;
+    },
+
+    setCurrentAudioLanguage: function(language) {
+        "use strict";
+        this.currentAudioLanguage = language;
+    },
+
+    getCurrentAudioLanguage: function() {
+        "use strict";
+        return this.currentAudioLanguage;
     },
 
     getContentProtectionData: function (adaptation) {
