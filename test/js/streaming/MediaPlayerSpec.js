@@ -3,7 +3,6 @@ describe("MediaPlayer", function () {
         MISSING_VIEW_OR_SOURCE_ERROR_MSG = "Missing view or source.",
         helper = window.Helpers.getSpecHelper(),
         objectsHelper = window.Helpers.getObjectsHelper(),
-        defaultQuality = helper.getDefaultQuality(),
         isHtmlRunner = helper.isHtmlRunner(),
         dummyView = helper.getDummyView(),
         dummyUrl = helper.getDummyUrl(),
@@ -52,14 +51,6 @@ describe("MediaPlayer", function () {
 
             expect(debug).not.toBeNull();
             expect(debug).toBeDefined();
-        });
-
-        it("should have default quality", function () {
-            var audioQuality = player.getQualityFor("audio"),
-                videoQuality = player.getQualityFor("video");
-
-            expect(audioQuality).toBe(defaultQuality);
-            expect(videoQuality).toBe(defaultQuality);
         });
 
         it("should not have metrics", function () {

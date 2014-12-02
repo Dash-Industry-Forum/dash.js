@@ -57,8 +57,16 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
     signalEndOfStream: function(source) {
         "use strict";
 
-        if (source.readyState === "open") {
-            source.endOfStream();
+        var buffers = source.sourceBuffers,
+            ln = buffers.length,
+            i = 0;
+
+        if (source.readyState !== "open") return;
+
+        for (i; i < ln; i += 1) {
+            if (buffers[i].updating) return;
         }
+
+        source.endOfStream();
     }
 };

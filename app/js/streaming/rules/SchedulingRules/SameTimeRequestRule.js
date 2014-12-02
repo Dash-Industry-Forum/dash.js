@@ -93,7 +93,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 return;
             }
 
-            currentTime = Math.round(fragmentModels[0].getContext().playbackController.getTime() * 100) / 100;
+            currentTime = fragmentModels[0].getContext().playbackController.getTime();
             reqForCurrentTime = getForTime(fragmentModels, currentTime);
             req = reqForCurrentTime || findClosestToTime(fragmentModels, currentTime) || current;
 
@@ -126,6 +126,16 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 }
 
                 sameTimeReq = model.getPendingRequestForTime(time);
+
+                // if a target fragment is the first fragment in the mpd and we have not found a match fragment for the same time,
+                // we need to look for a first fragment by index as well, because there may be a time shift between audio and video,
+                // so getPendingRequestForTime may not detect a corresponding fragment.
+                if (!sameTimeReq && req.index === 0) {
+                    sameTimeReq = pendingReqs.filter(
+                        function(r){
+                            return r.index === req.index;
+                        })[0];
+                }
 
                 if (sameTimeReq) {
                     reqsToExecute.push(sameTimeReq);

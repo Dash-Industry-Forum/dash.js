@@ -53,6 +53,7 @@ MediaPlayer = function (aContext) {
         streamController,
         rulesController,
         manifestUpdater,
+        protectionController,
         metricsExt,
         metricsModel,
         videoModel,
@@ -241,6 +242,7 @@ MediaPlayer = function (aContext) {
             abrController = system.getObject("abrController");
             rulesController = system.getObject("rulesController");
             metricsModel = system.getObject("metricsModel");
+            protectionController = system.getObject("protectionController");
         },
 
         /**
@@ -344,6 +346,15 @@ MediaPlayer = function (aContext) {
         },
 
         /**
+         * @param keySystem
+         * @param value
+         * @memberof MediaPlayer#
+         */
+        setBearerToken: function(keySystem, value) {
+            protectionController.setBearerToken({keySystem: keySystem, token: value});
+        },
+
+        /**
          * @param value
          * @memberof MediaPlayer#
          */
@@ -383,7 +394,7 @@ MediaPlayer = function (aContext) {
          * @memberof MediaPlayer#
          */
         getQualityFor: function (type) {
-            return abrController.getQualityFor(type);
+            return abrController.getQualityFor(type, streamController.getActiveStreamInfo());
         },
 
         /**
@@ -392,7 +403,7 @@ MediaPlayer = function (aContext) {
          * @memberof MediaPlayer#
          */
         setQualityFor: function (type, value) {
-            abrController.setPlaybackQuality(type, value);
+            abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value);
         },
 
         /**

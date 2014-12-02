@@ -19,66 +19,78 @@ MediaPlayer.dependencies.AbrController = function () {
         qualityDict = {},
         confidenceDict = {},
 
-        getInternalQuality = function (type) {
+        getInternalQuality = function (type, id) {
             var quality;
 
-            if (!qualityDict.hasOwnProperty(type)) {
-                qualityDict[type] = 0;
+            qualityDict[id] = qualityDict[id] || {};
+
+            if (!qualityDict[id].hasOwnProperty(type)) {
+                qualityDict[id][type] = 0;
             }
 
-            quality = qualityDict[type];
+            quality = qualityDict[id][type];
 
             return quality;
         },
 
-        setInternalQuality = function (type, value) {
-            qualityDict[type] = value;
+        setInternalQuality = function (type, id, value) {
+            qualityDict[id] = qualityDict[id] || {};
+            qualityDict[id][type] = value;
         },
 
-        getInternalConfidence = function (type) {
+        getInternalConfidence = function (type, id) {
             var confidence;
 
-            if (!confidenceDict.hasOwnProperty(type)) {
-                confidenceDict[type] = 0;
+            confidenceDict[id] = confidenceDict[id] || {};
+
+            if (!confidenceDict[id].hasOwnProperty(type)) {
+                confidenceDict[id][type] = 0;
             }
 
-            confidence = confidenceDict[type];
+            confidence = confidenceDict[id][type];
 
             return confidence;
         },
 
-        setInternalConfidence = function (type, value) {
-            confidenceDict[type] = value;
+        setInternalConfidence = function (type, id, value) {
+            confidenceDict[id] = confidenceDict[id] || {};
+            confidenceDict[id][type] = value;
         },
 
-        setTopQualityIndex = function (type, value) {
-            topQualities[type] = value;
+        setTopQualityIndex = function (type, id, value) {
+            topQualities[id] = topQualities[id] || {};
+            topQualities[id][type] = value;
         },
 
-        getTopQualityIndex = function(type) {
+        getTopQualityIndex = function(type, id) {
             var idx;
 
-            if (!topQualities.hasOwnProperty(type)) {
-                topQualities[type] = 0;
+            topQualities[id] = topQualities[id] || {};
+
+            if (!topQualities[id].hasOwnProperty(type)) {
+                topQualities[id][type] = 0;
             }
 
-            idx = topQualities[type];
+            idx = topQualities[id][type];
 
             return idx;
         },
 
-        onDataUpdateCompleted = function(sender, data, trackData) {
+        onDataUpdateCompleted = function(sender, data, trackData, error) {
+            if (error) return;
+
             var self = this,
                 mediaInfo = this.adapter.convertDataToTrack(trackData).mediaInfo,
                 type = mediaInfo.type,
+                streamId = mediaInfo.streamInfo.id,
                 max;
 
             max = mediaInfo.trackCount - 1;
 
-            if (getTopQualityIndex(type) === max) return;
+            if (getTopQualityIndex(type, streamId) === max) return;
 
-            setTopQualityIndex(type, max);
-            self.notify(self.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, type, max);
+            setTopQualityIndex(type, streamId, max);
+            self.notify(self.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, type, mediaInfo.streamInfo, max);
         };
 
     return {
@@ -109,13 +121,14 @@ MediaPlayer.dependencies.AbrController = function () {
         getPlaybackQuality: function (streamProcessor) {
             var self = this,
                 type = streamProcessor.getType(),
+                streamId = streamProcessor.getStreamInfo().id,
                 quality,
                 oldQuality,
                 rules,
                 confidence,
 
                 callback = function(res) {
-                    var topQualityIdx = getTopQualityIndex(type);
+                    var topQualityIdx = getTopQualityIndex(type, streamId);
 
                     quality = res.value;
                     confidence = res.confidence;
@@ -129,21 +142,21 @@ MediaPlayer.dependencies.AbrController = function () {
                         quality = topQualityIdx;
                     }
 
-                    oldQuality = getInternalQuality(type);
+                    oldQuality = getInternalQuality(type, streamId);
 
                     if (quality === oldQuality) return;
 
-                    setInternalQuality(type, quality);
+                    setInternalQuality(type, streamId, quality);
                     //self.debug.log("New quality of " + quality);
-                    setInternalConfidence(type, confidence);
+                    setInternalConfidence(type, streamId, confidence);
                     //self.debug.log("New confidence of " + confidence);
 
-                    self.notify(self.eventList.ENAME_QUALITY_CHANGED, type, oldQuality, quality);
+                    self.notify(self.eventList.ENAME_QUALITY_CHANGED, type, streamProcessor.getStreamInfo(), oldQuality, quality);
                 };
 
-            quality = getInternalQuality(type);
+            quality = getInternalQuality(type, streamId);
 
-            confidence = getInternalConfidence(type);
+            confidence = getInternalConfidence(type, streamId);
 
             //self.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
 
@@ -162,52 +175,41 @@ MediaPlayer.dependencies.AbrController = function () {
             });
         },
 
-        setPlaybackQuality: function (type, newPlaybackQuality) {
-            var quality = getInternalQuality(type),
+        setPlaybackQuality: function (type, streamInfo, newPlaybackQuality) {
+            var id = streamInfo.id,
+                quality = getInternalQuality(type, id),
                 isInt = newPlaybackQuality !== null && !isNaN(newPlaybackQuality) && (newPlaybackQuality % 1 === 0);
 
             if (!isInt) throw "argument is not an integer";
 
-            if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && topQualities.hasOwnProperty(type) && newPlaybackQuality <= topQualities[type]) {
-                setInternalQuality(type, newPlaybackQuality);
-                this.notify(this.eventList.ENAME_QUALITY_CHANGED, type, quality, newPlaybackQuality);
+            if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && topQualities[id].hasOwnProperty(type) && newPlaybackQuality <= topQualities[id][type]) {
+                setInternalQuality(type, streamInfo.id, newPlaybackQuality);
+                this.notify(this.eventList.ENAME_QUALITY_CHANGED, type, streamInfo, quality, newPlaybackQuality);
             }
         },
 
-        getQualityFor: function (type) {
-            return getInternalQuality(type);
+        getQualityFor: function (type, streamInfo) {
+            return getInternalQuality(type, streamInfo.id);
         },
 
-        getConfidenceFor: function(type) {
-            return getInternalConfidence(type);
+        getConfidenceFor: function(type, streamInfo) {
+            return getInternalConfidence(type, streamInfo.id);
         },
 
-        isPlayingAtTopQuality: function() {
+        isPlayingAtTopQuality: function(streamInfo) {
             var self = this,
                 isAtTop,
-                audioQuality = self.getQualityFor("audio"),
-                videoQuality = self.getQualityFor("video");
+                streamId = streamInfo.id,
+                audioQuality = self.getQualityFor("audio", streamInfo),
+                videoQuality = self.getQualityFor("video", streamInfo);
 
-            isAtTop = (audioQuality === getTopQualityIndex("audio")) &&
-                (videoQuality === getTopQualityIndex("video"));
+            isAtTop = (audioQuality === getTopQualityIndex("audio", streamId)) &&
+                (videoQuality === getTopQualityIndex("video", streamId));
 
             return isAtTop;
         },
 
         reset: function() {
-            var rules = this.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES),
-                rule,
-                ln = rules.length,
-                i = 0;
-
-            for (i; i < ln; i += 1) {
-                rule = rules[i];
-
-                if (typeof(rule.reset) === "function") {
-                    rule.reset();
-                }
-            }
-
             autoSwitchBitrate = true;
             topQualities = {};
             qualityDict = {};

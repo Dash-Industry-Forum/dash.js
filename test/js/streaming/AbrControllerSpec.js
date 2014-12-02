@@ -9,6 +9,7 @@ describe("AbrController", function () {
         onTopQualityIndexChangedEventName = abrCtrl.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED,
         dummyAdaptation = window.Helpers.getMpdHelper().getAdaptationWithSegmentTemplate(testedType),
         dummyRepresentation = window.Helpers.getVOHelper().getDummyRepresentation(testedType),
+        streamInfo = {id: "id1"},
         repsCount = dummyAdaptation.Representation_asArray.length;
 
     it("should have a handler for RepcresentationController.onDataUpdateCompleted event", function () {
@@ -35,7 +36,7 @@ describe("AbrController", function () {
                 expectedTopQuality = repsCount - 1,
                 actualTopQuality = NaN;
 
-            dummyObserver[onTopQualityIndexChangedEventName] = function(sender, type, topQualityValue){
+            dummyObserver[onTopQualityIndexChangedEventName] = function(sender, type, streamInfo, topQualityValue){
                 actualTopQuality = topQualityValue;
             };
 
@@ -51,8 +52,8 @@ describe("AbrController", function () {
 
             var testQuality = 1,
                 newQuality;
-            abrCtrl.setPlaybackQuality(testedType, testQuality);
-            newQuality = abrCtrl.getQualityFor(testedType);
+            abrCtrl.setPlaybackQuality(testedType, streamInfo, testQuality);
+            newQuality = abrCtrl.getQualityFor(testedType, streamInfo);
             expect(newQuality).toEqual(testQuality);
         });
 
@@ -60,23 +61,23 @@ describe("AbrController", function () {
             jasmine.clock().tick(eventDelay + 1);
 
             var testQuality = "a";
-            expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testQuality)).toThrow("argument is not an integer");
+            expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testedType, streamInfo, testQuality)).toThrow("argument is not an integer");
             testQuality = null;
-            expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testQuality)).toThrow("argument is not an integer");
+            expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testedType, streamInfo, testQuality)).toThrow("argument is not an integer");
             testQuality = 2.5;
-            expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testQuality)).toThrow("argument is not an integer");
+            expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testedType, streamInfo, testQuality)).toThrow("argument is not an integer");
             testQuality = {};
-            expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testQuality)).toThrow("argument is not an integer");
+            expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, testedType, streamInfo, testQuality)).toThrow("argument is not an integer");
         });
 
         it("should ignore an attempt to set a negative quality value", function () {
             jasmine.clock().tick(eventDelay + 1);
 
             var negativeQuality = -1,
-                oldQuality = abrCtrl.getQualityFor(testedType),
+                oldQuality = abrCtrl.getQualityFor(testedType, streamInfo),
                 newQuality;
-            abrCtrl.setPlaybackQuality(testedType, negativeQuality);
-            newQuality = abrCtrl.getQualityFor(testedType);
+            abrCtrl.setPlaybackQuality(testedType, streamInfo, negativeQuality);
+            newQuality = abrCtrl.getQualityFor(testedType, streamInfo);
             expect(newQuality).toEqual(oldQuality);
         });
 
@@ -84,10 +85,10 @@ describe("AbrController", function () {
             jasmine.clock().tick(eventDelay + 1);
 
             var greaterThanTopQualityValue = repsCount,
-                oldQuality = abrCtrl.getQualityFor(testedType),
+                oldQuality = abrCtrl.getQualityFor(testedType, streamInfo),
                 newQuality;
-            abrCtrl.setPlaybackQuality(testedType, greaterThanTopQualityValue);
-            newQuality = abrCtrl.getQualityFor(testedType);
+            abrCtrl.setPlaybackQuality(testedType, streamInfo, greaterThanTopQualityValue);
+            newQuality = abrCtrl.getQualityFor(testedType, streamInfo);
             expect(newQuality).toEqual(oldQuality);
         });
 
@@ -96,9 +97,9 @@ describe("AbrController", function () {
 
             var newQuality,
                 testQuality = 1;
-            abrCtrl.setPlaybackQuality(testedType, testQuality);
+            abrCtrl.setPlaybackQuality(testedType, streamInfo, testQuality);
             abrCtrl.reset();
-            newQuality = abrCtrl.getQualityFor(testedType);
+            newQuality = abrCtrl.getQualityFor(testedType, streamInfo);
             expect(newQuality).toEqual(defaultQuality);
         });
     });
