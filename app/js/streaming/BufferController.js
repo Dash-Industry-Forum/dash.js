@@ -388,7 +388,7 @@ MediaPlayer.dependencies.BufferController = function () {
             var timeToEnd = this.playbackController.getTimeToStreamEnd(),
                 minLevel = this.streamProcessor.isDynamic() ? minBufferTime / 2 : minBufferTime;
 
-            if ((bufferLevel < minLevel) && ((minBufferTime < timeToEnd) || (minBufferTime >= timeToEnd && !isBufferingCompleted))) {
+            if (bufferLevel === minLevel /*&& ((minBufferTime < timeToEnd)*/ || (minBufferTime >= timeToEnd && !isBufferingCompleted)) {
                 notifyIfSufficientBufferStateChanged.call(this, false);
             } else {
                 notifyIfSufficientBufferStateChanged.call(this, true);

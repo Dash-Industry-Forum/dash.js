@@ -150,8 +150,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
         validate = function () {
             var now = new Date().getTime(),
                 isEnoughTimeSinceLastValidation = lastValidationTime ? (now - lastValidationTime > this.fragmentController.getLoadingTime(this)) : true,
-                manifestInfo = currentTrackInfo.mediaInfo.streamInfo.manifestInfo,
-                qualitySwitchThreshold = 1000//Math.min(manifestInfo.minBufferTime, manifestInfo.maxFragmentDuration) * 1000;
+                //manifestInfo = currentTrackInfo.mediaInfo.streamInfo.manifestInfo,
+                qualitySwitchThreshold = 1000 //TODO need to get average segment duration and cut that in half for interval to apply rule
 
 
             if (now - lastABRRuleApplyTime > qualitySwitchThreshold) {

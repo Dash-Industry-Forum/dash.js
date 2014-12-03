@@ -20,14 +20,14 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
 
         execute: function (context, callback) {
             var self = this,
-                current = context.getCurrentValue(),
-                manifestInfo = context.getManifestInfo(),
+                //current = context.getCurrentValue(),
+                //manifestInfo = context.getManifestInfo(),
                 mediaInfo = context.getMediaInfo(),
                 mediaType = mediaInfo.type,
                 metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
                 lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
                 isBufferRich = false,
-                lowBufferMark = 8,
+                //lowBufferMark = 8,
                 maxIndex = mediaInfo.trackCount - 1,
                 switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
 
@@ -38,19 +38,21 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
 
                     if (isBufferRich) {
                         switchRequest = new MediaPlayer.rules.SwitchRequest(maxIndex, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
-                    } else {
-                        // not buffer rich but not low either.
                     }
+                    //else {
+                    //    // not buffer rich but not low either.
+                    //}
 
-                } else {
-                    // getting low should we do something or let the insufficientBufferRule take over in this case?
                 }
+                //else {
+                //    // getting low should we do something or let the insufficientBufferRule take over in this case?
+                //}
             }
 
             if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                self.debug.log("xxx BufferOccupancyRule requesting switch to index: ", switchRequest.value, " priority: ",
-                    switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "default" :
-                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "strong" : "weak");
+                self.debug.log("xxx BufferOccupancyRule requesting switch to index: ", switchRequest.value, " Priority: ",
+                    switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
+                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
             }
 
             callback(switchRequest);

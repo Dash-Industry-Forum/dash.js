@@ -54,16 +54,19 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
             var self = this,
                 mediaType = context.getMediaInfo().type,
                 current = context.getCurrentValue(),
+                manifestInfo = context.getManifestInfo(),
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 playlist,
                 streamInfo = context.getStreamInfo(),
                 duration = streamInfo.duration,
                 currentTime = context.getStreamProcessor().getPlaybackController().getTime(),
                 trace,
-                switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT),
+                sp = context.getStreamProcessor(),
+                isDynamic = sp.isDynamic(),
+                switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK),
                 lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
-                //lowBufferMark = Math.max(Math.min(manifestInfo.minBufferTime, manifestInfo.maxFragmentDuration), 4);
-                lowBufferMark = 4; // Not sure if we should dynamically figure this value out or just hardcode it for now. Re-eval.
+                lowBufferMark = manifestInfo.maxFragmentDuration;
+
 
             if (metrics.PlayList === null || metrics.PlayList === undefined || metrics.PlayList.length === 0) {
                 //self.debug.log("Not enough information for rule.");
@@ -80,40 +83,38 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
             }
 
             // The last trace is the currently playing fragment. So get the trace *before* that one.
-            trace = playlist.trace[playlist.trace.length - 2];
-
+            //Some streams only have one index we need to account for that
+            trace = playlist.trace[Math.max(playlist.trace.length - 2, 0)];
             if (trace === null || trace === undefined) {
                 //self.debug.log("Not enough information for rule.");
                 callback(switchRequest);
                 return;
             }
 
-            //We must only record a dry buffer hit once per buffer stall event.
-            //if we hit a buffer stall scenario we must switch all the way down regardless.
-            if (trace.stopreason !== null &&
-                trace.stopreason === MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON &&
-                !lastDryBufferHitRecorded) {
-
-                dryBufferHits += 1;
+            if (trace.stopreason !== null && trace.stopreason === MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON && !lastDryBufferHitRecorded) {
+                //dryBufferHits += 1; //Not using this for priority at this point but may in future.
                 lastDryBufferHitRecorded = true;
                 switchRequest = new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
                 self.debug.log("InsufficientBufferRule Number of times the buffer has run dry: " + dryBufferHits);
 
-            } else if ( bufferState === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
+            }
+            // For VOD we never want to fall this low and will start to react when we do.
+            else if ( !isDynamic &&
+                        bufferState === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
                         trace.stopreason !== MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON &&
                         lastBufferLevelVO !== null &&
                         lastBufferLevelVO.level < (lowBufferMark * 2) &&
                         lastBufferLevelVO.level > lowBufferMark &&
                         currentTime < (duration - lowBufferMark * 2)) {
 
-                switchRequest = new MediaPlayer.rules.SwitchRequest(Math.max(current - stepDownFactor, 0), MediaPlayer.rules.SwitchRequest.prototype.STRONG  );
+                switchRequest = new MediaPlayer.rules.SwitchRequest(Math.max(current - stepDownFactor, 0), MediaPlayer.rules.SwitchRequest.prototype.DEFAULT );
                 stepDownFactor++;
             }
 
             if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                self.debug.log("xxx InsufficientBufferRule requesting switch to index: ", switchRequest.value, " priority: ",
-                    switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "default" :
-                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "strong" : "weak");
+                self.debug.log("InsufficientBufferRule requesting switch to index: ", switchRequest.value, " Priority: ",
+                    switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
+                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
             }
 
             callback(switchRequest);

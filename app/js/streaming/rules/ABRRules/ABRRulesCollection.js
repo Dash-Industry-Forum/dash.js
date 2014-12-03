@@ -21,6 +21,7 @@ MediaPlayer.rules.ABRRulesCollection = function () {
         insufficientBufferRule: undefined,
         limitSwitchesRule: undefined,
         bufferOccupancyRule:undefined,
+        throughputRule:undefined,
 
         getRules: function (type) {
             switch (type) {
@@ -33,9 +34,10 @@ MediaPlayer.rules.ABRRulesCollection = function () {
 
         setup: function () {
             qualitySwitchRules.push(this.insufficientBufferRule);
-            qualitySwitchRules.push(this.bufferOccupancyRule);
-            qualitySwitchRules.push(this.downloadRatioRule);
-            //qualitySwitchRules.push(this.limitSwitchesRule);
+            qualitySwitchRules.push(this.throughputRule);
+            qualitySwitchRules.push(this.bufferOccupancyRule); // rule in progress needs more work.
+           //qualitySwitchRules.push(this.downloadRatioRule); //may add back
+            qualitySwitchRules.push(this.limitSwitchesRule);
         }
     };
 };

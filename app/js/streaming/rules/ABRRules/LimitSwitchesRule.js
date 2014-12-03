@@ -38,18 +38,16 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
                 delay;
 
             self.debug.log("Checking limit switches rule...");
-            qualitySwitchThreshold = Math.min(manifestInfo.minBufferTime, manifestInfo.maxFragmentDuration) * 1000;
-
             delay = now - lastCheckTime;
 
-            if (delay < qualitySwitchThreshold && rs !== undefined && (now - rs.t.getTime()) < qualitySwitchThreshold) {
+            if (delay < qualitySwitchThreshold /*&& rs !== undefined && (now - rs.t.getTime()) < qualitySwitchThreshold*/) {
                 self.debug.log("Wait some time before allowing another switch.");
                 callback(new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
                 return;
             }
 
             lastCheckTime = now;
-            callback(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
+            callback(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK));
         }
     };
 };

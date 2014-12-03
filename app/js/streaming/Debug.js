@@ -55,10 +55,13 @@ MediaPlayer.utils.Debug = function () {
          */
         log: function () {
 
+            var logTime = null,
+                logTimestamp = null;
+
             if (showLogTimestamp)
             {
-                var logTime = new Date().getTime(),
-                    LogTimestamp = "[" + (logTime - startTime) + "] ";
+                logTime = new Date().getTime();
+                logTimestamp = "[" + (logTime - startTime) + "] ";
             }
 
             var message = arguments[0];
@@ -66,11 +69,11 @@ MediaPlayer.utils.Debug = function () {
                 message = "";
                 Array.apply(null, arguments).forEach(function(item) {
                     message += " " + item;
-                })
+                });
             }
 
             if (logToBrowserConsole) {
-                console.log( (showLogTimestamp ? LogTimestamp : "")  + message);
+                console.log( (showLogTimestamp ? logTimestamp : "")  + message);
             }
 
             this.eventBus.dispatchEvent({
