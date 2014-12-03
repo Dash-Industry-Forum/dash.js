@@ -25,6 +25,9 @@
                 },
                 getCurrentTrack: function() {
                     return {};
+                },
+                getStreamInfo: function() {
+                    return {};
                 }
             }
         },

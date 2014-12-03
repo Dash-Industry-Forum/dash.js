@@ -69,13 +69,15 @@ Dash.dependencies.DashAdapter = function () {
         },
 
         convertPeriodToStreamInfo = function(period) {
-            var streamInfo = new MediaPlayer.vo.StreamInfo();
+            var streamInfo = new MediaPlayer.vo.StreamInfo(),
+                THRESHOLD = 1;
 
             streamInfo.id = period.id;
             streamInfo.index = period.index;
             streamInfo.start = period.start;
             streamInfo.duration = period.duration;
             streamInfo.manifestInfo = convertMpdToManifestInfo.call(this, period.mpd);
+            streamInfo.isLast = Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
 
             return streamInfo;
         },

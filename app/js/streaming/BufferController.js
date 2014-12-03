@@ -128,7 +128,7 @@ MediaPlayer.dependencies.BufferController = function () {
         onAppended = function(sender, sourceBuffer, data, error) {
             if (buffer !== sourceBuffer) return;
 
-            if (this.isBufferingCompleted()) {
+            if (this.isBufferingCompleted() && this.streamProcessor.getStreamInfo().isLast) {
                 this.mediaSourceExt.signalEndOfStream(mediaSource);
             }
 
@@ -468,7 +468,9 @@ MediaPlayer.dependencies.BufferController = function () {
             appendToBuffer.call(this, data.bytes, data.quality, data.index);
         },
 
-        onDataUpdateCompleted = function(sender, data, trackData) {
+        onDataUpdateCompleted = function(sender, data, trackData, error) {
+            if (error) return;
+
             var self = this,
                 bufferLength;
 

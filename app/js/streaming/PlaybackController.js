@@ -40,9 +40,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
             return presentationStartTime;
         },
 
-        getActualPresentationTime = function() {
+        getActualPresentationTime = function(currentTime) {
             var self = this,
-                currentTime = self.getTime(),
                 metrics = self.metricsModel.getMetricsFor(trackInfo.mediaInfo.type),
                 DVRMetrics = self.metricsExt.getCurrentDVRInfo(metrics),
                 DVRWindow = DVRMetrics ? DVRMetrics.range : null,
@@ -87,7 +86,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (this.isPaused() || !isDynamic) return;
 
             var currentTime = this.getTime(),
-                actualTime = getActualPresentationTime.call(this),
+                actualTime = getActualPresentationTime.call(this, currentTime),
                 timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
 
             if (timeChanged) {
@@ -95,7 +94,9 @@ MediaPlayer.dependencies.PlaybackController = function () {
             }
         },
 
-        onDataUpdateCompleted = function(sender, mediaData, TrackData) {
+        onDataUpdateCompleted = function(sender, mediaData, TrackData, error) {
+            if (error) return;
+
             trackInfo = this.adapter.convertDataToTrack(TrackData);
             streamInfo = trackInfo.mediaInfo.streamInfo;
             isDynamic = sender.streamProcessor.isDynamic();
@@ -303,6 +304,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
             liveStartTime = value;
         },
 
+        getLiveStartTime: function() {
+            return liveStartTime;
+        },
+
         start: function() {
             videoModel.play();
         },
@@ -324,7 +329,6 @@ MediaPlayer.dependencies.PlaybackController = function () {
         seek: function(time) {
             if (time === this.getTime()) return;
             videoModel.setCurrentTime(time);
-            this.notify(this.eventList.ENAME_PLAYBACK_SEEKING, time, true);
         },
 
         reset: function() {
