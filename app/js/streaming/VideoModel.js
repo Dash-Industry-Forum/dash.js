@@ -63,10 +63,10 @@ MediaPlayer.models.VideoModel = function () {
             }
         },
 
-        onBufferLevelStateChanged = function(sender, hasSufficientBuffer) {
-            var type = sender.streamProcessor.getType();
+        onBufferLevelStateChanged = function(e) {
+            var type = e.sender.streamProcessor.getType();
 
-            stallStream.call(this, type, !hasSufficientBuffer);
+            stallStream.call(this, type, !e.data.hasSufficientBuffer);
         }
         /*,
         handleSetCurrentTimeNotification = function () {

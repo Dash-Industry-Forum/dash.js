@@ -11,14 +11,14 @@ Dash.dependencies.RepresentationController = function () {
             var self = this;
 
             updating = true;
-            self.notify(self.eventList.ENAME_DATA_UPDATE_STARTED);
+            self.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
 
             availableRepresentations = updateRepresentations.call(self, adaptation);
             currentRepresentation = getRepresentationForQuality.call(self, self.abrController.getQualityFor(type, self.streamProcessor.getStreamInfo()));
             data = dataValue;
 
             if (type !== "video" && type !== "audio") {
-                self.notify(self.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
+                self.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {data: data, currentRepresentation: currentRepresentation});
                 addRepresentationSwitch.call(self);
                 return;
             }
@@ -83,7 +83,7 @@ Dash.dependencies.RepresentationController = function () {
                     if (this.isUpdating()) return;
 
                     updating = true;
-
+                    self.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
                     for (var i = 0; i < availableRepresentations.length; i += 1) {
                         self.indexHandler.updateRepresentation(availableRepresentations[i], true);
                     }
@@ -93,22 +93,22 @@ Dash.dependencies.RepresentationController = function () {
             setTimeout(update.bind(this), delay);
         },
 
-        onRepresentationUpdated = function(sender, representation, error) {
+        onRepresentationUpdated = function(e) {
             if (!this.isUpdating()) return;
 
             var self = this,
-                r = representation,
+                r = e.data.representation,
                 metrics = self.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
                 repInfo,
                 err,
                 alreadyAdded = false;
 
-            if (error && error.code === Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE) {
+            if (e.error && e.error.code === Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE) {
                 addDVRMetric.call(this);
-                postponeUpdate.call(this, error.availabilityDelay);
-                err = {code: Dash.dependencies.RepresentationController.SEGMENTS_UPDATE_FAILED_ERROR_CODE};
-                this.notify(this.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation, err);
+                postponeUpdate.call(this, e.error.data.availabilityDelay);
+                err = new MediaPlayer.vo.Error(Dash.dependencies.RepresentationController.SEGMENTS_UPDATE_FAILED_ERROR_CODE, "Segments update failed", null);
+                this.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {data: data, currentRepresentation: currentRepresentation}, err);
 
                 return;
             }
@@ -129,16 +129,18 @@ Dash.dependencies.RepresentationController = function () {
             if (isAllRepresentationsUpdated()) {
                 updating = false;
                 self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - self.streamProcessor.playbackController.getTime()});
-                this.notify(this.eventList.ENAME_DATA_UPDATE_COMPLETED, data, currentRepresentation);
+                this.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {data: data, currentRepresentation: currentRepresentation});
                 addRepresentationSwitch.call(self);
             }
         },
 
-        onWallclockTimeUpdated = function(sender, isDynamic/*, wallclockTime*/) {
-            updateAvailabilityWindow.call(this, isDynamic);
+        onWallclockTimeUpdated = function(e) {
+            updateAvailabilityWindow.call(this, e.data.isDynamic);
         },
 
-        onLiveEdgeFound = function(/*sender, liveEdgeTime, searchTime*/) {
+        onLiveEdgeSearchCompleted = function(e) {
+            if (e.error) return;
+
             updateAvailabilityWindow.call(this, true);
             this.indexHandler.updateRepresentation(currentRepresentation, false);
 
@@ -148,16 +150,16 @@ Dash.dependencies.RepresentationController = function () {
             currentRepresentation.adaptation.period.mpd.checkTime = this.manifestExt.getCheckTime(manifest, currentRepresentation.adaptation.period);
         },
 
-        onBufferLevelUpdated = function(/*sender, bufferLevel*/) {
+        onBufferLevelUpdated = function(/*e*/) {
             addDVRMetric.call(this);
         },
 
-        onQualityChanged = function(sender, type, streamInfo, oldQuality, newQuality) {
+        onQualityChanged = function(e) {
             var self = this;
 
-            if (type !== self.streamProcessor.getType() || self.streamProcessor.getStreamInfo().id !== streamInfo.id) return;
+            if (e.data.mediaType !== self.streamProcessor.getType() || self.streamProcessor.getStreamInfo().id !== e.data.streamInfo.id) return;
 
-            currentRepresentation = self.getRepresentationForQuality(newQuality);
+            currentRepresentation = self.getRepresentationForQuality(e.data.newQuality);
             addRepresentationSwitch.call(self);
         };
 
@@ -173,17 +175,13 @@ Dash.dependencies.RepresentationController = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_DATA_UPDATE_COMPLETED: "dataUpdateCompleted",
-            ENAME_DATA_UPDATE_STARTED: "dataUpdateStarted"
-        },
 
         setup: function() {
-            this.qualityChanged = onQualityChanged;
-            this.representationUpdated = onRepresentationUpdated;
-            this.wallclockTimeUpdated = onWallclockTimeUpdated;
-            this.liveEdgeFound = onLiveEdgeFound;
-            this.bufferLevelUpdated = onBufferLevelUpdated;
+            this[MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
+            this[Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED] = onRepresentationUpdated;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
+            this[MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED] = onBufferLevelUpdated;
         },
 
         initialize: function(streamProcessor) {
@@ -217,3 +215,8 @@ Dash.dependencies.RepresentationController.prototype = {
 };
 
 Dash.dependencies.RepresentationController.SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
+
+Dash.dependencies.RepresentationController.eventList = {
+    ENAME_DATA_UPDATE_COMPLETED: "dataUpdateCompleted",
+    ENAME_DATA_UPDATE_STARTED: "dataUpdateStarted"
+};

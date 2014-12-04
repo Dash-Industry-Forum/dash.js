@@ -9,7 +9,7 @@ describe("RepresentationController", function () {
         data = mpd.Period_asArray[0].AdaptationSet_asArray[0],
         trackCtrl = objHelper.getTrackController(),
         indexHandler = objHelper.getIndexHandler(),
-        onDataUpdateStartedEventName = trackCtrl.eventList.ENAME_DATA_UPDATE_STARTED;
+        onDataUpdateStartedEventName = Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED;
 
     trackCtrl.manifestModel.setValue(mpd);
     trackCtrl.indexHandler = indexHandler;

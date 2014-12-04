@@ -20,10 +20,10 @@ MediaPlayer.models.ProtectionModel = function () {
         session,
         keySystems = [],
 
-        onKeySystemUpdateCompleted = function(sender, data, error) {
-            if (error) return;
+        onKeySystemUpdateCompleted = function(e) {
+            if (e.error) return;
 
-            session.update(data);
+            session.update(e.data.data);
         };
 
     return {
@@ -31,7 +31,7 @@ MediaPlayer.models.ProtectionModel = function () {
         protectionExt : undefined,
 
         setup: function() {
-            this.keySystemUpdateCompleted = onKeySystemUpdateCompleted;
+            this[MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED] = onKeySystemUpdateCompleted;
         },
 
         init: function (videoModel) {
