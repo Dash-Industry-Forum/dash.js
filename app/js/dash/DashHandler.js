@@ -19,6 +19,7 @@ Dash.dependencies.DashHandler = function () {
         isDynamic,
         type,
         currentTime = 0,
+		absUrl = new RegExp('^(?:(?:[a-z]+:)?\/)?\/', 'i'),
 
         zeroPadToLength = function (numStr, minStrLength) {
             while (numStr.length < minStrLength) {
@@ -119,7 +120,7 @@ Dash.dependencies.DashHandler = function () {
 
             if (destination === baseURL) {
                 url = destination;
-            } else if (destination.indexOf("http://") !== -1) {
+            } else if (absUrl.test(destination)) {
                 url = destination;
             } else {
                 url = baseURL + destination;
