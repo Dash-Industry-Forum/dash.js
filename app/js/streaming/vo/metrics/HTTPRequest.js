@@ -34,6 +34,7 @@ MediaPlayer.vo.metrics.HTTPRequest = function () {
     this.responsecode = null;   // The HTTP response code.
     this.interval = null;       // The duration of the throughput trace intervals (ms), for successful requests only.
     this.mediaduration = null;  // The duration of the media requests, if available, in milliseconds.
+    this.responseHeaders = null // all the response headers from request.
     this.trace = [];            // Throughput traces, for successful requests only.
 };
 

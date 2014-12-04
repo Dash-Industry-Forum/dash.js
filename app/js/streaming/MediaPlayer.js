@@ -231,7 +231,6 @@ MediaPlayer = function (aContext) {
         capabilities: undefined,
         adapter: undefined,
         errHandler: undefined,
-        tokenAuthentication:undefined,
         uriQueryFragModel:undefined,
         videoElementExt:undefined,
 
@@ -334,15 +333,6 @@ MediaPlayer = function (aContext) {
          */
         getScheduleWhilePaused: function() {
             return scheduleWhilePaused;
-        },
-
-        /**
-         * @param name
-         * @param type
-         * @memberof MediaPlayer#
-         */
-        setTokenAuthentication:function(name, type) {
-            this.tokenAuthentication.setTokenAuthentication({name:name, type:type});
         },
 
         /**
