@@ -27,8 +27,19 @@ Dash.dependencies.DashParser = function () {
         matchers = [
             {
                 type: "duration",
-                test: function (str) {
-                    return durationRegex.test(str);
+                test: function (attr) {
+
+                    var attributeList = ["minBufferTime", "mediaPresentationDuration", "start",
+                            "minimumUpdatePeriod","timeShiftBufferDepth", "maxSegmentDuration",
+                            "maxSubsegmentDuration", "suggestedPresentationDelay", "start",
+                            "starttime", "duration"];
+
+                    for (var i = 0; i < attributeList.length-1; i++) {
+                        if (attr.nodeName === attributeList[i]) {
+                            return durationRegex.test(attr.value);
+                        }
+                    }
+                    return false;
                 },
                 converter: function (str) {
                     //str = "P10Y10M10DT10H10M10.1S";
@@ -43,8 +54,8 @@ Dash.dependencies.DashParser = function () {
             },
             {
                 type: "datetime",
-                test: function (str) {
-                    return datetimeRegex.test(str);
+                test: function (attr) {
+                    return datetimeRegex.test(attr.value);
                 },
                 converter: function (str) {
                     var match = datetimeRegex.exec(str),
@@ -71,8 +82,8 @@ Dash.dependencies.DashParser = function () {
             },
             {
                 type: "numeric",
-                test: function (str) {
-                    return numericRegex.test(str);
+                test: function (attr) {
+                    return numericRegex.test(attr.value);
                 },
                 converter: function (str) {
                     return parseFloat(str);
