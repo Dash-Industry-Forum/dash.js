@@ -216,10 +216,10 @@ Dash.dependencies.BaseURLExtensions = function () {
                     callback.call(self, null, new Error("Error loading initialization."));
                 };
 
-                request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
+                request.open("GET", self.requestModifierExt.modifyRequestURL(info.url));
                 request.responseType = "arraybuffer";
                 request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
-                request = self.tokenAuthentication.setTokenInRequestHeader(request);
+                request = self.requestModifierExt.modifyRequestHeader(request);
                 request.send(null);
             } else {
                 // Case 2
@@ -278,10 +278,10 @@ Dash.dependencies.BaseURLExtensions = function () {
                 self.notify(self.eventList.ENAME_INITIALIZATION_LOADED, representation);
             };
 
-            request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
+            request.open("GET", self.requestModifierExt.modifyRequestURL(info.url));
             request.responseType = "arraybuffer";
             request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
-            request = self.tokenAuthentication.setTokenInRequestHeader(request);
+            request = self.requestModifierExt.modifyRequestHeader(request);
             request.send(null);
             self.debug.log("Perform init search: " + info.url);
         },
@@ -365,10 +365,10 @@ Dash.dependencies.BaseURLExtensions = function () {
                     callback.call(self);
                 };
 
-                request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
+                request.open("GET", self.requestModifierExt.modifyRequestURL(info.url));
                 request.responseType = "arraybuffer";
                 request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
-                request = self.tokenAuthentication.setTokenInRequestHeader(request);
+                request = self.requestModifierExt.modifyRequestHeader(request);
                 request.send(null);
             } else {
                 // Case 3
@@ -492,10 +492,10 @@ Dash.dependencies.BaseURLExtensions = function () {
                 callback.call(self, null, representation, type);
             };
 
-            request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
+            request.open("GET", self.requestModifierExt.modifyRequestURL(info.url));
             request.responseType = "arraybuffer";
             request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
-            request = self.tokenAuthentication.setTokenInRequestHeader(request);
+            request = self.requestModifierExt.modifyRequestHeader(request);
             request.send(null);
             self.debug.log("Perform SIDX load: " + info.url);
         },
@@ -513,7 +513,7 @@ Dash.dependencies.BaseURLExtensions = function () {
     return {
         debug: undefined,
         errHandler: undefined,
-        tokenAuthentication:undefined,
+        requestModifierExt:undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
