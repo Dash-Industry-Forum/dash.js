@@ -40,7 +40,8 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                                       null,
                                                                       null,
                                                                       null,
-                                                                      request.duration);
+                                                                      request.duration,
+                                                                      null);
 
                 self.metricsModel.appendHttpTrace(httpRequestMetrics,
                                                   request.requestStartDate,
@@ -48,9 +49,9 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                   [0]);
                 lastTraceTime = request.requestStartDate;
 
-                req.open("GET", self.tokenAuthentication.addTokenAsQueryArg(request.url), true);
+                req.open("GET", self.requestModifierExt.modifyRequestURL(request.url), true);
                 req.responseType = "arraybuffer";
-                req = self.tokenAuthentication.setTokenInRequestHeader(req);
+                req = self.requestModifierExt.modifyRequestHeader(req);
 /*
                 req.setRequestHeader("Cache-Control", "no-cache");
                 req.setRequestHeader("Pragma", "no-cache");
@@ -101,6 +102,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     httpRequestMetrics.tresponse = request.firstByteDate;
                     httpRequestMetrics.tfinish = request.requestEndDate;
                     httpRequestMetrics.responsecode = req.status;
+                    httpRequestMetrics.responseHeaders = req.getAllResponseHeaders();
 
                     self.metricsModel.appendHttpTrace(httpRequestMetrics,
                                                       currentTime,
@@ -194,7 +196,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         metricsModel: undefined,
         errHandler: undefined,
         debug: undefined,
-        tokenAuthentication:undefined,
+        requestModifierExt:undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,

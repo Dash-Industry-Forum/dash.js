@@ -50,7 +50,6 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 needFailureReport = false;
                 loadedTime = new Date();
 
-                self.tokenAuthentication.checkRequestHeaderForToken(request);
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
                                                  "MPD",
@@ -59,9 +58,11 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  null,
                                                  requestTime,
                                                  loadedTime,
+                                                 null,
                                                  request.status,
                                                  null,
-                                                 null);
+                                                 null,
+                                                 request.getAllResponseHeaders());
 
                 manifest = self.parser.parse(request.responseText, baseUrl);
 
@@ -92,7 +93,8 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  new Date(),
                                                  request.status,
                                                  null,
-                                                 null);
+                                                 null,
+                                                 request.getAllResponseHeaders());
                 if (remainingAttempts > 0) {
                     self.debug.log("Failed loading manifest: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
                     remainingAttempts--;
@@ -111,7 +113,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 request.onload = onload;
                 request.onloadend = report;
                 request.onerror = report;
-                request.open("GET", url, true);
+                request.open("GET", self.requestModifierExt.modifyRequestURL(url), true);
                 request.send();
             } catch(e) {
                 request.onerror();
@@ -123,7 +125,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         parser: undefined,
         errHandler: undefined,
         metricsModel: undefined,
-        tokenAuthentication:undefined,
+        requestModifierExt:undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
