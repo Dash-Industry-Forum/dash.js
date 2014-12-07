@@ -115,6 +115,10 @@ MediaPlayer.models.ProtectionModel = function () {
             this.protectionExt.listenToNeedKey(this.videoModel, listener);
         },
 
+        unlistenToNeedKey: function(listener) {
+            this.protectionExt.unlistenToNeedKey(this.videoModel, listener);
+        },
+
         listenToKeyError: function(listener) {
             keyErrorListener = listener;
 

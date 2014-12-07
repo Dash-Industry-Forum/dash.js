@@ -270,6 +270,12 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
         source.addEventListener("keyadded", listener, false);
     },
 
+    unlistenToNeedKey: function(videoModel, listener) {
+        videoModel.unlisten("webkitneedkey", listener);
+        videoModel.unlisten("msneedkey", listener);
+        videoModel.unlisten("needKey", listener);
+    },
+
     unlistenToKeyError: function(source, listener) {
         source.removeEventListener("webkitkeyerror", listener);
         source.removeEventListener("mskeyerror", listener);
