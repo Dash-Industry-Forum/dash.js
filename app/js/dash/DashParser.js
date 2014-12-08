@@ -348,6 +348,12 @@ Dash.dependencies.DashParser = function () {
                     }
                 }
 
+                if (manifest.hasOwnProperty("Location")) {
+                    // for now, do not support multiple Locations -
+                    // just set Location to the first Location.
+                    manifest.Location = manifest.Location_asArray[0];
+                }
+
                 //this.debug.log("Flatten manifest properties.");
                 iron.run(manifest);
                 ironed = new Date();
