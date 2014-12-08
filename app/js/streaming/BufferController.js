@@ -326,7 +326,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
         clearBuffer = function() {
             var self = this,
-                currentTime = self.playbackController.getTime(),
+                currentTime,
                 removeStart,
                 removeEnd,
                 range,
@@ -334,6 +334,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             if (!buffer) return;
 
+            currentTime = self.playbackController.getTime();
             // we need to remove data that is more than one fragment before the video currentTime
             req = self.fragmentController.getExecutedRequestForTime(self.streamProcessor.getFragmentModel(), currentTime);
             removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
