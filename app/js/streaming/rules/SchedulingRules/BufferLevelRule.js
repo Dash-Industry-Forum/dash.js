@@ -99,19 +99,11 @@ MediaPlayer.rules.BufferLevelRule = function () {
         eventBus:undefined,
 
         setup: function() {
-<<<<<<< HEAD
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
             this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
-=======
-            this.bufferLevelOutrun = onBufferLevelOutrun;
-            this.bufferLevelBalanced = onBufferLevelBalanced;
-
-            this.streamCompleted = onStreamCompleted;
-
             this.eventBus.addEventListener(MediaPlayer.dependencies.BufferController.BUFFER_EMPTY, onBufferChange);
             this.eventBus.addEventListener(MediaPlayer.dependencies.BufferController.BUFFER_LOADED, onBufferChange);
->>>>>>> first round of switching rule modifications to make more robust and more tunable
         },
 
         setScheduleController: function(scheduleControllerValue) {
