@@ -22,9 +22,6 @@ MediaPlayer.models.ManifestModel = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_MANIFEST_UPDATED: "manifestUpdated"
-        },
 
         getValue:  function () {
             return manifest;
@@ -38,7 +35,7 @@ MediaPlayer.models.ManifestModel = function () {
                 data: value
             });
 
-            this.notify(this.eventList.ENAME_MANIFEST_UPDATED, value);
+            this.notify(MediaPlayer.models.ManifestModel.eventList.ENAME_MANIFEST_UPDATED, {manifest: value});
         }
     };
 };
@@ -47,6 +44,8 @@ MediaPlayer.models.ManifestModel.prototype = {
     constructor: MediaPlayer.models.ManifestModel
 };
 
-
+MediaPlayer.models.ManifestModel.eventList = {
+    ENAME_MANIFEST_UPDATED: "manifestUpdated"
+};
 
 

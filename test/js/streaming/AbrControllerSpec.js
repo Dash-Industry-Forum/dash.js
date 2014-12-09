@@ -5,8 +5,8 @@ describe("AbrController", function () {
         testedType = "video",
         defaultQuality = helper.getDefaultQuality(),
         trackCtrl = objectsHelper.getTrackController(testedType),
-        onDataUpdateCompletedEventName = trackCtrl.eventList.ENAME_DATA_UPDATE_COMPLETED,
-        onTopQualityIndexChangedEventName = abrCtrl.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED,
+        onDataUpdateCompletedEventName = Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED,
+        onTopQualityIndexChangedEventName = MediaPlayer.dependencies.AbrController.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED,
         dummyAdaptation = window.Helpers.getMpdHelper().getAdaptationWithSegmentTemplate(testedType),
         dummyRepresentation = window.Helpers.getVOHelper().getDummyRepresentation(testedType),
         streamInfo = {id: "id1"},
@@ -23,7 +23,7 @@ describe("AbrController", function () {
             jasmine.clock().install();
 
             setTimeout(function(){
-                abrCtrl[onDataUpdateCompletedEventName](trackCtrl, dummyAdaptation, dummyRepresentation);
+                abrCtrl[onDataUpdateCompletedEventName]({sender: trackCtrl, data:{data: dummyAdaptation, currentRepresentation: dummyRepresentation}});
             }, eventDelay);
         });
 
@@ -36,8 +36,8 @@ describe("AbrController", function () {
                 expectedTopQuality = repsCount - 1,
                 actualTopQuality = NaN;
 
-            dummyObserver[onTopQualityIndexChangedEventName] = function(sender, type, streamInfo, topQualityValue){
-                actualTopQuality = topQualityValue;
+            dummyObserver[onTopQualityIndexChangedEventName] = function(e){
+                actualTopQuality = e.data.maxIndex;
             };
 
             abrCtrl.subscribe(onTopQualityIndexChangedEventName, dummyObserver);

@@ -110,7 +110,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                       [bytes ? bytes.byteLength : 0]);
                     lastTraceTime = currentTime;
 
-                    self.notify(self.eventList.ENAME_LOADING_COMPLETED, request, bytes);
+                    self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: request, response: bytes});
                 };
 
                 req.onloadend = req.onerror = function () {
@@ -161,7 +161,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     } else {
                         self.debug.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
                         self.errHandler.downloadError("content", request.url, req);
-                        self.notify(self.eventList.ENAME_LOADING_COMPLETED, request, null, new Error("failed loading fragment"));
+                        self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: request, bytes: null}, new MediaPlayer.vo.Error(null, "failed loading fragment", null));
                     }
                 };
 
@@ -180,13 +180,13 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
                 isSuccessful = true;
 
-                self.notify(self.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, true, request);
+                self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, {request: request, exists: true});
             };
 
             req.onloadend = req.onerror = function () {
                 if (isSuccessful) return;
 
-                self.notify(self.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, false, request);
+                self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, {request: request, exists: false});
             };
 
             req.send();
@@ -200,15 +200,11 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_LOADING_COMPLETED: "loadingCompleted",
-            ENAME_CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted"
-        },
 
         load: function (req) {
 
             if (!req) {
-                this.notify(this.eventList.ENAME_LOADING_COMPLETED, req, null, new Error("request is null"));
+                this.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: req, bytes: null}, new MediaPlayer.vo.Error(null, "request is null", null));
             } else {
                 doLoad.call(this, req, RETRY_ATTEMPTS);
             }
@@ -216,7 +212,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
         checkForExistence: function(req) {
             if (!req) {
-                this.notify(this.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, false, req);
+                this.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, {request: req, exists: false});
                 return;
             }
 
@@ -242,4 +238,9 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
 MediaPlayer.dependencies.FragmentLoader.prototype = {
     constructor: MediaPlayer.dependencies.FragmentLoader
+};
+
+MediaPlayer.dependencies.FragmentLoader.eventList = {
+    ENAME_LOADING_COMPLETED: "loadingCompleted",
+    ENAME_CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted"
 };

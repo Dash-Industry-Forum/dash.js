@@ -19,9 +19,6 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
     notify: undefined,
     subscribe: undefined,
     unsubscribe: undefined,
-    eventList: {
-        ENAME_KEY_SYSTEM_UPDATE_COMPLETED: "keySystemUpdateCompleted"
-    },
 
     supportsCodec: function (mediaKeysString, codec) {
         "use strict";
@@ -94,14 +91,14 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                     }
                 }
                 else {
-                    self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new Error('DRM: playready update, can not find Challenge in keyMessage'));
+                    self.notify(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new MediaPlayer.vo.Error(null, 'DRM: playready update, can not find Challenge in keyMessage', null));
                 }
 
                 var headerNameList = xmlDoc.getElementsByTagName("name");
                 var headerValueList = xmlDoc.getElementsByTagName("value");
 
                 if (headerNameList.length != headerValueList.length) {
-                    self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new Error('DRM: playready update, invalid header name/value pair in keyMessage'));
+                    self.notify(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new MediaPlayer.vo.Error(null, 'DRM: playready update, invalid header name/value pair in keyMessage', null));
                 }
 
                 for (var i = 0; i < headerNameList.length; i++) {
@@ -118,16 +115,16 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 var xhr = new XMLHttpRequest();
                 xhr.onload = function () {
                     if (xhr.status == 200) {
-                        self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, new Uint8Array(xhr.response));
+                        self.notify(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, {data: new Uint8Array(xhr.response)});
                     } else {
-                        self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new Error('DRM: playready update, XHR status is "' + xhr.statusText + '" (' + xhr.status + '), expected to be 200. readyState is ' + xhr.readyState));
+                        self.notify(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new MediaPlayer.vo.Error(null, 'DRM: playready update, XHR status is "' + xhr.statusText + '" (' + xhr.status + '), expected to be 200. readyState is ' + xhr.readyState, null));
                     }
                 };
                 xhr.onabort = function () {
-                    self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new Error('DRM: playready update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
+                    self.notify(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new MediaPlayer.vo.Error(null, 'DRM: playready update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState, null));
                 };
                 xhr.onerror = function () {
-                    self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new Error('DRM: playready update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
+                    self.notify(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new MediaPlayer.vo.Error(null, 'DRM: playready update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState, null));
                 };
 
                 xhr.open('POST', laURL);
@@ -288,4 +285,8 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
         source.removeEventListener("keyadded", listener);
     }
 
+};
+
+MediaPlayer.dependencies.ProtectionExtensions.eventList = {
+    ENAME_KEY_SYSTEM_UPDATE_COMPLETED: "keySystemUpdateCompleted"
 };

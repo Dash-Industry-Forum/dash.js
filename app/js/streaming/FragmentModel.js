@@ -27,7 +27,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             var self = this;
 
             // We are about to start loading the fragment, so execute the corresponding callback
-            self.notify(self.eventList.ENAME_FRAGMENT_LOADING_STARTED, request);
+            self.notify(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, {request: request});
             self.fragmentLoader.load(request);
         },
 
@@ -75,39 +75,41 @@ MediaPlayer.dependencies.FragmentModel = function () {
             this.metricsModel.addSchedulingInfo(mediaType, now, type, startTime, availabilityStartTime, duration, quality, range, state);
         },
 
-        onLoadingCompleted = function(sender, request, response, error) {
+        onLoadingCompleted = function(e) {
+            var request = e.data.request,
+                response = e.data.response,
+                error = e.error;
+
             loadingRequests.splice(loadingRequests.indexOf(request), 1);
 
             if (response && !error) {
                 executedRequests.push(request);
-                addSchedulingInfoMetrics.call(this, request, MediaPlayer.vo.metrics.SchedulingInfo.EXECUTED_STATE);
-                this.notify(this.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, request, response);
-            } else {
-                addSchedulingInfoMetrics.call(this, request, MediaPlayer.vo.metrics.SchedulingInfo.FAILED_STATE);
-                this.notify(this.eventList.ENAME_FRAGMENT_LOADING_FAILED, request);
             }
+
+            addSchedulingInfoMetrics.call(this, request, error ? MediaPlayer.vo.metrics.SchedulingInfo.FAILED_STATE : MediaPlayer.vo.metrics.SchedulingInfo.EXECUTED_STATE);
+            this.notify(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {request: request, response: response}, error);
         },
 
-        onBytesRejected = function(sender, quality, index) {
-            var req = this.getExecutedRequestForQualityAndIndex(quality, index);
+        onBytesRejected = function(e) {
+            var req = this.getExecutedRequestForQualityAndIndex(e.data.quality, e.data.index);
             // if request for an unappropriate quality has not been removed yet, do it now
             if (req) {
                 this.removeExecutedRequest(req);
                 // if index is not a number it means that this is a media fragment, so we should
                 // request the fragment for the same time but with an appropriate quality
                 // If this is init fragment do nothing, because it will be requested in loadInitialization method
-                if (!isNaN(index)) {
+                if (!isNaN(e.data.index)) {
                     rejectedRequests.push(req);
                     addSchedulingInfoMetrics.call(this, req, MediaPlayer.vo.metrics.SchedulingInfo.REJECTED_STATE);
                 }
             }
         },
 
-        onBufferLevelOutrun = function() {
+        onBufferLevelOutrun = function(/*e*/) {
             isLoadingPostponed = true;
         },
 
-        onBufferLevelBalanced = function() {
+        onBufferLevelBalanced = function(/*e*/) {
             isLoadingPostponed = false;
         };
 
@@ -118,18 +120,12 @@ MediaPlayer.dependencies.FragmentModel = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_STREAM_COMPLETED: "streamCompleted",
-            ENAME_FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted",
-            ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted",
-            ENAME_FRAGMENT_LOADING_FAILED: "fragmentLoadingFailed"
-        },
 
         setup: function() {
-            this.bufferLevelOutrun = onBufferLevelOutrun;
-            this.bufferLevelBalanced = onBufferLevelBalanced;
-            this.bytesRejected = onBytesRejected;
-            this.loadingCompleted = onLoadingCompleted;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_REJECTED] = onBytesRejected;
+            this[MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED] = onLoadingCompleted;
         },
 
         setLoader: function(value) {
@@ -322,7 +318,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     // Stream has completed, execute the correspoinding callback
                     executedRequests.push(request);
                     addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.EXECUTED_STATE);
-                    self.notify(self.eventList.ENAME_STREAM_COMPLETED, request);
+                    self.notify(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED, {request: request});
                     break;
                 case "download":
                     loadingRequests.push(request);
@@ -338,4 +334,10 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
 MediaPlayer.dependencies.FragmentModel.prototype = {
     constructor: MediaPlayer.dependencies.FragmentModel
+};
+
+MediaPlayer.dependencies.FragmentModel.eventList = {
+    ENAME_STREAM_COMPLETED: "streamCompleted",
+    ENAME_FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted",
+    ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
 };

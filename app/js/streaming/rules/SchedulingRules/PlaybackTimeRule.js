@@ -4,8 +4,9 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
     var seekTarget = {},
         scheduleController = {},
 
-        onPlaybackSeeking = function(sender, time) {
-            var streamId = sender.getStreamId();
+        onPlaybackSeeking = function(e) {
+            var streamId = e.sender.getStreamId(),
+                time = e.data.seekTime;
             seekTarget[streamId] = seekTarget[streamId] || {};
             seekTarget[streamId].audio = time;
             seekTarget[streamId].video = time;
@@ -16,7 +17,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
         sourceBufferExt: undefined,
 
         setup: function() {
-            this.playbackSeeking = onPlaybackSeeking;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
         },
 
         setScheduleController: function(scheduleControllerValue) {
