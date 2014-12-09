@@ -21,5 +21,5 @@ MediaPlayer.dependencies.RequestModifierExtensions = function () {
         modifyRequestHeader : function (request) {
             return request;
         }
-    }
+    };
 };
