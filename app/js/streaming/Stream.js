@@ -91,25 +91,19 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             if (!!kid) {
-                self.protectionController.ensureKeySession(kid, type, event.initData);
+                self.protectionController.ensureKeySession(kid, type, event);
             }
         },
 
         onMediaSourceKeyMessage = function (event) {
             var self = this,
-                session = null,
-                bytes = null,
-                msg = null,
-                laURL = null;
+                session = null;
 
             this.debug.log("DRM: Got a key message...");
 
             session = event.target;
-            bytes = new Uint16Array(event.message.buffer);
-            msg = String.fromCharCode.apply(null, bytes);
-            laURL = event.destinationURL;
 
-            self.protectionController.updateFromMessage(kid, session, msg, laURL);
+            self.protectionController.updateFromMessage(kid, session, event);
 
             //if (event.keySystem !== DEFAULT_KEY_TYPE) {
             //    this.debug.log("DRM: Key type not supported!");
@@ -539,7 +533,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.videoModel = value;
         },
 
-        initProtection: function() {
+        initProtection: function(protectionData) {
             needKeyListener = onMediaSourceNeedsKey.bind(this);
             keyMessageListener = onMediaSourceKeyMessage.bind(this);
             keyAddedListener = onMediaSourceKeyAdded.bind(this);
@@ -548,7 +542,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.protectionModel = this.system.getObject("protectionModel");
             this.protectionModel.init(this.getVideoModel());
             this.protectionController = this.system.getObject("protectionController");
-            this.protectionController.init(this.videoModel, this.protectionModel);
+            this.protectionController.init(this.videoModel, this.protectionModel, protectionData);
 
             this.protectionModel.listenToNeedKey(needKeyListener);
             this.protectionModel.listenToKeyMessage(keyMessageListener);
