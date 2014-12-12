@@ -28,12 +28,12 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
 
         execute: function (context, callback) {
             var self = this,
-                mediaType = context.getMediaInfo().type,
+                //mediaType = context.getMediaInfo().type,
                 current = context.getCurrentValue(),
-                metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
-                manifestInfo = context.getManifestInfo(),
-                lastIdx = metrics.RepSwitchList.length - 1,
-                rs = metrics.RepSwitchList[lastIdx],
+                ///metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
+                //manifestInfo = context.getManifestInfo(),
+                //lastIdx = metrics.RepSwitchList.length - 1,
+                //rs = metrics.RepSwitchList[lastIdx],
                 now = new Date().getTime(),
                 delay;
 

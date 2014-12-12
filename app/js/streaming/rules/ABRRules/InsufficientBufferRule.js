@@ -25,17 +25,23 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
      */
 
     var dryBufferHits = 0,
-        stepDownFactor = 1,
-        DRY_BUFFER_LIMIT = 3,
-        lastDryBufferHitRecorded = false,
-        bufferState = MediaPlayer.dependencies.BufferController.BUFFER_EMPTY,
+        bufferStateDict = {},
+        bufferStateVO = {
+            state:MediaPlayer.dependencies.BufferController.BUFFER_EMPTY,
+            stepDownFactor:1,
+            dryBufferHits:0,
+            lastDryBufferHitRecorded:false
+        },
+        //DRY_BUFFER_LIMIT = 3,
 
         onBufferChange = function (event) {
-            bufferState = event.type;
+            bufferStateDict[event.data.bufferType] = bufferStateDict[event.data.bufferType] || bufferStateVO;
+            var vo = bufferStateDict[event.data.bufferType];
+            vo.state = event.type;
             if (event.type === MediaPlayer.dependencies.BufferController.BUFFER_LOADED) {
-                stepDownFactor = 1;
-                if (lastDryBufferHitRecorded) {
-                    lastDryBufferHitRecorded = false;
+                vo.stepDownFactor = 1;
+                if (vo.lastDryBufferHitRecorded) {
+                    vo.lastDryBufferHitRecorded = false;
                 }
             }
         };
@@ -65,7 +71,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 isDynamic = sp.isDynamic(),
                 switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK),
                 lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
-                lowBufferMark = manifestInfo.maxFragmentDuration;
+                lowBufferMark = Math.min(4, manifestInfo.maxFragmentDuration);
 
 
             if (metrics.PlayList === null || metrics.PlayList === undefined || metrics.PlayList.length === 0) {
@@ -91,28 +97,28 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 return;
             }
 
-            if (trace.stopreason !== null && trace.stopreason === MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON && !lastDryBufferHitRecorded) {
-                //dryBufferHits += 1; //Not using this for priority at this point but may in future.
-                lastDryBufferHitRecorded = true;
+            if (trace.stopreason !== null && trace.stopreason === MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON && !bufferStateDict[mediaType].lastDryBufferHitRecorded) {
+                //bufferStateDict[mediaType].dryBufferHits++; //Not using this for priority at this point but may in future.
+                bufferStateDict[mediaType].lastDryBufferHitRecorded = true;
                 switchRequest = new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
                 self.debug.log("InsufficientBufferRule Number of times the buffer has run dry: " + dryBufferHits);
 
             }
             // For VOD we never want to fall this low and will start to react when we do.
             else if ( !isDynamic &&
-                        bufferState === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
+                        bufferStateDict[mediaType].state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
                         trace.stopreason !== MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON &&
                         lastBufferLevelVO !== null &&
                         lastBufferLevelVO.level < (lowBufferMark * 2) &&
                         lastBufferLevelVO.level > lowBufferMark &&
                         currentTime < (duration - lowBufferMark * 2)) {
 
-                switchRequest = new MediaPlayer.rules.SwitchRequest(Math.max(current - stepDownFactor, 0), MediaPlayer.rules.SwitchRequest.prototype.DEFAULT );
-                stepDownFactor++;
+                switchRequest = new MediaPlayer.rules.SwitchRequest(Math.max(current - bufferStateDict[mediaType].stepDownFactor, 0), MediaPlayer.rules.SwitchRequest.prototype.STRONG );
+                bufferStateDict[mediaType].stepDownFactor++;
             }
 
             if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                self.debug.log("InsufficientBufferRule requesting switch to index: ", switchRequest.value, " Priority: ",
+                self.debug.log("InsufficientBufferRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
                     switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
                         switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
             }
@@ -121,7 +127,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
         },
 
         reset: function() {
-            stepDownFactor = 1;
+            bufferStateDict = {};
         }
     };
 };

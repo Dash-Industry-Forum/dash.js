@@ -98,7 +98,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES);
 
             self.rulesController.applyRules(rules, self.streamProcessor, callback, fragmentsToLoad, function(currentValue, newValue) {
-                return Math.min(currentValue, newValue);
+                currentValue = currentValue === MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
+                return Math.max(currentValue, newValue);
             });
         },
 
@@ -151,7 +152,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var now = new Date().getTime(),
                 isEnoughTimeSinceLastValidation = lastValidationTime ? (now - lastValidationTime > this.fragmentController.getLoadingTime(this)) : true,
                 //manifestInfo = currentTrackInfo.mediaInfo.streamInfo.manifestInfo,
-                qualitySwitchThreshold = 1000 //TODO need to get average segment duration and cut that in half for interval to apply rule
+                qualitySwitchThreshold = 1000; //TODO need to get average segment duration and cut that in half for interval to apply rule
 
 
             if (now - lastABRRuleApplyTime > qualitySwitchThreshold) {
@@ -245,7 +246,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onBufferLevelUpdated = function(e) {
             var self = this;
-            self.metricsModel.addBufferLevel(type, new Date(), e.data.bufferLevel);
+            self.metricsModel.addBufferLevel(type, new Date(), e.data.bufferLevel, self.scheduleRulesCollection.bufferLevelRule.getBufferTarget());
             validate.call(this);
         },
 

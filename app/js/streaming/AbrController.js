@@ -160,7 +160,8 @@ MediaPlayer.dependencies.AbrController = function () {
             //self.debug.log("Check ABR rules.");
             rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES);
             self.rulesController.applyRules(rules, streamProcessor, callback.bind(self), quality, function(currentValue, newValue) {
-                return Math.min(currentValue, newValue);
+                currentValue = currentValue === MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
+                return Math.max(currentValue, newValue);
             });
         },
 

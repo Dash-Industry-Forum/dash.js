@@ -20,16 +20,13 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
 
         execute: function (context, callback) {
             var self = this,
-                //current = context.getCurrentValue(),
-                //manifestInfo = context.getManifestInfo(),
                 mediaInfo = context.getMediaInfo(),
                 mediaType = mediaInfo.type,
                 metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
                 lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
                 isBufferRich = false,
-                //lowBufferMark = 8,
                 maxIndex = mediaInfo.trackCount - 1,
-                switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
+                switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
             if (lastBufferLevelVO !== null) {
                 if (lastBufferLevelVO.level > lastBufferLevelVO.target)
@@ -39,18 +36,11 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
                     if (isBufferRich) {
                         switchRequest = new MediaPlayer.rules.SwitchRequest(maxIndex, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
                     }
-                    //else {
-                    //    // not buffer rich but not low either.
-                    //}
-
                 }
-                //else {
-                //    // getting low should we do something or let the insufficientBufferRule take over in this case?
-                //}
             }
 
             if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                self.debug.log("xxx BufferOccupancyRule requesting switch to index: ", switchRequest.value, " Priority: ",
+                self.debug.log("BufferOccupancyRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
                     switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
                         switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
             }

@@ -116,7 +116,7 @@ MediaPlayer.rules.RulesController = function () {
                         values[result.priority] = overrideFunc(values[result.priority], result.value);
                     }
 
-                    //if (--rulesCount) return;
+                    if (--rulesCount) return;
 
                     if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
                         confidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;

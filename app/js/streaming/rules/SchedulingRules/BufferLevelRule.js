@@ -40,8 +40,8 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
                 ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"),
                 isLongFormContent = (duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
-                requiredBufferLength = 0,
-                additionalBuffer = (bufferState === MediaPlayer.dependencies.BufferController.BUFFER_LOADED) ? MediaPlayer.rules.BufferLevelRule.ADDITIONAL_BUFFER : 0;
+                requiredBufferLength = 0;
+
 
             if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN) {
                 requiredBufferLength = minBufferTarget;
@@ -57,7 +57,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
                     getCurrentHttpRequestLatency.call(self, ametrics));
             }
 
-            requiredBufferLength = Math.min(requiredBufferLength, criticalBufferLevel) + additionalBuffer;
+            requiredBufferLength = Math.min(requiredBufferLength, criticalBufferLevel) ;
 
             return requiredBufferLength;
         },
@@ -160,7 +160,6 @@ MediaPlayer.rules.BufferLevelRule = function () {
     };
 };
 
-MediaPlayer.rules.BufferLevelRule.ADDITIONAL_BUFFER = 4;
 MediaPlayer.rules.BufferLevelRule.prototype = {
     constructor: MediaPlayer.rules.BufferLevelRule
 };

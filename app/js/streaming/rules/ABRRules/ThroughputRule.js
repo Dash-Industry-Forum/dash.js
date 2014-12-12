@@ -18,20 +18,17 @@ MediaPlayer.rules.ThroughputRule = function () {
     var throughputArray = [],
         AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2,
         AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3,
-        THROUGHTPUT_RATIO_SAFETY_FACTOR = 1.2,
+        //THROUGHTPUT_RATIO_SAFETY_FACTOR = 1.2,
 
         storeLastRequestThroughputByType = function (type, lastRequestThroughput) {
-            
             throughputArray[type] = throughputArray[type] || [];
-            
             if (lastRequestThroughput !== Infinity &&
                 lastRequestThroughput !== throughputArray[type][throughputArray[type].length-1]) {
-
-                throughputArray[type].push(lastRequestThroughput)
+                throughputArray[type].push(lastRequestThroughput);
             }
         },
 
-        getAverageThroughtput = function (type,  isDynamic) {
+        getAverageThroughput = function (type,  isDynamic) {
             var averageThroughput = 0,
                 sampleAmount = isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE: AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD,
                 arr = throughputArray[type],
@@ -54,7 +51,7 @@ MediaPlayer.rules.ThroughputRule = function () {
             }
 
             return averageThroughput;
-        }
+        };
 
 
     return {
@@ -72,11 +69,11 @@ MediaPlayer.rules.ThroughputRule = function () {
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 isDynamic= context.getStreamProcessor().isDynamic(),
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
-                current = context.getCurrentValue(),
+                //current = context.getCurrentValue(),
                 downloadTime,
                 averageThroughput,
                 lastRequestThroughput,
-                switchRequest = new MediaPlayer.rules.SwitchRequest();
+                switchRequest =  new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
             if (!metrics || lastRequest === null) {
                 callback(new MediaPlayer.rules.SwitchRequest());
@@ -84,26 +81,25 @@ MediaPlayer.rules.ThroughputRule = function () {
             }
 
             downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
-            lastRequestThroughput = Math.round((lastRequest.trace[lastRequest.trace.length -1].b * 8 ) / downloadTime);
+            lastRequestThroughput = Math.round((lastRequest.trace[lastRequest.trace.length - 1].b * 8 ) / downloadTime);
 
             storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
-            averageThroughput = Math.round(getAverageThroughtput(mediaType, isDynamic));
+            averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic));
 
             var adaptation = this.manifestExt.getAdaptationForType(manifest, 0, mediaType);
             var max = mediaInfo.trackCount - 1;
             for ( var i = max ; i > 0; i-- )
             {
                 var repBandwidth = this.manifestExt.getRepresentationFor(i, adaptation).bandwidth;
-
                 if (averageThroughput >= repBandwidth) {
-                    var p = (current < i) ? MediaPlayer.rules.SwitchRequest.prototype.STRONG :MediaPlayer.rules.SwitchRequest.prototype.DEFAULT
+                    var p = /*(current < i) ? MediaPlayer.rules.SwitchRequest.prototype.STRONG :*/MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
                     switchRequest = new MediaPlayer.rules.SwitchRequest(i, p);
                     break;
                 }
             }
 
             if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                self.debug.log("ThroughputRule requesting switch to index: ", switchRequest.value, " Priority: ",
+                self.debug.log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
                     switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
                         switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
             }

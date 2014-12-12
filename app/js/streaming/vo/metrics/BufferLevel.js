@@ -16,7 +16,7 @@ MediaPlayer.vo.metrics.BufferLevel = function () {
 
     this.t = null;      // Real-Time | Time of the measurement of the buffer level.
     this.level = null;  // Level of the buffer in milliseconds. Indicates the playout duration for which media data of all active media components is available starting from the current playout time.
-    this.target = null  // Required Buffer Level determined by the BufferLevelRule.
+    this.target = null; // Required Buffer Level determined by the BufferLevelRule.
 };
 
 MediaPlayer.vo.metrics.BufferLevel.prototype = {

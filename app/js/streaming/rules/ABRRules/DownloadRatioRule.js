@@ -54,7 +54,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
             }
 
             return averageDownloadRatio;
-        }
+        };
 
 
     return {
@@ -77,6 +77,8 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 averageDownloadRatio,
                 downloadRatio,
                 totalRatio,
+                switchRatio,
+                i,
                 //currentBandwidth,
                 switchRequest = null;
 
@@ -118,10 +120,9 @@ MediaPlayer.rules.DownloadRatioRule = function () {
             {
                 if (current > 0)
                 {
-                    for ( var i = current - 1 ; i > 0; i-- ) {
-                        var switchRatio = getSwitchRatio.call(self, sp, i, current);
+                    for ( i = current - 1 ; i > 0; i-- ) {
+                        switchRatio = getSwitchRatio.call(self, sp, i, current);
                         if ( averageDownloadRatio > switchRatio * DOWNLOAD_RATIO_SAFETY_FACTOR) {
-                            self.debug.log("xxx down", averageDownloadRatio, switchRatio, i);
                             switchRequest = new MediaPlayer.rules.SwitchRequest(i, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
                             break;
                         }
@@ -143,9 +144,9 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                         //    switchRequest = new MediaPlayer.rules.SwitchRequest(max, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
                         //    stepDownFactor = 1;
                         //}else {
-                            for ( var i = max ; i > 0; i-- ) {
+                            for ( i = max ; i > 0; i-- ) {
 
-                                var switchRatio = getSwitchRatio.call(self, sp, i, current);
+                                switchRatio = getSwitchRatio.call(self, sp, i, current);
                                 if ( averageDownloadRatio > switchRatio) {
                                     if (current !== i) {
                                         self.debug.log("xxx down", averageDownloadRatio, switchRatio, i);
@@ -163,12 +164,11 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
             }
 
-            //if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-            //    self.debug.log("xxx "+mediaType+" averageDownloadRatio :", averageDownloadRatio);
-            //    self.debug.log("xxx DownloadRatioRule requesting switch to index: ", switchRequest.value, " priority: ",
-            //        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "default" :
-            //            switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "strong" : "weak");
-            //}
+            if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                self.debug.log("DownloadRatioRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " priority: ",
+                    switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "default" :
+                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "strong" : "weak");
+            }
 
             callback(switchRequest);
         },
