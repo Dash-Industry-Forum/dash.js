@@ -116,29 +116,28 @@ Dash.dependencies.FragmentExtensions = function () {
         loadFragment = function (media) {
             var self = this,
                 request = new XMLHttpRequest(),
-                url,
+                url = media,
                 loaded = false,
-                errorStr,
+                errorStr = "Error loading fragment: " + url,
+                error = new MediaPlayer.vo.Error(null, errorStr, null),
                 parsed;
-
-            url = media;
 
             request.onloadend = function () {
                 if (!loaded) {
                     errorStr = "Error loading fragment: " + url;
-                    self.notify(self.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, null, new Error(errorStr));
+                    self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: null}, error);
                 }
             };
 
             request.onload = function () {
                 loaded = true;
                 parsed = parseTFDT(request.response);
-                self.notify(self.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, parsed);
+                self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: parsed});
             };
 
             request.onerror = function () {
                 errorStr = "Error loading fragment: " + url;
-                self.notify(self.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, null, new Error(errorStr));
+                self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: null}, error);
             };
 
             request.responseType = "arraybuffer";
@@ -151,9 +150,6 @@ Dash.dependencies.FragmentExtensions = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
-        },
 
         loadFragment : loadFragment,
         parseTFDT : parseTFDT,
@@ -163,4 +159,8 @@ Dash.dependencies.FragmentExtensions = function () {
 
 Dash.dependencies.FragmentExtensions.prototype = {
     constructor: Dash.dependencies.FragmentExtensions
+};
+
+Dash.dependencies.FragmentExtensions.eventList = {
+    ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
 };

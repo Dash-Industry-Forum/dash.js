@@ -308,7 +308,54 @@ Dash.dependencies.DashMetricsExtensions = function () {
             curentDVRInfo = dvrInfo[dvrInfoLastIndex];
 
             return curentDVRInfo;
+        },
+
+        getLatestMPDRequestHeaderValueByID = function(metrics, id) {
+
+            if (metrics === null) return null;
+            var httpRequestList = getHttpRequests(metrics),
+                httpRequest = httpRequestList[httpRequestList.length-1],
+                headers;
+
+            if (httpRequest.type === 'MPD')
+            {
+                headers = parseResponseHeaders(httpRequest.responseHeaders, id);
+
+            }
+
+            return headers[id] === undefined ? null :  headers[id];
+        },
+
+        getLatestFragmentRequestHeaderValueByID = function(metrics, id) {
+
+            if (metrics === null) return null;
+
+            var httpRequest = getCurrentHttpRequest(metrics),
+                headers;
+
+            if (httpRequest === null || httpRequest.responseHeaders === null) return null;
+
+            headers = parseResponseHeaders(httpRequest.responseHeaders, id);
+            return headers[id] === undefined ? null :  headers[id];
+        },
+
+        parseResponseHeaders = function (headerStr) {
+            var headers = {};
+            if (!headerStr) {
+                return headers;
+            }
+            var headerPairs = headerStr.split('\u000d\u000a');
+            for (var i = 0, ilen = headerPairs.length; i < ilen; i++) {
+                var headerPair = headerPairs[i];
+                var index = headerPair.indexOf('\u003a\u0020');
+                if (index > 0) {
+                    headers[headerPair.substring(0, index)] = headerPair.substring(index + 2);
+                }
+            }
+            return headers;
         };
+
+
 
     return {
         manifestModel: undefined,
@@ -324,7 +371,9 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getCurrentDroppedFrames : getCurrentDroppedFrames,
         getCurrentSchedulingInfo: getCurrentSchedulingInfo,
         getCurrentDVRInfo : getCurrentDVRInfo,
-        getCurrentManifestUpdate: getCurrentManifestUpdate
+        getCurrentManifestUpdate: getCurrentManifestUpdate,
+        getLatestFragmentRequestHeaderValueByID:getLatestFragmentRequestHeaderValueByID,
+        getLatestMPDRequestHeaderValueByID:getLatestMPDRequestHeaderValueByID
     };
 };
 

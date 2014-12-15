@@ -7,7 +7,7 @@ describe("TimelineConverter", function () {
         searchTime = 0,
         testType = "video",
         representation = window.Helpers.getVOHelper().getDummyRepresentation(testType),
-        onLiveEdgeFoundEventName = liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND;
+        onLiveEdgeFoundEventName = MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED;
 
         liveEdgeFinder.streamProcessor.getCurrentTrack = function() {
             return representation;
@@ -78,7 +78,7 @@ describe("TimelineConverter", function () {
             timelineConverter.setExpectedLiveEdge(100);
 
             setTimeout(function(){
-                timelineConverter[onLiveEdgeFoundEventName](liveEdgeFinder, testActualLiveEdge, searchTime);
+                timelineConverter[onLiveEdgeFoundEventName]({sender: liveEdgeFinder, data: {liveEdge: testActualLiveEdge, searchTime: searchTime}});
                 updateCompleted = true;
                 done();
             }, eventDelay);

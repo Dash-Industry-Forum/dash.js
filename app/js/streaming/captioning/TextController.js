@@ -18,24 +18,24 @@ MediaPlayer.dependencies.TextController = function () {
          buffer,
          type,
 
-         onDataUpdateCompleted = function(/*sender ,data, trackData*/) {
+         onDataUpdateCompleted = function(/*e*/) {
              if (!initialized) {
                  if (buffer.hasOwnProperty('initialize')) {
                      buffer.initialize(type, this);
                  }
                  initialized = true;
              }
-             this.notify(this.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, 0);
+             this.notify(MediaPlayer.dependencies.TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, {CCIndex: 0});
          },
 
-         onInitFragmentLoaded = function (sender, model, bytes/*, quality*/) {
+         onInitFragmentLoaded = function (e) {
              var self = this;
 
-             if (model !== self.streamProcessor.getFragmentModel()) return;
+             if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel()) return;
 
-             if (bytes !== null) {
+             if (e.data.bytes !== null) {
                  //self.debug.log("Push text track bytes: " + data.byteLength);
-                 self.sourceBufferExt.append(buffer, bytes, self.videoModel);
+                 self.sourceBufferExt.append(buffer, e.data.bytes, self.videoModel);
              }
          };
 
@@ -46,13 +46,10 @@ MediaPlayer.dependencies.TextController = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_CLOSED_CAPTIONING_REQUESTED: "closedCaptioningRequested"
-        },
 
         setup: function() {
-            this.dataUpdateCompleted = onDataUpdateCompleted;
-            this.initFragmentLoaded = onInitFragmentLoaded;
+            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitFragmentLoaded;
         },
 
         initialize: function (typeValue, buffer, source, streamProcessor) {
@@ -91,3 +88,6 @@ MediaPlayer.dependencies.TextController.prototype = {
     constructor: MediaPlayer.dependencies.TextController
 };
 
+MediaPlayer.dependencies.TextController.eventList = {
+    ENAME_CLOSED_CAPTIONING_REQUESTED: "closedCaptioningRequested"
+};

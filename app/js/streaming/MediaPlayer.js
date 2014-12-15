@@ -50,6 +50,7 @@ MediaPlayer = function (aContext) {
         abrController,
         element,
         source,
+        protectionData = null,
         streamController,
         rulesController,
         manifestUpdater,
@@ -84,11 +85,12 @@ MediaPlayer = function (aContext) {
             playing = true;
             //this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
-            streamController.subscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
-            manifestLoader.subscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
-            manifestLoader.subscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, manifestUpdater);
+            streamController.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
+            manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
+            manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, manifestUpdater);
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
+            streamController.setProtectionData(protectionData);
             streamController.load(source);
 
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
@@ -207,9 +209,9 @@ MediaPlayer = function (aContext) {
 
         doReset = function() {
             if (playing && streamController) {
-                streamController.unsubscribe(streamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
-                manifestLoader.unsubscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
-                manifestLoader.unsubscribe(manifestLoader.eventList.ENAME_MANIFEST_LOADED, manifestUpdater);
+                streamController.unsubscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
+                manifestLoader.unsubscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
+                manifestLoader.unsubscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, manifestUpdater);
                 streamController.reset();
                 abrController.reset();
                 rulesController.reset();
@@ -231,7 +233,6 @@ MediaPlayer = function (aContext) {
         capabilities: undefined,
         adapter: undefined,
         errHandler: undefined,
-        tokenAuthentication:undefined,
         uriQueryFragModel:undefined,
         videoElementExt:undefined,
 
@@ -334,15 +335,6 @@ MediaPlayer = function (aContext) {
          */
         getScheduleWhilePaused: function() {
             return scheduleWhilePaused;
-        },
-
-        /**
-         * @param name
-         * @param type
-         * @memberof MediaPlayer#
-         */
-        setTokenAuthentication:function(name, type) {
-            this.tokenAuthentication.setTokenAuthentication({name:name, type:type});
         },
 
         /**
@@ -506,6 +498,14 @@ MediaPlayer = function (aContext) {
             if (isReady.call(this)) {
                 doAutoPlay.call(this);
             }
+        },
+
+        /**
+         * Attach a specific url to use for License Acquisition with EME
+         * @param url
+         */
+        attachProtectionData: function(data) {
+            protectionData = data;
         },
 
         /**

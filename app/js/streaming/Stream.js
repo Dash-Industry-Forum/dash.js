@@ -91,25 +91,19 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             if (!!kid) {
-                self.protectionController.ensureKeySession(kid, type, event.initData);
+                self.protectionController.ensureKeySession(kid, type, event);
             }
         },
 
         onMediaSourceKeyMessage = function (event) {
             var self = this,
-                session = null,
-                bytes = null,
-                msg = null,
-                laURL = null;
+                session = null;
 
             this.debug.log("DRM: Got a key message...");
 
             session = event.target;
-            bytes = new Uint16Array(event.message.buffer);
-            msg = String.fromCharCode.apply(null, bytes);
-            laURL = event.destinationURL;
 
-            self.protectionController.updateFromMessage(kid, session, msg, laURL);
+            self.protectionController.updateFromMessage(kid, session, event);
 
             //if (event.keySystem !== DEFAULT_KEY_TYPE) {
             //    this.debug.log("DRM: Key type not supported!");
@@ -322,7 +316,7 @@ MediaPlayer.dependencies.Stream = function () {
             checkIfInitializationCompleted.call(self);
         },
 
-        onLoad = function () {
+        onLoad = function (/*e*/) {
             this.debug.log("element loaded!");
             loaded = true;
             startAutoPlay.call(this);
@@ -344,7 +338,7 @@ MediaPlayer.dependencies.Stream = function () {
             var self = this,
                 ln = streamProcessors.length,
                 hasError = !!updateError.audio || !!updateError.video,
-                error = hasError ? {code: MediaPlayer.dependencies.Stream.DATA_UPDATE_FAILED_ERROR_CODE} : null,
+                error = hasError ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.Stream.DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null,
                 i = 0;
 
             if (!initialized) return;
@@ -354,11 +348,11 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             updating = false;
-            self.notify(self.eventList.ENAME_STREAM_UPDATED, error);
+            self.notify(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, null, error);
         },
 
-        onError = function (sender, error) {
-            var code = error.code,
+        onError = function (e) {
+            var code = e.data.error.code,
                 msg = "";
 
             if (code === -1) {
@@ -387,7 +381,7 @@ MediaPlayer.dependencies.Stream = function () {
             errored = true;
 
             this.debug.log("Video Element Error: " + msg);
-            this.debug.log(error);
+            this.debug.log(e.error);
             this.errHandler.mediaSourceError(msg);
             this.reset();
         },
@@ -406,7 +400,7 @@ MediaPlayer.dependencies.Stream = function () {
                         self.debug.log(msg);
                     } else {
                         self.liveEdgeFinder.initialize(streamProcessors[0]);
-                        self.liveEdgeFinder.subscribe(self.liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, self.playbackController);
+                        self.liveEdgeFinder.subscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, self.playbackController);
                         initializePlayback.call(self);
                         //self.debug.log("Playback initialized!");
                         startAutoPlay.call(self);
@@ -423,7 +417,7 @@ MediaPlayer.dependencies.Stream = function () {
             setUpMediaSource.call(self, mediaSourceResult, onMediaSourceSetup);
         },
 
-        onBufferingCompleted = function() {
+        onBufferingCompleted = function(/*e*/) {
             var processors = getAudioVideoProcessors(),
                 ln = processors.length,
                 i = 0;
@@ -439,20 +433,20 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
-        onDataUpdateCompleted = function(sender, mediaData, trackData, error) {
-            var type = sender.streamProcessor.getType();
+        onDataUpdateCompleted = function(e) {
+            var type = e.sender.streamProcessor.getType();
 
-            updateError[type] = error;
+            updateError[type] = e.error;
 
             checkIfInitializationCompleted.call(this);
         },
 
-        onKeySystemUpdateCompleted = function(sender, data, error) {
-            if (!error) return;
+        onKeySystemUpdateCompleted = function(e) {
+            if (!e.error) return;
 
             pause.call(this);
-            this.debug.log(error);
-            this.errHandler.mediaKeyMessageError(error);
+            this.debug.log(e.error);
+            this.errHandler.mediaKeyMessageError(e.error);
         },
 
         getAudioVideoProcessors = function() {
@@ -524,11 +518,11 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         setup: function () {
-            this.bufferingCompleted = onBufferingCompleted;
-            this.dataUpdateCompleted = onDataUpdateCompleted;
-            this.playbackError = onError;
-            this.playbackMetaDataLoaded = onLoad;
-            this.keySystemUpdateCompleted = onKeySystemUpdateCompleted;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFERING_COMPLETED] = onBufferingCompleted;
+            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR] = onError;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED] = onLoad;
+            this[MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED] = onKeySystemUpdateCompleted;
         },
 
         load: function(manifest) {
@@ -539,7 +533,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.videoModel = value;
         },
 
-        initProtection: function() {
+        initProtection: function(protectionData) {
             needKeyListener = onMediaSourceNeedsKey.bind(this);
             keyMessageListener = onMediaSourceKeyMessage.bind(this);
             keyAddedListener = onMediaSourceKeyAdded.bind(this);
@@ -548,15 +542,15 @@ MediaPlayer.dependencies.Stream = function () {
             this.protectionModel = this.system.getObject("protectionModel");
             this.protectionModel.init(this.getVideoModel());
             this.protectionController = this.system.getObject("protectionController");
-            this.protectionController.init(this.videoModel, this.protectionModel);
+            this.protectionController.init(this.videoModel, this.protectionModel, protectionData);
 
             this.protectionModel.listenToNeedKey(needKeyListener);
             this.protectionModel.listenToKeyMessage(keyMessageListener);
             this.protectionModel.listenToKeyError(keyErrorListener);
             this.protectionModel.listenToKeyAdded(keyAddedListener);
 
-            this.protectionExt.subscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this.protectionModel);
-            this.protectionExt.subscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this);
+            this.protectionExt.subscribe(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this.protectionModel);
+            this.protectionExt.subscribe(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this);
         },
 
         getVideoModel: function() {
@@ -581,18 +575,18 @@ MediaPlayer.dependencies.Stream = function () {
 
             if (this.protectionModel) {
                 this.protectionModel.unlistenToNeedKey(needKeyListener);
-                this.protectionExt.unsubscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this.protectionModel);
+                this.protectionExt.unsubscribe(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this.protectionModel);
             }
 
-            this.protectionExt.unsubscribe(this.protectionExt.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this);
+            this.protectionExt.unsubscribe(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this);
             this.protectionController = undefined;
             this.protectionModel = undefined;
             this.fragmentController = undefined;
-            this.playbackController.unsubscribe(this.playbackController.eventList.ENAME_PLAYBACK_ERROR, this);
-            this.playbackController.unsubscribe(this.playbackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, this);
+            this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, this);
+            this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, this);
             this.playbackController.reset();
             this.liveEdgeFinder.abortSearch();
-            this.liveEdgeFinder.unsubscribe(this.liveEdgeFinder.eventList.ENAME_LIVE_EDGE_FOUND, this.playbackController);
+            this.liveEdgeFinder.unsubscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.playbackController);
 
             // streamcontroller expects this to be valid
             //this.videoModel = null;
@@ -656,3 +650,7 @@ MediaPlayer.dependencies.Stream.prototype = {
 };
 
 MediaPlayer.dependencies.Stream.DATA_UPDATE_FAILED_ERROR_CODE = 1;
+
+MediaPlayer.dependencies.Stream.eventList = {
+    ENAME_STREAM_UPDATED: "streamUpdated"
+};

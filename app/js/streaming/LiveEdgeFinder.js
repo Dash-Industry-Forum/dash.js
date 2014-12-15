@@ -10,15 +10,12 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
             var liveEdge = req.value,
                 searchTime = (new Date().getTime() - searchStartTime) / 1000;
 
-            if (liveEdge !== null) {
-                this.notify(this.eventList.ENAME_LIVE_EDGE_FOUND, liveEdge, searchTime);
-            } else {
-                this.notify(this.eventList.ENAME_LIVE_EDGE_SEARCH_ERROR, searchTime);
-            }
+                this.notify(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime},
+                    liveEdge === null ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null);
         },
 
-        onStreamUpdated = function(sender, error) {
-            if (!this.streamProcessor.isDynamic() || isSearchStarted || error) return;
+        onStreamUpdated = function(e) {
+            if (!this.streamProcessor.isDynamic() || isSearchStarted || e.error) return;
 
             var self = this;
 
@@ -38,13 +35,9 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_LIVE_EDGE_FOUND: "liveEdgeFound",
-            ENAME_LIVE_EDGE_SEARCH_ERROR: "liveEdgeSearchError"
-        },
 
         setup: function() {
-            this.streamUpdated = onStreamUpdated;
+            this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
         },
 
         initialize: function(streamProcessor) {
@@ -66,3 +59,9 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 MediaPlayer.dependencies.LiveEdgeFinder.prototype = {
     constructor: MediaPlayer.dependencies.LiveEdgeFinder
 };
+
+MediaPlayer.dependencies.LiveEdgeFinder.eventList = {
+    ENAME_LIVE_EDGE_SEARCH_COMPLETED: "liveEdgeFound"
+};
+
+MediaPlayer.dependencies.LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE = 1;

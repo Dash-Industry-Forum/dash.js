@@ -47,12 +47,13 @@ MediaPlayer.dependencies.ProtectionController = function () {
             throw new Error("DRM: The protection system for this content is not supported.");
         },
 
-        ensureKeySession = function (kid, codec, eventInitData) {
+        ensureKeySession = function (kid, codec, event) {
             var self = this,
                 session = null,
+                eventInitData = event.initData,
                 initData = null;
 
-            if (!self.protectionModel.needToAddKeySession(kid)) {
+            if (!self.protectionModel.needToAddKeySession(kid, event)) {
                 return;
             }
 
@@ -68,15 +69,19 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
             if (!!initData) {
                 session = self.protectionModel.addKeySession(kid, codec, initData);
-                self.debug.log("DRM: Added Key Session [" + session.sessionId + "] for KID: " + kid + " type: " + codec + " initData length: " + initData.length);
+                if (session) {
+                    self.debug.log("DRM: Added Key Session [" + session.sessionId + "] for KID: " + kid + " type: " + codec + " initData length: " + initData.length);
+                } else {
+                    self.debug.log("DRM: Added Key Session for KID: " + kid + " type: " + codec + " initData length: " + initData.length);
+                }
             }
             else {
                 self.debug.log("DRM: initdata is null.");
             }
         },
 
-        updateFromMessage = function (kid, session, msg, laURL) {
-            this.protectionModel.updateFromMessage(kid, session, msg, laURL);
+        updateFromMessage = function (kid, session, event) {
+            this.protectionModel.updateFromMessage(kid, session, event);
         };
 
     return {
@@ -87,10 +92,10 @@ MediaPlayer.dependencies.ProtectionController = function () {
         protectionExt : undefined,
 
         setup : function () {
-            keySystems = this.protectionExt.getKeySystems();
         },
 
-        init: function (videoModel, protectionModel) {
+        init: function (videoModel, protectionModel, protectionData) {
+            keySystems = this.protectionExt.getKeySystems(protectionData);
             this.videoModel = videoModel;
             this.protectionModel = protectionModel;
             element = this.videoModel.getElement();

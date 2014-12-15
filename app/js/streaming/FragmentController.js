@@ -45,19 +45,21 @@ MediaPlayer.dependencies.FragmentController = function () {
             });
         },
 
-        onFragmentLoadingStart = function(sender, request) {
-            var self = this;
+        onFragmentLoadingStart = function(e) {
+            var self = this,
+                request = e.data.request;
 
             if (self.isInitializationRequest(request)) {
-                self.notify(self.eventList.ENAME_INIT_FRAGMENT_LOADING_START, sender, request);
+                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADING_START, {request: request, fragmentModel: e.sender});
             }else {
-                self.notify(self.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START, sender, request);
+                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START, {request: request, fragmentModel: e.sender});
             }
         },
 
-        onFragmentLoadingCompleted = function(sender, request, response) {
+        onFragmentLoadingCompleted = function(e) {
             var self = this,
-                bytes = self.process(response);
+                request = e.data.request,
+                bytes = self.process(e.data.response);
 
             if (bytes === null) {
                 self.debug.log("No " + request.mediaType + " bytes to push.");
@@ -65,19 +67,19 @@ MediaPlayer.dependencies.FragmentController = function () {
             }
 
             if (self.isInitializationRequest(request)) {
-                self.notify(self.eventList.ENAME_INIT_FRAGMENT_LOADED, sender, bytes, request.quality);
+                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED, {bytes: bytes, quality: request.quality, fragmentModel: e.sender});
             }else {
-                self.notify(self.eventList.ENAME_MEDIA_FRAGMENT_LOADED, sender, bytes, request.quality, request.index);
+                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED, {bytes: bytes, quality: request.quality, index: request.index, fragmentModel: e.sender});
             }
 
             executeRequests.call(this);
         },
 
-        onStreamCompleted = function(sender, request) {
-            this.notify(this.eventList.ENAME_STREAM_COMPLETED, sender, request);
+        onStreamCompleted = function(e) {
+            this.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED, {request: e.data.request, fragmentModel: e.sender});
         },
 
-        onBufferLevelBalanced = function(/*sender*/) {
+        onBufferLevelBalanced = function(/*e*/) {
             executeRequests.call(this);
         },
 
@@ -128,20 +130,13 @@ MediaPlayer.dependencies.FragmentController = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_STREAM_COMPLETED: "streamCompleted",
-            ENAME_INIT_FRAGMENT_LOADING_START: "initFragmentLoadingStart",
-            ENAME_MEDIA_FRAGMENT_LOADING_START: "mediaFragmentLoadingStart",
-            ENAME_INIT_FRAGMENT_LOADED: "initFragmentLoaded",
-            ENAME_MEDIA_FRAGMENT_LOADED: "mediaFragmentLoaded"
-        },
 
         setup: function() {
-            this.fragmentLoadingStarted = onFragmentLoadingStart;
-            this.fragmentLoadingCompleted = onFragmentLoadingCompleted;
-            this.streamCompleted = onStreamCompleted;
+            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = onFragmentLoadingStart;
+            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
+            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
 
-            this.bufferLevelBalanced = onBufferLevelBalanced;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
         },
 
         process: function (bytes) {
@@ -280,4 +275,12 @@ MediaPlayer.dependencies.FragmentController = function () {
 
 MediaPlayer.dependencies.FragmentController.prototype = {
     constructor: MediaPlayer.dependencies.FragmentController
+};
+
+MediaPlayer.dependencies.FragmentController.eventList = {
+    ENAME_STREAM_COMPLETED: "streamCompleted",
+    ENAME_INIT_FRAGMENT_LOADING_START: "initFragmentLoadingStart",
+    ENAME_MEDIA_FRAGMENT_LOADING_START: "mediaFragmentLoadingStart",
+    ENAME_INIT_FRAGMENT_LOADED: "initFragmentLoaded",
+    ENAME_MEDIA_FRAGMENT_LOADED: "mediaFragmentLoaded"
 };

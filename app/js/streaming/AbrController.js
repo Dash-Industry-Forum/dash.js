@@ -76,11 +76,11 @@ MediaPlayer.dependencies.AbrController = function () {
             return idx;
         },
 
-        onDataUpdateCompleted = function(sender, data, trackData, error) {
-            if (error) return;
+        onDataUpdateCompleted = function(e) {
+            if (e.error) return;
 
             var self = this,
-                mediaInfo = this.adapter.convertDataToTrack(trackData).mediaInfo,
+                mediaInfo = this.adapter.convertDataToTrack(e.data.currentRepresentation).mediaInfo,
                 type = mediaInfo.type,
                 streamId = mediaInfo.streamInfo.id,
                 max;
@@ -90,7 +90,7 @@ MediaPlayer.dependencies.AbrController = function () {
             if (getTopQualityIndex(type, streamId) === max) return;
 
             setTopQualityIndex(type, streamId, max);
-            self.notify(self.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, type, mediaInfo.streamInfo, max);
+            self.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, {mediaType: type, streamInfo: mediaInfo.streamInfo, maxIndex: max});
         };
 
     return {
@@ -101,13 +101,9 @@ MediaPlayer.dependencies.AbrController = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_QUALITY_CHANGED: "qualityChanged",
-            ENAME_TOP_QUALITY_INDEX_CHANGED: "topQualityIndexChanged"
-        },
 
         setup: function() {
-            this.dataUpdateCompleted = onDataUpdateCompleted;
+            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
         },
 
         getAutoSwitchBitrate: function () {
@@ -151,7 +147,7 @@ MediaPlayer.dependencies.AbrController = function () {
                     setInternalConfidence(type, streamId, confidence);
                     //self.debug.log("New confidence of " + confidence);
 
-                    self.notify(self.eventList.ENAME_QUALITY_CHANGED, type, streamProcessor.getStreamInfo(), oldQuality, quality);
+                    self.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
                 };
 
             quality = getInternalQuality(type, streamId);
@@ -184,7 +180,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
             if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && topQualities[id].hasOwnProperty(type) && newPlaybackQuality <= topQualities[id][type]) {
                 setInternalQuality(type, streamInfo.id, newPlaybackQuality);
-                this.notify(this.eventList.ENAME_QUALITY_CHANGED, type, streamInfo, quality, newPlaybackQuality);
+                this.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality});
             }
         },
 
@@ -220,4 +216,9 @@ MediaPlayer.dependencies.AbrController = function () {
 
 MediaPlayer.dependencies.AbrController.prototype = {
     constructor: MediaPlayer.dependencies.AbrController
+};
+
+MediaPlayer.dependencies.AbrController.eventList = {
+    ENAME_QUALITY_CHANGED: "qualityChanged",
+    ENAME_TOP_QUALITY_INDEX_CHANGED: "topQualityIndexChanged"
 };

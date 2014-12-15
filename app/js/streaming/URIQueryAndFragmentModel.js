@@ -65,8 +65,12 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
 
     return {
         parseURI:parseURI,
-        getURIFragmentData:URIFragmentDataVO,
-        getURIQueryData:URIQueryData,
+        getURIFragmentData:function(){
+            return URIFragmentDataVO;
+        },
+        getURIQueryData: function(){
+            return URIQueryData;
+        },
 
         reset: function() {
             URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData();

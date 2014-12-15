@@ -19,6 +19,7 @@ Dash.dependencies.DashHandler = function () {
         isDynamic,
         type,
         currentTime = 0,
+		absUrl = new RegExp('^(?:(?:[a-z]+:)?\/)?\/', 'i'),
 
         zeroPadToLength = function (numStr, minStrLength) {
             while (numStr.length < minStrLength) {
@@ -119,7 +120,7 @@ Dash.dependencies.DashHandler = function () {
 
             if (destination === baseURL) {
                 url = destination;
-            } else if (destination.indexOf("http://") !== -1) {
+            } else if (absUrl.test(destination)) {
                 url = destination;
             } else {
                 url = baseURL + destination;
@@ -613,8 +614,8 @@ Dash.dependencies.DashHandler = function () {
             representation.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
             if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
-                error = {code: Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE, availabilityDelay: Math.abs(representation.segmentAvailabilityRange.end)};
-                self.notify(self.eventList.ENAME_REPRESENTATION_UPDATED, representation, error);
+                error = new MediaPlayer.vo.Error(Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE, "no segments are available yet", {availabilityDelay: Math.abs(representation.segmentAvailabilityRange.end)});
+                self.notify(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation}, error);
                 return;
             }
 
@@ -630,7 +631,7 @@ Dash.dependencies.DashHandler = function () {
             }
 
             if (hasInitialization && hasSegments) {
-                self.notify(self.eventList.ENAME_REPRESENTATION_UPDATED, representation);
+                self.notify(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation});
             }
         },
 
@@ -852,17 +853,20 @@ Dash.dependencies.DashHandler = function () {
             return request;
         },
 
-        onInitializationLoaded = function(sender, representation) {
+        onInitializationLoaded = function(e) {
+            var representation = e.data.representation;
             //self.debug.log("Got an initialization.");
             if (!representation.segments) return;
 
-            this.notify(this.eventList.ENAME_REPRESENTATION_UPDATED, representation);
+            this.notify(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation});
         },
 
-        onSegmentsLoaded = function(sender, fragments, representation, typeValue, error) {
-            if (error || (type !== typeValue)) return;
+        onSegmentsLoaded = function(e) {
+            if (e.error || (type !== e.data.mediaType)) return;
 
             var self = this,
+                fragments = e.data.segments,
+                representation = e.data.representation,
                 i,
                 len,
                 s,
@@ -895,7 +899,7 @@ Dash.dependencies.DashHandler = function () {
 
             if (!representation.initialization) return;
 
-            this.notify(this.eventList.ENAME_REPRESENTATION_UPDATED, representation);
+            this.notify(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation});
         };
 
     return {
@@ -907,17 +911,14 @@ Dash.dependencies.DashHandler = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_REPRESENTATION_UPDATED: "representationUpdated"
-        },
 
         setup: function() {
-            this.initializationLoaded = onInitializationLoaded;
-            this.segmentsLoaded = onSegmentsLoaded;
+            this[Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED] = onInitializationLoaded;
+            this[Dash.dependencies.BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED] = onSegmentsLoaded;
         },
 
         initialize: function(streamProcessor) {
-            this.subscribe(this.eventList.ENAME_REPRESENTATION_UPDATED, streamProcessor.trackController);
+            this.subscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, streamProcessor.trackController);
             type = streamProcessor.getType();
             isDynamic = streamProcessor.isDynamic();
             this.streamProcessor = streamProcessor;
@@ -950,7 +951,7 @@ Dash.dependencies.DashHandler = function () {
             currentTime = 0;
             requestedTime = undefined;
             index = -1;
-            this.unsubscribe(this.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.trackController);
+            this.unsubscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.trackController);
         },
 
         getInitRequest: getInit,
@@ -966,3 +967,7 @@ Dash.dependencies.DashHandler.prototype = {
 };
 
 Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
+
+Dash.dependencies.DashHandler.eventList = {
+    ENAME_REPRESENTATION_UPDATED: "representationUpdated"
+};

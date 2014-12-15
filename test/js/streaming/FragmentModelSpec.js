@@ -7,7 +7,7 @@ describe("FragmentModel", function () {
         initRequest = voHelper.getInitRequest(),
         mediaRequest = voHelper.getMediaRequest(),
         loader = objectsHelper.getFragmentLoader(),
-        loadingCompletedEventName = loader.eventList.ENAME_LOADING_COMPLETED,
+        loadingCompletedEventName = MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED,
         completeRequest = voHelper.getCompleteRequest(),
         timeout = helper.getTimeoutDelay();
 
@@ -67,11 +67,11 @@ describe("FragmentModel", function () {
             var observer = {},
                 isFired = false;
 
-            observer[fragmentModel.eventList.ENAME_STREAM_COMPLETED] = function(sender, request) {
+            observer[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED] = function(sender, request) {
                 isFired = true;
             };
 
-            fragmentModel.subscribe(fragmentModel.eventList.ENAME_STREAM_COMPLETED, observer);
+            fragmentModel.subscribe(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED, observer);
 
             expect(fragmentModel.getPendingRequests().length).toBe(2);
             fragmentModel.addRequest(completeRequest);
@@ -110,11 +110,11 @@ describe("FragmentModel", function () {
                 var observer = {},
                     isFired = false;
 
-                observer[fragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = function(sender, request) {
+                observer[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = function(sender, request) {
                     isFired = true;
                 };
 
-                fragmentModel.subscribe(fragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, observer);
+                fragmentModel.subscribe(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, observer);
 
                 jasmine.clock().tick(delay + 1);
 

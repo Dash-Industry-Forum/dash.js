@@ -169,10 +169,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.metricsModel.clearCurrentMetricsForType(type);
         },
 
-        onDataUpdateCompleted = function(sender, mediaData, trackData, error) {
-            if (error) return;
+        onDataUpdateCompleted = function(e) {
+            if (e.error) return;
 
-            currentTrackInfo = this.adapter.convertDataToTrack(trackData);
+            currentTrackInfo = this.adapter.convertDataToTrack(e.data.currentRepresentation);
 
             if (!isDynamic) {
                 ready = true;
@@ -183,75 +183,77 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
-        onStreamCompleted = function(sender, model /*, request*/) {
-            if (model !== this.streamProcessor.getFragmentModel()) return;
+        onStreamCompleted = function(e) {
+            if (e.data.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
 
             this.debug.log(type + " Stream is complete.");
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON);
         },
 
-        onMediaFragmentLoadingStart = function(sender, model/*, request*/) {
+        onMediaFragmentLoadingStart = function(e) {
             var self = this;
 
-            if (model !== self.streamProcessor.getFragmentModel()) return;
+            if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel()) return;
 
             validate.call(self);
         },
 
-        onBytesError = function (/*sender, request*/) {
+        onFragmentLoadingCompleted = function (e) {
+            if (!e.error) return;
+
             doStop.call(this);
         },
 
-        onBytesAppended = function(/*sender, quality, index, ranges*/) {
+        onBytesAppended = function(/*e*/) {
             addPlaylistTraceMetrics.call(this);
         },
 
-        onDataUpdateStarted = function(/*sender*/) {
+        onDataUpdateStarted = function(/*e*/) {
             doStop.call(this, false);
         },
 
-        onInitRequested = function(sender, quality) {
-            getInitRequest.call(this, quality);
+        onInitRequested = function(e) {
+            getInitRequest.call(this, e.data.requiredQuality);
         },
 
-        onBufferCleared = function(sender, startTime, endTime, hasEnoughSpace) {
+        onBufferCleared = function(e) {
             // after the data has been removed from the buffer we should remove the requests from the list of
             // the executed requests for which playback time is inside the time interval that has been removed from the buffer
-            this.fragmentController.removeExecutedRequestsBeforeTime(fragmentModel, endTime);
+            this.fragmentController.removeExecutedRequestsBeforeTime(fragmentModel, e.data.to);
 
-            if (hasEnoughSpace) {
+            if (e.data.hasEnoughSpaceToAppend) {
                 doStart.call(this);
             }
         },
 
-        onBufferLevelStateChanged = function(sender, hasSufficientBuffer) {
+        onBufferLevelStateChanged = function(e) {
             var self = this;
 
-            if (!hasSufficientBuffer && !self.playbackController.isSeeking()) {
+            if (!e.data.hasSufficientBuffer && !self.playbackController.isSeeking()) {
                 self.debug.log("Stalling " + type + " Buffer: " + type);
                 clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
             }
         },
 
-        onBufferLevelUpdated = function(sender, newBufferLevel) {
+        onBufferLevelUpdated = function(e) {
             var self = this;
 
-            self.metricsModel.addBufferLevel(type, new Date(), newBufferLevel);
+            self.metricsModel.addBufferLevel(type, new Date(), e.data.bufferLevel);
             validate.call(this);
         },
 
-        onQuotaExceeded = function(/*sender, criticalBufferLevel*/) {
+        onQuotaExceeded = function(/*e*/) {
             doStop.call(this, false);
         },
 
-        onQualityChanged = function(sender, typeValue, streamInfo, oldQuality, newQuality) {
-            if (type !== typeValue || this.streamProcessor.getStreamInfo().id !== streamInfo.id) return;
+        onQualityChanged = function(e) {
+            if (type !== e.data.mediaType || this.streamProcessor.getStreamInfo().id !== e.data.streamInfo.id) return;
 
             var self = this,
                 canceledReqs;
 
-            canceledReqs = fragmentModel.cancelPendingRequests(oldQuality);
-            currentTrackInfo = self.streamProcessor.getTrackForQuality(newQuality);
+            canceledReqs = fragmentModel.cancelPendingRequests(e.data.oldQuality);
+            currentTrackInfo = self.streamProcessor.getTrackForQuality(e.data.newQuality);
 
             if (currentTrackInfo === null || currentTrackInfo === undefined) {
                 throw "Unexpected error!";
@@ -280,18 +282,18 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
-        onClosedCaptioningRequested = function(sender, quality) {
+        onClosedCaptioningRequested = function(e) {
             var self = this,
-                req = getInitRequest.call(self, quality);
+                req = getInitRequest.call(self, e.data.CCIndex);
 
             fragmentModel.executeRequest(req);
         },
 
-        onPlaybackStarted = function(/*sender, startTime*/) {
+        onPlaybackStarted = function(/*e*/) {
             doStart.call(this);
         },
 
-        onPlaybackSeeking = function(sender, time) {
+        onPlaybackSeeking = function(e) {
             if (!initialPlayback) {
                 this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
             }
@@ -299,23 +301,26 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var metrics = this.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = this.metricsExt.getCurrentManifestUpdate(metrics);
 
-            this.debug.log("ScheduleController " + type + " seek: " + time);
+            this.debug.log("ScheduleController " + type + " seek: " + e.data.seekTime);
             addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
 
             this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentTrackInfo.DVRWindow.end - this.playbackController.getTime()});
         },
 
-        onPlaybackRateChanged = function() {
+        onPlaybackRateChanged = function(/*e*/) {
             addPlaylistTraceMetrics.call(this);
         },
 
-        onWallclockTimeUpdated = function(/*sender*/) {
+        onWallclockTimeUpdated = function(/*e*/) {
             validate.call(this);
         },
 
-        onLiveEdgeFound = function(sender, liveEdgeTime/*, searchTime*/) {
+        onLiveEdgeSearchCompleted = function(e) {
+            if (e.error) return;
+
             // step back from a found live edge time to be able to buffer some data
             var self = this,
+                liveEdgeTime = e.data.liveEdge,
                 manifestInfo = currentTrackInfo.mediaInfo.streamInfo.manifestInfo,
                 startTime = liveEdgeTime - Math.min((manifestInfo.minBufferTime * 2), manifestInfo.DVRWindowSize / 2),
                 request,
@@ -347,36 +352,32 @@ MediaPlayer.dependencies.ScheduleController = function () {
         adapter: undefined,
         scheduleRulesCollection: undefined,
         rulesController: undefined,
-        eventList: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
 
         setup: function() {
-            this.liveEdgeFound = onLiveEdgeFound;
+            this[MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
 
-            this.qualityChanged = onQualityChanged;
+            this[MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
 
-            this.dataUpdateStarted = onDataUpdateStarted;
-            this.dataUpdateCompleted = onDataUpdateCompleted;
+            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED] = onDataUpdateStarted;
+            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
 
-            this.mediaFragmentLoadingStart = onMediaFragmentLoadingStart;
-            this.fragmentLoadingFailed = onBytesError;
-            this.streamCompleted = onStreamCompleted;
+            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START] = onMediaFragmentLoadingStart;
+            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
+            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
 
-            this.bufferCleared = onBufferCleared;
-            this.bytesAppended = onBytesAppended;
-            this.bufferLevelStateChanged = onBufferLevelStateChanged;
-            this.bufferLevelUpdated = onBufferLevelUpdated;
-            this.initRequested = onInitRequested;
-            this.quotaExceeded = onQuotaExceeded;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_CLEARED] = onBufferCleared;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED] = onBufferLevelStateChanged;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED] = onBufferLevelUpdated;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_INIT_REQUESTED] = onInitRequested;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_QUOTA_EXCEEDED] = onQuotaExceeded;
 
-            this.closedCaptioningRequested = onClosedCaptioningRequested;
+            this[MediaPlayer.dependencies.TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED] = onClosedCaptioningRequested;
 
-            this.playbackStarted = onPlaybackStarted;
-            this.playbackSeeking = onPlaybackSeeking;
-            this.playbackRateChanged = onPlaybackRateChanged;
-            this.wallclockTimeUpdated = onWallclockTimeUpdated;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED] = onPlaybackStarted;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED] = onPlaybackRateChanged;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
         },
 
         initialize: function(typeValue, streamProcessor) {
@@ -412,8 +413,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             doStop.call(self, true);
-            self.bufferController.unsubscribe(self.bufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, self.scheduleRulesCollection.bufferLevelRule);
-            self.bufferController.unsubscribe(self.bufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, self.scheduleRulesCollection.bufferLevelRule);
+            self.bufferController.unsubscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, self.scheduleRulesCollection.bufferLevelRule);
+            self.bufferController.unsubscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, self.scheduleRulesCollection.bufferLevelRule);
             self.fragmentController.abortRequestsForModel(fragmentModel);
             self.fragmentController.detachModel(fragmentModel);
             clearMetrics.call(self);

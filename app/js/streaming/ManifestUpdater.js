@@ -69,10 +69,10 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             self.manifestLoader.load(url);
         },
 
-        onManifestLoaded = function(sender, manifest, error) {
-            if (error) return;
+        onManifestLoaded = function(e) {
+            if (e.error) return;
 
-            this.manifestModel.setValue(manifest);
+            this.manifestModel.setValue(e.data.manifest);
             this.debug.log("Manifest has been refreshed.");
             //self.debug.log(manifestResult);
             if (isStopped) return;
@@ -80,15 +80,15 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             update.call(this);
         },
 
-        onPlaybackStarted = function() {
+        onPlaybackStarted = function(/*e*/) {
             this.start();
         },
 
-        onPlaybackPaused = function() {
+        onPlaybackPaused = function(/*e*/) {
             this.stop();
         },
 
-        onStreamsComposed = function(/*sender, error*/) {
+        onStreamsComposed = function(/*e*/) {
             // When streams are ready we can consider manifest update completed. Resolve the update promise.
             isUpdating = false;
         };
@@ -102,10 +102,10 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
         setup: function () {
             // Listen to streamsComposed event to be aware that the streams have been composed
-            this.streamsComposed = onStreamsComposed;
-            this.manifestLoaded = onManifestLoaded;
-            this.playbackStarted = onPlaybackStarted;
-            this.playbackPaused = onPlaybackPaused;
+            this[MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED] = onStreamsComposed;
+            this[MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = onManifestLoaded;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED] = onPlaybackStarted;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED] = onPlaybackPaused;
         },
 
         start: function () {
