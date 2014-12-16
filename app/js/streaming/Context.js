@@ -20,7 +20,6 @@ MediaPlayer.di.Context = function () {
             this.system.autoMapOutlets = true;
 
             this.system.mapSingleton('debug', MediaPlayer.utils.Debug);
-            this.system.mapSingleton('tokenAuthentication', MediaPlayer.utils.TokenAuthentication);
             this.system.mapSingleton('eventBus', MediaPlayer.utils.EventBus);
             this.system.mapSingleton('capabilities', MediaPlayer.utils.Capabilities);
             this.system.mapSingleton('textTrackExtensions', MediaPlayer.utils.TextTrackExtensions);
@@ -33,6 +32,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('uriQueryFragModel', MediaPlayer.models.URIQueryAndFragmentModel);
             this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel);
 
+            this.system.mapSingleton('requestModifierExt', MediaPlayer.dependencies.RequestModifierExtensions);
             this.system.mapSingleton('textSourceBuffer', MediaPlayer.dependencies.TextSourceBuffer);
             this.system.mapSingleton('mediaSourceExt', MediaPlayer.dependencies.MediaSourceExtensions);
             this.system.mapSingleton('sourceBufferExt', MediaPlayer.dependencies.SourceBufferExtensions);

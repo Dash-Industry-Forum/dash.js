@@ -4,8 +4,9 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
     var seekTarget = {},
         scheduleController = {},
 
-        onPlaybackSeeking = function(sender, time) {
-            var streamId = sender.getStreamId();
+        onPlaybackSeeking = function(e) {
+            var streamId = e.sender.getStreamId(),
+                time = e.data.seekTime;
             seekTarget[streamId] = seekTarget[streamId] || {};
             seekTarget[streamId].audio = time;
             seekTarget[streamId].video = time;
@@ -16,7 +17,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
         sourceBufferExt: undefined,
 
         setup: function() {
-            this.playbackSeeking = onPlaybackSeeking;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
         },
 
         setScheduleController: function(scheduleControllerValue) {
@@ -35,9 +36,10 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 streamProcessor = scheduleController[streamId][mediaType].streamProcessor,
                 track = streamProcessor.getCurrentTrack(),
                 st = seekTarget[streamId] ? seekTarget[streamId][mediaType] : null,
-                p = st ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
+                hasSeekTarget = (st !== undefined) && (st !== null),
+                p = hasSeekTarget ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
                 rejected = sc.getFragmentModel().getRejectedRequests().shift(),
-                keepIdx = !!rejected && !st,
+                keepIdx = !!rejected && !hasSeekTarget,
                 currentTime = this.adapter.getIndexHandlerTime(streamProcessor),
                 playbackTime = streamProcessor.playbackController.getTime(),
                 rejectedEnd = rejected ? rejected.startTime + rejected.duration : null,
@@ -46,7 +48,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 time,
                 request;
 
-            time = st || (useRejected ? (rejected.startTime) : currentTime);
+            time = hasSeekTarget ? st : ((useRejected ? (rejected.startTime) : currentTime));
 
             if (isNaN(time)) {
                 callback(new MediaPlayer.rules.SwitchRequest(null, p));

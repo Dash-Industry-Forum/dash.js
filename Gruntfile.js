@@ -23,7 +23,7 @@ module.exports = function(grunt) {
       },
       min : {
         files: {
-          "dash.min.js" : [
+          "dash.min.js": [
             "app/js/streaming/MediaPlayer.js",
             "app/js/streaming/Context.js",
             "app/js/dash/Dash.js",
@@ -31,12 +31,13 @@ module.exports = function(grunt) {
             "app/lib/xml2json.js",
             "app/lib/objectiron.js",
             "app/lib/dijon.js",
-            "app/js/*/**/*.js"]
+            "app/js/*/**/*.js"
+          ]
         }
       },
-      all : {
+      all: {
         files: {
-          "dash.all.js" : [
+          "dash.all.js": [
             "./app/lib/xml2json.js",
             "./app/lib/objectiron.js",
             "./app/lib/dijon.js",
@@ -47,7 +48,31 @@ module.exports = function(grunt) {
             "./app/js/streaming/Context.js",
             "./app/js/dash/Dash.js",
             "./app/js/dash/DashContext.js",
-            "./app/js/*/**/*.js"]
+            "./app/js/*/**/*.js"
+          ]
+        }
+      },
+      debug: {
+        options: {
+          beautify: true,
+          compress: false,
+          mangle: false
+        },
+        files: {
+          "dash.debug.js": [
+            "./app/lib/q.js",
+            "./app/lib/xml2json.js",
+            "./app/lib/objectiron.js",
+            "./app/lib/dijon.js",
+            "./app/lib/Math.js",
+            "./app/lib/long.js",
+            "./app/lib/base64.js",
+            "./app/js/streaming/MediaPlayer.js",
+            "./app/js/streaming/Context.js",
+            "./app/js/dash/Dash.js",
+            "./app/js/dash/DashContext.js",
+            "./app/js/*/**/*.js"
+          ]
         }
       }
     },
@@ -58,8 +83,8 @@ module.exports = function(grunt) {
             "./app/js/streaming/Context.js",
             "./app/js/dash/Dash.js",
             "./app/js/dash/DashContext.js",
-            "./app/js/*/**/*.js"],
-
+            "./app/js/*/**/*.js"
+        ],
         options: {
           host: 'http://127.0.0.1:8000/',
           keepRunner: true,
@@ -68,7 +93,8 @@ module.exports = function(grunt) {
             "./test/js/utils/SpecHelper.js",
             "./test/js/utils/ObjectsHelper.js",
             "./test/js/utils/MpdHelper.js",
-            "./test/js/utils/VOHelper.js"],
+            "./test/js/utils/VOHelper.js"
+          ],
           specs: [
             './test/js/dash/TimelineConverterSpec.js',
             './test/js/dash/DashHandlerSpec.js',
@@ -77,31 +103,34 @@ module.exports = function(grunt) {
             './test/js/streaming/FragmentControllerSpec.js',
             './test/js/streaming/FragmentModelSpec.js',
             './test/js/streaming/AbrControllerSpec.js'
-			],
+          ],
           vendor: [
-			"./app/lib/jquery/jquery-1.10.2.min.js",
+            "./app/lib/jquery/jquery-1.10.2.min.js",
             "./app/lib/xml2json.js",
-            "./app/lib/objectiron.js",			
+            "./app/lib/objectiron.js",
             "./app/lib/Math.js",
             "./app/lib/long.js",
             "./app/lib/kendo/kendo.web.min.js", 
-			"./app/lib/dijon.js",
-            "./app/lib/base64.js"],
-          template : require('grunt-template-jasmine-istanbul'),
+            "./app/lib/dijon.js",
+            "./app/lib/base64.js"
+          ],
+          template: require('grunt-template-jasmine-istanbul'),
           templateOptions: {
             coverage: 'reports/coverage.json',
-            report: 'reports/coverage'},
+            report: 'reports/coverage'
+          },
           junit: {
-              path: grunt.option('jsunit-path'),
-              consolidate: true}
+            path: grunt.option('jsunit-path'),
+            consolidate: true
+          }
         }
       }
     },
-	jsdoc: {
+    jsdoc: {
         dist: {
             options: {
                 destination: 'jsdoc/JSDoc',
-				configure : "jsdoc/jsdoc_conf.json"
+                configure: "jsdoc/jsdoc_conf.json"
             }
         }
     }

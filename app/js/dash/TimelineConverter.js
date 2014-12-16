@@ -120,12 +120,12 @@ Dash.dependencies.TimelineConverter = function () {
             return periodRelativeTime + periodStartTime;
         },
 
-        onLiveEdgeFound = function(sender, actualLiveEdge, searchTime) {
-            if (isClientServerTimeSyncCompleted) return;
+        onLiveEdgeSearchCompleted = function(e) {
+            if (isClientServerTimeSyncCompleted || e.error) return;
 
             // the difference between expected and actual live edge time is supposed to be a difference between client
             // and server time as well
-            clientServerTimeShift = actualLiveEdge - (expectedLiveEdge + searchTime);
+            clientServerTimeShift = e.data.liveEdge - (expectedLiveEdge + e.data.searchTime);
             isClientServerTimeSyncCompleted = true;
         },
 
@@ -147,7 +147,7 @@ Dash.dependencies.TimelineConverter = function () {
         uriQueryFragModel:undefined,
 
         setup: function() {
-            this.liveEdgeFound = onLiveEdgeFound;
+            this[MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
         },
 
         calcAvailabilityStartTimeFromPresentationTime: calcAvailabilityStartTimeFromPresentationTime,

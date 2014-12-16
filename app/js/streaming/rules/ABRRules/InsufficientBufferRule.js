@@ -45,7 +45,9 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 playlist,
                 trace,
                 shift = false,
-                p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+                p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
+                manifestInfo = context.getManifestInfo(),
+                reset;
 
             //self.debug.log("Checking insufficient buffer rule...");
 
@@ -76,6 +78,11 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
             if (trace.stopreason === MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON) {
                 shift = true;
                 dryBufferHits += 1;
+                //lpw - After a while, forget about this
+                reset = Math.max(manifestInfo.minBufferTime, manifestInfo.maxFragmentDuration) * 1000;
+                setTimeout(function() {
+                    dryBufferHits -= 1;
+                }, reset);
                 self.debug.log("Number of times the buffer has run dry: " + dryBufferHits);
             }
 

@@ -66,22 +66,22 @@ MediaPlayer.rules.BufferLevelRule = function () {
             return (isBufferLevelOutran[streamId] && isBufferLevelOutran[streamId][type]);
         },
 
-        onStreamCompleted = function(sender, model , request) {
-            var streamId = model.getContext().streamProcessor.getStreamInfo().id;
+        onStreamCompleted = function(e) {
+            var streamId = e.data.fragmentModel.getContext().streamProcessor.getStreamInfo().id;
             isCompleted[streamId] = isCompleted[streamId] || {};
-            isCompleted[streamId][request.mediaType] = true;
+            isCompleted[streamId][e.data.request.mediaType] = true;
         },
 
-        onBufferLevelOutrun = function(sender) {
-            var streamId = sender.streamProcessor.getStreamInfo().id;
+        onBufferLevelOutrun = function(e) {
+            var streamId = e.sender.streamProcessor.getStreamInfo().id;
             isBufferLevelOutran[streamId] = isBufferLevelOutran[streamId] || {};
-            isBufferLevelOutran[streamId][sender.streamProcessor.getType()] = true;
+            isBufferLevelOutran[streamId][e.sender.streamProcessor.getType()] = true;
         },
 
-        onBufferLevelBalanced = function(sender) {
-            var streamId = sender.streamProcessor.getStreamInfo().id;
+        onBufferLevelBalanced = function(e) {
+            var streamId = e.sender.streamProcessor.getStreamInfo().id;
             isBufferLevelOutran[streamId] = isBufferLevelOutran[streamId] || {};
-            isBufferLevelOutran[streamId][sender.streamProcessor.getType()] = false;
+            isBufferLevelOutran[streamId][e.sender.streamProcessor.getType()] = false;
         };
 
     return {
@@ -90,9 +90,9 @@ MediaPlayer.rules.BufferLevelRule = function () {
         abrController: undefined,
 
         setup: function() {
-            this.bufferLevelOutrun = onBufferLevelOutrun;
-            this.bufferLevelBalanced = onBufferLevelBalanced;
-            this.streamCompleted = onStreamCompleted;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
+            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
         },
 
         setScheduleController: function(scheduleControllerValue) {

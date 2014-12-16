@@ -11,17 +11,6 @@ MediaPlayer.dependencies.Notifier = function () {
             }
 
             return this.id;
-        },
-
-        isEventSupported = function(eventName) {
-            var event,
-                events = this.eventList;
-
-            for (event in events) {
-                if (events[event] === eventName) return true;
-            }
-
-            return false;
         };
 
     return {
@@ -35,20 +24,22 @@ MediaPlayer.dependencies.Notifier = function () {
         },
 
         notify: function (/*eventName[, args]*/) {
-            var args = [].slice.call(arguments);
-            args.splice(1, 0, this);
+            var eventId = arguments[0] + getId.call(this),
+                event = new MediaPlayer.vo.Event();
 
-            args[0] += getId.call(this);
+            event.sender =  this;
+            event.type = arguments[0];
+            event.data = arguments[1];
+            event.error = arguments[2];
+            event.timestamp = new Date().getTime();
 
-            system.notify.apply(system, args);
+            system.notify.call(system, eventId, event);
         },
 
         subscribe: function(eventName, observer, handler, oneShot) {
             if (!handler && observer[eventName]) {
                 handler = observer[eventName] = observer[eventName].bind(observer);
             }
-
-            if(!isEventSupported.call(this, eventName)) throw ("object does not support given event " + eventName);
 
             if(!observer) throw "observer object cannot be null or undefined";
 

@@ -216,10 +216,10 @@ Dash.dependencies.BaseURLExtensions = function () {
                     callback.call(self, null, new Error("Error loading initialization."));
                 };
 
-                request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
+                request.open("GET", self.requestModifierExt.modifyRequestURL(info.url));
                 request.responseType = "arraybuffer";
                 request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
-                request = self.tokenAuthentication.setTokenInRequestHeader(request);
+                request = self.requestModifierExt.modifyRequestHeader(request);
                 request.send(null);
             } else {
                 // Case 2
@@ -263,7 +263,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 findInit.call(self, request.response, info, function (range) {
                     representation.range = range;
                     representation.initialization = media;
-                    self.notify(self.eventList.ENAME_INITIALIZATION_LOADED, representation);
+                    self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {representation: representation});
                 });
             };
 
@@ -275,13 +275,13 @@ Dash.dependencies.BaseURLExtensions = function () {
                 needFailureReport = false;
 
                 self.errHandler.downloadError("initialization", info.url, request);
-                self.notify(self.eventList.ENAME_INITIALIZATION_LOADED, representation);
+                self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {representation: representation});
             };
 
-            request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
+            request.open("GET", self.requestModifierExt.modifyRequestURL(info.url));
             request.responseType = "arraybuffer";
             request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
-            request = self.tokenAuthentication.setTokenInRequestHeader(request);
+            request = self.requestModifierExt.modifyRequestHeader(request);
             request.send(null);
             self.debug.log("Perform init search: " + info.url);
         },
@@ -365,10 +365,10 @@ Dash.dependencies.BaseURLExtensions = function () {
                     callback.call(self);
                 };
 
-                request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
+                request.open("GET", self.requestModifierExt.modifyRequestURL(info.url));
                 request.responseType = "arraybuffer";
                 request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
-                request = self.tokenAuthentication.setTokenInRequestHeader(request);
+                request = self.requestModifierExt.modifyRequestHeader(request);
                 request.send(null);
             } else {
                 // Case 3
@@ -492,10 +492,10 @@ Dash.dependencies.BaseURLExtensions = function () {
                 callback.call(self, null, representation, type);
             };
 
-            request.open("GET", self.tokenAuthentication.addTokenAsQueryArg(info.url));
+            request.open("GET", self.requestModifierExt.modifyRequestURL(info.url));
             request.responseType = "arraybuffer";
             request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
-            request = self.tokenAuthentication.setTokenInRequestHeader(request);
+            request = self.requestModifierExt.modifyRequestHeader(request);
             request.send(null);
             self.debug.log("Perform SIDX load: " + info.url);
         },
@@ -504,23 +504,19 @@ Dash.dependencies.BaseURLExtensions = function () {
             var self = this;
 
             if( segments) {
-                self.notify(self.eventList.ENAME_SEGMENTS_LOADED, segments, representation, type);
+                self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
             } else {
-                self.notify(self.eventList.ENAME_SEGMENTS_LOADED, null, representation, type, new Error("error loading segments"));
+                self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type}, new MediaPlayer.vo.Error(null, "error loading segments", null));
             }
         };
 
     return {
         debug: undefined,
         errHandler: undefined,
-        tokenAuthentication:undefined,
+        requestModifierExt:undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_INITIALIZATION_LOADED: "initializationLoaded",
-            ENAME_SEGMENTS_LOADED: "segmentsLoaded"
-        },
 
         loadSegments: function(representation, type, range) {
             loadSegments.call(this, representation, type, range, onLoaded.bind(this));
@@ -535,4 +531,9 @@ Dash.dependencies.BaseURLExtensions = function () {
 
 Dash.dependencies.BaseURLExtensions.prototype = {
     constructor: Dash.dependencies.BaseURLExtensions
+};
+
+Dash.dependencies.BaseURLExtensions.eventList = {
+    ENAME_INITIALIZATION_LOADED: "initializationLoaded",
+    ENAME_SEGMENTS_LOADED: "segmentsLoaded"
 };

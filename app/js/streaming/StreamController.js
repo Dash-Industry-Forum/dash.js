@@ -25,6 +25,7 @@
         STREAM_BUFFER_END_THRESHOLD = 6,
         STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
+        protectionData,
         isStreamSwitchingInProgress = false,
 
         play = function () {
@@ -68,11 +69,11 @@
         attachVideoEvents = function (stream) {
             var playbackCtrl = stream.getPlaybackController();
 
-            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
-            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
-            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKING, this);
-            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_TIME_UPDATED, this);
-            playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PROGRESS, this);
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, this);
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, this);
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, this);
         },
 
         detachVideoEvents = function (stream) {
@@ -81,11 +82,11 @@
             // setTimeout is used to avoid an exception caused by unsubscibing from PLAYBACK_TIME_UPDATED event
             // inside the event handler
             setTimeout(function(){
-                playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_STARTED, self.manifestUpdater);
-                playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PAUSED, self.manifestUpdater);
-                playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_SEEKING, self);
-                playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_TIME_UPDATED, self);
-                playbackCtrl.unsubscribe(playbackCtrl.eventList.ENAME_PLAYBACK_PROGRESS, self);
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, self.manifestUpdater);
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, self.manifestUpdater);
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, self);
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, self);
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, self);
             },1);
         },
 
@@ -100,8 +101,8 @@
          * Used to determine the time current stream is almost buffered and we can start buffering of the next stream.
          * TODO move to ???Extensions class
          */
-        onProgress = function(sender, ranges, remainingUnbufferedDuration) {
-            if (!remainingUnbufferedDuration || (remainingUnbufferedDuration >= STREAM_BUFFER_END_THRESHOLD)) return;
+        onProgress = function(e) {
+            if (!e.data.remainingUnbufferedDuration || (e.data.remainingUnbufferedDuration >= STREAM_BUFFER_END_THRESHOLD)) return;
 
             onStreamBufferingEnd();
         },
@@ -111,10 +112,13 @@
          * Used to determine the time current stream is finished and we should switch to the next stream.
          * TODO move to ???Extensions class
          */
-        onTimeupdate = function(sender, timeToStreamEnd) {
-            var self = this;
+        onTimeupdate = function(e) {
+            var self = this,
+                playbackQuality = self.videoExt.getPlaybackQuality(activeStream.getVideoModel().getElement());
 
-            self.metricsModel.addDroppedFrames("video", self.videoExt.getPlaybackQuality(activeStream.getVideoModel().getElement()));
+            if (playbackQuality) {
+                self.metricsModel.addDroppedFrames("video", playbackQuality);
+            }
 
             if (!getNextStream()) return;
 
@@ -123,7 +127,7 @@
             if (activeStream.getVideoModel().getElement().seeking) return;
 
             // check if stream end is reached
-            if (timeToStreamEnd < STREAM_END_THRESHOLD) {
+            if (e.data.timeToEnd < STREAM_END_THRESHOLD) {
                 switchStream.call(this, activeStream, getNextStream());
             }
         },
@@ -132,11 +136,11 @@
          * Called when Seeking event is occured.
          * TODO move to ???Extensions class
          */
-        onSeeking = function(sender, seekingTime/*, isProgrammatic*/) {
-            var seekingStream = getStreamForTime(seekingTime);
+        onSeeking = function(e) {
+            var seekingStream = getStreamForTime(e.data.seekTime);
 
             if (seekingStream && seekingStream !== activeStream) {
-                switchStream.call(this, activeStream, seekingStream, seekingTime);
+                switchStream.call(this, activeStream, seekingStream, e.data.seekTime);
             }
         },
 
@@ -261,12 +265,12 @@
                         */
                         stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
                         stream.setPlaybackController(playbackCtrl);
-                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_ERROR, stream);
-                        playbackCtrl.subscribe(playbackCtrl.eventList.ENAME_PLAYBACK_METADATA_LOADED, stream);
-                        stream.initProtection();
+                        playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, stream);
+                        playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, stream);
+                        stream.initProtection(protectionData);
                         stream.setAutoPlay(autoPlay);
                         stream.load(manifest);
-                        stream.subscribe(stream.eventList.ENAME_STREAM_UPDATED, self);
+                        stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, self);
                         streams.push(stream);
                     }
                     self.metricsModel.addManifestUpdateStreamInfo(manifestUpdateInfo, streamInfo.id, streamInfo.index, streamInfo.start, streamInfo.duration);
@@ -277,7 +281,7 @@
                 if (!activeStream) {
                     activeStream = streams[0];
                     attachVideoEvents.call(self, activeStream);
-                    activeStream.subscribe(activeStream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
+                    activeStream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
                 }
             } catch(e) {
                 self.errHandler.manifestError(e.message, "nostreamscomposed", self.manifestModel.getValue());
@@ -285,7 +289,7 @@
             }
         },
 
-        onStreamUpdated = function() {
+        onStreamUpdated = function(/*e*/) {
             var self = this,
                 ln = streams.length,
                 i = 0;
@@ -294,12 +298,12 @@
                 if (streams[i].isUpdating()) return;
             }
 
-            self.notify(self.eventList.ENAME_STREAMS_COMPOSED);
+            self.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED);
         },
 
-        onManifestLoaded = function(sender, manifest, error) {
-            if (!error) {
-                this.manifestModel.setValue(manifest);
+        onManifestLoaded = function(e) {
+            if (!e.error) {
+                this.manifestModel.setValue(e.data.manifest);
                 this.debug.log("Manifest has loaded.");
                 //self.debug.log(self.manifestModel.getValue());
                 composeStreams.call(this);
@@ -325,17 +329,14 @@
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_STREAMS_COMPOSED: "streamsComposed"
-        },
 
         setup: function() {
-            this.manifestLoaded = onManifestLoaded;
-            this.streamUpdated = onStreamUpdated;
+            this[MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = onManifestLoaded;
+            this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
 
-            this.playbackSeeking = onSeeking;
-            this.playbackProgress = onProgress;
-            this.playbackTimeUpdated = onTimeupdate;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onSeeking;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS] = onProgress;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onTimeupdate;
         },
 
         setAutoPlay: function (value) {
@@ -344,6 +345,10 @@
 
         getAutoPlay: function () {
             return autoPlay;
+        },
+
+        setProtectionData: function (value) {
+            protectionData = value;
         },
 
         getVideoModel: function () {
@@ -370,7 +375,7 @@
 
             for (var i = 0, ln = streams.length; i < ln; i++) {
                 var stream = streams[i];
-                stream.unsubscribe(stream.eventList.ENAME_STREAM_UPDATED, this);
+                stream.unsubscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this);
                 stream.reset();
                 // we should not remove the video element for the active stream since it is the element users see at the page
                 if (stream !== activeStream) {
@@ -396,4 +401,8 @@
 
 MediaPlayer.dependencies.StreamController.prototype = {
     constructor: MediaPlayer.dependencies.StreamController
+};
+
+MediaPlayer.dependencies.StreamController.eventList = {
+    ENAME_STREAMS_COMPOSED: "streamsComposed"
 };

@@ -50,7 +50,6 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 needFailureReport = false;
                 loadedTime = new Date();
 
-                self.tokenAuthentication.checkRequestHeaderForToken(request);
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
                                                  "MPD",
@@ -59,9 +58,11 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  null,
                                                  requestTime,
                                                  loadedTime,
+                                                 null,
                                                  request.status,
                                                  null,
-                                                 null);
+                                                 null,
+                                                 request.getAllResponseHeaders());
 
                 manifest = self.parser.parse(request.responseText, baseUrl);
 
@@ -69,9 +70,9 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                     manifest.url = url;
                     manifest.loadedTime = loadedTime;
                     self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, loadedTime, manifest.availabilityStartTime);
-                    self.notify(self.eventList.ENAME_MANIFEST_LOADED, manifest);
+                    self.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: manifest});
                 } else {
-                    self.notify(self.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url));
+                    self.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: null}, new MediaPlayer.vo.Error(null, "Failed loading manifest: " + url, null));
                 }
             };
 
@@ -92,7 +93,8 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  new Date(),
                                                  request.status,
                                                  null,
-                                                 null);
+                                                 null,
+                                                 request.getAllResponseHeaders());
                 if (remainingAttempts > 0) {
                     self.debug.log("Failed loading manifest: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
                     remainingAttempts--;
@@ -102,7 +104,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 } else {
                     self.debug.log("Failed loading manifest: " + url + " no retry attempts left");
                     self.errHandler.downloadError("manifest", url, request);
-                    self.notify(self.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url + " no retry attempts left"));
+                    self.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url + " no retry attempts left"));
                 }
             };
 
@@ -111,7 +113,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 request.onload = onload;
                 request.onloadend = report;
                 request.onerror = report;
-                request.open("GET", url, true);
+                request.open("GET", self.requestModifierExt.modifyRequestURL(url), true);
                 request.send();
             } catch(e) {
                 request.onerror();
@@ -123,13 +125,10 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         parser: undefined,
         errHandler: undefined,
         metricsModel: undefined,
-        tokenAuthentication:undefined,
+        requestModifierExt:undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_MANIFEST_LOADED: "manifestLoaded"
-        },
 
         load: function(url) {
             doLoad.call(this, url, RETRY_ATTEMPTS);
@@ -141,4 +140,6 @@ MediaPlayer.dependencies.ManifestLoader.prototype = {
     constructor: MediaPlayer.dependencies.ManifestLoader
 };
 
-
+MediaPlayer.dependencies.ManifestLoader.eventList = {
+    ENAME_MANIFEST_LOADED: "manifestLoaded"
+};

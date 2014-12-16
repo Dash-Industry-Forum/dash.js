@@ -18,10 +18,6 @@ MediaPlayer.dependencies.SourceBufferExtensions = function () {
     this.notify = undefined;
     this.subscribe = undefined;
     this.unsubscribe = undefined;
-    this.eventList = {
-        ENAME_SOURCEBUFFER_REMOVE_COMPLETED: "sourceBufferRemoveCompleted",
-        ENAME_SOURCEBUFFER_APPEND_COMPLETED: "sourceBufferAppendCompleted"
-    };
 };
 
 MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
@@ -186,11 +182,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 self.waitForUpdateEnd(buffer, function() {
-                    self.notify(self.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, buffer, bytes);
+                    self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
                 });
             });
         } catch (err) {
-            self.notify(self.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, buffer, bytes, err);
+            self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes}, new MediaPlayer.vo.Error(err.code, err.message, null));
         }
     },
 
@@ -204,10 +200,10 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             }
             // updating is in progress, we should wait for it to complete before signaling that this operation is done
             this.waitForUpdateEnd(buffer, function() {
-                self.notify(self.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, buffer, start, end);
+                self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
             });
         } catch (err) {
-            self.notify(self.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, buffer, start, end, err);
+            self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end}, new MediaPlayer.vo.Error(err.code, err.message, null));
         }
     },
 
@@ -220,4 +216,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         } catch(ex){
         }
     }
+};
+
+MediaPlayer.dependencies.SourceBufferExtensions.QUOTA_EXCEEDED_ERROR_CODE = 22;
+
+MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
+    ENAME_SOURCEBUFFER_REMOVE_COMPLETED: "sourceBufferRemoveCompleted",
+    ENAME_SOURCEBUFFER_APPEND_COMPLETED: "sourceBufferAppendCompleted"
 };

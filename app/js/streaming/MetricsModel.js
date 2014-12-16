@@ -97,7 +97,7 @@ MediaPlayer.models.MetricsModel = function () {
             return vo;
         },
 
-        addHttpRequest: function (mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, interval, mediaduration) {
+        addHttpRequest: function (mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, interval, mediaduration, responseHeaders) {
             var vo = new MediaPlayer.vo.metrics.HTTPRequest();
 
             vo.stream = mediaType;
@@ -112,7 +112,7 @@ MediaPlayer.models.MetricsModel = function () {
             vo.responsecode = responsecode;
             vo.interval = interval;
             vo.mediaduration = mediaduration;
-
+            vo.responseHeaders = responseHeaders;
             this.getMetricsFor(mediaType).HttpList.push(vo);
 
             this.metricAdded(mediaType, this.adapter.metricsList.HTTP_REQUEST, vo);
