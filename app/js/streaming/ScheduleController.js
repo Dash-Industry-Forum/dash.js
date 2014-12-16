@@ -246,7 +246,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onBufferLevelUpdated = function(e) {
             var self = this;
-            self.metricsModel.addBufferLevel(type, new Date(), e.data.bufferLevel, self.scheduleRulesCollection.bufferLevelRule.getBufferTarget());
+            self.metricsModel.addBufferLevel(type, new Date(), e.data.bufferLevel);
             validate.call(this);
         },
 

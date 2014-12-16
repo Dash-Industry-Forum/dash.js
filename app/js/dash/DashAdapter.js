@@ -250,6 +250,7 @@ Dash.dependencies.DashAdapter = function () {
             HTTP_REQUEST_TRACE: "HttpRequestTrace",
             TRACK_SWITCH : "RepresentationSwitch",
             BUFFER_LEVEL: "BufferLevel",
+            BUFFER_STATE: "BufferState",
             DVR_INFO: "DVRInfo",
             DROPPED_FRAMES: "DroppedFrames",
             SCHEDULING_INFO: "SchedulingInfo",

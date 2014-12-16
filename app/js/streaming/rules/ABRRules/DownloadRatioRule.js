@@ -145,11 +145,10 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                         //    stepDownFactor = 1;
                         //}else {
                             for ( i = max ; i > 0; i-- ) {
-
                                 switchRatio = getSwitchRatio.call(self, sp, i, current);
                                 if ( averageDownloadRatio > switchRatio) {
                                     if (current !== i) {
-                                        self.debug.log("xxx down", averageDownloadRatio, switchRatio, i);
+                                        //self.debug.log("averageDownloadRatio", averageDownloadRatio, switchRatio, i);
                                         switchRequest = new MediaPlayer.rules.SwitchRequest(i, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
                                     }
                                     break;

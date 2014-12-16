@@ -385,10 +385,10 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         checkIfSufficientBuffer = function () {
-            var timeToEnd = this.playbackController.getTimeToStreamEnd(),
-                minLevel = this.streamProcessor.isDynamic() ? minBufferTime / 2 : minBufferTime;
+            var timeToEnd = this.playbackController.getTimeToStreamEnd();
+                //minLevel = this.streamProcessor.isDynamic() ? minBufferTime / 2 : minBufferTime;
 
-            if (bufferLevel === minLevel /*&& ((minBufferTime < timeToEnd)*/ || (minBufferTime >= timeToEnd && !isBufferingCompleted)) {
+            if (bufferLevel < STALL_THRESHOLD && (minBufferTime < timeToEnd) || (minBufferTime >= timeToEnd && !isBufferingCompleted)) {
                 notifyIfSufficientBufferStateChanged.call(this, false);
             } else {
                 notifyIfSufficientBufferStateChanged.call(this, true);
@@ -399,17 +399,16 @@ MediaPlayer.dependencies.BufferController = function () {
             if (hasSufficientBuffer === state) return;
 
             hasSufficientBuffer = state;
-
-            this.debug.log(hasSufficientBuffer ? ("Got enough " + type + " buffer to start.") : ("Waiting for more " + type + " buffer before starting playback."));
-
+            var bufferState = hasSufficientBuffer ? MediaPlayer.dependencies.BufferController.BUFFER_LOADED : MediaPlayer.dependencies.BufferController.BUFFER_EMPTY;
+            this.metricsModel.addBufferState(type, bufferState, this.scheduleRulesCollection.bufferLevelRule.getBufferTarget());
             this.eventBus.dispatchEvent({
-                type: hasSufficientBuffer ? MediaPlayer.dependencies.BufferController.BUFFER_LOADED : MediaPlayer.dependencies.BufferController.BUFFER_EMPTY,
+                type: bufferState,
                 data: {
                     bufferType: type
                 }
             });
-
             this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, {hasSufficientBuffer: state});
+            this.debug.log(hasSufficientBuffer ? ("Got enough " + type + " buffer to start.") : ("Waiting for more " + type + " buffer before starting playback."));
         },
 
         updateBufferTimestampOffset = function(MSETimeOffset) {
@@ -544,6 +543,7 @@ MediaPlayer.dependencies.BufferController = function () {
         metricsModel: undefined,
         metricsExt: undefined,
         adapter: undefined,
+        scheduleRulesCollection:undefined,
         debug: undefined,
         system: undefined,
         notify: undefined,
@@ -653,8 +653,8 @@ MediaPlayer.dependencies.BufferController = function () {
 MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED = "required";
 MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN = "min";
 MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY = "infinity";
-MediaPlayer.dependencies.BufferController.DEFAULT_STARTUP_BUFFER_TIME = 3;
 MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME = 12;
+MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD = 4;
 MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY = 30;
 MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 300;
 MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;

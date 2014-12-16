@@ -13,7 +13,6 @@
  */
 MediaPlayer.rules.InsufficientBufferRule = function () {
     "use strict";
-
     /*
      * This rule is intended to be sure that our buffer doesn't run dry.
      * If the buffer runs dry playback halts until more data is downloaded.
@@ -23,44 +22,28 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
      * A dry buffer is a good indication of this use case, so we want to switch down to
      * smaller fragments to decrease download time.
      */
-
-    var dryBufferHits = 0,
+    var //DRY_BUFFER_LIMIT = 3,
         bufferStateDict = {},
-        bufferStateVO = {
-            state:MediaPlayer.dependencies.BufferController.BUFFER_EMPTY,
-            stepDownFactor:1,
-            dryBufferHits:0,
-            lastDryBufferHitRecorded:false
-        },
-        //DRY_BUFFER_LIMIT = 3,
 
-        onBufferChange = function (event) {
-            bufferStateDict[event.data.bufferType] = bufferStateDict[event.data.bufferType] || bufferStateVO;
-            var vo = bufferStateDict[event.data.bufferType];
-            vo.state = event.type;
-            if (event.type === MediaPlayer.dependencies.BufferController.BUFFER_LOADED) {
-                vo.stepDownFactor = 1;
-                if (vo.lastDryBufferHitRecorded) {
-                    vo.lastDryBufferHitRecorded = false;
-                }
+        setBufferInfo = function (type, state) {
+            bufferStateDict[type] = bufferStateDict[type] || {};
+            bufferStateDict[type].state = state;
+            if (state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED) {
+                bufferStateDict[type].stepDownFactor = 1;
+                bufferStateDict[type].lastDryBufferHitRecorded = false;
             }
         };
 
     return {
         debug: undefined,
         metricsModel: undefined,
-        eventBus:undefined,
-
-        setup: function() {
-            this.eventBus.addEventListener(MediaPlayer.dependencies.BufferController.BUFFER_EMPTY, onBufferChange);
-            this.eventBus.addEventListener(MediaPlayer.dependencies.BufferController.BUFFER_LOADED, onBufferChange);
-        },
 
         execute: function (context, callback) {
             var self = this,
                 mediaType = context.getMediaInfo().type,
                 current = context.getCurrentValue(),
                 manifestInfo = context.getManifestInfo(),
+                mediaInfo = context.getMediaInfo(),
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 playlist,
                 streamInfo = context.getStreamInfo(),
@@ -71,10 +54,9 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 isDynamic = sp.isDynamic(),
                 switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK),
                 lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
-                lowBufferMark = Math.min(4, manifestInfo.maxFragmentDuration);
+                lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
 
-
-            if (metrics.PlayList === null || metrics.PlayList === undefined || metrics.PlayList.length === 0) {
+            if (mediaInfo.trackCount === 1 || metrics.PlayList === null || metrics.PlayList === undefined || metrics.PlayList.length === 0) {
                 //self.debug.log("Not enough information for rule.");
                 callback(switchRequest);
                 return;
@@ -88,7 +70,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 return;
             }
 
-            // The last trace is the currently playing fragment. So get the trace *before* that one.
+            //The last trace is the currently playing fragment. So get the trace *before* that one.
             //Some streams only have one index we need to account for that
             trace = playlist.trace[Math.max(playlist.trace.length - 2, 0)];
             if (trace === null || trace === undefined) {
@@ -97,21 +79,23 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 return;
             }
 
-            if (trace.stopreason !== null && trace.stopreason === MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON && !bufferStateDict[mediaType].lastDryBufferHitRecorded) {
+            setBufferInfo(mediaType, lastBufferStateVO.state);
+
+            if (trace.stopreason !== null && trace.stopreason === MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON &&
+                !bufferStateDict[mediaType].lastDryBufferHitRecorded) {
+
                 //bufferStateDict[mediaType].dryBufferHits++; //Not using this for priority at this point but may in future.
                 bufferStateDict[mediaType].lastDryBufferHitRecorded = true;
                 switchRequest = new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
-                self.debug.log("InsufficientBufferRule Number of times the buffer has run dry: " + dryBufferHits);
+                //self.debug.log("InsufficientBufferRule Number of times the buffer has run dry: " + bufferStateDict[mediaType].dryBufferHits);
 
-            }
-            // For VOD we never want to fall this low and will start to react when we do.
-            else if ( !isDynamic &&
+            } else if ( !isDynamic &&
                         bufferStateDict[mediaType].state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
                         trace.stopreason !== MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON &&
                         lastBufferLevelVO !== null &&
-                        lastBufferLevelVO.level < (lowBufferMark * 2) &&
-                        lastBufferLevelVO.level > lowBufferMark &&
-                        currentTime < (duration - lowBufferMark * 2)) {
+                        lastBufferLevelVO.level < (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD * 2) &&
+                        lastBufferLevelVO.level > MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD &&
+                        currentTime < (duration - MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD * 2)) {
 
                 switchRequest = new MediaPlayer.rules.SwitchRequest(Math.max(current - bufferStateDict[mediaType].stepDownFactor, 0), MediaPlayer.rules.SwitchRequest.prototype.STRONG );
                 bufferStateDict[mediaType].stepDownFactor++;

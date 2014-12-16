@@ -69,13 +69,15 @@ MediaPlayer.rules.ThroughputRule = function () {
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 isDynamic= context.getStreamProcessor().isDynamic(),
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
-                //current = context.getCurrentValue(),
+                current = context.getCurrentValue(),
                 downloadTime,
                 averageThroughput,
                 lastRequestThroughput,
+                bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
+                bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
                 switchRequest =  new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
-            if (!metrics || lastRequest === null) {
+            if (!metrics || lastRequest === null || lastRequest.type !== "Media Segment") {
                 callback(new MediaPlayer.rules.SwitchRequest());
                 return;
             }
@@ -88,20 +90,25 @@ MediaPlayer.rules.ThroughputRule = function () {
 
             var adaptation = this.manifestExt.getAdaptationForType(manifest, 0, mediaType);
             var max = mediaInfo.trackCount - 1;
-            for ( var i = max ; i > 0; i-- )
+
+            if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
+                (bufferLevelVO.level >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD*2) || isDynamic) )
             {
-                var repBandwidth = this.manifestExt.getRepresentationFor(i, adaptation).bandwidth;
-                if (averageThroughput >= repBandwidth) {
-                    var p = /*(current < i) ? MediaPlayer.rules.SwitchRequest.prototype.STRONG :*/MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-                    switchRequest = new MediaPlayer.rules.SwitchRequest(i, p);
-                    break;
+                for ( var i = max ; i > 0; i-- )
+                {
+                    var repBandwidth = this.manifestExt.getRepresentationFor(i, adaptation).bandwidth;
+                    if (averageThroughput >= repBandwidth) {
+                        var p = /*(current < i) ? MediaPlayer.rules.SwitchRequest.prototype.STRONG :*/MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+                        switchRequest = new MediaPlayer.rules.SwitchRequest(i, p);
+                        break;
+                    }
                 }
             }
 
             if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
                 self.debug.log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
                     switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
-                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
+                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak", "Average throughput", Math.round(averageThroughput/1024), "kbps");
             }
 
             callback(switchRequest);

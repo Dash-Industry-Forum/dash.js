@@ -42,7 +42,7 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
 
             if (delay < qualitySwitchThreshold /*&& rs !== undefined && (now - rs.t.getTime()) < qualitySwitchThreshold*/) {
                 self.debug.log("Wait some time before allowing another switch.");
-                callback(new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
+                callback(new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
                 return;
             }
 
