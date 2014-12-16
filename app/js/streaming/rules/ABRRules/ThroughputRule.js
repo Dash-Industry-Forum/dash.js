@@ -69,7 +69,6 @@ MediaPlayer.rules.ThroughputRule = function () {
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 isDynamic= context.getStreamProcessor().isDynamic(),
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
-                current = context.getCurrentValue(),
                 downloadTime,
                 averageThroughput,
                 lastRequestThroughput,

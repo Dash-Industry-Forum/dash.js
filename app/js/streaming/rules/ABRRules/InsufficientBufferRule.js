@@ -42,7 +42,6 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
             var self = this,
                 mediaType = context.getMediaInfo().type,
                 current = context.getCurrentValue(),
-                manifestInfo = context.getManifestInfo(),
                 mediaInfo = context.getMediaInfo(),
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 playlist,
