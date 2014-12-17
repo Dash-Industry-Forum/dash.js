@@ -55,7 +55,9 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
                 lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
 
-            if (mediaInfo.trackCount === 1 || metrics.PlayList === null || metrics.PlayList === undefined || metrics.PlayList.length === 0) {
+            if (mediaInfo.trackCount === 1 || metrics.PlayList === null ||
+                metrics.PlayList === undefined || metrics.PlayList.length === 0 ||
+                lastBufferStateVO === null) {
                 //self.debug.log("Not enough information for rule.");
                 callback(switchRequest);
                 return;

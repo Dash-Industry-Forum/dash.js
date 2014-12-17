@@ -76,7 +76,8 @@ MediaPlayer.rules.ThroughputRule = function () {
                 bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
                 switchRequest =  new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
-            if (!metrics || lastRequest === null || lastRequest.type !== "Media Segment") {
+            if (!metrics || lastRequest === null || lastRequest.type !== MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE ||
+                bufferStateVO === null || bufferLevelVO === null) {
                 callback(new MediaPlayer.rules.SwitchRequest());
                 return;
             }
