@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Baseline Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+
+    <!-- Libraries -->
+    <!--
+    <script src="app/lib/dijon.js"></script>
+    <script src="app/lib/xml2json.js"></script>
+    <script src="app/lib/objectiron.js"></script>
+    <script src="app/lib/long.js"></script>
+    <script src="app/lib/Math.js"></script>
+    -->
+
+    <!-- Minified Dash -->
+    <!--<script src="dash.min.js"></script>-->
+
+    <!-- Minified Dash & Libraries -->
+    <script src="dash.all.js"></script>
+
+    <script>
+        var video, context, player;
+
+        function getUrlVars() {
+            var vars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                vars[key] = value;
+            });
+            return vars;
+        }
+
+        function startVideo() {
+            var vars = getUrlVars(),
+                url = "http://dash.edgesuite.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd"
+//                url = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
+
+            if (vars && vars.hasOwnProperty("url")) {
+                url = vars.url;
+            }
+
+            video = document.querySelector(".dash-video-player video");
+            context = new Dash.di.DashContext();
+            player = new MediaPlayer(context);
+
+            player.startup();
+
+            player.attachView(video);
+            player.setAutoPlay(true);
+
+            player.attachSource(url);
+        }
+
+        function changeVideo( url ) {
+            player.reset();
+            player.attachView(video);
+            player.attachSource(url);
+        }
+
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 480px;
+        }
+    </style>
+
+    <body onload="startVideo()">
+        <div class="dash-video-player">
+            <video controls="true"></video>
+        </div>
+        <select onchange="javascript:changeVideo(this.value)">
+            <option value="" selected disabled>Additionall Dash Manifests</option>
+            <option value="http://wams.edgesuite.net/media/MPTExpressionData02/BigBuckBunny_1080p24_IYUV_2ch.ism/manifest(format=mpd-time-csf)">Bunny</option>
+            <option value="http://dash.edgesuite.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd">Elephant</option>
+            <option value="https://dl.dropboxusercontent.com/u/62143390/vid/JagerMonkey_dash.mpd">Jager</option>
+            <option value="http://dash.edgesuite.net/dash264/TestCases/2a/qualcomm/1/MultiResMPEG2.mpd">MultiRes</option>
+            <option value="http://dash.edgesuite.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd">Dream</option>
+        </select>
+    </body>
+</html>
