@@ -88,7 +88,7 @@ module.exports = function(grunt) {
             "./test/js/utils/Helpers.js",
             "./test/js/utils/SpecHelper.js",
             "./test/js/utils/ObjectsHelper.js",
-            "./test/js/utils/MpdHelper.js",
+            "./test/js/utils/MPDHelper.js",
             "./test/js/utils/VOHelper.js"
           ],
           specs: [
