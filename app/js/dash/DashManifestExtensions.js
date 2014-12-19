@@ -438,7 +438,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             // Period PeriodStart is the sum of the start time of the previous
             // Period PeriodStart and the value of the attribute @duration
             // of the previous Period.
-            else if (p1 !== null && p.hasOwnProperty("duration")){
+            else if (p1 !== null && p.hasOwnProperty("duration") && vo1 !== null){
                 vo = new Dash.vo.Period();
                 vo.start = vo1.start + vo1.duration;
                 vo.duration = p.duration;
@@ -471,11 +471,11 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 vo.index = i;
                 vo.mpd = mpd;
                 periods.push(vo);
+                p1 = p;
+                vo1 = vo;
             }
 
-            p1 = p;
             p = null;
-            vo1 = vo;
             vo = null;
         }
 

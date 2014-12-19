@@ -48,9 +48,9 @@
          *
          * TODO - move method to appropriate place - VideoModelExtensions??
          */
-        switchVideoModel = function (fromStream, toStream) {
-            var activeVideoElement = fromStream.getVideoModel().getElement(),
-                newVideoElement = toStream.getVideoModel().getElement();
+        switchVideoModel = function (fromModel, toModel) {
+            var activeVideoElement = fromModel.getElement(),
+                newVideoElement = toModel.getElement();
 
             if (!newVideoElement.parentNode) {
                 activeVideoElement.parentNode.insertBefore(newVideoElement, activeVideoElement);
@@ -62,8 +62,6 @@
             newVideoElement.style.width = "100%";
 
             copyVideoProperties(activeVideoElement, newVideoElement);
-            detachVideoEvents.call(this, fromStream);
-            attachVideoEvents.call(this, toStream);
         },
 
         attachVideoEvents = function (stream) {
@@ -203,7 +201,9 @@
             from.pause();
             activeStream = to;
 
-            switchVideoModel.call(this, from, to);
+            switchVideoModel.call(this, from.getVideoModel(), to.getVideoModel());
+            detachVideoEvents.call(this, from);
+            attachVideoEvents.call(this, to);
 
             if (seekTo) {
                 seek(from.getPlaybackController().getTime());
@@ -222,6 +222,7 @@
                 manifest = self.manifestModel.getValue(),
                 metrics = self.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
+                videoModel = activeStream ? activeStream.getVideoModel() : self.getVideoModel(),
                 playbackCtrl,
                 streamInfo,
                 pLen,
@@ -240,8 +241,8 @@
                     throw new Error("There are no streams");
                 }
 
-                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: self.videoModel.getCurrentTime(),
-                    buffered: self.videoModel.getElement().buffered, presentationStartTime: streamsInfo[0].start,
+                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: videoModel.getCurrentTime(),
+                    buffered: videoModel.getElement().buffered, presentationStartTime: streamsInfo[0].start,
                     clientTimeOffset: self.timelineConverter.getClientTimeOffset()});
 
                 for (pIdx = 0, pLen = streamsInfo.length; pIdx < pLen; pIdx += 1) {
@@ -371,14 +372,19 @@
 
             if (!!activeStream) {
                 detachVideoEvents.call(this, activeStream);
+
+                //switch back to the original video element
+                if (activeStream.getVideoModel() !== this.getVideoModel()) {
+                    switchVideoModel.call(this, activeStream.getVideoModel(), this.getVideoModel());
+                }
             }
 
             for (var i = 0, ln = streams.length; i < ln; i++) {
                 var stream = streams[i];
                 stream.unsubscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this);
                 stream.reset();
-                // we should not remove the video element for the active stream since it is the element users see at the page
-                if (stream !== activeStream) {
+                // remove all video elements except the original one
+                if (stream.getVideoModel() !== this.getVideoModel()) {
                     removeVideoElement(stream.getVideoModel().getElement());
                 }
             }
