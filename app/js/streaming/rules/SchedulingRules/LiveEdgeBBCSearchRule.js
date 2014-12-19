@@ -22,16 +22,16 @@ MediaPlayer.rules.LiveEdgeBBCSearchRule = function () {
                 req = self.adapter.generateFragmentRequestForTime(finder.streamProcessor, trackInfo, searchTime);
                 findLiveEdge.call(self, searchTime, onSuccess, onError, req);
             } else {
-                var handler = function(sender, isExist, request) {
-                    finder.fragmentLoader.unsubscribe(finder.fragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
-                    if (isExist) {
-                        onSuccess.call(self, request, searchTime);
+                var handler = function(e) {
+                    finder.fragmentLoader.unsubscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
+                    if (e.data.exists) {
+                        onSuccess.call(self, e.data.request, searchTime);
                     } else {
-                        onError.call(self, request, searchTime);
+                        onError.call(self, e.data.request, searchTime);
                     }
                 };
 
-                finder.fragmentLoader.subscribe(finder.fragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
+                finder.fragmentLoader.subscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
                 finder.fragmentLoader.checkForExistence(request);
             }
         },

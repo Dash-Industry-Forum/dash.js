@@ -149,7 +149,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
             // TODO : I structured this all goofy and messy.  fix plz
 
             totalRatio = lastRequest.mediaduration / totalTime;
-            downloadRatio = (lastRequest.mediaduration / downloadTime) * DOWNLOAD_RATIO_SAFETY_FACTOR;
+            downloadRatio = (lastRequest.mediaduration / downloadTime);// * DOWNLOAD_RATIO_SAFETY_FACTOR;
 
             if (isNaN(downloadRatio) || isNaN(totalRatio)) {
                 //self.debug.log("Total time: " + totalTime + "s");
@@ -159,8 +159,10 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 return;
             }
 
-            //self.debug.log("Total ratio: " + totalRatio);
-            //self.debug.log("Download ratio: " + downloadRatio);
+            if (mediaType == "video") {
+                self.debug.log("!!Total ratio: " + lastRequest.mediaduration + '/' + totalTime + ' = ' + totalRatio);
+                self.debug.log("!!Download ratio: " + downloadRatio);
+            }
 
             if (isNaN(downloadRatio)) {
                 //self.debug.log("Invalid ratio, bailing.");
@@ -174,9 +176,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                     switchRatio = oneDownBandwidth / currentBandwidth;
                     //self.debug.log("Switch ratio: " + switchRatio);
 
-                    if (downloadRatio < switchRatio + 1) {
-                        setUnhealthy(self, manifestInfo, mediaType, current);
-                    }
+                    setUnhealthy(self, manifestInfo, mediaType, current);
 
                     if (downloadRatio < switchRatio) {
                         self.debug.log("Things must be going pretty bad, switch all the way down.");
