@@ -13,124 +13,54 @@
  */
 MediaPlayer.dependencies.TextController = function () {
 
-     var LOADING = "LOADING",
-         //LOADED = "LOADED",
-         READY = "READY",
-         initialized = false,
-         periodInfo = null,
+     var initialized = false,
          mediaSource,
-         data,
          buffer,
-         availableRepresentations,
-         state = READY,
-         setState = function (value) {
-             this.debug.log("TextController setState to:" + value);
-             state = value;
-         },
-         startPlayback = function () {
+         type,
 
-             if (!initialized || state !== READY) {
-                 return;
-             }
-
-             var self = this;
-            // TODO Multiple tracks can be handled here by passing in quality level.
-            self.indexHandler.getInitRequest(availableRepresentations[0]).then(
-             function (request) {
-                 //self.debug.log("Loading text track initialization: " + request.url);
-                 //self.debug.log(request);
-                 self.fragmentLoader.load(request).then(onBytesLoaded.bind(self, request), onBytesError.bind(self, request));
-                 setState.call(self, LOADING);
-             }
-            );
-         },
-         doStart = function () {
-             startPlayback.call(this);
-         },
-
-         updateRepresentations = function (data, periodInfo) {
-             var self = this,
-                 deferred = Q.defer(),
-                 manifest = self.manifestModel.getValue();
-             self.manifestExt.getDataIndex(data, manifest, periodInfo.index).then(
-                 function(idx) {
-                     self.manifestExt.getAdaptationsForPeriod(manifest, periodInfo).then(
-                         function(adaptations) {
-                             self.manifestExt.getRepresentationsForAdaptation(manifest, adaptations[idx]).then(
-                                 function(representations) {
-                                     deferred.resolve(representations);
-                                 }
-                             );
-                         }
-                     );
+         onDataUpdateCompleted = function(/*e*/) {
+             if (!initialized) {
+                 if (buffer.hasOwnProperty('initialize')) {
+                     buffer.initialize(type, this);
                  }
-             );
-
-             return deferred.promise;
+                 initialized = true;
+             }
+             this.notify(MediaPlayer.dependencies.TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, {CCIndex: 0});
          },
 
-         onBytesLoaded = function (request, response) {
+         onInitFragmentLoaded = function (e) {
              var self = this;
-             //self.debug.log(" Text track Bytes finished loading: " + request.url);
-             self.fragmentController.process(response.data).then(
-                 function (data) {
-                     if (data !== null) {
-                         //self.debug.log("Push text track bytes: " + data.byteLength);
-                         self.sourceBufferExt.append(buffer, data, self.videoModel);
-                     }
-                 }
-             );
-         },
 
-         onBytesError = function (/*request*/) {
+             if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel()) return;
+
+             if (e.data.bytes !== null) {
+                 //self.debug.log("Push text track bytes: " + data.byteLength);
+                 self.sourceBufferExt.append(buffer, e.data.bytes, self.videoModel);
+             }
          };
 
     return {
-        videoModel: undefined,
-        fragmentLoader: undefined,
-        fragmentController: undefined,
-        indexHandler: undefined,
         sourceBufferExt: undefined,
-        manifestModel: undefined,
-        manifestExt: undefined,
         debug: undefined,
-        initialize: function (periodInfo, data, buffer, videoModel, source) {
+        system: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
+
+        setup: function() {
+            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitFragmentLoaded;
+        },
+
+        initialize: function (typeValue, buffer, source, streamProcessor) {
             var self = this;
 
-            self.setVideoModel(videoModel);
+            type = typeValue;
             self.setBuffer(buffer);
             self.setMediaSource(source);
-
-            self.updateData(data, periodInfo).then(
-                function() {
-                    initialized = true;
-                    startPlayback.call(self);
-                }
-            );
-        },
-
-        setPeriodInfo: function(value) {
-            periodInfo = value;
-        },
-
-        getPeriodIndex: function () {
-            return periodInfo.index;
-        },
-
-        getVideoModel: function () {
-            return this.videoModel;
-        },
-
-        setVideoModel: function (value) {
-            this.videoModel = value;
-        },
-
-        getData: function () {
-            return data;
-        },
-
-        setData: function (value) {
-            data = value;
+            self.videoModel = streamProcessor.videoModel;
+            self.trackController = streamProcessor.trackController;
+            self.streamProcessor = streamProcessor;
         },
 
         getBuffer: function () {
@@ -145,33 +75,12 @@ MediaPlayer.dependencies.TextController = function () {
             mediaSource = value;
         },
 
-        updateData: function (dataValue, periodInfoValue) {
-            var self = this,
-                deferred = Q.defer();
-
-            data = dataValue;
-            periodInfo = periodInfoValue;
-
-            updateRepresentations.call(self, data, periodInfo).then(
-                function(representations) {
-                    availableRepresentations = representations;
-                    setState.call(self, READY);
-                    startPlayback.call(self);
-                    deferred.resolve();
-                }
-            );
-
-            return deferred.promise;
-        },
-
         reset: function (errored) {
             if (!errored) {
                 this.sourceBufferExt.abort(mediaSource, buffer);
                 this.sourceBufferExt.removeSourceBuffer(mediaSource, buffer);
             }
-        },
-
-        start: doStart
+        }
     };
 };
 
@@ -179,3 +88,6 @@ MediaPlayer.dependencies.TextController.prototype = {
     constructor: MediaPlayer.dependencies.TextController
 };
 
+MediaPlayer.dependencies.TextController.eventList = {
+    ENAME_CLOSED_CAPTIONING_REQUESTED: "closedCaptioningRequested"
+};

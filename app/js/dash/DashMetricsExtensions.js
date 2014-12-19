@@ -70,34 +70,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
         },
 
         adaptationIsType = function (adaptation, bufferType) {
-            var found = false;
-
-            // TODO : HACK ATTACK
-            // Below we call getIsVideo and getIsAudio and then check the adaptation set for a 'type' property.
-            // getIsVideo and getIsAudio are adding this 'type' property and SHOULD NOT BE.
-            // This method expects getIsVideo and getIsAudio to be sync, but they are async (returns a promise).
-            // This is a bad workaround!
-            // The metrics extensions should have every method use promises.
-
-            if (bufferType === "video") {
-                //found = this.manifestExt.getIsVideo(adaptation);
-                this.manifestExt.getIsVideo(adaptation);
-                if (adaptation.type === "video") {
-                    found = true;
-                }
-            }
-            else if (bufferType === "audio") {
-                //found = this.manifestExt.getIsAudio(adaptation); // TODO : Have to be sure it's the *active* audio track.
-                this.manifestExt.getIsAudio(adaptation);
-                if (adaptation.type === "audio") {
-                    found = true;
-                }
-            }
-            else {
-                found = false;
-            }
-
-            return found;
+            return this.manifestExt.getIsTypeOf(adaptation, bufferType);
         },
 
         findMaxBufferIndex = function (periodArray, bufferType) {
@@ -200,6 +173,29 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return currentBufferLevel;
         },
 
+        getCurrentPlaybackRate = function (metrics) {
+            if (metrics === null) {
+                return null;
+            }
+
+            var playList = metrics.PlayList,
+                trace,
+                currentRate;
+
+            if (playList === null || playList.length <= 0) {
+                return null;
+            }
+
+            trace = playList[playList.length - 1].trace;
+
+            if (trace === null || trace.length <= 0) {
+                return null;
+            }
+
+            currentRate = trace[trace.length - 1].playbackspeed;
+            return currentRate;
+        },
+
         getCurrentHttpRequest = function (metrics) {
             if (metrics === null) {
                 return null;
@@ -252,7 +248,114 @@ Dash.dependencies.DashMetricsExtensions = function () {
             currentDroppedFrames = droppedFrames[droppedFramesLastIndex];
 
             return currentDroppedFrames;
+        },
+
+        getCurrentSchedulingInfo = function(metrics) {
+            if (metrics === null) return null;
+
+            var schedulingInfo = metrics.SchedulingInfo,
+                ln,
+                lastIdx,
+                currentSchedulingInfo;
+
+            if (schedulingInfo === null || schedulingInfo.length <= 0) {
+                return null;
+            }
+
+            ln = schedulingInfo.length;
+            lastIdx = ln - 1;
+
+            currentSchedulingInfo = schedulingInfo[lastIdx];
+
+            return currentSchedulingInfo;
+        },
+
+        getCurrentManifestUpdate = function(metrics) {
+            if (metrics === null) return null;
+
+            var manifestUpdate = metrics.ManifestUpdate,
+                ln,
+                lastIdx,
+                currentManifestUpdate;
+
+            if (manifestUpdate === null || manifestUpdate.length <= 0) {
+                return null;
+            }
+
+            ln = manifestUpdate.length;
+            lastIdx = ln - 1;
+
+            currentManifestUpdate = manifestUpdate[lastIdx];
+
+            return currentManifestUpdate;
+        },
+
+        getCurrentDVRInfo = function (metrics) {
+
+            if (metrics === null) {
+                return null;
+            }
+
+            var dvrInfo = metrics.DVRInfo,
+                dvrInfoLastIndex,
+                curentDVRInfo =  null;
+
+            if (dvrInfo === null || dvrInfo.length <= 0) {
+                return null;
+            }
+
+            dvrInfoLastIndex = dvrInfo.length - 1;
+            curentDVRInfo = dvrInfo[dvrInfoLastIndex];
+
+            return curentDVRInfo;
+        },
+
+        getLatestMPDRequestHeaderValueByID = function(metrics, id) {
+
+            if (metrics === null) return null;
+            var httpRequestList = getHttpRequests(metrics),
+                httpRequest = httpRequestList[httpRequestList.length-1],
+                headers;
+
+            if (httpRequest.type === 'MPD')
+            {
+                headers = parseResponseHeaders(httpRequest.responseHeaders, id);
+
+            }
+
+            return headers[id] === undefined ? null :  headers[id];
+        },
+
+        getLatestFragmentRequestHeaderValueByID = function(metrics, id) {
+
+            if (metrics === null) return null;
+
+            var httpRequest = getCurrentHttpRequest(metrics),
+                headers;
+
+            if (httpRequest === null || httpRequest.responseHeaders === null) return null;
+
+            headers = parseResponseHeaders(httpRequest.responseHeaders, id);
+            return headers[id] === undefined ? null :  headers[id];
+        },
+
+        parseResponseHeaders = function (headerStr) {
+            var headers = {};
+            if (!headerStr) {
+                return headers;
+            }
+            var headerPairs = headerStr.split('\u000d\u000a');
+            for (var i = 0, ilen = headerPairs.length; i < ilen; i++) {
+                var headerPair = headerPairs[i];
+                var index = headerPair.indexOf('\u003a\u0020');
+                if (index > 0) {
+                    headers[headerPair.substring(0, index)] = headerPair.substring(index + 2);
+                }
+            }
+            return headers;
         };
+
+
 
     return {
         manifestModel: undefined,
@@ -262,9 +365,15 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getMaxIndexForBufferType : getMaxIndexForBufferType,
         getCurrentRepresentationSwitch : getCurrentRepresentationSwitch,
         getCurrentBufferLevel : getCurrentBufferLevel,
+        getCurrentPlaybackRate: getCurrentPlaybackRate,
         getCurrentHttpRequest : getCurrentHttpRequest,
         getHttpRequests : getHttpRequests,
-        getCurrentDroppedFrames : getCurrentDroppedFrames
+        getCurrentDroppedFrames : getCurrentDroppedFrames,
+        getCurrentSchedulingInfo: getCurrentSchedulingInfo,
+        getCurrentDVRInfo : getCurrentDVRInfo,
+        getCurrentManifestUpdate: getCurrentManifestUpdate,
+        getLatestFragmentRequestHeaderValueByID:getLatestFragmentRequestHeaderValueByID,
+        getLatestMPDRequestHeaderValueByID:getLatestMPDRequestHeaderValueByID
     };
 };
 

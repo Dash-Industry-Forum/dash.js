@@ -18,9 +18,6 @@ Dash.vo.Period = function () {
     this.duration = NaN;
     this.start = NaN;
     this.mpd = null;
-    this.liveEdge = NaN;
-    this.isClientServerTimeSyncCompleted = false;
-    this.clientServerTimeShift = 0;
 };
 
 Dash.vo.Period.prototype = {

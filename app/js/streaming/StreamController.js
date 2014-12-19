@@ -15,7 +15,7 @@
     "use strict";
 
     /*
-     * StreamController aggregates all streams defined as Period sections in the manifest file
+     * StreamController aggregates all streams defined in the manifest file
      * and implements corresponding logic to switch between them.
      */
 
@@ -25,12 +25,8 @@
         STREAM_BUFFER_END_THRESHOLD = 6,
         STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
-        isPeriodSwitchingInProgress = false,
-        timeupdateListener,
-        seekingListener,
-        progressListener,
-        pauseListener,
-        playListener,
+        protectionData,
+        isStreamSwitchingInProgress = false,
 
         play = function () {
             activeStream.play();
@@ -52,9 +48,9 @@
          *
          * TODO - move method to appropriate place - VideoModelExtensions??
          */
-        switchVideoModel = function (fromVideoModel, toVideoModel) {
-            var activeVideoElement = fromVideoModel.getElement(),
-                newVideoElement = toVideoModel.getElement();
+        switchVideoModel = function (fromModel, toModel) {
+            var activeVideoElement = fromModel.getElement(),
+                newVideoElement = toModel.getElement();
 
             if (!newVideoElement.parentNode) {
                 activeVideoElement.parentNode.insertBefore(newVideoElement, activeVideoElement);
@@ -66,30 +62,34 @@
             newVideoElement.style.width = "100%";
 
             copyVideoProperties(activeVideoElement, newVideoElement);
-            detachVideoEvents.call(this, fromVideoModel);
-            attachVideoEvents.call(this, toVideoModel);
-
-            return Q.when(true);
         },
 
-        attachVideoEvents = function (videoModel) {
-            videoModel.listen("seeking", seekingListener);
-            videoModel.listen("progress", progressListener);
-            videoModel.listen("timeupdate", timeupdateListener);
-            videoModel.listen("pause", pauseListener);
-            videoModel.listen("play", playListener);
+        attachVideoEvents = function (stream) {
+            var playbackCtrl = stream.getPlaybackController();
+
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, this);
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, this);
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, this);
         },
 
-        detachVideoEvents = function (videoModel) {
-            videoModel.unlisten("seeking", seekingListener);
-            videoModel.unlisten("progress", progressListener);
-            videoModel.unlisten("timeupdate", timeupdateListener);
-            videoModel.unlisten("pause", pauseListener);
-            videoModel.unlisten("play", playListener);
+        detachVideoEvents = function (stream) {
+            var self = this,
+                playbackCtrl = stream.getPlaybackController();
+            // setTimeout is used to avoid an exception caused by unsubscibing from PLAYBACK_TIME_UPDATED event
+            // inside the event handler
+            setTimeout(function(){
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, self.manifestUpdater);
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, self.manifestUpdater);
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, self);
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, self);
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, self);
+            },1);
         },
 
         copyVideoProperties = function (fromVideoElement, toVideoElement) {
-            ["controls", "loop", "muted", "playbackRate", "volume"].forEach( function(prop) {
+            ["controls", "loop", "muted", "volume"].forEach( function(prop) {
                 toVideoElement[prop] = fromVideoElement[prop];
             });
         },
@@ -99,23 +99,10 @@
          * Used to determine the time current stream is almost buffered and we can start buffering of the next stream.
          * TODO move to ???Extensions class
          */
-        onProgress = function() {
+        onProgress = function(e) {
+            if (!e.data.remainingUnbufferedDuration || (e.data.remainingUnbufferedDuration >= STREAM_BUFFER_END_THRESHOLD)) return;
 
-            var ranges = activeStream.getVideoModel().getElement().buffered;
-
-            // nothing is buffered
-            if (!ranges.length) {
-                return;
-            }
-
-            var lastRange = ranges.length -1,
-                bufferEndTime = ranges.end(lastRange),
-                remainingBufferDuration = activeStream.getStartTime() + activeStream.getDuration() - bufferEndTime;
-
-            if (remainingBufferDuration < STREAM_BUFFER_END_THRESHOLD) {
-                activeStream.getVideoModel().unlisten("progress", progressListener);
-                onStreamBufferingEnd();
-            }
+            onStreamBufferingEnd();
         },
 
         /*
@@ -123,21 +110,22 @@
          * Used to determine the time current stream is finished and we should switch to the next stream.
          * TODO move to ???Extensions class
          */
-        onTimeupdate = function() {
-            var streamEndTime  = activeStream.getStartTime() + activeStream.getDuration(),
-                currentTime = activeStream.getVideoModel().getCurrentTime(),
-                self = this;
+        onTimeupdate = function(e) {
+            var self = this,
+                playbackQuality = self.videoExt.getPlaybackQuality(activeStream.getVideoModel().getElement());
 
-            self.metricsModel.addDroppedFrames("video", self.videoExt.getPlaybackQuality(activeStream.getVideoModel().getElement()));
+            if (playbackQuality) {
+                self.metricsModel.addDroppedFrames("video", playbackQuality);
+            }
 
             if (!getNextStream()) return;
 
-            // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new period starts
+            // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new stream starts
             // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
             if (activeStream.getVideoModel().getElement().seeking) return;
 
             // check if stream end is reached
-            if (streamEndTime - currentTime < STREAM_END_THRESHOLD) {
+            if (e.data.timeToEnd < STREAM_END_THRESHOLD) {
                 switchStream.call(this, activeStream, getNextStream());
             }
         },
@@ -146,21 +134,12 @@
          * Called when Seeking event is occured.
          * TODO move to ???Extensions class
          */
-        onSeeking = function() {
-            var seekingTime = activeStream.getVideoModel().getCurrentTime(),
-                seekingStream = getStreamForTime(seekingTime);
+        onSeeking = function(e) {
+            var seekingStream = getStreamForTime(e.data.seekTime);
 
             if (seekingStream && seekingStream !== activeStream) {
-                switchStream.call(this, activeStream, seekingStream, seekingTime);
+                switchStream.call(this, activeStream, seekingStream, e.data.seekTime);
             }
-        },
-
-        onPause = function() {
-            this.manifestUpdater.stop();
-        },
-
-        onPlay = function() {
-            this.manifestUpdater.start();
         },
 
         /*
@@ -174,7 +153,7 @@
         },
 
         getNextStream = function() {
-            var nextIndex = activeStream.getPeriodIndex() + 1;
+            var nextIndex = activeStream.getStreamIndex() + 1;
             return (nextIndex < streams.length) ? streams[nextIndex] : null;
         },
 
@@ -195,6 +174,8 @@
                     return stream;
                 }
             }
+
+            return null;
         },
 
         //  TODO move to ???Extensions class
@@ -213,17 +194,19 @@
 
         switchStream = function(from, to, seekTo) {
 
-            if(isPeriodSwitchingInProgress || !from || !to || from === to) return;
+            if(isStreamSwitchingInProgress || !from || !to || from === to) return;
 
-            isPeriodSwitchingInProgress = true;
+            isStreamSwitchingInProgress = true;
 
             from.pause();
             activeStream = to;
 
             switchVideoModel.call(this, from.getVideoModel(), to.getVideoModel());
+            detachVideoEvents.call(this, from);
+            attachVideoEvents.call(this, to);
 
             if (seekTo) {
-                seek(from.getVideoModel().getCurrentTime());
+                seek(from.getPlaybackController().getTime());
             } else {
                 seek(to.getStartTime());
             }
@@ -231,86 +214,99 @@
             play();
             from.resetEventController();
             activeStream.startEventController();
-            isPeriodSwitchingInProgress = false;
+            isStreamSwitchingInProgress = false;
         },
 
         composeStreams = function() {
             var self = this,
                 manifest = self.manifestModel.getValue(),
-                deferred = Q.defer(),
-                updatedStreams = [],
+                metrics = self.metricsModel.getMetricsFor("stream"),
+                manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
+                videoModel = activeStream ? activeStream.getVideoModel() : self.getVideoModel(),
+                playbackCtrl,
+                streamInfo,
                 pLen,
                 sLen,
                 pIdx,
                 sIdx,
-                period,
+                streamsInfo,
                 stream;
 
-            if (!manifest) {
-                return Q.when(false);
-            }
+            if (!manifest) return;
 
-            self.manifestExt.getMpd(manifest).then(
-                function(mpd) {
-                    self.manifestExt.getRegularPeriods(manifest, mpd).then(
-                        function(periods) {
+            streamsInfo = self.adapter.getStreamsInfo(manifest);
 
-                            if (periods.length === 0) {
-                                return deferred.reject("There are no regular periods");
-                            }
-
-                            for (pIdx = 0, pLen = periods.length; pIdx < pLen; pIdx += 1) {
-                                period = periods[pIdx];
-                                for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx += 1) {
-                                    // If the stream already exists we just need to update the values we got from the updated manifest
-                                    if (streams[sIdx].getId() === period.id) {
-                                        stream = streams[sIdx];
-                                        updatedStreams.push(stream.updateData(period));
-                                    }
-                                }
-                                // If the Stream object does not exist we probably loaded the manifest the first time or it was
-                                // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
-                                if (!stream) {
-                                    stream = self.system.getObject("stream");
-                                    stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
-                                    stream.initProtection();
-                                    stream.setAutoPlay(autoPlay);
-                                    stream.load(manifest, period);
-                                    streams.push(stream);
-                                }
-                                stream = null;
-                            }
-
-                            // If the active stream has not been set up yet, let it be the first Stream in the list
-                            if (!activeStream) {
-                                activeStream = streams[0];
-                                attachVideoEvents.call(self, activeStream.getVideoModel());
-                            }
-
-                            Q.all(updatedStreams).then(
-                                function() {
-                                    deferred.resolve();
-                                }
-                            );
-                        }
-                    );
+            try {
+                if (streamsInfo.length === 0) {
+                    throw new Error("There are no streams");
                 }
-            );
 
-            return deferred.promise;
+                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: videoModel.getCurrentTime(),
+                    buffered: videoModel.getElement().buffered, presentationStartTime: streamsInfo[0].start,
+                    clientTimeOffset: self.timelineConverter.getClientTimeOffset()});
+
+                for (pIdx = 0, pLen = streamsInfo.length; pIdx < pLen; pIdx += 1) {
+                    streamInfo = streamsInfo[pIdx];
+                    for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx += 1) {
+                        // If the stream already exists we just need to update the values we got from the updated manifest
+                        if (streams[sIdx].getId() === streamInfo.id) {
+                            stream = streams[sIdx];
+                            stream.updateData(streamInfo);
+                        }
+                    }
+                    // If the Stream object does not exist we probably loaded the manifest the first time or it was
+                    // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
+                    if (!stream) {
+                        stream = self.system.getObject("stream");
+                        playbackCtrl = self.system.getObject("playbackController");
+                        stream.setStreamInfo(streamInfo);
+                        stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
+                        stream.setPlaybackController(playbackCtrl);
+                        playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, stream);
+                        playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, stream);
+                        stream.initProtection(protectionData);
+                        stream.setAutoPlay(autoPlay);
+                        stream.load(manifest);
+                        stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, self);
+                        streams.push(stream);
+                    }
+                    self.metricsModel.addManifestUpdateStreamInfo(manifestUpdateInfo, streamInfo.id, streamInfo.index, streamInfo.start, streamInfo.duration);
+                    stream = null;
+                }
+
+                // If the active stream has not been set up yet, let it be the first Stream in the list
+                if (!activeStream) {
+                    activeStream = streams[0];
+                    attachVideoEvents.call(self, activeStream);
+                    activeStream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
+                }
+            } catch(e) {
+                self.errHandler.manifestError(e.message, "nostreamscomposed", self.manifestModel.getValue());
+                self.reset();
+            }
         },
 
-        manifestHasUpdated = function() {
-            var self = this;
-            composeStreams.call(self).then(
-                function() {
-                    self.system.notify("streamsComposed");
-                },
-                function(errMsg) {
-                    self.errHandler.manifestError(errMsg, "nostreamscomposed", self.manifestModel.getValue());
-                    self.reset();
-                }
-            );
+        onStreamUpdated = function(/*e*/) {
+            var self = this,
+                ln = streams.length,
+                i = 0;
+
+            for (i; i < ln; i += 1) {
+                if (streams[i].isUpdating()) return;
+            }
+
+            self.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED);
+        },
+
+        onManifestLoaded = function(e) {
+            if (!e.error) {
+                this.manifestModel.setValue(e.data.manifest);
+                this.debug.log("Manifest has loaded.");
+                //self.debug.log(self.manifestModel.getValue());
+                composeStreams.call(this);
+            } else {
+                this.reset();
+            }
         };
 
     return {
@@ -319,30 +315,25 @@
         manifestLoader: undefined,
         manifestUpdater: undefined,
         manifestModel: undefined,
-        mediaSourceExt: undefined,
-        sourceBufferExt: undefined,
-        bufferExt: undefined,
-        manifestExt: undefined,
-        fragmentController: undefined,
-        abrController: undefined,
-        fragmentExt: undefined,
-        capabilities: undefined,
+        adapter: undefined,
         debug: undefined,
         metricsModel: undefined,
+        metricsExt: undefined,
         videoExt: undefined,
+        liveEdgeFinder: undefined,
+        timelineConverter: undefined,
         errHandler: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
 
         setup: function() {
-            this.system.mapHandler("manifestUpdated", undefined, manifestHasUpdated.bind(this));
-            timeupdateListener = onTimeupdate.bind(this);
-            progressListener = onProgress.bind(this);
-            seekingListener = onSeeking.bind(this);
-            pauseListener = onPause.bind(this);
-            playListener = onPlay.bind(this);
-        },
+            this[MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = onManifestLoaded;
+            this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
 
-        getManifestExt: function () {
-            return activeStream.getManifestExt();
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onSeeking;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS] = onProgress;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onTimeupdate;
         },
 
         setAutoPlay: function (value) {
@@ -353,6 +344,10 @@
             return autoPlay;
         },
 
+        setProtectionData: function (value) {
+            protectionData = value;
+        },
+
         getVideoModel: function () {
             return this.videoModel;
         },
@@ -361,41 +356,42 @@
             this.videoModel = value;
         },
 
-        load: function (url) {
-            var self = this;
+        getActiveStreamInfo: function() {
+            return activeStream ? activeStream.getStreamInfo() : null;
+        },
 
-            self.manifestLoader.load(url).then(
-                function(manifest) {
-                    self.manifestModel.setValue(manifest);
-                    self.debug.log("Manifest has loaded.");
-                    //self.debug.log(self.manifestModel.getValue());
-                    self.manifestUpdater.start();
-                },
-                function () {
-                    self.reset();
-                }
-            );
+        load: function (url) {
+            this.manifestLoader.load(url);
         },
 
         reset: function () {
 
             if (!!activeStream) {
-                detachVideoEvents.call(this, activeStream.getVideoModel());
+                detachVideoEvents.call(this, activeStream);
+
+                //switch back to the original video element
+                if (activeStream.getVideoModel() !== this.getVideoModel()) {
+                    switchVideoModel.call(this, activeStream.getVideoModel(), this.getVideoModel());
+                }
             }
 
             for (var i = 0, ln = streams.length; i < ln; i++) {
                 var stream = streams[i];
+                stream.unsubscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this);
                 stream.reset();
-                // we should not remove the video element for the active stream since it is the element users see at the page
-                if (stream !== activeStream) {
+                // remove all video elements except the original one
+                if (stream.getVideoModel() !== this.getVideoModel()) {
                     removeVideoElement(stream.getVideoModel().getElement());
                 }
             }
 
             streams = [];
             this.manifestUpdater.stop();
+            this.metricsModel.clearAllCurrentMetrics();
             this.manifestModel.setValue(null);
-            isPeriodSwitchingInProgress = false;
+            this.timelineConverter.reset();
+            this.adapter.reset();
+            isStreamSwitchingInProgress = false;
             activeStream = null;
         },
 
@@ -407,4 +403,8 @@
 
 MediaPlayer.dependencies.StreamController.prototype = {
     constructor: MediaPlayer.dependencies.StreamController
+};
+
+MediaPlayer.dependencies.StreamController.eventList = {
+    ENAME_STREAMS_COMPOSED: "streamsComposed"
 };

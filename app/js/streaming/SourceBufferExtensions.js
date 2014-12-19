@@ -14,43 +14,41 @@
 MediaPlayer.dependencies.SourceBufferExtensions = function () {
     "use strict";
     this.system = undefined;
-    this.manifestExt = undefined;
+    this.errHandler = undefined;
+    this.notify = undefined;
+    this.subscribe = undefined;
+    this.unsubscribe = undefined;
 };
 
 MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
     constructor: MediaPlayer.dependencies.SourceBufferExtensions,
 
-    createSourceBuffer: function (mediaSource, codec) {
+    createSourceBuffer: function (mediaSource, mediaInfo) {
         "use strict";
-        var deferred = Q.defer(),
-            self = this;
+        var self = this,
+            codec = mediaInfo.codec,
+            buffer = null;
         try {
-            deferred.resolve(mediaSource.addSourceBuffer(codec));
+            buffer = mediaSource.addSourceBuffer(codec);
         } catch(ex) {
-            if (!self.manifestExt.getIsTextTrack(codec)) {
-                deferred.reject(ex.description);
+            if (mediaInfo.isText) {
+                buffer = self.system.getObject("textSourceBuffer");
             } else {
-                deferred.resolve(self.system.getObject("textSourceBuffer"));
+                throw ex;
             }
-
         }
-        return deferred.promise;
+
+        return buffer;
     },
 
     removeSourceBuffer: function (mediaSource, buffer) {
         "use strict";
-        var deferred = Q.defer();
+
         try {
-            deferred.resolve(mediaSource.removeSourceBuffer(buffer));
+            mediaSource.removeSourceBuffer(buffer);
         } catch(ex){
-            if (buffer && typeof(buffer.getTextTrackExtensions) === "function") {
-                deferred.resolve();
-            } else {
-                deferred.reject(ex.description);
-            }
         }
-        return deferred.promise;
     },
 
     getBufferRange: function (buffer, time, tolerance) {
@@ -69,7 +67,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         try {
             ranges = buffer.buffered;
         } catch(ex) {
-            return Q.when(null);
+            return null;
         }
 
         if (ranges !== null) {
@@ -82,12 +80,10 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                         // start the range
                         firstStart = start;
                         lastEnd = end;
-                        continue;
                     } else if (gap <= toler) {
                         // start the range even though the buffer does not contain time 0
                         firstStart = start;
                         lastEnd = end;
-                        continue;
                     }
                 } else {
                     gap = start - lastEnd;
@@ -101,11 +97,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             }
 
             if (firstStart !== null) {
-                return Q.when({start: firstStart, end: lastEnd});
+                return {start: firstStart, end: lastEnd};
             }
         }
 
-        return Q.when(null);
+        return null;
     },
 
     getAllRanges: function(buffer) {
@@ -113,9 +109,9 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
         try{
             ranges = buffer.buffered;
-            return Q.when(ranges);
+            return ranges;
         } catch (ex) {
-            return Q.when(null);
+            return null;
         }
     },
 
@@ -123,39 +119,43 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         "use strict";
 
         var self = this,
-            deferred = Q.defer();
+            range,
+            length;
 
-        self.getBufferRange(buffer, time, tolerance).then(
-            function (range) {
-                if (range === null) {
-                    deferred.resolve(0);
-                } else {
-                    deferred.resolve(range.end - time);
-                }
-            }
-        );
+        range = self.getBufferRange(buffer, time, tolerance);
 
-        return deferred.promise;
+        if (range === null) {
+            length = 0;
+        } else {
+            length = range.end - time;
+        }
+
+        return length;
     },
 
-    waitForUpdateEnd: function(buffer) {
+    waitForUpdateEnd: function(buffer, callback) {
         "use strict";
-        var defer = Q.defer(),
-            intervalId,
+        var intervalId,
             CHECK_INTERVAL = 50,
             checkIsUpdateEnded = function() {
                 // if undating is still in progress do nothing and wait for the next check again.
                 if (buffer.updating) return;
                 // updating is completed, now we can stop checking and resolve the promise
                 clearInterval(intervalId);
-                defer.resolve(true);
+                callback(true);
             },
             updateEndHandler = function() {
                 if (buffer.updating) return;
 
                 buffer.removeEventListener("updateend", updateEndHandler, false);
-                defer.resolve(true);
+                callback(true);
             };
+
+        if (!buffer.updating) {
+            callback(true);
+            return;
+        }
+
         // use updateend event if possible
         if (typeof buffer.addEventListener === "function") {
             try {
@@ -168,64 +168,59 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             // use setInterval to periodically check if updating has been completed
             intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
         }
-
-        return defer.promise;
     },
 
-    append: function (buffer, bytes /*, videoModel*/) {
-        var deferred = Q.defer();
+    append: function (buffer, bytes) {
+        var self = this,
+            appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null);
+
+        if (!appendMethod) return;
 
         try {
-            if ("append" in buffer) {
-                buffer.append(bytes);
-            } else if ("appendBuffer" in buffer) {
-                buffer.appendBuffer(bytes);
-            }
-            // updating is in progress, we should wait for it to complete before signaling that this operation is done
-            this.waitForUpdateEnd(buffer).then(
-                function() {
-                    deferred.resolve();
-                }
-            );
-        } catch (err) {
-            deferred.reject({err: err, data: bytes});
-        }
+            self.waitForUpdateEnd(buffer, function() {
+                buffer[appendMethod](bytes);
 
-        return deferred.promise;
+                // updating is in progress, we should wait for it to complete before signaling that this operation is done
+                self.waitForUpdateEnd(buffer, function() {
+                    self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
+                });
+            });
+        } catch (err) {
+            self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes}, new MediaPlayer.vo.Error(err.code, err.message, null));
+        }
     },
 
-    remove: function (buffer, start, end, duration, mediaSource) {
-        var deferred = Q.defer();
+    remove: function (buffer, start, end, mediaSource) {
+        var self = this;
 
         try {
             // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
-            if ((start >= 0) && (start < duration) && (end > start) && (mediaSource.readyState !== "ended")) {
+            if ((start >= 0) && (end > start) && (mediaSource.readyState !== "ended")) {
                 buffer.remove(start, end);
             }
             // updating is in progress, we should wait for it to complete before signaling that this operation is done
-            this.waitForUpdateEnd(buffer).then(
-                function() {
-                    deferred.resolve();
-                }
-            );
+            this.waitForUpdateEnd(buffer, function() {
+                self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
+            });
         } catch (err) {
-            deferred.reject(err);
+            self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end}, new MediaPlayer.vo.Error(err.code, err.message, null));
         }
-
-        return deferred.promise;
     },
 
     abort: function (mediaSource, buffer) {
         "use strict";
-        var deferred = Q.defer();
         try {
             if (mediaSource.readyState === "open") {
                 buffer.abort();
             }
-            deferred.resolve();
         } catch(ex){
-            deferred.reject(ex.description);
         }
-        return deferred.promise;
     }
+};
+
+MediaPlayer.dependencies.SourceBufferExtensions.QUOTA_EXCEEDED_ERROR_CODE = 22;
+
+MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
+    ENAME_SOURCEBUFFER_REMOVE_COMPLETED: "sourceBufferRemoveCompleted",
+    ENAME_SOURCEBUFFER_APPEND_COMPLETED: "sourceBufferAppendCompleted"
 };

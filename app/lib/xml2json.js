@@ -126,7 +126,7 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 				var value2 = attr.value;
 				for(var m=0, ml=matchers.length; m < ml; m++) {
 				    var matchobj = matchers[m];
-				    if (matchobj.test.call(this, attr.value))
+				    if (matchobj.test.call(this, attr))
 				        value2 = matchobj.converter.call(this, attr.value);
 				}
 				

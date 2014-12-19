@@ -1,0 +1,9 @@
+{
+    "items": [
+        {
+            "name": "Feelings",
+            "url": "http://yt-dash-mse-test.commondatastorage.googleapis.com/media/feelings_vp9-20130806-manifest.mpd",
+            "browsers": "bcdias"
+        }
+    ]
+}

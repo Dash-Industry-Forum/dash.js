@@ -32,19 +32,20 @@ MediaPlayer.utils.Capabilities.prototype = {
 
         var hasWebKit = ("WebKitMediaKeys" in window),
             hasMs = ("MSMediaKeys" in window),
-            hasMediaSource = ("MediaKeys" in window);
+            hasMediaSource = ("MediaKeys" in window),
+            hasWebkitGenerateKeyRequest = ('webkitGenerateKeyRequest' in document.createElement('video'));
 
-        return (hasWebKit || hasMs || hasMediaSource);
+        return (hasWebKit || hasMs || hasMediaSource || hasWebkitGenerateKeyRequest);
     },
 
     supportsCodec: function (element, codec) {
         "use strict";
 
-        if (!(element instanceof HTMLVideoElement)) {
-            throw "element must be of type HTMLVideoElement.";
+        if (!(element instanceof HTMLMediaElement)) {
+            throw "element must be of type HTMLMediaElement.";
         }
 
         var canPlay = element.canPlayType(codec);
-        return (canPlay === "probably");
+        return (canPlay === "probably" || canPlay === "maybe");
     }
 };

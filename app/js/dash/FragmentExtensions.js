@@ -15,8 +15,7 @@ Dash.dependencies.FragmentExtensions = function () {
     "use strict";
 
     var parseTFDT = function (ab) {
-            var deferred = Q.defer(),
-                d = new DataView(ab),
+            var d = new DataView(ab),
                 pos = 0,
                 base_media_decode_time,
                 version,
@@ -57,12 +56,10 @@ Dash.dependencies.FragmentExtensions = function () {
                 base_media_decode_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
             }
 
-            deferred.resolve({
+            return {
                 'version' : version,
                 'base_media_decode_time' : base_media_decode_time
-            });
-
-            return deferred.promise;
+            };
         },
 
         parseSIDX = function (ab) {
@@ -110,49 +107,50 @@ Dash.dependencies.FragmentExtensions = function () {
                 earliest_presentation_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
             }
 
-            return Q.when({
+            return {
                 'earliestPresentationTime' : earliest_presentation_time,
                 'timescale' : timescale
-            });
+            };
         },
 
         loadFragment = function (media) {
-            var deferred = Q.defer(),
+            var self = this,
                 request = new XMLHttpRequest(),
-                url,
+                url = media,
                 loaded = false,
-                errorStr,
+                errorStr = "Error loading fragment: " + url,
+                error = new MediaPlayer.vo.Error(null, errorStr, null),
                 parsed;
-
-            url = media;
 
             request.onloadend = function () {
                 if (!loaded) {
                     errorStr = "Error loading fragment: " + url;
-                    deferred.reject(errorStr);
+                    self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: null}, error);
                 }
             };
 
             request.onload = function () {
                 loaded = true;
                 parsed = parseTFDT(request.response);
-                deferred.resolve(parsed);
+                self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: parsed});
             };
 
             request.onerror = function () {
                 errorStr = "Error loading fragment: " + url;
-                deferred.reject(errorStr);
+                self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: null}, error);
             };
 
             request.responseType = "arraybuffer";
             request.open("GET", url);
             request.send(null);
-
-            return deferred.promise;
         };
 
     return {
         debug : undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
+
         loadFragment : loadFragment,
         parseTFDT : parseTFDT,
         parseSIDX : parseSIDX
@@ -161,4 +159,8 @@ Dash.dependencies.FragmentExtensions = function () {
 
 Dash.dependencies.FragmentExtensions.prototype = {
     constructor: Dash.dependencies.FragmentExtensions
+};
+
+Dash.dependencies.FragmentExtensions.eventList = {
+    ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
 };

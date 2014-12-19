@@ -20,10 +20,10 @@ MediaPlayer.vo.metrics.HTTPRequest = function () {
                                     // The type of the request:
                                     // - MPD
                                     // - XLink expansion
-                                    // - Initialization Segment
-                                    // - Index Segment
-                                    // - Media Segment
-                                    // - Bitstream Switching Segment
+                                    // - Initialization Fragment
+                                    // - Index Fragment
+                                    // - Media Fragment
+                                    // - Bitstream Switching Fragment
                                     // - other
     this.url = null;            // The original URL (before any redirects or failures)
     this.actualurl = null;      // The actual URL requested, if different from above
@@ -34,6 +34,7 @@ MediaPlayer.vo.metrics.HTTPRequest = function () {
     this.responsecode = null;   // The HTTP response code.
     this.interval = null;       // The duration of the throughput trace intervals (ms), for successful requests only.
     this.mediaduration = null;  // The duration of the media requests, if available, in milliseconds.
+    this.responseHeaders = null; // all the response headers from request.
     this.trace = [];            // Throughput traces, for successful requests only.
 };
 
@@ -45,9 +46,9 @@ MediaPlayer.vo.metrics.HTTPRequest.Trace = function () {
     "use strict";
 
     /*
-     * s - Real-Time | Measurement period start.
-     * d - Measurement period duration (ms).
-     * b - List of integers counting the bytes received in each trace interval within the measurement period.
+     * s - Real-Time | Measurement stream start.
+     * d - Measurement stream duration (ms).
+     * b - List of integers counting the bytes received in each trace interval within the measurement stream.
      */
     this.s = null;
     this.d = null;

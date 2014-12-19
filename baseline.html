@@ -8,7 +8,6 @@
 
     <!-- Libraries -->
     <!--
-    <script src="app/lib/q.js"></script>
     <script src="app/lib/dijon.js"></script>
     <script src="app/lib/xml2json.js"></script>
     <script src="app/lib/objectiron.js"></script>
@@ -36,10 +35,14 @@
                 url = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd",
                 video,
                 context,
-                player;
+                player,
+                autoplay = false;
 
             if (vars && vars.hasOwnProperty("url")) {
                 url = vars.url;
+            }
+            if (vars && vars.hasOwnProperty("autoplay")) {
+                autoplay = (vars.autoplay == "true");
             }
 
             video = document.querySelector(".dash-video-player video");
@@ -49,7 +52,7 @@
             player.startup();
 
             player.attachView(video);
-            player.setAutoPlay(false);
+            player.setAutoPlay(autoplay);
 
             player.attachSource(url);
         }

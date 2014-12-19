@@ -21,15 +21,17 @@ MediaPlayer.dependencies.ProtectionController = function () {
             self.protectionModel.removeKeySystem(kid);
         },
 
-        selectKeySystem = function (codec, contentProtection) {
-            var self = this;
+        selectKeySystem = function (mediaInfo) {
+            var self = this,
+                codec = mediaInfo.codec,
+                contentProtection = mediaInfo.contentProtection;
 
             for(var ks = 0; ks < keySystems.length; ++ks) {
                 for(var cp = 0; cp < contentProtection.length; ++cp) {
                     if (keySystems[ks].isSupported(contentProtection[cp]) &&
                         self.protectionExt.supportsCodec(keySystems[ks].keysTypeString, codec)) {
 
-                        var kid = self.manifestExt.getKID(contentProtection[cp]);
+                        var kid = contentProtection[cp].KID;
                         if (!kid) {
                             kid = "unknown";
                         }
@@ -45,12 +47,13 @@ MediaPlayer.dependencies.ProtectionController = function () {
             throw new Error("DRM: The protection system for this content is not supported.");
         },
 
-        ensureKeySession = function (kid, codec, eventInitData) {
+        ensureKeySession = function (kid, codec, event) {
             var self = this,
                 session = null,
+                eventInitData = event.initData,
                 initData = null;
 
-            if (!self.protectionModel.needToAddKeySession(kid)) {
+            if (!self.protectionModel.needToAddKeySession(kid, event)) {
                 return;
             }
 
@@ -66,41 +69,62 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
             if (!!initData) {
                 session = self.protectionModel.addKeySession(kid, codec, initData);
-                self.debug.log("DRM: Added Key Session [" + session.sessionId + "] for KID: " + kid + " type: " + codec + " initData length: " + initData.length);
+                if (session) {
+                    self.debug.log("DRM: Added Key Session [" + session.sessionId + "] for KID: " + kid + " type: " + codec + " initData length: " + initData.length);
+                } else {
+                    self.debug.log("DRM: Added Key Session for KID: " + kid + " type: " + codec + " initData length: " + initData.length);
+                }
             }
             else {
                 self.debug.log("DRM: initdata is null.");
             }
         },
 
-        updateFromMessage = function (kid, session, msg, laURL) {
-            var self = this,
-                result;
-            result = self.protectionModel.updateFromMessage(kid, msg, laURL);
-            result.then(
-                function (data) {
-                    session.update(data);
-            });
-            return result;
+        updateFromMessage = function (kid, session, event) {
+            this.protectionModel.updateFromMessage(kid, session, event);
         };
 
     return {
         system : undefined,
         debug : undefined,
-        manifestExt : undefined,
         capabilities : undefined,
-        videoModel : undefined,
         protectionModel : undefined,
         protectionExt : undefined,
 
         setup : function () {
-            keySystems = this.protectionExt.getKeySystems();
         },
 
-        init: function (videoModel, protectionModel) {
+        init: function (videoModel, protectionModel, protectionData) {
+            keySystems = this.protectionExt.getKeySystems(protectionData);
             this.videoModel = videoModel;
             this.protectionModel = protectionModel;
             element = this.videoModel.getElement();
+        },
+
+        getBearerToken: function(keySystem) {
+            var i = 0,
+                ln = keySystems.length,
+                ks;
+
+            for (i; i < ln; i += 1) {
+                ks = keySystems[i];
+                if (ks.keysTypeString === keySystem) return ks.bearerToken;
+            }
+
+            return null;
+        },
+
+        setBearerToken: function(tokenObj) {
+            var i = 0,
+                ln = keySystems.length,
+                ks;
+
+            for (i; i < ln; i += 1) {
+                ks = keySystems[i];
+                if (ks.keysTypeString === tokenObj.keySystem){
+                    ks.bearerToken = tokenObj.token;
+                }
+            }
         },
 
         selectKeySystem : selectKeySystem,

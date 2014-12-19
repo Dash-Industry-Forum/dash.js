@@ -13,7 +13,13 @@
  */
 MediaPlayer.utils.TextTrackExtensions = function () {
     "use strict";
+    var Cue;
+
     return {
+        setup: function() {
+            Cue = window.VTTCue || window.TextTrackCue;
+        },
+
         addTextTrack: function(video, captionData,  label, scrlang, isDefaultTrack) {
 
             //TODO: Ability to define the KIND in the MPD - ie subtitle vs caption....
@@ -26,22 +32,39 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
             for(var item in captionData) {
                 var currentItem = captionData[item];
-                track.addCue(new TextTrackCue(currentItem.start, currentItem.end, currentItem.data));
+                track.addCue(new Cue(currentItem.start, currentItem.end, currentItem.data));
             }
 
-            return Q.when(track);
+            return track;
         },
         deleteCues: function(video) {
             //when multiple tracks are supported - iterate through and delete all cues from all tracks.
-            var track = video.textTracks[0],
+
+            var i = 0,
+                firstValidTrack = false;
+
+            while (!firstValidTrack)
+            {
+                if (video.textTracks[i].cues !== null)
+                {
+                    firstValidTrack = true;
+                    break;
+                }
+                i++;
+            }
+
+            var track = video.textTracks[i],
                 cues = track.cues,
                 lastIdx = cues.length - 1;
 
-            for (var i = lastIdx; i >= 0 ; i -= 1) {
+            for (i = lastIdx; i >= 0 ; i--) {
                 track.removeCue(cues[i]);
             }
 
             track.mode = "disabled";
+            // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
+            /*jshint -W024 */
+            track.default = false;
         }
 
     };

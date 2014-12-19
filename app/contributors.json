@@ -23,6 +23,16 @@
         {
             "name": "Senthil",
             "link": "https://github.com/senthil-codr"
+        },
+        {
+            "name": "Brightcove",
+            "logo": "app/img/brightcove.png",
+            "link": "https://www.brightcove.com"
+        },
+        {
+            "name": "Fraunhofer Fokus",
+            "logo": "app/img/fh_fokus.png",
+            "link": "http://www.fokus.fraunhofer.de/en/fame/index.html"
         }
     ]
 }

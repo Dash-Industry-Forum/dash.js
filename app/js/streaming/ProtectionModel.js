@@ -17,16 +17,25 @@ MediaPlayer.models.ProtectionModel = function () {
         keyAddedListener = null,
         keyErrorListener = null,
         keyMessageListener = null,
-        keySystems = [];
+        session,
+        keySystems = [],
+
+        onKeySystemUpdateCompleted = function(e) {
+            var hasWebkitGenerateKeyRequest = ('webkitGenerateKeyRequest' in document.createElement('video'));
+
+            if (e.error) return;
+
+            if (!hasWebkitGenerateKeyRequest) {
+                session.update(e.data.data);
+            }
+        };
 
     return {
         system : undefined,
-        videoModel : undefined,
         protectionExt : undefined,
 
-        setup : function () {
-            //this.system.mapHandler("setCurrentTime", undefined, handleSetCurrentTimeNotification.bind(this));
-            element = this.videoModel.getElement();
+        setup: function() {
+            this[MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED] = onKeySystemUpdateCompleted;
         },
 
         init: function (videoModel) {
@@ -35,13 +44,18 @@ MediaPlayer.models.ProtectionModel = function () {
         },
 
         addKeySession: function (kid, mediaCodec, initData) {
-            var session = null;
+            var session = null,
+                hasWebkitGenerateKeyRequest = ('webkitGenerateKeyRequest' in document.createElement('video'));
 
-            session = this.protectionExt.createSession(keySystems[kid].keys, mediaCodec, initData);
+            if (!hasWebkitGenerateKeyRequest) {
+                session = this.protectionExt.createSession(keySystems[kid].keys, mediaCodec, initData, keySystems[kid].keySystem.cdmData());
 
-            this.protectionExt.listenToKeyAdded(session, keyAddedListener);
-            this.protectionExt.listenToKeyError(session, keyErrorListener);
-            this.protectionExt.listenToKeyMessage(session, keyMessageListener);
+                this.protectionExt.listenToKeyAdded(session, keyAddedListener);
+                this.protectionExt.listenToKeyError(session, keyErrorListener);
+                this.protectionExt.listenToKeyMessage(session, keyMessageListener);
+            } else {
+                this.protectionExt.listenToKeyMessage(this.videoModel.getElement(), keyMessageListener);
+            }
 
             keySystems[kid].initData = initData;
             keySystems[kid].keySessions.push(session);
@@ -81,10 +95,10 @@ MediaPlayer.models.ProtectionModel = function () {
             }
         },
 
-        needToAddKeySession: function (kid) {
+        needToAddKeySession: function (kid, event) {
             var keySystem = null;
             keySystem = keySystems[kid];
-            return keySystem.keySystem.needToAddKeySession(keySystem.initData, keySystem.keySessions);
+            return keySystem.keySystem.needToAddKeySession(keySystem.initData, keySystem.keySessions, event);
         },
 
         getInitData: function (kid) {
@@ -93,8 +107,9 @@ MediaPlayer.models.ProtectionModel = function () {
             return keySystem.keySystem.getInitData(keySystem.contentProtection);
         },
 
-        updateFromMessage: function (kid, msg, laURL) {
-            return keySystems[kid].keySystem.getUpdate(msg, laURL);
+        updateFromMessage: function (kid, sessionValue, event) {
+            session = sessionValue;
+            keySystems[kid].keySystem.getUpdate(event);
         },
 /*
         addKey: function (type, key, data, id) {

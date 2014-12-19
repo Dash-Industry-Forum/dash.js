@@ -15,13 +15,14 @@ MediaPlayer.dependencies.FragmentController = function () {
     "use strict";
 
     var fragmentModels = [],
+        inProgress = false,
 
-        findModel = function(bufferController) {
+        findModel = function(context) {
             var ln = fragmentModels.length;
-            // We expect one-to-one relation between FragmentModel and BufferController,
-            // so just compare the given BufferController object with the one that stored in the model to find the model for it
+            // We expect one-to-one relation between FragmentModel and context,
+            // so just compare the given context object with the one that stored in the model to find the model for it
             for (var i = 0; i < ln; i++) {
-                if (fragmentModels[i].getContext() == bufferController) {
+                if (fragmentModels[i].getContext() == context) {
                     return fragmentModels[i];
                 }
             }
@@ -29,30 +30,114 @@ MediaPlayer.dependencies.FragmentController = function () {
             return null;
         },
 
-        isReadyToLoadNextFragment = function() {
-            var isReady = true,
-                ln = fragmentModels.length;
-            // Loop through the models and check if all of them are in the ready state
-            for (var i = 0; i < ln; i++) {
-                if (!fragmentModels[i].isReady()) {
-                    isReady = false;
-                    break;
+        getRequestsToLoad = function(current, callback) {
+            var self =this,
+                streamProcessor = fragmentModels[0].getContext().streamProcessor,
+                streamId = streamProcessor.getStreamInfo().id,
+                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_EXECUTE_RULES);
+
+            if (rules.indexOf(this.scheduleRulesCollection.sameTimeRequestRule) !== -1) {
+                this.scheduleRulesCollection.sameTimeRequestRule.setFragmentModels(fragmentModels, streamId);
+            }
+
+            self.rulesController.applyRules(rules, streamProcessor, callback, current, function(currentValue, newValue) {
+                return newValue;
+            });
+        },
+
+        onFragmentLoadingStart = function(e) {
+            var self = this,
+                request = e.data.request;
+
+            if (self.isInitializationRequest(request)) {
+                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADING_START, {request: request, fragmentModel: e.sender});
+            }else {
+                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START, {request: request, fragmentModel: e.sender});
+            }
+        },
+
+        onFragmentLoadingCompleted = function(e) {
+            var self = this,
+                request = e.data.request,
+                bytes = self.process(e.data.response);
+
+            if (bytes === null) {
+                self.debug.log("No " + request.mediaType + " bytes to push.");
+                return;
+            }
+
+            if (self.isInitializationRequest(request)) {
+                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED, {bytes: bytes, quality: request.quality, fragmentModel: e.sender});
+            }else {
+                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED, {bytes: bytes, quality: request.quality, index: request.index, fragmentModel: e.sender});
+            }
+
+            executeRequests.call(this);
+        },
+
+        onStreamCompleted = function(e) {
+            this.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED, {request: e.data.request, fragmentModel: e.sender});
+        },
+
+        onBufferLevelBalanced = function(/*e*/) {
+            executeRequests.call(this);
+        },
+
+        onGetRequests = function(result) {
+            var reqsToExecute = result.value,
+                mediaType,
+                r,
+                m,
+                i,
+                j;
+
+            for (i = 0; i < reqsToExecute.length; i += 1) {
+                r = reqsToExecute[i];
+
+                if (!r) continue;
+
+                for (j = 0; j < fragmentModels.length; j += 1) {
+                    m = fragmentModels[j];
+                    mediaType = m.getContext().streamProcessor.getType();
+
+                    if (r.mediaType !== mediaType) continue;
+
+                    if (!(r instanceof MediaPlayer.vo.FragmentRequest)) {
+                        r = m.getPendingRequestForTime(r.startTime);
+                    }
+
+                    m.executeRequest(r);
                 }
             }
 
-            return isReady;
+            inProgress = false;
         },
 
-        executeRequests = function() {
-            for (var i = 0; i < fragmentModels.length; i++) {
-                fragmentModels[i].executeCurrentRequest();
-            }
+        executeRequests = function(request) {
+            if (inProgress) return;
+
+            inProgress = true;
+
+            getRequestsToLoad.call(this, request, onGetRequests.bind(this));
         };
 
     return {
         system: undefined,
         debug: undefined,
+        scheduleRulesCollection: undefined,
+        rulesController: undefined,
         fragmentLoader: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
+
+        setup: function() {
+            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = onFragmentLoadingStart;
+            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
+            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
+
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
+        },
 
         process: function (bytes) {
             var result = null;
@@ -61,40 +146,33 @@ MediaPlayer.dependencies.FragmentController = function () {
                 result = new Uint8Array(bytes);
             }
 
-            return Q.when(result);
+            return result;
         },
 
-        attachBufferController: function(bufferController) {
-            if (!bufferController) return null;
+        getModel: function(context) {
+            if (!context) return null;
             // Wrap the buffer controller into model and store it to track the loading state and execute the requests
-            var model = findModel(bufferController);
+            var model = findModel(context);
 
             if (!model){
                 model = this.system.getObject("fragmentModel");
-                model.setContext(bufferController);
+                model.setContext(context);
                 fragmentModels.push(model);
             }
 
             return model;
         },
 
-        detachBufferController: function(bufferController) {
-            var idx = fragmentModels.indexOf(bufferController);
+        detachModel: function(model) {
+            var idx = fragmentModels.indexOf(model);
             // If we have the model for the given buffer just remove it from array
             if (idx > -1) {
                 fragmentModels.splice(idx, 1);
             }
         },
 
-        onBufferControllerStateChange: function() {
-            // Check if we are ready to execute pending requests and do it
-            if (isReadyToLoadNextFragment()) {
-                executeRequests.call(this);
-            }
-        },
-
-        isFragmentLoadedOrPending: function(bufferController, request) {
-            var fragmentModel = findModel(bufferController),
+        isFragmentLoadedOrPending: function(context, request) {
+            var fragmentModel = findModel(context),
                 isLoaded;
 
             if (!fragmentModel) {
@@ -106,8 +184,8 @@ MediaPlayer.dependencies.FragmentController = function () {
             return isLoaded;
         },
 
-        getPendingRequests: function(bufferController) {
-            var fragmentModel = findModel(bufferController);
+        getPendingRequests: function(context) {
+            var fragmentModel = findModel(context);
 
             if (!fragmentModel) {
                 return null;
@@ -116,8 +194,8 @@ MediaPlayer.dependencies.FragmentController = function () {
             return fragmentModel.getPendingRequests();
         },
 
-        getLoadingRequests: function(bufferController) {
-            var fragmentModel = findModel(bufferController);
+        getLoadingRequests: function(context) {
+            var fragmentModel = findModel(context);
 
             if (!fragmentModel) {
                 return null;
@@ -127,11 +205,11 @@ MediaPlayer.dependencies.FragmentController = function () {
         },
 
 		isInitializationRequest: function(request){
-			return (request && request.type && request.type.toLowerCase() === "initialization segment");
+			return (request && request.type && request.type.toLowerCase().indexOf("initialization") !== -1);
 		},
 
-        getLoadingTime: function(bufferController) {
-            var fragmentModel = findModel(bufferController);
+        getLoadingTime: function(context) {
+            var fragmentModel = findModel(context);
 
             if (!fragmentModel) {
                 return null;
@@ -170,38 +248,39 @@ MediaPlayer.dependencies.FragmentController = function () {
             if (model) {
                 model.abortRequests();
             }
+
+            executeRequests.call(this);
         },
 
-        isFragmentExists: function(request) {
-            var deferred = Q.defer();
+        prepareFragmentForLoading: function(context, request) {
+            var fragmentModel = findModel(context);
 
-            this.fragmentLoader.checkForExistence(request).then(
-                function() {
-                    deferred.resolve(true);
-                },
-                function() {
-                    deferred.resolve(false);
-                }
-            );
-
-            return deferred.promise;
-        },
-
-        prepareFragmentForLoading: function(bufferController, request, startLoadingCallback, successLoadingCallback, errorLoadingCallback, streamEndCallback) {
-            var fragmentModel = findModel(bufferController);
-
-            if (!fragmentModel || !request) {
-                return Q.when(null);
-            }
+            if (!fragmentModel || !request) return;
             // Store the request and all the necessary callbacks in the model for deferred execution
-            fragmentModel.addRequest(request);
-            fragmentModel.setCallbacks(startLoadingCallback, successLoadingCallback, errorLoadingCallback, streamEndCallback);
+            if (fragmentModel.addRequest(request)) {
+                executeRequests.call(this, request);
+            }
+        },
 
-            return Q.when(true);
+        executePendingRequests: function() {
+            executeRequests.call(this);
+        },
+
+        resetModel: function(model) {
+            this.abortRequestsForModel(model);
+            this.cancelPendingRequestsForModel(model);
         }
     };
 };
 
 MediaPlayer.dependencies.FragmentController.prototype = {
     constructor: MediaPlayer.dependencies.FragmentController
+};
+
+MediaPlayer.dependencies.FragmentController.eventList = {
+    ENAME_STREAM_COMPLETED: "streamCompleted",
+    ENAME_INIT_FRAGMENT_LOADING_START: "initFragmentLoadingStart",
+    ENAME_MEDIA_FRAGMENT_LOADING_START: "mediaFragmentLoadingStart",
+    ENAME_INIT_FRAGMENT_LOADED: "initFragmentLoaded",
+    ENAME_MEDIA_FRAGMENT_LOADED: "mediaFragmentLoaded"
 };
