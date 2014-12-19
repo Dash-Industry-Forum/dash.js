@@ -11,7 +11,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         lastValidationTime = null,
         lastABRRuleApplyTime = 0,
         isStopped = false,
-
         playListMetrics = null,
         playListTraceMetrics = null,
         playListTraceMetricsClosed = true,
@@ -415,6 +414,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         getFragmentModel: function() {
             return fragmentModel;
+        },
+
+        getFragmentToLoadCount:function () {
+            return fragmentsToLoad;
         },
 
         reset: function() {

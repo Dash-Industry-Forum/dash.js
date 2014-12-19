@@ -29,9 +29,11 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
                 maxIndex = mediaInfo.trackCount - 1,
                 switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
+
             if (lastBufferLevelVO !== null && lastBufferStateVO !== null) {
-                if (lastBufferLevelVO.level > lastBufferStateVO.target)
-                {
+                // This will happen when another rule tries to switch from top to any other.
+                // If there is enough buffer why not try to stay at high level.
+                if (lastBufferLevelVO.level > lastBufferStateVO.target) {
                     isBufferRich = (lastBufferLevelVO.level - lastBufferStateVO.target) > MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD;
                     if (isBufferRich && mediaInfo.trackCount > 1) {
                         switchRequest = new MediaPlayer.rules.SwitchRequest(maxIndex, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
@@ -40,7 +42,7 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
             }
 
             if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                self.debug.log("XXX BufferOccupancyRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
+                self.debug.log("BufferOccupancyRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
                     switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
                         switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
             }

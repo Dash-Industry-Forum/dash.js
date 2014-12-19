@@ -19,6 +19,7 @@ MediaPlayer.dependencies.BufferController = function () {
         currentQuality = -1,
         isBufferingCompleted = false,
         bufferLevel = 0,
+        bufferTarget= 0,
         criticalBufferLevel = Number.POSITIVE_INFINITY,
         mediaSource,
         maxAppendedIndex = -1,
@@ -395,12 +396,18 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
+        getBufferState = function() {
+            return hasSufficientBuffer ? MediaPlayer.dependencies.BufferController.BUFFER_LOADED : MediaPlayer.dependencies.BufferController.BUFFER_EMPTY;
+        },
+
         notifyIfSufficientBufferStateChanged = function(state) {
             if (hasSufficientBuffer === state) return;
 
             hasSufficientBuffer = state;
-            var bufferState = hasSufficientBuffer ? MediaPlayer.dependencies.BufferController.BUFFER_LOADED : MediaPlayer.dependencies.BufferController.BUFFER_EMPTY;
-            this.metricsModel.addBufferState(type, bufferState, this.scheduleRulesCollection.bufferLevelRule.getBufferTarget());
+
+            var bufferState = getBufferState();
+            this.metricsModel.addBufferState(type, bufferState, bufferTarget);
+
             this.eventBus.dispatchEvent({
                 type: bufferState,
                 data: {
@@ -420,9 +427,13 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         updateBufferState = function() {
-            var self = this;
+            var self = this,
+                fragmentsToLoad = this.streamProcessor.getScheduleController().getFragmentToLoadCount(),
+                fragmentDuration = this.streamProcessor.getCurrentTrack().fragmentDuration;
 
             updateBufferLevel.call(self);
+            bufferTarget = fragmentsToLoad > 0 ? (fragmentsToLoad * fragmentDuration) + bufferLevel : bufferTarget;
+            this.metricsModel.addBufferState(type, getBufferState(), bufferTarget);
             appendNext.call(self);
         },
 

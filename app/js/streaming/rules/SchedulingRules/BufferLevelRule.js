@@ -4,7 +4,6 @@ MediaPlayer.rules.BufferLevelRule = function () {
     var isBufferLevelOutran = {},
         isCompleted = {},
         scheduleController = {},
-        bufferTarget = 0,
 
         getCurrentHttpRequestLatency = function(metrics) {
             var httpRequest = this.metricsExt.getCurrentHttpRequest(metrics);
@@ -133,8 +132,6 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 fragmentCount = fragmentCount || 1;
             }
 
-            bufferTarget = requiredBufferLength;
-
             callback(new MediaPlayer.rules.SwitchRequest(fragmentCount, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
         },
 
@@ -142,10 +139,6 @@ MediaPlayer.rules.BufferLevelRule = function () {
             isBufferLevelOutran = {};
             isCompleted = {};
             scheduleController = {};
-        },
-
-        getBufferTarget:function () {
-            return bufferTarget;
         }
     };
 };

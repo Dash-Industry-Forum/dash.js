@@ -161,6 +161,10 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             return mediaInfo;
         },
 
+        getScheduleController:function () {
+            return this.scheduleController;
+        },
+
         getEventController: function() {
             return eventController;
         },
