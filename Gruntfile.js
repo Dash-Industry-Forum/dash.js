@@ -16,12 +16,8 @@ module.exports = function(grunt) {
         jshintrc: ".jshintrc"
       }
     },
-    uglify : {
-      options: {
-        mangle: false,
-        sourceMap: true
-      },
-      min : {
+    uglify: {
+      min: {
         files: {
           "dash.min.js": [
             "app/js/streaming/MediaPlayer.js",
@@ -36,6 +32,9 @@ module.exports = function(grunt) {
         }
       },
       all: {
+        option: {
+          sourceMap: true
+        },
         files: {
           "dash.all.js": [
             "./app/lib/xml2json.js",
