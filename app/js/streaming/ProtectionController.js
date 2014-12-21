@@ -21,7 +21,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
             self.protectionModel.removeKeySystem(kid);
         },
 
-        selectKeySystem = function (mediaInfo) {
+        selectKeySystem = function (mediaInfo, event) {
             var self = this,
                 codec = mediaInfo.codec,
                 contentProtection = mediaInfo.contentProtection;
@@ -36,7 +36,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                             kid = "unknown";
                         }
 
-                        self.protectionModel.addKeySystem(kid, contentProtection[cp], keySystems[ks]);
+                        self.protectionModel.addKeySystem(kid, contentProtection[cp], keySystems[ks], event.initData);
 
                         self.debug.log("DRM: Selected Key System: " + keySystems[ks].keysTypeString + " For KID: " + kid);
 
@@ -50,7 +50,6 @@ MediaPlayer.dependencies.ProtectionController = function () {
         ensureKeySession = function (kid, codec, event) {
             var self = this,
                 session = null,
-                eventInitData = event.initData,
                 initData = null;
 
             if (!self.protectionModel.needToAddKeySession(kid, event)) {
@@ -59,8 +58,8 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
             initData = self.protectionModel.getInitData(kid);
 
-            if (!initData && !!eventInitData) {
-                initData = eventInitData;
+            if (!initData && !!event.initData) {
+                initData = event.initData;
                 self.debug.log("DRM: Using initdata from needskey event. length: " + initData.length);
             }
             else if (!!initData){
@@ -69,19 +68,15 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
             if (!!initData) {
                 session = self.protectionModel.addKeySession(kid, codec, initData);
-                if (session) {
-                    self.debug.log("DRM: Added Key Session [" + session.sessionId + "] for KID: " + kid + " type: " + codec + " initData length: " + initData.length);
-                } else {
-                    self.debug.log("DRM: Added Key Session for KID: " + kid + " type: " + codec + " initData length: " + initData.length);
-                }
+                self.debug.log("DRM: Added Key Session [" + session.sessionId + "] for KID: " + kid + " type: " + codec + " initData length: " + initData.length);
             }
             else {
                 self.debug.log("DRM: initdata is null.");
             }
         },
 
-        updateFromMessage = function (kid, session, event) {
-            this.protectionModel.updateFromMessage(kid, session, event);
+        updateFromMessage = function (kid, event) {
+            this.protectionModel.updateFromMessage(kid, event);
         };
 
     return {
@@ -95,10 +90,11 @@ MediaPlayer.dependencies.ProtectionController = function () {
         },
 
         init: function (videoModel, protectionModel, protectionData) {
-            keySystems = this.protectionExt.getKeySystems(protectionData);
             this.videoModel = videoModel;
-            this.protectionModel = protectionModel;
             element = this.videoModel.getElement();
+
+            this.protectionModel = protectionModel;
+            keySystems = this.protectionExt.getKeySystems(protectionData);
         },
 
         getBearerToken: function(keySystem) {

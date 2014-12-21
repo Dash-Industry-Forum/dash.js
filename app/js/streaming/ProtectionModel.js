@@ -21,11 +21,9 @@ MediaPlayer.models.ProtectionModel = function () {
         keySystems = [],
 
         onKeySystemUpdateCompleted = function(e) {
-            var hasWebkitGenerateKeyRequest = ('webkitGenerateKeyRequest' in document.createElement('video'));
-
             if (e.error) return;
 
-            if (!hasWebkitGenerateKeyRequest) {
+            if ('update' in session) {
                 session.update(e.data.data);
             }
         };
@@ -33,6 +31,7 @@ MediaPlayer.models.ProtectionModel = function () {
     return {
         system : undefined,
         protectionExt : undefined,
+        stringMethods : undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED] = onKeySystemUpdateCompleted;
@@ -44,18 +43,13 @@ MediaPlayer.models.ProtectionModel = function () {
         },
 
         addKeySession: function (kid, mediaCodec, initData) {
-            var session = null,
-                hasWebkitGenerateKeyRequest = ('webkitGenerateKeyRequest' in document.createElement('video'));
+            var session = null;
 
-            if (!hasWebkitGenerateKeyRequest) {
-                session = this.protectionExt.createSession(keySystems[kid].keys, mediaCodec, initData, keySystems[kid].keySystem.cdmData());
+            session = this.protectionExt.createSession(keySystems[kid].keys, mediaCodec, initData, keySystems[kid].keySystem.cdmData());
 
-                this.protectionExt.listenToKeyAdded(session, keyAddedListener);
-                this.protectionExt.listenToKeyError(session, keyErrorListener);
-                this.protectionExt.listenToKeyMessage(session, keyMessageListener);
-            } else {
-                this.protectionExt.listenToKeyMessage(this.videoModel.getElement(), keyMessageListener);
-            }
+            this.protectionExt.listenToKeyAdded(session, keyAddedListener);
+            this.protectionExt.listenToKeyError(session, keyErrorListener);
+            this.protectionExt.listenToKeyMessage(session, keyMessageListener);
 
             keySystems[kid].initData = initData;
             keySystems[kid].keySessions.push(session);
@@ -63,12 +57,12 @@ MediaPlayer.models.ProtectionModel = function () {
             return session;
         },
 
-        addKeySystem: function (kid, contentProtectionData, keySystemDesc) {
+        addKeySystem: function (kid, contentProtectionData, keySystemDesc, initData) {
             var keysLocal = null;
 
             keysLocal = this.protectionExt.createMediaKeys(keySystemDesc.keysTypeString);
 
-            this.protectionExt.setMediaKey(element, keysLocal);
+            this.protectionExt.setMediaKey(element, keysLocal, initData);
 
             keySystems[kid] = {
                 kID : kid,
@@ -82,6 +76,8 @@ MediaPlayer.models.ProtectionModel = function () {
 
         removeKeySystem: function (kid) {
             if (kid !== null && keySystems[kid] !== undefined && keySystems[kid].keySessions.length !== 0) {
+                this.protectionExt.unlistenToVideoModelKeyMessage(this.videoModel, keyMessageListener);
+
                 var keySessions = keySystems[kid].keySessions;
 
                 for(var kss = 0; kss < keySessions.length; ++kss) {
@@ -107,9 +103,9 @@ MediaPlayer.models.ProtectionModel = function () {
             return keySystem.keySystem.getInitData(keySystem.contentProtection);
         },
 
-        updateFromMessage: function (kid, sessionValue, event) {
-            session = sessionValue;
-            keySystems[kid].keySystem.getUpdate(event);
+        updateFromMessage: function (kid, event) {
+            session = event.target;
+            keySystems[kid].keySystem.getUpdate(event, !this.stringMethods.isNullOrEmpty(keySystems[kid].keySystem.laUrl()) ? keySystems[kid].keySystem.laUrl() : event.destinationURL);
         },
 /*
         addKey: function (type, key, data, id) {
@@ -138,6 +134,8 @@ MediaPlayer.models.ProtectionModel = function () {
 
         listenToKeyMessage: function(listener) {
             keyMessageListener = listener;
+
+            this.protectionExt.listenToVideoModelKeyMessage(this.videoModel, listener);
 
             for(var ks = 0; ks < keySystems.length; ++ks) {
                 var keySessions = keySystems[ks].keySessions;

@@ -50,7 +50,6 @@ MediaPlayer = function (aContext) {
         abrController,
         element,
         source,
-        protectionData = null,
         streamController,
         rulesController,
         manifestUpdater,
@@ -58,6 +57,7 @@ MediaPlayer = function (aContext) {
         metricsExt,
         metricsModel,
         videoModel,
+        protectionData,
         initialized = false,
         playing = false,
         autoPlay = true,
@@ -89,8 +89,8 @@ MediaPlayer = function (aContext) {
             manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
             manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, manifestUpdater);
             streamController.setVideoModel(videoModel);
-            streamController.setAutoPlay(autoPlay);
             streamController.setProtectionData(protectionData);
+            streamController.setAutoPlay(autoPlay);
             streamController.load(source);
 
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
@@ -216,6 +216,7 @@ MediaPlayer = function (aContext) {
                 abrController.reset();
                 rulesController.reset();
                 streamController = null;
+                protectionData = null;
                 playing = false;
             }
         };
@@ -303,6 +304,14 @@ MediaPlayer = function (aContext) {
          */
         getVideoModel: function () {
             return videoModel;
+        },
+
+        /**
+         * @param value
+         * @memberof MediaPlayer#
+         */
+        setProtectionData: function (value) {
+            protectionData = value;
         },
 
         /**
