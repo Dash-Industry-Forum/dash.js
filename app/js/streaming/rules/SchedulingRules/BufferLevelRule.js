@@ -17,11 +17,11 @@ MediaPlayer.rules.BufferLevelRule = function () {
             var minBufferTarget;
 
             if (isNaN(duration) || MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
-                minBufferTarget = Math.max(MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
+                minBufferTarget = Math.max(MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME * 5, minBufferTime * 5);
             } else if (minBufferTime >= duration) {
                 minBufferTarget = Math.min(duration, MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME);
             } else {
-                minBufferTarget = Math.min(duration, minBufferTime);
+                minBufferTarget = Math.min(duration, minBufferTime * 5);
             }
 
             return minBufferTarget;

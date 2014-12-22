@@ -2970,7 +2970,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             if (p.hasOwnProperty("start")) {
                 vo = new Dash.vo.Period();
                 vo.start = p.start;
-            } else if (p1 !== null && p.hasOwnProperty("duration")) {
+            } else if (p1 !== null && p.hasOwnProperty("duration") && vo1 !== null) {
                 vo = new Dash.vo.Period();
                 vo.start = vo1.start + vo1.duration;
                 vo.duration = p.duration;
@@ -2991,10 +2991,10 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 vo.index = i;
                 vo.mpd = mpd;
                 periods.push(vo);
+                p1 = p;
+                vo1 = vo;
             }
-            p1 = p;
             p = null;
-            vo1 = vo;
             vo = null;
         }
         if (periods.length === 0) {
@@ -6217,11 +6217,11 @@ MediaPlayer.dependencies.PlaybackController = function() {
     }, onBytesAppended = function(e) {
         var bufferedStart, ranges = e.data.bufferedRanges, currentEarliestTime = commonEarliestTime, playbackStart = getStreamStartTime.call(this, streamInfo), req;
         if (!ranges || !ranges.length) return;
-        req = this.adapter.getFragmentRequestForTime(e.sender.streamProcessor, trackInfo, playbackStart, false);
-        if (!req || req.index !== e.data.index) return;
         bufferedStart = ranges.start(0);
         commonEarliestTime = commonEarliestTime === null ? bufferedStart : Math.max(commonEarliestTime, bufferedStart);
         if (currentEarliestTime === commonEarliestTime) return;
+        req = this.adapter.getFragmentRequestForTime(e.sender.streamProcessor, trackInfo, playbackStart, false);
+        if (!req || req.index !== e.data.index) return;
         this.seek(commonEarliestTime);
     }, setupVideoModel = function(model) {
         videoModel = model;
@@ -7729,16 +7729,14 @@ MediaPlayer.dependencies.StreamController = function() {
         activeStream.pause();
     }, seek = function(time) {
         activeStream.seek(time);
-    }, switchVideoModel = function(fromStream, toStream) {
-        var activeVideoElement = fromStream.getVideoModel().getElement(), newVideoElement = toStream.getVideoModel().getElement();
+    }, switchVideoModel = function(fromModel, toModel) {
+        var activeVideoElement = fromModel.getElement(), newVideoElement = toModel.getElement();
         if (!newVideoElement.parentNode) {
             activeVideoElement.parentNode.insertBefore(newVideoElement, activeVideoElement);
         }
         activeVideoElement.style.width = "0px";
         newVideoElement.style.width = "100%";
         copyVideoProperties(activeVideoElement, newVideoElement);
-        detachVideoEvents.call(this, fromStream);
-        attachVideoEvents.call(this, toStream);
     }, attachVideoEvents = function(stream) {
         var playbackCtrl = stream.getPlaybackController();
         playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
@@ -7811,7 +7809,9 @@ MediaPlayer.dependencies.StreamController = function() {
         isStreamSwitchingInProgress = true;
         from.pause();
         activeStream = to;
-        switchVideoModel.call(this, from, to);
+        switchVideoModel.call(this, from.getVideoModel(), to.getVideoModel());
+        detachVideoEvents.call(this, from);
+        attachVideoEvents.call(this, to);
         if (seekTo) {
             seek(from.getPlaybackController().getTime());
         } else {
@@ -7822,7 +7822,7 @@ MediaPlayer.dependencies.StreamController = function() {
         activeStream.startEventController();
         isStreamSwitchingInProgress = false;
     }, composeStreams = function() {
-        var self = this, manifest = self.manifestModel.getValue(), metrics = self.metricsModel.getMetricsFor("stream"), manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics), playbackCtrl, streamInfo, pLen, sLen, pIdx, sIdx, streamsInfo, stream;
+        var self = this, manifest = self.manifestModel.getValue(), metrics = self.metricsModel.getMetricsFor("stream"), manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics), videoModel = activeStream ? activeStream.getVideoModel() : self.getVideoModel(), playbackCtrl, streamInfo, pLen, sLen, pIdx, sIdx, streamsInfo, stream;
         if (!manifest) return;
         streamsInfo = self.adapter.getStreamsInfo(manifest);
         try {
@@ -7830,8 +7830,8 @@ MediaPlayer.dependencies.StreamController = function() {
                 throw new Error("There are no streams");
             }
             self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
-                currentTime: self.videoModel.getCurrentTime(),
-                buffered: self.videoModel.getElement().buffered,
+                currentTime: videoModel.getCurrentTime(),
+                buffered: videoModel.getElement().buffered,
                 presentationStartTime: streamsInfo[0].start,
                 clientTimeOffset: self.timelineConverter.getClientTimeOffset()
             });
@@ -7932,12 +7932,15 @@ MediaPlayer.dependencies.StreamController = function() {
         reset: function() {
             if (!!activeStream) {
                 detachVideoEvents.call(this, activeStream);
+                if (activeStream.getVideoModel() !== this.getVideoModel()) {
+                    switchVideoModel.call(this, activeStream.getVideoModel(), this.getVideoModel());
+                }
             }
             for (var i = 0, ln = streams.length; i < ln; i++) {
                 var stream = streams[i];
                 stream.unsubscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this);
                 stream.reset();
-                if (stream !== activeStream) {
+                if (stream.getVideoModel() !== this.getVideoModel()) {
                     removeVideoElement(stream.getVideoModel().getElement());
                 }
             }
@@ -8624,7 +8627,7 @@ MediaPlayer.rules.ABRRulesCollection.prototype = {
 
 MediaPlayer.rules.DownloadRatioRule = function() {
     "use strict";
-    var MAX_SCALEDOWNS_FROM_BITRATE = 2, streamProcessors = {}, unhealthyIndexes = {}, checkRatio = function(sp, newIdx, currentBandwidth) {
+    var MAX_SCALEDOWNS_FROM_BITRATE = 2, streamProcessors = {}, unhealthyIndexes = {}, videoBandwidth, checkRatio = function(sp, newIdx, currentBandwidth) {
         var newBandwidth = sp.getTrackForQuality(newIdx).bandwidth;
         return newBandwidth / currentBandwidth;
     }, doSwitch = function(self, mediaType, idx) {
@@ -8660,9 +8663,21 @@ MediaPlayer.rules.DownloadRatioRule = function() {
         unhealthyIndexes[mediaType][idx] += 1;
         setTimeout(function() {
             if (unhealthyIndexes[mediaType][idx] < MAX_SCALEDOWNS_FROM_BITRATE) {
-                unhealthyIndexes[mediaType][idx] -= 1;
+                setHealthy(self, mediaType, idx);
             }
         }, reset);
+        self.debug.log("!!" + mediaType + " index " + (idx + 1) + " has unhealthy score of " + unhealthyIndexes[mediaType][idx]);
+    }, setHealthy = function(self, mediaType, idx) {
+        if (!unhealthyIndexes.hasOwnProperty(mediaType)) {
+            unhealthyIndexes[mediaType] = [];
+        }
+        if (!unhealthyIndexes[mediaType].hasOwnProperty(idx)) {
+            self.debug.log("!!Resetting " + mediaType + " " + (idx + 1));
+            unhealthyIndexes[mediaType][idx] = 0;
+        }
+        if (unhealthyIndexes[mediaType][idx] > 0) {
+            unhealthyIndexes[mediaType][idx] = 0;
+        }
         self.debug.log("!!" + mediaType + " index " + (idx + 1) + " has unhealthy score of " + unhealthyIndexes[mediaType][idx]);
     };
     return {
@@ -8705,18 +8720,16 @@ MediaPlayer.rules.DownloadRatioRule = function() {
                 self.debug.log("!!Total ratio: " + lastRequest.mediaduration + "/" + totalTime + " = " + totalRatio);
                 self.debug.log("!!Download ratio: " + downloadRatio);
             }
-            if (isNaN(downloadRatio)) {
-                switchRequest = new MediaPlayer.rules.SwitchRequest();
-            } else if (downloadRatio < 4) {
+            if (isNaN(totalRatio)) {
+                switchRequest = current;
+            } else if (totalRatio < 4) {
                 if (current > 0) {
                     self.debug.log("We are not at the lowest bitrate, so switch down.");
                     oneDownBandwidth = sp.getTrackForQuality(current - 1).bandwidth;
                     currentBandwidth = sp.getTrackForQuality(current).bandwidth;
                     switchRatio = oneDownBandwidth / currentBandwidth;
-                    if (downloadRatio < switchRatio + 1) {
-                        setUnhealthy(self, manifestInfo, mediaType, current);
-                    }
-                    if (downloadRatio < switchRatio) {
+                    setUnhealthy(self, manifestInfo, mediaType, current);
+                    if (totalRatio < switchRatio) {
                         self.debug.log("Things must be going pretty bad, switch all the way down.");
                         switchRequest = Math.max(current - 3, 0);
                         setUnhealthy(self, manifestInfo, mediaType, current);
@@ -8732,21 +8745,29 @@ MediaPlayer.rules.DownloadRatioRule = function() {
                     oneUpBandwidth = sp.getTrackForQuality(current + 1).bandwidth;
                     currentBandwidth = sp.getTrackForQuality(current).bandwidth;
                     switchRatio = oneUpBandwidth / currentBandwidth;
-                    if (downloadRatio >= switchRatio) {
-                        if (downloadRatio > 100) {
+                    if (totalRatio >= switchRatio) {
+                        if (mediaType == "video") {
+                            self.debug.log("!!Oneup: " + totalRatio * currentBandwidth / oneUpBandwidth);
+                        }
+                        if (totalRatio * currentBandwidth / oneUpBandwidth >= 5) {
+                            setHealthy(self, mediaType, current + 1);
+                        }
+                        if (totalRatio > 100) {
                             self.debug.log("Tons of bandwidth available, go all the way up.");
                             switchRequest = Math.min(current + 3, max);
-                        } else if (downloadRatio > 10) {
+                        } else if (totalRatio > 10) {
                             self.debug.log("Just enough bandwidth available, switch up one.");
                             switchRequest = current + 1;
                         } else {
                             i = -1;
                             while ((i += 1) < max) {
-                                if (downloadRatio < checkRatio.call(self, sp, i, currentBandwidth)) {
+                                if (totalRatio < checkRatio.call(self, sp, i, currentBandwidth)) {
                                     break;
                                 }
                             }
-                            self.debug.log("Calculated ideal new quality index is: " + i);
+                            if (mediaType == "video") {
+                                self.debug.log("!!Calculated ideal new quality index is: " + i);
+                            }
                             switchRequest = i;
                         }
                     } else {
@@ -8754,6 +8775,14 @@ MediaPlayer.rules.DownloadRatioRule = function() {
                     }
                 } else {
                     switchRequest = max;
+                }
+            }
+            if (mediaType === "video") {
+                videoBandwidth = sp.getTrackForQuality(switchRequest).bandwidth;
+            } else if (mediaType === "audio" && videoBandwidth && sp.getTrackForQuality(switchRequest).bandwidth > videoBandwidth) {
+                self.debug.log("!!Audio bitrate is less than video! Switch down.");
+                while (switchRequest > 0 && sp.getTrackForQuality(switchRequest).bandwidth > videoBandwidth) {
+                    switchRequest -= 1;
                 }
             }
             callback(doSwitch(self, mediaType, switchRequest));
@@ -8790,6 +8819,7 @@ MediaPlayer.rules.InsufficientBufferRule = function() {
                 callback(new MediaPlayer.rules.SwitchRequest());
                 return;
             }
+            console.log(trace);
             if (trace.stopreason === MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON) {
                 shift = true;
                 dryBufferHits += 1;
@@ -8803,7 +8833,7 @@ MediaPlayer.rules.InsufficientBufferRule = function() {
                 p = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
                 self.debug.log("Apply STRONG to buffer rule.");
             }
-            if (shift) {
+            if (shift && current != 0) {
                 self.debug.log("The buffer ran dry recently, switch down.");
                 callback(new MediaPlayer.rules.SwitchRequest(current - 1, p));
             } else if (dryBufferHits > DRY_BUFFER_LIMIT) {
@@ -8882,11 +8912,11 @@ MediaPlayer.rules.BufferLevelRule = function() {
     }, decideBufferLength = function(minBufferTime, duration) {
         var minBufferTarget;
         if (isNaN(duration) || MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
-            minBufferTarget = Math.max(MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
+            minBufferTarget = Math.max(MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME * 5, minBufferTime * 5);
         } else if (minBufferTime >= duration) {
             minBufferTarget = Math.min(duration, MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME);
         } else {
-            minBufferTarget = Math.min(duration, minBufferTime);
+            minBufferTarget = Math.min(duration, minBufferTime * 5);
         }
         return minBufferTarget;
     }, getRequiredBufferLength = function(isDynamic, duration, scheduleController) {
@@ -9196,7 +9226,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule.prototype = {
 
 MediaPlayer.rules.PendingRequestsRule = function() {
     "use strict";
-    var LIMIT = 1, scheduleController = {};
+    var LIMIT = 2, scheduleController = {};
     return {
         metricsExt: undefined,
         setScheduleController: function(scheduleControllerValue) {
@@ -9921,4 +9951,3 @@ MediaPlayer.vo.metrics.TCPConnection = function() {
 MediaPlayer.vo.metrics.TCPConnection.prototype = {
     constructor: MediaPlayer.vo.metrics.TCPConnection
 };
-//# sourceMappingURL=dash.debug.js.map

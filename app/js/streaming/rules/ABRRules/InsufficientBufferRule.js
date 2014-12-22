@@ -93,7 +93,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 self.debug.log("Apply STRONG to buffer rule.");
             }
 
-            if (shift) {
+            if (shift && current != 0) {
                 self.debug.log("The buffer ran dry recently, switch down.");
                 callback(new MediaPlayer.rules.SwitchRequest(current - 1, p));
             } else if (dryBufferHits > DRY_BUFFER_LIMIT) {

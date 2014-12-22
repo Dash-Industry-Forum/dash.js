@@ -32,8 +32,11 @@ module.exports = function(grunt) {
         }
       },
       all: {
-        option: {
-          sourceMap: true
+        options: {
+          sourceMap: true,
+          beautify: true,
+          compress: true,
+          mangle: false
         },
         files: {
           "dash.all.js": [

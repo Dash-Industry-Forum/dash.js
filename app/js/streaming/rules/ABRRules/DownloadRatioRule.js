@@ -27,6 +27,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
     var MAX_SCALEDOWNS_FROM_BITRATE = 2,
         streamProcessors = {},
         unhealthyIndexes = {},
+        videoBandwidth,
 
         checkRatio = function (sp, newIdx, currentBandwidth) {
             var newBandwidth = sp.getTrackForQuality(newIdx).bandwidth;
@@ -72,9 +73,23 @@ MediaPlayer.rules.DownloadRatioRule = function () {
             unhealthyIndexes[mediaType][idx] += 1;
             setTimeout(function() {
                 if (unhealthyIndexes[mediaType][idx] < MAX_SCALEDOWNS_FROM_BITRATE) {
-                    unhealthyIndexes[mediaType][idx] -= 1;
+                    setHealthy(self, mediaType, idx);
                 }
             }, reset);
+            self.debug.log('!!' + mediaType + ' index ' + (idx+1) + ' has unhealthy score of ' + unhealthyIndexes[mediaType][idx]);
+        },
+
+        setHealthy = function(self, mediaType, idx) {
+            if (!unhealthyIndexes.hasOwnProperty(mediaType)) {
+                unhealthyIndexes[mediaType] = [];
+            }
+            if (!unhealthyIndexes[mediaType].hasOwnProperty(idx)) {
+                self.debug.log('!!Resetting ' + mediaType + ' ' + (idx+1));
+                unhealthyIndexes[mediaType][idx] = 0;
+            }
+            if (unhealthyIndexes[mediaType][idx] > 0) {
+                unhealthyIndexes[mediaType][idx] = 0
+            }
             self.debug.log('!!' + mediaType + ' index ' + (idx+1) + ' has unhealthy score of ' + unhealthyIndexes[mediaType][idx]);
         };
 
@@ -148,7 +163,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
 
             // TODO : I structured this all goofy and messy.  fix plz
 
-            totalRatio = lastRequest.mediaduration / totalTime;
+            totalRatio = (lastRequest.mediaduration / totalTime);// * DOWNLOAD_RATIO_SAFETY_FACTOR;
             downloadRatio = (lastRequest.mediaduration / downloadTime);// * DOWNLOAD_RATIO_SAFETY_FACTOR;
 
             if (isNaN(downloadRatio) || isNaN(totalRatio)) {
@@ -164,10 +179,10 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 self.debug.log("!!Download ratio: " + downloadRatio);
             }
 
-            if (isNaN(downloadRatio)) {
+            if (isNaN(totalRatio)) {
                 //self.debug.log("Invalid ratio, bailing.");
-                switchRequest = new MediaPlayer.rules.SwitchRequest();
-            } else if (downloadRatio < 4.0) {
+                switchRequest = current;
+            } else if (totalRatio < 4.0) {
                 //self.debug.log("Download ratio is poor.");
                 if (current > 0) {
                     self.debug.log("We are not at the lowest bitrate, so switch down.");
@@ -178,7 +193,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
 
                     setUnhealthy(self, manifestInfo, mediaType, current);
 
-                    if (downloadRatio < switchRatio) {
+                    if (totalRatio < switchRatio) {
                         self.debug.log("Things must be going pretty bad, switch all the way down.");
                         switchRequest = Math.max(current - 3, 0);
                         setUnhealthy(self, manifestInfo, mediaType, current);
@@ -200,12 +215,21 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                     switchRatio = oneUpBandwidth / currentBandwidth;
                     //self.debug.log("Switch ratio: " + switchRatio);
 
-                    if (downloadRatio >= switchRatio) {
-                        if (downloadRatio > 100.0) {
+                    if (totalRatio >= switchRatio) {
+
+                        if (mediaType == 'video') {
+                            self.debug.log('!!Oneup: ' + (totalRatio * currentBandwidth) / oneUpBandwidth);
+                        }
+
+                        if ((totalRatio * currentBandwidth) / oneUpBandwidth >= 5.0) {
+                            setHealthy(self, mediaType, current + 1);
+                        }
+
+                        if (totalRatio > 100.0) {
                             self.debug.log("Tons of bandwidth available, go all the way up.");
                             switchRequest = Math.min(current + 3, max);
                         }
-                        else if (downloadRatio > 10.0) {
+                        else if (totalRatio > 10.0) {
                             self.debug.log("Just enough bandwidth available, switch up one.");
                             switchRequest = current + 1;
                         }
@@ -213,12 +237,12 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                             //self.debug.log("Not exactly sure where to go, so do some math.");
                             i = -1;
                             while ((i += 1) < max) {
-                                if (downloadRatio < checkRatio.call(self, sp, i, currentBandwidth)) {
+                                if (totalRatio < checkRatio.call(self, sp, i, currentBandwidth)) {
                                     break;
                                 }
                             }
 
-                            self.debug.log("Calculated ideal new quality index is: " + i);
+                            if (mediaType == "video") {self.debug.log("!!Calculated ideal new quality index is: " + i);}
                             switchRequest = i;
                         }
                     } else {
@@ -231,6 +255,14 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 }
             }
 
+            if (mediaType === 'video') {
+                videoBandwidth = sp.getTrackForQuality(switchRequest).bandwidth
+            } else if (mediaType === 'audio' && videoBandwidth && sp.getTrackForQuality(switchRequest).bandwidth > videoBandwidth) {
+                self.debug.log('!!Audio bitrate is less than video! Switch down.');
+                while (switchRequest > 0 && sp.getTrackForQuality(switchRequest).bandwidth > videoBandwidth) {
+                    switchRequest -= 1;
+                }
+            }
             callback(doSwitch(self, mediaType, switchRequest));
         },
 
