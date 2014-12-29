@@ -114,7 +114,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             for (i = 0; i < ln; i += 1) {
                 request = canceledRequests[i];
                 time = request.startTime + (request.duration / 2) + EPSILON;
-                request = this.adapter.getFragmentRequestForTime(this.streamProcessor, currentTrackInfo, time, false);
+                request = this.adapter.getFragmentRequestForTime(this.streamProcessor, currentTrackInfo, time, {timeThreshold: 0});
                 this.fragmentController.prepareFragmentForLoading(this, request);
             }
         },

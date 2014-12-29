@@ -635,10 +635,11 @@ Dash.dependencies.DashHandler = function () {
             }
         },
 
-        getIndexForSegments = function (time, representation) {
+        getIndexForSegments = function (time, representation, timeThreshold) {
             var segments = representation.segments,
                 ln = segments ? segments.length : null,
                 idx = -1,
+                epsilon,
                 frag,
                 ft,
                 fd,
@@ -649,8 +650,10 @@ Dash.dependencies.DashHandler = function () {
                     frag = segments[i];
                     ft = frag.presentationStartTime;
                     fd = frag.duration;
-                    if ((time + fd/2) >= ft &&
-                        (time - fd/2) < (ft + fd)) {
+                    epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd/2 : timeThreshold;
+
+                    if ((time + epsilon) >= ft &&
+                        (time - epsilon) < (ft + fd)) {
                         idx = frag.availabilityIdx;
                         break;
                     }
@@ -750,11 +753,13 @@ Dash.dependencies.DashHandler = function () {
             return request;
         },
 
-        getForTime = function(representation, time, keepIdx) {
+        getForTime = function(representation, time, options) {
             var request,
                 segment,
                 finished,
                 idx = index,
+                keepIdx = options ? options.keepIdx : false,
+                timeThreshold = options ? options.timeThreshold : null,
                 self = this;
 
             if (!representation) {
@@ -765,11 +770,11 @@ Dash.dependencies.DashHandler = function () {
 
             self.debug.log("Getting the request for time: " + time);
 
-            index = getIndexForSegments.call(self, time, representation);
+            index = getIndexForSegments.call(self, time, representation, timeThreshold);
             getSegments.call(self, representation);
 
             if (index < 0) {
-                index = getIndexForSegments.call(self, time, representation);
+                index = getIndexForSegments.call(self, time, representation, timeThreshold);
             }
 
             //self.debug.log("Got segments.");
@@ -806,7 +811,7 @@ Dash.dependencies.DashHandler = function () {
 
             representation.segments = null;
             representation.segmentAvailabilityRange = {start: time - step, end: time + step};
-            return getForTime.call(this, representation, time, false);
+            return getForTime.call(this, representation, time, {keepIdx: false});
         },
 
         getNext = function (representation) {
