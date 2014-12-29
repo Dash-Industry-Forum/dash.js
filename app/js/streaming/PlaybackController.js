@@ -207,7 +207,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
             // since segments are appended out of order, we cannot blindly seek after the first appended segment.
             // Do nothing till we make sure that the segment for initial time has been appended.
-            req = this.adapter.getFragmentRequestForTime(e.sender.streamProcessor, trackInfo, playbackStart, false);
+            req = this.adapter.getFragmentRequestForTime(e.sender.streamProcessor, trackInfo, playbackStart, {keepIdx: false});
 
             if (!req || req.index !== e.data.index) return;
 
