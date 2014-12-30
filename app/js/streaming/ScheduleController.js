@@ -9,9 +9,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
         currentTrackInfo,
         initialPlayback = true,
         lastValidationTime = null,
-
+        lastABRRuleApplyTime = 0,
         isStopped = false,
-
         playListMetrics = null,
         playListTraceMetrics = null,
         playListTraceMetricsClosed = true,
@@ -98,7 +97,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES);
 
             self.rulesController.applyRules(rules, self.streamProcessor, callback, fragmentsToLoad, function(currentValue, newValue) {
-                return Math.min(currentValue, newValue);
+                currentValue = currentValue === MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
+                return Math.max(currentValue, newValue);
             });
         },
 
@@ -123,13 +123,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             fragmentsToLoad = result.value;
-
             if (fragmentsToLoad <= 0) {
                 self.fragmentController.executePendingRequests();
                 return;
             }
 
-            self.abrController.getPlaybackQuality(self.streamProcessor);
             getNextFragment.call(self, onNextFragment.bind(self));
         },
 
@@ -151,12 +149,22 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         validate = function () {
             var now = new Date().getTime(),
-                isEnoughTimeSinceLastValidation = lastValidationTime ? (now - lastValidationTime > this.fragmentController.getLoadingTime(this)) : true;
+                isEnoughTimeSinceLastValidation = lastValidationTime ? (now - lastValidationTime > this.fragmentController.getLoadingTime(this)) : true,
+                //manifestInfo = currentTrackInfo.mediaInfo.streamInfo.manifestInfo,
+                qualitySwitchThreshold = 1000; //TODO need to get average segment duration and cut that in half for interval to apply rule
+
+
+            if (now - lastABRRuleApplyTime > qualitySwitchThreshold) {
+                lastABRRuleApplyTime = now;
+                this.abrController.getPlaybackQuality(this.streamProcessor);
+            }
+
 
             if (!isEnoughTimeSinceLastValidation || isStopped || (this.playbackController.isPaused() && (!this.scheduleWhilePaused || isDynamic))) return;
 
             lastValidationTime = now;
             getRequiredFragmentCount.call(this, onGetRequiredFragmentCount.bind(this));
+
         },
 
         clearMetrics = function () {
@@ -237,7 +245,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onBufferLevelUpdated = function(e) {
             var self = this;
-
             self.metricsModel.addBufferLevel(type, new Date(), e.data.bufferLevel);
             validate.call(this);
         },
@@ -407,6 +414,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         getFragmentModel: function() {
             return fragmentModel;
+        },
+
+        getFragmentToLoadCount:function () {
+            return fragmentsToLoad;
         },
 
         reset: function() {

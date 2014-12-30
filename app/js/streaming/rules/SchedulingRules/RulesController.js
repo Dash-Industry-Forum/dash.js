@@ -68,9 +68,11 @@ MediaPlayer.rules.RulesController = function () {
                     subTypeRuleSet = currentRulesCollection.getRules(ruleSubType);
 
                     if (override) {
+                        override = false;
                         subTypeRuleSet.length = 0;
                     }
 
+                    system.injectInto(rule);
                     subTypeRuleSet.push(rule);
                 }
             }
@@ -139,6 +141,7 @@ MediaPlayer.rules.RulesController = function () {
                     }
 
                     callback({value: (value !== undefined) ? value : current, confidence: confidence});
+
                 };
 
             values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;

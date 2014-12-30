@@ -16,10 +16,21 @@
 MediaPlayer.utils.Debug = function () {
     "use strict";
 
-    var logToBrowserConsole = true;
+    var logToBrowserConsole = true,
+        showLogTimestamp = false,
+        startTime = new Date().getTime();
 
     return {
         eventBus: undefined,
+        /**
+         * Prepends a timestamp in milliseconds to each log message.
+         * @param {boolean} value Set to true if you want to see a timestamp in each log message.
+         * @default false
+         * @memberof MediaPlayer.utils.Debug#
+         */
+        setLogTimestampVisible: function(value) {
+            showLogTimestamp = value;
+        },
         /**
          * Toggles logging to the browser's javascript console.  If you set to false you will still receive a log event with the same message.
          * @param {boolean} value Set to false if you want to turn off logging to the browser's console.
@@ -39,13 +50,30 @@ MediaPlayer.utils.Debug = function () {
         },
         /**
          * This method will allow you send log messages to either the browser's console and/or dispatch an event to capture at the media player level.
-         * @param {string} message The message you want to log. (Does not currently support comma separated values.)
+         * @param {arguments} The message you want to log. The Arguments object is supported for this method so you can send in comma separated logging items.
          * @memberof MediaPlayer.utils.Debug#
-         * @todo - add args... and allow comma separated logging values that will auto concat.
          */
-        log: function (message) {
-            if (logToBrowserConsole){
-                console.log(message);
+        log: function () {
+
+            var logTime = null,
+                logTimestamp = null;
+
+            if (showLogTimestamp)
+            {
+                logTime = new Date().getTime();
+                logTimestamp = "[" + (logTime - startTime) + "] ";
+            }
+
+            var message = arguments[0];
+            if (arguments.length > 1) {
+                message = "";
+                Array.apply(null, arguments).forEach(function(item) {
+                    message += " " + item;
+                });
+            }
+
+            if (logToBrowserConsole) {
+                console.log( (showLogTimestamp ? logTimestamp : "")  + message);
             }
 
             this.eventBus.dispatchEvent({

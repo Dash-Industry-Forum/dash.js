@@ -1,6 +1,7 @@
 MediaPlayer.rules.RulesContext = function (streamProcessor, currentValue) {
     "use strict";
-    var trackInfo = streamProcessor.getCurrentTrack();
+    var trackInfo = streamProcessor.getCurrentTrack(),
+        sp = streamProcessor;
 
     return {
         getStreamInfo: function() {
@@ -21,7 +22,13 @@ MediaPlayer.rules.RulesContext = function (streamProcessor, currentValue) {
 
         getManifestInfo: function() {
             return trackInfo.mediaInfo.streamInfo.manifestInfo;
+        },
+
+        getStreamProcessor: function() {
+            return sp;
         }
+
+
     };
 };
 
