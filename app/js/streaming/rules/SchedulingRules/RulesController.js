@@ -72,7 +72,7 @@ MediaPlayer.rules.RulesController = function () {
                         subTypeRuleSet.length = 0;
                     }
 
-                    system.injectInto(rule);
+                    this.system.injectInto(rule);
                     subTypeRuleSet.push(rule);
                 }
             }
