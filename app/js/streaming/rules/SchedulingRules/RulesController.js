@@ -68,9 +68,11 @@ MediaPlayer.rules.RulesController = function () {
                     subTypeRuleSet = currentRulesCollection.getRules(ruleSubType);
 
                     if (override) {
+                        override = false;
                         subTypeRuleSet.length = 0;
                     }
 
+                    system.injectInto(rule);
                     subTypeRuleSet.push(rule);
                 }
             }
