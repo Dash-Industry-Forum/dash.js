@@ -79,7 +79,14 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 switchRatio,
                 i,
                 //currentBandwidth,
-                switchRequest = null;
+                switchRequest = null,
+                max = mediaInfo.trackCount - 1;
+
+            if (lastRequest == null) {
+                // This is the first request
+                callback(new MediaPlayer.rules.SwitchRequest(Math.floor(max/2)));
+                return;
+            }
 
             if (!metrics ||
                 lastRequest === null ||
@@ -134,7 +141,6 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 if ((currentBufferMetric !== null && currentBufferMetric.level >= currentBufferMetric.target) ||
                     (isDynamic && currentBufferMetric !== null && currentBufferMetric.level >= MediaPlayer.dependencies.BufferController.DEFAULT_STARTUP_BUFFER_TIME)) { // Only switch up if we are not at low buffer otherwise let the InsufficientBufferRule handle this.
 
-                    var max = mediaInfo.trackCount - 1;
                     if (current < max) {
                         //if (averageDownloadRatio > 100)
                         //{
