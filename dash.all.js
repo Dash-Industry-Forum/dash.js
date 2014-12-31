@@ -780,7 +780,8 @@ MediaPlayer.di.Context = function() {
             this.system.mapClass("metrics", MediaPlayer.models.MetricsList), this.system.mapClass("downloadRatioRule", MediaPlayer.rules.DownloadRatioRule), 
             this.system.mapClass("insufficientBufferRule", MediaPlayer.rules.InsufficientBufferRule), 
             this.system.mapClass("limitSwitchesRule", MediaPlayer.rules.LimitSwitchesRule), 
-            this.system.mapSingleton("abrRulesCollection", MediaPlayer.rules.ABRRulesCollection), 
+            this.system.mapClass("bufferOccupancyRule", MediaPlayer.rules.BufferOccupancyRule), 
+            this.system.mapClass("throughputRule", MediaPlayer.rules.ThroughputRule), this.system.mapSingleton("abrRulesCollection", MediaPlayer.rules.ABRRulesCollection), 
             this.system.mapSingleton("rulesController", MediaPlayer.rules.RulesController), 
             this.system.mapClass("liveEdgeBinarySearchRule", MediaPlayer.rules.LiveEdgeBinarySearchRule), 
             this.system.mapClass("liveEdgeBBCSearchRule", MediaPlayer.rules.LiveEdgeBBCSearchRule), 
@@ -1054,9 +1055,9 @@ Dash.dependencies.BaseURLExtensions = function() {
     }, getNextFragmentRequest = function(streamProcessor, trackInfo) {
         var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.trackController);
         return streamProcessor.indexHandler.getNextSegmentRequest(representation);
-    }, getFragmentRequestForTime = function(streamProcessor, trackInfo, time, keepIdx) {
+    }, getFragmentRequestForTime = function(streamProcessor, trackInfo, time, options) {
         var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.trackController);
-        return streamProcessor.indexHandler.getSegmentRequestForTime(representation, time, keepIdx);
+        return streamProcessor.indexHandler.getSegmentRequestForTime(representation, time, options);
     }, generateFragmentRequestForTime = function(streamProcessor, trackInfo, time) {
         var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.trackController), request = streamProcessor.indexHandler.generateSegmentRequestForTime(representation, time);
         return request;
@@ -1096,6 +1097,7 @@ Dash.dependencies.BaseURLExtensions = function() {
             HTTP_REQUEST_TRACE: "HttpRequestTrace",
             TRACK_SWITCH: "RepresentationSwitch",
             BUFFER_LEVEL: "BufferLevel",
+            BUFFER_STATE: "BufferState",
             DVR_INFO: "DVRInfo",
             DROPPED_FRAMES: "DroppedFrames",
             SCHEDULING_INFO: "SchedulingInfo",
@@ -1323,11 +1325,11 @@ Dash.dependencies.BaseURLExtensions = function() {
         void (hasInitialization && hasSegments && self.notify(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {
             representation: representation
         })));
-    }, getIndexForSegments = function(time, representation) {
-        time = Math.floor(time);
-        var frag, ft, fd, i, segments = representation.segments, ln = segments ? segments.length : null, idx = -1;
+    }, getIndexForSegments = function(time, representation, timeThreshold) {
+        var epsilon, frag, ft, fd, i, segments = representation.segments, ln = segments ? segments.length : null, idx = -1;
         if (segments && ln > 0) for (i = 0; ln > i; i += 1) if (frag = segments[i], ft = frag.presentationStartTime, 
-        fd = frag.duration, time + fd / 2 >= ft && ft + fd > time - fd / 2) {
+        fd = frag.duration, epsilon = void 0 === timeThreshold || null === timeThreshold ? fd / 2 : timeThreshold, 
+        time + epsilon >= ft && ft + fd > time - epsilon) {
             idx = frag.availabilityIdx;
             break;
         }
@@ -1354,21 +1356,24 @@ Dash.dependencies.BaseURLExtensions = function() {
         request.availabilityEndTime = segment.availabilityEndTime, request.wallStartTime = segment.wallStartTime, 
         request.quality = representation.index, request.index = segment.availabilityIdx, 
         request;
-    }, getForTime = function(representation, time, keepIdx) {
-        var request, segment, finished, idx = index, self = this;
+    }, getForTime = function(representation, time, options) {
+        var request, segment, finished, idx = index, keepIdx = options ? options.keepIdx : !1, timeThreshold = options ? options.timeThreshold : null, self = this;
         return representation ? (requestedTime = time, self.debug.log("Getting the request for time: " + time), 
-        index = getIndexForSegments.call(self, time, representation), getSegments.call(self, representation), 
-        0 > index && (index = getIndexForSegments.call(self, time, representation)), self.debug.log("Index for time " + time + " is " + index), 
-        finished = isMediaFinished.call(self, representation), finished ? (request = new MediaPlayer.vo.FragmentRequest(), 
-        request.action = request.ACTION_COMPLETE, request.index = index, request.mediaType = type, 
-        self.debug.log("Signal complete."), self.debug.log(request)) : (segment = getSegmentByIndex(index, representation), 
+        index = getIndexForSegments.call(self, time, representation, timeThreshold), getSegments.call(self, representation), 
+        0 > index && (index = getIndexForSegments.call(self, time, representation, timeThreshold)), 
+        self.debug.log("Index for time " + time + " is " + index), finished = isMediaFinished.call(self, representation), 
+        finished ? (request = new MediaPlayer.vo.FragmentRequest(), request.action = request.ACTION_COMPLETE, 
+        request.index = index, request.mediaType = type, self.debug.log("Signal complete."), 
+        self.debug.log(request)) : (segment = getSegmentByIndex(index, representation), 
         request = getRequestForSegment.call(self, segment)), keepIdx && (index = idx), request) : null;
     }, generateForTime = function(representation, time) {
         var step = (representation.segmentAvailabilityRange.end - representation.segmentAvailabilityRange.start) / 2;
         return representation.segments = null, representation.segmentAvailabilityRange = {
             start: time - step,
             end: time + step
-        }, getForTime.call(this, representation, time, !1);
+        }, getForTime.call(this, representation, time, {
+            keepIdx: !1
+        });
     }, getNext = function(representation) {
         var request, segment, finished, idx, self = this;
         if (!representation) return null;
@@ -2324,10 +2329,10 @@ Dash.dependencies.RepresentationController.eventList = {
                 }));
             };
             quality = getInternalQuality(type, streamId), confidence = getInternalConfidence(type, streamId), 
-            autoSwitchBitrate && (self.abrRulesCollection.downloadRatioRule && self.abrRulesCollection.downloadRatioRule.setStreamProcessor(streamProcessor), 
-            rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES), 
+            autoSwitchBitrate && (rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES), 
             self.rulesController.applyRules(rules, streamProcessor, callback.bind(self), quality, function(currentValue, newValue) {
-                return Math.min(currentValue, newValue);
+                return currentValue = currentValue === MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue, 
+                Math.max(currentValue, newValue);
             }));
         },
         setPlaybackQuality: function(type, streamInfo, newPlaybackQuality) {
@@ -2362,7 +2367,7 @@ Dash.dependencies.RepresentationController.eventList = {
     ENAME_TOP_QUALITY_INDEX_CHANGED: "topQualityIndexChanged"
 }, MediaPlayer.dependencies.BufferController = function() {
     "use strict";
-    var mediaSource, type, minBufferTime, appendedBytesInfo, STALL_THRESHOLD = .5, initializationData = [], requiredQuality = 0, currentQuality = -1, isBufferingCompleted = !1, bufferLevel = 0, criticalBufferLevel = Number.POSITIVE_INFINITY, maxAppendedIndex = -1, lastIndex = -1, buffer = null, hasSufficientBuffer = null, isBufferLevelOutrun = !1, isAppendingInProgress = !1, pendingMedia = [], inbandEventFound = !1, waitingForInit = function() {
+    var mediaSource, type, minBufferTime, appendedBytesInfo, STALL_THRESHOLD = .5, initializationData = [], requiredQuality = 0, currentQuality = -1, isBufferingCompleted = !1, bufferLevel = 0, bufferTarget = 0, criticalBufferLevel = Number.POSITIVE_INFINITY, maxAppendedIndex = -1, lastIndex = -1, buffer = null, hasSufficientBuffer = null, isBufferLevelOutrun = !1, isAppendingInProgress = !1, pendingMedia = [], inbandEventFound = !1, waitingForInit = function() {
         var loadingReqs = this.streamProcessor.getFragmentModel().getLoadingRequests();
         return currentQuality > requiredQuality && (hasReqsForQuality(pendingMedia, currentQuality) || hasReqsForQuality(loadingReqs, currentQuality)) ? !1 : currentQuality !== requiredQuality;
     }, hasReqsForQuality = function(arr, quality) {
@@ -2486,23 +2491,29 @@ Dash.dependencies.RepresentationController.eventList = {
         var isLastIdxAppended = maxAppendedIndex === lastIndex - 1;
         isLastIdxAppended && !isBufferingCompleted && (isBufferingCompleted = !0, this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFERING_COMPLETED));
     }, checkIfSufficientBuffer = function() {
-        var timeToEnd = this.playbackController.getTimeToStreamEnd(), minLevel = this.streamProcessor.isDynamic() ? minBufferTime / 2 : minBufferTime;
-        minLevel > bufferLevel && (timeToEnd > minBufferTime || minBufferTime >= timeToEnd && !isBufferingCompleted) ? notifyIfSufficientBufferStateChanged.call(this, !1) : notifyIfSufficientBufferStateChanged.call(this, !0);
+        var timeToEnd = this.playbackController.getTimeToStreamEnd();
+        STALL_THRESHOLD > bufferLevel && timeToEnd > minBufferTime || minBufferTime >= timeToEnd && !isBufferingCompleted ? notifyIfSufficientBufferStateChanged.call(this, !1) : notifyIfSufficientBufferStateChanged.call(this, !0);
+    }, getBufferState = function() {
+        return hasSufficientBuffer ? MediaPlayer.dependencies.BufferController.BUFFER_LOADED : MediaPlayer.dependencies.BufferController.BUFFER_EMPTY;
     }, notifyIfSufficientBufferStateChanged = function(state) {
-        hasSufficientBuffer !== state && (hasSufficientBuffer = state, this.debug.log(hasSufficientBuffer ? "Got enough " + type + " buffer to start." : "Waiting for more " + type + " buffer before starting playback."), 
-        this.eventBus.dispatchEvent({
-            type: hasSufficientBuffer ? "bufferLoaded" : "bufferStalled",
-            data: {
-                bufferType: type
-            }
-        }), this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, {
-            hasSufficientBuffer: state
-        }));
+        if (hasSufficientBuffer !== state) {
+            hasSufficientBuffer = state;
+            var bufferState = getBufferState();
+            this.metricsModel.addBufferState(type, bufferState, bufferTarget), this.eventBus.dispatchEvent({
+                type: bufferState,
+                data: {
+                    bufferType: type
+                }
+            }), this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, {
+                hasSufficientBuffer: state
+            }), this.debug.log(hasSufficientBuffer ? "Got enough " + type + " buffer to start." : "Waiting for more " + type + " buffer before starting playback.");
+        }
     }, updateBufferTimestampOffset = function(MSETimeOffset) {
         buffer.timestampOffset !== MSETimeOffset && (buffer.timestampOffset = MSETimeOffset);
     }, updateBufferState = function() {
-        var self = this;
-        updateBufferLevel.call(self), appendNext.call(self);
+        var self = this, fragmentsToLoad = this.streamProcessor.getScheduleController().getFragmentToLoadCount(), fragmentDuration = this.streamProcessor.getCurrentTrack().fragmentDuration;
+        updateBufferLevel.call(self), bufferTarget = fragmentsToLoad > 0 ? fragmentsToLoad * fragmentDuration + bufferLevel : bufferTarget, 
+        this.metricsModel.addBufferState(type, getBufferState(), bufferTarget), appendNext.call(self);
     }, appendNext = function() {
         waitingForInit.call(this) ? switchInitData.call(this) : appendNextMedia.call(this);
     }, onAppendToBufferCompleted = function(quality, index) {
@@ -2562,6 +2573,7 @@ Dash.dependencies.RepresentationController.eventList = {
         metricsModel: void 0,
         metricsExt: void 0,
         adapter: void 0,
+        scheduleRulesCollection: void 0,
         debug: void 0,
         system: void 0,
         notify: void 0,
@@ -2629,10 +2641,11 @@ Dash.dependencies.RepresentationController.eventList = {
     };
 }, MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED = "required", 
 MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN = "min", MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY = "infinity", 
-MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME = 8, MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY = 30, 
-MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 300, 
+MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME = 12, MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD = 4, 
+MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY = 30, MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 300, 
 MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD = 600, 
-MediaPlayer.dependencies.BufferController.prototype = {
+MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD = 20, MediaPlayer.dependencies.BufferController.BUFFER_LOADED = "bufferLoaded", 
+MediaPlayer.dependencies.BufferController.BUFFER_EMPTY = "bufferStalled", MediaPlayer.dependencies.BufferController.prototype = {
     constructor: MediaPlayer.dependencies.BufferController
 }, MediaPlayer.dependencies.BufferController.eventList = {
     ENAME_BUFFER_LEVEL_STATE_CHANGED: "bufferLevelStateChanged",
@@ -2668,17 +2681,26 @@ MediaPlayer.dependencies.BufferController.prototype = {
     }
 }, MediaPlayer.utils.Debug = function() {
     "use strict";
-    var logToBrowserConsole = !0;
+    var logToBrowserConsole = !0, showLogTimestamp = !1, startTime = new Date().getTime();
     return {
         eventBus: void 0,
+        setLogTimestampVisible: function(value) {
+            showLogTimestamp = value;
+        },
         setLogToBrowserConsole: function(value) {
             logToBrowserConsole = value;
         },
         getLogToBrowserConsole: function() {
             return logToBrowserConsole;
         },
-        log: function(message) {
-            logToBrowserConsole && console.log(message), this.eventBus.dispatchEvent({
+        log: function() {
+            var logTime = null, logTimestamp = null;
+            showLogTimestamp && (logTime = new Date().getTime(), logTimestamp = "[" + (logTime - startTime) + "] ");
+            var message = arguments[0];
+            arguments.length > 1 && (message = "", Array.apply(null, arguments).forEach(function(item) {
+                message += " " + item;
+            })), logToBrowserConsole && console.log((showLogTimestamp ? logTimestamp : "") + message), 
+            this.eventBus.dispatchEvent({
                 type: "log",
                 message: message
             });
@@ -3516,6 +3538,11 @@ MediaPlayer.dependencies.BufferController.prototype = {
             return vo.t = t, vo.level = level, this.getMetricsFor(mediaType).BufferLevel.push(vo), 
             this.metricAdded(mediaType, this.adapter.metricsList.BUFFER_LEVEL, vo), vo;
         },
+        addBufferState: function(mediaType, state, target) {
+            var vo = new MediaPlayer.vo.metrics.BufferState();
+            return vo.target = target, vo.state = state, this.getMetricsFor(mediaType).BufferState.push(vo), 
+            this.metricAdded(mediaType, this.adapter.metricsList.BUFFER_STATE, vo), vo;
+        },
         addDVRInfo: function(mediaType, currentTime, mpd, range) {
             var vo = new MediaPlayer.vo.metrics.DVRInfo();
             return vo.time = currentTime, vo.range = range, vo.manifestInfo = mpd, this.getMetricsFor(mediaType).DVRInfo.push(vo), 
@@ -3685,8 +3712,9 @@ MediaPlayer.dependencies.BufferController.prototype = {
     }, onBytesAppended = function(e) {
         var bufferedStart, req, ranges = e.data.bufferedRanges, currentEarliestTime = commonEarliestTime, playbackStart = getStreamStartTime.call(this, streamInfo);
         ranges && ranges.length && (bufferedStart = ranges.start(0), commonEarliestTime = null === commonEarliestTime ? bufferedStart : Math.max(commonEarliestTime, bufferedStart), 
-        currentEarliestTime !== commonEarliestTime && (req = this.adapter.getFragmentRequestForTime(e.sender.streamProcessor, trackInfo, playbackStart, !1), 
-        req && req.index === e.data.index && this.seek(commonEarliestTime)));
+        currentEarliestTime !== commonEarliestTime && (req = this.adapter.getFragmentRequestForTime(e.sender.streamProcessor, trackInfo, playbackStart, {
+            keepIdx: !1
+        }), req && req.index === e.data.index && this.seek(commonEarliestTime)));
     }, setupVideoModel = function(model) {
         videoModel = model, videoModel.listen("play", onPlaybackStart), videoModel.listen("pause", onPlaybackPaused), 
         videoModel.listen("error", onPlaybackError), videoModel.listen("seeking", onPlaybackSeeking), 
@@ -3849,7 +3877,7 @@ MediaPlayer.dependencies.BufferController.prototype = {
     },
     getKeySystems: function(protectionData) {
         var self = this, _protectionData = protectionData, getLAUrl = function(laUrl, keysystem) {
-            return void 0 !== protectionData[keysystem] && null !== protectionData[keysystem].laUrl && "" !== protectionData[keysystem].laUrl ? protectionData[keysystem].laUrl : laUrl;
+            return protectionData && void 0 !== protectionData[keysystem] && null !== protectionData[keysystem].laUrl && "" !== protectionData[keysystem].laUrl ? protectionData[keysystem].laUrl : laUrl;
         }, playreadyGetUpdate = function(event) {
             var headerName, key, headerOverrides, xmlDoc, msg, laURL, bytes, decodedChallenge = null, headers = {}, parser = new DOMParser();
             if (bytes = new Uint16Array(event.message.buffer), msg = String.fromCharCode.apply(null, bytes), 
@@ -3875,7 +3903,7 @@ MediaPlayer.dependencies.BufferController.prototype = {
             }, xhr.onerror = function() {
                 self.notify(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new MediaPlayer.vo.Error(null, 'DRM: playready update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + "), readyState is " + xhr.readyState, null));
             }, xhr.open("POST", getLAUrl(laURL, "com.microsoft.playready")), xhr.responseType = "arraybuffer", 
-            headerOverrides = _protectionData["com.microsoft.playready"] ? _protectionData["com.microsoft.playready"].headers : null) for (key in headerOverrides) headers[key] = headerOverrides[key];
+            headerOverrides = _protectionData && _protectionData["com.microsoft.playready"] ? _protectionData["com.microsoft.playready"].headers : null) for (key in headerOverrides) headers[key] = headerOverrides[key];
             for (headerName in headers) "authorization" === headerName.toLowerCase() && (xhr.withCredentials = !0), 
             xhr.setRequestHeader(headerName, headers[headerName]);
             xhr.send(decodedChallenge);
@@ -3895,7 +3923,7 @@ MediaPlayer.dependencies.BufferController.prototype = {
             PSSHData.setUint32(byteCursor, PROSize), byteCursor += 4, PSSHBox.set(uint8arraydecodedPROHeader, byteCursor), 
             byteCursor += PROSize, PSSHBox;
         }, playReadyCdmData = function() {
-            if (void 0 !== protectionData["com.microsoft.playready"] && null !== protectionData["com.microsoft.playready"].cdmData && "" !== protectionData["com.microsoft.playready"].cdmData) {
+            if (protectionData && void 0 !== protectionData["com.microsoft.playready"] && null !== protectionData["com.microsoft.playready"].cdmData && "" !== protectionData["com.microsoft.playready"].cdmData) {
                 var charCode, cdmDataArray = [], cdmData = protectionData["com.microsoft.playready"].cdmData;
                 cdmDataArray.push(239), cdmDataArray.push(187), cdmDataArray.push(191);
                 for (var i = 0, j = cdmData.length; j > i; ++i) charCode = cdmData.charCodeAt(i), 
@@ -3919,7 +3947,7 @@ MediaPlayer.dependencies.BufferController.prototype = {
                 self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new Error('DRM: widevine update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + "), readyState is " + xhr.readyState));
             }, xhr.onerror = function() {
                 self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new Error('DRM: widevine update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + "), readyState is " + xhr.readyState));
-            }, headerOverrides = _protectionData["com.widevine.alpha"] ? _protectionData["com.widevine.alpha"].headers : null) for (key in headerOverrides) headers[key] = headerOverrides[key];
+            }, headerOverrides = _protectionData && _protectionData["com.widevine.alpha"] ? _protectionData["com.widevine.alpha"].headers : null) for (key in headerOverrides) headers[key] = headerOverrides[key];
             for (headerName in headers) "authorization" === headerName.toLowerCase() && (xhr.withCredentials = !0), 
             xhr.setRequestHeader(headerName, headers[headerName]);
             xhr.send(event.message);
@@ -4114,7 +4142,7 @@ MediaPlayer.dependencies.BufferController.prototype = {
     };
 }, MediaPlayer.dependencies.ScheduleController = function() {
     "use strict";
-    var type, ready, fragmentModel, isDynamic, currentTrackInfo, fragmentsToLoad = 0, initialPlayback = !0, lastValidationTime = null, isStopped = !1, playListMetrics = null, playListTraceMetrics = null, playListTraceMetricsClosed = !0, clearPlayListTraceMetrics = function(endTime, stopreason) {
+    var type, ready, fragmentModel, isDynamic, currentTrackInfo, fragmentsToLoad = 0, initialPlayback = !0, lastValidationTime = null, lastABRRuleApplyTime = 0, isStopped = !1, playListMetrics = null, playListTraceMetrics = null, playListTraceMetricsClosed = !0, clearPlayListTraceMetrics = function(endTime, stopreason) {
         var duration = 0, startTime = null;
         playListTraceMetricsClosed === !1 && (startTime = playListTraceMetrics.start, duration = endTime.getTime() - startTime.getTime(), 
         playListTraceMetrics.duration = duration, playListTraceMetrics.stopreason = stopreason, 
@@ -4141,24 +4169,26 @@ MediaPlayer.dependencies.BufferController.prototype = {
     }, getRequiredFragmentCount = function(callback) {
         var self = this, rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES);
         self.rulesController.applyRules(rules, self.streamProcessor, callback, fragmentsToLoad, function(currentValue, newValue) {
-            return Math.min(currentValue, newValue);
+            return currentValue = currentValue === MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue, 
+            Math.max(currentValue, newValue);
         });
     }, replaceCanceledPendingRequests = function(canceledRequests) {
         var request, time, i, ln = canceledRequests.length, EPSILON = .1;
         for (i = 0; ln > i; i += 1) request = canceledRequests[i], time = request.startTime + request.duration / 2 + EPSILON, 
-        request = this.adapter.getFragmentRequestForTime(this.streamProcessor, currentTrackInfo, time, !1), 
-        this.fragmentController.prepareFragmentForLoading(this, request);
+        request = this.adapter.getFragmentRequestForTime(this.streamProcessor, currentTrackInfo, time, {
+            timeThreshold: 0
+        }), this.fragmentController.prepareFragmentForLoading(this, request);
     }, onGetRequiredFragmentCount = function(result) {
         var self = this;
-        return fragmentsToLoad = result.value, 0 >= fragmentsToLoad ? void self.fragmentController.executePendingRequests() : (self.abrController.getPlaybackQuality(self.streamProcessor), 
-        void getNextFragment.call(self, onNextFragment.bind(self)));
+        return fragmentsToLoad = result.value, 0 >= fragmentsToLoad ? void self.fragmentController.executePendingRequests() : void getNextFragment.call(self, onNextFragment.bind(self));
     }, onNextFragment = function(result) {
         var request = result.value;
         null === request || request instanceof MediaPlayer.vo.FragmentRequest || (request = this.adapter.getFragmentRequestForTime(this.streamProcessor, currentTrackInfo, request.startTime)), 
         request ? (fragmentsToLoad--, this.fragmentController.prepareFragmentForLoading(this, request)) : this.fragmentController.executePendingRequests();
     }, validate = function() {
-        var now = new Date().getTime(), isEnoughTimeSinceLastValidation = lastValidationTime ? now - lastValidationTime > this.fragmentController.getLoadingTime(this) : !0;
-        !isEnoughTimeSinceLastValidation || isStopped || this.playbackController.isPaused() && (!this.scheduleWhilePaused || isDynamic) || (lastValidationTime = now, 
+        var now = new Date().getTime(), isEnoughTimeSinceLastValidation = lastValidationTime ? now - lastValidationTime > this.fragmentController.getLoadingTime(this) : !0, qualitySwitchThreshold = 1e3;
+        now - lastABRRuleApplyTime > qualitySwitchThreshold && (lastABRRuleApplyTime = now, 
+        this.abrController.getPlaybackQuality(this.streamProcessor)), !isEnoughTimeSinceLastValidation || isStopped || this.playbackController.isPaused() && (!this.scheduleWhilePaused || isDynamic) || (lastValidationTime = now, 
         getRequiredFragmentCount.call(this, onGetRequiredFragmentCount.bind(this)));
     }, clearMetrics = function() {
         var self = this;
@@ -4278,6 +4308,9 @@ MediaPlayer.dependencies.BufferController.prototype = {
         },
         getFragmentModel: function() {
             return fragmentModel;
+        },
+        getFragmentToLoadCount: function() {
+            return fragmentsToLoad;
         },
         reset: function() {
             var self = this;
@@ -4937,6 +4970,9 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
         getFragmentModel: function() {
             return this.scheduleController.getFragmentModel();
         },
+        getPlaybackController: function() {
+            return this.playbackController;
+        },
         getStreamInfo: function() {
             return stream.getStreamInfo();
         },
@@ -4945,6 +4981,9 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
         },
         getMediaInfo: function() {
             return mediaInfo;
+        },
+        getScheduleController: function() {
+            return this.scheduleController;
         },
         getEventController: function() {
             return eventController;
@@ -5327,6 +5366,8 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
         downloadRatioRule: void 0,
         insufficientBufferRule: void 0,
         limitSwitchesRule: void 0,
+        bufferOccupancyRule: void 0,
+        throughputRule: void 0,
         getRules: function(type) {
             switch (type) {
               case MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES:
@@ -5337,105 +5378,101 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
             }
         },
         setup: function() {
-            qualitySwitchRules.push(this.downloadRatioRule), qualitySwitchRules.push(this.insufficientBufferRule), 
-            qualitySwitchRules.push(this.limitSwitchesRule);
+            qualitySwitchRules.push(this.insufficientBufferRule), qualitySwitchRules.push(this.throughputRule), 
+            qualitySwitchRules.push(this.bufferOccupancyRule), qualitySwitchRules.push(this.limitSwitchesRule);
         }
     };
 }, MediaPlayer.rules.ABRRulesCollection.prototype = {
     constructor: MediaPlayer.rules.ABRRulesCollection,
     QUALITY_SWITCH_RULES: "qualitySwitchRules"
+}, MediaPlayer.rules.BufferOccupancyRule = function() {
+    "use strict";
+    return {
+        debug: void 0,
+        metricsModel: void 0,
+        execute: function(context, callback) {
+            var self = this, mediaInfo = context.getMediaInfo(), mediaType = mediaInfo.type, metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType), lastBufferLevelVO = metrics.BufferLevel.length > 0 ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null, lastBufferStateVO = metrics.BufferState.length > 0 ? metrics.BufferState[metrics.BufferState.length - 1] : null, isBufferRich = !1, maxIndex = mediaInfo.trackCount - 1, switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
+            null !== lastBufferLevelVO && null !== lastBufferStateVO && lastBufferLevelVO.level > lastBufferStateVO.target && (isBufferRich = lastBufferLevelVO.level - lastBufferStateVO.target > MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD, 
+            isBufferRich && mediaInfo.trackCount > 1 && (switchRequest = new MediaPlayer.rules.SwitchRequest(maxIndex, MediaPlayer.rules.SwitchRequest.prototype.STRONG))), 
+            switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && self.debug.log("BufferOccupancyRule requesting switch to index: ", switchRequest.value, "type: ", mediaType, " Priority: ", switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" : switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak"), 
+            callback(switchRequest);
+        }
+    };
+}, MediaPlayer.rules.BufferOccupancyRule.prototype = {
+    constructor: MediaPlayer.rules.BufferOccupancyRule
 }, MediaPlayer.rules.DownloadRatioRule = function() {
     "use strict";
-    var videoBandwidth, MAX_SCALEDOWNS_FROM_BITRATE = 2, streamProcessors = {}, unhealthyIndexes = {}, checkRatio = function(sp, newIdx, currentBandwidth) {
-        var newBandwidth = sp.getTrackForQuality(newIdx).bandwidth;
-        return newBandwidth / currentBandwidth;
-    }, doSwitch = function(self, mediaType, idx) {
-        var reliable = !0;
-        if (unhealthyIndexes.hasOwnProperty(mediaType)) for (var key in unhealthyIndexes[mediaType]) if (unhealthyIndexes[mediaType].hasOwnProperty(key) && idx >= key && unhealthyIndexes[mediaType][key] >= MAX_SCALEDOWNS_FROM_BITRATE) {
-            reliable = !1;
-            break;
+    var stepDownFactor = 1, downloadRatioArray = [], TOTAL_DOWNLOAD_RATIO_ARRAY_LENGTH = 20, AVERAGE_DOWNLOAD_RATIO_SAMPLE_AMOUNT = 3, DOWNLOAD_RATIO_SAFETY_FACTOR = 1.4, getSwitchRatio = function(sp, newIdx, current) {
+        return sp.getTrackForQuality(newIdx).bandwidth / sp.getTrackForQuality(current).bandwidth;
+    }, getAverageDownloadRatio = function(sampleAmount) {
+        var averageDownloadRatio = 0, len = downloadRatioArray.length;
+        if (sampleAmount = sampleAmount > len ? len : sampleAmount, len > 0) {
+            for (var startValue = len - sampleAmount, totalSampledValue = 0, i = startValue; len > i; i++) totalSampledValue += downloadRatioArray[i];
+            averageDownloadRatio = totalSampledValue / sampleAmount;
         }
-        return reliable ? (self.debug.log("!!Switching to index " + (idx + 1) + " for " + mediaType), 
-        new MediaPlayer.rules.SwitchRequest(idx)) : (self.debug.log("!!Index " + (idx + 1) + " for " + mediaType + " is unreliable"), 
-        idx > 0 ? doSwitch(self, mediaType, idx - 1) : new MediaPlayer.rules.switchRequest());
-    }, setUnhealthy = function(self, manifestInfo, mediaType, idx) {
-        var reset = 1e3 * Math.max(manifestInfo.minBufferTime, manifestInfo.maxFragmentDuration) * 5;
-        unhealthyIndexes.hasOwnProperty(mediaType) || (unhealthyIndexes[mediaType] = []), 
-        unhealthyIndexes[mediaType].hasOwnProperty(idx) || (self.debug.log("!!Resetting " + mediaType + " " + (idx + 1)), 
-        unhealthyIndexes[mediaType][idx] = 0), unhealthyIndexes[mediaType][idx] += 1, setTimeout(function() {
-            unhealthyIndexes[mediaType][idx] < MAX_SCALEDOWNS_FROM_BITRATE && setHealthy(self, mediaType, idx);
-        }, reset), self.debug.log("!!" + mediaType + " index " + (idx + 1) + " has unhealthy score of " + unhealthyIndexes[mediaType][idx]);
-    }, setHealthy = function(self, mediaType, idx) {
-        unhealthyIndexes.hasOwnProperty(mediaType) || (unhealthyIndexes[mediaType] = []), 
-        unhealthyIndexes[mediaType].hasOwnProperty(idx) || (self.debug.log("!!Resetting " + mediaType + " " + (idx + 1)), 
-        unhealthyIndexes[mediaType][idx] = 0), unhealthyIndexes[mediaType][idx] > 0 && (unhealthyIndexes[mediaType][idx] = 0), 
-        self.debug.log("!!" + mediaType + " index " + (idx + 1) + " has unhealthy score of " + unhealthyIndexes[mediaType][idx]);
+        return downloadRatioArray.length > TOTAL_DOWNLOAD_RATIO_ARRAY_LENGTH && downloadRatioArray.shift(), 
+        averageDownloadRatio;
     };
     return {
         debug: void 0,
         metricsExt: void 0,
         metricsModel: void 0,
-        setStreamProcessor: function(streamProcessorValue) {
-            var type = streamProcessorValue.getType(), id = streamProcessorValue.getStreamInfo().id;
-            streamProcessors[id] = streamProcessors[id] || {}, streamProcessors[id][type] = streamProcessorValue;
-        },
         execute: function(context, callback) {
-            var downloadTime, totalTime, downloadRatio, totalRatio, switchRatio, oneDownBandwidth, oneUpBandwidth, currentBandwidth, i, switchRequest, self = this, streamId = context.getStreamInfo().id, manifestInfo = context.getManifestInfo(), mediaInfo = context.getMediaInfo(), mediaType = mediaInfo.type, current = context.getCurrentValue(), sp = streamProcessors[streamId][mediaType], metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType), lastRequest = self.metricsExt.getCurrentHttpRequest(metrics), max = mediaInfo.trackCount - 1;
-            if (null == lastRequest) return void callback(new MediaPlayer.rules.SwitchRequest(Math.floor(max / 2)));
-            if (!metrics) return void callback(new MediaPlayer.rules.SwitchRequest());
+            var downloadTime, totalTime, averageDownloadRatio, downloadRatio, totalRatio, switchRatio, i, self = this, mediaInfo = context.getMediaInfo(), mediaType = mediaInfo.type, current = context.getCurrentValue(), sp = context.getStreamProcessor(), isDynamic = sp.isDynamic(), metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType), lastRequest = self.metricsExt.getCurrentHttpRequest(metrics), currentBufferMetric = metrics.BufferLevel[metrics.BufferLevel.length - 1] || null, switchRequest = null;
+            if (!metrics || null === lastRequest || null === lastRequest.mediaduration || void 0 === lastRequest.mediaduration || lastRequest.mediaduration <= 0 || isNaN(lastRequest.mediaduration)) return void callback(new MediaPlayer.rules.SwitchRequest());
             if (totalTime = (lastRequest.tfinish.getTime() - lastRequest.trequest.getTime()) / 1e3, 
             downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1e3, 
             0 >= totalTime) return void callback(new MediaPlayer.rules.SwitchRequest());
-            if (null === lastRequest.mediaduration || void 0 === lastRequest.mediaduration || lastRequest.mediaduration <= 0 || isNaN(lastRequest.mediaduration)) return void callback(new MediaPlayer.rules.SwitchRequest());
             if (totalRatio = lastRequest.mediaduration / totalTime, downloadRatio = lastRequest.mediaduration / downloadTime, 
-            isNaN(downloadRatio) || isNaN(totalRatio)) return self.debug.log("The ratios are NaN, bailing."), 
-            void callback(new MediaPlayer.rules.SwitchRequest());
-            if ("video" == mediaType && (self.debug.log("!!Total ratio: " + lastRequest.mediaduration + "/" + totalTime + " = " + totalRatio), 
-            self.debug.log("!!Download ratio: " + downloadRatio)), isNaN(totalRatio)) switchRequest = current; else if (4 > totalRatio) current > 0 ? (self.debug.log("We are not at the lowest bitrate, so switch down."), 
-            oneDownBandwidth = sp.getTrackForQuality(current - 1).bandwidth, currentBandwidth = sp.getTrackForQuality(current).bandwidth, 
-            switchRatio = oneDownBandwidth / currentBandwidth, setUnhealthy(self, manifestInfo, mediaType, current), 
-            switchRatio > totalRatio ? (self.debug.log("Things must be going pretty bad, switch all the way down."), 
-            switchRequest = Math.max(current - 3, 0), setUnhealthy(self, manifestInfo, mediaType, current)) : (self.debug.log("Things could be better, so just switch down one index."), 
-            switchRequest = current - 1)) : switchRequest = current; else if (max > current) if (oneUpBandwidth = sp.getTrackForQuality(current + 1).bandwidth, 
-            currentBandwidth = sp.getTrackForQuality(current).bandwidth, switchRatio = oneUpBandwidth / currentBandwidth, 
-            totalRatio >= switchRatio) if ("video" == mediaType && self.debug.log("!!Oneup: " + totalRatio * currentBandwidth / oneUpBandwidth), 
-            totalRatio * currentBandwidth / oneUpBandwidth >= 5 && setHealthy(self, mediaType, current + 1), 
-            totalRatio > 100) self.debug.log("Tons of bandwidth available, go all the way up."), 
-            switchRequest = Math.min(current + 3, max); else if (totalRatio > 10) self.debug.log("Just enough bandwidth available, switch up one."), 
-            switchRequest = current + 1; else {
-                for (i = -1; (i += 1) < max && !(totalRatio < checkRatio.call(self, sp, i, currentBandwidth)); ) ;
-                "video" == mediaType && self.debug.log("!!Calculated ideal new quality index is: " + i), 
-                switchRequest = i;
-            } else switchRequest = current; else switchRequest = max;
-            if ("video" === mediaType) videoBandwidth = sp.getTrackForQuality(switchRequest).bandwidth; else if ("audio" === mediaType && videoBandwidth && sp.getTrackForQuality(switchRequest).bandwidth > videoBandwidth) for (self.debug.log("!!Audio bitrate is less than video! Switch down."); switchRequest > 0 && sp.getTrackForQuality(switchRequest).bandwidth > videoBandwidth; ) switchRequest -= 1;
-            callback(doSwitch(self, mediaType, switchRequest));
+            1/0 !== downloadRatio && downloadRatioArray.push(downloadRatio), averageDownloadRatio = getAverageDownloadRatio(AVERAGE_DOWNLOAD_RATIO_SAMPLE_AMOUNT), 
+            isNaN(averageDownloadRatio) || isNaN(downloadRatio) || isNaN(totalRatio)) return void callback(new MediaPlayer.rules.SwitchRequest());
+            if (1 > averageDownloadRatio) {
+                if (current > 0) for (i = current - 1; i > 0; i--) if (switchRatio = getSwitchRatio.call(self, sp, i, current), 
+                averageDownloadRatio > switchRatio * DOWNLOAD_RATIO_SAFETY_FACTOR) {
+                    switchRequest = new MediaPlayer.rules.SwitchRequest(i, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
+                    break;
+                }
+            } else if (null !== currentBufferMetric && currentBufferMetric.level >= currentBufferMetric.target || isDynamic && null !== currentBufferMetric && currentBufferMetric.level >= MediaPlayer.dependencies.BufferController.DEFAULT_STARTUP_BUFFER_TIME) {
+                var max = mediaInfo.trackCount - 1;
+                if (max > current) for (i = max; i > 0; i--) if (switchRatio = getSwitchRatio.call(self, sp, i, current), 
+                averageDownloadRatio > switchRatio) {
+                    current !== i && (switchRequest = new MediaPlayer.rules.SwitchRequest(i, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
+                    break;
+                }
+            }
+            null === switchRequest && (switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT)), 
+            switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && self.debug.log("DownloadRatioRule requesting switch to index: ", switchRequest.value, "type: ", mediaType, " priority: ", switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "default" : switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "strong" : "weak"), 
+            callback(switchRequest);
         },
         reset: function() {
-            streamProcessors = {};
+            stepDownFactor = 1, downloadRatioArray = [];
         }
     };
 }, MediaPlayer.rules.DownloadRatioRule.prototype = {
     constructor: MediaPlayer.rules.DownloadRatioRule
 }, MediaPlayer.rules.InsufficientBufferRule = function() {
     "use strict";
-    var dryBufferHits = 0, DRY_BUFFER_LIMIT = 3;
+    var bufferStateDict = {}, setBufferInfo = function(type, state) {
+        bufferStateDict[type] = bufferStateDict[type] || {}, bufferStateDict[type].state = state, 
+        state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED && (bufferStateDict[type].stepDownFactor = 1, 
+        bufferStateDict[type].lastDryBufferHitRecorded = !1);
+    };
     return {
         debug: void 0,
         metricsModel: void 0,
         execute: function(context, callback) {
-            var playlist, trace, reset, self = this, mediaType = context.getMediaInfo().type, current = context.getCurrentValue(), metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType), shift = !1, p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT, manifestInfo = context.getManifestInfo();
-            return null === metrics.PlayList || void 0 === metrics.PlayList || 0 === metrics.PlayList.length ? void callback(new MediaPlayer.rules.SwitchRequest()) : (playlist = metrics.PlayList[metrics.PlayList.length - 1], 
-            null === playlist || void 0 === playlist || 0 === playlist.trace.length ? void callback(new MediaPlayer.rules.SwitchRequest()) : (trace = playlist.trace[playlist.trace.length - 2], 
-            null === trace || void 0 === trace || null === trace.stopreason || void 0 === trace.stopreason ? void callback(new MediaPlayer.rules.SwitchRequest()) : (console.log(trace), 
-            trace.stopreason === MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON && (shift = !0, 
-            dryBufferHits += 1, reset = 1e3 * Math.max(manifestInfo.minBufferTime, manifestInfo.maxFragmentDuration), 
-            setTimeout(function() {
-                dryBufferHits -= 1;
-            }, reset), self.debug.log("Number of times the buffer has run dry: " + dryBufferHits)), 
-            dryBufferHits > DRY_BUFFER_LIMIT && (p = MediaPlayer.rules.SwitchRequest.prototype.STRONG, 
-            self.debug.log("Apply STRONG to buffer rule.")), void (shift && 0 != current ? (self.debug.log("The buffer ran dry recently, switch down."), 
-            callback(new MediaPlayer.rules.SwitchRequest(current - 1, p))) : dryBufferHits > DRY_BUFFER_LIMIT ? (self.debug.log("Too many dry buffer hits, quit switching bitrates."), 
-            callback(new MediaPlayer.rules.SwitchRequest(current, p))) : callback(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, p))))));
+            var playlist, trace, self = this, mediaType = context.getMediaInfo().type, current = context.getCurrentValue(), mediaInfo = context.getMediaInfo(), metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType), streamInfo = context.getStreamInfo(), duration = streamInfo.duration, currentTime = context.getStreamProcessor().getPlaybackController().getTime(), sp = context.getStreamProcessor(), isDynamic = sp.isDynamic(), switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK), lastBufferLevelVO = metrics.BufferLevel.length > 0 ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null, lastBufferStateVO = metrics.BufferState.length > 0 ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+            return 1 === mediaInfo.trackCount || null === metrics.PlayList || void 0 === metrics.PlayList || 0 === metrics.PlayList.length || null === lastBufferStateVO ? void callback(switchRequest) : (playlist = metrics.PlayList[metrics.PlayList.length - 1], 
+            null === playlist || void 0 === playlist || 0 === playlist.trace.length ? void callback(switchRequest) : (trace = playlist.trace[Math.max(playlist.trace.length - 2, 0)], 
+            null === trace || void 0 === trace ? void callback(switchRequest) : (setBufferInfo(mediaType, lastBufferStateVO.state), 
+            null === trace.stopreason || trace.stopreason !== MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON || bufferStateDict[mediaType].lastDryBufferHitRecorded ? !isDynamic && bufferStateDict[mediaType].state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED && trace.stopreason !== MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON && null !== lastBufferLevelVO && lastBufferLevelVO.level < 2 * MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD && lastBufferLevelVO.level > MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD && currentTime < duration - 2 * MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD && (switchRequest = new MediaPlayer.rules.SwitchRequest(Math.max(current - bufferStateDict[mediaType].stepDownFactor, 0), MediaPlayer.rules.SwitchRequest.prototype.STRONG), 
+            bufferStateDict[mediaType].stepDownFactor++) : (bufferStateDict[mediaType].lastDryBufferHitRecorded = !0, 
+            switchRequest = new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG)), 
+            switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && self.debug.log("InsufficientBufferRule requesting switch to index: ", switchRequest.value, "type: ", mediaType, " Priority: ", switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" : switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak"), 
+            void callback(switchRequest))));
+        },
+        reset: function() {
+            bufferStateDict = {};
         }
     };
 }, MediaPlayer.rules.InsufficientBufferRule.prototype = {
@@ -5447,18 +5484,60 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
         debug: void 0,
         metricsModel: void 0,
         execute: function(context, callback) {
-            var delay, self = this, mediaType = context.getMediaInfo().type, current = context.getCurrentValue(), metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType), manifestInfo = context.getManifestInfo(), lastIdx = metrics.RepSwitchList.length - 1, rs = metrics.RepSwitchList[lastIdx], now = new Date().getTime();
-            return qualitySwitchThreshold = 1e3 * Math.min(manifestInfo.minBufferTime, manifestInfo.maxFragmentDuration), 
-            delay = now - lastCheckTime, qualitySwitchThreshold > delay && now - rs.t.getTime() < qualitySwitchThreshold ? (self.debug.log("Wait some time before allowing another switch."), 
-            void callback(new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG))) : (lastCheckTime = now, 
-            void callback(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.STRONG)));
+            var delay, self = this, current = context.getCurrentValue(), now = new Date().getTime();
+            return self.debug.log("Checking limit switches rule..."), delay = now - lastCheckTime, 
+            qualitySwitchThreshold > delay ? (self.debug.log("Wait some time before allowing another switch."), 
+            void callback(new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT))) : (lastCheckTime = now, 
+            void callback(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK)));
         }
     };
 }, MediaPlayer.rules.LimitSwitchesRule.prototype = {
     constructor: MediaPlayer.rules.LimitSwitchesRule
+}, MediaPlayer.rules.ThroughputRule = function() {
+    "use strict";
+    var throughputArray = [], AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2, AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3, storeLastRequestThroughputByType = function(type, lastRequestThroughput) {
+        throughputArray[type] = throughputArray[type] || [], 1/0 !== lastRequestThroughput && lastRequestThroughput !== throughputArray[type][throughputArray[type].length - 1] && throughputArray[type].push(lastRequestThroughput);
+    }, getAverageThroughput = function(type, isDynamic) {
+        var averageThroughput = 0, sampleAmount = isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD, arr = throughputArray[type], len = arr.length;
+        if (sampleAmount = sampleAmount > len ? len : sampleAmount, len > 0) {
+            for (var startValue = len - sampleAmount, totalSampledValue = 0, i = startValue; len > i; i++) totalSampledValue += arr[i];
+            averageThroughput = totalSampledValue / sampleAmount;
+        }
+        return arr.length > sampleAmount && arr.shift(), averageThroughput;
+    };
+    return {
+        debug: void 0,
+        metricsExt: void 0,
+        metricsModel: void 0,
+        manifestExt: void 0,
+        manifestModel: void 0,
+        execute: function(context, callback) {
+            var downloadTime, averageThroughput, lastRequestThroughput, self = this, mediaInfo = context.getMediaInfo(), mediaType = mediaInfo.type, manifest = this.manifestModel.getValue(), metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType), isDynamic = context.getStreamProcessor().isDynamic(), lastRequest = self.metricsExt.getCurrentHttpRequest(metrics), bufferStateVO = metrics.BufferState.length > 0 ? metrics.BufferState[metrics.BufferState.length - 1] : null, bufferLevelVO = metrics.BufferLevel.length > 0 ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null, switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
+            if (!metrics || null === lastRequest || lastRequest.type !== MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE || null === bufferStateVO || null === bufferLevelVO) return void callback(new MediaPlayer.rules.SwitchRequest());
+            downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1e3, 
+            lastRequestThroughput = Math.round(8 * lastRequest.trace[lastRequest.trace.length - 1].b / downloadTime), 
+            storeLastRequestThroughputByType(mediaType, lastRequestThroughput), averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic));
+            var adaptation = this.manifestExt.getAdaptationForType(manifest, 0, mediaType), max = mediaInfo.trackCount - 1;
+            if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED && (bufferLevelVO.level >= 2 * MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD || isDynamic)) for (var i = max; i > 0; i--) {
+                var repBandwidth = this.manifestExt.getRepresentationFor(i, adaptation).bandwidth;
+                if (averageThroughput >= repBandwidth) {
+                    var p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+                    switchRequest = new MediaPlayer.rules.SwitchRequest(i, p);
+                    break;
+                }
+            }
+            switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && self.debug.log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ", mediaType, " Priority: ", switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" : switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak", "Average throughput", Math.round(averageThroughput / 1024), "kbps"), 
+            callback(switchRequest);
+        },
+        reset: function() {
+            throughputArray = [];
+        }
+    };
+}, MediaPlayer.rules.ThroughputRule.prototype = {
+    constructor: MediaPlayer.rules.ThroughputRule
 }, MediaPlayer.rules.RulesContext = function(streamProcessor, currentValue) {
     "use strict";
-    var trackInfo = streamProcessor.getCurrentTrack();
+    var trackInfo = streamProcessor.getCurrentTrack(), sp = streamProcessor;
     return {
         getStreamInfo: function() {
             return trackInfo.mediaInfo.streamInfo;
@@ -5474,6 +5553,9 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
         },
         getManifestInfo: function() {
             return trackInfo.mediaInfo.streamInfo.manifestInfo;
+        },
+        getStreamProcessor: function() {
+            return sp;
         }
     };
 }, MediaPlayer.rules.RulesContext.prototype = {
@@ -5487,7 +5569,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
         var minBufferTarget;
         return minBufferTarget = isNaN(duration) || MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME < duration && duration > minBufferTime ? Math.max(5 * MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME, 5 * minBufferTime) : minBufferTime >= duration ? Math.min(duration, MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME) : Math.min(duration, 5 * minBufferTime);
     }, getRequiredBufferLength = function(isDynamic, duration, scheduleController) {
-        var self = this, criticalBufferLevel = scheduleController.bufferController.getCriticalBufferLevel(), minBufferTarget = decideBufferLength.call(this, scheduleController.bufferController.getMinBufferTime(), duration), currentBufferTarget = minBufferTarget, bufferMax = scheduleController.bufferController.bufferMax, vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"), ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"), isLongFormContent = duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD, requiredBufferLength = 0;
+        var self = this, criticalBufferLevel = scheduleController.bufferController.getCriticalBufferLevel(), vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"), ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"), minBufferTarget = decideBufferLength.call(this, scheduleController.bufferController.getMinBufferTime(), duration), currentBufferTarget = minBufferTarget, bufferMax = scheduleController.bufferController.bufferMax, isLongFormContent = duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD, requiredBufferLength = 0;
         return bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN ? requiredBufferLength = minBufferTarget : bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY ? requiredBufferLength = duration : bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED && (!isDynamic && self.abrController.isPlayingAtTopQuality(scheduleController.streamProcessor.getStreamInfo()) && (currentBufferTarget = isLongFormContent ? MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM : MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY), 
         requiredBufferLength = currentBufferTarget + Math.max(getCurrentHttpRequestLatency.call(self, vmetrics), getCurrentHttpRequestLatency.call(self, ametrics))), 
         requiredBufferLength = Math.min(requiredBufferLength, criticalBufferLevel);
@@ -5712,8 +5794,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
             if (time = hasSeekTarget ? st : useRejected ? rejected.startTime : currentTime, 
             isNaN(time)) return void callback(new MediaPlayer.rules.SwitchRequest(null, p));
             for (seekTarget[streamId] && (seekTarget[streamId][mediaType] = null), range = this.sourceBufferExt.getBufferRange(streamProcessor.bufferController.getBuffer(), time), 
-            null !== range && (time = range.end), request = this.adapter.getFragmentRequestForTime(streamProcessor, track, time, keepIdx), 
-            useRejected && request && request.index !== rejected.index && (request = this.adapter.getFragmentRequestForTime(streamProcessor, track, rejected.startTime + rejected.duration / 2 + EPSILON, keepIdx)); request && streamProcessor.fragmentController.isFragmentLoadedOrPending(sc, request); ) {
+            null !== range && (time = range.end), request = this.adapter.getFragmentRequestForTime(streamProcessor, track, time, {
+                keepIdx: keepIdx
+            }), useRejected && request && request.index !== rejected.index && (request = this.adapter.getFragmentRequestForTime(streamProcessor, track, rejected.startTime + rejected.duration / 2 + EPSILON, {
+                keepIdx: keepIdx
+            })); request && streamProcessor.fragmentController.isFragmentLoadedOrPending(sc, request); ) {
                 if ("complete" === request.action) {
                     request = null, this.adapter.setIndexHandlerTime(streamProcessor, 0/0);
                     break;
@@ -5751,8 +5836,8 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
         var rule, ruleSubType, subTypeRuleSet, ruleArr, ln, i;
         for (ruleSubType in newRulesCollection) if (ruleArr = newRulesCollection[ruleSubType], 
         ln = ruleArr.length) for (i = 0; ln > i; i += 1) rule = ruleArr[i], isRule.call(this, rule) && (rule = normalizeRule.call(this, rule), 
-        subTypeRuleSet = currentRulesCollection.getRules(ruleSubType), override && (subTypeRuleSet.length = 0), 
-        subTypeRuleSet.push(rule));
+        subTypeRuleSet = currentRulesCollection.getRules(ruleSubType), override && (override = !1, 
+        subTypeRuleSet.length = 0), this.system.injectInto(rule), subTypeRuleSet.push(rule));
     };
     return {
         system: void 0,
@@ -5939,6 +6024,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
         HttpList: [],
         RepSwitchList: [],
         BufferLevel: [],
+        BufferState: [],
         PlayList: [],
         DroppedFrames: [],
         SchedulingInfo: [],
@@ -5969,6 +6055,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
     this.t = null, this.level = null;
 }, MediaPlayer.vo.metrics.BufferLevel.prototype = {
     constructor: MediaPlayer.vo.metrics.BufferLevel
+}, MediaPlayer.vo.metrics.BufferState = function() {
+    "use strict";
+    this.target = null, this.state = MediaPlayer.dependencies.BufferController.BUFFER_EMPTY;
+}, MediaPlayer.vo.metrics.BufferState.prototype = {
+    constructor: MediaPlayer.vo.metrics.BufferState
 }, MediaPlayer.vo.metrics.DVRInfo = function() {
     "use strict";
     this.time = null, this.range = null, this.manifestInfo = null;
@@ -5992,7 +6083,8 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
     this.s = null, this.d = null, this.b = [];
 }, MediaPlayer.vo.metrics.HTTPRequest.Trace.prototype = {
     constructor: MediaPlayer.vo.metrics.HTTPRequest.Trace
-}, MediaPlayer.vo.metrics.ManifestUpdate = function() {
+}, MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE = "Media Segment", MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE = "MPD", 
+MediaPlayer.vo.metrics.ManifestUpdate = function() {
     "use strict";
     this.mediaType = null, this.type = null, this.requestTime = null, this.fetchTime = null, 
     this.availabilityStartTime = null, this.presentationStartTime = 0, this.clientTimeOffset = 0, 

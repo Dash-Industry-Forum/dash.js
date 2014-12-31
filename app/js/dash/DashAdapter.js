@@ -150,9 +150,9 @@ Dash.dependencies.DashAdapter = function () {
             return streamProcessor.indexHandler.getNextSegmentRequest(representation);
         },
 
-        getFragmentRequestForTime = function(streamProcessor, trackInfo, time, keepIdx) {
+        getFragmentRequestForTime = function(streamProcessor, trackInfo, time, options) {
             var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.trackController);
-            return streamProcessor.indexHandler.getSegmentRequestForTime(representation, time, keepIdx);
+            return streamProcessor.indexHandler.getSegmentRequestForTime(representation, time, options);
         },
 
         generateFragmentRequestForTime = function(streamProcessor, trackInfo, time) {
@@ -249,6 +249,7 @@ Dash.dependencies.DashAdapter = function () {
             HTTP_REQUEST_TRACE: "HttpRequestTrace",
             TRACK_SWITCH : "RepresentationSwitch",
             BUFFER_LEVEL: "BufferLevel",
+            BUFFER_STATE: "BufferState",
             DVR_INFO: "DVRInfo",
             DROPPED_FRAMES: "DroppedFrames",
             SCHEDULING_INFO: "SchedulingInfo",

@@ -1,7 +1,7 @@
 ﻿/*
  * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
  * 
- * Copyright (c) 2013, Digital Primates
+ * Copyright (c) 2013, Digital Primates, Akamai Technologies
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -21,124 +21,72 @@ MediaPlayer.rules.DownloadRatioRule = function () {
      *
      * This rule is not sufficient by itself.  We may be able to download a fragment
      * fine, but if the buffer is not sufficiently long playback hiccups will happen.
-     * Be sure to use this rule in conjuction with the InsufficientBufferRule.
+     * Be sure to use this rule in conjunction with the InsufficientBufferRule.
      */
 
-    var MAX_SCALEDOWNS_FROM_BITRATE = 2,
-        streamProcessors = {},
-        unhealthyIndexes = {},
-        videoBandwidth,
+    var stepDownFactor = 1,
+        downloadRatioArray = [],
+        TOTAL_DOWNLOAD_RATIO_ARRAY_LENGTH = 20,
+        AVERAGE_DOWNLOAD_RATIO_SAMPLE_AMOUNT = 3,
+        DOWNLOAD_RATIO_SAFETY_FACTOR = 1.4,
 
-        checkRatio = function (sp, newIdx, currentBandwidth) {
-            var newBandwidth = sp.getTrackForQuality(newIdx).bandwidth;
-
-            return (newBandwidth / currentBandwidth);
+        getSwitchRatio = function (sp, newIdx, current) {
+            return sp.getTrackForQuality(newIdx).bandwidth / sp.getTrackForQuality(current).bandwidth;
         },
 
-        doSwitch = function(self, mediaType, idx) {
-            var reliable = true;
-            if (unhealthyIndexes.hasOwnProperty(mediaType)) {
-                for (var key in unhealthyIndexes[mediaType]) {
-                    if (unhealthyIndexes[mediaType].hasOwnProperty(key) &&
-                        key <= idx &&
-                        unhealthyIndexes[mediaType][key] >= MAX_SCALEDOWNS_FROM_BITRATE) {
-                        reliable = false;
-                        break;
-                    }
-                }
-            }
-            if (!reliable) {
-                //We've said this rule is bad
-                self.debug.log('!!Index ' + (idx+1) + ' for ' + mediaType + ' is unreliable');
-                if (idx > 0) {
-                    return doSwitch(self, mediaType, idx - 1);
-                } else {
-                    return new MediaPlayer.rules.switchRequest();
-                }
-            } else {
-                self.debug.log('!!Switching to index ' + (idx+1) + ' for ' + mediaType);
-                return new MediaPlayer.rules.SwitchRequest(idx);
-            }
-        },
+        getAverageDownloadRatio = function (sampleAmount) {
+            var averageDownloadRatio = 0,
+                len = downloadRatioArray.length;
 
-        setUnhealthy = function(self, manifestInfo, mediaType, idx) {
-            var reset = Math.max(manifestInfo.minBufferTime, manifestInfo.maxFragmentDuration) * 1000 * 5;
-            if (!unhealthyIndexes.hasOwnProperty(mediaType)) {
-                unhealthyIndexes[mediaType] = [];
-            }
-            if (!unhealthyIndexes[mediaType].hasOwnProperty(idx)) {
-                self.debug.log('!!Resetting ' + mediaType + ' ' + (idx+1));
-                unhealthyIndexes[mediaType][idx] = 0;
-            }
-            unhealthyIndexes[mediaType][idx] += 1;
-            setTimeout(function() {
-                if (unhealthyIndexes[mediaType][idx] < MAX_SCALEDOWNS_FROM_BITRATE) {
-                    setHealthy(self, mediaType, idx);
-                }
-            }, reset);
-            self.debug.log('!!' + mediaType + ' index ' + (idx+1) + ' has unhealthy score of ' + unhealthyIndexes[mediaType][idx]);
-        },
+            sampleAmount = len < sampleAmount ? len : sampleAmount;
+            if (len > 0) {
+                var startValue = len - sampleAmount,
+                    totalSampledValue = 0;
 
-        setHealthy = function(self, mediaType, idx) {
-            if (!unhealthyIndexes.hasOwnProperty(mediaType)) {
-                unhealthyIndexes[mediaType] = [];
+                for (var i = startValue; i < len; i++) {
+                    totalSampledValue += downloadRatioArray[i];
+                }
+                averageDownloadRatio = totalSampledValue / sampleAmount;
             }
-            if (!unhealthyIndexes[mediaType].hasOwnProperty(idx)) {
-                self.debug.log('!!Resetting ' + mediaType + ' ' + (idx+1));
-                unhealthyIndexes[mediaType][idx] = 0;
+
+            if (downloadRatioArray.length > TOTAL_DOWNLOAD_RATIO_ARRAY_LENGTH) {
+                downloadRatioArray.shift();
             }
-            if (unhealthyIndexes[mediaType][idx] > 0) {
-                unhealthyIndexes[mediaType][idx] = 0
-            }
-            self.debug.log('!!' + mediaType + ' index ' + (idx+1) + ' has unhealthy score of ' + unhealthyIndexes[mediaType][idx]);
+            return averageDownloadRatio;
         };
+
 
     return {
         debug: undefined,
         metricsExt: undefined,
         metricsModel: undefined,
 
-        setStreamProcessor: function(streamProcessorValue) {
-            var type = streamProcessorValue.getType(),
-                id = streamProcessorValue.getStreamInfo().id;
-
-            streamProcessors[id] = streamProcessors[id] || {};
-            streamProcessors[id][type] = streamProcessorValue;
-        },
-
         execute: function (context, callback) {
             var self = this,
-                streamId = context.getStreamInfo().id,
-                manifestInfo = context.getManifestInfo(),
                 mediaInfo = context.getMediaInfo(),
                 mediaType = mediaInfo.type,
                 current = context.getCurrentValue(),
-                sp = streamProcessors[streamId][mediaType],
+                sp = context.getStreamProcessor(),
+                isDynamic = sp.isDynamic(),
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
+                currentBufferMetric = metrics.BufferLevel[metrics.BufferLevel.length-1] || null,
                 downloadTime,
                 totalTime,
+                averageDownloadRatio,
                 downloadRatio,
                 totalRatio,
                 switchRatio,
-                oneDownBandwidth,
-                oneUpBandwidth,
-                currentBandwidth,
                 i,
-                max = mediaInfo.trackCount - 1, //0 based
-                switchRequest,
-                DOWNLOAD_RATIO_SAFETY_FACTOR = 0.75;
+                //currentBandwidth,
+                switchRequest = null;
 
-            if (lastRequest == null) {
-                // This is the first request
-                callback(new MediaPlayer.rules.SwitchRequest(Math.floor(max/2)));
-                return;
-            }
-
-            //self.debug.log("Checking download ratio rule...");
-
-            if (!metrics) {
-                //self.debug.log("No metrics, bailing.");
+            if (!metrics ||
+                lastRequest === null ||
+                lastRequest.mediaduration === null ||
+                lastRequest.mediaduration === undefined ||
+                lastRequest.mediaduration <= 0 ||
+                isNaN(lastRequest.mediaduration)) {
                 callback(new MediaPlayer.rules.SwitchRequest());
                 return;
             }
@@ -151,123 +99,79 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                 callback(new MediaPlayer.rules.SwitchRequest());
                 return;
             }
+            totalRatio = lastRequest.mediaduration / totalTime;
+            downloadRatio = (lastRequest.mediaduration / downloadTime);
+            if (downloadRatio !== Infinity) {
+                downloadRatioArray.push(downloadRatio);
+            }
+            averageDownloadRatio = getAverageDownloadRatio(AVERAGE_DOWNLOAD_RATIO_SAMPLE_AMOUNT);
 
-            if (lastRequest.mediaduration === null ||
-                lastRequest.mediaduration === undefined ||
-                lastRequest.mediaduration <= 0 ||
-                isNaN(lastRequest.mediaduration)) {
-                //self.debug.log("Don't know the duration of the last media fragment, bailing.");
+            if (isNaN(averageDownloadRatio) || isNaN(downloadRatio) || isNaN(totalRatio)) {
+                //self.debug.log("The ratios are NaN, bailing.");
                 callback(new MediaPlayer.rules.SwitchRequest());
                 return;
             }
 
-            // TODO : I structured this all goofy and messy.  fix plz
 
-            totalRatio = (lastRequest.mediaduration / totalTime);// * DOWNLOAD_RATIO_SAFETY_FACTOR;
-            downloadRatio = (lastRequest.mediaduration / downloadTime);// * DOWNLOAD_RATIO_SAFETY_FACTOR;
-
-            if (isNaN(downloadRatio) || isNaN(totalRatio)) {
-                //self.debug.log("Total time: " + totalTime + "s");
-                //self.debug.log("Download time: " + downloadTime + "s");
-                self.debug.log("The ratios are NaN, bailing.");
-                callback(new MediaPlayer.rules.SwitchRequest());
-                return;
-            }
-
-            if (mediaType == "video") {
-                self.debug.log("!!Total ratio: " + lastRequest.mediaduration + '/' + totalTime + ' = ' + totalRatio);
-                self.debug.log("!!Download ratio: " + downloadRatio);
-            }
-
-            if (isNaN(totalRatio)) {
-                //self.debug.log("Invalid ratio, bailing.");
-                switchRequest = current;
-            } else if (totalRatio < 4.0) {
-                //self.debug.log("Download ratio is poor.");
-                if (current > 0) {
-                    self.debug.log("We are not at the lowest bitrate, so switch down.");
-                    oneDownBandwidth = sp.getTrackForQuality(current - 1).bandwidth;
-                    currentBandwidth = sp.getTrackForQuality(current).bandwidth;
-                    switchRatio = oneDownBandwidth / currentBandwidth;
-                    //self.debug.log("Switch ratio: " + switchRatio);
-
-                    setUnhealthy(self, manifestInfo, mediaType, current);
-
-                    if (totalRatio < switchRatio) {
-                        self.debug.log("Things must be going pretty bad, switch all the way down.");
-                        switchRequest = Math.max(current - 3, 0);
-                        setUnhealthy(self, manifestInfo, mediaType, current);
-                    } else {
-                        self.debug.log("Things could be better, so just switch down one index.");
-                        switchRequest = current - 1;
+            if (averageDownloadRatio < 1)
+            {
+                if (current > 0)
+                {
+                    for ( i = current - 1 ; i > 0; i-- ) {
+                        switchRatio = getSwitchRatio.call(self, sp, i, current);
+                        if ( averageDownloadRatio > switchRatio * DOWNLOAD_RATIO_SAFETY_FACTOR) {
+                            switchRequest = new MediaPlayer.rules.SwitchRequest(i, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
+                            break;
+                        }
                     }
-                } else {
-                    //self.debug.log("We are at the lowest bitrate and cannot switch down, use current.");
-                    switchRequest = current;
+                    //switchRequest = getBestBitrateForPlayback(sp, current, current, downloadRatio);
+                    //var switchDownTo = Math.max(current - stepDownFactor, 0);
+                    //switchRequest = new MediaPlayer.rules.SwitchRequest(switchDownTo, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
+                    //stepDownFactor++;
                 }
             } else {
-                //self.debug.log("Download ratio is good.");
 
-                if (current < max) {
-                    //self.debug.log("We are not at the highest bitrate, so switch up.");
-                    oneUpBandwidth = sp.getTrackForQuality(current + 1).bandwidth;
-                    currentBandwidth = sp.getTrackForQuality(current).bandwidth;
-                    switchRatio = oneUpBandwidth / currentBandwidth;
-                    //self.debug.log("Switch ratio: " + switchRatio);
+                if ((currentBufferMetric !== null && currentBufferMetric.level >= currentBufferMetric.target) ||
+                    (isDynamic && currentBufferMetric !== null && currentBufferMetric.level >= MediaPlayer.dependencies.BufferController.DEFAULT_STARTUP_BUFFER_TIME)) { // Only switch up if we are not at low buffer otherwise let the InsufficientBufferRule handle this.
 
-                    if (totalRatio >= switchRatio) {
-
-                        if (mediaType == 'video') {
-                            self.debug.log('!!Oneup: ' + (totalRatio * currentBandwidth) / oneUpBandwidth);
-                        }
-
-                        if ((totalRatio * currentBandwidth) / oneUpBandwidth >= 5.0) {
-                            setHealthy(self, mediaType, current + 1);
-                        }
-
-                        if (totalRatio > 100.0) {
-                            self.debug.log("Tons of bandwidth available, go all the way up.");
-                            switchRequest = Math.min(current + 3, max);
-                        }
-                        else if (totalRatio > 10.0) {
-                            self.debug.log("Just enough bandwidth available, switch up one.");
-                            switchRequest = current + 1;
-                        }
-                        else {
-                            //self.debug.log("Not exactly sure where to go, so do some math.");
-                            i = -1;
-                            while ((i += 1) < max) {
-                                if (totalRatio < checkRatio.call(self, sp, i, currentBandwidth)) {
+                    var max = mediaInfo.trackCount - 1;
+                    if (current < max) {
+                        //if (averageDownloadRatio > 100)
+                        //{
+                        //    switchRequest = new MediaPlayer.rules.SwitchRequest(max, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
+                        //    stepDownFactor = 1;
+                        //}else {
+                            for ( i = max ; i > 0; i-- ) {
+                                switchRatio = getSwitchRatio.call(self, sp, i, current);
+                                if ( averageDownloadRatio > switchRatio) {
+                                    if (current !== i) {
+                                        //self.debug.log("averageDownloadRatio", averageDownloadRatio, switchRatio, i);
+                                        switchRequest = new MediaPlayer.rules.SwitchRequest(i, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
+                                    }
                                     break;
                                 }
                             }
-
-                            if (mediaType == "video") {self.debug.log("!!Calculated ideal new quality index is: " + i);}
-                            switchRequest = i;
-                        }
-                    } else {
-                        //self.debug.log("Not enough bandwidth to switch up.");
-                        switchRequest = current;
+                       // }
                     }
-                } else {
-                    //self.debug.log("We are at the highest bitrate and cannot switch up, use current.");
-                    switchRequest = max;
                 }
             }
 
-            if (mediaType === 'video') {
-                videoBandwidth = sp.getTrackForQuality(switchRequest).bandwidth
-            } else if (mediaType === 'audio' && videoBandwidth && sp.getTrackForQuality(switchRequest).bandwidth > videoBandwidth) {
-                self.debug.log('!!Audio bitrate is less than video! Switch down.');
-                while (switchRequest > 0 && sp.getTrackForQuality(switchRequest).bandwidth > videoBandwidth) {
-                    switchRequest -= 1;
-                }
+            if (switchRequest === null) {
+                switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
             }
-            callback(doSwitch(self, mediaType, switchRequest));
+
+            if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                self.debug.log("DownloadRatioRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " priority: ",
+                    switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "default" :
+                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "strong" : "weak");
+            }
+
+            callback(switchRequest);
         },
 
         reset: function() {
-            streamProcessors = {};
+            stepDownFactor = 1;
+            downloadRatioArray = [];
         }
     };
 };

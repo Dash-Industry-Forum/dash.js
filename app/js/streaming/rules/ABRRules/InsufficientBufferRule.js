@@ -1,7 +1,7 @@
 ﻿/*
  * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
  * 
- * Copyright (c) 2013, Digital Primates
+ * Copyright (c) 2013, Digital Primates, Akamai Technologies
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,7 +13,6 @@
  */
 MediaPlayer.rules.InsufficientBufferRule = function () {
     "use strict";
-
     /*
      * This rule is intended to be sure that our buffer doesn't run dry.
      * If the buffer runs dry playback halts until more data is downloaded.
@@ -22,16 +21,18 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
      * but the play may not leave enough time in the buffer to allow for longer fragments.
      * A dry buffer is a good indication of this use case, so we want to switch down to
      * smaller fragments to decrease download time.
-     *
-     * TODO
-     * An alternative would be to increase the size of the buffer.
-     * Is there a good way to handle this?
-     * Maybe the BufferExtensions should have some monitoring built into the
-     * shouldBufferMore method to increase the buffer over time...
      */
+    var //DRY_BUFFER_LIMIT = 3,
+        bufferStateDict = {},
 
-    var dryBufferHits = 0,
-        DRY_BUFFER_LIMIT = 3;
+        setBufferInfo = function (type, state) {
+            bufferStateDict[type] = bufferStateDict[type] || {};
+            bufferStateDict[type].state = state;
+            if (state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED) {
+                bufferStateDict[type].stepDownFactor = 1;
+                bufferStateDict[type].lastDryBufferHitRecorded = false;
+            }
+        };
 
     return {
         debug: undefined,
@@ -41,19 +42,24 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
             var self = this,
                 mediaType = context.getMediaInfo().type,
                 current = context.getCurrentValue(),
+                mediaInfo = context.getMediaInfo(),
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 playlist,
+                streamInfo = context.getStreamInfo(),
+                duration = streamInfo.duration,
+                currentTime = context.getStreamProcessor().getPlaybackController().getTime(),
                 trace,
-                shift = false,
-                p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
-                manifestInfo = context.getManifestInfo(),
-                reset;
+                sp = context.getStreamProcessor(),
+                isDynamic = sp.isDynamic(),
+                switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK),
+                lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
+                lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
 
-            //self.debug.log("Checking insufficient buffer rule...");
-
-            if (metrics.PlayList === null || metrics.PlayList === undefined || metrics.PlayList.length === 0) {
+            if (mediaInfo.trackCount === 1 || metrics.PlayList === null ||
+                metrics.PlayList === undefined || metrics.PlayList.length === 0 ||
+                lastBufferStateVO === null) {
                 //self.debug.log("Not enough information for rule.");
-                callback(new MediaPlayer.rules.SwitchRequest());
+                callback(switchRequest);
                 return;
             }
 
@@ -61,47 +67,51 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
 
             if (playlist === null || playlist === undefined || playlist.trace.length === 0) {
                 //self.debug.log("Not enough information for rule.");
-                callback(new MediaPlayer.rules.SwitchRequest());
+                callback(switchRequest);
                 return;
             }
 
-            // The last trace is the currently playing fragment.
-            // So get the trace *before* that one.
-            trace = playlist.trace[playlist.trace.length - 2];
-
-            if (trace === null || trace === undefined || trace.stopreason === null || trace.stopreason === undefined) {
+            //The last trace is the currently playing fragment. So get the trace *before* that one.
+            //Some streams only have one index we need to account for that
+            trace = playlist.trace[Math.max(playlist.trace.length - 2, 0)];
+            if (trace === null || trace === undefined) {
                 //self.debug.log("Not enough information for rule.");
-                callback(new MediaPlayer.rules.SwitchRequest());
+                callback(switchRequest);
                 return;
             }
 
-            if (trace.stopreason === MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON) {
-                shift = true;
-                dryBufferHits += 1;
-                //lpw - After a while, forget about this
-                reset = Math.max(manifestInfo.minBufferTime, manifestInfo.maxFragmentDuration) * 1000;
-                setTimeout(function() {
-                    dryBufferHits -= 1;
-                }, reset);
-                self.debug.log("Number of times the buffer has run dry: " + dryBufferHits);
+            setBufferInfo(mediaType, lastBufferStateVO.state);
+
+            if (trace.stopreason !== null && trace.stopreason === MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON &&
+                !bufferStateDict[mediaType].lastDryBufferHitRecorded) {
+
+                //bufferStateDict[mediaType].dryBufferHits++; //Not using this for priority at this point but may in future.
+                bufferStateDict[mediaType].lastDryBufferHitRecorded = true;
+                switchRequest = new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
+                //self.debug.log("InsufficientBufferRule Number of times the buffer has run dry: " + bufferStateDict[mediaType].dryBufferHits);
+
+            } else if ( !isDynamic &&
+                        bufferStateDict[mediaType].state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
+                        trace.stopreason !== MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON &&
+                        lastBufferLevelVO !== null &&
+                        lastBufferLevelVO.level < (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD * 2) &&
+                        lastBufferLevelVO.level > MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD &&
+                        currentTime < (duration - MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD * 2)) {
+
+                switchRequest = new MediaPlayer.rules.SwitchRequest(Math.max(current - bufferStateDict[mediaType].stepDownFactor, 0), MediaPlayer.rules.SwitchRequest.prototype.STRONG );
+                bufferStateDict[mediaType].stepDownFactor++;
+            }
+            if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                self.debug.log("InsufficientBufferRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
+                    switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
+                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
             }
 
-            // if we've hit a dry buffer too many times, become strong to override whatever is
-            // causing the stream to switch up
-            if (dryBufferHits > DRY_BUFFER_LIMIT) {
-                p = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
-                self.debug.log("Apply STRONG to buffer rule.");
-            }
+            callback(switchRequest);
+        },
 
-            if (shift && current != 0) {
-                self.debug.log("The buffer ran dry recently, switch down.");
-                callback(new MediaPlayer.rules.SwitchRequest(current - 1, p));
-            } else if (dryBufferHits > DRY_BUFFER_LIMIT) {
-                self.debug.log("Too many dry buffer hits, quit switching bitrates.");
-                callback(new MediaPlayer.rules.SwitchRequest(current, p));
-            } else {
-                callback(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, p));
-            }
+        reset: function() {
+            bufferStateDict = {};
         }
     };
 };

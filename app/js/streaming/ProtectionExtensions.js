@@ -91,7 +91,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
         var self = this,
             _protectionData = protectionData,
             getLAUrl = function (laUrl, keysystem) {
-                if (protectionData[keysystem] !== undefined) {
+                if (protectionData && protectionData[keysystem] !== undefined) {
                     if (protectionData[keysystem].laUrl !== null && protectionData[keysystem].laUrl !== '') {
                         return protectionData[keysystem].laUrl;
                     }
@@ -158,7 +158,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 xhr.open('POST', getLAUrl(laURL, "com.microsoft.playready"));
                 xhr.responseType = 'arraybuffer';
 
-                headerOverrides = (_protectionData["com.microsoft.playready"]) ? _protectionData["com.microsoft.playready"].headers : null;
+                headerOverrides = (_protectionData && _protectionData["com.microsoft.playready"]) ? _protectionData["com.microsoft.playready"].headers : null;
 
                 if (headerOverrides) {
                     for (key in headerOverrides) {
@@ -234,7 +234,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                     return PSSHBox;
             },
             playReadyCdmData = function () {
-                if (protectionData["com.microsoft.playready"] !== undefined) {
+                if (protectionData && protectionData["com.microsoft.playready"] !== undefined) {
                     if (protectionData["com.microsoft.playready"].cdmData !== null && protectionData["com.microsoft.playready"].cdmData !== '') {
 
                         var cdmDataArray = [],
@@ -285,7 +285,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                     self.notify(self.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, null, new Error('DRM: widevine update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                 };
 
-                headerOverrides = (_protectionData["com.widevine.alpha"]) ? _protectionData["com.widevine.alpha"].headers : null;
+                headerOverrides = (_protectionData && _protectionData["com.widevine.alpha"]) ? _protectionData["com.widevine.alpha"].headers : null;
 
                 if (headerOverrides) {
                     for (key in headerOverrides) {
