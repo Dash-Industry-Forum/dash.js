@@ -30,13 +30,14 @@ MediaPlayer.rules.BufferLevelRule = function () {
         getRequiredBufferLength = function (isDynamic, duration, scheduleController) {
             var self = this,
                 criticalBufferLevel = scheduleController.bufferController.getCriticalBufferLevel(),
+                vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
+                ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"),
                 minBufferTarget = decideBufferLength.call(this, scheduleController.bufferController.getMinBufferTime(), duration),
                 currentBufferTarget = minBufferTarget,
                 bufferMax = scheduleController.bufferController.bufferMax,
-                vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
-                ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"),
                 isLongFormContent = (duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
                 requiredBufferLength = 0;
+
 
             if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN) {
                 requiredBufferLength = minBufferTarget;
@@ -48,12 +49,11 @@ MediaPlayer.rules.BufferLevelRule = function () {
                         MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :
                         MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY;
                 }
-
                 requiredBufferLength = currentBufferTarget + Math.max(getCurrentHttpRequestLatency.call(self, vmetrics),
                     getCurrentHttpRequestLatency.call(self, ametrics));
             }
 
-            requiredBufferLength = Math.min(requiredBufferLength, criticalBufferLevel);
+            requiredBufferLength = Math.min(requiredBufferLength, criticalBufferLevel) ;
 
             return requiredBufferLength;
         },
