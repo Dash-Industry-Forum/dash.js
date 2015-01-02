@@ -1,0 +1,22 @@
+<?xml version="1.0"?>\
+				<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\
+				  xmlns="urn:mpeg:dash:schema:mpd:2011"\
+				  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd"\
+				  type="static"\
+				  minBufferTime="PT2S"\
+				  profiles="urn:mpeg:dash:profile:isoff-live:2011"\
+				  mediaPresentationDuration="PT234S">\
+				  <Period>\
+					<AdaptationSet mimeType="video/mp4" segmentAlignment="true" startWithSAP="1">\
+					  <SegmentTemplate duration="2" startNumber="1" media="video_$Number$_$Bandwidth$bps.mp4" initialization="video_$Bandwidth$bps.mp4">\
+					  </SegmentTemplate>\
+					  <Representation id="v0" codecs="avc1.4d401e" width="720" height="576" bandwidth="900000"/>\
+					  <Representation id="v1" codecs="avc1.4d401e" width="720" height="576" bandwidth="500000"/>\
+					</AdaptationSet>\
+					<AdaptationSet mimeType="audio/mp4" codecs="mp4a.40.5" segmentAlignment="true" startWithSAP="1">\
+					  <SegmentTemplate duration="2" startNumber="1" media="audio_$Number$_$Bandwidth$bps_Input_2.mp4" initialization="audio_$Bandwidth$bps_Input_2.mp4">\
+					  </SegmentTemplate>\
+					  <Representation id="a2" bandwidth="56000"/>\
+					</AdaptationSet>\
+				  </Period>\
+				</MPD>

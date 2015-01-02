@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>MediaSource Test</title>
+    <meta name="description" content="" />
+
+    <script>
+        var ms,
+            sourceBuffer,
+            video,
+            baseUrl = "http://origintest.cloudapp.net/media/SintelTrailer_MP4_from_WAME/sintel_trailer-1080p.ism/",
+            mimetype,
+            codec,
+            loaded = 0,
+            initialization,
+            frags,
+            playbackStarted = false;
+
+        function loadVideo() {
+            mimetype = "video/mp4";
+            codec = "avc1.640028";
+
+            initialization = baseUrl + "QualityLevels(2222352)/Fragments(video=i,format=mpd-time-csf)";
+
+            frags = [];
+            frags.push(baseUrl + "QualityLevels(2222352)/Fragments(video=0,format=mpd-time-csf)");
+            frags.push(baseUrl + "QualityLevels(2222352)/Fragments(video=20000000,format=mpd-time-csf)");
+            frags.push(baseUrl + "QualityLevels(2222352)/Fragments(video=40000000,format=mpd-time-csf)");
+            frags.push(baseUrl + "QualityLevels(2222352)/Fragments(video=60000000,format=mpd-time-csf)");
+            frags.push(baseUrl + "QualityLevels(2222352)/Fragments(video=80000000,format=mpd-time-csf)");
+
+            load();
+        }
+
+        function loadAudio() {
+            mimetype = "audio/mp4";
+            codec = "mp4a.40.2";
+
+            initialization = baseUrl + "QualityLevels(125576)/Fragments(audio_eng=i,format=mpd-time-csf)";
+
+            frags = [];
+            frags.push(baseUrl + "QualityLevels(125576)/Fragments(audio_eng=0,format=mpd-time-csf)");
+            frags.push(baseUrl + "QualityLevels(125576)/Fragments(audio_eng=20201360,format=mpd-time-csf)");
+            frags.push(baseUrl + "QualityLevels(125576)/Fragments(audio_eng=40402721,format=mpd-time-csf)");
+            frags.push(baseUrl + "QualityLevels(125576)/Fragments(audio_eng=60604081,format=mpd-time-csf)");
+            frags.push(baseUrl + "QualityLevels(125576)/Fragments(audio_eng=80805442,format=mpd-time-csf)");
+
+            load();
+        }
+
+        function load() {
+            console.log("FRAGMENTS:");
+            console.log(frags);
+
+            console.log("START");
+            window.MediaSource = window.MediaSource || window.WebKitMediaSource;
+
+            ms = new MediaSource();
+
+            video = document.querySelector('video');
+            video.src = window.URL.createObjectURL(ms);
+
+            ms.addEventListener('webkitsourceopen', opened, false);
+            ms.addEventListener('webkitsourceclose', closed, false);
+        }
+
+        function opened() {
+            var value = mimetype + ';codecs="' + codec + '"',
+                url = initialization;
+
+            console.log("OPENED");
+            console.log(value);
+
+            sourceBuffer = ms.addSourceBuffer(value);
+
+            console.log("LOAD INIT");
+            var req = new XMLHttpRequest();
+            req.responseType = "arraybuffer";
+            req.open("GET", url, true);
+
+            req.onload = function () {
+                console.log("INIT DONE LOADING");
+                sourceBuffer.append(new Uint8Array(req.response));
+                loadNext();
+            }
+
+            req.onerror = function () {
+                alert("Could not load init.");
+            }
+
+            req.send();
+        }
+
+        function loadNext() {
+            if (loaded >= frags.length) {
+                console.log("EVERYTHING IS LOADED!");
+                return;
+            }
+
+            var url = frags[loaded],
+                i,
+                len,
+                ranges = sourceBuffer.buffered;
+
+            console.log("--STATUS-------");
+            console.log("CURRENT TIME: " + video.currentTime);
+            console.log("BUFFERED RANGES: " + ranges.length);
+            for (i = 0, len = ranges.length; i < len; i += 1) {
+                console.log("RANGE: " + ranges.start(i) + " - " + ranges.end(i));
+            }
+            console.log("---------------");
+
+            console.log("LOAD FRAGMENT: " + url);
+
+            var req = new XMLHttpRequest();
+            req.responseType = "arraybuffer";
+            req.open("GET", url, true);
+
+            req.onload = function () {
+                console.log("FRAGMENT DONE LOADING");
+                sourceBuffer.append(new Uint8Array(req.response));
+
+                if (!playbackStarted) {
+                    playbackStarted = true;
+                    video.play();
+                    video.currentTime = sourceBuffer.buffered.start(0);
+                }
+
+                loaded += 1;
+                loadNext();
+            }
+
+            req.onerror = function () {
+                alert("Could not load fragment.");
+            }
+
+            req.send();
+        }
+
+        function closed() {
+            alert("MediaSource Closed.");
+        }
+    </script>
+</head>
+
+<body>
+    <button type="button" onclick="loadVideo()">Load Video</button>
+    <button type="button" onclick="loadAudio()">Load Audio</button>
+
+    <video controls autoplay width="320" height="240"></video>
+</body>
+</html>
