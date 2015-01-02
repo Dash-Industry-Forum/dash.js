@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
  * 
  * Copyright (c) 2013, Digital Primates
@@ -28,29 +28,26 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
 
         execute: function (context, callback) {
             var self = this,
-                mediaType = context.getMediaInfo().type,
+                //mediaType = context.getMediaInfo().type,
                 current = context.getCurrentValue(),
-                metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
-                manifestInfo = context.getManifestInfo(),
-                lastIdx = metrics.RepSwitchList.length - 1,
-                rs = metrics.RepSwitchList[lastIdx],
+                ///metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
+                //manifestInfo = context.getManifestInfo(),
+                //lastIdx = metrics.RepSwitchList.length - 1,
+                //rs = metrics.RepSwitchList[lastIdx],
                 now = new Date().getTime(),
                 delay;
 
-            //self.debug.log("Checking limit switches rule...");
-            qualitySwitchThreshold = Math.min(manifestInfo.minBufferTime, manifestInfo.maxFragmentDuration) * 1000;
-
+            self.debug.log("Checking limit switches rule...");
             delay = now - lastCheckTime;
 
-            if (delay < qualitySwitchThreshold && (now - rs.t.getTime()) < qualitySwitchThreshold) {
+            if (delay < qualitySwitchThreshold /*&& rs !== undefined && (now - rs.t.getTime()) < qualitySwitchThreshold*/) {
                 self.debug.log("Wait some time before allowing another switch.");
-                callback(new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
+                callback(new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
                 return;
             }
 
             lastCheckTime = now;
-
-            callback(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
+            callback(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK));
         }
     };
 };

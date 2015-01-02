@@ -58,3 +58,6 @@ MediaPlayer.vo.metrics.HTTPRequest.Trace = function () {
 MediaPlayer.vo.metrics.HTTPRequest.Trace.prototype = {
     constructor : MediaPlayer.vo.metrics.HTTPRequest.Trace
 };
+
+MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE = 'Media Segment';
+MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE = 'MPD';

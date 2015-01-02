@@ -200,16 +200,16 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
             if (!ranges || !ranges.length) return;
 
-            // since segments are appended out of order, we cannot blindly seek after the first appended segment.
-            // Do nothing till we make sure that the segment for initial time has been appended.
-            req = this.adapter.getFragmentRequestForTime(e.sender.streamProcessor, trackInfo, playbackStart, false);
-
-            if (!req || req.index !== e.data.index) return;
-
             bufferedStart = ranges.start(0);
             commonEarliestTime = (commonEarliestTime === null) ? bufferedStart : Math.max(commonEarliestTime, bufferedStart);
 
             if (currentEarliestTime === commonEarliestTime) return;
+
+            // since segments are appended out of order, we cannot blindly seek after the first appended segment.
+            // Do nothing till we make sure that the segment for initial time has been appended.
+            req = this.adapter.getFragmentRequestForTime(e.sender.streamProcessor, trackInfo, playbackStart, {keepIdx: false});
+
+            if (!req || req.index !== e.data.index) return;
 
             // seek to the start of buffered range to avoid stalling caused by a shift between audio and video media time
             this.seek(commonEarliestTime);

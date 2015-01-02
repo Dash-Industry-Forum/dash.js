@@ -146,7 +146,9 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         getFragmentModel: function() {
             return this.scheduleController.getFragmentModel();
         },
-
+        getPlaybackController:function() {
+            return this.playbackController;
+        },
         getStreamInfo: function() {
             return stream.getStreamInfo();
         },
@@ -157,6 +159,10 @@ MediaPlayer.dependencies.StreamProcessor = function () {
 
         getMediaInfo: function() {
             return mediaInfo;
+        },
+
+        getScheduleController:function () {
+            return this.scheduleController;
         },
 
         getEventController: function() {
