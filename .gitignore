@@ -12,6 +12,7 @@ npm-debug.log
 .grunt
 _SpecRunner.html
 reports
+jsdocs
 
 #################
 ## Eclipse
