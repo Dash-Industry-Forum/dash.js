@@ -29,12 +29,13 @@ Dash.dependencies.DashParser = function () {
                 type: "duration",
                 test: function (attr) {
 
-                    var attributeList = ["minBufferTime", "mediaPresentationDuration", "start",
+                    var attributeList = ["minBufferTime", "mediaPresentationDuration",
                             "minimumUpdatePeriod","timeShiftBufferDepth", "maxSegmentDuration",
                             "maxSubsegmentDuration", "suggestedPresentationDelay", "start",
-                            "starttime", "duration"];
+                            "starttime", "duration"],
+                        len = attributeList.length;
 
-                    for (var i = 0; i < attributeList.length-1; i++) {
+                    for (var i = 0; i < len; i++) {
                         if (attr.nodeName === attributeList[i]) {
                             return durationRegex.test(attr.value);
                         }
