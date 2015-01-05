@@ -152,10 +152,12 @@ MediaPlayer.dependencies.Stream = function () {
 
         setUpMediaSource = function (mediaSourceArg, callback) {
             var self = this,
+                sourceUrl,
 
                 onMediaSourceOpen = function (e) {
                     self.debug.log("MediaSource is open!");
                     self.debug.log(e);
+                    window.URL.revokeObjectURL(sourceUrl);
 
                     mediaSourceArg.removeEventListener("sourceopen", onMediaSourceOpen);
                     mediaSourceArg.removeEventListener("webkitsourceopen", onMediaSourceOpen);
@@ -168,7 +170,7 @@ MediaPlayer.dependencies.Stream = function () {
             mediaSourceArg.addEventListener("sourceopen", onMediaSourceOpen, false);
             mediaSourceArg.addEventListener("webkitsourceopen", onMediaSourceOpen, false);
 
-            self.mediaSourceExt.attachMediaSource(mediaSourceArg, self.videoModel);
+            sourceUrl = self.mediaSourceExt.attachMediaSource(mediaSourceArg, self.videoModel);
 
             //self.debug.log("MediaSource attached to video.  Waiting on open...");
         },

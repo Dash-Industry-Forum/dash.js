@@ -36,7 +36,11 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
     attachMediaSource: function (source, videoModel) {
         "use strict";
 
-        videoModel.setSource(window.URL.createObjectURL(source));
+        var objectURL = window.URL.createObjectURL(source);
+
+        videoModel.setSource(objectURL);
+
+        return objectURL;
     },
 
     detachMediaSource: function (videoModel) {
