@@ -28,11 +28,6 @@ MediaPlayer.dependencies.Stream = function () {
         streamInfo = null,
         updateError = {},
 
-        needKeyListener,
-        keyMessageListener,
-        keyAddedListener,
-        keyErrorListener,
-
         eventController = null,
 
         play = function () {
@@ -65,87 +60,54 @@ MediaPlayer.dependencies.Stream = function () {
 
         // Encrypted Media Extensions
 
-        onMediaSourceNeedsKey = function (event) {
-            var self = this,
-                mediaInfo = mediaInfos.video,
-                videoCodec = mediaInfos ? mediaInfos.video.codec : null,
-                type;
+        onNeedKey = function (event) {
+            var mediaInfo = mediaInfos.video,
+                initData = this.protectionExt.autoSelectKeySystem(mediaInfo, event.data.initData);
 
-            type = (event.type !== "msneedkey") ? event.type : videoCodec;
-            initData.push({type: type, initData: event.initData});
-
-            this.debug.log("DRM: Key required for - " + type);
-            //this.debug.log("DRM: Generating key request...");
-            //this.protectionModel.generateKeyRequest(DEFAULT_KEY_TYPE, event.initData);
-            if (mediaInfo && !!videoCodec && !kid) {
-                try
-                {
-                    kid = self.protectionController.selectKeySystem(mediaInfo);
-                }
-                catch (error)
-                {
-                    pause.call(self);
-                    self.debug.log(error);
-                    self.errHandler.mediaKeySystemSelectionError(error);
-                }
-            }
-
-            if (!!kid) {
-                self.protectionController.ensureKeySession(kid, type, event);
-            }
+            this.protectionModel.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
+            this.debug.log("DRM: Key required for - " + mediaInfo.codec);
+            this.protectionController.createKeySession(initData, mediaInfo.codec);
         },
 
-        onMediaSourceKeyMessage = function (event) {
-            var self = this,
-                session = null;
-
-            this.debug.log("DRM: Got a key message...");
-
-            session = event.target;
-
-            self.protectionController.updateFromMessage(kid, session, event);
-
-            //if (event.keySystem !== DEFAULT_KEY_TYPE) {
-            //    this.debug.log("DRM: Key type not supported!");
-            //}
-            // else {
-                // todo : request license?
-                //requestLicense(e.message, e.sessionId, this);
-            // }
-        },
-
-        onMediaSourceKeyAdded = function () {
+        onKeyAdded = function (/*event*/) {
             this.debug.log("DRM: Key added.");
         },
 
-        onMediaSourceKeyError = function () {
-            var session = event.target,
-                msg;
-            msg = 'DRM: MediaKeyError - sessionId: ' + session.sessionId + ' errorCode: ' + session.error.code + ' systemErrorCode: ' + session.error.systemCode + ' [';
-            switch (session.error.code) {
-                case 1:
-                    msg += "MEDIA_KEYERR_UNKNOWN - An unspecified error occurred. This value is used for errors that don't match any of the other codes.";
-                    break;
-                case 2:
-                    msg += "MEDIA_KEYERR_CLIENT - The Key System could not be installed or updated.";
-                    break;
-                case 3:
-                    msg += "MEDIA_KEYERR_SERVICE - The message passed into update indicated an error from the license service.";
-                    break;
-                case 4:
-                    msg += "MEDIA_KEYERR_OUTPUT - There is no available output device with the required characteristics for the content protection system.";
-                    break;
-                case 5:
-                    msg += "MEDIA_KEYERR_HARDWARECHANGE - A hardware configuration change caused a content protection error.";
-                    break;
-                case 6:
-                    msg += "MEDIA_KEYERR_DOMAIN - An error occurred in a multi-device domain licensing configuration. The most common error is a failure to join the domain.";
-                    break;
+        onLicenseRequestComplete = function(e) {
+            if (e.error) {
+                pause.call(this);
+                this.debug.log(e.error);
+                this.errHandler.mediaKeyMessageError(e.error);
+            } else {
+                this.debug.log("DRM: License request successful.  Session ID = " + e.data.requestData.sessionID);
+                this.protectionController.updateKeySession(e.data.requestData, e.data.message);
             }
-            msg += "]";
+        },
+
+        onKeyError = function (event) {
+            var session = event.data.sessionToken,
+                sessionID = (session.sessionID) ? session.sessionID : "NONE",
+                msg;
+            msg = 'DRM: MediaKeyError - sessionId: ' + sessionID + '.  ' + event.data.error;
             //pause.call(this);
             this.debug.log(msg);
             this.errHandler.mediaKeySessionError(msg);
+        },
+
+        onKeySessionCreated = function(event) {
+            this.debug.log("DRM: Session created.  SessionID = " + event.data.sessionID);
+        },
+
+        onKeySessionLoaded = function(event) {
+            this.debug.log("DRM: Session loaded.  SessionID = " + event.data.sessionID);
+        },
+
+        onKeySessionUnloaded = function(event) {
+            this.debug.log("DRM: Session unloaded.  SessionID = " + event.data.sessionID);
+        },
+
+        onKeySessionClosed = function(event) {
+            this.debug.log("DRM: Session closed.  SessionID = " + event.data.sessionID);
         },
 
         // Media Source
@@ -443,14 +405,6 @@ MediaPlayer.dependencies.Stream = function () {
             checkIfInitializationCompleted.call(this);
         },
 
-        onKeySystemUpdateCompleted = function(e) {
-            if (!e.error) return;
-
-            pause.call(this);
-            this.debug.log(e.error);
-            this.errHandler.mediaKeyMessageError(e.error);
-        },
-
         getAudioVideoProcessors = function() {
             var arr = [],
                 i = 0,
@@ -515,6 +469,7 @@ MediaPlayer.dependencies.Stream = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        videoModel: undefined,
         eventList: {
             ENAME_STREAM_UPDATED: "streamUpdated"
         },
@@ -524,7 +479,16 @@ MediaPlayer.dependencies.Stream = function () {
             this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR] = onError;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED] = onLoad;
-            this[MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED] = onKeySystemUpdateCompleted;
+
+            // Protection event handlers
+            this[MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE] = onLicenseRequestComplete.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY] = onNeedKey.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED] = onKeyAdded.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR] = onKeyError.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED] = onKeySessionCreated.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_LOADED] = onKeySessionLoaded.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_UNLOADED] = onKeySessionUnloaded.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED] = onKeySessionClosed.bind(this);
         },
 
         load: function(manifest) {
@@ -536,23 +500,18 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         initProtection: function(protectionData) {
-            needKeyListener = onMediaSourceNeedsKey.bind(this);
-            keyMessageListener = onMediaSourceKeyMessage.bind(this);
-            keyAddedListener = onMediaSourceKeyAdded.bind(this);
-            keyErrorListener = onMediaSourceKeyError.bind(this);
-
-            this.protectionModel = this.system.getObject("protectionModel");
+            this.protectionExt.init(protectionData, this.protectionModel);
             this.protectionModel.init(this.getVideoModel());
-            this.protectionController = this.system.getObject("protectionController");
-            this.protectionController.init(this.videoModel, this.protectionModel, protectionData);
+            this.protectionModel.setMediaElement(this.videoModel.getElement());
+            this.protectionController.init(this.protectionModel);
 
-            this.protectionModel.listenToNeedKey(needKeyListener);
-            this.protectionModel.listenToKeyMessage(keyMessageListener);
-            this.protectionModel.listenToKeyError(keyErrorListener);
-            this.protectionModel.listenToKeyAdded(keyAddedListener);
-
-            this.protectionExt.subscribe(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this.protectionModel);
-            this.protectionExt.subscribe(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_LOADED, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_UNLOADED, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
         },
 
         getVideoModel: function() {
@@ -571,17 +530,21 @@ MediaPlayer.dependencies.Stream = function () {
             pause.call(this);
 
             tearDownMediaSource.call(this);
-            if (!!this.protectionController) {
-                this.protectionController.teardownKeySystem(kid);
-            }
 
-            if (this.protectionModel) {
-                this.protectionExt.unsubscribe(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this.protectionModel);
-            }
+            this.protectionModel.keySystem.unsubscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_LOADED, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_UNLOADED, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
 
-            this.protectionExt.unsubscribe(MediaPlayer.dependencies.ProtectionExtensions.eventList.ENAME_KEY_SYSTEM_UPDATE_COMPLETED, this);
+            this.protectionController.teardown();
+            this.protectionModel.teardown();
             this.protectionController = undefined;
             this.protectionModel = undefined;
+
             this.fragmentController = undefined;
             this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, this);
             this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, this);
