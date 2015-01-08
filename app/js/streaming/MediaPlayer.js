@@ -54,7 +54,6 @@ MediaPlayer = function (aContext) {
         streamController,
         rulesController,
         manifestUpdater,
-        protectionController,
         metricsExt,
         metricsModel,
         videoModel,
@@ -243,7 +242,6 @@ MediaPlayer = function (aContext) {
             abrController = system.getObject("abrController");
             rulesController = system.getObject("rulesController");
             metricsModel = system.getObject("metricsModel");
-            protectionController = system.getObject("protectionController");
         },
 
         /**
@@ -335,15 +333,6 @@ MediaPlayer = function (aContext) {
          */
         getScheduleWhilePaused: function() {
             return scheduleWhilePaused;
-        },
-
-        /**
-         * @param keySystem
-         * @param value
-         * @memberof MediaPlayer#
-         */
-        setBearerToken: function(keySystem, value) {
-            protectionController.setBearerToken({keySystem: keySystem, token: value});
         },
 
         /**
