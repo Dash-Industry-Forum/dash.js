@@ -297,12 +297,33 @@
             self.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED);
         },
 
+        onTimeSyncAttemptCompleted = function (e) {
+            var self = this,
+                manifest;
+
+            if (!e.error) {
+                // adjust the loadedTime of the manifest by the offset between
+                // the network time and the local time. this is because loadedTime
+                // is used in a number of places to work out availability etc.
+                manifest = self.manifestModel.getValue();
+                manifest.loadedTime = new Date(manifest.loadedTime.getTime() + e.data.offset);
+                manifest.loadedTimeModified = true;
+                self.manifestModel.setValue(manifest);
+            }
+
+            composeStreams.call(this);
+        },
+
         onManifestLoaded = function(e) {
             if (!e.error) {
                 this.manifestModel.setValue(e.data.manifest);
+
                 this.debug.log("Manifest has loaded.");
                 //self.debug.log(self.manifestModel.getValue());
-                composeStreams.call(this);
+
+                // before composing streams, attempt to syncronise with some
+                // time source (if there are any available)
+                this.timeSyncController.initialize(this.manifestExt.getUTCTimingSources(e.data.manifest));
             } else {
                 this.reset();
             }
@@ -314,6 +335,7 @@
         manifestLoader: undefined,
         manifestUpdater: undefined,
         manifestModel: undefined,
+        manifestExt: undefined,
         adapter: undefined,
         debug: undefined,
         metricsModel: undefined,
@@ -322,6 +344,7 @@
         liveEdgeFinder: undefined,
         timelineConverter: undefined,
         protectionExt: undefined,
+        timeSyncController: undefined,
         errHandler: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -334,6 +357,8 @@
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onSeeking;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS] = onProgress;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onTimeupdate;
+
+            this[MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCRONISATION_COMPLETED] = onTimeSyncAttemptCompleted;
         },
 
         setAutoPlay: function (value) {
@@ -360,6 +385,12 @@
             return activeStream ? activeStream.getStreamInfo() : null;
         },
 
+        initialize: function () {
+            this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCRONISATION_COMPLETED, this.timelineConverter);
+            this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCRONISATION_COMPLETED, this.liveEdgeFinder);
+            this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCRONISATION_COMPLETED, this);
+        },
+
         load: function (url) {
             this.manifestLoader.load(url);
         },
@@ -374,6 +405,11 @@
                     switchVideoModel.call(this, activeStream.getVideoModel(), this.getVideoModel());
                 }
             }
+
+            this.timeSyncController.unsubscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCRONISATION_COMPLETED, this.timelineConverter);
+            this.timeSyncController.unsubscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCRONISATION_COMPLETED, this.liveEdgeFinder);
+            this.timeSyncController.unsubscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCRONISATION_COMPLETED, this);
+            this.timeSyncController.reset();
 
             for (var i = 0, ln = streams.length; i < ln; i++) {
                 var stream = streams[i];
