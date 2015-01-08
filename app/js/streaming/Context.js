@@ -54,15 +54,18 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('abrRulesCollection', MediaPlayer.rules.ABRRulesCollection);
 
             this.system.mapSingleton('rulesController', MediaPlayer.rules.RulesController);
-            this.system.mapClass('liveEdgeBinarySearchRule', MediaPlayer.rules.LiveEdgeBinarySearchRule);
             this.system.mapClass('bufferLevelRule', MediaPlayer.rules.BufferLevelRule);
             this.system.mapClass('pendingRequestsRule', MediaPlayer.rules.PendingRequestsRule);
             this.system.mapClass('playbackTimeRule', MediaPlayer.rules.PlaybackTimeRule);
             this.system.mapClass('sameTimeRequestRule', MediaPlayer.rules.SameTimeRequestRule);
             this.system.mapSingleton('scheduleRulesCollection', MediaPlayer.rules.ScheduleRulesCollection);
 
+            this.system.mapClass('liveEdgeBinarySearchRule', MediaPlayer.rules.LiveEdgeBinarySearchRule);
+            this.system.mapClass('liveEdgeWithTimeSyncronisationRule', MediaPlayer.rules.LiveEdgeWithTimeSyncronisationRule);
+            this.system.mapSingleton('syncronisationRulesCollection', MediaPlayer.rules.SyncronisationRulesCollection);
+
             this.system.mapClass('streamProcessor', MediaPlayer.dependencies.StreamProcessor);
-			this.system.mapClass('eventController', MediaPlayer.dependencies.EventController);
+            this.system.mapClass('eventController', MediaPlayer.dependencies.EventController);
             this.system.mapClass('textController', MediaPlayer.dependencies.TextController);
             this.system.mapClass('bufferController', MediaPlayer.dependencies.BufferController);
             this.system.mapSingleton('manifestLoader', MediaPlayer.dependencies.ManifestLoader);
@@ -73,6 +76,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('streamController', MediaPlayer.dependencies.StreamController);
             this.system.mapClass('stream', MediaPlayer.dependencies.Stream);
             this.system.mapClass('scheduleController', MediaPlayer.dependencies.ScheduleController);
+            this.system.mapSingleton('timeSyncController', MediaPlayer.dependencies.TimeSyncController);
 
             this.system.mapSingleton('notifier', MediaPlayer.dependencies.Notifier);
         }
