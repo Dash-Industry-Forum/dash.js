@@ -469,7 +469,6 @@ MediaPlayer.dependencies.Stream = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        videoModel: undefined,
         eventList: {
             ENAME_STREAM_UPDATED: "streamUpdated"
         },
