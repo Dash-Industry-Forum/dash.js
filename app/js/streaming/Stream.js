@@ -61,12 +61,18 @@ MediaPlayer.dependencies.Stream = function () {
         // Encrypted Media Extensions
 
         onNeedKey = function (event) {
-            var mediaInfo = mediaInfos.video,
-                initData = this.protectionExt.autoSelectKeySystem(mediaInfo, event.data.initData);
+            try {
+                var mediaInfo = mediaInfos.video,
+                        initData = this.protectionExt.autoSelectKeySystem(mediaInfo, event.data.initData);
 
-            this.protectionModel.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
-            this.debug.log("DRM: Key required for - " + mediaInfo.codec);
-            this.protectionController.createKeySession(initData, mediaInfo.codec);
+                this.protectionModel.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
+                this.debug.log("DRM: Key required for - " + mediaInfo.codec);
+                this.protectionController.createKeySession(initData, mediaInfo.codec);
+            } catch (error) { // Thrown when media key system is not supported
+                this.errHandler.mediaKeySessionError(error.message);
+                this.debug.log(error.message);
+                this.reset();
+            }
         },
 
         onKeyAdded = function (/*event*/) {
