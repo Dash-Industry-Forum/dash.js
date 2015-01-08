@@ -206,8 +206,8 @@ MediaPlayer.dependencies.Stream = function () {
 
                     contentProtectionData = mediaInfo.contentProtection;
 
-                    if (!!contentProtectionData && !self.capabilities.supportsMediaKeys()) {
-                        self.errHandler.capabilityError("mediakeys");
+                    if (!!contentProtectionData && !self.capabilities.supportsEncryptedMedia()) {
+                        self.errHandler.capabilityError("encryptedmedia");
                     } else {
                         //kid = self.protectionController.selectKeySystem(codec, contentProtection);
                         //self.protectionController.ensureKeySession(kid, codec, null);
@@ -500,18 +500,21 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         initProtection: function(protectionData) {
-            this.protectionExt.init(protectionData, this.protectionModel);
-            this.protectionModel.init(this.getVideoModel());
-            this.protectionModel.setMediaElement(this.videoModel.getElement());
-            this.protectionController.init(this.protectionModel);
+            if (this.capabilities.supportsEncryptedMedia(this.videoModel.getElement()) && !this.protectionModel) {
+                this.protectionModel = this.system.getObject("protectionModel");
+                this.protectionExt.init(protectionData, this.protectionModel);
+                this.protectionModel.init(this.getVideoModel());
+                this.protectionModel.setMediaElement(this.videoModel.getElement());
+                this.protectionController.init(this.protectionModel);
 
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_LOADED, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_UNLOADED, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_LOADED, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_UNLOADED, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
+            }
         },
 
         getVideoModel: function() {
@@ -531,19 +534,23 @@ MediaPlayer.dependencies.Stream = function () {
 
             tearDownMediaSource.call(this);
 
-            this.protectionModel.keySystem.unsubscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
-            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
-            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
-            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
-            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
-            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_LOADED, this);
-            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_UNLOADED, this);
-            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
+            if (!!this.protectionModel) {
+                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
+                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
+                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
+                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
+                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_LOADED, this);
+                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_UNLOADED, this);
+                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
+                if (!!this.protectionModel.keySystem) {
+                    this.protectionModel.keySystem.unsubscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
+                }
 
-            this.protectionController.teardown();
-            this.protectionModel.teardown();
-            this.protectionController = undefined;
-            this.protectionModel = undefined;
+                this.protectionController.teardown();
+                this.protectionModel.teardown();
+                this.protectionController = undefined;
+                this.protectionModel = undefined;
+            }
 
             this.fragmentController = undefined;
             this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, this);

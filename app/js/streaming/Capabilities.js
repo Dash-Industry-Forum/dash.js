@@ -17,6 +17,8 @@ MediaPlayer.utils.Capabilities = function () {
 
 MediaPlayer.utils.Capabilities.prototype = {
     constructor: MediaPlayer.utils.Capabilities,
+    system: undefined,
+    debug: undefined,
 
     supportsMediaSource: function () {
         "use strict";
@@ -27,15 +29,31 @@ MediaPlayer.utils.Capabilities.prototype = {
         return (hasWebKit || hasMediaSource);
     },
 
-    supportsMediaKeys: function () {
-        "use strict";
+    /**
+     * Returns whether Encrypted Media Extensions are supported on this
+     * user agent
+     *
+     * @param element the video element
+     * @return {boolean} true if EME is supported, false otherwise
+     */
+    supportsEncryptedMedia: function (element) {
+        if (this.system.hasMapping('protectionModel')) {
+            return true;
+        }
 
-        var hasWebKit = ("WebKitMediaKeys" in window),
-            hasMs = ("MSMediaKeys" in window),
-            hasMediaSource = ("MediaKeys" in window),
-            hasWebkitGenerateKeyRequest = ('webkitGenerateKeyRequest' in document.createElement('video'));
+        // Detect EME APIs.  Look for newest API versions first
+        if (MediaPlayer.models.ProtectionModel_3Feb2014.detect(element)) {
+            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_3Feb2014);
+            return true;
+        }
+        if (MediaPlayer.models.ProtectionModel_01b.detect(element)) {
+            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_01b);
+            return true;
+        }
 
-        return (hasWebKit || hasMs || hasMediaSource || hasWebkitGenerateKeyRequest);
+        this.debug.log("No supported version of EME detected on this user agent!");
+        this.debug.log("Attempts to play encrypted content will fail!");
+        return false;
     },
 
     supportsCodec: function (element, codec) {
