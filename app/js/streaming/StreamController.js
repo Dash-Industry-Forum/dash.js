@@ -25,7 +25,6 @@
         STREAM_BUFFER_END_THRESHOLD = 6,
         STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
-        protectionData,
         isStreamSwitchingInProgress = false,
 
         play = function () {
@@ -264,7 +263,7 @@
                         stream.setPlaybackController(playbackCtrl);
                         playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, stream);
                         playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, stream);
-                        stream.initProtection(protectionData);
+                        stream.initProtection();
                         stream.setAutoPlay(autoPlay);
                         stream.load(manifest);
                         stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, self);
@@ -322,6 +321,7 @@
         videoExt: undefined,
         liveEdgeFinder: undefined,
         timelineConverter: undefined,
+        protectionExt: undefined,
         errHandler: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -345,7 +345,7 @@
         },
 
         setProtectionData: function (value) {
-            protectionData = value;
+            this.protectionExt.init(value);
         },
 
         getVideoModel: function () {

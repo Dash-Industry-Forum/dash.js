@@ -15,52 +15,52 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
 
     var keySystems = [];
 
-
     return {
         system: undefined,
         debug: undefined,
 
-        setup: function() {
-        },
-
         /**
-         * Select and initialize the available key systems
-         *
-         * @param protectionDataSet object that contains 0 or more ProtectionData
-         * objects.  Each one is identified by an attribute name equal to
-         * to the unique key system string for the DRM to which it is intended
-         * @param protectionModel protection model
+         * Setup the key systems available in the player
          */
-        init: function(protectionDataSet, protectionModel) {
-
-            var keySystem,
-                getProtectionData = function(keySystemString) {
-                    var protData = null;
-                    if (protectionDataSet) {
-                        protData = (keySystemString in protectionDataSet) ? protectionDataSet[keySystemString] : null;
-                    }
-                    return protData;
-                };
+        setup: function() {
+            var keySystem;
 
             // PlayReady
             keySystem = this.system.getObject("ksPlayReady");
-            keySystem.init(getProtectionData(keySystem.systemString));
             keySystems.push(keySystem);
 
             // Widevine
             keySystem = this.system.getObject("ksWidevine");
-            keySystem.init(getProtectionData(keySystem.systemString));
             keySystems.push(keySystem);
 
             // ClearKey
             keySystem = this.system.getObject("ksClearKey");
-            keySystem.init(getProtectionData(keySystem.systemString));
             keySystems.push(keySystem);
 
             // ClearKey
             // TODO: Need to define a ClearKey system more completely.
+        },
 
-            this.protectionModel = protectionModel;
+        /**
+         * Initialize the available key systems
+         *
+         * @param protectionDataSet object that contains 0 or more ProtectionData
+         * objects.  Each one is identified by an attribute name equal to
+         * to the unique key system string for the DRM to which it is intended
+         */
+        init: function(protectionDataSet) {
+            var getProtectionData = function(keySystemString) {
+                var protData = null;
+                if (protectionDataSet) {
+                    protData = (keySystemString in protectionDataSet) ? protectionDataSet[keySystemString] : null;
+                }
+                return protData;
+            };
+
+            for (var i = 0; i < keySystems.length; i++) {
+                var keySystem = keySystems[i];
+                keySystem.init(getProtectionData(keySystem.systemString));
+            }
         },
 
         /**
@@ -80,23 +80,24 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
          * key systems of this user agent.  The protectionModel is initialized with
          * the selected key system.
          *
+         * @param protectionModel the ProtectionModel
          * @param mediaInfo the media info
          * @param initData initialization data detected in the media
          * @returns selected initialization data that should be used to create
          * a new key session
          */
-        autoSelectKeySystem: function(mediaInfo, initData) {
+        autoSelectKeySystem: function(protectionModel, mediaInfo, initData) {
             var ks = null, ksIdx, cpIdx, cp, selectedInitData;
 
             // Check DRM-specific content protection elements for a DRM we support
             for(ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
                 for(cpIdx = 0; cpIdx < mediaInfo.contentProtection.length; ++cpIdx) {
                     cp = mediaInfo.contentProtection[cpIdx];
-                    if (this.protectionModel.isSupported(keySystems[ksIdx], mediaInfo.codec) &&
+                    if (protectionModel.isSupported(keySystems[ksIdx], mediaInfo.codec) &&
                             cp.schemeIdUri.toLowerCase() === keySystems[ksIdx].schemeIdURI) {
                         ks = keySystems[ksIdx];
                         selectedInitData = ks.getInitData(cp);
-                        this.protectionModel.selectKeySystem(ks);
+                        protectionModel.selectKeySystem(ks);
                         break;
                     }
                 }
@@ -111,10 +112,10 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
                     var pssh = MediaPlayer.dependencies.protection.CommonEncryption.parsePSSHList(initData);
                     for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
                         if (keySystems[ksIdx].uuid in pssh &&
-                                this.protectionModel.isSupported(keySystems[ksIdx], mediaInfo.codec)) {
+                                protectionModel.isSupported(keySystems[ksIdx], mediaInfo.codec)) {
                             ks = keySystems[ksIdx];
                             selectedInitData = pssh[keySystems[ksIdx].uuid];
-                            this.protectionModel.selectKeySystem(ks);
+                            protectionModel.selectKeySystem(ks);
                             break;
                         }
                     }

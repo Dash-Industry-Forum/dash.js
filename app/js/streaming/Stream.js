@@ -63,7 +63,7 @@ MediaPlayer.dependencies.Stream = function () {
         onNeedKey = function (event) {
             try {
                 var mediaInfo = mediaInfos.video,
-                        initData = this.protectionExt.autoSelectKeySystem(mediaInfo, event.data.initData);
+                    initData = this.protectionExt.autoSelectKeySystem(this.protectionModel, mediaInfo, event.data.initData);
 
                 this.protectionModel.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
                 this.debug.log("DRM: Key required for - " + mediaInfo.codec);
@@ -504,10 +504,9 @@ MediaPlayer.dependencies.Stream = function () {
             this.videoModel = value;
         },
 
-        initProtection: function(protectionData) {
+        initProtection: function() {
             if (this.capabilities.supportsEncryptedMedia(this.videoModel.getElement()) && !this.protectionModel) {
                 this.protectionModel = this.system.getObject("protectionModel");
-                this.protectionExt.init(protectionData, this.protectionModel);
                 this.protectionModel.init(this.getVideoModel());
                 this.protectionModel.setMediaElement(this.videoModel.getElement());
                 this.protectionController.init(this.protectionModel);
