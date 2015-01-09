@@ -166,6 +166,10 @@ Dash.dependencies.DashParser = function () {
                 {
                     name: 'ContentProtection',
                     merge: true
+                },
+                {
+                    name: 'lang',
+                    merge: false
                 }
             ];
 

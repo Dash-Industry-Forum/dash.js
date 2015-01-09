@@ -109,6 +109,11 @@ Dash.dependencies.DashAdapter = function () {
 
             adaptations[periodId] = adaptations[periodId] || this.manifestExt.getAdaptationsForPeriod(manifest, periodInfo);
 
+            if (type === "audio") {
+                this.manifestExt.setCurrentAudioLanguage( this.manifestExt.getLanguage(data));
+                this.manifestExt.initAudioLanguages(manifest, periodInfo.index);
+            }
+
             return convertAdaptationToMediaInfo.call(this, adaptations[periodId][idx]);
         },
 

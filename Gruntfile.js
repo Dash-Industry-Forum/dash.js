@@ -138,8 +138,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-jsdoc');
+  //grunt.loadNpmTasks('grunt-jsdoc');
 
   // Define tasks
-  grunt.registerTask('default', ['jshint','connect:default_options','jasmine','uglify', 'jsdoc']);
+  grunt.registerTask('default', ['jshint','connect:default_options','jasmine','uglify']);
 };
