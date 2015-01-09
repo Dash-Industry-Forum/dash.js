@@ -65,7 +65,13 @@ MediaPlayer.dependencies.Stream = function () {
                 var mediaInfo = mediaInfos.video,
                     initData = this.protectionExt.autoSelectKeySystem(this.protectionModel, mediaInfo, event.data.initData);
 
-                this.protectionModel.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
+                if (!!this.keySystem && this.keySystem !== this.protectionModel.keySystem) {
+                    throw new Error("DRM:  Changing key systems within a single Period is not allowed!");
+                }
+                if (!this.keySystem) {
+                    this.keySystem = this.protectionModel.keySystem;
+                    this.protectionModel.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
+                }
                 this.debug.log("DRM: Key required for - " + mediaInfo.codec);
                 this.protectionController.createKeySession(initData, mediaInfo.codec);
             } catch (error) { // Thrown when media key system is not supported
@@ -464,7 +470,6 @@ MediaPlayer.dependencies.Stream = function () {
         adapter: undefined,
         fragmentController: undefined,
         playbackController: undefined,
-        protectionController: undefined,
         protectionExt: undefined,
         capabilities: undefined,
         debug: undefined,
@@ -504,10 +509,11 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         initProtection: function() {
-            if (this.capabilities.supportsEncryptedMedia(this.videoModel.getElement()) && !this.protectionModel) {
+            if (this.capabilities.supportsEncryptedMedia(this.videoModel.getElement())) {
                 this.protectionModel = this.system.getObject("protectionModel");
                 this.protectionModel.init(this.getVideoModel());
                 this.protectionModel.setMediaElement(this.videoModel.getElement());
+                this.protectionController = this.system.getObject("protectionController");
                 this.protectionController.init(this.protectionModel);
 
                 this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
@@ -535,8 +541,6 @@ MediaPlayer.dependencies.Stream = function () {
         reset: function () {
             pause.call(this);
 
-            tearDownMediaSource.call(this);
-
             if (!!this.protectionModel) {
                 this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
                 this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
@@ -545,8 +549,9 @@ MediaPlayer.dependencies.Stream = function () {
                 this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_LOADED, this);
                 this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_UNLOADED, this);
                 this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
-                if (!!this.protectionModel.keySystem) {
-                    this.protectionModel.keySystem.unsubscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
+                if (!!this.keySystem) {
+                    this.keySystem.unsubscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
+                    this.keySystem = undefined;
                 }
 
                 this.protectionController.teardown();
@@ -554,6 +559,8 @@ MediaPlayer.dependencies.Stream = function () {
                 this.protectionController = undefined;
                 this.protectionModel = undefined;
             }
+
+            tearDownMediaSource.call(this);
 
             this.fragmentController = undefined;
             this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, this);
