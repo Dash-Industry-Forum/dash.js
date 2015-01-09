@@ -464,7 +464,6 @@ MediaPlayer.dependencies.Stream = function () {
         adapter: undefined,
         fragmentController: undefined,
         playbackController: undefined,
-        protectionModel: undefined,
         protectionController: undefined,
         protectionExt: undefined,
         capabilities: undefined,

@@ -20,6 +20,21 @@ MediaPlayer.utils.Capabilities.prototype = {
     system: undefined,
     debug: undefined,
 
+    setup: function() {
+
+        var videoElement = document.createElement("video");
+
+        // Detect EME APIs.  Look for newest API versions first
+        if (MediaPlayer.models.ProtectionModel_3Feb2014.detect(videoElement)) {
+            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_3Feb2014);
+        } else if (MediaPlayer.models.ProtectionModel_01b.detect(videoElement)) {
+            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_01b);
+        } else {
+            this.debug.log("No supported version of EME detected on this user agent!");
+            this.debug.log("Attempts to play encrypted content will fail!");
+        }
+    },
+
     supportsMediaSource: function () {
         "use strict";
 
@@ -37,23 +52,7 @@ MediaPlayer.utils.Capabilities.prototype = {
      * @return {boolean} true if EME is supported, false otherwise
      */
     supportsEncryptedMedia: function (element) {
-        if (this.system.hasMapping('protectionModel')) {
-            return true;
-        }
-
-        // Detect EME APIs.  Look for newest API versions first
-        if (MediaPlayer.models.ProtectionModel_3Feb2014.detect(element)) {
-            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_3Feb2014);
-            return true;
-        }
-        if (MediaPlayer.models.ProtectionModel_01b.detect(element)) {
-            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_01b);
-            return true;
-        }
-
-        this.debug.log("No supported version of EME detected on this user agent!");
-        this.debug.log("Attempts to play encrypted content will fail!");
-        return false;
+        return this.system.hasMapping('protectionModel');
     },
 
     supportsCodec: function (element, codec) {
