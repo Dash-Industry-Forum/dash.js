@@ -5,6 +5,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
     var isSearchStarted = false,
         searchStartTime = NaN,
         rules,
+        ruleSet = MediaPlayer.rules.SyncronisationRulesCollection.prototype.BEST_GUESS_RULES,
 
         onSearchCompleted = function(req) {
             var liveEdge = req.value,
@@ -15,22 +16,38 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
         },
 
         onStreamUpdated = function(e) {
-            if (!this.streamProcessor.isDynamic() || isSearchStarted || e.error) return;
-
             var self = this;
 
-            rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.LIVE_EDGE_RULES);
+            if (!self.streamProcessor.isDynamic() || isSearchStarted || e.error) {
+                return;
+            }
+
+            rules = self.syncronisationRulesCollection.getRules(ruleSet);
             isSearchStarted = true;
             searchStartTime = new Date().getTime();
 
-            this.rulesController.applyRules(rules, self.streamProcessor, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
+            rules.forEach(function (rule) {
+                if (rule.hasOwnProperty("setFinder")) {
+                    rule.setFinder(self);
+                }
+            });
+
+            self.rulesController.applyRules(rules, self.streamProcessor, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
                 return newValue;
             });
+        },
+
+        onTimeSyncComplete = function (e) {
+            if (e.error) {
+                ruleSet = MediaPlayer.rules.SyncronisationRulesCollection.prototype.BEST_GUESS_RULES;
+            } else {
+                ruleSet = MediaPlayer.rules.SyncronisationRulesCollection.prototype.TIME_SYNCRONISED_RULES;
+            }
         };
 
     return {
         system: undefined,
-        scheduleRulesCollection: undefined,
+        syncronisationRulesCollection: undefined,
         rulesController: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -38,15 +55,12 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
         setup: function() {
             this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
+            this[MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCRONISATION_COMPLETED] = onTimeSyncComplete;
         },
 
         initialize: function(streamProcessor) {
             this.streamProcessor = streamProcessor;
             this.fragmentLoader = streamProcessor.fragmentLoader;
-
-            if (this.scheduleRulesCollection.liveEdgeBinarySearchRule) {
-                this.scheduleRulesCollection.liveEdgeBinarySearchRule.setFinder(this);
-            }
         },
 
         abortSearch: function() {

@@ -527,7 +527,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         // TODO The client typically should not use the time at which it actually successfully received the MPD, but should
         // take into account delay due to MPD delivery and processing. The fetch is considered successful fetching
         // either if the client obtains an updated MPD or the client verifies that the MPD has not been updated since the previous fetching.
-        var fetchTime = this.timelineConverter.calcPresentationTimeFromWallTime(manifest.loadedTime, period);
+        // note that if the loadedTime has been modified (which would have happened if time sync was completed), we will need to ignore
+        // the offset in the time calculation. bit of a hack, but makes things easier everywhere else loadTime is used.
+        var fetchTime = this.timelineConverter.calcPresentationTimeFromWallTime(manifest.loadedTime, period, manifest.loadedTimeModified);
 
         return fetchTime;
     },
@@ -667,8 +669,56 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 eventStreams.push(eventStream);
             }
         }
+
         return eventStreams;
+    },
 
+    getUTCTimingSources : function (manifest) {
+        "use strict";
+
+        var self = this,
+            isDynamic = self.getIsDynamic(manifest),
+            hasAST = manifest.hasOwnProperty("availabilityStartTime"),
+            utcTimingsArray = manifest.UTCTiming_asArray,
+            utcTimingEntries = [];
+
+        // do not bother syncronising the clock if MPD is
+        // static or does not have availabilityStartTime
+        if ((isDynamic || hasAST)) {
+            if (utcTimingsArray) {
+                // the order is important here - 23009-1 states that the order
+                // in the manifest "indicates relative preference, first having
+                // the highest, and the last the lowest priority".
+                utcTimingsArray.forEach(function (utcTiming) {
+                    var entry = new Dash.vo.UTCTiming();
+
+                    if (utcTiming.hasOwnProperty("schemeIdUri")) {
+                        entry.schemeIdUri = utcTiming.schemeIdUri;
+                    } else {
+                        // entries of type DescriptorType with no schemeIdUri
+                        // are meaningless. let's just ignore this entry and
+                        // move on.
+                        return;
+                    }
+
+                    // this is (incorrectly) interpreted as a number - schema
+                    // defines it as a string
+                    if (utcTiming.hasOwnProperty("value")) {
+                        entry.value = utcTiming.value.toString();
+                    } else {
+                        // without a value, there's not a lot we can do with
+                        // this entry. let's just ignore this one and move on
+                        return;
+                    }
+
+                    // we're not interested in the optional id or any other
+                    // attributes which might be attached to the entry
+
+                    utcTimingEntries.push(entry);
+                });
+            }
+        }
+
+        return utcTimingEntries;
     }
-
 };
