@@ -95,8 +95,11 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
                     cp = mediaInfo.contentProtection[cpIdx];
                     if (protectionModel.isSupported(keySystems[ksIdx], mediaInfo.codec) &&
                             cp.schemeIdUri.toLowerCase() === keySystems[ksIdx].schemeIdURI) {
+                        selectedInitData = keySystems[ksIdx].getInitData(cp);
+                        if (!selectedInitData) {
+                            continue;
+                        }
                         ks = keySystems[ksIdx];
-                        selectedInitData = ks.getInitData(cp);
                         protectionModel.selectKeySystem(ks);
                         break;
                     }
