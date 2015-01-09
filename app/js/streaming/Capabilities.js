@@ -33,10 +33,9 @@ MediaPlayer.utils.Capabilities.prototype = {
      * Returns whether Encrypted Media Extensions are supported on this
      * user agent
      *
-     * @param element the video element
      * @return {boolean} true if EME is supported, false otherwise
      */
-    supportsEncryptedMedia: function (element) {
+    supportsEncryptedMedia: function () {
         return this.system.hasMapping('protectionModel');
     },
 

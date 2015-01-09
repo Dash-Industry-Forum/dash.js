@@ -509,7 +509,7 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         initProtection: function() {
-            if (this.capabilities.supportsEncryptedMedia(this.videoModel.getElement())) {
+            if (this.capabilities.supportsEncryptedMedia()) {
                 this.protectionModel = this.system.getObject("protectionModel");
                 this.protectionModel.init(this.getVideoModel());
                 this.protectionModel.setMediaElement(this.videoModel.getElement());
