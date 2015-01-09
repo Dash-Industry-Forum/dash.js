@@ -336,16 +336,16 @@
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onTimeupdate;
         },
 
+        setProtectionData: function (value) {
+            protectionData = value;
+        },
+
         setAutoPlay: function (value) {
             autoPlay = value;
         },
 
         getAutoPlay: function () {
             return autoPlay;
-        },
-
-        setProtectionData: function (value) {
-            protectionData = value;
         },
 
         getVideoModel: function () {
@@ -393,6 +393,7 @@
             this.adapter.reset();
             isStreamSwitchingInProgress = false;
             activeStream = null;
+            protectionData = null;
         },
 
         play: play,

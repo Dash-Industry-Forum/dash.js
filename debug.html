@@ -31,6 +31,20 @@
             player = new MediaPlayer(context);
             player.startup();
             player.attachView(video);
+            player.setProtectionData({
+                licenseRequest: {
+                    'com.microsoft.playready': {
+                        cdmData: null,
+                        laUrl: null,
+                        headers: null
+                    },
+                    'com.widevine.alpha': {
+                        cdmData: null,
+                        laUrl: null,
+                        headers: null
+                    }
+                }
+            });
             player.setAutoPlay(false);
             player.attachSource(url);
         }
