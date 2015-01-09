@@ -190,10 +190,6 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
         subscribe: undefined,
         unsubscribe: undefined,
 
-        setup: function() {
-
-        },
-
         /**
          * Initialize this key system
          *

@@ -111,10 +111,6 @@ MediaPlayer.dependencies.protection.KeySystem_Widevine = function() {
         subscribe: undefined,
         unsubscribe: undefined,
 
-        setup: function() {
-
-        },
-
         /**
          * Initialize this key system
          *

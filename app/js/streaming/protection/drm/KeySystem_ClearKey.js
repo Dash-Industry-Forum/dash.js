@@ -45,10 +45,6 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
         subscribe: undefined,
         unsubscribe: undefined,
 
-        setup: function() {
-
-        },
-
         /**
          * Initialize this key system
          *
