@@ -20,21 +20,6 @@ MediaPlayer.utils.Capabilities.prototype = {
     system: undefined,
     debug: undefined,
 
-    setup: function() {
-
-        var videoElement = document.createElement("video");
-
-        // Detect EME APIs.  Look for newest API versions first
-        if (MediaPlayer.models.ProtectionModel_3Feb2014.detect(videoElement)) {
-            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_3Feb2014);
-        } else if (MediaPlayer.models.ProtectionModel_01b.detect(videoElement)) {
-            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_01b);
-        } else {
-            this.debug.log("No supported version of EME detected on this user agent!");
-            this.debug.log("Attempts to play encrypted content will fail!");
-        }
-    },
-
     supportsMediaSource: function () {
         "use strict";
 

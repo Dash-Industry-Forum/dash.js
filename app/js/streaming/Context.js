@@ -14,6 +14,21 @@
 MediaPlayer.di.Context = function () {
     "use strict";
 
+    var mapProtectionModel = function() {
+        var videoElement = document.createElement("video");
+
+        // Detect EME APIs.  Look for newest API versions first
+        if (MediaPlayer.models.ProtectionModel_3Feb2014.detect(videoElement)) {
+            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_3Feb2014);
+        } else if (MediaPlayer.models.ProtectionModel_01b.detect(videoElement)) {
+            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_01b);
+        } else {
+            var debug = this.system.getObject("debug");
+            debug.log("No supported version of EME detected on this user agent!");
+            debug.log("Attempts to play encrypted content will fail!");
+        }
+    };
+
     return {
         system : undefined,
         setup : function () {
@@ -45,6 +60,8 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('protectionExt', MediaPlayer.dependencies.ProtectionExtensions);
             this.system.mapClass('protectionController', MediaPlayer.dependencies.ProtectionController);
             this.system.mapClass('playbackController', MediaPlayer.dependencies.PlaybackController);
+
+            mapProtectionModel.call(this); // Determines EME API support and version
 
             this.system.mapSingleton('liveEdgeFinder', MediaPlayer.dependencies.LiveEdgeFinder);
 
