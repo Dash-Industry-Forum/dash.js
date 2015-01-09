@@ -34,8 +34,8 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
             keySystems.push(keySystem);
 
             // ClearKey
-            keySystem = this.system.getObject("ksClearKey");
-            keySystems.push(keySystem);
+            //keySystem = this.system.getObject("ksClearKey");
+            //keySystems.push(keySystem);
 
             // ClearKey
             // TODO: Need to define a ClearKey system more completely.
