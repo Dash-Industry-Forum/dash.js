@@ -682,8 +682,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             utcTimingsArray = manifest.UTCTiming_asArray,
             utcTimingEntries = [];
 
-        // do not bother syncronising the clock if MPD is
-        // static or does not have availabilityStartTime
+        // do not bother syncronising the clock unless MPD is live,
+        // or it is static and has availabilityStartTime attribute
         if ((isDynamic || hasAST)) {
             if (utcTimingsArray) {
                 // the order is important here - 23009-1 states that the order
