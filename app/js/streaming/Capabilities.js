@@ -17,6 +17,8 @@ MediaPlayer.utils.Capabilities = function () {
 
 MediaPlayer.utils.Capabilities.prototype = {
     constructor: MediaPlayer.utils.Capabilities,
+    system: undefined,
+    debug: undefined,
 
     supportsMediaSource: function () {
         "use strict";
@@ -27,15 +29,14 @@ MediaPlayer.utils.Capabilities.prototype = {
         return (hasWebKit || hasMediaSource);
     },
 
-    supportsMediaKeys: function () {
-        "use strict";
-
-        var hasWebKit = ("WebKitMediaKeys" in window),
-            hasMs = ("MSMediaKeys" in window),
-            hasMediaSource = ("MediaKeys" in window),
-            hasWebkitGenerateKeyRequest = ('webkitGenerateKeyRequest' in document.createElement('video'));
-
-        return (hasWebKit || hasMs || hasMediaSource || hasWebkitGenerateKeyRequest);
+    /**
+     * Returns whether Encrypted Media Extensions are supported on this
+     * user agent
+     *
+     * @return {boolean} true if EME is supported, false otherwise
+     */
+    supportsEncryptedMedia: function () {
+        return this.system.hasMapping('protectionModel');
     },
 
     supportsCodec: function (element, codec) {

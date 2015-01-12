@@ -54,7 +54,6 @@ MediaPlayer = function (aContext) {
         streamController,
         rulesController,
         manifestUpdater,
-        protectionController,
         metricsExt,
         metricsModel,
         videoModel,
@@ -243,7 +242,6 @@ MediaPlayer = function (aContext) {
             abrController = system.getObject("abrController");
             rulesController = system.getObject("rulesController");
             metricsModel = system.getObject("metricsModel");
-            protectionController = system.getObject("protectionController");
         },
 
         /**
@@ -335,15 +333,6 @@ MediaPlayer = function (aContext) {
          */
         getScheduleWhilePaused: function() {
             return scheduleWhilePaused;
-        },
-
-        /**
-         * @param keySystem
-         * @param value
-         * @memberof MediaPlayer#
-         */
-        setBearerToken: function(keySystem, value) {
-            protectionController.setBearerToken({keySystem: keySystem, token: value});
         },
 
         /**
@@ -501,8 +490,10 @@ MediaPlayer = function (aContext) {
         },
 
         /**
-         * Attach a specific url to use for License Acquisition with EME
-         * @param url
+         * Attach KeySystem-specific data to use for License Acquisition with EME
+         * @param data and object containing property names corresponding to key
+         * system name strings and associated values being instances of
+         * MediaPlayer.vo.protection.ProtectionData
          */
         attachProtectionData: function(data) {
             protectionData = data;
@@ -651,9 +642,11 @@ MediaPlayer.prototype = {
 };
 
 MediaPlayer.dependencies = {};
+MediaPlayer.dependencies.protection = {};
 MediaPlayer.utils = {};
 MediaPlayer.models = {};
 MediaPlayer.vo = {};
 MediaPlayer.vo.metrics = {};
+MediaPlayer.vo.protection = {};
 MediaPlayer.rules = {};
 MediaPlayer.di = {};
