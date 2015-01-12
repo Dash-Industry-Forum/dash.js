@@ -297,7 +297,7 @@
             self.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED);
         },
 
-        onTimeSyncAttemptCompleted = function (e) {
+        onTimeSyncAttemptCompleted = function (/*e*/) {
             composeStreams.call(this);
         },
 
