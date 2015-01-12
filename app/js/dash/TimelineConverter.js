@@ -50,9 +50,8 @@ Dash.dependencies.TimelineConverter = function () {
             return calcAvailabilityTimeFromPresentationTime.call(this, presentationTime, mpd, isDynamic, true);
         },
 
-        calcPresentationTimeFromWallTime = function (wallTime, period, ignoreOffset) {
-            var offset = (ignoreOffset ? 0 : clientServerTimeShift) * 1000;
-            return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() + offset) / 1000);
+        calcPresentationTimeFromWallTime = function (wallTime, period) {
+            return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() + clientServerTimeShift * 1000) / 1000);
         },
 
         calcPresentationTimeFromMediaTime = function (mediaTime, representation) {
@@ -146,6 +145,10 @@ Dash.dependencies.TimelineConverter = function () {
             return (periodStart - presentationOffset);
         },
 
+        calcServerTimeFromLocalTime = function (time) {
+            return new Date(time.getTime() + (clientServerTimeShift * 1000));
+        },
+
         reset = function() {
             clientServerTimeShift = 0;
             isClientServerTimeSyncCompleted = false;
@@ -171,6 +174,7 @@ Dash.dependencies.TimelineConverter = function () {
         calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
         calcWallTimeForSegment: calcWallTimeForSegment,
         calcMSETimeOffset: calcMSETimeOffset,
+        calcServerTimeFromLocalTime: calcServerTimeFromLocalTime,
         reset: reset,
 
         isTimeSyncCompleted: function() {
