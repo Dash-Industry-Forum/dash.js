@@ -26,12 +26,6 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
             isSearchStarted = true;
             searchStartTime = new Date().getTime();
 
-            rules.forEach(function (rule) {
-                if (rule.hasOwnProperty("setFinder")) {
-                    rule.setFinder(self);
-                }
-            });
-
             self.rulesController.applyRules(rules, self.streamProcessor, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
                 return newValue;
             });
