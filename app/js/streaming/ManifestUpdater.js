@@ -18,8 +18,6 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
         refreshTimer = null,
         isStopped = false,
         isUpdating = false,
-        // ensure a sensible default time
-        lastUpdateTime = new Date().getTime(),
 
         clear = function () {
             if (refreshTimer !== null) {
@@ -45,7 +43,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
             if (manifest !== undefined && manifest !== null) {
                 delay = self.manifestExt.getRefreshDelay(manifest);
-                timeSinceLastUpdate = (new Date().getTime() - lastUpdateTime) / 1000;
+                timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;
                 refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
                 start.call(self);
             }
@@ -76,8 +74,6 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
             this.manifestModel.setValue(e.data.manifest);
             this.debug.log("Manifest has been refreshed.");
-
-            lastUpdateTime = new Date().getTime();
 
             //self.debug.log(manifestResult);
             if (isStopped) return;

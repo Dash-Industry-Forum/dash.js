@@ -298,19 +298,6 @@
         },
 
         onTimeSyncAttemptCompleted = function (e) {
-            var self = this,
-                manifest;
-
-            if (!e.error) {
-                // adjust the loadedTime of the manifest by the offset between
-                // the network time and the local time. this is because loadedTime
-                // is used in a number of places to work out availability etc.
-                manifest = self.manifestModel.getValue();
-                manifest.loadedTime = new Date(manifest.loadedTime.getTime() + e.data.offset);
-                manifest.loadedTimeModified = true;
-                self.manifestModel.setValue(manifest);
-            }
-
             composeStreams.call(this);
         },
 
