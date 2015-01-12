@@ -20,7 +20,6 @@ Dash.vo.UTCTiming = function () {
     // UTCTiming is a DescriptorType and doesn't have any additional fields
     this.schemeIdUri = "";
     this.value = "";
-    this.id = "";
 };
 
 Dash.vo.UTCTiming.prototype = {
