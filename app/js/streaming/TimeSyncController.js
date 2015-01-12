@@ -111,7 +111,7 @@ MediaPlayer.dependencies.TimeSyncController = function () {
         directHandler = function (xsdatetimeStr, onSuccessCB, onFailureCB) {
             var time = xsdatetimeDecoder(xsdatetimeStr);
 
-            if (isNaN(time)) {
+            if (!isNaN(time)) {
                 onSuccessCB(time);
                 return;
             }
