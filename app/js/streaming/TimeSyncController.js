@@ -104,76 +104,78 @@ MediaPlayer.dependencies.TimeSyncController = function () {
             return Date.parse(dateStr);
         },
 
-        notSupportedHandler = function () {
-            return new Promise(function (resolve, reject) {
-                reject(new Error("Not supported"));
-            });
+        notSupportedHandler = function (url, onSuccessCB, onFailureCB) {
+            onFailureCB();
         },
 
-        directHandler = function (xsdatetimeStr) {
-            return new Promise(function (resolve, reject) {
-                var time = xsdatetimeDecoder(xsdatetimeStr);
+        directHandler = function (xsdatetimeStr, onSuccessCB, onFailureCB) {
+            var time = xsdatetimeDecoder(xsdatetimeStr);
 
-                if (isNaN(time)) {
-                    reject(time);
-                }
+            if (isNaN(time)) {
+                onSuccessCB(time);
+                return;
+            }
 
-                resolve(time);
-            });
+            onFailureCB();
         },
 
-        httpHandler = function (decoder, url, isHeadRequest) {
-            return new Promise(function (resolve, reject) {
+        httpHandler = function (decoder, url, onSuccessCB, onFailureCB, isHeadRequest) {
+            var oncomplete,
+                onload,
+                complete = false,
+                req = new XMLHttpRequest(),
+                verb = isHeadRequest ? 'HEAD' : 'GET',
+                urls = url.match(/\S+/g);
 
-                var req = new XMLHttpRequest(),
-                    verb = isHeadRequest ? 'HEAD' : 'GET',
-                    urls = url.match(/\S+/g);
+            // according to ISO 23009-1, url could be a white-space
+            // separated list of URLs. just handle one at a time.
+            url = urls.shift();
 
-                // according to ISO 23009-1, url could be a white-space
-                // separated list of URLs. for now, just handle the first
-                // entry in the list
-                if (urls.length > 1) {
-                    url = urls[0];
+            oncomplete = function () {
+                if (complete) {
+                    return;
                 }
 
-                req.open(verb, url);
+                // we only want to pass through here once per xhr,
+                // regardless of whether the load was successful.
+                complete = true;
 
-                req.timeout = HTTP_TIMEOUT_MS || 0;
-                req.ontimeout = function () {
-                    reject(new Error("network timeout"));
-                };
+                // if there are more urls to try, call self.
+                if (urls.length) {
+                    httpHandler(decoder, urls.join(" "), onSuccessCB, onFailureCB, isHeadRequest);
+                } else {
+                    onFailureCB();
+                }
+            };
 
-                req.onload = function () {
-                    var time,
-                        result;
+            onload = function () {
+                var time,
+                    result;
 
-                    if (req.status === 200) {
-                        time = isHeadRequest ?
-                                req.getResponseHeader("Date") :
-                                req.response;
+                if (req.status === 200) {
+                    time = isHeadRequest ?
+                            req.getResponseHeader("Date") :
+                            req.response;
 
-                        result = decoder(time);
+                    result = decoder(time);
 
-                        // decoder returns NaN if non-standard input
-                        if (!isNaN(result)) {
-                            resolve(result);
-                        }
+                    // decoder returns NaN if non-standard input
+                    if (!isNaN(result)) {
+                        onSuccessCB(result);
+                        complete = true;
                     }
+                }
+            };
 
-                    // in all cases other than total success, just reject
-                    reject(new Error(req.statusText));
-                };
-
-                req.onerror = function () {
-                    reject(new Error("network error"));
-                };
-
-                req.send();
-            });
+            req.open(verb, url);
+            req.timeout = HTTP_TIMEOUT_MS || 0;
+            req.onload = onload;
+            req.onloadend = oncomplete;
+            req.send();
         },
 
-        httpHeadHandler = function (url) {
-            return httpHandler.call(this, rfc1123Decoder, url, true);
+        httpHeadHandler = function (url, onSuccessCB, onFailureCB) {
+            httpHandler.call(this, rfc1123Decoder, url, onSuccessCB, onFailureCB, true);
         },
 
         // a list of known schemeIdUris and a method to call with @value
@@ -236,7 +238,8 @@ MediaPlayer.dependencies.TimeSyncController = function () {
                 // check if there is a handler for this @schemeIdUri
                 if (handlers.hasOwnProperty(source.schemeIdUri)) {
                     // if so, call it with its @value
-                    handlers[source.schemeIdUri](source.value).then(
+                    handlers[source.schemeIdUri](
+                        source.value,
                         function (serverTime) {
                             // the timing source returned something useful
                             var deviceTime = new Date().getTime(),
