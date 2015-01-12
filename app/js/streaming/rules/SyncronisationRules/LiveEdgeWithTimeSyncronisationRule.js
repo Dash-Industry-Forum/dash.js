@@ -17,14 +17,8 @@
 MediaPlayer.rules.LiveEdgeWithTimeSyncronisationRule = function () {
     "use strict";
 
-    var finder;
-
     return {
         adapter: undefined,
-
-        setFinder: function (liveEdgeFinder) {
-            finder = liveEdgeFinder;
-        },
 
         // if the time has been syncronised correctly (which it must have been
         // to end up executing this rule), we should simply check that the
@@ -33,7 +27,9 @@ MediaPlayer.rules.LiveEdgeWithTimeSyncronisationRule = function () {
         execute: function (context, callback) {
             var self = this,
                 request,
-                trackInfo = finder.streamProcessor.getCurrentTrack(),
+                streamProcessor = context.getStreamProcessor(),
+                fragmentLoader = streamProcessor.getFragmentLoader(),
+                trackInfo = context.getTrackInfo(),
                 liveEdgeInitialSearchPosition = trackInfo.DVRWindow.end,
 
                 // this handler is called when the HEAD request has completed
@@ -41,7 +37,7 @@ MediaPlayer.rules.LiveEdgeWithTimeSyncronisationRule = function () {
                 handler = function (e) {
                     var searchTime = null;
 
-                    finder.fragmentLoader.unsubscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
+                    fragmentLoader.unsubscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
 
                     if (e.data.exists) {
                         searchTime = liveEdgeInitialSearchPosition;
@@ -56,17 +52,13 @@ MediaPlayer.rules.LiveEdgeWithTimeSyncronisationRule = function () {
                 };
 
             // formulate the request for the last segment in the DVR window
-            request = self.adapter.getFragmentRequestForTime(finder.streamProcessor, trackInfo, liveEdgeInitialSearchPosition);
+            request = self.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, liveEdgeInitialSearchPosition);
 
             // listen for the event to say the fragment has been checked ...
-            finder.fragmentLoader.subscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
+            fragmentLoader.subscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
 
             // ... and make the HEAD request
-            finder.fragmentLoader.checkForExistence(request);
-        },
-
-        reset: function () {
-            finder = null;
+            fragmentLoader.checkForExistence(request);
         }
     };
 };
