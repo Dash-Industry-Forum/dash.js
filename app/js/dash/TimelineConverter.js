@@ -145,10 +145,6 @@ Dash.dependencies.TimelineConverter = function () {
             return (periodStart - presentationOffset);
         },
 
-        calcServerTimeFromLocalTime = function (time) {
-            return new Date(time.getTime() + (clientServerTimeShift * 1000));
-        },
-
         reset = function() {
             clientServerTimeShift = 0;
             isClientServerTimeSyncCompleted = false;
@@ -174,7 +170,6 @@ Dash.dependencies.TimelineConverter = function () {
         calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
         calcWallTimeForSegment: calcWallTimeForSegment,
         calcMSETimeOffset: calcMSETimeOffset,
-        calcServerTimeFromLocalTime: calcServerTimeFromLocalTime,
         reset: reset,
 
         isTimeSyncCompleted: function() {
