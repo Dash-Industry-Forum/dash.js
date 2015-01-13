@@ -18,47 +18,17 @@ MediaPlayer.rules.LiveEdgeWithTimeSyncronisationRule = function () {
     "use strict";
 
     return {
-        adapter: undefined,
-
         // if the time has been syncronised correctly (which it must have been
-        // to end up executing this rule), we should simply check that the
-        // last entry in the DVR window is available. assuming it is, we are
-        // good to go. if it isn't, something has gone wrong so just fail
+        // to end up executing this rule), the last entry in the DVR window
+        // should be the live edge. if that is incorrect for whatever reason,
+        // playback will fail to start and some other action should be taken.
         execute: function (context, callback) {
-            var self = this,
-                request,
-                streamProcessor = context.getStreamProcessor(),
-                fragmentLoader = streamProcessor.getFragmentLoader(),
-                trackInfo = context.getTrackInfo(),
-                liveEdgeInitialSearchPosition = trackInfo.DVRWindow.end,
-
-                // this handler is called when the HEAD request has completed
-                // the callback is called with success or failure
-                handler = function (e) {
-                    var searchTime = null;
-
-                    fragmentLoader.unsubscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
-
-                    if (e.data.exists) {
-                        searchTime = liveEdgeInitialSearchPosition;
-                    }
-
-                    callback(
-                        new MediaPlayer.rules.SwitchRequest(
-                            searchTime,
-                            MediaPlayer.rules.SwitchRequest.prototype.DEFAULT
-                        )
-                    );
-                };
-
-            // formulate the request for the last segment in the DVR window
-            request = self.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, liveEdgeInitialSearchPosition);
-
-            // listen for the event to say the fragment has been checked ...
-            fragmentLoader.subscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
-
-            // ... and make the HEAD request
-            fragmentLoader.checkForExistence(request);
+            callback(
+                new MediaPlayer.rules.SwitchRequest(
+                    context.getTrackInfo().DVRWindow.end,
+                    MediaPlayer.rules.SwitchRequest.prototype.DEFAULT
+                )
+            );
         }
     };
 };
