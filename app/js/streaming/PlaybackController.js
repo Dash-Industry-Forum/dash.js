@@ -4,7 +4,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
     var WALLCLOCK_TIME_UPDATE_INTERVAL = 1000,
         currentTime = 0,
         liveStartTime = NaN,
-        wallclockTimeIntervalId,
+        wallclockTimeIntervalId = null,
         commonEarliestTime = null,
         streamInfo,
         videoModel,
@@ -59,14 +59,12 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         startUpdatingWallclockTime = function() {
+            if (wallclockTimeIntervalId !== null) return;
+
             var self = this,
                 tick = function() {
                     onWallclockTime.call(self);
                 };
-
-            if (wallclockTimeIntervalId !== null) {
-                stopUpdatingWallclockTime.call(this);
-            }
 
             wallclockTimeIntervalId = setInterval(tick, WALLCLOCK_TIME_UPDATE_INTERVAL);
         },
@@ -121,11 +119,13 @@ MediaPlayer.dependencies.PlaybackController = function () {
             videoModel.unlisten("progress", onPlaybackProgress);
             videoModel.unlisten("ratechange", onPlaybackRateChanged);
             videoModel.unlisten("loadedmetadata", onPlaybackMetaDataLoaded);
+            videoModel.unlisten("ended", onPlaybackEnded);
         },
 
         onPlaybackStart = function() {
             //this.debug.log("Got play event.");
             updateCurrentTime.call(this);
+            startUpdatingWallclockTime.call(this);
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, {startTime: this.getTime()});
         },
 
@@ -136,6 +136,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         onPlaybackSeeking = function() {
             //this.debug.log("Got seeking event.");
+            startUpdatingWallclockTime.call(this);
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime: this.getTime()});
         },
 
@@ -183,6 +184,11 @@ MediaPlayer.dependencies.PlaybackController = function () {
             startUpdatingWallclockTime.call(this);
         },
 
+        onPlaybackEnded = function(/*e*/) {
+            this.debug.log("Got ended event.");
+            stopUpdatingWallclockTime.call(this);
+        },
+
         onPlaybackError = function(event) {
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, {error: event.srcElement.error});
         },
@@ -227,6 +233,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             videoModel.listen("progress", onPlaybackProgress);
             videoModel.listen("ratechange", onPlaybackRateChanged);
             videoModel.listen("loadedmetadata", onPlaybackMetaDataLoaded);
+            videoModel.listen("ended", onPlaybackEnded);
         };
 
     return {
@@ -254,6 +261,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             onPlaybackProgress = onPlaybackProgress.bind(this);
             onPlaybackRateChanged = onPlaybackRateChanged.bind(this);
             onPlaybackMetaDataLoaded = onPlaybackMetaDataLoaded.bind(this);
+            onPlaybackEnded = onPlaybackEnded.bind(this);
         },
 
         initialize: function(streamInfoValue, model) {
