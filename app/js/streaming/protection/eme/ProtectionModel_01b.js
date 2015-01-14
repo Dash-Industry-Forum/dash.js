@@ -41,12 +41,12 @@ MediaPlayer.models.ProtectionModel_01b = function () {
         // that in the case of multiple sessions, key messages will be received
         // in the order that generateKeyRequest() is called.
 
-        // The most recently created session, or the single session in the case that
-        // the CDM does not support sessionIDs
-        singleSession = null,
+        // Holding spot for newly-created sessions until we determine whether or
+        // not the CDM supports sessionIDs
+        pendingSessions = [],
 
-        // List of sessions that have been initialized with sessionId.  Will not be used
-        // in the case that the CDM does not support sessionIDs
+        // List of sessions that have been initialized.  Only the first position will
+        // be used in the case that the CDM does not support sessionIDs
         sessions = [],
 
         // Not all CDMs support the notion of sessionIDs.  Without sessionIDs
@@ -71,9 +71,9 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                             break;
 
                         case api.keyerror:
-                            sessionToken = findSessionByID(event.sessionId);
+                            sessionToken = findSessionByID(sessions, event.sessionId);
                             if (!sessionToken) {
-                                sessionToken = singleSession;
+                                sessionToken = findSessionByID(pendingSessions, event.sessionId);
                             }
 
                             if (sessionToken) {
@@ -108,7 +108,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                             break;
 
                         case api.keyadded:
-                            sessionToken = findSessionByID(event.sessionId);
+                            sessionToken = findSessionByID(sessions, event.sessionId);
                             if (!sessionToken) {
                                 sessionToken = singleSession;
                             }
@@ -130,25 +130,23 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                             // SessionIDs supported
                             if (moreSessionsAllowed) {
 
-                                // Attempt to find an initialized token with this sessionID
-                                sessionToken = findSessionByID(event.sessionId);
+                                // Attempt to find an uninitialized token with this sessionID
+                                sessionToken = findSessionByID(sessions, event.sessionId);
                                 if (!sessionToken) {
 
                                     // This is the first message for our latest session, so set the
                                     // sessionID and add it to our list
-                                    if (singleSession) {
-                                        singleSession.sessionID = event.sessionId;
-                                        sessions.push(singleSession);
-                                        sessionToken = singleSession;
-
-                                        singleSession = null;
-                                    }
+                                    sessionToken = pendingSessions.shift();
+                                    sessions.push(sessionToken);
+                                    sessionToken.sessionID = event.sessionId;
                                 }
                             } else { // SessionIDs not supported
 
-                                // Use the single session
-                                if (singleSession) {
-                                    sessionToken = singleSession;
+                                sessionToken = pendingSessions.shift();
+                                sessions.push(sessionToken);
+
+                                if (pendingSessions.length !== 0) {
+                                    self.errHandler.mediaKeyMessageError("Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!");
                                 }
                             }
 
@@ -169,10 +167,11 @@ MediaPlayer.models.ProtectionModel_01b = function () {
          * Helper function to retrieve the stored session token based on a given
          * sessionID value
          *
+         * @param sessionArray {[]} the array of sessions to search
          * @param sessionID the sessionID to search for
          * @returns {*} the session token with the given sessionID
          */
-        findSessionByID = function(sessionID) {
+        findSessionByID = function(sessionArray, sessionID) {
 
             if (!sessionID) {
                 return null;
@@ -197,6 +196,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
     return {
         system: undefined,
         debug: undefined,
+        errHandler: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
@@ -220,12 +220,8 @@ MediaPlayer.models.ProtectionModel_01b = function () {
             if (videoElement) {
                 removeEventListeners();
             }
-            if (singleSession) {
-                this.closeKeySession(singleSession);
-            } else {
-                for (var i = 0; i < sessions.length; i++) {
-                    this.closeKeySession(sessions[i]);
-                }
+            for (var i = 0; i < sessions.length; i++) {
+                this.closeKeySession(sessions[i]);
             }
         },
 
@@ -260,16 +256,17 @@ MediaPlayer.models.ProtectionModel_01b = function () {
             // Determine if creating a new session is allowed
             if (moreSessionsAllowed || sessions.length === 0) {
 
-                singleSession = {
+                var newSession = {
                     prototype: (new MediaPlayer.models.SessionToken()).prototype,
                     sessionID: null,
                     initData: initData
                 };
+                pendingSessions.push(newSession);
 
                 // Send our request to the CDM
                 videoElement[api.generateKeyRequest](this.keySystem.systemString, initData);
 
-                return singleSession;
+                return newSession;
             }
 
             throw new Error("Multiple sessions not allowed!");
