@@ -511,6 +511,8 @@ Dash.dependencies.DashHandler = function () {
                 segments = [],
                 list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList,
+                baseURL = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+                    AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
                 len = list.SegmentURL_asArray.length,
                 periodSegIdx,
                 seg,
@@ -535,7 +537,7 @@ Dash.dependencies.DashHandler = function () {
                     periodSegIdx);
 
                 seg.replacementTime = (start + periodSegIdx - 1) * representation.segmentDuration;
-                seg.media = s.media;
+                seg.media = s.media ? s.media : baseURL;
                 seg.mediaRange = s.mediaRange;
                 seg.index = s.index;
                 seg.indexRange = s.indexRange;
