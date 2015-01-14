@@ -110,7 +110,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                         case api.keyadded:
                             sessionToken = findSessionByID(sessions, event.sessionId);
                             if (!sessionToken) {
-                                sessionToken = singleSession;
+                                sessionToken = findSessionByID(pendingSessions, event.sessionId);
                             }
 
                             if (sessionToken) {
