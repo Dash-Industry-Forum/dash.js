@@ -74,6 +74,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
             this.manifestModel.setValue(e.data.manifest);
             this.debug.log("Manifest has been refreshed.");
+
             //self.debug.log(manifestResult);
             if (isStopped) return;
 

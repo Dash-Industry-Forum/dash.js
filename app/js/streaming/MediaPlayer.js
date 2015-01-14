@@ -87,6 +87,7 @@ MediaPlayer = function (aContext) {
             streamController.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
             manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
             manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, manifestUpdater);
+            streamController.initialize();
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.setProtectionData(protectionData);

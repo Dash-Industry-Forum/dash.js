@@ -19,7 +19,7 @@ Dash.dependencies.DashHandler = function () {
         isDynamic,
         type,
         currentTime = 0,
-		absUrl = new RegExp('^(?:(?:[a-z]+:)?\/)?\/', 'i'),
+        absUrl = new RegExp('^(?:(?:[a-z]+:)?\/)?\/', 'i'),
 
         zeroPadToLength = function (numStr, minStrLength) {
             while (numStr.length < minStrLength) {
@@ -289,7 +289,7 @@ Dash.dependencies.DashHandler = function () {
                     scaledTime = time / fTimescale;
                 }
 
-                //This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the 
+                //This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
                 // next MPD update."
                 if (repeat < 0) {
                     nextFrag = fragments[i+1];
@@ -412,7 +412,7 @@ Dash.dependencies.DashHandler = function () {
             if (!periodRelativeRange) {
                 periodRelativeRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
             }
-            
+
             if (isDynamic && !self.timelineConverter.isTimeSyncCompleted()) {
                 start = Math.floor(periodRelativeRange.start / duration);
                 end = Math.floor(periodRelativeRange.end / duration);

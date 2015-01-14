@@ -667,8 +667,56 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 eventStreams.push(eventStream);
             }
         }
+
         return eventStreams;
+    },
 
+    getUTCTimingSources : function (manifest) {
+        "use strict";
+
+        var self = this,
+            isDynamic = self.getIsDynamic(manifest),
+            hasAST = manifest.hasOwnProperty("availabilityStartTime"),
+            utcTimingsArray = manifest.UTCTiming_asArray,
+            utcTimingEntries = [];
+
+        // do not bother syncronising the clock unless MPD is live,
+        // or it is static and has availabilityStartTime attribute
+        if ((isDynamic || hasAST)) {
+            if (utcTimingsArray) {
+                // the order is important here - 23009-1 states that the order
+                // in the manifest "indicates relative preference, first having
+                // the highest, and the last the lowest priority".
+                utcTimingsArray.forEach(function (utcTiming) {
+                    var entry = new Dash.vo.UTCTiming();
+
+                    if (utcTiming.hasOwnProperty("schemeIdUri")) {
+                        entry.schemeIdUri = utcTiming.schemeIdUri;
+                    } else {
+                        // entries of type DescriptorType with no schemeIdUri
+                        // are meaningless. let's just ignore this entry and
+                        // move on.
+                        return;
+                    }
+
+                    // this is (incorrectly) interpreted as a number - schema
+                    // defines it as a string
+                    if (utcTiming.hasOwnProperty("value")) {
+                        entry.value = utcTiming.value.toString();
+                    } else {
+                        // without a value, there's not a lot we can do with
+                        // this entry. let's just ignore this one and move on
+                        return;
+                    }
+
+                    // we're not interested in the optional id or any other
+                    // attributes which might be attached to the entry
+
+                    utcTimingEntries.push(entry);
+                });
+            }
+        }
+
+        return utcTimingEntries;
     }
-
 };
