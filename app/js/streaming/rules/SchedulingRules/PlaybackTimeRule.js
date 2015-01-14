@@ -43,7 +43,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 currentTime = this.adapter.getIndexHandlerTime(streamProcessor),
                 playbackTime = streamProcessor.playbackController.getTime(),
                 rejectedEnd = rejected ? rejected.startTime + rejected.duration : null,
-                useRejected = rejected && ((rejectedEnd > playbackTime) && (rejected.startTime <= currentTime) || isNaN(currentTime)),
+                useRejected = !hasSeekTarget && rejected && ((rejectedEnd > playbackTime) && (rejected.startTime <= currentTime) || isNaN(currentTime)),
                 range,
                 time,
                 request;

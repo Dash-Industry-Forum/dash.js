@@ -651,6 +651,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     $scope.doLoad = function () {
         player.attachSource($scope.selectedItem.url);
+        player.setAutoSwitchQuality($scope.abrEnabled);
         $scope.manifestUpdateInfo = null;
     }
 
