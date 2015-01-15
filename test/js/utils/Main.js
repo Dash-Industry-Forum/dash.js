@@ -336,7 +336,7 @@ function initStreamData() {
     streams.test = {url: "http://live.unified-streaming.com/loop/loop.isml/loop.mpd?format=mp4", isLive: true};
 
     streams.archive = {url: "http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd", isLive: false};
-    streams.live = {url: "http://dashdemo.edgesuite.net/mediaexcel/live/ch1/dash.mpd", isLive: true}; //"http://venus.mediaexcel.com/hera/videos/ch1/dash.mpd";
+    streams.live = {url: "http://dash.edgesuite.net/mediaexcel/live/ch1/dash.mpd", isLive: true}; //"http://venus.mediaexcel.com/hera/videos/ch1/dash.mpd";
     streams.list = {url: "http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd", isLive: false};
     streams.template = {url: "http://www.digitalprimates.net/dash/streams/mp4-live-template/mp4-live-mpd-AV-BS.mpd", isLive: false};
     streams.timeline = {url: "http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd", isLive: false};

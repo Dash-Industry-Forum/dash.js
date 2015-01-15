@@ -102,12 +102,7 @@ function CasterController($scope) {
         },
         {
             name: "Media Excel Live 1",
-            url: "http://dashdemo.edgesuite.net/mediaexcel/live/ch1/dash.mpd",
-            isLive: true
-        },
-        {
-            name: "Media Excel Live 2",
-            url: "http://dashdemo.edgesuite.net/mediaexcel/live/ch2/dash.mpd",
+            url: "http://dash.edgesuite.net/mediaexcel/live/ch1/dash.mpd",
             isLive: true
         },
 
