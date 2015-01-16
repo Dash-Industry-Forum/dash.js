@@ -27,7 +27,8 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
         metricsModel: undefined,
 
         execute: function (context, callback) {
-            var //mediaType = context.getMediaInfo().type,
+            var //self = this,
+                //mediaType = context.getMediaInfo().type,
                 current = context.getCurrentValue(),
                 ///metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
                 //manifestInfo = context.getManifestInfo(),
