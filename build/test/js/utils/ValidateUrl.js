@@ -44,7 +44,7 @@
 	function ActualRequest()
 	{
 		//Base url to get the manifest data
-		source="http://dashdemo.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
+		source="http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
 		
 		//Segment url from different mpd - will be changed later when we get a sample mpd with segment url and mpd size being small
 		segmentSource = "http://dash.edgesuite.net/dash264/TestCases/1a/netflix/ElephantsDream_H264BPL30_0100.264.dash";
