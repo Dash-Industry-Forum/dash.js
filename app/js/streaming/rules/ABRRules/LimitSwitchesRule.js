@@ -1,4 +1,4 @@
-﻿/*
+/*
  * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
  * 
  * Copyright (c) 2013, Digital Primates
@@ -27,8 +27,7 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
         metricsModel: undefined,
 
         execute: function (context, callback) {
-            var self = this,
-                //mediaType = context.getMediaInfo().type,
+            var //mediaType = context.getMediaInfo().type,
                 current = context.getCurrentValue(),
                 ///metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
                 //manifestInfo = context.getManifestInfo(),
