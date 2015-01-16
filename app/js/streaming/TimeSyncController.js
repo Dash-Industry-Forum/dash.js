@@ -23,15 +23,15 @@ MediaPlayer.dependencies.TimeSyncController = function () {
         // and the client time at that point, in milliseconds.
         offsetToDeviceTimeMs = 0,
 
-        isSyncronising = false,
+        isSynchronizing = false,
         isInitialised = false,
 
-        setIsSyncronising = function (value) {
-            isSyncronising = value;
+        setIsSynchronizing = function (value) {
+            isSynchronizing = value;
         },
 
-        getIsSyncronising = function () {
-            return isSyncronising;
+        getIsSynchronizing = function () {
+            return isSynchronizing;
         },
 
         setIsInitialised = function (value) {
@@ -220,10 +220,10 @@ MediaPlayer.dependencies.TimeSyncController = function () {
                 onComplete = function (time, offset) {
                     var failed = !time || !offset;
 
-                    setIsSyncronising(false);
+                    setIsSynchronizing(false);
 
                     self.notify(
-                        MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCRONISATION_COMPLETED,
+                        MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED,
                         {
                             time: time,
                             offset: offset
@@ -232,7 +232,7 @@ MediaPlayer.dependencies.TimeSyncController = function () {
                     );
                 };
 
-            setIsSyncronising(true);
+            setIsSynchronizing(true);
 
             if (source) {
                 // check if there is a handler for this @schemeIdUri
@@ -283,7 +283,7 @@ MediaPlayer.dependencies.TimeSyncController = function () {
         },
 
         initialize: function (timingSources) {
-            if (!getIsSyncronising()) {
+            if (!getIsSynchronizing()) {
                 attemptSync.call(this, timingSources);
                 setIsInitialised(true);
             }
@@ -291,7 +291,7 @@ MediaPlayer.dependencies.TimeSyncController = function () {
 
         reset: function () {
             setIsInitialised(false);
-            setIsSyncronising(false);
+            setIsSynchronizing(false);
         }
     };
 };
@@ -301,7 +301,7 @@ MediaPlayer.dependencies.TimeSyncController.prototype = {
 };
 
 MediaPlayer.dependencies.TimeSyncController.eventList = {
-    ENAME_TIME_SYNCRONISATION_COMPLETED: "timeSyncronisationComplete"
+    ENAME_TIME_SYNCHRONIZATION_COMPLETED: "timeSynchronizationComplete"
 };
 
 MediaPlayer.dependencies.TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE = 1;

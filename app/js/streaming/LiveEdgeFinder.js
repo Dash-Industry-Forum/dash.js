@@ -5,7 +5,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
     var isSearchStarted = false,
         searchStartTime = NaN,
         rules,
-        ruleSet = MediaPlayer.rules.SyncronisationRulesCollection.prototype.BEST_GUESS_RULES,
+        ruleSet = MediaPlayer.rules.SynchronizationRulesCollection.prototype.BEST_GUESS_RULES,
 
         onSearchCompleted = function(req) {
             var liveEdge = req.value,
@@ -22,7 +22,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
                 return;
             }
 
-            rules = self.syncronisationRulesCollection.getRules(ruleSet);
+            rules = self.synchronizationRulesCollection.getRules(ruleSet);
             isSearchStarted = true;
             searchStartTime = new Date().getTime();
 
@@ -33,15 +33,15 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
         onTimeSyncComplete = function (e) {
             if (e.error) {
-                ruleSet = MediaPlayer.rules.SyncronisationRulesCollection.prototype.BEST_GUESS_RULES;
+                ruleSet = MediaPlayer.rules.SynchronizationRulesCollection.prototype.BEST_GUESS_RULES;
             } else {
-                ruleSet = MediaPlayer.rules.SyncronisationRulesCollection.prototype.TIME_SYNCRONISED_RULES;
+                ruleSet = MediaPlayer.rules.SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES;
             }
         };
 
     return {
         system: undefined,
-        syncronisationRulesCollection: undefined,
+        synchronizationRulesCollection: undefined,
         rulesController: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -49,7 +49,7 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
         setup: function() {
             this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
-            this[MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCRONISATION_COMPLETED] = onTimeSyncComplete;
+            this[MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncComplete;
         },
 
         initialize: function(streamProcessor) {

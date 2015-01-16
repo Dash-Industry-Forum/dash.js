@@ -81,8 +81,8 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('scheduleRulesCollection', MediaPlayer.rules.ScheduleRulesCollection);
 
             this.system.mapClass('liveEdgeBinarySearchRule', MediaPlayer.rules.LiveEdgeBinarySearchRule);
-            this.system.mapClass('liveEdgeWithTimeSyncronisationRule', MediaPlayer.rules.LiveEdgeWithTimeSyncronisationRule);
-            this.system.mapSingleton('syncronisationRulesCollection', MediaPlayer.rules.SyncronisationRulesCollection);
+            this.system.mapClass('liveEdgeWithTimeSynchronizationRule', MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule);
+            this.system.mapSingleton('synchronizationRulesCollection', MediaPlayer.rules.SynchronizationRulesCollection);
 
             this.system.mapClass('streamProcessor', MediaPlayer.dependencies.StreamProcessor);
             this.system.mapClass('eventController', MediaPlayer.dependencies.EventController);

@@ -89,7 +89,7 @@ MediaPlayer.rules.RulesController = function () {
         initialize: function() {
             rules[this.ABR_RULE] = this.system.getObject("abrRulesCollection");
             rules[this.SCHEDULING_RULE] = this.system.getObject("scheduleRulesCollection");
-            rules[this.SYNC_RULE] = this.system.getObject("syncronisationRulesCollection");
+            rules[this.SYNC_RULE] = this.system.getObject("synchronizationRulesCollection");
         },
 
         setRules: function(ruleType, rulesCollection) {
@@ -165,13 +165,13 @@ MediaPlayer.rules.RulesController = function () {
         reset: function() {
             var abrRules = rules[this.ABR_RULE],
                 schedulingRules = rules[this.SCHEDULING_RULE],
-                syncronisationRules = rules[this.SYNC_RULE],
+                synchronizationRules = rules[this.SYNC_RULE],
                 allRules = (abrRules.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES)|| []).
                     concat(schedulingRules.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES) || []).
                     concat(schedulingRules.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES) || []).
                     concat(schedulingRules.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_EXECUTE_RULES) || []).
-                    concat(syncronisationRules.getRules(MediaPlayer.rules.SyncronisationRulesCollection.prototype.TIME_SYNCRONISED_RULES) || []).
-                    concat(syncronisationRules.getRules(MediaPlayer.rules.SyncronisationRulesCollection.prototype.BEST_GUESS_RULES) || []),
+                    concat(synchronizationRules.getRules(MediaPlayer.rules.SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES) || []).
+                    concat(synchronizationRules.getRules(MediaPlayer.rules.SynchronizationRulesCollection.prototype.BEST_GUESS_RULES) || []),
                 ln = allRules.length,
                 rule,
                 i;

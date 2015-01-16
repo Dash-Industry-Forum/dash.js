@@ -14,11 +14,11 @@
 
 /*global MediaPlayer*/
 
-MediaPlayer.rules.LiveEdgeWithTimeSyncronisationRule = function () {
+MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule = function () {
     "use strict";
 
     return {
-        // if the time has been syncronised correctly (which it must have been
+        // if the time has been synchronized correctly (which it must have been
         // to end up executing this rule), the last entry in the DVR window
         // should be the live edge. if that is incorrect for whatever reason,
         // playback will fail to start and some other action should be taken.
@@ -33,6 +33,6 @@ MediaPlayer.rules.LiveEdgeWithTimeSyncronisationRule = function () {
     };
 };
 
-MediaPlayer.rules.LiveEdgeWithTimeSyncronisationRule.prototype = {
-    constructor: MediaPlayer.rules.LiveEdgeWithTimeSyncronisationRule
+MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule.prototype = {
+    constructor: MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule
 };
