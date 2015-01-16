@@ -132,7 +132,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
                                 // Attempt to find an uninitialized token with this sessionID
                                 sessionToken = findSessionByID(sessions, event.sessionId);
-                                if (!sessionToken) {
+                                if (!sessionToken && pendingSessions.length > 0) {
 
                                     // This is the first message for our latest session, so set the
                                     // sessionID and add it to our list
