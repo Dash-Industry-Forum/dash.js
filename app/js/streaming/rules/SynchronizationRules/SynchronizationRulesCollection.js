@@ -14,7 +14,7 @@
 
 /*globals MediaPlayer*/
 
-MediaPlayer.rules.SyncronisationRulesCollection = function () {
+MediaPlayer.rules.SynchronizationRulesCollection = function () {
     "use strict";
 
     var withAccurateTimeSourceRules = [],
@@ -22,13 +22,13 @@ MediaPlayer.rules.SyncronisationRulesCollection = function () {
 
     return {
         liveEdgeBinarySearchRule: undefined,
-        liveEdgeWithTimeSyncronisationRule: undefined,
+        liveEdgeWithTimeSynchronizationRule: undefined,
 
         getRules: function (type) {
             switch (type) {
-            case MediaPlayer.rules.SyncronisationRulesCollection.prototype.TIME_SYNCRONISED_RULES:
+            case MediaPlayer.rules.SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES:
                 return withAccurateTimeSourceRules;
-            case MediaPlayer.rules.SyncronisationRulesCollection.prototype.BEST_GUESS_RULES:
+            case MediaPlayer.rules.SynchronizationRulesCollection.prototype.BEST_GUESS_RULES:
                 return bestGuestRules;
             default:
                 return null;
@@ -36,14 +36,14 @@ MediaPlayer.rules.SyncronisationRulesCollection = function () {
         },
 
         setup: function () {
-            withAccurateTimeSourceRules.push(this.liveEdgeWithTimeSyncronisationRule);
+            withAccurateTimeSourceRules.push(this.liveEdgeWithTimeSynchronizationRule);
             bestGuestRules.push(this.liveEdgeBinarySearchRule);
         }
     };
 };
 
-MediaPlayer.rules.SyncronisationRulesCollection.prototype = {
-    constructor: MediaPlayer.rules.SyncronisationRulesCollection,
-    TIME_SYNCRONISED_RULES: "withAccurateTimeSourceRules",
+MediaPlayer.rules.SynchronizationRulesCollection.prototype = {
+    constructor: MediaPlayer.rules.SynchronizationRulesCollection,
+    TIME_SYNCHRONIZED_RULES: "withAccurateTimeSourceRules",
     BEST_GUESS_RULES: "bestGuestRules"
 };

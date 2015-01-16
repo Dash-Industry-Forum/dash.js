@@ -680,7 +680,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             utcTimingsArray = manifest.UTCTiming_asArray,
             utcTimingEntries = [];
 
-        // do not bother syncronising the clock unless MPD is live,
+        // do not bother synchronizing the clock unless MPD is live,
         // or it is static and has availabilityStartTime attribute
         if ((isDynamic || hasAST)) {
             if (utcTimingsArray) {
