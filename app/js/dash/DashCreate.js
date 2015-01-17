@@ -10,10 +10,7 @@
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-var MANIFEST_TYPE = "application/dash+xml",
-    VIDEO_ELEMENT_NAME = "VIDEO",
-    DEFAULT_CLASSNAME = ".dashjs-player",
-    aPlayers;
+
 
 /**
  *  A new MediaPlayer is instantiated for the supplied videoElement and optional source and context.  If no context is provided,
@@ -25,11 +22,11 @@ var MANIFEST_TYPE = "application/dash+xml",
  */
 Dash.create = function(video, source, context)
 {
-    if (typeof video === undefined || video.nodeName != VIDEO_ELEMENT_NAME) return;
+    if (typeof video === undefined || video.nodeName != "VIDEO") return;
 
     var player, videoID = (video.id || video.name || "video element");
     context = context || new Dash.di.DashContext();
-    source = source || [].slice.call(video.querySelectorAll("source")).filter(function(s){return s.type == MANIFEST_TYPE;})[0];
+    source = source || [].slice.call(video.querySelectorAll("source")).filter(function(s){return s.type == MediaPlayer.utils.Capabilities.supportedManifestTypes.dashXML;})[0];
 
     player = new MediaPlayer(context);
     player.startup();
@@ -51,8 +48,8 @@ Dash.create = function(video, source, context)
  */
 Dash.createAll = function(className, scope, context)
 {
-    aPlayers = [];
-    className = className || DEFAULT_CLASSNAME;
+    var aPlayers = [];
+    className = className || ".dashjs-player";
     scope = scope || document;
     context = context || new Dash.di.DashContext();
     var videos = scope.querySelectorAll(className);
