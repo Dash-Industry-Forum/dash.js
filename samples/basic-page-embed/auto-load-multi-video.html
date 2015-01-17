@@ -4,7 +4,6 @@
     <meta charset="utf-8"/>
     <title>Auto-player instantiation example</title>
     <script src="../../dash.min.js"></script>
-
     <style>
         video {
             width: 320px;
@@ -12,7 +11,7 @@
         }
     </style>
 
-    <body onload="createDashPlayers()">
+    <body onload="Dash.createAll()">
         <div>
             <video class="dashjs-player" autoplay controls="true">
                 <source src="http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd" type="application/dash+xml"/>

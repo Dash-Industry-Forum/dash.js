@@ -9,7 +9,7 @@
 
         function init()
         {
-            player = createDashPlayer(document.querySelector(".dashjs-player"));
+            player = Dash.create(document.querySelector(".dashjs-player"));
             setInterval(updateStats,500)
         }
 
