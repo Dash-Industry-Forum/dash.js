@@ -26,7 +26,7 @@ Dash.create = function(video, source, context)
 
     var player, videoID = (video.id || video.name || "video element");
     context = context || new Dash.di.DashContext();
-    source = source || [].slice.call(video.querySelectorAll("source")).filter(function(s){return s.type == MediaPlayer.utils.Capabilities.supportedManifestTypes.dashXML;})[0];
+    source = source || [].slice.call(video.querySelectorAll("source")).filter(function(s){return s.type == Dash.supportedManifestMimeTypes.mimeType;})[0];
 
     player = new MediaPlayer(context);
     player.startup();
@@ -58,4 +58,12 @@ Dash.createAll = function(className, scope, context)
         aPlayers.push(player);
     }
     return aPlayers;
+};
+
+/**
+ * Returns the mime-type identifier for any source content to be accepted as a dash manifest by the Dash.create() method.
+ * @type {dashManifestMimeType: string}
+ */
+Dash.supportedManifestMimeTypes = {
+    mimeType: "application/dash+xml"
 };
