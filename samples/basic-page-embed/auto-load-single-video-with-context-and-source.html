@@ -3,7 +3,11 @@
 <head>
     <meta charset="utf-8"/>
     <title>Auto-player instantiation example, single videoElement, supplying context and source</title>
-    <script src="../../dash.min.js"></script>
+
+    <script src="../../dash.debug.js"></script>
+    <!--dash.all.js should be used in production over dash.debug.js. dash.debug.js is not compressed or obfuscated and the file size is much larger compared with dash.all.js-->
+    <!--<script src="../../dash.all.js"></script>-->
+
     <script>
         function init()
         {
