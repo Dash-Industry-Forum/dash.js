@@ -15,6 +15,7 @@ MediaPlayer.utils.Capabilities = function () {
     "use strict";
 };
 
+
 MediaPlayer.utils.Capabilities.prototype = {
     constructor: MediaPlayer.utils.Capabilities,
     system: undefined,
@@ -49,4 +50,6 @@ MediaPlayer.utils.Capabilities.prototype = {
         var canPlay = element.canPlayType(codec);
         return (canPlay === "probably" || canPlay === "maybe");
     }
+
+
 };
