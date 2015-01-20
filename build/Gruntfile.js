@@ -25,9 +25,6 @@ module.exports = function(grunt) {
             "../src/streaming/Context.js",
             "../src/dash/Dash.js",
             "../src/dash/DashContext.js",
-            "../src/lib/xml2json.js",
-            "../src/lib/objectiron.js",
-            "../src/lib/dijon.js",
             "../src/dash/**/*.js",
             "../src/streaming/**/*.js"
           ]
