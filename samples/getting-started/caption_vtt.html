@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>WebVTT Dash Demo</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+
+    <script src="../../dist/dash.debug.js"></script>
+
+    <script>
+        function startVideo() {
+            var url = "http://dash.edgesuite.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
+                video,
+                context,
+                player;
+
+
+            video = document.querySelector(".dash-video-player video");
+            context = new Dash.di.DashContext();
+            player = new MediaPlayer(context);
+
+            player.startup();
+
+            player.attachView(video);
+            player.setAutoPlay(true);
+
+            player.attachSource(url);
+        }
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+
+    <body onload="startVideo()">
+        <div class="dash-video-player">
+            <video controls="true"></video>
+        </div>
+    </body>
+</html>

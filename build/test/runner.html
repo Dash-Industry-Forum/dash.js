@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Dash JS Test Runner</title>
+	<link rel="stylesheet" href="lib/jasmine-2.0.2/jasmine.css"/>
+</head>
+<body>
+
+	<script src="../../dist/dash.debug.js"></script>
+	<!-- Unit Testing -->
+	
+	<script src="./lib/jasmine-2.0.2/jasmine.js"></script>
+	<script src="./lib/jasmine-2.0.2/jasmine-html.js"></script>
+	<script src="./lib/jasmine-2.0.2/boot.js"></script>
+
+    <script src="./js/utils/Helpers.js"></script>
+    <script src="./js/utils/SpecHelper.js"></script>
+    <script src="./js/utils/ObjectsHelper.js"></script>
+    <script src="./js/utils/MPDHelper.js"></script>
+    <script src="./js/utils/VOHelper.js"></script>
+
+	<!-- TESTS -->
+    <script src="./js/dash/TimeLineConverterSpec.js"></script>
+    <script src="./js/dash/DashHandlerSpec.js"></script>
+    <script src="./js/dash/RepresentationControllerSpec.js"></script>
+	<script src="./js/streaming/AbrControllerSpec.js"></script>
+    <script src="./js/streaming/MediaPlayerSpec.js"></script>
+    <script src="./js/streaming/FragmentControllerSpec.js"></script>
+    <script src="./js/streaming/FragmentModelSpec.js"></script>
+</body>
+</html>

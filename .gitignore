@@ -12,6 +12,7 @@ npm-debug.log
 .grunt
 _SpecRunner.html
 reports
+jsdocs
 
 #################
 ## Eclipse
@@ -152,8 +153,6 @@ Desktop.ini
 # Packages
 *.egg
 *.egg-info
-dist
-build
 eggs
 parts
 bin
@@ -178,5 +177,3 @@ pip-log.txt
 # Mac crap
 .DS_Store
 
-# ignore any jsdoc output
-/jsdoc/**/*
