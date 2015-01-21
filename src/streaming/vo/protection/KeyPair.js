@@ -38,9 +38,9 @@
  */
 MediaPlayer.vo.protection.KeyPair = function(keyID, key) {
     "use strict";
-    if (keyID.length !== 16)
+    if (!keyID || keyID.length !== 16)
         throw new Error("Illegal key ID length! Must be 16 bytes (128 bits)");
-    if (key.length !== 16)
+    if (!key || key.length !== 16)
         throw new Error("Illegal key length! Must be 16 bytes (128 bits)");
     this.keyID = keyID;
     this.key = key;
