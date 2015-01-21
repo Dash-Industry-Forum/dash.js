@@ -25,6 +25,10 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
         setup: function() {
             var keySystem;
 
+            // ClearKey
+            keySystem = this.system.getObject("ksClearKey");
+            keySystems.push(keySystem);
+
             // PlayReady
             keySystem = this.system.getObject("ksPlayReady");
             keySystems.push(keySystem);
@@ -33,12 +37,6 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
             keySystem = this.system.getObject("ksWidevine");
             keySystems.push(keySystem);
 
-            // ClearKey
-            //keySystem = this.system.getObject("ksClearKey");
-            //keySystems.push(keySystem);
-
-            // ClearKey
-            // TODO: Need to define a ClearKey system more completely.
         },
 
         /**
@@ -137,119 +135,5 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
 
 MediaPlayer.dependencies.ProtectionExtensions.prototype = {
     constructor: MediaPlayer.dependencies.ProtectionExtensions
-
-    /*
-    getKeySystems: function (protectionDataSet) {
-        var self = this,
-            _protectionData = protectionData,
-            getLAUrl = function (laUrl, keysystem) {
-                if (protectionData && protectionData[keysystem] !== undefined) {
-                    if (protectionData[keysystem].laUrl !== null && protectionData[keysystem].laUrl !== '') {
-                        return protectionData[keysystem].laUrl;
-                    }
-                }
-                return laUrl;
-            },
-            playReadyCdmData = function () {
-                if (protectionData && protectionData["com.microsoft.playready"] !== undefined) {
-                    if (protectionData["com.microsoft.playready"].cdmData !== null && protectionData["com.microsoft.playready"].cdmData !== '') {
-
-                        var cdmDataArray = [],
-                            charCode,
-                            cdmData = protectionData["com.microsoft.playready"].cdmData;
-                        cdmDataArray.push(239);
-                        cdmDataArray.push(187);
-                        cdmDataArray.push(191);
-                        for (var i = 0, j = cdmData.length; i < j; ++i) {
-                            charCode = cdmData.charCodeAt(i);
-                            cdmDataArray.push((charCode & 0xFF00) >> 8);
-                            cdmDataArray.push(charCode & 0xFF);
-                        }
-
-                        return new Uint8Array(cdmDataArray);
-                    }
-                }
-                return null;
-            },
-            widevineNeedToAddKeySession = function(initData, keySession, event){
-                event.target.webkitGenerateKeyRequest("com.widevine.alpha", event.initData);
-
-                return true;
-            },
-            widevineGetUpdate =  function (event) {
-            };
-
-        //
-        // order by priority. if an mpd contains more than one the first match will win.
-        // Entries with the same schemeIdUri can appear multiple times with different keysTypeStrings.
-        //
-        return [
-            {
-                schemeIdUri: "urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95",
-                keysTypeString: "com.microsoft.playready",
-                isSupported: function (data) {
-                    return this.schemeIdUri === data.schemeIdUri.toLowerCase();},
-                needToAddKeySession: playReadyNeedToAddKeySession,
-                getInitData: playreadyGetInitData,
-                getUpdate: playreadyGetUpdate,
-                cdmData: playReadyCdmData
-            },
-            {
-                schemeIdUri: "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
-                keysTypeString: "com.widevine.alpha",
-                isSupported: function (data) {
-                    return this.schemeIdUri === data.schemeIdUri.toLowerCase();},
-                needToAddKeySession: widevineNeedToAddKeySession,
-                getInitData: function () {
-                    // the cenc element in mpd does not contain initdata
-                    return null;},
-                getUpdate: widevineGetUpdate,
-                cdmData: function() {return null;}
-            },
-            {
-                schemeIdUri: "urn:mpeg:dash:mp4protection:2011",
-                keysTypeString: "com.microsoft.playready",
-                isSupported: function (data) {
-                    return this.schemeIdUri === data.schemeIdUri.toLowerCase() && data.value.toLowerCase() === "cenc";},
-                needToAddKeySession: playReadyNeedToAddKeySession,
-                getInitData: function () {
-                    // the cenc element in mpd does not contain initdata
-                    return null;},
-                getUpdate: playreadyGetUpdate,
-                cdmData: playReadyCdmData
-            },
-            {
-                schemeIdUri: "urn:mpeg:dash:mp4protection:2011",
-                keysTypeString: "com.widevine.alpha",
-                isSupported: function (data) {
-                    return this.schemeIdUri === data.schemeIdUri.toLowerCase() && data.value.toLowerCase() === "cenc";},
-                needToAddKeySession: widevineNeedToAddKeySession,
-                getInitData: function () {
-                    // the cenc element in mpd does not contain initdata
-                    return null;},
-                getUpdate: widevineGetUpdate,
-                cdmData: function() {return null;}
-            },
-            {
-                schemeIdUri: "urn:uuid:00000000-0000-0000-0000-000000000000",
-                keysTypeString: "webkit-org.w3.clearkey",
-                isSupported: function (data) {
-                    return this.schemeIdUri === data.schemeIdUri.toLowerCase();},
-                needToAddKeySession: function () {
-                    return true;},
-                getInitData: function () {
-                    return null;},
-                getUpdate: function (event) {
-                    var bytes, msg;
-                    bytes = new Uint16Array(event.message.buffer);
-                    msg = String.fromCharCode.apply(null, bytes);
-                    return msg;
-                },
-                cdmData: function() {return null;}
-            }
-        ];
-    },
-     */
-
 };
 

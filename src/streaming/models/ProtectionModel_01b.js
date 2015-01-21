@@ -151,6 +151,12 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                             }
 
                             if (sessionToken) {
+
+                                // For ClearKey, the spec mandates that you pass this message to the
+                                // addKey method, so we always save it to the token since there is no
+                                // way to tell which key system is in use
+                                sessionToken.keyMessage = event.message;
+
                                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE,
                                     new MediaPlayer.vo.protection.KeyMessage(sessionToken, event.message, event.defaultURL));
                             } else {
@@ -250,8 +256,22 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                 throw new Error("Can not create sessions until you have selected a key system");
             }
 
-            // TODO: Need to check for duplicate initData.  If we already have
-            // a KeySession for this exact initData, we shouldn't create a new session.
+            // Detect duplicate init data
+            /*
+            var i;
+            for (i = 0; i < pendingSessions.length; i++) {
+                if (this.keySystem.initDataEquals(initData, pendingSessions[i].initData)) {
+                    this.debug.log("Duplicate init data detected.  No new key session created!");
+                    return;
+                }
+            }
+            for (i = 0; i < sessions.length; i++) {
+                if (this.keySystem.initDataEquals(initData, sessions[i].initData)) {
+                    this.debug.log("Duplicate init data detected.  No new key session created!");
+                    return;
+                }
+            }
+            */
 
             // Determine if creating a new session is allowed
             if (moreSessionsAllowed || sessions.length === 0) {
@@ -267,15 +287,24 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                 videoElement[api.generateKeyRequest](this.keySystem.systemString, initData);
 
                 return newSession;
+
+            } else {
+                throw new Error("Multiple sessions not allowed!");
             }
 
-            throw new Error("Multiple sessions not allowed!");
         },
 
         updateKeySession: function(sessionToken, message) {
             // Send our request to the CDM
             videoElement[api.addKey](this.keySystem.systemString,
                 message, sessionToken.initData, sessionToken.sessionID);
+        },
+
+        updateKeySessionClearKey: function(sessionToken, keySet) {
+            for (var i = 0; i < keySet.keyPairs.length; i++) {
+                videoElement[api.addKey](this.keySystem.systemString,
+                        keySet.keyPairs[i].key, keySet.keyPairs[i].keyID, sessionToken.sessionID);
+            }
         },
 
         closeKeySession: function(sessionToken) {

@@ -29,70 +29,45 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.dependencies.protection.KeySystem = {
+/**
+ * A collection of ClearKey encryption keys with an (optional) associated
+ * type
+ *
+ * @param keyPairs {MediaPlayer.vo.protection.KeyPair[]} array of key pairs
+ * @param type the type of keys in this set.  One of either 'persistent'
+ * or 'temporary'.  Can also be null or undefined.
+ * @constructor
+ */
+MediaPlayer.vo.protection.ClearKeyKeySet = function(keyPairs, type) {
+    if (type && type !== "persistent" && type !== "temporary")
+        throw new Error("Invalid ClearKey key set type!  Must be one of 'persistent' or 'temporary'");
+    this.keyPairs = keyPairs;
+    this.type = type;
 
     /**
-     * Key system name string (e.g. 'org.w3.clearkey')
-     *
-     * {DOMString}
-     *
-     systemString: undefined,
+     * Convert this key set to its JSON Web Key (JWK) representation
      */
-
-    /**
-     * Key system UUID in the form '01234567-89ab-cdef-0123-456789abcdef'
-     *
-     * {DOMString}
-     *
-     uuid: undefined,
-     */
-
-    /**
-     * The scheme ID URI for this key system in the form
-     * 'urn:uuid:01234567-89ab-cdef-0123-456789abcdef' as used
-     * in DASH ContentProtection elements
-     *
-     * {DOMString}
-     *
-     schemeIdURI: undefined,
-     */
-
-    /**
-     * Request a content key/license from a remote server
-     *
-     * @param msg the request message from the CDM
-     * @param laURL default URL provided by the CDM
-     * @param requestData object that will be returned in the
-     * ENAME_LICENSE_REQUEST_COMPLETE event
-     *
-     doLicenseRequest: function(msg, laURL, requestData) {},
-     */
-
-    /**
-     * Parse DRM-specific init data from the ContentProtection
-     * element.
-     *
-     * @param contentProtection the ContentProtection element
-     * @returns {Uint8Array} initialization data
-     *
-     getInitData: function(contentProtection) { return null; },
-     */
-
-    /**
-     * Checks for equality of initialization data.  CDMs may send "needkey"
-     * events multiple times for the same initialization data, and players may
-     * wish to avoid creating new sessions for each needkey event if the init
-     * data is the same.
-     *
-     * @param initData1
-     * @param initData2
-     *
-     initDataEquals: function(initData1, initData2) {},
-     */
-
-    eventList: {
-        ENAME_LICENSE_REQUEST_COMPLETE: "licenseRequestComplete",
-        ENAME_CLEARKEY_LICENSE_REQUEST_COMPLETE: "clearkeyLicenseRequestComplete"
-    }
+    this.toJWKString = function() {
+        var i, numKeys = this.keyPairs.length,
+            retval = {};
+        retval.keys = [];
+        for (i = 0; i < numKeys; i++) {
+            var key = {
+                kty: "oct",
+                alg: "A128KW"
+            };
+            // Remove base64 padding from each
+            key.k = btoa(String.fromCharCode.apply(null, this.keyPairs[i].key)).replace(/=/g, "");
+            key.kid = btoa(String.fromCharCode.apply(null, this.keyPairs[i].keyID)).replace(/=/g, "");
+            retval.keys.push(key);
+        }
+        if (this.type) {
+            retval.type = this.type;
+        }
+        return JSON.stringify(retval);
+    };
 };
 
+MediaPlayer.vo.protection.ClearKeyKeySet.prototype = {
+    constructor: MediaPlayer.vo.protection.ClearKeyKeySet
+}

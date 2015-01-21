@@ -74,6 +74,15 @@ MediaPlayer.models.ProtectionModel = {
      */
 
     /**
+     * Adds the given ClearKey key set to this session
+     *
+     * @param sessionToken the session token
+     * @param keySet {MediaPlayer.vo.protection.ClearKeyKeySet} the key set
+     *
+     updateKeySessionClearKey: function(sessionToken, keySet) { },
+     */
+
+    /**
      * Close the given session and release all associated keys.  Following
      * this call, the sessionToken becomes invalid
      *

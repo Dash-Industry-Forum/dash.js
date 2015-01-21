@@ -183,6 +183,11 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
             session.update(message);
         },
 
+        updateKeySessionClearKey: function(sessionToken, keySet) {
+            var session = sessionToken.session;
+            session.update(keySet.toJWKString());
+        },
+
         /**
          * Close the given session and release all associated keys.  Following
          * this call, the sessionToken becomes invalid
