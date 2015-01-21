@@ -25,10 +25,6 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
         setup: function() {
             var keySystem;
 
-            // ClearKey
-            keySystem = this.system.getObject("ksClearKey");
-            keySystems.push(keySystem);
-
             // PlayReady
             keySystem = this.system.getObject("ksPlayReady");
             keySystems.push(keySystem);
@@ -37,6 +33,9 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
             keySystem = this.system.getObject("ksWidevine");
             keySystems.push(keySystem);
 
+            // ClearKey
+            keySystem = this.system.getObject("ksClearKey");
+            keySystems.push(keySystem);
         },
 
         /**

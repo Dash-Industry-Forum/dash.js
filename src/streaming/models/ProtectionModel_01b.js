@@ -256,22 +256,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                 throw new Error("Can not create sessions until you have selected a key system");
             }
 
-            // Detect duplicate init data
-            /*
-            var i;
-            for (i = 0; i < pendingSessions.length; i++) {
-                if (this.keySystem.initDataEquals(initData, pendingSessions[i].initData)) {
-                    this.debug.log("Duplicate init data detected.  No new key session created!");
-                    return;
-                }
-            }
-            for (i = 0; i < sessions.length; i++) {
-                if (this.keySystem.initDataEquals(initData, sessions[i].initData)) {
-                    this.debug.log("Duplicate init data detected.  No new key session created!");
-                    return;
-                }
-            }
-            */
+            // TODO: Detect duplicate init data
 
             // Determine if creating a new session is allowed
             if (moreSessionsAllowed || sessions.length === 0) {
