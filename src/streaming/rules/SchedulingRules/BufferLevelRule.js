@@ -35,7 +35,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 minBufferTarget = decideBufferLength.call(this, scheduleController.bufferController.getMinBufferTime(), duration),
                 currentBufferTarget = minBufferTarget,
                 bufferMax = scheduleController.bufferController.bufferMax,
-                isLongFormContent = (duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
+                //isLongFormContent = (duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
                 requiredBufferLength = 0;
 
 
@@ -45,8 +45,8 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 requiredBufferLength = duration;
             } else if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED) {
                 if (!isDynamic && self.abrController.isPlayingAtTopQuality(scheduleController.streamProcessor.getStreamInfo())) {
-                    currentBufferTarget = isLongFormContent ?
-                        MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :
+                    currentBufferTarget = /*isLongFormContent ?
+                        MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :*/
                         MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY;
                 }
                 requiredBufferLength = currentBufferTarget + Math.max(getCurrentHttpRequestLatency.call(self, vmetrics),
