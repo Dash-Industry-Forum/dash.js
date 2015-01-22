@@ -71,7 +71,6 @@ MediaPlayer.dependencies.Stream = function () {
                 if (!this.keySystem) {
                     this.keySystem = this.protectionModel.keySystem;
                     this.protectionModel.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
-                    this.protectionModel.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_CLEARKEY_LICENSE_REQUEST_COMPLETE, this);
                 }
                 this.debug.log("DRM: Key required for - " + mediaInfo.codec);
                 this.protectionController.createKeySession(initData, mediaInfo.codec);
@@ -86,23 +85,15 @@ MediaPlayer.dependencies.Stream = function () {
             this.debug.log("DRM: Key added.");
         },
 
-        licenseRequestComplete = function(e, updateKeySessionFunc) {
+        onLicenseRequestComplete = function(e, updateKeySessionFunc) {
             if (e.error) {
                 pause.call(this);
                 this.debug.log(e.error);
                 this.errHandler.mediaKeyMessageError(e.error);
             } else {
                 this.debug.log("DRM: License request successful.  Session ID = " + e.data.requestData.sessionID);
-                updateKeySessionFunc.call(this.protectionController, e.data.requestData, e.data.message);
+                this.protectionController.updateKeySession(e.data.requestData, e.data.message);
             }
-        },
-
-        onClearKeyLicenseRequestComplete = function(e) {
-            licenseRequestComplete.call(this, e, this.protectionController.updateKeySessionClearKey);
-        },
-
-        onLicenseRequestComplete = function(e) {
-            licenseRequestComplete.call(this, e, this.protectionController.updateKeySession);
         },
 
         onKeyError = function (event) {
@@ -500,7 +491,6 @@ MediaPlayer.dependencies.Stream = function () {
 
             // Protection event handlers
             this[MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE] = onLicenseRequestComplete.bind(this);
-            this[MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_CLEARKEY_LICENSE_REQUEST_COMPLETE] = onClearKeyLicenseRequestComplete.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY] = onNeedKey.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED] = onKeyAdded.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR] = onKeyError.bind(this);
@@ -561,7 +551,6 @@ MediaPlayer.dependencies.Stream = function () {
                 this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
                 if (!!this.keySystem) {
                     this.keySystem.unsubscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
-                    this.keySystem.unsubscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_CLEARKEY_LICENSE_REQUEST_COMPLETE, this);
                     this.keySystem = undefined;
                 }
 

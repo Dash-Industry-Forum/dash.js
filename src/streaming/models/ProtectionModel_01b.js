@@ -206,6 +206,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        protectionExt: undefined,
         keySystem: null,
 
         setup: function() {
@@ -280,15 +281,17 @@ MediaPlayer.models.ProtectionModel_01b = function () {
         },
 
         updateKeySession: function(sessionToken, message) {
-            // Send our request to the CDM
-            videoElement[api.addKey](this.keySystem.systemString,
-                message, sessionToken.initData, sessionToken.sessionID);
-        },
-
-        updateKeySessionClearKey: function(sessionToken, keySet) {
-            for (var i = 0; i < keySet.keyPairs.length; i++) {
+            var sessionID = sessionToken.sessionID;
+            if (!this.protectionExt.isClearKey(this.keySystem)) {
+                // Send our request to the CDM
                 videoElement[api.addKey](this.keySystem.systemString,
-                        keySet.keyPairs[i].key, keySet.keyPairs[i].keyID, sessionToken.sessionID);
+                        message, sessionToken.initData, sessionID);
+            } else {
+                // For clearkey, message is a MediaPlayer.vo.protection.ClearKeyKeySet
+                for (var i = 0; i < message.keyPairs.length; i++) {
+                    videoElement[api.addKey](this.keySystem.systemString,
+                            message.keyPairs[i].key, message.keyPairs[i].keyID, sessionID);
+                }
             }
         },
 

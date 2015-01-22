@@ -92,7 +92,6 @@ MediaPlayer.dependencies.protection.KeySystem = {
 
     eventList: {
         ENAME_LICENSE_REQUEST_COMPLETE: "licenseRequestComplete",
-        ENAME_CLEARKEY_LICENSE_REQUEST_COMPLETE: "clearkeyLicenseRequestComplete"
     }
 };
 

@@ -62,10 +62,6 @@ MediaPlayer.dependencies.ProtectionController = function () {
         updateKeySession: function(sessionToken, message) {
             this.protectionModel.updateKeySession(sessionToken, message);
         },
-
-        updateKeySessionClearKey: function(sessionToken, message) {
-            this.protectionModel.updateKeySessionClearKey(sessionToken, message);
-        }
     };
 
 };

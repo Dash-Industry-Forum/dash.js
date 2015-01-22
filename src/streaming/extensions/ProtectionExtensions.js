@@ -14,6 +14,7 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
     "use strict";
 
     var keySystems = [];
+    var clearkeyKeySystem;
 
     return {
         system: undefined,
@@ -36,6 +37,7 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
             // ClearKey
             keySystem = this.system.getObject("ksClearKey");
             keySystems.push(keySystem);
+            clearkeyKeySystem = keySystem;
         },
 
         /**
@@ -69,6 +71,20 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
          */
         getKeySystems: function() {
             return keySystems;
+        },
+
+        /**
+         * Determines whether the given key system is ClearKey.  This is
+         * necessary because the EME spec defines ClearKey and its method
+         * for providing keys to the key session; and this method has changed
+         * between the various API versions.  Our EME-specific ProtectionModels
+         * must know if the system is ClearKey so that it can format the keys
+         * according to the particular spec version.
+         *
+         * @param keySystem the key
+         */
+        isClearKey: function(keySystem) {
+            return (keySystem === clearkeyKeySystem);
         },
 
         /**
