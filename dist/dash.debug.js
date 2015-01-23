@@ -7444,6 +7444,7 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
 MediaPlayer.dependencies.ProtectionExtensions = function() {
     "use strict";
     var keySystems = [];
+    var clearkeyKeySystem;
     return {
         system: undefined,
         debug: undefined,
@@ -7453,6 +7454,9 @@ MediaPlayer.dependencies.ProtectionExtensions = function() {
             keySystems.push(keySystem);
             keySystem = this.system.getObject("ksWidevine");
             keySystems.push(keySystem);
+            keySystem = this.system.getObject("ksClearKey");
+            keySystems.push(keySystem);
+            clearkeyKeySystem = keySystem;
         },
         init: function(protectionDataSet) {
             var getProtectionData = function(keySystemString) {
@@ -7469,6 +7473,9 @@ MediaPlayer.dependencies.ProtectionExtensions = function() {
         },
         getKeySystems: function() {
             return keySystems;
+        },
+        isClearKey: function(keySystem) {
+            return keySystem === clearkeyKeySystem;
         },
         autoSelectKeySystem: function(protectionModel, mediaInfo, initData) {
             var ks = null, ksIdx, cpIdx, cp, selectedInitData;
@@ -8345,6 +8352,7 @@ MediaPlayer.models.ProtectionModel_01b = function() {
                         }
                     }
                     if (sessionToken) {
+                        sessionToken.keyMessage = event.message;
                         self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, new MediaPlayer.vo.protection.KeyMessage(sessionToken, event.message, event.defaultURL));
                     } else {
                         self.debug.log("No session token found for key message");
@@ -8378,6 +8386,7 @@ MediaPlayer.models.ProtectionModel_01b = function() {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        protectionExt: undefined,
         keySystem: null,
         setup: function() {
             eventHandler = createEventHandler.call(this);
@@ -8423,11 +8432,19 @@ MediaPlayer.models.ProtectionModel_01b = function() {
                 pendingSessions.push(newSession);
                 videoElement[api.generateKeyRequest](this.keySystem.systemString, initData);
                 return newSession;
+            } else {
+                throw new Error("Multiple sessions not allowed!");
             }
-            throw new Error("Multiple sessions not allowed!");
         },
         updateKeySession: function(sessionToken, message) {
-            videoElement[api.addKey](this.keySystem.systemString, message, sessionToken.initData, sessionToken.sessionID);
+            var sessionID = sessionToken.sessionID;
+            if (!this.protectionExt.isClearKey(this.keySystem)) {
+                videoElement[api.addKey](this.keySystem.systemString, message, sessionToken.initData, sessionID);
+            } else {
+                for (var i = 0; i < message.keyPairs.length; i++) {
+                    videoElement[api.addKey](this.keySystem.systemString, message.keyPairs[i].key, message.keyPairs[i].keyID, sessionID);
+                }
+            }
         },
         closeKeySession: function(sessionToken) {
             videoElement[api.cancelKeyRequest](this.keySystem.systemString, sessionToken.sessionID);
@@ -8522,6 +8539,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function() {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        protectionExt: undefined,
         keySystem: null,
         setup: function() {
             eventHandler = createEventHandler.call(this);
@@ -8573,7 +8591,11 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function() {
         },
         updateKeySession: function(sessionToken, message) {
             var session = sessionToken.session;
-            session.update(message);
+            if (!this.protectionExt.isClearKey(this.keySystem)) {
+                session.update(message);
+            } else {
+                session.update(message.toJWKString());
+            }
         },
         closeKeySession: function(sessionToken) {
             var session = sessionToken.session;
@@ -8780,6 +8802,9 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
         }
         return retVal;
     },
+    getPSSHData: function(pssh) {
+        return new Uint8Array(pssh.buffer.slice(32));
+    },
     parsePSSHList: function(data) {
         if (data === null) return [];
         var dv = new DataView(data.buffer), done = false;
@@ -8860,7 +8885,61 @@ MediaPlayer.dependencies.protection.KeySystem_Access.prototype = {
 
 MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
     "use strict";
-    var keySystemStr = "webkit-org.w3.clearkey", keySystemUUID = "00000000-0000-0000-0000-000000000001", protData;
+    var keySystemStr = "webkit-org.w3.clearkey", keySystemUUID = "10000000-0000-0000-0000-000000000000", protData, requestClearKeyLicense = function(message, requestData) {
+        var i;
+        var psshData = MediaPlayer.dependencies.protection.CommonEncryption.getPSSHData(message), dv = new DataView(psshData.buffer), byteCursor = 0, ckType, keyPairs = [];
+        ckType = dv.getUint8(byteCursor);
+        byteCursor += 1;
+        if (ckType === 0) {
+            var url = "", urlB64 = "", urlLen = dv.getUint16(byteCursor);
+            byteCursor += 2;
+            for (i = 0; i < urlLen; i++) {
+                urlB64 += String.fromCharCode(dv.getUint8(byteCursor + i));
+            }
+            url = atob(urlB64);
+            url = url.replace(/&amp;/, "&");
+            var xhr = new XMLHttpRequest();
+            xhr.onload = function() {
+                if (xhr.status == 200) {
+                    if (!xhr.response.hasOwnProperty("keys")) {
+                        this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error("DRM: ClearKey Remote update, Illegal response JSON"));
+                    }
+                    for (i = 0; i < xhr.reponse.keys.length; i++) {
+                        var keypair = xhr.response.keys[i], keyid = atob(keypair.kid), key = atob(keypair.k);
+                        keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyid, key));
+                    }
+                    var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs), requestData);
+                    this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, event);
+                } else {
+                    this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error('DRM: ClearKey Remote update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + "), readyState is " + xhr.readyState));
+                }
+            };
+            xhr.onabort = function() {
+                this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error('DRM: ClearKey update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + "), readyState is " + xhr.readyState));
+            };
+            xhr.onerror = function() {
+                this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error('DRM: ClearKey update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + "), readyState is " + xhr.readyState));
+            };
+            xhr.open("GET", url);
+            xhr.responseType = "json";
+            xhr.send();
+        } else if (ckType === 1) {
+            var numKeys = dv.getUint8(byteCursor);
+            byteCursor += 1;
+            for (i = 0; i < numKeys; i++) {
+                var keyid, key;
+                keyid = new Uint8Array(psshData.buffer.slice(byteCursor, byteCursor + 16));
+                byteCursor += 16;
+                key = new Uint8Array(psshData.buffer.slice(byteCursor, byteCursor + 16));
+                byteCursor += 16;
+                keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyid, key));
+            }
+            var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs), requestData);
+            this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, event);
+        } else {
+            this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error("DRM: Illegal ClearKey type: " + ckType));
+        }
+    };
     return {
         schemeIdURI: undefined,
         systemString: keySystemStr,
@@ -8872,11 +8951,18 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
             this.schemeIdURI = "urn:uuid:" + keySystemUUID;
             protData = protectionData;
         },
-        doLicenseRequest: function() {},
+        doLicenseRequest: function(message, laURL, requestData) {
+            requestClearKeyLicense.call(this, message, requestData);
+        },
         getInitData: function() {
             return null;
         },
-        initDataEquals: function() {
+        initDataEquals: function(initData1, initData2) {
+            if (initData1.length === initData2.length) {
+                if (btoa(initData1.buffer) === btoa(initData2.buffer)) {
+                    return true;
+                }
+            }
             return false;
         }
     };
@@ -9511,14 +9597,14 @@ MediaPlayer.rules.BufferLevelRule = function() {
         }
         return minBufferTarget;
     }, getRequiredBufferLength = function(isDynamic, duration, scheduleController) {
-        var self = this, criticalBufferLevel = scheduleController.bufferController.getCriticalBufferLevel(), vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"), ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"), minBufferTarget = decideBufferLength.call(this, scheduleController.bufferController.getMinBufferTime(), duration), currentBufferTarget = minBufferTarget, bufferMax = scheduleController.bufferController.bufferMax, isLongFormContent = duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD, requiredBufferLength = 0;
+        var self = this, criticalBufferLevel = scheduleController.bufferController.getCriticalBufferLevel(), vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"), ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"), minBufferTarget = decideBufferLength.call(this, scheduleController.bufferController.getMinBufferTime(), duration), currentBufferTarget = minBufferTarget, bufferMax = scheduleController.bufferController.bufferMax, requiredBufferLength = 0;
         if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN) {
             requiredBufferLength = minBufferTarget;
         } else if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY) {
             requiredBufferLength = duration;
         } else if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED) {
             if (!isDynamic && self.abrController.isPlayingAtTopQuality(scheduleController.streamProcessor.getStreamInfo())) {
-                currentBufferTarget = isLongFormContent ? MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM : MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY;
+                currentBufferTarget = MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY;
             }
             requiredBufferLength = currentBufferTarget + Math.max(getCurrentHttpRequestLatency.call(self, vmetrics), getCurrentHttpRequestLatency.call(self, ametrics));
         }
@@ -10465,6 +10551,33 @@ MediaPlayer.vo.metrics.TCPConnection.prototype = {
     constructor: MediaPlayer.vo.metrics.TCPConnection
 };
 
+MediaPlayer.vo.protection.ClearKeyKeySet = function(keyPairs, type) {
+    if (type && type !== "persistent" && type !== "temporary") throw new Error("Invalid ClearKey key set type!  Must be one of 'persistent' or 'temporary'");
+    this.keyPairs = keyPairs;
+    this.type = type;
+    this.toJWKString = function() {
+        var i, numKeys = this.keyPairs.length, retval = {};
+        retval.keys = [];
+        for (i = 0; i < numKeys; i++) {
+            var key = {
+                kty: "oct",
+                alg: "A128KW"
+            };
+            key.k = btoa(String.fromCharCode.apply(null, this.keyPairs[i].key)).replace(/=/g, "");
+            key.kid = btoa(String.fromCharCode.apply(null, this.keyPairs[i].keyID)).replace(/=/g, "");
+            retval.keys.push(key);
+        }
+        if (this.type) {
+            retval.type = this.type;
+        }
+        return JSON.stringify(retval);
+    };
+};
+
+MediaPlayer.vo.protection.ClearKeyKeySet.prototype = {
+    constructor: MediaPlayer.vo.protection.ClearKeyKeySet
+};
+
 MediaPlayer.vo.protection.KeyError = function(sessionToken, errorString) {
     "use strict";
     this.sessionToken = sessionToken;
@@ -10484,6 +10597,18 @@ MediaPlayer.vo.protection.KeyMessage = function(sessionToken, message, defaultUR
 
 MediaPlayer.vo.protection.KeyMessage.prototype = {
     constructor: MediaPlayer.vo.protection.KeyMessage
+};
+
+MediaPlayer.vo.protection.KeyPair = function(keyID, key) {
+    "use strict";
+    if (!keyID || keyID.length !== 16) throw new Error("Illegal key ID length! Must be 16 bytes (128 bits)");
+    if (!key || key.length !== 16) throw new Error("Illegal key length! Must be 16 bytes (128 bits)");
+    this.keyID = keyID;
+    this.key = key;
+};
+
+MediaPlayer.vo.protection.KeyPair.prototype = {
+    constructor: MediaPlayer.vo.protection.KeyPair
 };
 
 MediaPlayer.vo.protection.LicenseRequestComplete = function(message, requestData) {
