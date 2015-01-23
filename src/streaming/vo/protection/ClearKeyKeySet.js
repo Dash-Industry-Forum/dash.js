@@ -70,4 +70,4 @@ MediaPlayer.vo.protection.ClearKeyKeySet = function(keyPairs, type) {
 
 MediaPlayer.vo.protection.ClearKeyKeySet.prototype = {
     constructor: MediaPlayer.vo.protection.ClearKeyKeySet
-}
+};
