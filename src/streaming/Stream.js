@@ -85,7 +85,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.debug.log("DRM: Key added.");
         },
 
-        onLicenseRequestComplete = function(e) {
+        onLicenseRequestComplete = function(e, updateKeySessionFunc) {
             if (e.error) {
                 pause.call(this);
                 this.debug.log(e.error);

@@ -61,7 +61,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
         updateKeySession: function(sessionToken, message) {
             this.protectionModel.updateKeySession(sessionToken, message);
-        }
+        },
     };
 
 };

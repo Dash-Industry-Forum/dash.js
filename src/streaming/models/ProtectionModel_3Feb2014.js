@@ -105,6 +105,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        protectionExt: undefined,
         keySystem: null,
 
         setup: function() {
@@ -179,8 +180,13 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
             var session = sessionToken.session;
 
-            // Send our request to the key session
-            session.update(message);
+            if (!this.protectionExt.isClearKey(this.keySystem)) {
+                // Send our request to the key session
+                session.update(message);
+            } else {
+                // For clearkey, message is a MediaPlayer.vo.protection.ClearKeyKeySet
+                session.update(message.toJWKString());
+            }
         },
 
         /**

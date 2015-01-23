@@ -29,69 +29,24 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.dependencies.protection.KeySystem = {
+/**
+ * Represents a 128-bit keyID and 128-bit encryption key
+ *
+ * @param keyID {Uint8Array} 128-bit key ID
+ * @param key {Uint8Array} 128-bit encryption key
+ * @constructor
+ */
+MediaPlayer.vo.protection.KeyPair = function(keyID, key) {
+    "use strict";
+    if (!keyID || keyID.length !== 16)
+        throw new Error("Illegal key ID length! Must be 16 bytes (128 bits)");
+    if (!key || key.length !== 16)
+        throw new Error("Illegal key length! Must be 16 bytes (128 bits)");
+    this.keyID = keyID;
+    this.key = key;
+};
 
-    /**
-     * Key system name string (e.g. 'org.w3.clearkey')
-     *
-     * {DOMString}
-     *
-     systemString: undefined,
-     */
-
-    /**
-     * Key system UUID in the form '01234567-89ab-cdef-0123-456789abcdef'
-     *
-     * {DOMString}
-     *
-     uuid: undefined,
-     */
-
-    /**
-     * The scheme ID URI for this key system in the form
-     * 'urn:uuid:01234567-89ab-cdef-0123-456789abcdef' as used
-     * in DASH ContentProtection elements
-     *
-     * {DOMString}
-     *
-     schemeIdURI: undefined,
-     */
-
-    /**
-     * Request a content key/license from a remote server
-     *
-     * @param msg the request message from the CDM
-     * @param laURL default URL provided by the CDM
-     * @param requestData object that will be returned in the
-     * ENAME_LICENSE_REQUEST_COMPLETE event
-     *
-     doLicenseRequest: function(msg, laURL, requestData) {},
-     */
-
-    /**
-     * Parse DRM-specific init data from the ContentProtection
-     * element.
-     *
-     * @param contentProtection the ContentProtection element
-     * @returns {Uint8Array} initialization data
-     *
-     getInitData: function(contentProtection) { return null; },
-     */
-
-    /**
-     * Checks for equality of initialization data.  CDMs may send "needkey"
-     * events multiple times for the same initialization data, and players may
-     * wish to avoid creating new sessions for each needkey event if the init
-     * data is the same.
-     *
-     * @param initData1
-     * @param initData2
-     *
-     initDataEquals: function(initData1, initData2) {},
-     */
-
-    eventList: {
-        ENAME_LICENSE_REQUEST_COMPLETE: "licenseRequestComplete",
-    }
+MediaPlayer.vo.protection.KeyPair.prototype = {
+    constructor: MediaPlayer.vo.protection.KeyPair
 };
 

@@ -151,6 +151,12 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                             }
 
                             if (sessionToken) {
+
+                                // For ClearKey, the spec mandates that you pass this message to the
+                                // addKey method, so we always save it to the token since there is no
+                                // way to tell which key system is in use
+                                sessionToken.keyMessage = event.message;
+
                                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE,
                                     new MediaPlayer.vo.protection.KeyMessage(sessionToken, event.message, event.defaultURL));
                             } else {
@@ -200,6 +206,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        protectionExt: undefined,
         keySystem: null,
 
         setup: function() {
@@ -250,8 +257,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                 throw new Error("Can not create sessions until you have selected a key system");
             }
 
-            // TODO: Need to check for duplicate initData.  If we already have
-            // a KeySession for this exact initData, we shouldn't create a new session.
+            // TODO: Detect duplicate init data
 
             // Determine if creating a new session is allowed
             if (moreSessionsAllowed || sessions.length === 0) {
@@ -267,15 +273,26 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                 videoElement[api.generateKeyRequest](this.keySystem.systemString, initData);
 
                 return newSession;
+
+            } else {
+                throw new Error("Multiple sessions not allowed!");
             }
 
-            throw new Error("Multiple sessions not allowed!");
         },
 
         updateKeySession: function(sessionToken, message) {
-            // Send our request to the CDM
-            videoElement[api.addKey](this.keySystem.systemString,
-                message, sessionToken.initData, sessionToken.sessionID);
+            var sessionID = sessionToken.sessionID;
+            if (!this.protectionExt.isClearKey(this.keySystem)) {
+                // Send our request to the CDM
+                videoElement[api.addKey](this.keySystem.systemString,
+                        message, sessionToken.initData, sessionID);
+            } else {
+                // For clearkey, message is a MediaPlayer.vo.protection.ClearKeyKeySet
+                for (var i = 0; i < message.keyPairs.length; i++) {
+                    videoElement[api.addKey](this.keySystem.systemString,
+                            message.keyPairs[i].key, message.keyPairs[i].keyID, sessionID);
+                }
+            }
         },
 
         closeKeySession: function(sessionToken) {

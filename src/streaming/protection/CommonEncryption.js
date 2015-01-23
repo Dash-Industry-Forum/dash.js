@@ -51,6 +51,17 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
     },
 
     /**
+     * Returns just the data portion of a single PSSH
+     *
+     * @param pssh {Uint8Array} the PSSH
+     * @return {Uint8Array} data portion of the PSSH
+     */
+    getPSSHData: function(pssh) {
+        // Data begins 32 bytes into the box
+        return new Uint8Array(pssh.buffer.slice(32));
+    },
+
+    /**
      * Parses list of PSSH boxes into keysystem-specific PSSH data
      *
      * @param data {Uint8Array} the concatenated list of PSSH boxes as provided by
