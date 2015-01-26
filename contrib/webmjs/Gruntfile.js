@@ -24,9 +24,6 @@ module.exports = function(grunt) {
             "../../src/streaming/Context.js",
             "../../src/dash/Dash.js",
             "../../src/dash/DashContext.js",
-            "../../src/lib/xml2json.js",
-            "../../src/lib/objectiron.js",
-            "../../src/lib/dijon.js",
             "app/js/webm/Webm.js",
             "app/js/webm/WebmContext.js",
             "app/js/webm/WebmURLExtensions.js",
@@ -49,7 +46,33 @@ module.exports = function(grunt) {
             "app/js/webm/Webm.js",
             "app/js/webm/WebmContext.js",
             "app/js/webm/WebmURLExtensions.js",
-            "../../src/**/*.js"]
+            "../../src/**/*.js"
+		  ]
+        }
+      },
+      debug: {
+        options: {
+          beautify: true,
+          compress: false,
+          mangle: false
+        },
+        files: {
+            "dash.webm.debug.js" : [
+              "../../src/lib/xml2json.js",
+              "../../src/lib/objectiron.js",
+              "../../src/lib/dijon.js",
+              "../../src/lib/Math.js",
+              "../../src/lib/long.js",
+              "../../src/lib/base64.js",
+              "../../src/streaming/MediaPlayer.js",
+              "../../src/streaming/Context.js",
+              "../../src/dash/Dash.js",
+              "../../src/dash/DashContext.js",
+              "app/js/webm/Webm.js",
+              "app/js/webm/WebmContext.js",
+              "app/js/webm/WebmURLExtensions.js",
+              "../../src/**/*.js"
+  		  ]
         }
       }
     },
