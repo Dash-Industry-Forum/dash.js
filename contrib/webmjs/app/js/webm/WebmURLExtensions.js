@@ -555,9 +555,9 @@ Webm.dependencies.WebmURLExtensions = function () {
             var self = this;
 
             if(segments) {
-                self.notify(self.eventList.ENAME_SEGMENTS_LOADED, segments, representation, type);
+                self.notify(Webm.dependencies.WebmURLExtensions.eventList.ENAME_SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
             } else {
-                self.notify(self.eventList.ENAME_SEGMENTS_LOADED, null, representation, type, new Error("error loading segments"));
+                self.notify(Webm.dependencies.WebmURLExtensions.eventList.ENAME_SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type}, new MediaPlayer.vo.Error(null, "error loading segments", null));
             }
         };
 
@@ -567,10 +567,6 @@ Webm.dependencies.WebmURLExtensions = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_INITIALIZATION_LOADED: "initializationLoaded",
-            ENAME_SEGMENTS_LOADED: "segmentsLoaded"
-        },
 
         loadSegments: function(representation, type, range) {
             loadSegments.call(this, representation, type, range, onLoaded.bind(this));
@@ -584,4 +580,9 @@ Webm.dependencies.WebmURLExtensions = function () {
 
 Webm.dependencies.WebmURLExtensions.prototype = {
     constructor: Webm.dependencies.WebmURLExtensions
+};
+
+Webm.dependencies.WebmURLExtensions.eventList = {
+    ENAME_INITIALIZATION_LOADED: "initializationLoaded",
+    ENAME_SEGMENTS_LOADED: "segmentsLoaded"
 };
