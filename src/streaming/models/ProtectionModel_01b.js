@@ -179,13 +179,13 @@ MediaPlayer.models.ProtectionModel_01b = function () {
          */
         findSessionByID = function(sessionArray, sessionID) {
 
-            if (!sessionID) {
+            if (!sessionID || !sessionArray) {
                 return null;
             } else {
-                var len = sessions.length;
+                var len = sessionArray.length;
                 for (var i = 0; i < len; i++) {
-                    if (sessions[i].sessionID == sessionID) {
-                        return sessions[i];
+                    if (sessionArray[i].sessionID == sessionID) {
+                        return sessionArray[i];
                     }
                 }
                 return null;
