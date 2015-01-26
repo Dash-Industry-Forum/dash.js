@@ -11,59 +11,59 @@ module.exports = function(grunt) {
     },
     watch: {},
     jshint: {
-      all: ["../../app/js/*/**/*.js", "./app/js/webm/*.js"],
+      all: ["../../src/**/*.js","!../../src/lib/*.js", "./app/js/webm/*.js"],
       options: {
-        jshintrc: "../../.jshintrc"
+        jshintrc: "../../build/.jshintrc"
       }
     },
     uglify : {
       min : {
         files: {
           "dash.webm.min.js" : [
-            "../../app/js/streaming/MediaPlayer.js",
-            "../../app/js/streaming/Context.js",
-            "../../app/js/dash/Dash.js",
-            "../../app/js/dash/DashContext.js",
-            "../../app/lib/xml2json.js",
-            "../../app/lib/objectiron.js",
-            "../../app/lib/dijon.js",
+            "../../src/streaming/MediaPlayer.js",
+            "../../src/streaming/Context.js",
+            "../../src/dash/Dash.js",
+            "../../src/dash/DashContext.js",
+            "../../src/lib/xml2json.js",
+            "../../src/lib/objectiron.js",
+            "../../src/lib/dijon.js",
             "app/js/webm/Webm.js",
             "app/js/webm/WebmContext.js",
             "app/js/webm/WebmURLExtensions.js",
-            "../../app/js/*/**/*.js"]
+            "../../src/**/*.js"]
         }
       },
       all : {
         files: {
           "dash.webm.all.js" : [
-            "../../app/lib/xml2json.js",
-            "../../app/lib/objectiron.js",
-            "../../app/lib/dijon.js",
-            "../../app/lib/Math.js",
-            "../../app/lib/long.js",
-            "../../app/lib/base64.js",
-            "../../app/js/streaming/MediaPlayer.js",
-            "../../app/js/streaming/Context.js",
-            "../../app/js/dash/Dash.js",
-            "../../app/js/dash/DashContext.js",
+            "../../src/lib/xml2json.js",
+            "../../src/lib/objectiron.js",
+            "../../src/lib/dijon.js",
+            "../../src/lib/Math.js",
+            "../../src/lib/long.js",
+            "../../src/lib/base64.js",
+            "../../src/streaming/MediaPlayer.js",
+            "../../src/streaming/Context.js",
+            "../../src/dash/Dash.js",
+            "../../src/dash/DashContext.js",
             "app/js/webm/Webm.js",
             "app/js/webm/WebmContext.js",
             "app/js/webm/WebmURLExtensions.js",
-            "../../app/js/*/**/*.js"]
+            "../../src/**/*.js"]
         }
       }
     },
     jasmine: {
       tests: {
         src: [
-            "../../app/js/streaming/MediaPlayer.js",
-            "../../app/js/streaming/Context.js",
-            "../../app/js/dash/Dash.js",
-            "../../app/js/dash/DashContext.js",
+            "../../src/streaming/MediaPlayer.js",
+            "../../src/streaming/Context.js",
+            "../../src/dash/Dash.js",
+            "../../src/dash/DashContext.js",
             "app/js/webm/Webm.js",
             "app/js/webm/WebmContext.js",
             "app/js/webm/WebmURLExtensions.js",
-            "../../app/js/*/**/*.js"],
+            "../../src/**/*.js"],
 
         options: {
           host: 'http://127.0.0.1:8000/',
@@ -74,7 +74,7 @@ module.exports = function(grunt) {
              './test/js/webm/WebmURLExtensions_Suite.js'
      			],
           vendor: [
-                "../../app/lib/dijon.js"
+                "../../src/lib/dijon.js"
             ],
           template : require('grunt-template-jasmine-istanbul'),
           templateOptions: {
