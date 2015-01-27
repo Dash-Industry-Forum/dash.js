@@ -139,6 +139,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
             if (videoElement) {
                 videoElement[api.setMediaKeys](mediaKeys);
             }
+            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MEDIAKEYS_CREATED, null);
         },
 
         setMediaElement: function(mediaElement) {
