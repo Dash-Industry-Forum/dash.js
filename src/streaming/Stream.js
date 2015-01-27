@@ -62,7 +62,8 @@ MediaPlayer.dependencies.Stream = function () {
 
         onNeedKey = function (event) {
             try {
-                var mediaInfo = mediaInfos.video,
+                var mediaInfo = mediaInfos.video;
+                                
                     initData = this.protectionExt.autoSelectKeySystem(this.protectionModel, mediaInfo, event.data.initData);
 
                 if (!!this.keySystem && this.keySystem !== this.protectionModel.keySystem) {
