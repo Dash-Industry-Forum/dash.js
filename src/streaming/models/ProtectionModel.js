@@ -105,5 +105,6 @@ MediaPlayer.models.ProtectionModel.eventList = {
     ENAME_KEY_SESSION_CREATED: "keySessionCreated",
     ENAME_KEY_SESSION_LOADED: "keySessionLoaded",
     ENAME_KEY_SESSION_UNLOADED: "keySessionUnloaded",
-    ENAME_KEY_SESSION_CLOSED: "keySessionClosed"
+    ENAME_KEY_SESSION_CLOSED: "keySessionClosed",
+    ENAME_KEY_MEDIAKEYS_CREATED: "mediaKeysCreated"
 };
