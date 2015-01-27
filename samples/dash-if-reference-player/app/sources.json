@@ -1,0 +1,167 @@
+{
+    "items": [
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/1a/netflix/exMPD_BIP_TC1.mpd","name" : "Single Resolution Multi-Rate 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd","name" : "Single Resolution Multi-Rate 2", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/1/MultiRate.mpd","name" : "Single Resolution Multi-Rate 3", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/1a/qualcomm/2/MultiRate.mpd","name" : "Single Resolution Multi-Rate 4", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/1b/envivio/manifest.mpd","name" : "Single Resolution Multi-Rate 5", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/1b/qualcomm/1/MultiRate.mpd","name" : "Single Resolution Multi-Rate 8", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/1b/qualcomm/2/MultiRate.mpd","name" : "Single Resolution Multi-Rate 9", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/1c/envivio/manifest.mpd","name" : "Single Resolution Multi-Rate 10", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/1c/qualcomm/1/MultiRate.mpd","name" : "Single Resolution Multi-Rate 11", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/1c/qualcomm/2/MultiRate.mpd","name" : "Single Resolution Multi-Rate 12", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/2a/qualcomm/1/MultiResMPEG2.mpd","name" : "Multi-Resolution Multi-Rate 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/2a/qualcomm/2/MultiRes.mpd","name" : "Multi-Resolution Multi-Rate 2", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/2b/qualcomm/1/MultiResMPEG2.mpd","name" : "Multi-Resolution Multi-Rate 5", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/2b/qualcomm/2/MultiRes.mpd","name" : "Multi-Resolution Multi-Rate 6", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/2c/qualcomm/1/MultiResMPEG2.mpd","name" : "Multi-Resolution Multi-Rate 7", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/2c/qualcomm/2/MultiRes.mpd","name" : "Multi-Resolution Multi-Rate 8", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/3a/fraunhofer/heaac_stereo_without_video/ElephantsDream/elephants_dream_audio_only_heaac_stereo_sidx.mpd","name" : "Multiple Audio Representations 3", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/3a/fraunhofer/heaac_stereo_without_video/Sintel/sintel_audio_only_heaac_stereo_sidx.mpd","name" : "Multiple Audio Representations 4", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/3a/fraunhofer/heaacv2_stereo_without_video/ElephantsDream/elephants_dream_audio_only_heaacv2_stereo_sidx.mpd","name" : "Multiple Audio Representations 5", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/3a/fraunhofer/heaacv2_stereo_without_video/Sintel/sintel_audio_only_heaacv2_stereo_sidx.mpd","name" : "Multiple Audio Representations 6", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/3b/fraunhofer/heaac_stereo_with_video/ElephantsDream/elephants_dream_480p_heaac_stereo_sidx.mpd","name" : "Multiple Audio Representations 10", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/3b/fraunhofer/heaac_stereo_with_video/Sintel/sintel_480p_heaac_stereo_sidx.mpd","name" : "Multiple Audio Representations 11", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/3b/fraunhofer/heaacv2_stereo_with_video/ElephantsDream/elephants_dream_480p_heaacv2_stereo_sidx.mpd","name" : "Multiple Audio Representations 12", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/3b/fraunhofer/heaacv2_stereo_with_video/Sintel/sintel_480p_heaacv2_stereo_sidx.mpd","name" : "Multiple Audio Representations 13", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/3b/sony/SNE_DASH_CASE3B_SD_REVISED.mpd","name" : "Multiple Audio Representations 14", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/4b/qualcomm/1/ED_OnDemand_5SecSeg_Subtitles.mpd","name" : "Addition of Timed Text 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/4b/qualcomm/2/TearsOfSteel_onDem5secSegSubTitles.mpd","name" : "Addition of Timed Text 2", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/4b/qualcomm/3/Solekai.mpd","name" : "Addition of Timed Text 3", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/5a/1/manifest.mpd","name" : "Multiple Periods 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCases/5b/1/manifest.mpd","name" : "Multiple Periods 2", "browsers": "cdsbi" },
+        { "url" : "http://tvnlive.dashdemo.edgesuite.net/live/manifest.mpd","name" : "Dynamic Segment Offering with MPD Update 2", "browsers": "cdsbi" },
+        { "url" : "http://54.201.151.65/livesim/testpic_2s/Manifest.mpd","name" : "Dynamic Segment Offering with MPD Update 3", "browsers": "cdsbi" },
+        { "url" : "http://eu1.eastmark.net/pdash/testpic_6s/Manifest.mpd","name" : "Dynamic Segment Offering with MPD Update 4", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/1a/qualcomm/1/MultiRate.mpd","name" : "Single Resolution Multi-Rate HD 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/1a/qualcomm/2/MultiRate.mpd","name" : "Single Resolution Multi-Rate HD 2", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/1b/qualcomm/1/MultiRate.mpd","name" : "Single Resolution Multi-Rate HD 3", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/1b/qualcomm/2/MultiRate.mpd","name" : "Single Resolution Multi-Rate HD 4", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/1c/qualcomm/1/MultiRate.mpd","name" : "Single Resolution Multi-Rate HD 5", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/2a/DTV/1/ondemand.mpd","name" : "Multi-Resolution Multi-Rate HD 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/2a/qualcomm/1/MultiResMPEG2.mpd","name" : "Multi-Resolution Multi-Rate HD 2", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/2a/qualcomm/2/MultiRes.mpd","name" : "Multi-Resolution Multi-Rate HD 3", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/2b/DTV/1/live.mpd","name" : "Multi-Resolution Multi-Rate HD 4", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/2b/qualcomm/1/MultiResMPEG2.mpd","name" : "Multi-Resolution Multi-Rate HD 5", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/2b/qualcomm/2/MultiRes.mpd","name" : "Multi-Resolution Multi-Rate HD 6", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/2c/qualcomm/1/MultiResMPEG2.mpd","name" : "Multi-Resolution Multi-Rate HD 7", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/1/1/ChID_voices_51_256_ddp.mpd","name" : "Dolby 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/2/1/ChID_voices_71_768_ddp.mpd","name" : "Dolby 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/3/1/ChID_voices_20_128_ddp.mpd","name" : "Dolby 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dolby/4/1/ChID_voices_71_384_448_768_ddp.mpd","name" : "Dolby 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dts/1/Paint_dtsc_testA.mpd","name" : "DTS A 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dts/1/Paint_dtse_testA.mpd","name" : "DTS A 2", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dts/1/Paint_dtsh_testA.mpd","name" : "DTS A 3", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dts/1/Paint_dtsl_testA.mpd","name" : "DTS A 4", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dts/2/Paint_dtsc_testB.mpd","name" : "DTS B 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dts/2/Paint_dtse_testB.mpd","name" : "DTS B 2", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dts/2/Paint_dtsl_testB.mpd","name" : "DTS B 3", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dts/3/Paint_dtsc_testD.mpd","name" : "DTS D 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dts/3/Paint_dtse_testD.mpd","name" : "DTS D 2", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dts/3/Paint_dtsh_testD.mpd","name" : "DTS D 3", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/dts/3/Paint_dtsl_testD.mpd","name" : "DTS D 4", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/MPEG_Surround/1/6chID/6chId_480p_single_adapt_mps5_1_sidx.mpd","name" : "MPEG Surround 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/MPEG_Surround/2/ElephantsDream_6ch/elephants_dream_480p_mps5_1_sidx.mpd","name" : "MPEG Surround 1", "browsers": "cdsbi" },
+        { "url" : "http://dash.edgesuite.net/dash264/TestCasesMCA/fraunhofer/MPEG_Surround/2/Sintel_6ch/sintel_480p_mps5_1_sidx.mpd","name" : "MPEG Surround 2", "browsers": "cdsbi" },
+        {
+            "name": "Caption Test",
+            "url": "http://dash.edgesuite.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
+            "browsers": "cdsbi"
+        },
+        {
+            "name": "4K",
+            "url": "http://dash.edgesuite.net/akamai/streamroot/050714/Spring_4Ktest.mpd",
+            "browsers": "cdsbi"
+        },
+        {
+            "name": "Envivio",
+            "url": "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd",
+            "browsers": "cdsbi"
+        },
+        {
+            "name": "Segment List",
+            "url": "http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd",
+            "browsers": "cdsbi"
+        },
+        {
+            "name": "Segment Template",
+            "url": "http://www.digitalprimates.net/dash/streams/mp4-live-template/mp4-live-mpd-AV-BS.mpd",
+            "browsers": "cdsbi"
+        },
+        {
+            "name": "Unified Streaming - Timeline",
+            "url": "http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd",
+            "browsers": "cdsbi"
+        },
+        {
+            "name": "Unified Streaming Live",
+            "url": "http://live.unified-streaming.com/loop/loop.isml/loop.mpd?format=mp4&session_id=25020",
+            "browsers": ""
+        },
+        {
+            "name": "Microsoft #1",
+            "url": "http://wams.edgesuite.net/media/SintelTrailer_MP4_from_WAME/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)",
+            "browsers": "cdsbi"
+        },
+        {
+            "name": "Microsoft #2",
+            "url": "http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)",
+            "browsers": "cdsbi"
+        },
+        {
+            "name": "Microsoft #3",
+            "url": "http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME_720p_Main_Profile/sintel_trailer-720p.ism/manifest(format=mpd-time-csf)",
+            "browsers": "cdsbi"
+        },
+        {
+            "name": "Microsoft #4",
+            "url": "http://wams.edgesuite.net/media/MPTExpressionData01/ElephantsDream_1080p24_IYUV_2ch.ism/manifest(format=mpd-time-csf)",
+            "browsers": "cdsbi"
+        },
+        {
+            "name": "Microsoft #5",
+            "url": "http://wams.edgesuite.net/media/MPTExpressionData02/BigBuckBunny_1080p24_IYUV_2ch.ism/manifest(format=mpd-time-csf)",
+            "browsers": "cdsbi"
+        },
+        {
+            "name": "Microsoft Cenc #1",
+            "url": "http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME_720p_Main_Profile_CENC/CENC/sintel_trailer-720p.ism/manifest(format=mpd-time-csf)",
+            "browsers": "i"
+        },
+        {
+            "name": "Microsoft Cenc #4",
+            "url": "http://wams.edgesuite.net/media/SintelTrailer_Smooth_from_WAME_CENC/CENC/sintel_trailer-1080p.ism/manifest(format=mpd-time-csf)",
+            "browsers": "i"
+        },
+        {
+            "name": "D-Dash #1",
+            "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=2&type=full",
+            "browsers": ""
+        },
+        {
+            "name": "D-Dash #2",
+            "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=4&type=full",
+            "browsers": ""
+        },
+        {
+            "name": "D-Dash #3",
+            "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=6&type=full",
+            "browsers": ""
+        },
+        {
+            "name": "D-Dash #4",
+            "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=8&type=full",
+            "browsers": ""
+        },
+        {
+            "name": "D-Dash #5",
+            "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=10&type=full",
+            "browsers": ""
+        },
+        {
+            "name": "D-Dash #6",
+            "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=15&type=full",
+            "browsers": ""
+        }
+    ]
+}

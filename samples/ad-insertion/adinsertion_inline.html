@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html ng-app="DashPlayer" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
+    <link href="style.css" rel="stylesheet" type="text/css" />
+	<script src="../../dist/dash.debug.js"></script>
+
+</head>
+<body ng-controller="DashController">
+
+</div>
+
+<div class="container" style="margin-top:20px;">
+
+    <a href="http://www.fokus.fraunhofer.de/go/fame"><img src="images/fame.png" style="position:absolute;top:20px;left:30px;" /></a>
+    <a href="http://www.fokus.fraunhofer.de/go/fame"><img src="images/fokus.png" style="position:absolute;top:20px;left:200px;height:65px;" /></a>
+    <img src="images/famium.png" style="position:absolute;top:20px;left:500px;" />
+
+    <div id="info_area">
+        <div id="info_item" style="width: 550px; height: 300px;">
+            <b>Post-Roll Advert-Insertion with DASH + W3C MediaSource Extensions + Inline Event MPD Reload</b>
+
+            <ol>
+                <li>The server provides a MPD  containing an InlineEventStream element on Period Level. The schmeIdUri and the value of the Eventstream are set according to ISO/IEC
+                    23009-1 5.10.4.1.
+                    <br><br>
+                      <pre>&lt;EventStream schemeIdUri="urn:mpeg:dash:event:2012" value="1"/&gt;
+       &lt;Event presentationTime="5" id="1"/>
+&lt;/EventStream&gt;
+                    </pre>
+                   </li>
+
+                <li>MPD reload is scheduled at 5 seconds of the playback </li>
+                <li>The new MPD contains an additional period with ad content (51 seconds) which will be played after 15 seconds</li>
+
+            </ol>
+            Important:
+            <ul>
+                <li>Cookies have to be activated</li>
+                <li>Due to missing Multiperiod implementation a workaround has to be used to enable multiperiod playback. The second period will therefore have a starttime set to PT0M0S.</li>
+            </ul>
+            <div><a href="index.html">Back to selection</a></div>
+        </div>
+
+    </div>
+    <div class="dash-video-player" style="position:absolute; left:700px;top:170px; width:640px" >
+        <video controls="true" id="vid" width="640" height="360"></video>
+    </div>
+</div>
+
+<div class="footer-area">
+
+</div>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html ng-app="DashPlayer" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
+    <link href="style.css" rel="stylesheet" type="text/css" />
+    <script src="../../dist/dash.debug.js"></script>
+
+</head>
+<body ng-controller="DashController">
+
+<div class="container" style="margin-top:20px;">
+
+    <a href="http://www.fokus.fraunhofer.de/go/fame"><img src="images/fame.png" style="position:absolute;top:20px;left:30px;" /></a>
+    <a href="http://www.fokus.fraunhofer.de/go/fame"><img src="images/fokus.png" style="position:absolute;top:20px;left:200px;height:65px;" /></a>
+    <img src="images/famium.png" style="position:absolute;top:20px;left:500px;" />
+
+    <div id="info_area">
+        <div id="info_item" style="width: 550px; height: 300px;">
+            <b>Pre-Roll Advert-Insertion with DASH + W3C MediaSource Extensions + Inband Event MPD Reload</b>
+
+            <ol>
+                <li>The server provides a MPD  containing an InbandEventStream element on Period Level. The schmeIdUri and the value of the Eventstream are set according to ISO/IEC
+                    23009-1 5.10.4.1.
+                <br><br>
+                <pre>&lt;InbandEventStream schemeIdUri="urn:mpeg:dash:event:2012" value="1"/&gt;</pre>
+                Additionally one segment contains an EMSG Box with the same schemeIdUri and the same value.</li>
+
+                <li>During the playback the Client parses the EMSG Box, removes it from the segment and schedules the MPD Reload.</li>
+                <li>The new MPD contains an additional period (15 seconds) with regular content, which will be played after 51 seconds</li>
+
+            </ol>
+            Important:
+            <ul>
+                <li>Cookies have to be activated</li>
+                <li>Since the EMSG Box is only present in one of the segments, seeking might lead to a state where the player is not reloading the manifest file. Furthermore seeking back will not trigger the reload again since the EMSG Box is removed from the segment after it has been parsed. </li>
+                <li>Due to missing Multiperiod implementation a workaround has to be used to enable multiperiod playback. The second period will therefore have a starttime set to PT0M0S.</li>
+            </ul>
+            <div><a href="index.html">Back to selection</a></div>
+        </div>
+    </div>
+    <div class="dash-video-player" style="position:absolute; left:700px;top:170px; width:640px" >
+            <video controls="true" id="vid" width="640" height="360";></video>
+        </div>
+    </div>
+    <div class="footer-area">
+    </div>
+</body>
+</html>

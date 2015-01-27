@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Auto-player instantiation example, showing how to obtain a reference to the MediaPlayer</title>
+
+    <script src="../../dist/dash.debug.js"></script>
+    <!--dash.all.js should be used in production over dash.debug.js. dash.debug.js is not compressed or obfuscated and the file size is much larger compared with dash.all.js-->
+    <!--<script src="../../dist/dash.all.js"></script>-->
+
+    <script>
+        var player;
+
+        function init()
+        {
+            player = Dash.create(document.querySelector(".dashjs-player"));
+            setInterval(updateStats,500)
+        }
+
+        function updateStats()
+        {
+            var     metrics = player.getMetricsFor('video'),
+                    metricsExt = player.getMetricsExt(),
+                    bufferLevel = metricsExt.getCurrentBufferLevel(metrics);
+            document.querySelector("#stats").innerHTML = "Buffer level " + bufferLevel.level.toPrecision(3) + "s";
+        }
+    </script>
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+
+    <body onload="init()">
+        <div>
+            <video class="dashjs-player" autoplay controls>
+                <source src="http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd" type="application/dash+xml"/>
+            </video>
+        </div>
+        <div>
+            <span id="stats"/>
+        </div>
+
+    </body>
+</html>

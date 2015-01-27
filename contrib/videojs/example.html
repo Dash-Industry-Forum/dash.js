@@ -1,0 +1,44 @@
+<html>
+
+<head>
+
+  <!-- Loading Video.js CDN-hosted Scripts from videojs.com -->
+  <link href="http://vjs.zencdn.net/4.6/video-js.css" rel="stylesheet">
+  <script src="http://vjs.zencdn.net/4.6/video.js"></script>
+  <script src="../../dist/dash.debug.js"></script>
+
+
+  <!-- Load videojs-tech-dashjs after both other projects -->
+  <script src="videojs-tech-dashjs.js"></script>
+
+</head>
+<body>
+
+<h1>videojs-tech-dashjs demo</h1>
+
+<!-- Standard video.js embed with a DASH source -->
+<video id="vid1" class="video-js vjs-default-skin" controls preload="auto" width="640" height="264">
+  <source src="http://54.201.151.65/livesim/tfdt_32/testpic_2s/Manifest.mpd" type='application/dash+xml'>
+</video>
+
+<script>
+  // Initalize the video.js player after videojs-tech-dashjs has loaded
+  var myPlayer = videojs('vid1', {context:new Dash.di.DashContext()});
+</script>
+
+<!-- EXAMPLE-SPECIFIC CODE -->
+<style>
+  #dash-not-supported { width: 618px; border: 1px solid #c00; padding: 10px; margin: 10px 0; background-color: rgba(200,0,0,0.5); }
+</style>
+<script>
+  if (!videojs.Dashjs.isSupported()) {
+    var notSupportedDiv = document.createElement('div');
+    notSupportedDiv.id = 'dash-not-supported';
+    notSupportedDiv.innerHTML = 'DASH (through Media Source Extensions) is not supported in your browser, you are currently viewing a fallback MP4 playing through Flash or HTML5 video. Try using the latest version of <a href="http://windows.microsoft.com/en-us/internet-explorer/download-ie">IE</a> or <a href="https://www.google.com/intl/en/chrome/browser/">Chrome</a>.';
+    document.body.insertBefore(notSupportedDiv, document.body.firstChild);
+  }
+</script>
+<!-- END EXAMPLE-SPECIFIC CODE -->
+
+</body>
+</html>
