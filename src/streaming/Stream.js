@@ -23,7 +23,6 @@ MediaPlayer.dependencies.Stream = function () {
         loaded = false,
         errored = false,
         kid = null,
-        initData = [],
         updating = true,
         streamInfo = null,
         updateError = {},
@@ -232,7 +231,6 @@ MediaPlayer.dependencies.Stream = function () {
             initialized = false;
 
             kid = null;
-            initData = [];
 
             mediaInfos = {};
 
