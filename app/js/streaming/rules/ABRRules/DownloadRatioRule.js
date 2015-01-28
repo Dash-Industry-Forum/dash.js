@@ -84,7 +84,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
 
             if (lastRequest == null) {
                 // This is the first request
-                callback(new MediaPlayer.rules.SwitchRequest(Math.floor(max/2)));
+                callback(new MediaPlayer.rules.SwitchRequest(Math.floor(max/2), MediaPlayer.rules.SwitchRequest.prototype.STRONG));
                 return;
             }
 
