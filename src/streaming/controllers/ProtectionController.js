@@ -44,23 +44,36 @@ MediaPlayer.dependencies.ProtectionController = function () {
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
         },
 
-        /**
-         * Called in response to a needkey event to auto select a key
-         * system based on the media and initialization data
-         *
-         * @param mediaInfo media information
-         * @param initData initialization data
-         */
-        selectKeySystem : function(mediaInfo, initData) {
-            this.protectionExt.autoSelectKeySystem(mediaInfo, initData);
+        requestKeySystemAccess: function(ksConfiguration) {
+            this.protectionModel.requestKeySystemAccess(ksConfiguration);
         },
 
-        createKeySession: function(initData, contentType) {
-            this.protectionModel.createKeySession(initData, contentType, "cenc");
+        selectKeySystem: function(keySystemAccess) {
+            this.protectionModel.selectKeySystem(keySystemAccess);
+        },
+
+        createKeySession: function(initData, sessionType) {
+            this.protectionModel.createKeySession(initData, sessionType);
         },
 
         updateKeySession: function(sessionToken, message) {
             this.protectionModel.updateKeySession(sessionToken, message);
+        },
+
+        loadKeySession: function(sessionID) {
+            this.protectionModel.loadKeySession(sessionID);
+        },
+
+        removeKeySession: function(sessionToken) {
+            this.protectionModel.removeKeySession(sessionToken);
+        },
+
+        closeKeySession: function(sessionToken) {
+            this.protectionModel.closeKeySession(sessionToken);
+        },
+
+        setServerCertificate: function(serverCertificate) {
+            this.protectionModel.setServerCertificate(serverCertificate);
         }
     };
 

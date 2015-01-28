@@ -35,13 +35,16 @@
  * @param sessionToken the session to which the key message is associated
  * @param message the key message
  * @param [defaultURL] license acquisition URL provided by the CDM
+ * @param [messageType] the message type.  One of "license-request",
+ * "license-renewal", "license-release", "individualization-request"
  * @constructor
  */
-MediaPlayer.vo.protection.KeyMessage = function(sessionToken, message, defaultURL) {
+MediaPlayer.vo.protection.KeyMessage = function(sessionToken, message, defaultURL, messageType) {
     "use strict";
     this.sessionToken = sessionToken;
     this.message = message;
     this.defaultURL = defaultURL;
+    this.messageType = messageType;
 };
 
 MediaPlayer.vo.protection.KeyMessage.prototype = {
