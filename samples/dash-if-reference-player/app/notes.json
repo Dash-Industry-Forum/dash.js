@@ -10,6 +10,29 @@
             ]
         },
         {
+            "title": "Release Notes v1.3.0",
+            "items": [
+                "New folder structure for entire project",
+                "Removed q.js library from the project",
+                "Improved ABR rules",
+                "Refactored scheduling into replaceable rules",
+                "Integrated support for grunt jsdocs",
+                "Added dash.debug.js",
+                "DRM - refactor",
+                "DRM - added Widevine support",
+                "DRM - added support for ClearKey DRM",
+                "DRM - Added API to get DRM information",
+                "UTCTiming support",
+                "Added a contrib directory with webmjs and videojs-tech-dashjs",
+                "Added MPD Reload via Inband/Inline Events",
+                "Added MediaPlayerFactory for simple embed",
+                "Added ability to store and read custom response headers on each httprequest vo created",
+                "Gracefully handle multiple MPD.Location elements",
+                "Fixes for multi-period",
+                "Fixes for dynamic (Live)"
+            ]
+        },
+        {
             "title": "Release Notes v1.2.0",
             "items": [
                 "Captions - TTML Fallback",
