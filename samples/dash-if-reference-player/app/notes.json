@@ -25,7 +25,7 @@
                 "UTCTiming support",
                 "Added a contrib directory with webmjs and videojs-tech-dashjs",
                 "Added MPD Reload via Inband/Inline Events",
-                "Added MediaPlayerFactory for simple embed",
+                "Added DashCreate for simple embed",
                 "Added ability to store and read custom response headers on each httprequest vo created",
                 "Gracefully handle multiple MPD.Location elements",
                 "Fixes for multi-period",
