@@ -583,47 +583,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     }
 
     // Get url params...
-    var vars = getUrlVars(),
-        browserVersion,
-        filterValue;
-
-    if (vars && vars.hasOwnProperty("version")) {
-        browserVersion = vars.version;
-    }
-    else {
-        browserVersion = "stable";
-    }
-
-    switch(browserVersion) {
-        case "beta":
-            filterValue = "b";
-            break;
-        case "canary":
-            filterValue = "c";
-            break;
-        case "dev":
-            filterValue = "d";
-            break;
-        case "explorer":
-            filterValue = "i";
-            break;
-        case "all":
-            filterValue = "a";
-            break;
-        case "stable":
-        default:
-            filterValue = "s";
-            break;
-    }
-
-    $scope.isStreamAvailable = function (str) {
-        if (filterValue === "a") {
-            return true;
-        }
-        else {
-            return (str.indexOf(filterValue) != -1);
-        }
-    }
+    var vars = getUrlVars();
 
     Sources.query(function (data) {
         $scope.availableStreams = data.items;

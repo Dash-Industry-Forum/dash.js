@@ -1,10 +1,6 @@
 {
     "items": [
         {
-            "name": "q",
-            "link": "https://github.com/kriskowal/q"
-        },
-        {
             "name": "dijon",
             "link": "https://github.com/creynders/dijon-framework"
         },
