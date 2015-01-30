@@ -1234,7 +1234,7 @@ if (undefined === atob) {
 
 MediaPlayer = function(aContext) {
     "use strict";
-    var VERSION = "1.3.0 (refactor)", context = aContext, system, manifestLoader, abrController, element, source, protectionData = null, streamController, rulesController, manifestUpdater, metricsExt, metricsModel, videoModel, initialized = false, playing = false, autoPlay = true, scheduleWhilePaused = false, bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED, isReady = function() {
+    var VERSION = "1.3.0", context = aContext, system, manifestLoader, abrController, element, source, protectionData = null, streamController, rulesController, manifestUpdater, metricsExt, metricsModel, videoModel, initialized = false, playing = false, autoPlay = true, scheduleWhilePaused = false, bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED, isReady = function() {
         return !!element && !!source;
     }, play = function() {
         if (!initialized) {
@@ -8362,13 +8362,13 @@ MediaPlayer.models.ProtectionModel_01b = function() {
             }
         };
     }, eventHandler = null, findSessionByID = function(sessionArray, sessionID) {
-        if (!sessionID) {
+        if (!sessionID || !sessionArray) {
             return null;
         } else {
-            var len = sessions.length;
+            var len = sessionArray.length;
             for (var i = 0; i < len; i++) {
-                if (sessions[i].sessionID == sessionID) {
-                    return sessions[i];
+                if (sessionArray[i].sessionID == sessionID) {
+                    return sessionArray[i];
                 }
             }
             return null;
