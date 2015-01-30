@@ -182,8 +182,7 @@
                    href="#"
                    class="list-group-item"
                    ng-click="setStream(item)"
-                   data-dismiss="modal"
-                   ng-show="isStreamAvailable(item.browsers)">
+                   data-dismiss="modal">
                     {{item.name}}
                 </a>
             </div>
@@ -228,8 +227,7 @@
                     <ul class="dropdown-menu">
                         <li
                             ng-repeat="item in availableStreams"
-                            ng-click="setStream(item)"
-                            ng-show="isStreamAvailable(item.browsers)">
+                            ng-click="setStream(item)">
                             <a>{{item.name}}</a>
                         </li>
                     </ul>
@@ -500,16 +498,10 @@
                     <ul class="list-group">
                         <li class="list-group-item"><a href="https://github.com/Dash-Industry-Forum/dash.js">This project can be forked on GitHub.</a></li>
                         <li class="list-group-item">Use your browser's JavaScript console to view detailed information about stream playback.</li>
-                        <li class="list-group-item"><a href="baseline.html">See a base implementation here.</a></li>
+                        <li class="list-group-item"><a href="../basic-page-embed/auto-load-single-video.html">See a base implementation here.</a></li>
                         <li class="list-group-item">A browser that supports MSE (Media Source Extensions) is required.</li>
-                        <li class="list-group-item">As of 8/30/13, Desktop Chrome, Desktop Internet Explorer 11, and Mobile Chrome Beta for Android are the only browsers supported.</li>
+                        <li class="list-group-item">As of 2/1/2015 supported on the following browsers: Desktop Chrome, Desktop Internet Explorer 11 under WIn8.1, Mobile Chrome for Android and Safari on Mac Yosemite</li>
                         <li class="list-group-item">Use the most up-to-date version of your browser for the best compatibility.</li>
-                        <li class="list-group-item">Many of the streams in the dropdown box (with ?version=all) only work in the developer channel or Canary version of Chrome.</li>
-                        <li class="list-group-item"><a href="index.html?version=stable">Stable Chrome Streams</a></li>
-                        <li class="list-group-item"><a href="index.html?version=beta">Beta Chrome Streams</a></li>
-                        <li class="list-group-item"><a href="index.html?version=dev">Dev Chrome Streams</a></li>
-                        <li class="list-group-item"><a href="index.html?version=canary">Canary Chrome Streams</a></li>
-                        <li class="list-group-item"><a href="index.html?version=explorer">Internet Explorer 11 Streams</a></li>
                     </ul>
                 </div>
                 <div class="col-md-3">
