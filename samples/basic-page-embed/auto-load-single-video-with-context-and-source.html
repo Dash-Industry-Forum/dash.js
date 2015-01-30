@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Auto-player instantiation example, single videoElement, supplying context and source</title>
+
+    <script src="../../dist/dash.debug.js"></script>
+    <!--dash.all.js should be used in production over dash.debug.js. dash.debug.js is not compressed or obfuscated and the file size is much larger compared with dash.all.js-->
+    <!--<script src="../../dist/dash.all.js"></script>-->
+
+    <script>
+        function init()
+        {
+            var player, video, source, context;
+
+            // Example specifying only the video element
+            video = document.querySelector("#video1");
+            player = Dash.create(video);
+
+            //Example adding video and source
+            video = document.querySelector("#video2");
+            source = document.createElement("source");
+            source.src = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
+            source.type = "application/dash+xml";
+            player = Dash.create(video, source);
+
+            //Example adding video, source and context
+            video = document.querySelector("#video3");
+            source = document.createElement("source");
+            source.src = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
+            source.type = "application/dash+xml";
+            context = new Dash.di.DashContext();  // you could add a custom DashContext at this point
+            player = Dash.create(video, source, context);
+        }
+    </script>
+    <style>
+        video {
+            width: 320px;
+            height: 180px;
+        }
+    </style>
+
+    <body onload="init()">
+        <div>
+            <video id="video1" autoplay controls="true">
+                <source src="http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd" type="application/dash+xml"/>
+            </video>
+            <p/>
+            <video id="video2" autoplay controls="true">
+            </video>
+            <p/>
+            <video id="video3" autoplay controls="true">
+            </video>
+        </div>
+    </body>
+</html>

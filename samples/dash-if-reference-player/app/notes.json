@@ -1,0 +1,258 @@
+{
+    "notes": [
+        {
+            "title": "Known Issues",
+            "items": [
+                "Erratic playback at higher bitrates.",
+                "Streams using high profile codecs may not play properly.",
+                "Only streams with segmentAlignment='true' will work with abr.",
+		"Seek at start does not support multi-period content at this point."
+            ]
+        },
+        {
+            "title": "Release Notes v1.3.0",
+            "items": [
+                "New folder structure for entire project",
+                "Removed q.js library from the project",
+                "Improved ABR rules",
+                "Refactored scheduling into replaceable rules",
+                "Integrated support for grunt jsdocs",
+                "Added dash.debug.js",
+                "DRM - refactor",
+                "DRM - added Widevine support",
+                "DRM - added support for ClearKey DRM",
+                "DRM - Added API to get DRM information",
+                "UTCTiming support",
+                "Added a contrib directory with webmjs and videojs-tech-dashjs",
+                "Added MPD Reload via Inband/Inline Events",
+                "Added DashCreate for simple embed",
+                "Added ability to store and read custom response headers on each httprequest vo created",
+                "Gracefully handle multiple MPD.Location elements",
+                "Fixes for multi-period",
+                "Fixes for dynamic (Live)"
+            ]
+        },
+        {
+            "title": "Release Notes v1.2.0",
+            "items": [
+                "Captions - TTML Fallback",
+                "Reduced logging output",
+                "Produce additional stats and show them in index.html",
+                "Token Auth support",
+                "Replace github ribbon with Star and Fork buttons",
+                "Style the new stats display in index.html",
+                "Basic handling of EMSG in segments",
+                "DVR Window support for pages hosting the player to display their own UI",
+                "fixes for multi-period",
+                "fixes for dynamic (Live)",
+                "contrib sample for using video.js with dash.js",
+                "contrib implementation of webm support",
+                "implement format tag substitution",
+		"Immediately seek to a a location within the media source upon initial load",
+		"add manifest update chart",
+		"fix period@start interpretation",
+		"include ftyp in init segment",
+		"update sources list"
+            ]
+        },
+        {
+            "title": "Release Notes v1.1.2",
+            "items": [
+                "Improved support for dynamic mpd type",
+                "Added search for live edge.",
+                "Added support for overlapped segment requests.",
+                "Added support for multiple buffer levels.",
+                "Refined error type on the eventbus to be more uniform.",
+                "Added manifestLoaded type on the eventbus",
+                "Add reset() to MediaPlayer.",
+                "Added ScheduleWhilePaused property to MediaPlayer.",
+                "Added BufferMax property to MediaPlayer.",
+                "Added metricAdded, metricUpdated, metricChanged and metricsChanged events to remove polling",
+                "Fixed metrics for http requests and dropped frames"
+            ]
+        },
+        {
+            "title": "Release Notes v1.0.0",
+            "items": [
+                "Updated README.",
+                "Create responsive showcase page.",
+                "Clean up showcase page and javascript.",
+                "Add 'Fork me on GitHub' banner.",
+                "Externalize a bunch of showcase data to JSON files.",
+                "Remove jquery from baseline requirements.",
+                "Update baseline player page.",
+                "Fix a bug where the displayed rendition indexes were incorrect.",
+                "Fix a bug where autoPlay did not work as expected.",
+                "Fix a bug where multiple BaseURL nodes broke playback.",
+                "Changed live stream detection to use the MPD.@type property (with value 'dynamic').",
+                "First pass at closed captioning.",
+                "First pass at EME.",
+                "First pass at multi-period support.",
+                "Respond to fragment loading errors.",
+                "Added new test vectors.",
+                "Add a ChromeCast sample."
+            ]
+        },
+        {
+            "title": "Release Notes v0.2.5",
+            "items": [
+                "Update test vectors.",
+                "Update stream availability for Chrome versions and IE 11.",
+                "Revert BaseURLExtensions to fix issues with SIDX parsing.",
+                "Fix a bug when calculating stream end with SegmentTemplate.",
+                "Short circuit logic on unexpected pauses.",
+                "Various fixes to SourceBufferExtensions."
+            ]
+        },
+        {
+            "title": "Release Notes v0.2.4",
+            "items": [
+                "Added support for updateend event.",
+                "Added support for mpd url parameter (index.html?mpd=&lt;mpd url&gt;).",
+                "Added dash.min.js and dash.all.js",
+                "Extended logging in BufferController.",
+                "Improved shouldBufferMore calulation.",
+                "Improved getBufferLength calulation.",
+                "Improved validateInterval calulation.",
+                "Default in-page degbug logging to off.",
+                "Update the buffer length metrics even when shouldBufferMore is false.",
+                "Fix timescale defaults for SegmentTemplate.",
+                "Fix some seek bugs.",
+                "Fix some SIDX parse bugs."
+            ]
+        },
+        {
+            "title": "Release Notes v0.2.3",
+            "items": [
+                "Change license header.",
+                "Add footer.",
+                "Add more live support.  Still a work in progress.",
+                "Fix some bugs with the timeline."
+            ]
+        },
+        {
+            "title": "Release Notes v0.2.1",
+            "items": [
+                "Add support for SegmentBase manifests with reference_type = 1.  (Multi-level SIDX.)",
+                "Finish externalizing live toggle.  The player no longer attempts to discover liveness from the manifest.",
+                "Add a live toggle to the main UI.",
+                "Fix an issue where a custom value in the text input was ignored.",
+                "Fixed some bugs and clean up the SIDX loading.",
+                "Clean up some of the UI.",
+                "Added some new MediaSource test pages.",
+                "Expanded test.html to work with byte ranges.",
+                "Redid how live works again to support particular streams.  Live still needs more work."
+            ]
+        },
+        {
+            "title": "Release Notes v0.2.0",
+            "items": [
+                "Live pass #3.  More bugs fixed.  More remain, but live streams should play.",
+                "Fix lots of bugs.",
+                "Clean up UI; condense information into a more usable format.",
+                "Add some UI bits to make things more clear.",
+                "Added test vectors to sources dropdown.",
+                "Clean up the filtering so that it doesn't bog down the stream as much.",
+                "Add test application to verify that fragments work with MediaSource.",
+                "Added ability to change streams without refreshing the page.",
+                "Better error messaging."
+            ]
+        },
+        {
+            "title": "Release Notes v0.1.2",
+            "items": [
+                "Live pass #2.  Working better, but still not done.",
+                "Live w/ SegmentTemplate is working pretty good.",
+                "Live support for other methods is spotty.",
+                "Implement manifest refreshing.",
+                "Add filter to debug window.  **WARNING** Filtering has performance issues that still need to be sorted out.",
+                "Add trees to view metrics. **Must manually populate due to performance issues.**",
+                "Band-aid some VOD seeking bugs.",
+                "Implement use of presentation delay.",
+                "Fix some bugs."
+            ]
+        },
+        {
+            "title": "Release Notes v0.1.1",
+            "items": [
+                "Metrics first pass.",
+                "Live first pass (still not working).",
+                "ABR first pass.",
+                "If a buffer runs dry playback stalls until more data is loaded.",
+                "Fix some (maybe not all) performance issues.",
+                "Change copyright information."
+            ]
+        },
+        {
+            "title": "Release Notes v0.1.0",
+            "items": [
+                "Major architecture changes.",
+                "Moved a lot of code around to make smaller overall objects.",
+                "Implemented Promises to make everything async.",
+                "Implemented DI for easy overriding of objects.",
+                "Added more logging.",
+                "Metrics are not currently implemented.",
+                "Auto ABR is not yet working due to metrics dependancy."
+            ]
+        },
+        {
+            "title": "Release Notes v0.0.7",
+            "items": [
+                "Changes for structure and contents of JavaScript files.",
+                "-Scope is now better isolated.",
+                "-Better patterns for object creation.",
+                "-Overall cleaner code."
+            ]
+        },
+        {
+            "title": "Release Notes v0.0.6",
+            "items": [
+                "UI changes."
+            ]
+        },
+        {
+            "title": "Release Notes v0.0.5",
+            "items": [
+                "Flesh out abr support.",
+                "Add architecture for rule checking.",
+                "Add basic bandwidth rule.",
+                "Introduced a limitation: only streams with segmentAlignment='true' will work with abr."
+            ]
+        },
+        {
+            "title": "Release Notes v0.0.4",
+            "items": [
+                "Add metrics bling.",
+                "Expose methods to change audio bitrate.",
+                "Play video automatically after loading completes."
+            ]
+        },
+        {
+            "title": "Release Notes v0.0.3",
+            "items": [
+                "Handle BaseURL with no SegmentTemplate, SegmentList, or SegmentBase.",
+                "Handle SegmentBase nodes without an indexRange or initializationRange."
+            ]
+        },
+        {
+            "title": "Release Notes v0.0.2",
+            "items": [
+                "Rearchitect the application for better extensibility.",
+                "Properly signal end of stream.",
+                "Add metrics tracking.",
+                "Add charts and tables with metrics info."
+            ]
+        },
+        {
+            "title": "Release Notes v0.0.1",
+            "items": [
+                "Requires Chrome 24 or later.",
+                "Basic implements for the four fragment description types work.",
+                "SegmentList",
+                "SegmentTemplate",
+                "SegmentTemplate with SegmentTimeline",
+                "SegmentBase"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,33 @@
+{
+    "tags": {
+        "allowUnknownTags": true
+    },
+    "source": {
+        "include": ["../src/streaming/", "../src/dash/"]
+    },
+    "plugins": [],
+    "templates": {	
+		"cleverLinks"           : false,
+		"monospaceLinks"        : true,
+		"dateFormat"            : "ddd MMM Do YYYY",
+		"outputSourceFiles"     : true,
+		"outputSourcePath"      : true,
+		"systemName"            : "Dash JS",
+		"copyright"             : "<h3>Dash.js <a href=\"http://gruntjs.com/\"><img src=\"https://cdn.gruntjs.com/builtwith.png\" alt=\"Built with Grunt\"></a></h3>",
+		"footer"                : "",
+		"navType"               : "horizontal",
+		"theme"                 : "spacelab",
+		"linenums"              : true,
+		"collapseSymbols"       : false,
+		"inverseNav"            : true,
+		"highlightTutorialCode" : true
+    },
+    "opts": {
+        "template": "./node_modules/grunt-jsdoc/node_modules/ink-docstrap/template",
+        "encoding": "utf8",
+        "recurse": true,
+        "query": "value",
+        "private": false,
+        "lenient": true
+    }
+}
