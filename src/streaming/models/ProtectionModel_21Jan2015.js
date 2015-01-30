@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
+MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 
     var videoElement = null,
         mediaKeys = null,
@@ -83,7 +83,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
                         case api.message:
                             self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE,
-                                    new MediaPlayer.vo.protection.KeyMessage(this, event.message, event.destinationURL));
+                                    new MediaPlayer.vo.protection.KeyMessage(this, event.message, "http://srv-06.labgencynet.com:36345"));
                             break;
 
                         case api.ready:
@@ -117,7 +117,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
          */
         init: function() {
             var tmpVideoElement = document.createElement("video");
-            api = MediaPlayer.models.ProtectionModel_3Feb2014.detect(tmpVideoElement);
+            api = MediaPlayer.models.ProtectionModel_21Jan2015.detect(tmpVideoElement);
         },
 
         teardown: function() {
@@ -130,16 +130,30 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
         },
 
         isSupported: function(keySystem, contentType) {
-            return window[api.MediaKeys].isTypeSupported(keySystem.systemString, contentType);
+            return window[api.MediaKeys].isTypeSupported(keySystem.systemString/*, contentType*/);
         },
 
         selectKeySystem: function(keySystem) {
             this.keySystem = keySystem;
-            mediaKeys = new window[api.MediaKeys](this.keySystem.systemString);
-            if (videoElement) {
-                videoElement[api.setMediaKeys](mediaKeys);
-            }
-            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MEDIAKEYS_CREATED, null);
+            var self = this;
+           
+            navigator.requestMediaKeySystemAccess(keySystem.systemString).then(
+                function(keySystemAccess) {
+                    var promise =  keySystemAccess.createMediaKeys();
+                    promise.catch(
+                        console.error.bind(console, "Unable to create MediaKeys")
+                    );
+
+                    promise.then(
+                        function(createdMediaKeys) {
+                            if (videoElement.mediaKeys === null) {
+                                mediaKeys = createdMediaKeys;
+                                if (videoElement) {
+                                    videoElement.setMediaKeys(createdMediaKeys);
+                                }
+                                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MEDIAKEYS_CREATED,
+                                        null);
+                    }})});
         },
 
         setMediaElement: function(mediaElement) {
@@ -162,14 +176,17 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
             // TODO: Need to check for duplicate initData.  If we already have
             // a KeySession for this exact initData, we shouldn't create a new session.
 
-            var session = mediaKeys.createSession(contentType, initData);
+            var session = mediaKeys.createSession(/*contentType, initData*/);
             var sessionToken = createSessionToken.call(this, session, initData);
 
             // Add all event listeners
-            session.addEventListener(api.error, sessionToken);
-            session.addEventListener(api.message, sessionToken);
-            session.addEventListener(api.ready, sessionToken);
-            session.addEventListener(api.close, sessionToken);
+            session.addEventListener(api.error, sessionToken.handleEvent);
+            session.addEventListener(api.message, sessionToken.handleEvent);
+            //session.addEventListener(api.statuseschange, sessionToken.handleEvent);
+            session.addEventListener(api.ready, sessionToken.handleEvent);
+            session.addEventListener(api.close, sessionToken.handleEvent);
+                       
+            session.generateRequest('cenc', initData);
 
             // Add to our session list
             sessions.push(sessionToken);
@@ -179,11 +196,11 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
         updateKeySession: function(sessionToken, message) {
 
-            var session = sessionToken.session;
+            //var session = sessionToken.session;
 
             if (!this.protectionExt.isClearKey(this.keySystem)) {
                 // Send our request to the key session
-                session.update(message);
+                sessionToken.update(message);
             } else {
                 // For clearkey, message is a MediaPlayer.vo.protection.ClearKeyKeySet
                 session.update(message.toJWKString());
@@ -220,8 +237,8 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
     };
 };
 
-// Defines the supported 3Feb2014 API variations
-MediaPlayer.models.ProtectionModel_3Feb2014.APIs = [
+// Defines the supported 21Jan API variations
+MediaPlayer.models.ProtectionModel_21Jan2015.APIs = [
     // Un-prefixed as per spec
     // Chrome 38 (and some earlier versions) with chrome://flags -- Enable Encrypted Media Extensions
     {
@@ -235,11 +252,12 @@ MediaPlayer.models.ProtectionModel_3Feb2014.APIs = [
         release: "close",
 
         // Events
-        needkey: "needkey",
+        needkey: "encrypted",
         error: "keyerror",
-        message: "keymessage",
+        message: "message",
         ready: "keyadded",
-        close: "keyclose"
+        close: "keyclose",
+        statuseschange: "keystatuseschange"
     },
     // MS-prefixed (IE11, Windows 8.1)
     {
@@ -269,8 +287,8 @@ MediaPlayer.models.ProtectionModel_3Feb2014.APIs = [
  * @returns an API object that is used when initializing the ProtectionModel
  * instance
  */
-MediaPlayer.models.ProtectionModel_3Feb2014.detect = function(videoElement) {
-    var apis = MediaPlayer.models.ProtectionModel_3Feb2014.APIs;
+MediaPlayer.models.ProtectionModel_21Jan2015.detect = function(videoElement) {
+    var apis = MediaPlayer.models.ProtectionModel_21Jan2015.APIs;
     for (var i = 0; i < apis.length; i++) {
         var api = apis[i];
         if (typeof videoElement[api.setMediaKeys] !== 'function') {
@@ -285,7 +303,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014.detect = function(videoElement) {
     return null;
 };
 
-MediaPlayer.models.ProtectionModel_3Feb2014.prototype = {
-    constructor: MediaPlayer.models.ProtectionModel_3Feb2014
+MediaPlayer.models.ProtectionModel_21Jan2015.prototype = {
+    constructor: MediaPlayer.models.ProtectionModel_21Jan2015
 };
 

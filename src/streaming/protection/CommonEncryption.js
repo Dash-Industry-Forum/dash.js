@@ -75,7 +75,7 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
         if (data === null)
             return [];
 
-        var dv = new DataView(data.buffer),
+        var dv = new DataView(data),
                 done = false;
         var pssh = {};
 

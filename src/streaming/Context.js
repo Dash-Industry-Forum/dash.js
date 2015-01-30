@@ -18,7 +18,10 @@ MediaPlayer.di.Context = function () {
         var videoElement = document.createElement("video");
 
         // Detect EME APIs.  Look for newest API versions first
-        if (MediaPlayer.models.ProtectionModel_3Feb2014.detect(videoElement)) {
+        if (MediaPlayer.models.ProtectionModel_21Jan2015.detect(videoElement)) {
+            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_21Jan2015);
+        }
+        else if (MediaPlayer.models.ProtectionModel_3Feb2014.detect(videoElement)) {
             this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_3Feb2014);
         } else if (MediaPlayer.models.ProtectionModel_01b.detect(videoElement)) {
             this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_01b);

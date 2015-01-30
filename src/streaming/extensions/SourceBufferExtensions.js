@@ -142,17 +142,17 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 if (buffer.updating) return;
                 // updating is completed, now we can stop checking and resolve the promise
                 clearInterval(intervalId);
-                callback(true);
+                callback();
             },
             updateEndHandler = function() {
                 if (buffer.updating) return;
 
                 buffer.removeEventListener("updateend", updateEndHandler, false);
-                callback(true);
+                callback();
             };
 
         if (!buffer.updating) {
-            callback(true);
+            callback();
             return;
         }
 
