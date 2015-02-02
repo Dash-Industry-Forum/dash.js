@@ -8,7 +8,6 @@ MediaPlayer.dependencies.PlaybackController = function () {
         commonEarliestTime = null,
         streamInfo,
         videoModel,
-        trackInfo,
         isDynamic,
 
         getStreamStartTime = function (streamInfo) {
@@ -42,7 +41,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         getActualPresentationTime = function(currentTime) {
             var self = this,
-                metrics = self.metricsModel.getMetricsFor(trackInfo.mediaInfo.type),
+                metrics = self.metricsModel.getReadOnlyMetricsFor("video") || self.metricsModel.getReadOnlyMetricsFor("audio"),
                 DVRMetrics = self.metricsExt.getCurrentDVRInfo(metrics),
                 DVRWindow = DVRMetrics ? DVRMetrics.range : null,
                 actualTime;
@@ -95,8 +94,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
         onDataUpdateCompleted = function(e) {
             if (e.error) return;
 
-            trackInfo = this.adapter.convertDataToTrack(e.data.currentRepresentation);
-            streamInfo = trackInfo.mediaInfo.streamInfo;
+            var track = this.adapter.convertDataToTrack(e.data.currentRepresentation);
+            streamInfo = track.mediaInfo.streamInfo;
             isDynamic = e.sender.streamProcessor.isDynamic();
             updateCurrentTime.call(this);
         },
@@ -202,6 +201,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
                 ranges = e.data.bufferedRanges,
                 currentEarliestTime = commonEarliestTime,
                 playbackStart = getStreamStartTime.call(this, streamInfo),
+                track = e.sender.streamProcessor.getCurrentTrack(),
                 req;
 
             if (!ranges || !ranges.length) return;
@@ -213,7 +213,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
             // since segments are appended out of order, we cannot blindly seek after the first appended segment.
             // Do nothing till we make sure that the segment for initial time has been appended.
-            req = this.adapter.getFragmentRequestForTime(e.sender.streamProcessor, trackInfo, playbackStart, {keepIdx: false});
+            req = this.adapter.getFragmentRequestForTime(e.sender.streamProcessor, track, playbackStart, {keepIdx: false});
 
             if (!req || req.index !== e.data.index) return;
 
