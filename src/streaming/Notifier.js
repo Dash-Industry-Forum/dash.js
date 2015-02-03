@@ -1,16 +1,17 @@
 MediaPlayer.dependencies.Notifier = function () {
     "use strict";
 
-    var system,
+    var OBSERVABLE_ID_PROP = "observableId",
+        system,
         id = 0,
 
         getId = function() {
-            if (!this.id) {
+            if (!this[OBSERVABLE_ID_PROP]) {
                 id += 1;
-                this.id = "_id_" + id;
+                this[OBSERVABLE_ID_PROP] = "_id_" + id;
             }
 
-            return this.id;
+            return this[OBSERVABLE_ID_PROP];
         };
 
     return {
