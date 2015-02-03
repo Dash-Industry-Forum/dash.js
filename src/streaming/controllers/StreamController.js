@@ -372,6 +372,17 @@
             return activeStream ? activeStream.getStreamInfo() : null;
         },
 
+        /**
+         * @param id
+         * @returns {object}
+         * @memberof StreamController#
+         */
+        getStreamById: function(id) {
+            return streams.filter(function(item){
+                return item.getStreamInfo().id === id;
+            })[0];
+        },
+
         initialize: function () {
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);

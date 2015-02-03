@@ -608,6 +608,16 @@ MediaPlayer.dependencies.Stream = function () {
         getStreamInfo: function() {
             return streamInfo;
         },
+
+        /**
+         * @param type
+         * @returns {Array}
+         * @memberof Stream#
+         */
+        getBitrateListFor: function(type) {
+            return this.abrController.getBitrateList(mediaInfos[type]);
+        },
+
         startEventController: function() {
             eventController.start();
         },

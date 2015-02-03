@@ -289,6 +289,26 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return adaptation.Representation_asArray.length;
     },
 
+    /**
+     * @param adaptation
+     * @returns {Array}
+     * @memberof DashManifestExtensions#
+     */
+    getBitrateListForAdaptation: function(adaptation) {
+        if (!adaptation || !adaptation.Representation_asArray || !adaptation.Representation_asArray.length) return null;
+
+        var a = this.processAdaptation(adaptation),
+            reps = a.Representation_asArray,
+            ln = reps.length,
+            bitrateList = [];
+
+        for (var i = 0; i < ln; i += 1) {
+            bitrateList.push(reps[i].bandwidth);
+        }
+
+        return bitrateList;
+    },
+
     getRepresentationFor: function (index, adaptation) {
         "use strict";
         return adaptation.Representation_asArray[index];
