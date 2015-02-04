@@ -327,7 +327,8 @@ MediaPlayer.dependencies.Stream = function () {
             updating = false;
 
             self.eventBus.dispatchEvent({
-                type: "initialized"
+                type: "initialized",
+                data: {streamInfo: streamInfo}
             });
 
             self.notify(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, null, error);
