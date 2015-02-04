@@ -560,6 +560,7 @@ MediaPlayer.dependencies.BufferController = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        config: undefined,
 
         setup: function() {
             this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
@@ -580,6 +581,14 @@ MediaPlayer.dependencies.BufferController = function () {
             onRemoved = onRemoved.bind(this);
             this.sourceBufferExt.subscribe(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);
             this.sourceBufferExt.subscribe(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, this, onRemoved);
+
+            if (MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME === undefined) {
+                MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME = this.config.getParamFor(undefined, "BufferController.defaultMinBufferTime", "number", 12);
+            }
+            
+            if (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD === undefined) {
+                MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD = this.config.getParamFor(undefined, "BufferController.lowBufferThreshold", "number", 4);
+            }
         },
 
         initialize: function (typeValue, buffer, source, streamProcessor) {
@@ -664,8 +673,6 @@ MediaPlayer.dependencies.BufferController = function () {
 MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED = "required";
 MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN = "min";
 MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY = "infinity";
-MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME = 12;
-MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD = 4;
 MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY = 30;
 MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 300;
 MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;

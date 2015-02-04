@@ -61,6 +61,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
         debug: undefined,
         metricsExt: undefined,
         metricsModel: undefined,
+        config: undefined,
 
         execute: function (context, callback) {
             var self = this,

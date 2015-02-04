@@ -99,6 +99,8 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('timeSyncController', MediaPlayer.dependencies.TimeSyncController);
 
             this.system.mapSingleton('notifier', MediaPlayer.dependencies.Notifier);
+
+            this.system.mapSingleton('config', MediaPlayer.utils.Config);
         }
     };
 };

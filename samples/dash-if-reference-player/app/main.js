@@ -98,7 +98,8 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         context,
         videoSeries = [],
         audioSeries = [],
-        maxGraphPoints = 50;
+        maxGraphPoints = 50,
+        config = null;
 
     ////////////////////////////////////////
     //
@@ -533,6 +534,24 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     player.attachView(video);
     player.setAutoPlay(true);
+
+    ////////////////////////////////////////
+    //
+    // Configuration file
+    //
+    ////////////////////////////////////////
+    var reqConfig = new XMLHttpRequest();
+    reqConfig.onload = function() {
+        if (reqConfig.status === 200) {
+            config = JSON.parse(reqConfig.responseText);
+            if (player) {
+                player.setConfig(config);
+            }
+        }
+    };
+    reqConfig.open("GET", "dashplayer_config.json", true);
+    reqConfig.setRequestHeader("Content-type", "application/json");
+    reqConfig.send();
 
     ////////////////////////////////////////
     //

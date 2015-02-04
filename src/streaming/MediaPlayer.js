@@ -235,6 +235,7 @@ MediaPlayer = function (aContext) {
         errHandler: undefined,
         uriQueryFragModel:undefined,
         videoElementExt:undefined,
+        config: undefined,
 
         setup: function() {
             metricsExt = system.getObject("metricsExt");
@@ -508,6 +509,12 @@ MediaPlayer = function (aContext) {
         reset: function() {
             this.attachSource(null);
             this.attachView(null);
+        },
+
+        setConfig: function (params) {
+            if (this.config && params) {
+                this.config.setParams(params);
+            }
         },
 
         /**
