@@ -76,7 +76,7 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             }
 
             if (protData && protData.bearerToken) {
-                headers.push({name: "Authorization", value: protData.bearerToken});
+                headers.Authorization = protData.bearerToken;
             }
 
             var xhr = new XMLHttpRequest();
@@ -117,6 +117,8 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
 
                 xhr.setRequestHeader(headerName, headers[headerName]);
             }
+
+            if (protData && protData.withCredentials) xhr.withCredentials = true;
 
             xhr.send(decodedChallenge);
         },
