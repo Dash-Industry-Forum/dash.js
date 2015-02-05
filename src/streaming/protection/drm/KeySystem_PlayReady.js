@@ -76,7 +76,7 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             }
 
             if (protData && protData.bearerToken) {
-                headers.push({name: "Authorization", value: protData.bearerToken});
+                headers.Authorization = protData.bearerToken;
             }
 
             var xhr = new XMLHttpRequest();
