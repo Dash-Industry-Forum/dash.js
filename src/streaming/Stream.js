@@ -248,6 +248,7 @@ MediaPlayer.dependencies.Stream = function () {
                     streamProcessors.push(processor);
                     processor.initialize(mimeType || type, buffer, self.videoModel, self.fragmentController, self.playbackController, mediaSource, self, eventController);
                     processor.setMediaInfo(mediaInfo);
+                    self.abrController.updateTopQualityIndex(mediaInfo);
                     self.adapter.updateData(processor);
                     //self.debug.log(type + " is ready!");
                 }
@@ -324,6 +325,12 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             updating = false;
+
+            self.eventBus.dispatchEvent({
+                type: "initialized",
+                data: {streamInfo: streamInfo}
+            });
+
             self.notify(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, null, error);
         },
 
@@ -458,12 +465,14 @@ MediaPlayer.dependencies.Stream = function () {
                 processor = streamProcessors[i];
                 mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, processor.getType());
                 processor.setMediaInfo(mediaInfo);
+                this.abrController.updateTopQualityIndex(mediaInfo);
                 this.adapter.updateData(processor);
             }
         };
 
     return {
         system: undefined,
+        eventBus: undefined,
         manifestModel: undefined,
         mediaSourceExt: undefined,
         sourceBufferExt: undefined,

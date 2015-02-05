@@ -181,6 +181,12 @@ MediaPlayer.dependencies.ScheduleController = function () {
             if (e.error) return;
 
             currentTrackInfo = this.adapter.convertDataToTrack(e.data.currentRepresentation);
+        },
+
+        onStreamUpdated = function(e) {
+            if (e.error) return;
+
+            currentTrackInfo = this.streamProcessor.getCurrentTrack();
 
             if (!isDynamic) {
                 ready = true;
@@ -345,7 +351,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: self.timelineConverter.getClientTimeOffset()});
             ready = true;
-            startOnReady.call(self);
+
+            if (currentTrackInfo) {
+                startOnReady.call(self);
+            }
         };
 
     return {
@@ -367,6 +376,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED] = onDataUpdateStarted;
             this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
 
             this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START] = onMediaFragmentLoadingStart;
             this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
