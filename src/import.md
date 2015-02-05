@@ -34,6 +34,7 @@
 <script src="streaming/RequestModifierExtensions.js"></script>
 <script src="streaming/VideoModel.js"></script>
 <script src="streaming/vo/FragmentRequest.js"></script>
+<script src="streaming/vo/BitrateInfo.js"></script>
 <script src="streaming/vo/TrackInfo.js"></script>
 <script src="streaming/vo/MediaInfo.js"></script>
 <script src="streaming/vo/StreamInfo.js"></script>

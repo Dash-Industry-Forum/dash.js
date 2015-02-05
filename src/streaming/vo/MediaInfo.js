@@ -11,6 +11,7 @@ MediaPlayer.vo.MediaInfo = function () {
     this.contentProtection = null;
     this.isText = false;
     this.KID = null;
+    this.bitrateList = null;
 };
 
 MediaPlayer.vo.MediaInfo.prototype = {

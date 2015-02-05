@@ -56,6 +56,7 @@ Dash.dependencies.DashAdapter = function () {
             mediaInfo.codec = this.manifestExt.getCodec(a);
             mediaInfo.mimeType = this.manifestExt.getMimeType(a);
             mediaInfo.contentProtection = this.manifestExt.getContentProtectionData(a);
+            mediaInfo.bitrateList = this.manifestExt.getBitrateListForAdaptation(a);
 
             if (mediaInfo.contentProtection) {
                 mediaInfo.contentProtection.forEach(function(item){

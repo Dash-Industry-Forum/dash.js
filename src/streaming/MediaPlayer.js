@@ -389,6 +389,18 @@ MediaPlayer = function (aContext) {
         },
 
         /**
+         * @param type
+         * @returns {Array}
+         * @memberof MediaPlayer#
+         */
+        getBitrateInfoListFor: function(type) {
+            var streamInfo = streamController.getActiveStreamInfo(),
+                stream = streamController.getStreamById(streamInfo.id);
+
+            return stream.getBitrateListFor(type);
+        },
+
+        /**
          * @returns {object}
          * @memberof MediaPlayer#
          */
