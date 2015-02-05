@@ -5,9 +5,8 @@
   <!-- Loading Video.js CDN-hosted Scripts from videojs.com -->
   <link href="http://vjs.zencdn.net/4.6/video-js.css" rel="stylesheet">
   <script src="http://vjs.zencdn.net/4.6/video.js"></script>
+  <script src="../../dist/dash.debug.js"></script>
 
-  <!-- Include dash.all.js -->
-  <script src="../../dash.all.js"></script>
 
   <!-- Load videojs-tech-dashjs after both other projects -->
   <script src="videojs-tech-dashjs.js"></script>
@@ -19,16 +18,13 @@
 
 <!-- Standard video.js embed with a DASH source -->
 <video id="vid1" class="video-js vjs-default-skin" controls preload="auto" width="640" height="264">
-  <source src="http://dashdemo.edgesuite.net/envivio/dashpr/clear/Manifest.mpd" type='application/dash+xml'>
+  <source src="http://54.201.151.65/livesim/tfdt_32/testpic_2s/Manifest.mpd" type='application/dash+xml'>
 </video>
 
 <script>
   // Initalize the video.js player after videojs-tech-dashjs has loaded
-  var myPlayer = videojs('vid1');
+  var myPlayer = videojs('vid1', {context:new Dash.di.DashContext()});
 </script>
-
-
-
 
 <!-- EXAMPLE-SPECIFIC CODE -->
 <style>

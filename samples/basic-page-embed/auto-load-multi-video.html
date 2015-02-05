@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Auto-player instantiation example</title>
+
+    <script src="../../dist/dash.debug.js"></script>
+    <!--dash.all.js should be used in production over dash.debug.js. dash.debug.js is not compressed or obfuscated and the file size is much larger compared with dash.all.js-->
+    <!--<script src="../../dist/dash.all.js"></script>-->
+
+    <style>
+        video {
+            width: 320px;
+            height: 180px;
+        }
+    </style>
+
+    <body onload="Dash.createAll()">
+        <div>
+            <video class="dashjs-player" autoplay controls="true">
+                <source src="http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd" type="application/dash+xml"/>
+            </video>
+            <br/>This is a dash.js player that should autostart<p/>
+        </div>
+        <div>
+            <video class="any-other-class" autoplay controls="true">
+                <source src="http://mediapm.edgesuite.net/ovp/content/test/video/spacealonehd_sounas_640_300.mp4" type="video/mp4"/>
+            </video>
+            <br/>This is a standard mp4 (non-dash)<p/>
+        </div>
+        <div>
+            <video class="dashjs-player" poster="http://mediapm.edgesuite.net/will/dash/temp/poster.png"controls="true">
+                <source src="http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/Sintel/sintel_480p_heaac2_0.mpd" type="application/dash+xml"/>
+            </video>
+            <br/>This is a dash.js player that should not autostart
+        </div>
+    </body>
+</html>

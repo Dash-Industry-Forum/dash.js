@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Baseline Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+
+    <!-- Concatenated Dash & Libraries -->
+    <script src="../../dist/dash.debug.js"></script>
+
+    <script>
+        function getUrlVars() {
+            var vars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                vars[key] = value;
+            });
+            return vars;
+        }
+        function startVideo() {
+            var vars = getUrlVars(),
+                url = "http://localhost/Playground/Dash/Manifest.mpd",
+                video,
+                context,
+                player;
+            if (vars && vars.hasOwnProperty("url")) {
+                url = vars.url;
+            }
+            video = document.querySelector(".dash-video-player video");
+            context = new Dash.di.DashContext();
+            player = new MediaPlayer(context);
+            player.startup();
+            player.attachView(video);
+            player.setAutoPlay(false);
+            player.attachSource(url);
+        }
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 480px;
+        }
+    </style>
+
+    <body onload="startVideo()">
+        <div class="dash-video-player">
+            <video controls="true"></video>
+        </div>
+    </body>
+</html>
