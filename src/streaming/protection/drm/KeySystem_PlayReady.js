@@ -118,6 +118,8 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
                 xhr.setRequestHeader(headerName, headers[headerName]);
             }
 
+            if (protData && protData.withCredentials) xhr.withCredentials = true;
+
             xhr.send(decodedChallenge);
         },
 
