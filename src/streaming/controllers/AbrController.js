@@ -78,7 +78,6 @@ MediaPlayer.dependencies.AbrController = function () {
 
     return {
         debug: undefined,
-        adapter: undefined,
         abrRulesCollection: undefined,
         rulesController: undefined,
         notify: undefined,

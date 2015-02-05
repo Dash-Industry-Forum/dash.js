@@ -126,7 +126,6 @@ MediaPlayer.dependencies.FragmentController = function () {
         debug: undefined,
         scheduleRulesCollection: undefined,
         rulesController: undefined,
-        fragmentLoader: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,

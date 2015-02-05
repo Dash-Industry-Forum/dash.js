@@ -488,9 +488,6 @@ MediaPlayer.dependencies.Stream = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_STREAM_UPDATED: "streamUpdated"
-        },
 
         setup: function () {
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFERING_COMPLETED] = onBufferingCompleted;

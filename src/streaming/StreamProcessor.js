@@ -19,7 +19,6 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         indexHandler: undefined,
         liveEdgeFinder: undefined,
         timelineConverter: undefined,
-        eventList: undefined,
         abrController: undefined,
         baseURLExt: undefined,
         adapter: undefined,
