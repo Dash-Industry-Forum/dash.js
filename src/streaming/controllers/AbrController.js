@@ -199,6 +199,8 @@ MediaPlayer.dependencies.AbrController = function () {
             if (getTopQualityIndex(type, streamId) === max) return;
 
             setTopQualityIndex(type, streamId, max);
+
+            return max;
         },
 
         isPlayingAtTopQuality: function(streamInfo) {
