@@ -546,7 +546,6 @@ MediaPlayer.dependencies.BufferController = function () {
         };
 
     return {
-        manifestModel: undefined,
         sourceBufferExt: undefined,
         eventBus: undefined,
         bufferMax: undefined,
@@ -554,7 +553,6 @@ MediaPlayer.dependencies.BufferController = function () {
         metricsModel: undefined,
         metricsExt: undefined,
         adapter: undefined,
-        scheduleRulesCollection:undefined,
         debug: undefined,
         system: undefined,
         notify: undefined,

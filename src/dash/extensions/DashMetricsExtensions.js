@@ -41,7 +41,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return -1;
         },
 
-        findRepresentionInPeriodArray = function (periodArray, representationId) {
+        findRepresentationInPeriodArray = function (periodArray, representationId) {
             var period,
                 adaptationSet,
                 adaptationSetArray,
@@ -102,7 +102,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
                 representation,
                 periodArray = manifest.Period_asArray;
 
-            representation = findRepresentionInPeriodArray.call(self, periodArray, representationId);
+            representation = findRepresentationInPeriodArray.call(self, periodArray, representationId);
 
             if (representation === null) {
                 return null;
@@ -298,7 +298,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
             var dvrInfo = metrics.DVRInfo,
                 dvrInfoLastIndex,
-                curentDVRInfo =  null;
+                curentDVRInfo;
 
             if (dvrInfo === null || dvrInfo.length <= 0) {
                 return null;
@@ -319,7 +319,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
             if (httpRequest.type === 'MPD')
             {
-                headers = parseResponseHeaders(httpRequest.responseHeaders, id);
+                headers = parseResponseHeaders(httpRequest.responseHeaders);
 
             }
 
@@ -335,7 +335,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
             if (httpRequest === null || httpRequest.responseHeaders === null) return null;
 
-            headers = parseResponseHeaders(httpRequest.responseHeaders, id);
+            headers = parseResponseHeaders(httpRequest.responseHeaders);
             return headers[id] === undefined ? null :  headers[id];
         },
 

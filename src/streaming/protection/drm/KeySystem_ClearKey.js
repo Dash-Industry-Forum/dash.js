@@ -40,13 +40,12 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
          * Request a ClearKey license using PSSH-based message format that allows
          * multiple methodologies for retrieving/storing key information
          *
-         * @param notifier the KeySystem notifier that will receive the ENAME_LICENSE_REQUEST_COMPLETE
-         * event once the license retrieval process is complete
          * @param message the ClearKey PSSH
          * @param requestData request data to be passed back in the LicenseRequestComplete event
          */
         requestClearKeyLicense = function(message, /*laURL,*/ requestData) {
-            var i;
+            var self = this,
+                i;
 
             /* The ClearKey PSSH data format is defined as below:
              *
@@ -78,9 +77,9 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
 
             /* URL -- Retrieve JWKs from remote server */
             if (ckType === 0) {
-                var url = "",
-                        urlB64 = "",
-                        urlLen = dv.getUint16(byteCursor);
+                var url,
+                    urlB64 = "",
+                    urlLen = dv.getUint16(byteCursor);
 
                 byteCursor += 2;
 
@@ -95,7 +94,7 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
                     if (xhr.status == 200) {
 
                         if (!xhr.response.hasOwnProperty("keys")) {
-                            this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                            self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                                     null, new Error('DRM: ClearKey Remote update, Illegal response JSON'));
                         }
                         for (i = 0; i < xhr.reponse.keys.length; i++) {
@@ -105,19 +104,19 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
                             keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyid, key));
                         }
                         var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs), requestData);
-                        this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                        self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                                 event);
                     } else {
-                        this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                        self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                                 null, new Error('DRM: ClearKey Remote update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                     }
                 };
                 xhr.onabort = function () {
-                    this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                             null, new Error('DRM: ClearKey update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                 };
                 xhr.onerror = function () {
-                    this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                             null, new Error('DRM: ClearKey update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                 };
 

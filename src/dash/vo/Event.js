@@ -18,7 +18,7 @@ Dash.vo.Event = function () {
     this.id = NaN;
     this.messageData = "";
     this.eventStream = null;
-    this.presentationTimeDelta = NaN; // Specific EMSG Box paramater
+    this.presentationTimeDelta = NaN; // Specific EMSG Box parameter
 
 };
 

@@ -158,10 +158,9 @@ Dash.dependencies.DashAdapter = function () {
         },
 
         generateFragmentRequestForTime = function(streamProcessor, trackInfo, time) {
-            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.trackController),
-                request = streamProcessor.indexHandler.generateSegmentRequestForTime(representation, time);
+            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.trackController);
 
-            return request;
+            return streamProcessor.indexHandler.generateSegmentRequestForTime(representation, time);
         },
 
         getIndexHandlerTime = function(streamProcessor) {

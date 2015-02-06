@@ -152,8 +152,6 @@ Dash.dependencies.TimelineConverter = function () {
         };
 
     return {
-        notifier: undefined,
-        uriQueryFragModel: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;

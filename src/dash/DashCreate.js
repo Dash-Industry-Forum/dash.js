@@ -17,12 +17,14 @@
  *  a default DashContext is used. If no source is provided, the videoElement is interrogated to extract the first source whose
  *  type is application/dash+xml.
  * The autoplay property of the videoElement is preserved. Any preload attribute is ignored. This method should be called after the page onLoad event is dispatched.
- * @param video, source, context
+ * @param video
+ * @param source
+ * @param context
  * @returns {MediaPlayer}
  */
 Dash.create = function(video, source, context)
 {
-    if (typeof video === undefined || video.nodeName != "VIDEO") return;
+    if (typeof video === "undefined" || video.nodeName != "VIDEO") return null;
 
     var player, videoID = (video.id || video.name || "video element");
     context = context || new Dash.di.DashContext();
@@ -43,8 +45,10 @@ Dash.create = function(video, source, context)
  * A new MediaPlayer is instantiated for each matching video element and the appropriate source is assigned.
  * The autoplay property of the video element is preserved. Any preload attribute is ignored. This method should be called after the page onLoad event is dispatched.
  * Returns an array holding all the MediaPlayer instances that were added by this method.
- * @param className, scope, context
- * @returns [MediaPlayer]
+ * @param className
+ * @param scope
+ * @param context
+ * @returns {Array} an array of MediaPlayer objects
  */
 Dash.createAll = function(className, scope, context)
 {
@@ -62,7 +66,7 @@ Dash.createAll = function(className, scope, context)
 
 /**
  * Returns the mime-type identifier for any source content to be accepted as a dash manifest by the Dash.create() method.
- * @type {dashManifestMimeType: string}
+ * @type {string}
  */
 Dash.supportedManifestMimeTypes = {
     mimeType: "application/dash+xml"
