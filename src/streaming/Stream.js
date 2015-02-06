@@ -188,6 +188,17 @@ MediaPlayer.dependencies.Stream = function () {
                 getCodecOrMimeType = function(mediaInfo) {
                     return mediaInfo.codec;
                 },
+                createBuffer = function(mediaSource, mediaInfo) {
+                    var buffer = null;
+
+                    try{
+                        buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
+                    } catch (e) {
+                        self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
+                    }
+
+                    return buffer;
+                },
                 processor,
                 mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, type);
 
@@ -206,11 +217,7 @@ MediaPlayer.dependencies.Stream = function () {
                     buffer = null;
 
                 if (codecOrMime === mimeType) {
-                    try{
-                        buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
-                    } catch (e) {
-                        self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
-                    }
+                        buffer = createBuffer(mediaSource, mediaInfo);
                 } else {
                     codec = codecOrMime;
                     self.debug.log(type + " codec: " + codec);
@@ -229,11 +236,7 @@ MediaPlayer.dependencies.Stream = function () {
                             self.errHandler.manifestError(msg, "codec", manifest);
                             self.debug.log(msg);
                         } else {
-                            try {
-                                buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
-                            } catch (e) {
-                                self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
-                            }
+                            buffer = createBuffer(mediaSource, mediaInfo);
                         }
                     }
                 }

@@ -25,10 +25,7 @@ MediaPlayer.dependencies.EventController = function(){
         MPD_RELOAD_VALUE = 1,
 
         reset = function() {
-            if(eventInterval !== null) {
-                clearInterval(eventInterval);
-                eventInterval = null;
-            }
+            clear();
             inlineEvents = null;
             inbandEvents = null;
             activeEvents = null;

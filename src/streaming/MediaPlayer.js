@@ -150,34 +150,28 @@ MediaPlayer = function (context) {
             return range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize;
         },
 
-        timeAsUTC = function () {
+        getAsUTC = function(valToConvert) {
             var metric = getDVRInfoMetric.call(this),
                 availableFrom,
-                currentUTCTime;
+                utcValue;
 
             if (metric === null) {
                 return 0;
             }
 
             availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
-            currentUTCTime = this.time() + (availableFrom + metric.range.start);
 
-            return currentUTCTime;
+            utcValue = valToConvert + (availableFrom + metric.range.start);
+
+            return utcValue;
+        },
+
+        timeAsUTC = function () {
+            return getAsUTC.call(this, this.time());
         },
 
         durationAsUTC = function () {
-            var metric = getDVRInfoMetric.call(this),
-                availableFrom,
-                currentUTCDuration;
-
-            if (metric === null){
-                return 0;
-            }
-
-            availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
-            currentUTCDuration = (availableFrom + metric.range.start) + this.duration();
-
-            return currentUTCDuration;
+            return getAsUTC.call(this, this.duration());
         },
 
         formatUTC = function (time, locales, hour12) {

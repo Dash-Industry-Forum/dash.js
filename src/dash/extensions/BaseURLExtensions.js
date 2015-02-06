@@ -213,11 +213,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                     callback.call(self, null, new Error("Error loading initialization."));
                 };
 
-                request.open("GET", self.requestModifierExt.modifyRequestURL(info.url));
-                request.responseType = "arraybuffer";
-                request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
-                request = self.requestModifierExt.modifyRequestHeader(request);
-                request.send(null);
+                sendRequest.call(self, request, info);
             } else {
                 // Case 2
                 // We have the entire range, so continue.
@@ -275,11 +271,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {representation: representation});
             };
 
-            request.open("GET", self.requestModifierExt.modifyRequestURL(info.url));
-            request.responseType = "arraybuffer";
-            request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
-            request = self.requestModifierExt.modifyRequestHeader(request);
-            request.send(null);
+            sendRequest.call(self, request, info);
             self.debug.log("Perform init search: " + info.url);
         },
 
@@ -362,11 +354,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                     callback.call(self);
                 };
 
-                request.open("GET", self.requestModifierExt.modifyRequestURL(info.url));
-                request.responseType = "arraybuffer";
-                request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
-                request = self.requestModifierExt.modifyRequestHeader(request);
-                request.send(null);
+                sendRequest.call(self, request, info);
             } else {
                 // Case 3
                 // We have the entire box, so parse it and continue.
@@ -489,12 +477,16 @@ Dash.dependencies.BaseURLExtensions = function () {
                 callback.call(self, null, representation, type);
             };
 
-            request.open("GET", self.requestModifierExt.modifyRequestURL(info.url));
+            sendRequest.call(self, request, info);
+            self.debug.log("Perform SIDX load: " + info.url);
+        },
+
+        sendRequest = function(request, info) {
+            request.open("GET", this.requestModifierExt.modifyRequestURL(info.url));
             request.responseType = "arraybuffer";
             request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
-            request = self.requestModifierExt.modifyRequestHeader(request);
+            request = this.requestModifierExt.modifyRequestHeader(request);
             request.send(null);
-            self.debug.log("Perform SIDX load: " + info.url);
         },
 
         onLoaded = function(segments, representation, type) {

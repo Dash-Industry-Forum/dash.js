@@ -631,62 +631,45 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return events;
     },
 
-    getEventStreamForAdaptationSet : function (manifest, adaptation) {
+    getEventStreams: function(inbandStreams, representation) {
+        var eventStreams = [];
 
-        var eventStreams = [],
-            inbandStreams = manifest.Period_asArray[adaptation.period.index].
-                AdaptationSet_asArray[adaptation.index].InbandEventStream_asArray;
+        if(!inbandStreams) return eventStreams;
 
-        if(inbandStreams) {
-            for(var i = 0; i < inbandStreams.length ; i += 1 ) {
-                var eventStream = new Dash.vo.EventStream();
-                eventStream.timescale = 1;
+        for(var i = 0; i < inbandStreams.length ; i++ ) {
+            var eventStream = new Dash.vo.EventStream();
+            eventStream.timescale = 1;
+            eventStream.representation =  representation;
 
-                if(inbandStreams[i].hasOwnProperty("schemeIdUri")) {
-                    eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
-                } else {
-                    throw "Invalid EventStream. SchemeIdUri has to be set";
-                }
-                if(inbandStreams[i].hasOwnProperty("timescale")) {
-                    eventStream.timescale = inbandStreams[i].timescale;
-                }
-                if(inbandStreams[i].hasOwnProperty("value")) {
-                    eventStream.value = inbandStreams[i].value;
-                }
-                eventStreams.push(eventStream);
+            if(inbandStreams[i].hasOwnProperty("schemeIdUri")) {
+                eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
+            } else {
+                throw "Invalid EventStream. SchemeIdUri has to be set";
             }
+            if(inbandStreams[i].hasOwnProperty("timescale")) {
+                eventStream.timescale = inbandStreams[i].timescale;
+            }
+            if(inbandStreams[i].hasOwnProperty("value")) {
+                eventStream.value = inbandStreams[i].value;
+            }
+            eventStreams.push(eventStream);
         }
+
         return eventStreams;
     },
 
-    getEventStreamForRepresentation : function (manifest, representation) {
+    getEventStreamForAdaptationSet : function (manifest, adaptation) {
+        var inbandStreams = manifest.Period_asArray[adaptation.period.index].
+                AdaptationSet_asArray[adaptation.index].InbandEventStream_asArray;
 
-        var eventStreams = [],
-            inbandStreams = manifest.Period_asArray[representation.adaptation.period.index].
+        return this.getEventStreams(inbandStreams, null);
+    },
+
+    getEventStreamForRepresentation : function (manifest, representation) {
+        var inbandStreams = manifest.Period_asArray[representation.adaptation.period.index].
                 AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].InbandEventStream_asArray;
 
-        if(inbandStreams) {
-            for(var i = 0; i < inbandStreams.length ; i++ ) {
-                var eventStream = new Dash.vo.EventStream();
-                eventStream.timescale = 1;
-                eventStream.representation = representation;
-
-                if(inbandStreams[i].hasOwnProperty("schemeIdUri")) {
-                    eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
-                } else {
-                    throw "Invalid EventStream. SchemeIdUri has to be set";
-                }
-                if(inbandStreams[i].hasOwnProperty("timescale")) {
-                    eventStream.timescale = inbandStreams[i].timescale;
-                }
-                if(inbandStreams[i].hasOwnProperty("value")) {
-                    eventStream.value = inbandStreams[i].value;
-                }
-                eventStreams.push(eventStream);
-            }
-        }
-
-        return eventStreams;
+        return this.getEventStreams(inbandStreams, representation);
     },
 
     getUTCTimingSources : function (manifest) {
