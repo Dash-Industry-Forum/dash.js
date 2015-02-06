@@ -328,6 +328,11 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 default:
                     this.debug.log("Unknown request action.");
             }
+        },
+
+        reset: function() {
+            this.abortRequests();
+            this.cancelPendingRequests();
         }
     };
 };
