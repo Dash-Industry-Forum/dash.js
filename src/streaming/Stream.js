@@ -183,7 +183,7 @@ MediaPlayer.dependencies.Stream = function () {
 
         initializeMediaForType = function(type, manifest) {
             var self = this,
-                mimeType,
+                mimeType = null,
                 codec,
                 getCodecOrMimeType = function(mediaInfo) {
                     return mediaInfo.codec;

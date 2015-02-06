@@ -31,8 +31,8 @@ Dash.dependencies.DashHandler = function () {
 
         replaceTokenForTemplate = function (url, token, value) {
 
-            var startPos = 0,
-                endPos = 0,
+            var startPos,
+                endPos,
                 tokenLen = token.length,
                 formatTag = "%0",
                 formatTagLen = formatTag.length,
@@ -53,7 +53,7 @@ Dash.dependencies.DashHandler = function () {
                     return url;
                 }
 
-                // the next '$' must be the end of the identifer
+                // the next '$' must be the end of the identifier
                 // if there isn't one, return the url as is.
                 endPos = url.indexOf("$", startPos + tokenLen);
                 if (endPos < 0) {

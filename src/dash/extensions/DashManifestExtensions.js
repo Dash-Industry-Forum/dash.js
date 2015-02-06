@@ -190,10 +190,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
     getCodec: function (adaptation) {
         "use strict";
-        var representation = adaptation.Representation_asArray[0],
-            codec = (representation.mimeType + ';codecs="' + representation.codecs + '"');
+        var representation = adaptation.Representation_asArray[0];
 
-        return codec;
+        return (representation.mimeType + ';codecs="' + representation.codecs + '"');
     },
 
     getMimeType: function (adaptation) {
@@ -547,9 +546,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         // TODO The client typically should not use the time at which it actually successfully received the MPD, but should
         // take into account delay due to MPD delivery and processing. The fetch is considered successful fetching
         // either if the client obtains an updated MPD or the client verifies that the MPD has not been updated since the previous fetching.
-        var fetchTime = this.timelineConverter.calcPresentationTimeFromWallTime(manifest.loadedTime, period);
 
-        return fetchTime;
+        return this.timelineConverter.calcPresentationTimeFromWallTime(manifest.loadedTime, period);
     },
 
     getCheckTime: function(manifest, period) {

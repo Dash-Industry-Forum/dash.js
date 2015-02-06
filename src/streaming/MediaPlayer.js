@@ -11,10 +11,10 @@
  *
  * @license THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @class MediaPlayer
- * @param aContext - New instance of a dijon.js context (i.e. new Dash.di.DashContext()).  You can pass a custom context that extends Dash.di.DashContext to override item(s) in the DashContext.
+ * @param context - New instance of a dijon.js context (i.e. new Dash.di.DashContext()).  You can pass a custom context that extends Dash.di.DashContext to override item(s) in the DashContext.
  */
 /*jshint -W020 */
-MediaPlayer = function (aContext) {
+MediaPlayer = function (context) {
 
     "use strict";
 
@@ -44,7 +44,6 @@ MediaPlayer = function (aContext) {
  * 7) Push fragmemt bytes into SourceBuffer.
  */
     var VERSION = "1.3.0",
-        context = aContext,
         system,
         manifestLoader,
         abrController,
@@ -366,8 +365,7 @@ MediaPlayer = function (aContext) {
          * @memberof MediaPlayer#
          */
         getMetricsFor: function (type) {
-            var metrics = metricsModel.getReadOnlyMetricsFor(type);
-            return metrics;
+            return metricsModel.getReadOnlyMetricsFor(type);
         },
 
         /**
@@ -451,7 +449,7 @@ MediaPlayer = function (aContext) {
         /**
          * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
          *
-         * @param {VideoElement} view An HTML5 VideoElement that has already defined in the DOM.
+         * @param view An HTML5 VideoElement that has already defined in the DOM.
          *
          * @memberof MediaPlayer#
          */

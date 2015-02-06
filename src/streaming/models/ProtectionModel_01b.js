@@ -173,7 +173,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
          * Helper function to retrieve the stored session token based on a given
          * sessionID value
          *
-         * @param sessionArray {[]} the array of sessions to search
+         * @param sessionArray {Array} the array of sessions to search
          * @param sessionID the sessionID to search for
          * @returns {*} the session token with the given sessionID
          */
@@ -215,8 +215,6 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
         /**
          * Initialize this protection model
-         *
-         * @param element
          */
         init: function() {
             var tmpVideoElement = document.createElement("video");

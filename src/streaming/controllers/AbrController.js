@@ -195,7 +195,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
             max = mediaInfo.trackCount - 1;
 
-            if (getTopQualityIndex(type, streamId) === max) return;
+            if (getTopQualityIndex(type, streamId) === max) return max;
 
             setTopQualityIndex(type, streamId, max);
 
@@ -229,5 +229,5 @@ MediaPlayer.dependencies.AbrController.prototype = {
 };
 
 MediaPlayer.dependencies.AbrController.eventList = {
-    ENAME_QUALITY_CHANGED: "qualityChanged",
+    ENAME_QUALITY_CHANGED: "qualityChanged"
 };

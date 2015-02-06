@@ -151,7 +151,6 @@ Dash.dependencies.BaseURLExtensions = function () {
                 pos = 0,
                 type = "",
                 size = 0,
-                bytesAvailable,
                 i,
                 c,
                 request,
@@ -182,8 +181,6 @@ Dash.dependencies.BaseURLExtensions = function () {
                     pos += size - 8;
                 }
             }
-
-            bytesAvailable = d.byteLength - pos;
 
             if (type !== "moov") {
                 // Case 1

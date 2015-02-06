@@ -50,7 +50,7 @@ MediaPlayer.utils.Debug = function () {
         },
         /**
          * This method will allow you send log messages to either the browser's console and/or dispatch an event to capture at the media player level.
-         * @param {arguments} The message you want to log. The Arguments object is supported for this method so you can send in comma separated logging items.
+         * @param arguments The message you want to log. The Arguments object is supported for this method so you can send in comma separated logging items.
          * @memberof MediaPlayer.utils.Debug#
          */
         log: function () {
