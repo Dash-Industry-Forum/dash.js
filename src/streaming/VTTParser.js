@@ -49,17 +49,17 @@ MediaPlayer.utils.VTTParser = function () {
         getCaptionStyles = function (arr) {
 
             var styleObject = {};
-            arr.forEach(function logArrayElements(element) {
-                if (element.match(/align/)){
+            arr.forEach(function (element) {
+                if (element.match(/align/) || element.match(/A/)){
                     styleObject.align = element.split(/:/)[1];
                 }
-                if (element.match(/line/)){
+                if (element.match(/line/) || element.match(/L/) ){
                     styleObject.line = element.split(/:/)[1].replace(/%/, "");
                 }
-                if (element.match(/position/)){
+                if (element.match(/position/) || element.match(/P/) ){
                     styleObject.position = element.split(/:/)[1].replace(/%/, "");
                 }
-                if (element.match(/size/)){
+                if (element.match(/size/) || element.match(/S/)){
                     styleObject.size = element.split(/:/)[1].replace(/%/, "");
                 }
             });
@@ -75,7 +75,7 @@ MediaPlayer.utils.VTTParser = function () {
                 i = idx,
                 subline = "";
 
-            while(data[i] !== "") {
+            while(data[i] !== "" && i < data.length) {
                 i++;
             }
 
@@ -117,13 +117,13 @@ MediaPlayer.utils.VTTParser = function () {
                         var attributes = parseItemAttributes(item),
                             cuePoints = attributes.cuePoints,
                             styles = attributes.styles,
-                            sublines = getSublines(data, i+1);
+                            text = getSublines(data, i+1);
 
                         //TODO Make VO external so other parsers can use.
                         captionArray.push({
                             start:convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, '')),
                             end:convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, '')),
-                            data:sublines,
+                            data:text,
                             styles:styles
                         });
                     }
