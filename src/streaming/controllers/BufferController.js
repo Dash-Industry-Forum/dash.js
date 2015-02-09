@@ -71,7 +71,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel()) return;
 
-            self.debug.log("Initialization finished loading: " + type);
+            self.debug.log(self, "Initialization finished loading: " + type);
 
             // cache the initialization data to use it next time the quality has changed
             initializationData[e.data.quality] = e.data.bytes;
@@ -124,7 +124,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 onMediaRejected.call(self, quality, index);
                 return;
             }
-            //self.debug.log("Push (" + type + ") bytes: " + data.byteLength);
+            //self.debug.log(self, "Push (" + type + ") bytes: " + data.byteLength);
             self.sourceBufferExt.append(buffer, data);
         },
 
@@ -163,14 +163,14 @@ MediaPlayer.dependencies.BufferController = function () {
             ranges = self.sourceBufferExt.getAllRanges(buffer);
 
             if (ranges) {
-                //self.debug.log("Append " + type + " complete: " + ranges.length);
+                //self.debug.log(self, "Append " + type + " complete: " + ranges.length);
                 if (ranges.length > 0) {
                     var i,
                         len;
 
-                    //self.debug.log("Number of buffered " + type + " ranges: " + ranges.length);
+                    //self.debug.log(self, "Number of buffered " + type + " ranges: " + ranges.length);
                     for (i = 0, len = ranges.length; i < len; i += 1) {
-                        self.debug.log("Buffered " + type + " Range: " + ranges.start(i) + " - " + ranges.end(i));
+                        self.debug.log(self, "Buffered " + type + " Range: " + ranges.start(i) + " - " + ranges.end(i));
                     }
                 }
             }
@@ -415,7 +415,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 }
             });
             this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, {hasSufficientBuffer: state});
-            this.debug.log(hasSufficientBuffer ? ("Got enough " + type + " buffer to start.") : ("Waiting for more " + type + " buffer before starting playback."));
+            this.debug.log(this, hasSufficientBuffer ? ("Got enough " + type + " buffer to start.") : ("Waiting for more " + type + " buffer before starting playback."));
         },
 
         updateBufferTimestampOffset = function(MSETimeOffset) {
@@ -490,7 +490,7 @@ MediaPlayer.dependencies.BufferController = function () {
             updateBufferTimestampOffset.call(self, e.data.currentRepresentation.MSETimeOffset);
 
             bufferLength = self.streamProcessor.getStreamInfo().manifestInfo.minBufferTime;
-            //self.debug.log("Min Buffer time: " + bufferLength);
+            //self.debug.log(self, "Min Buffer time: " + bufferLength);
             if (minBufferTime !== bufferLength) {
                 self.setMinBufferTime(bufferLength);
                 self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, {minBufferTime: bufferLength});
@@ -590,6 +590,14 @@ MediaPlayer.dependencies.BufferController = function () {
             self.fragmentController = streamProcessor.fragmentController;
             self.scheduleController = streamProcessor.scheduleController;
             self.playbackController = streamProcessor.playbackController;
+        },
+
+        getName: function () {
+            return "BufferController";
+        },
+
+        getType: function () {
+            return type;
         },
 
         getStreamProcessor: function() {

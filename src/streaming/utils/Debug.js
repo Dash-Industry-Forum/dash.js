@@ -68,7 +68,14 @@ MediaPlayer.utils.Debug = function () {
             if (arguments.length > 1) {
                 message = "";
                 Array.apply(null, arguments).forEach(function(item) {
-                    message += " " + item;
+                    if (typeof(item) === "object" && item.getName) {
+                        message += "[" + item.getName() + "]";
+                        if (item.getType) {
+                            message += "[" + item.getType() + "]";
+                        }
+                    } else {
+                        message += " " + item;
+                    }
                 });
             }
 
