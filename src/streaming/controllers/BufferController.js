@@ -36,7 +36,7 @@ MediaPlayer.dependencies.BufferController = function () {
         inbandEventFound = false,
 
         waitingForInit = function() {
-            var loadingReqs = this.streamProcessor.getFragmentModel().getLoadingRequests();
+            var loadingReqs = this.streamProcessor.getFragmentModel().getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING});
 
             if ((currentQuality > requiredQuality) && (hasReqsForQuality(pendingMedia, currentQuality) || hasReqsForQuality(loadingReqs, currentQuality))) {
                 return false;
@@ -90,7 +90,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 bytes = e.data.bytes,
                 quality = e.data.quality,
                 index = e.data.index,
-                request = this.streamProcessor.getFragmentModel().getExecutedRequestForQualityAndIndex(quality, index),
+                request = this.streamProcessor.getFragmentModel().getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, quality: quality, index: index})[0],
                 currentTrack = this.streamProcessor.getTrackForQuality(quality),
                 eventStreamMedia = this.adapter.getEventsFor(currentTrack.mediaInfo, this.streamProcessor),
                 eventStreamTrack = this.adapter.getEventsFor(currentTrack, this.streamProcessor);
@@ -337,7 +337,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             currentTime = self.playbackController.getTime();
             // we need to remove data that is more than one fragment before the video currentTime
-            req = self.streamProcessor.getFragmentModel().getExecutedRequestForTime(currentTime);
+            req = self.streamProcessor.getFragmentModel().getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, time: currentTime})[0];
             removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
 
             range = self.sourceBufferExt.getBufferRange(buffer, currentTime);

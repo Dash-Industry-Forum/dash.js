@@ -38,7 +38,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 st = seekTarget[streamId] ? seekTarget[streamId][mediaType] : null,
                 hasSeekTarget = (st !== undefined) && (st !== null),
                 p = hasSeekTarget ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
-                rejected = sc.getFragmentModel().getRejectedRequests().shift(),
+                rejected = sc.getFragmentModel().getRequests({state: MediaPlayer.dependencies.FragmentModel.states.REJECTED})[0],
                 keepIdx = !!rejected && !hasSeekTarget,
                 currentTime = this.adapter.getIndexHandlerTime(streamProcessor),
                 playbackTime = streamProcessor.playbackController.getTime(),
@@ -49,6 +49,10 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 request;
 
             time = hasSeekTarget ? st : ((useRejected ? (rejected.startTime) : currentTime));
+
+            if (rejected) {
+                sc.getFragmentModel().removeRejectedRequest(rejected);
+            }
 
             if (isNaN(time)) {
                 callback(new MediaPlayer.rules.SwitchRequest(null, p));

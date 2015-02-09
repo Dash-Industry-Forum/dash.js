@@ -13,7 +13,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 ln = fragmentModels.length;
 
             for (i; i < ln; i += 1) {
-                pendingReqs = fragmentModels[i].getPendingRequests();
+                pendingReqs = fragmentModels[i].getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
                 sortRequestsByProperty.call(this, pendingReqs, "index");
 
                 for (j = 0, pln = pendingReqs.length; j < pln; j++) {
@@ -40,7 +40,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 i;
 
             for (i = 0; i < ln; i += 1) {
-                req = fragmentModels[i].getPendingRequestForTime(currentTime);
+                req = fragmentModels[i].getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING, time: currentTime})[0];
 
                 if (req && (!r || req.startTime > r.startTime)) {
                     r = req;
@@ -108,8 +108,8 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
                 if (type !== "video" && type !== "audio") continue;
 
-                pendingReqs = model.getPendingRequests();
-                loadingLength = model.getLoadingRequests().length;
+                pendingReqs = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
+                loadingLength = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING}).length;
 
                 if (model.getIsPostponed() && !isNaN(req.startTime)) continue;
 
@@ -125,11 +125,11 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                     continue;
                 }
 
-                sameTimeReq = model.getPendingRequestForTime(time);
+                sameTimeReq = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING, time: time})[0];
 
                 // if a target fragment is the first fragment in the mpd and we have not found a match fragment for the same time,
                 // we need to look for a first fragment by index as well, because there may be a time shift between audio and video,
-                // so getPendingRequestForTime may not detect a corresponding fragment.
+                // so getRequestS may not detect a corresponding fragment.
                 if (!sameTimeReq && req.index === 0) {
                     sameTimeReq = pendingReqs.filter(
                         function(r){
@@ -142,7 +142,8 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                     continue;
                 }
 
-                sameTimeReq = model.getLoadingRequestForTime(time) || model.getExecutedRequestForTime(time);
+                sameTimeReq = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING, time: time})[0] ||
+                    model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, time: time})[0];
 
                 if (!sameTimeReq) {
                     shouldWait = true;

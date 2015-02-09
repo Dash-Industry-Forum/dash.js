@@ -103,7 +103,7 @@ MediaPlayer.dependencies.FragmentController = function () {
                     if (r.mediaType !== mediaType) continue;
 
                     if (!(r instanceof MediaPlayer.vo.FragmentRequest)) {
-                        r = m.getPendingRequestForTime(r.startTime);
+                        r = m.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING, time: r.startTime})[0];
                     }
 
                     m.executeRequest(r);
