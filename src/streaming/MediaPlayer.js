@@ -393,6 +393,24 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * @param type
+         * @param {number} value A value of the initial bitrate, kbps
+         * @memberof MediaPlayer#
+         */
+        setInitialBitrateFor: function(type, value) {
+            abrController.setInitialBitrateFor(type, value);
+        },
+
+        /**
+         * @param type
+         * @returns {number} A value of the initial bitrate, kbps
+         * @memberof MediaPlayer#
+         */
+        getInitialBitrateFor: function(type) {
+            return abrController.getInitialBitrateFor(type);
+        },
+
+        /**
          * @returns {object}
          * @memberof MediaPlayer#
          */
