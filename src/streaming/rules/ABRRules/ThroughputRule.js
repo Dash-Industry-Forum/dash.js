@@ -76,7 +76,7 @@ MediaPlayer.rules.ThroughputRule = function () {
                 bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
                 switchRequest =  new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
-            if (!metrics || lastRequest === null || lastRequest.type !== MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE ||
+            if (!metrics || lastRequest === null ||
                 bufferStateVO === null || bufferLevelVO === null) {
                 callback(new MediaPlayer.rules.SwitchRequest());
                 return;
@@ -91,17 +91,13 @@ MediaPlayer.rules.ThroughputRule = function () {
             var adaptation = this.manifestExt.getAdaptationForType(manifest, 0, mediaType);
             var max = mediaInfo.trackCount - 1;
 
-            if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
-                (bufferLevelVO.level >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD*2) || isDynamic) )
+            for ( var i = max ; i > 0; i-- )
             {
-                for ( var i = max ; i > 0; i-- )
-                {
-                    var repBandwidth = this.manifestExt.getRepresentationFor(i, adaptation).bandwidth;
-                    if (averageThroughput >= repBandwidth) {
-                        var p = /*(current < i) ? MediaPlayer.rules.SwitchRequest.prototype.STRONG :*/MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-                        switchRequest = new MediaPlayer.rules.SwitchRequest(i, p);
-                        break;
-                    }
+                var repBandwidth = this.manifestExt.getRepresentationFor(i, adaptation).bandwidth;
+                if (averageThroughput >= repBandwidth) {
+                    var p = /*(current < i) ? MediaPlayer.rules.SwitchRequest.prototype.STRONG :*/MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+                    switchRequest = new MediaPlayer.rules.SwitchRequest(i, p);
+                    break;
                 }
             }
 
