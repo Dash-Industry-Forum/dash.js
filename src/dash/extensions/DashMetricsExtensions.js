@@ -213,7 +213,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
             httpListLength = httpList.length;
             httpListLastIndex = httpListLength - 1;
 
-            while (httpListLastIndex > 0) {
+            while (httpListLastIndex >= 0) {
                 if (httpList[httpListLastIndex].responsecode) {
                     currentHttpList = httpList[httpListLastIndex];
                     break;
