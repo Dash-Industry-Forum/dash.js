@@ -8,24 +8,13 @@ Dash.dependencies.RepresentationController = function () {
         currentRepresentation,
 
         updateData = function(dataValue, adaptation, type) {
-            var self = this,
-                bitrate = null,
-                streamInfo = self.streamProcessor.getStreamInfo(),
-                quality;
+            var self = this;
 
             updating = true;
             self.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
 
             availableRepresentations = updateRepresentations.call(self, adaptation);
-
-            if (data === null) {
-                bitrate = self.abrController.getInitialBitrateFor(type, streamInfo);
-                quality = self.abrController.getQualityForBitrate(self.streamProcessor.getMediaInfo(), bitrate);
-            } else {
-                quality = self.abrController.getQualityFor(type, streamInfo);
-            }
-
-            currentRepresentation = getRepresentationForQuality.call(self, quality);
+            currentRepresentation = getRepresentationForQuality.call(self, self.abrController.getQualityFor(type, self.streamProcessor.getStreamInfo()));
             data = dataValue;
 
             if (type !== "video" && type !== "audio") {
@@ -57,10 +46,6 @@ Dash.dependencies.RepresentationController = function () {
 
         getRepresentationForQuality = function(quality) {
             return availableRepresentations[quality];
-        },
-
-        getQualityForRepresentation = function(representation) {
-            return availableRepresentations.indexOf(representation);
         },
 
         isAllRepresentationsUpdated = function() {
@@ -144,7 +129,6 @@ Dash.dependencies.RepresentationController = function () {
 
             if (isAllRepresentationsUpdated()) {
                 updating = false;
-                self.abrController.setPlaybackQuality(self.streamProcessor.getType(), self.streamProcessor.getStreamInfo(), getQualityForRepresentation.call(this, currentRepresentation));
                 self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - self.streamProcessor.playbackController.getTime()});
                 this.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {data: data, currentRepresentation: currentRepresentation});
                 addRepresentationSwitch.call(self);
