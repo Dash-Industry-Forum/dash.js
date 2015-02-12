@@ -229,7 +229,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 bandwidthValue = Math.round(bandwidthValue);
             }
 
-            numBitratesValue = metricsExt.getMaxIndexForBufferType(type);
+            numBitratesValue = metricsExt.getMaxIndexForBufferType(type, $scope.streamInfo.index);
 
             if (bufferLevel !== null) {
                 bufferLengthValue = bufferLevel.level.toPrecision(5);
@@ -466,6 +466,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         $scope.safeApply();
     }
 
+    function streamSwitch(e) {
+        $scope.streamInfo = e.data.toStreamInfo;
+    }
+
     ////////////////////////////////////////
     //
     // Error Handling
@@ -530,6 +534,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     player.addEventListener("error", onError.bind(this));
     player.addEventListener("metricChanged", metricChanged.bind(this));
     player.addEventListener("metricUpdated", metricUpdated.bind(this));
+    player.addEventListener("streamswitch", streamSwitch.bind(this));
 
     player.attachView(video);
     player.setAutoPlay(true);
@@ -550,7 +555,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     $scope.abrUp = function (type) {
         var newQuality,
             metricsExt = player.getMetricsExt(),
-            max = metricsExt.getMaxIndexForBufferType(type);
+            max = metricsExt.getMaxIndexForBufferType(type, $scope.streamInfo.index);
 
         newQuality = player.getQualityFor(type) + 1;
         // zero based

@@ -93,6 +93,16 @@
             });
         },
 
+        fireSwitchEvent = function(fromStream, toStream) {
+            this.eventBus.dispatchEvent({
+                type: "streamswitch",
+                data: {
+                    fromStreamInfo: fromStream ? fromStream.getStreamInfo() : null,
+                    toStreamInfo: toStream.getStreamInfo()
+                }
+            });
+        },
+
         /*
          * Called when more data is buffered.
          * Used to determine the time current stream is almost buffered and we can start buffering of the next stream.
@@ -214,6 +224,7 @@
             from.resetEventController();
             activeStream.startEventController();
             isStreamSwitchingInProgress = false;
+            fireSwitchEvent.call(this, from, to);
         },
 
         composeStreams = function() {
@@ -278,6 +289,7 @@
                     activeStream = streams[0];
                     attachVideoEvents.call(self, activeStream);
                     activeStream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
+                    fireSwitchEvent.call(self, null, activeStream);
                 }
             } catch(e) {
                 self.errHandler.manifestError(e.message, "nostreamscomposed", self.manifestModel.getValue());
@@ -333,6 +345,7 @@
         protectionExt: undefined,
         timeSyncController: undefined,
         errHandler: undefined,
+        eventBus: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
