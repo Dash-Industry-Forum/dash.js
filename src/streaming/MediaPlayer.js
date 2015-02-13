@@ -128,8 +128,7 @@ MediaPlayer = function (context) {
         },
 
         seek = function(value) {
-
-            videoModel.getElement().currentTime = this.getDVRSeekOffset(value);
+            this.getVideoModel().getElement().currentTime = this.getDVRSeekOffset(value);
         },
 
         time = function () {
@@ -294,7 +293,10 @@ MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          */
         getVideoModel: function () {
-            return videoModel;
+            var streamInfo = streamController.getActiveStreamInfo(),
+                stream = streamController.getStreamById(streamInfo.id);
+
+            return stream.getVideoModel();
         },
 
         /**
