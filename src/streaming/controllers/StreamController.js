@@ -95,7 +95,7 @@
 
         fireSwitchEvent = function(fromStream, toStream) {
             this.eventBus.dispatchEvent({
-                type: "streamswitch",
+                type: MediaPlayer.events.SWITCH_STREAM,
                 data: {
                     fromStreamInfo: fromStream ? fromStream.getStreamInfo() : null,
                     toStreamInfo: toStream.getStreamInfo()

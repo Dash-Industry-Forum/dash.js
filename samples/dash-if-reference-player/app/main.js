@@ -531,10 +531,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     $scope.version = player.getVersion();
 
     player.startup();
-    player.addEventListener("error", onError.bind(this));
-    player.addEventListener("metricChanged", metricChanged.bind(this));
-    player.addEventListener("metricUpdated", metricUpdated.bind(this));
-    player.addEventListener("streamswitch", streamSwitch.bind(this));
+    player.addEventListener(MediaPlayer.events.ERROR, onError.bind(this));
+    player.addEventListener(MediaPlayer.events.METRIC_CHANGED, metricChanged.bind(this));
+    player.addEventListener(MediaPlayer.events.METRIC_UPDATED, metricUpdated.bind(this));
+    player.addEventListener(MediaPlayer.events.SWITCH_STREAM, streamSwitch.bind(this));
 
     player.attachView(video);
     player.setAutoPlay(true);
