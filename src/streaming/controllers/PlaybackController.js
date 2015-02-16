@@ -122,6 +122,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
             videoModel.unlisten("ended", onPlaybackEnded);
         },
 
+        onCanPlay = function(/*e*/) {
+            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY);
+        },
+
         onPlaybackStart = function() {
             this.log("<video> play");
             updateCurrentTime.call(this);
@@ -232,7 +236,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         setupVideoModel = function(model) {
             videoModel = model;
-
+            videoModel.listen("canplay", onCanPlay);
             videoModel.listen("play", onPlaybackStart);
             videoModel.listen("playing", onPlaybackPlaying);
             videoModel.listen("pause", onPlaybackPaused);
@@ -262,6 +266,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             this[MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
 
+            onCanPlay = onCanPlay.bind(this);
             onPlaybackStart = onPlaybackStart.bind(this);
             onPlaybackPlaying = onPlaybackPlaying.bind(this);
             onPlaybackPaused = onPlaybackPaused.bind(this);
@@ -304,6 +309,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         getPlaybackRate: function() {
             return videoModel.getPlaybackRate();
+        },
+
+        getPlayedRanges: function() {
+            return videoModel.getElement().played;
         },
 
         setLiveStartTime: function(value) {
@@ -355,6 +364,7 @@ MediaPlayer.dependencies.PlaybackController.prototype = {
 
 
 MediaPlayer.dependencies.PlaybackController.eventList = {
+    ENAME_CAN_PLAY: "canPlay",
     ENAME_PLAYBACK_STARTED: "playbackStarted",
     ENAME_PLAYBACK_PLAYING: "playbackPlaying",
     ENAME_PLAYBACK_STOPPED: "playbackStopped",

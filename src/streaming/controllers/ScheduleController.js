@@ -160,7 +160,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
 
 
-            if (!isEnoughTimeSinceLastValidation || isStopped || (this.playbackController.isPaused() && (!this.scheduleWhilePaused || isDynamic))) return;
+            if (!isEnoughTimeSinceLastValidation || isStopped || (this.playbackController.isPaused() && (this.playbackController.getPlayedRanges().length > 0) &&
+                (!this.scheduleWhilePaused || isDynamic))) return;
 
             lastValidationTime = now;
             getRequiredFragmentCount.call(this, onGetRequiredFragmentCount.bind(this));
