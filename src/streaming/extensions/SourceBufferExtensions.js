@@ -14,7 +14,6 @@
 MediaPlayer.dependencies.SourceBufferExtensions = function () {
     "use strict";
     this.system = undefined;
-    this.errHandler = undefined;
     this.notify = undefined;
     this.subscribe = undefined;
     this.unsubscribe = undefined;
@@ -142,17 +141,17 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 if (buffer.updating) return;
                 // updating is completed, now we can stop checking and resolve the promise
                 clearInterval(intervalId);
-                callback(true);
+                callback();
             },
             updateEndHandler = function() {
                 if (buffer.updating) return;
 
                 buffer.removeEventListener("updateend", updateEndHandler, false);
-                callback(true);
+                callback();
             };
 
         if (!buffer.updating) {
-            callback(true);
+            callback();
             return;
         }
 

@@ -41,7 +41,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return -1;
         },
 
-        findRepresentionInPeriodArray = function (periodArray, representationId) {
+        findRepresentationInPeriodArray = function (periodArray, representationId) {
             var period,
                 adaptationSet,
                 adaptationSetArray,
@@ -73,23 +73,20 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return this.manifestExt.getIsTypeOf(adaptation, bufferType);
         },
 
-        findMaxBufferIndex = function (periodArray, bufferType) {
-            var period,
-                adaptationSet,
+        findMaxBufferIndex = function (period, bufferType) {
+            var adaptationSet,
                 adaptationSetArray,
                 representationArray,
-                periodArrayIndex,
                 adaptationSetArrayIndex;
 
-            for (periodArrayIndex = 0; periodArrayIndex < periodArray.length; periodArrayIndex = periodArrayIndex + 1) {
-                period = periodArray[periodArrayIndex];
-                adaptationSetArray = period.AdaptationSet_asArray;
-                for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
-                    adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-                    representationArray = adaptationSet.Representation_asArray;
-                    if (adaptationIsType.call(this, adaptationSet, bufferType)) {
-                        return representationArray.length;
-                    }
+            if (!period || !bufferType) return -1;
+
+            adaptationSetArray = period.AdaptationSet_asArray;
+            for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
+                adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
+                representationArray = adaptationSet.Representation_asArray;
+                if (adaptationIsType.call(this, adaptationSet, bufferType)) {
+                    return representationArray.length;
                 }
             }
 
@@ -102,7 +99,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
                 representation,
                 periodArray = manifest.Period_asArray;
 
-            representation = findRepresentionInPeriodArray.call(self, periodArray, representationId);
+            representation = findRepresentationInPeriodArray.call(self, periodArray, representationId);
 
             if (representation === null) {
                 return null;
@@ -121,13 +118,13 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return representationIndex;
         },
 
-        getMaxIndexForBufferType = function (bufferType) {
+        getMaxIndexForBufferType = function (bufferType, periodIdx) {
             var self = this,
                 manifest = self.manifestModel.getValue(),
                 maxIndex,
-                periodArray = manifest.Period_asArray;
+                period = manifest.Period_asArray[periodIdx];
 
-            maxIndex = findMaxBufferIndex.call(this, periodArray, bufferType);
+            maxIndex = findMaxBufferIndex.call(this, period, bufferType);
             return maxIndex;
         },
 
@@ -213,7 +210,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
             httpListLength = httpList.length;
             httpListLastIndex = httpListLength - 1;
 
-            while (httpListLastIndex > 0) {
+            while (httpListLastIndex >= 0) {
                 if (httpList[httpListLastIndex].responsecode) {
                     currentHttpList = httpList[httpListLastIndex];
                     break;
@@ -298,7 +295,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
             var dvrInfo = metrics.DVRInfo,
                 dvrInfoLastIndex,
-                curentDVRInfo =  null;
+                curentDVRInfo;
 
             if (dvrInfo === null || dvrInfo.length <= 0) {
                 return null;
@@ -319,7 +316,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
             if (httpRequest.type === 'MPD')
             {
-                headers = parseResponseHeaders(httpRequest.responseHeaders, id);
+                headers = parseResponseHeaders(httpRequest.responseHeaders);
 
             }
 
@@ -335,7 +332,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
             if (httpRequest === null || httpRequest.responseHeaders === null) return null;
 
-            headers = parseResponseHeaders(httpRequest.responseHeaders, id);
+            headers = parseResponseHeaders(httpRequest.responseHeaders);
             return headers[id] === undefined ? null :  headers[id];
         },
 

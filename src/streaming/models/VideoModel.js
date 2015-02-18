@@ -23,7 +23,7 @@ MediaPlayer.models.VideoModel = function () {
         },
 
         addStalledStream = function (type) {
-            if (type === null) {
+            if (type === null || element.seeking) {
                 return;
             }
 

@@ -11,10 +11,10 @@
  *
  * @license THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @class MediaPlayer
- * @param aContext - New instance of a dijon.js context (i.e. new Dash.di.DashContext()).  You can pass a custom context that extends Dash.di.DashContext to override item(s) in the DashContext.
+ * @param context - New instance of a dijon.js context (i.e. new Dash.di.DashContext()).  You can pass a custom context that extends Dash.di.DashContext to override item(s) in the DashContext.
  */
 /*jshint -W020 */
-MediaPlayer = function (aContext) {
+MediaPlayer = function (context) {
 
     "use strict";
 
@@ -43,8 +43,7 @@ MediaPlayer = function (aContext) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    var VERSION = "1.3.0 (refactor)",
-        context = aContext,
+    var VERSION = "1.3.0",
         system,
         manifestLoader,
         abrController,
@@ -129,8 +128,7 @@ MediaPlayer = function (aContext) {
         },
 
         seek = function(value) {
-
-            videoModel.getElement().currentTime = this.getDVRSeekOffset(value);
+            this.getVideoModel().getElement().currentTime = this.getDVRSeekOffset(value);
         },
 
         time = function () {
@@ -151,34 +149,28 @@ MediaPlayer = function (aContext) {
             return range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize;
         },
 
-        timeAsUTC = function () {
+        getAsUTC = function(valToConvert) {
             var metric = getDVRInfoMetric.call(this),
                 availableFrom,
-                currentUTCTime;
+                utcValue;
 
             if (metric === null) {
                 return 0;
             }
 
             availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
-            currentUTCTime = this.time() + (availableFrom + metric.range.start);
 
-            return currentUTCTime;
+            utcValue = valToConvert + (availableFrom + metric.range.start);
+
+            return utcValue;
+        },
+
+        timeAsUTC = function () {
+            return getAsUTC.call(this, this.time());
         },
 
         durationAsUTC = function () {
-            var metric = getDVRInfoMetric.call(this),
-                availableFrom,
-                currentUTCDuration;
-
-            if (metric === null){
-                return 0;
-            }
-
-            availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
-            currentUTCDuration = (availableFrom + metric.range.start) + this.duration();
-
-            return currentUTCDuration;
+            return getAsUTC.call(this, this.duration());
         },
 
         formatUTC = function (time, locales, hour12) {
@@ -301,7 +293,10 @@ MediaPlayer = function (aContext) {
          * @memberof MediaPlayer#
          */
         getVideoModel: function () {
-            return videoModel;
+            var streamInfo = streamController.getActiveStreamInfo(),
+                stream = streamController.getStreamById(streamInfo.id);
+
+            return stream.getVideoModel();
         },
 
         /**
@@ -366,8 +361,7 @@ MediaPlayer = function (aContext) {
          * @memberof MediaPlayer#
          */
         getMetricsFor: function (type) {
-            var metrics = metricsModel.getReadOnlyMetricsFor(type);
-            return metrics;
+            return metricsModel.getReadOnlyMetricsFor(type);
         },
 
         /**
@@ -386,6 +380,18 @@ MediaPlayer = function (aContext) {
          */
         setQualityFor: function (type, value) {
             abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value);
+        },
+
+        /**
+         * @param type
+         * @returns {Array}
+         * @memberof MediaPlayer#
+         */
+        getBitrateInfoListFor: function(type) {
+            var streamInfo = streamController.getActiveStreamInfo(),
+                stream = streamController.getStreamById(streamInfo.id);
+
+            return stream.getBitrateListFor(type);
         },
 
         /**
@@ -439,7 +445,7 @@ MediaPlayer = function (aContext) {
         /**
          * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
          *
-         * @param {VideoElement} view An HTML5 VideoElement that has already defined in the DOM.
+         * @param view An HTML5 VideoElement that has already defined in the DOM.
          *
          * @memberof MediaPlayer#
          */
@@ -651,3 +657,21 @@ MediaPlayer.vo.metrics = {};
 MediaPlayer.vo.protection = {};
 MediaPlayer.rules = {};
 MediaPlayer.di = {};
+
+/**
+ * The list of events supported by MediaPlayer
+ */
+MediaPlayer.events = {
+    METRICS_CHANGED: "metricschanged",
+    METRIC_CHANGED: "metricchanged",
+    METRIC_UPDATED: "metricupdated",
+    METRIC_ADDED: "metricadded",
+    MANIFEST_LOADED: "manifestloaded",
+    SWITCH_STREAM: "streamswitched",
+    STREAM_INITIALIZED: "streaminitialized",
+    TEXT_TRACK_ADDED: "texttrackadded",
+    BUFFER_LOADED: "bufferloaded",
+    BUFFER_EMPTY: "bufferstalled",
+    ERROR: "error",
+    LOG: "log"
+};

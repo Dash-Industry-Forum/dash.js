@@ -74,37 +74,15 @@ MediaPlayer.dependencies.AbrController = function () {
             idx = topQualities[id][type];
 
             return idx;
-        },
-
-        onDataUpdateCompleted = function(e) {
-            if (e.error) return;
-
-            var self = this,
-                mediaInfo = this.adapter.convertDataToTrack(e.data.currentRepresentation).mediaInfo,
-                type = mediaInfo.type,
-                streamId = mediaInfo.streamInfo.id,
-                max;
-
-            max = mediaInfo.trackCount - 1;
-
-            if (getTopQualityIndex(type, streamId) === max) return;
-
-            setTopQualityIndex(type, streamId, max);
-            self.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, {mediaType: type, streamInfo: mediaInfo.streamInfo, maxIndex: max});
         };
 
     return {
         debug: undefined,
-        adapter: undefined,
         abrRulesCollection: undefined,
         rulesController: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-
-        setup: function() {
-            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
-        },
 
         getAutoSwitchBitrate: function () {
             return autoSwitchBitrate;
@@ -186,6 +164,44 @@ MediaPlayer.dependencies.AbrController = function () {
             return getInternalConfidence(type, streamInfo.id);
         },
 
+        /**
+         * @param mediaInfo
+         * @returns {Array}
+         * @memberof AbrController#
+         */
+        getBitrateList: function(mediaInfo) {
+            if (!mediaInfo || !mediaInfo.bitrateList) return null;
+
+            var bitrateList = mediaInfo.bitrateList,
+                type = mediaInfo.type,
+                infoList = [],
+                bitrateInfo;
+
+            for (var i = 0, ln = bitrateList.length; i < ln; i += 1) {
+                bitrateInfo = new MediaPlayer.vo.BitrateInfo();
+                bitrateInfo.mediaType = type;
+                bitrateInfo.qualityIndex = i;
+                bitrateInfo.bitrate = bitrateList[i];
+                infoList.push(bitrateInfo);
+            }
+
+            return infoList;
+        },
+
+        updateTopQualityIndex: function(mediaInfo) {
+            var type = mediaInfo.type,
+                streamId = mediaInfo.streamInfo.id,
+                max;
+
+            max = mediaInfo.trackCount - 1;
+
+            if (getTopQualityIndex(type, streamId) === max) return max;
+
+            setTopQualityIndex(type, streamId, max);
+
+            return max;
+        },
+
         isPlayingAtTopQuality: function(streamInfo) {
             var self = this,
                 isAtTop,
@@ -213,6 +229,5 @@ MediaPlayer.dependencies.AbrController.prototype = {
 };
 
 MediaPlayer.dependencies.AbrController.eventList = {
-    ENAME_QUALITY_CHANGED: "qualityChanged",
-    ENAME_TOP_QUALITY_INDEX_CHANGED: "topQualityIndexChanged"
+    ENAME_QUALITY_CHANGED: "qualityChanged"
 };

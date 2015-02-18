@@ -183,10 +183,21 @@ MediaPlayer.dependencies.Stream = function () {
 
         initializeMediaForType = function(type, manifest) {
             var self = this,
-                mimeType,
+                mimeType = null,
                 codec,
                 getCodecOrMimeType = function(mediaInfo) {
                     return mediaInfo.codec;
+                },
+                createBuffer = function(mediaSource, mediaInfo) {
+                    var buffer = null;
+
+                    try{
+                        buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
+                    } catch (e) {
+                        self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
+                    }
+
+                    return buffer;
                 },
                 processor,
                 mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, type);
@@ -206,11 +217,7 @@ MediaPlayer.dependencies.Stream = function () {
                     buffer = null;
 
                 if (codecOrMime === mimeType) {
-                    try{
-                        buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
-                    } catch (e) {
-                        self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
-                    }
+                        buffer = createBuffer(mediaSource, mediaInfo);
                 } else {
                     codec = codecOrMime;
                     self.debug.log(type + " codec: " + codec);
@@ -229,11 +236,7 @@ MediaPlayer.dependencies.Stream = function () {
                             self.errHandler.manifestError(msg, "codec", manifest);
                             self.debug.log(msg);
                         } else {
-                            try {
-                                buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
-                            } catch (e) {
-                                self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
-                            }
+                            buffer = createBuffer(mediaSource, mediaInfo);
                         }
                     }
                 }
@@ -248,6 +251,7 @@ MediaPlayer.dependencies.Stream = function () {
                     streamProcessors.push(processor);
                     processor.initialize(mimeType || type, buffer, self.videoModel, self.fragmentController, self.playbackController, mediaSource, self, eventController);
                     processor.setMediaInfo(mediaInfo);
+                    self.abrController.updateTopQualityIndex(mediaInfo);
                     self.adapter.updateData(processor);
                     //self.debug.log(type + " is ready!");
                 }
@@ -324,6 +328,12 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             updating = false;
+
+            self.eventBus.dispatchEvent({
+                type: MediaPlayer.events.STREAM_INITIALIZED,
+                data: {streamInfo: streamInfo}
+            });
+
             self.notify(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, null, error);
         },
 
@@ -458,12 +468,14 @@ MediaPlayer.dependencies.Stream = function () {
                 processor = streamProcessors[i];
                 mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, processor.getType());
                 processor.setMediaInfo(mediaInfo);
+                this.abrController.updateTopQualityIndex(mediaInfo);
                 this.adapter.updateData(processor);
             }
         };
 
     return {
         system: undefined,
+        eventBus: undefined,
         manifestModel: undefined,
         mediaSourceExt: undefined,
         sourceBufferExt: undefined,
@@ -479,9 +491,6 @@ MediaPlayer.dependencies.Stream = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_STREAM_UPDATED: "streamUpdated"
-        },
 
         setup: function () {
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFERING_COMPLETED] = onBufferingCompleted;
@@ -599,6 +608,16 @@ MediaPlayer.dependencies.Stream = function () {
         getStreamInfo: function() {
             return streamInfo;
         },
+
+        /**
+         * @param type
+         * @returns {Array}
+         * @memberof Stream#
+         */
+        getBitrateListFor: function(type) {
+            return this.abrController.getBitrateList(mediaInfos[type]);
+        },
+
         startEventController: function() {
             eventController.start();
         },

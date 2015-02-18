@@ -66,7 +66,7 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
      *
      * @param data {Uint8Array} the concatenated list of PSSH boxes as provided by
      * CDM as initialization data when CommonEncryption content is detected
-     * @returns {Uint8Array} an object that has a property named according to each of
+     * @returns {object} an object that has a property named according to each of
      * the detected key system UUIDs (e.g. 00000000-0000-0000-0000-0000000000)
      * and a Uint8Array (the entire PSSH box) as the property value
      */

@@ -229,7 +229,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 bandwidthValue = Math.round(bandwidthValue);
             }
 
-            numBitratesValue = metricsExt.getMaxIndexForBufferType(type);
+            numBitratesValue = metricsExt.getMaxIndexForBufferType(type, $scope.streamInfo.index);
 
             if (bufferLevel !== null) {
                 bufferLengthValue = bufferLevel.level.toPrecision(5);
@@ -466,6 +466,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         $scope.safeApply();
     }
 
+    function streamSwitch(e) {
+        $scope.streamInfo = e.data.toStreamInfo;
+    }
+
     ////////////////////////////////////////
     //
     // Error Handling
@@ -527,9 +531,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     $scope.version = player.getVersion();
 
     player.startup();
-    player.addEventListener("error", onError.bind(this));
-    player.addEventListener("metricChanged", metricChanged.bind(this));
-    player.addEventListener("metricUpdated", metricUpdated.bind(this));
+    player.addEventListener(MediaPlayer.events.ERROR, onError.bind(this));
+    player.addEventListener(MediaPlayer.events.METRIC_CHANGED, metricChanged.bind(this));
+    player.addEventListener(MediaPlayer.events.METRIC_UPDATED, metricUpdated.bind(this));
+    player.addEventListener(MediaPlayer.events.SWITCH_STREAM, streamSwitch.bind(this));
 
     player.attachView(video);
     player.setAutoPlay(true);
@@ -550,7 +555,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     $scope.abrUp = function (type) {
         var newQuality,
             metricsExt = player.getMetricsExt(),
-            max = metricsExt.getMaxIndexForBufferType(type);
+            max = metricsExt.getMaxIndexForBufferType(type, $scope.streamInfo.index);
 
         newQuality = player.getQualityFor(type) + 1;
         // zero based
@@ -583,47 +588,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     }
 
     // Get url params...
-    var vars = getUrlVars(),
-        browserVersion,
-        filterValue;
-
-    if (vars && vars.hasOwnProperty("version")) {
-        browserVersion = vars.version;
-    }
-    else {
-        browserVersion = "stable";
-    }
-
-    switch(browserVersion) {
-        case "beta":
-            filterValue = "b";
-            break;
-        case "canary":
-            filterValue = "c";
-            break;
-        case "dev":
-            filterValue = "d";
-            break;
-        case "explorer":
-            filterValue = "i";
-            break;
-        case "all":
-            filterValue = "a";
-            break;
-        case "stable":
-        default:
-            filterValue = "s";
-            break;
-    }
-
-    $scope.isStreamAvailable = function (str) {
-        if (filterValue === "a") {
-            return true;
-        }
-        else {
-            return (str.indexOf(filterValue) != -1);
-        }
-    }
+    var vars = getUrlVars();
 
     Sources.query(function (data) {
         $scope.availableStreams = data.items;

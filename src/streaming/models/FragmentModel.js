@@ -31,11 +31,11 @@ MediaPlayer.dependencies.FragmentModel = function () {
             self.fragmentLoader.load(request);
         },
 
-        removeExecutedRequest = function(request) {
-            var idx = executedRequests.indexOf(request);
+        removeRequest = function(arr, request) {
+            var idx = arr.indexOf(request);
 
             if (idx !== -1) {
-                executedRequests.splice(idx, 1);
+                arr.splice(idx, 1);
             }
         },
 
@@ -58,6 +58,48 @@ MediaPlayer.dependencies.FragmentModel = function () {
             }
 
             return null;
+        },
+
+        filterRequests = function(arr, filter) {
+            if (!filter) return arr;
+
+            // for time use a specific filtration function
+            if (filter.hasOwnProperty("time")) {
+                return [getRequestForTime.call(this, arr, filter.time)];
+            }
+
+            return arr.filter(function(request/*, idx, arr*/) {
+                for (var prop in filter) {
+                    if (prop === "state") continue;
+
+                    if (filter.hasOwnProperty(prop) && request[prop] != filter[prop]) return false;
+                }
+
+                return true;
+            });
+        },
+
+        getRequestsForState = function(state) {
+            var requests;
+
+            switch (state) {
+                case MediaPlayer.dependencies.FragmentModel.states.PENDING:
+                    requests = pendingRequests;
+                    break;
+                case MediaPlayer.dependencies.FragmentModel.states.LOADING:
+                    requests = loadingRequests;
+                    break;
+                case MediaPlayer.dependencies.FragmentModel.states.EXECUTED:
+                    requests = executedRequests;
+                    break;
+                case MediaPlayer.dependencies.FragmentModel.states.REJECTED:
+                    requests = rejectedRequests;
+                    break;
+                default:
+                    requests = [];
+            }
+
+            return requests;
         },
 
         addSchedulingInfoMetrics = function(request, state) {
@@ -86,21 +128,21 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 executedRequests.push(request);
             }
 
-            addSchedulingInfoMetrics.call(this, request, error ? MediaPlayer.vo.metrics.SchedulingInfo.FAILED_STATE : MediaPlayer.vo.metrics.SchedulingInfo.EXECUTED_STATE);
+            addSchedulingInfoMetrics.call(this, request, error ? MediaPlayer.dependencies.FragmentModel.states.FAILED : MediaPlayer.dependencies.FragmentModel.states.EXECUTED);
             this.notify(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {request: request, response: response}, error);
         },
 
         onBytesRejected = function(e) {
-            var req = this.getExecutedRequestForQualityAndIndex(e.data.quality, e.data.index);
+            var req = this.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, quality: e.data.quality, index: e.data.index})[0];
             // if request for an unappropriate quality has not been removed yet, do it now
             if (req) {
-                this.removeExecutedRequest(req);
+                removeRequest.call(this, executedRequests, req);
                 // if index is not a number it means that this is a media fragment, so we should
                 // request the fragment for the same time but with an appropriate quality
                 // If this is init fragment do nothing, because it will be requested in loadInitialization method
                 if (!isNaN(e.data.index)) {
                     rejectedRequests.push(req);
-                    addSchedulingInfoMetrics.call(this, req, MediaPlayer.vo.metrics.SchedulingInfo.REJECTED_STATE);
+                    addSchedulingInfoMetrics.call(this, req, MediaPlayer.dependencies.FragmentModel.states.REJECTED);
                 }
             }
         },
@@ -148,7 +190,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             if (!value || this.isFragmentLoadedOrPending(value)) return false;
 
             pendingRequests.push(value);
-            addSchedulingInfoMetrics.call(this, value, MediaPlayer.vo.metrics.SchedulingInfo.PENDING_STATE);
+            addSchedulingInfoMetrics.call(this, value, MediaPlayer.dependencies.FragmentModel.states.PENDING);
 
             return true;
         },
@@ -188,20 +230,40 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return (check(pendingRequests) || check(loadingRequests) || check(executedRequests));
         },
 
-        getPendingRequests: function() {
-            return pendingRequests;
-        },
+        /**
+         *
+         * Gets an array of {@link MediaPlayer.vo.FragmentRequest} objects
+         *
+         * @param {object} filter The object with properties by which the method filters the requests to be returned.
+         *  the only mandatory property is state, which must be a value from {@link MediaPlayer.dependencies.FragmentModel.states}
+         *  other properties should match the properties of {@link MediaPlayer.vo.FragmentRequest}. E.g.:
+         *  getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, quality: 0}) - returns
+         *  all the requests from executedRequests array where requests.quality = filter.quality
+         *
+         * @returns {Array}
+         * @memberof FragmentModel#
+         */
+        getRequests: function(filter) {
+            var requests = [],
+                filteredRequests = [],
+                states,
+                ln = 1;
 
-        getLoadingRequests: function() {
-            return loadingRequests;
-        },
+            if (!filter || !filter.state) return requests;
 
-        getExecutedRequests: function() {
-            return executedRequests;
-        },
+            if (filter.state instanceof Array) {
+                ln = filter.state.length;
+                states = filter.state;
+            } else {
+                states = [filter.state];
+            }
 
-        getRejectedRequests: function() {
-            return rejectedRequests;
+            for(var i = 0; i < ln; i += 1) {
+                requests = getRequestsForState.call(this, states[i]);
+                filteredRequests = filteredRequests.concat(filterRequests.call(this, requests, filter));
+            }
+
+            return filteredRequests;
         },
 
         getLoadingTime: function() {
@@ -223,35 +285,12 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return loadingTime;
         },
 
-        getExecutedRequestForTime: function(time) {
-            return getRequestForTime(executedRequests, time);
-        },
-
-        getPendingRequestForTime: function(time) {
-            return getRequestForTime(pendingRequests, time);
-        },
-
-        getLoadingRequestForTime: function(time) {
-            return getRequestForTime(loadingRequests, time);
-        },
-
-        getExecutedRequestForQualityAndIndex: function(quality, index) {
-            var lastIdx = executedRequests.length - 1,
-                req = null,
-                i;
-
-            for (i = lastIdx; i >= 0; i -=1) {
-                req = executedRequests[i];
-                if ((req.quality === quality) && (req.index === index)) {
-                    return req;
-                }
-            }
-
-            return null;
-        },
-
         removeExecutedRequest: function(request) {
-            removeExecutedRequest.call(this, request);
+            removeRequest.call(this, executedRequests, request);
+        },
+
+        removeRejectedRequest: function(request) {
+            removeRequest.call(this, rejectedRequests, request);
         },
 
         removeExecutedRequestsBeforeTime: function(time) {
@@ -265,7 +304,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 req = executedRequests[i];
                 start = req.startTime;
                 if (!isNaN(start) && (start < time)) {
-                    removeExecutedRequest.call(this, req);
+                    removeRequest.call(this, executedRequests, req);
                 }
             }
         },
@@ -289,7 +328,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             }
 
             canceled.forEach(function(request) {
-                addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.CANCELED_STATE);
+                addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.CANCELED);
             });
 
             return canceled;
@@ -299,7 +338,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             this.fragmentLoader.abort();
 
             for (var i = 0, ln = loadingRequests.length; i < ln; i += 1) {
-                this.removeExecutedRequest(loadingRequests[i]);
+                removeRequest.call(this, executedRequests, loadingRequests[i]);
             }
 
             loadingRequests = [];
@@ -317,17 +356,22 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 case "complete":
                     // Stream has completed, execute the correspoinding callback
                     executedRequests.push(request);
-                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.EXECUTED_STATE);
+                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.EXECUTED);
                     self.notify(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED, {request: request});
                     break;
                 case "download":
                     loadingRequests.push(request);
-                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.LOADING_STATE);
+                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.LOADING);
                     loadCurrentFragment.call(self, request);
                     break;
                 default:
                     this.debug.log("Unknown request action.");
             }
+        },
+
+        reset: function() {
+            this.abortRequests();
+            this.cancelPendingRequests();
         }
     };
 };
@@ -340,4 +384,14 @@ MediaPlayer.dependencies.FragmentModel.eventList = {
     ENAME_STREAM_COMPLETED: "streamCompleted",
     ENAME_FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted",
     ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
+};
+
+/* Public Static Constants */
+MediaPlayer.dependencies.FragmentModel.states = {
+    PENDING: "pending",
+    LOADING: "loading",
+    EXECUTED: "executed",
+    REJECTED: "rejected",
+    CANCELED: "canceled",
+    FAILED: "failed"
 };

@@ -18,7 +18,7 @@ MediaPlayer.utils.VTTParser = function () {
         var timeArray = time.split( ":"),
             len = timeArray.length - 1;
 
-        time = parseInt( timeArray[len-1], 10 ) * 60 + parseFloat( timeArray[len], 10 );
+        time = parseInt( timeArray[len-1], 10 ) * 60 + parseFloat( timeArray[len]);
 
         if ( len === 2 ) {
             time += parseInt( timeArray[0], 10 ) * 3600;

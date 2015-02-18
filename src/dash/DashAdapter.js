@@ -56,6 +56,7 @@ Dash.dependencies.DashAdapter = function () {
             mediaInfo.codec = this.manifestExt.getCodec(a);
             mediaInfo.mimeType = this.manifestExt.getMimeType(a);
             mediaInfo.contentProtection = this.manifestExt.getContentProtectionData(a);
+            mediaInfo.bitrateList = this.manifestExt.getBitrateListForAdaptation(a);
 
             if (mediaInfo.contentProtection) {
                 mediaInfo.contentProtection.forEach(function(item){
@@ -157,10 +158,9 @@ Dash.dependencies.DashAdapter = function () {
         },
 
         generateFragmentRequestForTime = function(streamProcessor, trackInfo, time) {
-            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.trackController),
-                request = streamProcessor.indexHandler.generateSegmentRequestForTime(representation, time);
+            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.trackController);
 
-            return request;
+            return streamProcessor.indexHandler.generateSegmentRequestForTime(representation, time);
         },
 
         getIndexHandlerTime = function(streamProcessor) {

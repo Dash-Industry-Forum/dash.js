@@ -76,7 +76,7 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             }
 
             if (protData && protData.bearerToken) {
-                headers.push({name: "Authorization", value: protData.bearerToken});
+                headers.Authorization = protData.bearerToken;
             }
 
             var xhr = new XMLHttpRequest();
@@ -118,6 +118,8 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
                 xhr.setRequestHeader(headerName, headers[headerName]);
             }
 
+            if (protData && protData.withCredentials) xhr.withCredentials = true;
+
             xhr.send(decodedChallenge);
         },
 
@@ -131,14 +133,14 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             // *   protection system data size (4) - length of decoded PROHeader
             // *   decoded PROHeader data from MPD file
             var byteCursor = 0,
-                PROSize = 0,
-                PSSHSize = 0,
+                PROSize,
+                PSSHSize,
                 PSSHBoxType = new Uint8Array([0x70, 0x73, 0x73, 0x68, 0x00, 0x00, 0x00, 0x00 ]), //'PSSH' 8 bytes
                 playreadySystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86, 0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]),
                 uint8arraydecodedPROHeader = null,
-                PSSHBoxBuffer = null,
-                PSSHBox = null,
-                PSSHData = null;
+                PSSHBoxBuffer,
+                PSSHBox,
+                PSSHData;
 
             if ("pro" in cpData) {
                 uint8arraydecodedPROHeader = BASE64.decodeArray(cpData.pro.__text);

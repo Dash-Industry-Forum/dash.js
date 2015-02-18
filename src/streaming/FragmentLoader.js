@@ -24,7 +24,36 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 firstProgress = true,
                 needFailureReport = true,
                 lastTraceTime = null,
-                self = this;
+                self = this,
+                handleLoaded = function(requestVO, succeeded) {
+                    needFailureReport = false;
+
+                    var currentTime = new Date(),
+                        bytes = req.response,
+                        latency,
+                        download;
+
+                    if (!requestVO.firstByteDate) {
+                        requestVO.firstByteDate = requestVO.requestStartDate;
+                    }
+                    requestVO.requestEndDate = currentTime;
+
+                    latency = (requestVO.firstByteDate.getTime() - requestVO.requestStartDate.getTime());
+                    download = (requestVO.requestEndDate.getTime() - requestVO.firstByteDate.getTime());
+
+                    self.debug.log((succeeded ? "loaded " : "failed ") + requestVO.mediaType + ":" + requestVO.type + ":" + requestVO.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
+
+                    httpRequestMetrics.tresponse = requestVO.firstByteDate;
+                    httpRequestMetrics.tfinish = requestVO.requestEndDate;
+                    httpRequestMetrics.responsecode = req.status;
+                    httpRequestMetrics.responseHeaders = req.getAllResponseHeaders();
+
+                    self.metricsModel.appendHttpTrace(httpRequestMetrics,
+                        currentTime,
+                        currentTime.getTime() - lastTraceTime.getTime(),
+                        [bytes ? bytes.byteLength : 0]);
+                    lastTraceTime = currentTime;
+                };
 
                 xhrs.push(req);
                 request.requestStartDate = new Date();
@@ -78,39 +107,10 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 };
 
                 req.onload = function () {
-                    if (req.status < 200 || req.status > 299)
-                    {
-                      return;
-                    }
-                    needFailureReport = false;
+                    if (req.status < 200 || req.status > 299) return;
 
-                    var currentTime = new Date(),
-                        bytes = req.response,
-                        latency,
-                        download;
-
-                    if (!request.firstByteDate) {
-                        request.firstByteDate = request.requestStartDate;
-                    }
-                    request.requestEndDate = currentTime;
-
-                    latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime());
-                    download = (request.requestEndDate.getTime() - request.firstByteDate.getTime());
-
-                    self.debug.log("loaded " + request.mediaType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
-
-                    httpRequestMetrics.tresponse = request.firstByteDate;
-                    httpRequestMetrics.tfinish = request.requestEndDate;
-                    httpRequestMetrics.responsecode = req.status;
-                    httpRequestMetrics.responseHeaders = req.getAllResponseHeaders();
-
-                    self.metricsModel.appendHttpTrace(httpRequestMetrics,
-                                                      currentTime,
-                                                      currentTime.getTime() - lastTraceTime.getTime(),
-                                                      [bytes ? bytes.byteLength : 0]);
-                    lastTraceTime = currentTime;
-
-                    self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: request, response: bytes});
+                    handleLoaded(request, true);
+                    self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: request, response: req.response});
                 };
 
                 req.onloadend = req.onerror = function () {
@@ -120,37 +120,9 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                         xhrs.splice(xhrs.indexOf(req), 1);
                     }
 
-                    if (!needFailureReport)
-                    {
-                      return;
-                    }
-                    needFailureReport = false;
+                    if (!needFailureReport) return;
 
-                    var currentTime = new Date(),
-                        bytes = req.response,
-                        latency,
-                        download;
-
-                    if (!request.firstByteDate) {
-                        request.firstByteDate = request.requestStartDate;
-                    }
-                    request.requestEndDate = currentTime;
-
-                    latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime());
-                    download = (request.requestEndDate.getTime() - request.firstByteDate.getTime());
-
-                    self.debug.log("failed " + request.mediaType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
-
-                    httpRequestMetrics.tresponse = request.firstByteDate;
-                    httpRequestMetrics.tfinish = request.requestEndDate;
-                    httpRequestMetrics.responsecode = req.status;
-
-                    self.metricsModel.appendHttpTrace(httpRequestMetrics,
-                                                      currentTime,
-                                                      currentTime.getTime() - lastTraceTime.getTime(),
-                                                      [bytes ? bytes.byteLength : 0]);
-                    lastTraceTime = currentTime;
-
+                    handleLoaded(request, false);
 
                     if (remainingAttempts > 0) {
                         self.debug.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);

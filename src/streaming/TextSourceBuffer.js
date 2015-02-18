@@ -40,7 +40,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 lang = mediaInfo.lang;
 
                 self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, true);
-                self.eventBus.dispatchEvent({type:"updateend"});
+                self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
             } catch(e) {
                 self.errHandler.closedCaptionsError(e, "parse", ccContent);
             }

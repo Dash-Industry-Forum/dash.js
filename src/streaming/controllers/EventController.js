@@ -25,10 +25,7 @@ MediaPlayer.dependencies.EventController = function(){
         MPD_RELOAD_VALUE = 1,
 
         reset = function() {
-            if(eventInterval !== null) {
-                clearInterval(eventInterval);
-                eventInterval = null;
-            }
+            clear();
             inlineEvents = null;
             inbandEvents = null;
             activeEvents = null;
@@ -147,8 +144,6 @@ MediaPlayer.dependencies.EventController = function(){
         manifestLoader:undefined,
         debug: undefined,
         system: undefined,
-        errHandler: undefined,
-        videoModel:undefined,
         addInlineEvents : addInlineEvents,
         addInbandEvents : addInbandEvents,
         reset : reset,

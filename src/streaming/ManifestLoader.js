@@ -37,8 +37,8 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 loadedTime = null,
                 needFailureReport = true,
                 manifest,
-                onload = null,
-                report = null,
+                onload,
+                report,
                 self = this;
 
 
