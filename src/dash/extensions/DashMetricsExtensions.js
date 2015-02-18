@@ -73,23 +73,20 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return this.manifestExt.getIsTypeOf(adaptation, bufferType);
         },
 
-        findMaxBufferIndex = function (periodArray, bufferType) {
-            var period,
-                adaptationSet,
+        findMaxBufferIndex = function (period, bufferType) {
+            var adaptationSet,
                 adaptationSetArray,
                 representationArray,
-                periodArrayIndex,
                 adaptationSetArrayIndex;
 
-            for (periodArrayIndex = 0; periodArrayIndex < periodArray.length; periodArrayIndex = periodArrayIndex + 1) {
-                period = periodArray[periodArrayIndex];
-                adaptationSetArray = period.AdaptationSet_asArray;
-                for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
-                    adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-                    representationArray = adaptationSet.Representation_asArray;
-                    if (adaptationIsType.call(this, adaptationSet, bufferType)) {
-                        return representationArray.length;
-                    }
+            if (!period || !bufferType) return -1;
+
+            adaptationSetArray = period.AdaptationSet_asArray;
+            for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
+                adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
+                representationArray = adaptationSet.Representation_asArray;
+                if (adaptationIsType.call(this, adaptationSet, bufferType)) {
+                    return representationArray.length;
                 }
             }
 
@@ -121,13 +118,13 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return representationIndex;
         },
 
-        getMaxIndexForBufferType = function (bufferType) {
+        getMaxIndexForBufferType = function (bufferType, periodIdx) {
             var self = this,
                 manifest = self.manifestModel.getValue(),
                 maxIndex,
-                periodArray = manifest.Period_asArray;
+                period = manifest.Period_asArray[periodIdx];
 
-            maxIndex = findMaxBufferIndex.call(this, periodArray, bufferType);
+            maxIndex = findMaxBufferIndex.call(this, period, bufferType);
             return maxIndex;
         },
 

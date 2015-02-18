@@ -330,7 +330,7 @@ MediaPlayer.dependencies.Stream = function () {
             updating = false;
 
             self.eventBus.dispatchEvent({
-                type: "initialized",
+                type: MediaPlayer.events.STREAM_INITIALIZED,
                 data: {streamInfo: streamInfo}
             });
 

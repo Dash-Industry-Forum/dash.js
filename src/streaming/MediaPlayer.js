@@ -128,8 +128,7 @@ MediaPlayer = function (context) {
         },
 
         seek = function(value) {
-
-            videoModel.getElement().currentTime = this.getDVRSeekOffset(value);
+            this.getVideoModel().getElement().currentTime = this.getDVRSeekOffset(value);
         },
 
         time = function () {
@@ -294,7 +293,10 @@ MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          */
         getVideoModel: function () {
-            return videoModel;
+            var streamInfo = streamController.getActiveStreamInfo(),
+                stream = streamController.getStreamById(streamInfo.id);
+
+            return stream.getVideoModel();
         },
 
         /**
@@ -655,3 +657,21 @@ MediaPlayer.vo.metrics = {};
 MediaPlayer.vo.protection = {};
 MediaPlayer.rules = {};
 MediaPlayer.di = {};
+
+/**
+ * The list of events supported by MediaPlayer
+ */
+MediaPlayer.events = {
+    METRICS_CHANGED: "metricschanged",
+    METRIC_CHANGED: "metricchanged",
+    METRIC_UPDATED: "metricupdated",
+    METRIC_ADDED: "metricadded",
+    MANIFEST_LOADED: "manifestloaded",
+    SWITCH_STREAM: "streamswitched",
+    STREAM_INITIALIZED: "streaminitialized",
+    TEXT_TRACK_ADDED: "texttrackadded",
+    BUFFER_LOADED: "bufferloaded",
+    BUFFER_EMPTY: "bufferstalled",
+    ERROR: "error",
+    LOG: "log"
+};

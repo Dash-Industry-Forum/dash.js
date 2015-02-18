@@ -405,11 +405,12 @@ MediaPlayer.dependencies.BufferController = function () {
 
             hasSufficientBuffer = state;
 
-            var bufferState = getBufferState();
+            var bufferState = getBufferState(),
+                eventName = (bufferState === MediaPlayer.dependencies.BufferController.BUFFER_LOADED) ? MediaPlayer.events.BUFFER_LOADED : MediaPlayer.events.BUFFER_EMPTY;
             this.metricsModel.addBufferState(type, bufferState, bufferTarget);
 
             this.eventBus.dispatchEvent({
-                type: bufferState,
+                type: eventName,
                 data: {
                     bufferType: type
                 }

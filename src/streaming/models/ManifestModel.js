@@ -31,7 +31,7 @@ MediaPlayer.models.ManifestModel = function () {
             manifest = value;
 
             this.eventBus.dispatchEvent({
-                type: "manifestLoaded",
+                type: MediaPlayer.events.MANIFEST_LOADED,
                 data: value
             });
 
