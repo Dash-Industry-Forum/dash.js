@@ -422,7 +422,7 @@ MediaPlayer.dependencies.BufferController = function () {
         updateBufferTimestampOffset = function(MSETimeOffset) {
             // each track can have its own @presentationTimeOffset, so we should set the offset
             // if it has changed after switching the quality or updating an mpd
-            if (buffer.timestampOffset !== MSETimeOffset) {
+            if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
                 buffer.timestampOffset = MSETimeOffset;
             }
         },
