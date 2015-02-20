@@ -62,9 +62,27 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
     },
 
     /**
+     * Returns the PSSH associated with the given key system from the concatenated
+     * list of PSSH boxes in the given initData
+     *
+     * @param {MediaPlayer.dependencies.protection.KeySystem} keySystem the desired
+     * key system
+     * @param {ArrayBuffer} initData 'cenc' initialization data.  Concatenated list of PSSH.
+     * @returns {Uint8Array} The PSSH box data corresponding to the given key system
+     * or null if a valid association could not be found.
+     */
+    getPSSHForKeySystem: function(keySystem, initData) {
+        var psshList = MediaPlayer.dependencies.protection.CommonEncryption.parsePSSHList(initData);
+        if (psshList.hasOwnProperty(keySystem.uuid.toLowerCase())) {
+            return psshList[keySystem.uuid.toLowerCase()];
+        }
+        return null;
+    },
+
+    /**
      * Parses list of PSSH boxes into keysystem-specific PSSH data
      *
-     * @param data {Uint8Array} the concatenated list of PSSH boxes as provided by
+     * @param data {ArrayBuffer} the concatenated list of PSSH boxes as provided by
      * CDM as initialization data when CommonEncryption content is detected
      * @returns {object} an object that has a property named according to each of
      * the detected key system UUIDs (e.g. 00000000-0000-0000-0000-0000000000)
@@ -75,7 +93,7 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
         if (data === null)
             return [];
 
-        var dv = new DataView(data.buffer),
+        var dv = new DataView(data),
                 done = false;
         var pssh = {};
 

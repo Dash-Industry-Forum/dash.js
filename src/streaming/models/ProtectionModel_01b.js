@@ -67,7 +67,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
                         case api.needkey:
                             self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY,
-                                new MediaPlayer.vo.protection.NeedKey(event.initData));
+                                new MediaPlayer.vo.protection.NeedKey(event.initData, "cenc"));
                             break;
 
                         case api.keyerror:
@@ -132,7 +132,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
                                 // Attempt to find an uninitialized token with this sessionID
                                 sessionToken = findSessionByID(sessions, event.sessionId);
-                                if (!sessionToken) {
+                                if (!sessionToken && pendingSessions.length > 0) {
 
                                     // This is the first message for our latest session, so set the
                                     // sessionID and add it to our list
@@ -140,7 +140,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                                     sessions.push(sessionToken);
                                     sessionToken.sessionID = event.sessionId;
                                 }
-                            } else { // SessionIDs not supported
+                            } else if (pendingSessions.length > 0) { // SessionIDs not supported
 
                                 sessionToken = pendingSessions.shift();
                                 sessions.push(sessionToken);
@@ -230,12 +230,76 @@ MediaPlayer.models.ProtectionModel_01b = function () {
             }
         },
 
-        isSupported: function(keySystem, contentType) {
-            return (videoElement.canPlayType(contentType, keySystem.systemString) !== "");
+        requestKeySystemAccess: function(ksConfigurations) {
+            var ve = videoElement;
+            if (!ve) { // Must have a video element to do this capability tests
+                ve = document.createElement("video");
+            }
+
+            // Try key systems in order, first one with supported key system configuration
+            // is used
+            var found = false;
+            for (var ksIdx = 0; ksIdx < ksConfigurations.length; ksIdx++) {
+                var systemString = ksConfigurations[ksIdx].ks.systemString;
+                var configs = ksConfigurations[ksIdx].configs;
+                var supportedAudio = null;
+                var supportedVideo = null;
+
+                // Try key system configs in order, first one with supported audio/video
+                // is used
+                for (var configIdx = 0; configIdx < configs.length; configIdx++) {
+                    var audios = configs[configIdx].audioCapabilities;
+                    var videos = configs[configIdx].videoCapabilities;
+
+                    // Look for supported audio container/codecs
+                    /*
+                    if (audios && audios.length !== 0) {
+                        supportedAudio = []; // Indicates that we have a requested audio config
+                        for (var audioIdx = 0; audioIdx < audios.length; audioIdx++) {
+                            if (ve.canPlayType(audios[audioIdx].contentType, systemString) !== "") {
+                                supportedAudio.push(audios[audioIdx]);
+                            }
+                        }
+                    }
+                    */
+
+                    // Look for supported video container/codecs
+                    if (videos && videos.length !== 0) {
+                        supportedVideo = []; // Indicates that we have a requested video config
+                        for (var videoIdx = 0; videoIdx < videos.length; videoIdx++) {
+                            if (ve.canPlayType(videos[videoIdx].contentType, systemString) !== "") {
+                                supportedVideo.push(videos[videoIdx]);
+                            }
+                        }
+                    }
+
+                    // No supported audio or video in this configuration OR we have
+                    // requested audio or video configuration that is not supported
+                    if ((!supportedAudio && !supportedVideo) ||
+                            (supportedAudio && supportedAudio.length === 0) ||
+                            (supportedVideo && supportedVideo.length === 0)) {
+                        continue;
+                    }
+
+                    // This configuration is supported
+                    found = true;
+                    var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(supportedAudio, supportedVideo);
+                    var ks = this.protectionExt.getKeySystemBySystemString(systemString);
+                    var ksAccess = new MediaPlayer.vo.protection.KeySystemAccess(ks, ksConfig);
+                    this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
+                            ksAccess);
+                    break;
+                }
+            }
+            if (!found) {
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
+                        null, "Key system access denied! -- No valid audio/video content configurations detected!");
+            }
         },
 
-        selectKeySystem: function(keySystem) {
-            this.keySystem = keySystem;
+        selectKeySystem: function(keySystemAccess) {
+            this.keySystem = keySystemAccess.keySystem;
+            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
         },
 
         setMediaElement: function(mediaElement) {
@@ -247,9 +311,10 @@ MediaPlayer.models.ProtectionModel_01b = function () {
             videoElement.addEventListener(api.needkey, eventHandler);
             videoElement.addEventListener(api.keymessage, eventHandler);
             videoElement.addEventListener(api.keyadded, eventHandler);
+            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
         },
 
-        createKeySession: function(initData/*, contentType, initDataType*/) {
+        createKeySession: function(initData /*, keySystemType */) {
 
             if (!this.keySystem) {
                 throw new Error("Can not create sessions until you have selected a key system");
@@ -263,7 +328,11 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                 var newSession = {
                     prototype: (new MediaPlayer.models.SessionToken()).prototype,
                     sessionID: null,
-                    initData: initData
+                    initData: initData,
+
+                    getSessionID: function() {
+                        return this.sessionID;
+                    }
                 };
                 pendingSessions.push(newSession);
 
@@ -298,7 +367,11 @@ MediaPlayer.models.ProtectionModel_01b = function () {
             videoElement[api.cancelKeyRequest](this.keySystem.systemString, sessionToken.sessionID);
         },
 
-        setServerCertificate: function(/*serverCertificate*/) { /* Not supported */ }
+        setServerCertificate: function(/*serverCertificate*/) { /* Not supported */ },
+
+        loadKeySession: function(/*sessionID*/) { /* Not supported */ },
+
+        removeKeySession: function(/*sessionToken*/) { /* Not supported */ }
     };
 };
 

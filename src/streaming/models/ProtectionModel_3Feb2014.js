@@ -33,6 +33,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
     var videoElement = null,
         mediaKeys = null,
+        keySystemAccess = null,
 
         // API names object selected for this user agent
         api = null,
@@ -51,7 +52,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
                         case api.needkey:
                             self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY,
-                                new MediaPlayer.vo.protection.NeedKey(event.initData));
+                                new MediaPlayer.vo.protection.NeedKey(event.initData, "cenc"));
                             break;
                     }
                 }
@@ -66,7 +67,6 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
             return {
                 prototype: (new MediaPlayer.models.SessionToken()).prototype,
                 session: keySession,
-                sessionID: keySession.sessionId,
                 initData: initData,
 
                 // This is our main event handler for all desired MediaKeySession events
@@ -93,9 +93,13 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
                         case api.close:
                             self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED,
-                                    this);
+                                    this.getSessionID());
                             break;
                     }
+                },
+
+                getSessionID: function() {
+                    return this.session.sessionId;
                 }
             };
         };
@@ -129,15 +133,81 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
             }
         },
 
-        isSupported: function(keySystem, contentType) {
-            return window[api.MediaKeys].isTypeSupported(keySystem.systemString, contentType);
+        requestKeySystemAccess: function(ksConfigurations) {
+
+            // Try key systems in order, first one with supported key system configuration
+            // is used
+            var found = false;
+            for (var ksIdx = 0; ksIdx < ksConfigurations.length; ksIdx++) {
+                var systemString = ksConfigurations[ksIdx].ks.systemString;
+                var configs = ksConfigurations[ksIdx].configs;
+                var supportedAudio = null;
+                var supportedVideo = null;
+
+                // Try key system configs in order, first one with supported audio/video
+                // is used
+                for (var configIdx = 0; configIdx < configs.length; configIdx++) {
+                    var audios = configs[configIdx].audioCapabilities;
+                    var videos = configs[configIdx].videoCapabilities;
+
+                    // Look for supported audio container/codecs
+                    if (audios && audios.length !== 0) {
+                        supportedAudio = []; // Indicates that we have a requested audio config
+                        for (var audioIdx = 0; audioIdx < audios.length; audioIdx++) {
+                            if (window[api.MediaKeys].isTypeSupported(systemString, audios[audioIdx].contentType)) {
+                                supportedAudio.push(audios[audioIdx]);
+                            }
+                        }
+                    }
+
+                    // Look for supported video container/codecs
+                    if (videos && videos.length !== 0) {
+                        supportedVideo = []; // Indicates that we have a requested video config
+                        for (var videoIdx = 0; videoIdx < videos.length; videoIdx++) {
+                            if (window[api.MediaKeys].isTypeSupported(systemString, videos[videoIdx].contentType)) {
+                                supportedVideo.push(videos[videoIdx]);
+                            }
+                        }
+                    }
+
+                    // No supported audio or video in this configuration OR we have
+                    // requested audio or video configuration that is not supported
+                    if ((!supportedAudio && !supportedVideo) ||
+                            (supportedAudio && supportedAudio.length === 0) ||
+                            (supportedVideo && supportedVideo.length === 0)) {
+                        continue;
+                    }
+
+                    // This configuration is supported
+                    found = true;
+                    var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(supportedAudio, supportedVideo);
+                    var ks = this.protectionExt.getKeySystemBySystemString(systemString);
+                    var ksAccess = new MediaPlayer.vo.protection.KeySystemAccess(ks, ksConfig);
+                    this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
+                            ksAccess);
+                    break;
+                }
+            }
+            if (!found) {
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
+                        null, "Key system access denied! -- No valid audio/video content configurations detected!");
+            }
         },
 
-        selectKeySystem: function(keySystem) {
-            this.keySystem = keySystem;
-            mediaKeys = new window[api.MediaKeys](this.keySystem.systemString);
-            if (videoElement) {
-                videoElement[api.setMediaKeys](mediaKeys);
+        selectKeySystem: function(ksAccess) {
+            try {
+                mediaKeys = ksAccess.mediaKeys = new window[api.MediaKeys](ksAccess.keySystem.systemString);
+                this.keySystem = ksAccess.keySystem;
+                keySystemAccess = ksAccess;
+                if (videoElement) {
+                    videoElement[api.setMediaKeys](mediaKeys);
+                    this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
+                }
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
+
+            } catch (error) {
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED,
+                        null, "Error selecting keys system (" + this.keySystem.systemString + ")! Could not create MediaKeys -- TODO");
             }
         },
 
@@ -149,18 +219,22 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
             videoElement.addEventListener(api.needkey, eventHandler);
             if (mediaKeys) {
                 videoElement[api.setMediaKeys](mediaKeys);
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
             }
         },
 
-        createKeySession: function(initData, contentType/*, initDataType*/) {
+        createKeySession: function(initData /*, keySystemType */) {
 
-            if (!this.keySystem || !mediaKeys) {
+            if (!this.keySystem || !mediaKeys || !keySystemAccess) {
                 throw new Error("Can not create sessions until you have selected a key system");
             }
 
             // TODO: Need to check for duplicate initData.  If we already have
             // a KeySession for this exact initData, we shouldn't create a new session.
 
+            // Use the first video capability for the contentType.
+            // TODO:  Not sure if there is a way to concatenate all capability data into a RFC6386-compatible format
+            var contentType = keySystemAccess.ksConfiguration.videoCapabilities[0].contentType;
             var session = mediaKeys.createSession(contentType, initData);
             var sessionToken = createSessionToken.call(this, session, initData);
 
@@ -215,14 +289,20 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
             // Send our request to the key session
             session[api.release]();
-        }
+        },
+
+        setServerCertificate: function(/*serverCertificate*/) { /* Not supported */ },
+
+        loadKeySession: function(/*sessionID*/) { /* Not supported */ },
+
+        removeKeySession: function(/*sessionToken*/) { /* Not supported */ }
     };
 };
 
 // Defines the supported 3Feb2014 API variations
 MediaPlayer.models.ProtectionModel_3Feb2014.APIs = [
     // Un-prefixed as per spec
-    // Chrome 38 (and some earlier versions) with chrome://flags -- Enable Encrypted Media Extensions
+    // Chrome 38-39 (and some earlier versions) with chrome://flags -- Enable Encrypted Media Extensions
     {
         // Video Element
         setMediaKeys: "setMediaKeys",
