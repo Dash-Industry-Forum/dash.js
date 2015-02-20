@@ -52,7 +52,9 @@ Dash.dependencies.DashParser = function () {
                             parseFloat(match[10] || 0) * SECONDS_IN_MIN +
                             parseFloat(match[12] || 0));
 
-                    match[1] === undefined ?result = result: result= -result;
+                    if (match[1] !== undefined) {
+                        result= -result;
+                    }
 
                     return result;
                 }

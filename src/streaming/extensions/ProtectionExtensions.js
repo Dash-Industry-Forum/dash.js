@@ -221,7 +221,7 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
 
             })(protectionModel, protectionController);
         }
-    }
+    };
 };
 
 MediaPlayer.dependencies.ProtectionExtensions.prototype = {

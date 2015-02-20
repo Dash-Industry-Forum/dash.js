@@ -55,7 +55,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                     keySystemAccess.mksa = mediaKeySystemAccess;
                     self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
                             keySystemAccess);
-                }).catch(function(error) {
+                }).catch(function() {
                     if (++i < ksConfigurations.length) {
                         requestKeySystemAccessInternal(ksConfigurations, i);
                     } else {
@@ -193,7 +193,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                 }
                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
 
-            }).catch(function(error) {
+            }).catch(function() {
                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED,
                         null, "Error selecting keys system (" + keySystemAccess.keySystem.systemString + ")! Could not create MediaKeys -- TODO");
 
@@ -325,12 +325,12 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
  * @returns {Boolean} true if support was detected, false otherwise
  */
 MediaPlayer.models.ProtectionModel_21Jan2015.detect = function(videoElement) {
-    if (videoElement["onencrypted"] === undefined ||
-            videoElement["mediaKeys"] === undefined) {
+    if (videoElement.onencrypted === undefined ||
+            videoElement.mediaKeys === undefined) {
         return false;
     }
-    if (navigator["requestMediaKeySystemAccess"] === undefined ||
-            typeof navigator["requestMediaKeySystemAccess"] !== 'function') {
+    if (navigator.requestMediaKeySystemAccess === undefined ||
+            typeof navigator.requestMediaKeySystemAccess !== 'function') {
         return false;
     }
 
