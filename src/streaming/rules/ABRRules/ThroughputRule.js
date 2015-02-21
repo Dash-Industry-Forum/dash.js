@@ -66,6 +66,7 @@ MediaPlayer.rules.ThroughputRule = function () {
                 mediaInfo = context.getMediaInfo(),
                 mediaType = mediaInfo.type,
                 manifest = this.manifestModel.getValue(),
+                current = context.getCurrentValue(),
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 isDynamic= context.getStreamProcessor().isDynamic(),
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
@@ -105,7 +106,7 @@ MediaPlayer.rules.ThroughputRule = function () {
                 }
             }
 
-            if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+            if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && current !== switchRequest.value) {
                 self.debug.log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
                     switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
                         switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak", "Average throughput", Math.round(averageThroughput/1024), "kbps");
