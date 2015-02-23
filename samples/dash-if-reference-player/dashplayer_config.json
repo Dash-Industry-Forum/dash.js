@@ -1,0 +1,19 @@
+{
+    "//": "General parameters, applied to all media",
+    "//": "A value of '-1' is considered as an undefined value, thus default value from source code is used",
+
+    "// BufferController.lowBufferThreshold": "The minimum media buffer size (in seconds) to fill before starting playing when buffering",
+    "BufferController.lowBufferThreshold": 4,
+
+    "// BufferController.minBufferTime": "The minimum media buffer size (in seconds) to fill when playing",
+    "BufferController.defaultMinBufferTime": 12,
+
+    "// video" : "Video media parameters that override general parameters",
+    "video": {
+    },
+
+    "// audio" : "Audio media parameters that override general parameters",
+    "audio": {
+    }
+}
+
