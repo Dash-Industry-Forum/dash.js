@@ -293,10 +293,10 @@ MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          */
         getVideoModel: function () {
-            var streamInfo = streamController.getActiveStreamInfo(),
-                stream = streamController.getStreamById(streamInfo.id);
+            var streamInfo = streamController ? streamController.getActiveStreamInfo() : null,
+                stream = streamInfo ? streamController.getStreamById(streamInfo.id) : null;
 
-            return stream.getVideoModel();
+            return (stream ? stream.getVideoModel() : videoModel);
         },
 
         /**
