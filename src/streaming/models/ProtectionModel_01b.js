@@ -248,7 +248,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                 // Try key system configs in order, first one with supported audio/video
                 // is used
                 for (var configIdx = 0; configIdx < configs.length; configIdx++) {
-                    var audios = configs[configIdx].audioCapabilities;
+                    //var audios = configs[configIdx].audioCapabilities;
                     var videos = configs[configIdx].videoCapabilities;
 
                     // Look for supported audio container/codecs
