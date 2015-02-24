@@ -18,6 +18,7 @@ MediaPlayer.utils.Debug = function () {
 
     var logToBrowserConsole = true,
         showLogTimestamp = false,
+        showCalleeName = true,
         startTime = new Date().getTime();
 
     return {
@@ -30,6 +31,15 @@ MediaPlayer.utils.Debug = function () {
          */
         setLogTimestampVisible: function(value) {
             showLogTimestamp = value;
+        },
+        /**
+         * Prepends the callee object name, and media type if available, to each log message.
+         * @param {boolean} value Set to true if you want to see a object name and media type in each log message.
+         * @default false
+         * @memberof MediaPlayer.utils.Debug#
+         */
+        showCalleeName: function(value) {
+            showCalleeName = value;
         },
         /**
          * Toggles logging to the browser's javascript console.  If you set to false you will still receive a log event with the same message.
@@ -68,10 +78,14 @@ MediaPlayer.utils.Debug = function () {
             if (arguments.length > 1) {
                 message = "";
                 Array.apply(null, arguments).forEach(function(item) {
+                    // Handle callee object as 1st parameter
                     if (typeof(item) === "object" && item.getName) {
-                        message += "[" + item.getName() + "]";
-                        if (item.getType) {
-                            message += "[" + item.getType() + "]";
+                        if (showCalleeName) {
+                            message += "[" + item.getName() + "]";
+                            var mediaType = item.getMediaType();
+                            if (mediaType !== undefined) {
+                                message += "[" + mediaType + "]";
+                            }
                         }
                     } else {
                         message += " " + item;
