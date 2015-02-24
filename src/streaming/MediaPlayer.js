@@ -213,6 +213,18 @@ MediaPlayer = function (context) {
             }
         };
 
+    // Overload dijon getObject function
+    var _getObject = dijon.System.prototype.getObject;
+    dijon.System.prototype.getObject = function(name) {
+        var obj = _getObject.call(this, name);
+        if (typeof obj === "object" && !obj.getName) {
+            obj.getName = function () {return name;};
+            obj.setMediaType = function (mediaType) {obj.mediaType = mediaType;};
+            obj.getMediaType = function () {return obj.mediaType;};
+        }
+        return obj;
+    };
+
     // Set up DI.
     system = new dijon.System();
     system.mapValue("system", system);
