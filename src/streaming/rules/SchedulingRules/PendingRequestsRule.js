@@ -19,11 +19,10 @@ MediaPlayer.rules.PendingRequestsRule = function () {
                 current = context.getCurrentValue(),
                 sc = scheduleController[streamId][mediaType],
                 model = sc.getFragmentModel(),
-                pendingRequests = model.getPendingRequests(),
-                loadingRequests = model.getLoadingRequests(),
-                rejectedRequests = model.getRejectedRequests(),
+                requests = model.getRequests({state: [MediaPlayer.dependencies.FragmentModel.states.PENDING, MediaPlayer.dependencies.FragmentModel.states.LOADING]}),
+                rejectedRequests = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.REJECTED}),
                 rLn = rejectedRequests.length,
-                ln = pendingRequests.length + loadingRequests.length,
+                ln = requests.length,
                 count = Math.max(current - ln, 0);
 
             if (rLn > 0) {

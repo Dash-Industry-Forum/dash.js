@@ -30,50 +30,17 @@
  */
 
 /**
- * All session tokens returns by ProtectionModel implementations
- * are guaranteed to contain initialization data and optionally
- * session IDs
+ * A media capability
  *
+ * @param {string} contentType MIME type and codecs (RFC6386)
+ * @param {string} [robustness]
  * @constructor
  */
-MediaPlayer.models.SessionToken = function () {
-    "use strict";
+MediaPlayer.vo.protection.MediaCapability = function(contentType, robustness) {
+    this.contentType = contentType;
+    this.robustness = robustness;
 };
 
-MediaPlayer.models.SessionToken.prototype = {
-
-    /**
-     * The initialization data used to create this session
-     *
-     * {Uint8Array} initialization data
-     */
-    initData: null,
-
-    /**
-     * The unique session ID designated to this session
-     *
-     * @return {string} the session ID or the empty string if the implementation
-     * does not support session IDs or the sessionID has not yet been established
-     */
-    getSessionID: function() { return ""; },
-
-    /**
-     * The time, in milliseconds since 01 January, 1970 UTC, after which
-     * the key(s) in the session will no longer be usable to decrypt
-     * media data, or NaN if no such time exists
-     *
-     * @returns {Number} the expiration time
-     */
-    getExpirationTime: function() { return NaN; },
-
-    /**
-     * Returns a read-only map of key IDs known to the session to the
-     * current status of the associated key.
-     *
-     * @returns {maplike<BufferSource,MediaKeyStatus>}
-     */
-    getKeyStatuses: function() { return null; }
+MediaPlayer.vo.protection.MediaCapability.prototype = {
+    constructor: MediaPlayer.vo.protection.MediaCapability
 };
-
-
-

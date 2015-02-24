@@ -14,27 +14,93 @@
 MediaPlayer.utils.VTTParser = function () {
     "use strict";
 
-    var convertCuePointTimes = function(time) {
-        var timeArray = time.split( ":"),
-            len = timeArray.length - 1;
+    /**
+     *
+     * @type {RegExp}
+     */
+    var regExNewLine = /(?:\r\n|\r|\n)/gm,
+        regExToken = /-->/,
+        regExWhiteSpace = /(^[\s]+|[\s]+$)/g,
+        regExWhiteSpaceWordBoundry = /\s\b/g,
 
-        time = parseInt( timeArray[len-1], 10 ) * 60 + parseFloat( timeArray[len]);
 
-        if ( len === 2 ) {
-            time += parseInt( timeArray[0], 10 ) * 3600;
-        }
+        convertCuePointTimes = function(time) {
+            var timeArray = time.split( ":"),
+                len = timeArray.length - 1;
 
-        return time;
-    };
+            time = parseInt( timeArray[len-1], 10 ) * 60 + parseFloat( timeArray[len]);
+
+            if ( len === 2 ) {
+                time += parseInt( timeArray[0], 10 ) * 3600;
+            }
+
+            return time;
+        },
+
+        parseItemAttributes = function (data) {
+            var vttCuePoints = data.split(regExToken);
+            var arr = vttCuePoints[1].split(regExWhiteSpaceWordBoundry);
+            arr.shift(); //remove first array index it is empty...
+            vttCuePoints[1] = arr[0];
+            arr.shift();
+            return {cuePoints:vttCuePoints, styles:getCaptionStyles(arr)};
+        },
+
+        getCaptionStyles = function (arr) {
+
+            var styleObject = {};
+            arr.forEach(function (element) {
+                if (element.match(/align/) || element.match(/A/)){
+                    styleObject.align = element.split(/:/)[1];
+                }
+                if (element.match(/line/) || element.match(/L/) ){
+                    styleObject.line = element.split(/:/)[1].replace(/%/, "");
+                }
+                if (element.match(/position/) || element.match(/P/) ){
+                    styleObject.position = element.split(/:/)[1].replace(/%/, "");
+                }
+                if (element.match(/size/) || element.match(/S/)){
+                    styleObject.size = element.split(/:/)[1].replace(/%/, "");
+                }
+            });
+
+            return styleObject;
+        },
+
+        /**
+         * VTT can have multiple lines to display per cuepoint.
+         * */
+        getSublines = function(data, idx){
+            var lineCount,
+                i = idx,
+                subline = "";
+
+            while(data[i] !== "" && i < data.length) {
+                i++;
+            }
+
+            lineCount = i - idx;
+            if (lineCount > 1){
+                for(var j = 0; j < lineCount; j++){
+                    subline += data[(idx + j)];
+                    if (j !== lineCount-1) {
+                        subline += "\n";
+                    }
+                }
+            } else {
+                subline = data[idx];
+            }
+
+            return decodeURI(subline);
+        };
+
+
 
     return {
 
         parse: function (data)
         {
-            var regExNewLine = /(?:\r\n|\r|\n)/gm,
-                regExToken = /-->/,
-                regExWhiteSpace = /(^[\s]+|[\s]+$)/g,
-                captionArray = [],
+            var captionArray = [],
                 len;
 
             data = data.split( regExNewLine );
@@ -48,15 +114,17 @@ MediaPlayer.utils.VTTParser = function () {
                 {
                     if (item.match(regExToken))
                     {
-                        var cuePoints = item.split(regExToken);
-                        //vtt has sublines so more will need to be done here
-                        var sublines = data[i+1];
+                        var attributes = parseItemAttributes(item),
+                            cuePoints = attributes.cuePoints,
+                            styles = attributes.styles,
+                            text = getSublines(data, i+1);
 
                         //TODO Make VO external so other parsers can use.
                         captionArray.push({
                             start:convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, '')),
                             end:convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, '')),
-                            data:sublines
+                            data:text,
+                            styles:styles
                         });
                     }
                 }

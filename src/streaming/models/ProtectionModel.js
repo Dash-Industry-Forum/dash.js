@@ -18,25 +18,31 @@
  * in a user agent
  */
 MediaPlayer.models.ProtectionModel = {
+
     /**
-     * Determine if the user-agent supports the given key system and
-     * content type
+     * Determine if the user-agent supports one of the given key systems and
+     * content type configurations. Sends ENAME_KEY_SYSTEM_ACCESS_COMPLETE event
+     * with a KeySystemAccess object as event data
      *
-     * @param keySystem {KeySystem} the key system of interest
-     * @param contentType {String} content description string (MIME type; codec)
-     * @return {boolean} true if the given combination of keySystem/contentType
-     * is supported by the user-agent, false otherwise
+     * @param {Object[]} ksConfigurations - array of desired key system
+     * configurations in priority order (highest priority first)
+     * @param {MediaPlayer.dependencies.protection.KeySystem} ksConfigurations.ks -
+     * the key system
+     * @param {MediaPlayer.vo.protection.KeySystemConfiguration[]}
+     * ksConfigurations.configs - array of acceptable key system configurations
+     * for this key system in priority order (highest priority first)
      *
-     isSupported: function(keySystem, contentType) { return false; },
+     requestKeySystemAccess: function(ksConfigurations) { },
      */
 
     /**
-     * Selects the desired key system to use for this MediaPlayer
+     * Selects the key system to use for all future operations on this
+     * ProtectionModel.  Sends ENAME_KEY_SYSTEM_SELECTED with no data
      *
-     * @param keySystem {KeySystem} the desired key system to use for
-     * all license requests
+     * @param keySystemAccess {MediaPlayer.vo.protection.KeySystemAccess} the key
+     * system access token representing a supported key system
      *
-     selectKeySystem: function(keySystem) { },
+     selectKeySystem: function(keySystemAccess) { },
      */
 
     /**
@@ -50,32 +56,57 @@ MediaPlayer.models.ProtectionModel = {
      */
 
     /**
-     * Creates a new key session using the given initData and type
+     * Creates a new key session using the given initData and type. Sends
+     * ENAME_KEY_SESSION_CREATED event with MediaPlayer.vo.protection.SessionToken
+     * as data.
      *
-     * @param initData {ArrayBuffer} CDM initialization data
-     * @param contentType {String} Content MIME type and codec
-     * @param [initDataType] {String} the type of the initData
-     * @return {*} an opaque session token that can be used
-     * for future operations on the session or null if a session
-     * already exists for the given initialization data
+     * @param {ArrayBuffer} initData PSSH box for the currently selected
+     * key system.
+     * @param {string} sessionType the desired session type.  One of "temporary",
+     * "persistent-license", "persistent-release-message".  CDM implementations
+     * are not required to support anything except "temporary"
      *
-     createKeySession: function(initData, contentType, initDataType) { return null; },
+     createKeySession: function(initData, sessionType) { },
      */
 
     /**
      * Update the given key session with a key (or any other message
      * intended for the CDM)
      *
-     * @param sessionToken the session token
-     * @param message the message that should be delivered to the CDM
+     * @param {MediaPlayer.vo.protection.SessionToken} sessionToken the session
+     * token
+     * @param {ArrayBuffer} message the message that should be delivered to the CDM
      * for this session
      *
      updateKeySession: function(sessionToken, message) { },
      */
 
     /**
+     * Loads the persisted key session data associated with the given sessionID
+     * into a new session.  Sends ENAME_KEY_SESSION_CREATED event with
+     * MediaPlayer.vo.protection.SessionToken as data.
+     *
+     * @param {string} sessionID the session ID corresponding to the persisted
+     * session data to be loaded
+     *
+     loadKeySession: function(sessionID) {},
+     */
+
+    /**
+     * Removes any persisted key session data associated with the given session.
+     * Also closes the session.  Sends ENAME_KEY_SESSION_REMOVED and
+     * ENAME_KEY_SESSION_CLOSED with sessionID as data
+     *
+     * @param {MediaPlayer.vo.protection.SessionToken} sessionToken the session
+     * token
+     *
+     removeKeySession: function(sessionToken) {},
+     */
+
+    /**
      * Close the given session and release all associated keys.  Following
-     * this call, the sessionToken becomes invalid
+     * this call, the sessionToken becomes invalid.  Sends ENAME_KEY_SESSION_CLOSED
+     * with sessionID as data
      *
      * @param sessionToken the session token
      *
@@ -99,11 +130,15 @@ MediaPlayer.models.ProtectionModel = {
 
 MediaPlayer.models.ProtectionModel.eventList = {
     ENAME_NEED_KEY: "needkey",
+    ENAME_KEY_SYSTEM_ACCESS_COMPLETE: "keySystemAccessComplete",
+    ENAME_KEY_SYSTEM_SELECTED: "keySystemSelected",
+    ENAME_VIDEO_ELEMENT_SELECTED: "videoElementSelected",
+    ENAME_SERVER_CERTIFICATE_UPDATED: "serverCertificateUpdated",
     ENAME_KEY_MESSAGE: "keyMessage",
     ENAME_KEY_ADDED: "keyAdded",
     ENAME_KEY_ERROR: "keyError",
     ENAME_KEY_SESSION_CREATED: "keySessionCreated",
-    ENAME_KEY_SESSION_LOADED: "keySessionLoaded",
-    ENAME_KEY_SESSION_UNLOADED: "keySessionUnloaded",
-    ENAME_KEY_SESSION_CLOSED: "keySessionClosed"
+    ENAME_KEY_SESSION_REMOVED: "keySessionRemoved",
+    ENAME_KEY_SESSION_CLOSED: "keySessionClosed",
+    ENAME_KEY_STATUSES_CHANGED: "keyStatusesChanged"
 };

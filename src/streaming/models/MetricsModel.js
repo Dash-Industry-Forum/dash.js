@@ -21,14 +21,14 @@ MediaPlayer.models.MetricsModel = function () {
         streamMetrics: {},
         metricsChanged: function () {
             this.eventBus.dispatchEvent({
-                type: "metricsChanged",
+                type: MediaPlayer.events.METRICS_CHANGED,
                 data: {}
             });
         },
 
         metricChanged: function (mediaType) {
             this.eventBus.dispatchEvent({
-                type: "metricChanged",
+                type: MediaPlayer.events.METRIC_CHANGED,
                 data: {stream: mediaType}
             });
             this.metricsChanged();
@@ -36,7 +36,7 @@ MediaPlayer.models.MetricsModel = function () {
 
         metricUpdated: function (mediaType, metricType, vo) {
             this.eventBus.dispatchEvent({
-                type: "metricUpdated",
+                type: MediaPlayer.events.METRIC_UPDATED,
                 data: {stream: mediaType, metric: metricType, value: vo}
             });
             this.metricChanged(mediaType);
@@ -44,7 +44,7 @@ MediaPlayer.models.MetricsModel = function () {
 
         metricAdded: function (mediaType, metricType, vo) {
             this.eventBus.dispatchEvent({
-                type: "metricAdded",
+                type: MediaPlayer.events.METRIC_ADDED,
                 data: {stream: mediaType, metric: metricType, value: vo}
             });
             this.metricChanged(mediaType);

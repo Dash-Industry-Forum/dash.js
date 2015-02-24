@@ -103,7 +103,7 @@ MediaPlayer.dependencies.FragmentController = function () {
                     if (r.mediaType !== mediaType) continue;
 
                     if (!(r instanceof MediaPlayer.vo.FragmentRequest)) {
-                        r = m.getPendingRequestForTime(r.startTime);
+                        r = m.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING, time: r.startTime})[0];
                     }
 
                     m.executeRequest(r);
@@ -170,90 +170,11 @@ MediaPlayer.dependencies.FragmentController = function () {
             }
         },
 
-        isFragmentLoadedOrPending: function(context, request) {
-            var fragmentModel = findModel(context),
-                isLoaded;
-
-            if (!fragmentModel) {
-                return false;
-            }
-
-            isLoaded = fragmentModel.isFragmentLoadedOrPending(request);
-
-            return isLoaded;
-        },
-
-        getPendingRequests: function(context) {
-            var fragmentModel = findModel(context);
-
-            if (!fragmentModel) {
-                return null;
-            }
-
-            return fragmentModel.getPendingRequests();
-        },
-
-        getLoadingRequests: function(context) {
-            var fragmentModel = findModel(context);
-
-            if (!fragmentModel) {
-                return null;
-            }
-
-            return fragmentModel.getLoadingRequests();
-        },
-
 		isInitializationRequest: function(request){
 			return (request && request.type && request.type.toLowerCase().indexOf("initialization") !== -1);
 		},
 
-        getLoadingTime: function(context) {
-            var fragmentModel = findModel(context);
-
-            if (!fragmentModel) {
-                return null;
-            }
-
-            return fragmentModel.getLoadingTime();
-        },
-
-        getExecutedRequestForTime: function(model, time) {
-            if (model) {
-                return model.getExecutedRequestForTime(time);
-            }
-
-            return null;
-        },
-
-        removeExecutedRequest: function(model, request) {
-            if (model) {
-                model.removeExecutedRequest(request);
-            }
-        },
-
-        removeExecutedRequestsBeforeTime: function(model, time) {
-            if (model) {
-                model.removeExecutedRequestsBeforeTime(time);
-            }
-        },
-
-        cancelPendingRequestsForModel: function(model) {
-            if (model) {
-                model.cancelPendingRequests();
-            }
-        },
-
-        abortRequestsForModel: function(model) {
-            if (model) {
-                model.abortRequests();
-            }
-
-            executeRequests.call(this);
-        },
-
-        prepareFragmentForLoading: function(context, request) {
-            var fragmentModel = findModel(context);
-
+        prepareFragmentForLoading: function(fragmentModel, request) {
             if (!fragmentModel || !request) return;
             // Store the request and all the necessary callbacks in the model for deferred execution
             if (fragmentModel.addRequest(request)) {
@@ -263,11 +184,6 @@ MediaPlayer.dependencies.FragmentController = function () {
 
         executePendingRequests: function() {
             executeRequests.call(this);
-        },
-
-        resetModel: function(model) {
-            this.abortRequestsForModel(model);
-            this.cancelPendingRequestsForModel(model);
         }
     };
 };

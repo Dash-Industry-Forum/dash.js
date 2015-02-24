@@ -12,21 +12,27 @@ All new work should be in the development branch.  Master is now reserved to tag
 
 ## Quick Start
 
-Download 'master' or latest tagged release, extract and open main folder dash.js/index.html in your web browser to view the main test file.
+### Reference Player
+1. Download 'master' or latest tagged release.
+2. Extract dash.js and move the entire folder to localhost (or run any http server instance such as python's SimpleHTTPServer at the root of the dash.js folder).
+3. Open samples/dash-if-reference-player/index.html in your MSE capable web browser.
 
 ### Install Dependencies
 1. [install nodejs](http://nodejs.org/)
 2. [install grunt](http://gruntjs.com/getting-started)
     * npm install -g grunt-cli
-3. [install grunt-template-jasmine-istanbul](https://github.com/maenu/grunt-template-jasmine-istanbul)
-    * npm install grunt-template-jasmine-istanbul --save-dev
-4. install some other dependencies:
-    * npm install grunt-contrib-connect grunt-contrib-watch grunt-contrib-jshint grunt-contrib-uglify grunt-jsdoc-plugin grunt-jsdoc
 
-### Build / Run tests:
-```
-grunt --config Gruntfile.js --force
-```
+### Build / Run tests
+1. Change directories to the build folder
+    * cd build/
+2. Install all Node Modules defined in package.json 
+    * npm install
+3. Run all the GruntFile.js task (Complete Build and Test)
+    * grunt
+4. You can also target individual tasks:
+    * grunt uglify
+    * grunt jsdoc
+    * grunt jshint
 
 ## Getting Started
 Create a video element somewhere in your html. For our purposes, make sure to set the controls property to true.

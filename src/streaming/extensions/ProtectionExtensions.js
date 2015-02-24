@@ -67,10 +67,28 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
          * by this player (not necessarily those supported by the
          * user agent)
          *
-         * @returns {KeySystem[]} a prioritized list of key systems
+         * @returns {MediaPlayer.dependencies.protection.KeySystem[]} a prioritized
+         * list of key systems
          */
         getKeySystems: function() {
             return keySystems;
+        },
+
+        /**
+         * Returns the key system associated with the given key system string
+         * name (i.e. 'org.w3.clearkey')
+         *
+         * @param {string} systemString the system string
+         * @returns {MediaPlayer.dependencies.protection.KeySystem} the key system
+         * or null if no key system is associated with the given key system string
+         */
+        getKeySystemBySystemString: function(systemString) {
+            for (var i = 0; i < keySystems.length; i++) {
+                if (keySystems[i].systemString === systemString) {
+                    return keySystems[i];
+                }
+            }
+            return null;
         },
 
         /**
@@ -88,62 +106,120 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
         },
 
         /**
-         * Auto-selects a key system based on initializationData found in
-         * the media, initializationData found in the mediaInfo, and the supported
-         * key systems of this user agent.  The protectionModel is initialized with
-         * the selected key system.
+         * Returns a set of supported key systems and CENC intialization data
+         * from the given array of ContentProtection elements.  Only
+         * key systems that are supported by this player will be returned.
+         * Key systems are returned in priority order (highest first).
          *
-         * @param protectionModel the ProtectionModel
-         * @param mediaInfo the media info
-         * @param initData initialization data detected in the media
-         * @returns selected initialization data that should be used to create
-         * a new key session
+         * This can be called by code that wants to "pre-fetch" keys for media
+         * that is not currently being played using DRM-specific ContentProtection
+         * element data
+         *
+         * @param {Object[]} cps array of content protection elements parsed
+         * from the manifest
+         * @returns {Object[]} array of objects with ks (KeySystem) and
+         * initData {ArrayBuffer) properties.  Empty array is returned if no
+         * supported key systems were found
          */
-        autoSelectKeySystem: function(protectionModel, mediaInfo, initData) {
-            var ks = null, ksIdx, cpIdx, cp, selectedInitData;
+        getSupportedKeySystemsFromContentProtection: function(cps) {
+            var cp, ks, ksIdx, cpIdx, supportedKS = [];
 
-            // Check DRM-specific content protection elements for a DRM we support
             for(ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
-                for(cpIdx = 0; cpIdx < mediaInfo.contentProtection.length; ++cpIdx) {
-                    cp = mediaInfo.contentProtection[cpIdx];
-                    if (protectionModel.isSupported(keySystems[ksIdx], mediaInfo.codec) &&
-                            cp.schemeIdUri.toLowerCase() === keySystems[ksIdx].schemeIdURI) {
-                        selectedInitData = keySystems[ksIdx].getInitData(cp);
-                        if (!selectedInitData) {
-                            continue;
-                        }
-                        ks = keySystems[ksIdx];
-                        protectionModel.selectKeySystem(ks);
-                        break;
-                    }
-                }
-            }
-
-            // Look for ContentProtection element that indicates use of CommonEncryption
-            if (!ks ) {
-                cp = MediaPlayer.dependencies.protection.CommonEncryption.findCencContentProtection(mediaInfo.contentProtection);
-
-                if (cp) {
-                    this.debug.log("CommonEncryption detected in MPD.  Searching initData for supported key systems...");
-                    var pssh = MediaPlayer.dependencies.protection.CommonEncryption.parsePSSHList(initData);
-                    for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
-                        if (keySystems[ksIdx].uuid in pssh &&
-                                protectionModel.isSupported(keySystems[ksIdx], mediaInfo.codec)) {
-                            ks = keySystems[ksIdx];
-                            selectedInitData = pssh[keySystems[ksIdx].uuid];
-                            protectionModel.selectKeySystem(ks);
-                            break;
+                ks = keySystems[ksIdx];
+                for(cpIdx = 0; cpIdx < cps.length; ++cpIdx) {
+                    cp = cps[cpIdx];
+                    if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
+                        var initData = ks.getInitData(cp);
+                        if (!!initData) {
+                            supportedKS.push({
+                                ks: keySystems[ksIdx],
+                                initData: initData
+                            });
                         }
                     }
                 }
             }
+            return supportedKS;
+        },
 
-            if (!ks) {
-                throw new Error("DRM: The protection system for this content is not supported.");
+        /**
+         * Returns key systems supported by this player for the given PSSH
+         * initializationData.  Key systems are returned in priority
+         * order (highest priority first)
+         *
+         * @param {ArrayBuffer} initData Concatenated PSSH data for all DRMs
+         * supported by the content
+         * @returns {Object[]} array of objects with ks (KeySystem) and
+         * initData {ArrayBuffer) properties.  Empty array is returned if no
+         * supported key systems were found
+         */
+        getSupportedKeySystems: function(initData) {
+            var ksIdx, supportedKS = [],
+                pssh = MediaPlayer.dependencies.protection.CommonEncryption.parsePSSHList(initData);
+
+            for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
+                if (keySystems[ksIdx].uuid in pssh) {
+                    supportedKS.push({
+                        ks: keySystems[ksIdx],
+                        initData: pssh[keySystems[ksIdx].uuid]
+                    });
+                }
+            }
+            return supportedKS;
+        },
+
+        /**
+         * Select a key system by using the priority-ordered key systems supported
+         * by the player and the key systems supported by the content
+         *
+         * @param {MediaPlayer.models.ProtectionModel} protectionModel
+         * @param {MediaPlayer.dependencies.ProtectionController} protectionController
+         * @param {Object} mediaInfos media information set
+         * @param {MediaPlayer.vo.MediaInfo} mediaInfos.video video media information
+         * @param {MediaPlayer.vo.MediaInfo} mediaInfos.audio audio media information
+         * @param {ArrayBuffer} initData the concatenated set of PSSH data found in
+         * the content indicating DRM support for this content
+         */
+        autoSelectKeySystem: function(protectionModel, protectionController, mediaInfos, initData) {
+
+            // Does the initData contain a key system supported by the player?
+            var supportedKS = this.getSupportedKeySystems(initData);
+            if (supportedKS.length === 0) {
+                throw new Error("DRM system for this content not supported by the player!");
             }
 
-            this.debug.log("Selected key system -- " + ks.systemString);
-            return selectedInitData;
+            var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(
+                    [new MediaPlayer.vo.protection.MediaCapability(mediaInfos.audio.codec)],
+                    [new MediaPlayer.vo.protection.MediaCapability(mediaInfos.video.codec)]);
+            var requestedKeySystems = [];
+            for (var i = 0; i < supportedKS.length; i++) {
+                requestedKeySystems.push({ ks: supportedKS[i].ks, configs: [ksConfig] });
+            }
+
+            // Since ProtectionExtensions is a singleton, we need to create an IIFE to wrap the
+            // event callback and save the values of protectionModel and protectionController.
+            var self = this;
+            (function(protMod, protCont) {
+
+                // Callback object for KEY_SYSTEM_ACCESS_COMPLETE event
+                var cbObj = {};
+
+                // Subscribe for event and then perform request
+                cbObj[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
+                    protMod.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
+                    if (!event.error) {
+                        var keySystemAccess = event.data;
+                        self.debug.log("KeySystem Access Granted (" + keySystemAccess.keySystem.systemString + ")!");
+                        protCont.selectKeySystem(keySystemAccess);
+                    } else {
+                        self.debug.log(event.error);
+                    }
+                };
+
+                protMod.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, cbObj);
+                protCont.requestKeySystemAccess(requestedKeySystems);
+
+            })(protectionModel, protectionController);
         }
     };
 };
