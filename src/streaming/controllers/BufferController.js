@@ -584,16 +584,13 @@ MediaPlayer.dependencies.BufferController = function () {
             var self = this;
 
             type = typeValue;
+            self.setMediaType(type);
             self.setMediaSource(source);
             self.setBuffer(buffer);
             self.streamProcessor = streamProcessor;
             self.fragmentController = streamProcessor.fragmentController;
             self.scheduleController = streamProcessor.scheduleController;
             self.playbackController = streamProcessor.playbackController;
-        },
-
-        getName: function () {
-            return "BufferController";
         },
 
         getType: function () {

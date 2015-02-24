@@ -305,7 +305,7 @@
             if (!e.error) {
                 this.manifestModel.setValue(e.data.manifest);
 
-                this.debug.log("Manifest has loaded.");
+                this.debug.log(this, "Manifest has loaded.");
                 //self.debug.log(self.manifestModel.getValue());
 
                 // before composing streams, attempt to synchronize with some

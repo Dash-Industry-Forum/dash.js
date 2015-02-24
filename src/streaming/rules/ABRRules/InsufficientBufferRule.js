@@ -58,7 +58,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
             if (mediaInfo.trackCount === 1 || metrics.PlayList === null ||
                 metrics.PlayList === undefined || metrics.PlayList.length === 0 ||
                 lastBufferStateVO === null) {
-                //self.debug.log("Not enough information for rule.");
+                //self.debug.log(self, "Not enough information for rule.");
                 callback(switchRequest);
                 return;
             }
@@ -66,7 +66,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
             playlist = metrics.PlayList[metrics.PlayList.length - 1];
 
             if (playlist === null || playlist === undefined || playlist.trace.length === 0) {
-                //self.debug.log("Not enough information for rule.");
+                //self.debug.log(self, "Not enough information for rule.");
                 callback(switchRequest);
                 return;
             }
@@ -75,7 +75,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
             //Some streams only have one index we need to account for that
             trace = playlist.trace[Math.max(playlist.trace.length - 2, 0)];
             if (trace === null || trace === undefined) {
-                //self.debug.log("Not enough information for rule.");
+                //self.debug.log(self, "Not enough information for rule.");
                 callback(switchRequest);
                 return;
             }
@@ -88,7 +88,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 //bufferStateDict[mediaType].dryBufferHits++; //Not using this for priority at this point but may in future.
                 bufferStateDict[mediaType].lastDryBufferHitRecorded = true;
                 switchRequest = new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
-                //self.debug.log("InsufficientBufferRule Number of times the buffer has run dry: " + bufferStateDict[mediaType].dryBufferHits);
+                //self.debug.log(self, "InsufficientBufferRule Number of times the buffer has run dry: " + bufferStateDict[mediaType].dryBufferHits);
 
             } else if ( !isDynamic &&
                         bufferStateDict[mediaType].state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
@@ -103,7 +103,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
             }
 
             if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                self.debug.log("InsufficientBufferRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
+                self.debug.log(self, "InsufficientBufferRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
                     switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
                         switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
             }

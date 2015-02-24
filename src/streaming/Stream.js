@@ -31,29 +31,29 @@ MediaPlayer.dependencies.Stream = function () {
         eventController = null,
 
         play = function () {
-            //this.debug.log("Attempting play...");
+            //this.debug.log(this, "Attempting play...");
 
             if (!initialized) {
                 return;
             }
 
-            //this.debug.log("Do play.");
+            //this.debug.log(this, "Do play.");
             this.playbackController.start();
         },
 
         pause = function () {
-            //this.debug.log("Do pause.");
+            //this.debug.log(this, "Do pause.");
             this.playbackController.pause();
         },
 
         seek = function (time) {
-            //this.debug.log("Attempting seek...");
+            //this.debug.log(this, "Attempting seek...");
 
             if (!initialized) {
                 return;
             }
 
-            this.debug.log("Do seek: " + time);
+            this.debug.log(this, "Do seek: " + time);
 
             this.playbackController.seek(time);
         },
@@ -72,7 +72,7 @@ MediaPlayer.dependencies.Stream = function () {
                     this.keySystem = this.protectionModel.keySystem;
                     this.protectionModel.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
                 }
-                this.debug.log("DRM: Key required for - " + mediaInfo.codec);
+                this.debug.log(this, "DRM: Key required for - " + mediaInfo.codec);
                 this.protectionController.createKeySession(initData, mediaInfo.codec);
             } catch (error) { // Thrown when media key system is not supported
                 this.errHandler.mediaKeySessionError(error.message);
@@ -82,7 +82,7 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         onKeyAdded = function (/*event*/) {
-            this.debug.log("DRM: Key added.");
+            this.debug.log(this, "DRM: Key added.");
         },
 
         onLicenseRequestComplete = function(e) {
@@ -91,7 +91,7 @@ MediaPlayer.dependencies.Stream = function () {
                 this.debug.log(e.error);
                 this.errHandler.mediaKeyMessageError(e.error);
             } else {
-                this.debug.log("DRM: License request successful.  Session ID = " + e.data.requestData.sessionID);
+                this.debug.log(this, "DRM: License request successful.  Session ID = " + e.data.requestData.sessionID);
                 this.protectionController.updateKeySession(e.data.requestData, e.data.message);
             }
         },
@@ -107,19 +107,19 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         onKeySessionCreated = function(event) {
-            this.debug.log("DRM: Session created.  SessionID = " + event.data.sessionID);
+            this.debug.log(this, "DRM: Session created.  SessionID = " + event.data.sessionID);
         },
 
         onKeySessionLoaded = function(event) {
-            this.debug.log("DRM: Session loaded.  SessionID = " + event.data.sessionID);
+            this.debug.log(this, "DRM: Session loaded.  SessionID = " + event.data.sessionID);
         },
 
         onKeySessionUnloaded = function(event) {
-            this.debug.log("DRM: Session unloaded.  SessionID = " + event.data.sessionID);
+            this.debug.log(this, "DRM: Session unloaded.  SessionID = " + event.data.sessionID);
         },
 
         onKeySessionClosed = function(event) {
-            this.debug.log("DRM: Session closed.  SessionID = " + event.data.sessionID);
+            this.debug.log(this, "DRM: Session closed.  SessionID = " + event.data.sessionID);
         },
 
         // Media Source
@@ -129,7 +129,7 @@ MediaPlayer.dependencies.Stream = function () {
                 sourceUrl,
 
                 onMediaSourceOpen = function (e) {
-                    self.debug.log("MediaSource is open!");
+                    self.debug.log(self, "MediaSource is open!");
                     self.debug.log(e);
                     window.URL.revokeObjectURL(sourceUrl);
 
@@ -139,14 +139,14 @@ MediaPlayer.dependencies.Stream = function () {
                     callback(mediaSourceArg);
                 };
 
-            //self.debug.log("MediaSource should be closed. The actual readyState is: " + mediaSourceArg.readyState);
+            //self.debug.log(self, "MediaSource should be closed. The actual readyState is: " + mediaSourceArg.readyState);
 
             mediaSourceArg.addEventListener("sourceopen", onMediaSourceOpen, false);
             mediaSourceArg.addEventListener("webkitsourceopen", onMediaSourceOpen, false);
 
             sourceUrl = self.mediaSourceExt.attachMediaSource(mediaSourceArg, self.videoModel);
 
-            //self.debug.log("MediaSource attached to video.  Waiting on open...");
+            //self.debug.log(self, "MediaSource attached to video.  Waiting on open...");
         },
 
         tearDownMediaSource = function () {
@@ -211,7 +211,7 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             if (mediaInfo !== null) {
-                //self.debug.log("Create " + type + " buffer.");
+                //self.debug.log(self, "Create " + type + " buffer.");
                 var codecOrMime = getCodecOrMimeType.call(self, mediaInfo),
                     contentProtectionData,
                     buffer = null;
@@ -220,7 +220,7 @@ MediaPlayer.dependencies.Stream = function () {
                         buffer = createBuffer(mediaSource, mediaInfo);
                 } else {
                     codec = codecOrMime;
-                    self.debug.log(type + " codec: " + codec);
+                    self.debug.log(self, type + " codec: " + codec);
                     mediaInfos[type] = mediaInfo;
 
                     contentProtectionData = mediaInfo.contentProtection;
@@ -234,7 +234,7 @@ MediaPlayer.dependencies.Stream = function () {
                         if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
                             var msg = type + "Codec (" + codec + ") is not supported.";
                             self.errHandler.manifestError(msg, "codec", manifest);
-                            self.debug.log(msg);
+                            self.debug.log(self, msg);
                         } else {
                             buffer = createBuffer(mediaSource, mediaInfo);
                         }
@@ -242,7 +242,7 @@ MediaPlayer.dependencies.Stream = function () {
                 }
 
                 if (buffer === null) {
-                    self.debug.log("No buffer was created, skipping " + type + " data.");
+                    self.debug.log(self, "No buffer was created, skipping " + type + " data.");
                 } else {
                     // TODO : How to tell index handler live/duration?
                     // TODO : Pass to controller and then pass to each method on handler?
@@ -253,17 +253,17 @@ MediaPlayer.dependencies.Stream = function () {
                     processor.setMediaInfo(mediaInfo);
                     self.abrController.updateTopQualityIndex(mediaInfo);
                     self.adapter.updateData(processor);
-                    //self.debug.log(type + " is ready!");
+                    //self.debug.log(self, type + " is ready!");
                 }
 
 
             } else {
-                self.debug.log("No " + type + " data.");
+                self.debug.log(self, "No " + type + " data.");
             }
         },
 
         initializeMediaSource = function () {
-            //this.debug.log("Getting MediaSource ready...");
+            //this.debug.log(this, "Getting MediaSource ready...");
 
             var self = this,
                 events;
@@ -273,13 +273,13 @@ MediaPlayer.dependencies.Stream = function () {
             events = self.adapter.getEventsFor(streamInfo);
             eventController.addInlineEvents(events);
             // Figure out some bits about the stream before building anything.
-            //self.debug.log("Gathering information for buffers. (1)");
+            //self.debug.log(self, "Gathering information for buffers. (1)");
 
             initializeMediaForType.call(self, "video", manifest);
             initializeMediaForType.call(self, "audio", manifest);
             initializeMediaForType.call(self, "text", manifest);
 
-            //this.debug.log("MediaSource initialized!");
+            //this.debug.log(this, "MediaSource initialized!");
         },
 
         initializePlayback = function () {
@@ -287,17 +287,17 @@ MediaPlayer.dependencies.Stream = function () {
                 manifestDuration,
                 mediaDuration;
 
-            //self.debug.log("Getting ready for playback...");
+            //self.debug.log(self, "Getting ready for playback...");
 
             manifestDuration = streamInfo.manifestInfo.duration;
             mediaDuration = self.mediaSourceExt.setDuration(mediaSource, manifestDuration);
-            self.debug.log("Duration successfully set to: " + mediaDuration);
+            self.debug.log(self, "Duration successfully set to: " + mediaDuration);
             initialized = true;
             checkIfInitializationCompleted.call(self);
         },
 
         onLoad = function (/*e*/) {
-            this.debug.log("element loaded!");
+            this.debug.log(this, "element loaded!");
             loaded = true;
             startAutoPlay.call(this);
         },
@@ -366,7 +366,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             errored = true;
 
-            this.debug.log("Video Element Error: " + msg);
+            this.debug.log(this, "Video Element Error: " + msg);
             this.debug.log(e.error);
             this.errHandler.mediaSourceError(msg);
             this.reset();
@@ -377,7 +377,7 @@ MediaPlayer.dependencies.Stream = function () {
             var self = this,
                 onMediaSourceSetup = function (mediaSourceResult) {
                     mediaSource = mediaSourceResult;
-                    //self.debug.log("MediaSource set up.");
+                    //self.debug.log(self, "MediaSource set up.");
                     initializeMediaSource.call(self);
 
                     if (streamProcessors.length === 0) {
@@ -388,17 +388,17 @@ MediaPlayer.dependencies.Stream = function () {
                         self.liveEdgeFinder.initialize(streamProcessors[0]);
                         self.liveEdgeFinder.subscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, self.playbackController);
                         initializePlayback.call(self);
-                        //self.debug.log("Playback initialized!");
+                        //self.debug.log(self, "Playback initialized!");
                         startAutoPlay.call(self);
                     }
                 },
                 mediaSourceResult;
 
-            //self.debug.log("Stream start loading.");
+            //self.debug.log(self, "Stream start loading.");
 
             manifest = manifestResult;
             mediaSourceResult = self.mediaSourceExt.createMediaSource();
-            //self.debug.log("MediaSource created.");
+            //self.debug.log(self, "MediaSource created.");
 
             setUpMediaSource.call(self, mediaSourceResult, onMediaSourceSetup);
         },
@@ -457,7 +457,7 @@ MediaPlayer.dependencies.Stream = function () {
             updating = true;
             manifest = self.manifestModel.getValue();
             streamInfo = updatedStreamInfo;
-            self.debug.log("Manifest updated... set new data on buffers.");
+            self.debug.log(self, "Manifest updated... set new data on buffers.");
 
             if (eventController) {
                 events = self.adapter.getEventsFor(streamInfo);

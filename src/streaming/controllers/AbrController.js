@@ -121,9 +121,9 @@ MediaPlayer.dependencies.AbrController = function () {
                     if (quality === oldQuality) return;
 
                     setInternalQuality(type, streamId, quality);
-                    //self.debug.log("New quality of " + quality);
+                    self.debug.log(self, "New quality of " + quality);
                     setInternalConfidence(type, streamId, confidence);
-                    //self.debug.log("New confidence of " + confidence);
+                    self.debug.log(self, "New confidence of " + confidence);
 
                     self.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
                 };
@@ -132,10 +132,10 @@ MediaPlayer.dependencies.AbrController = function () {
             confidence = getInternalConfidence(type, streamId);
 
 
-            //self.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
+            //self.debug.log(self, "ABR enabled? (" + autoSwitchBitrate + ")");
             if (!autoSwitchBitrate) return;
 
-            //self.debug.log("Check ABR rules.");
+            self.debug.log(self, "Check ABR rules.");
             rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES);
             self.rulesController.applyRules(rules, streamProcessor, callback.bind(self), quality, function(currentValue, newValue) {
                 currentValue = currentValue === MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;

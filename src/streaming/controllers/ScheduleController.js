@@ -39,9 +39,9 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 initialPlayback = false;
             }
 
-            this.debug.log("ScheduleController " + type + " start.");
+            this.debug.log(this, type + " start");
 
-            //this.debug.log("ScheduleController begin " + type + " validation");
+            //this.debug.log(this, "begin " + type + "validation");
             validate.call(this);
         },
 
@@ -59,7 +59,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             isStopped = true;
 
-            this.debug.log("ScheduleController " + type + " stop.");
+            this.debug.log(this, type + " stop");
             // cancel the requests that have already been created, but not loaded yet.
             if (cancelPending) {
                 this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
@@ -84,7 +84,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             request = self.adapter.getInitRequest(self.streamProcessor, quality);
 
             if (request !== null) {
-                //self.debug.log("Loading initialization: " + request.mediaType + ":" + request.startTime);
+                //self.debug.log(self, "Loading initialization: " + request.mediaType + ":" + request.startTime);
                 //self.debug.log(request);
                 self.fragmentController.prepareFragmentForLoading(self, request);
             }
@@ -140,7 +140,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             if (request) {
                 fragmentsToLoad--;
-                //self.debug.log("Loading fragment: " + request.mediaType + ":" + request.startTime);
+                //self.debug.log(self, "Loading fragment: " + request.mediaType + ":" + request.startTime);
                 this.fragmentController.prepareFragmentForLoading(this, request);
             } else {
                 this.fragmentController.executePendingRequests();
@@ -200,7 +200,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         onStreamCompleted = function(e) {
             if (e.data.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
 
-            this.debug.log(type + " Stream is complete.");
+            this.debug.log(this, type + " Stream is complete");
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON);
         },
 
@@ -244,7 +244,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             if (!e.data.hasSufficientBuffer && !self.playbackController.isSeeking()) {
-                self.debug.log("Stalling " + type + " Buffer: " + type);
+                self.debug.log(self, "Stalling " + type + " Buffer");
                 clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
             }
         },
@@ -314,7 +314,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var metrics = this.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = this.metricsExt.getCurrentManifestUpdate(metrics);
 
-            this.debug.log("ScheduleController " + type + " seek: " + e.data.seekTime);
+            this.debug.log(this, type + " seek: " + e.data.seekTime);
             addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
 
             this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentTrackInfo.DVRWindow.end - this.playbackController.getTime()});
@@ -401,6 +401,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             type = typeValue;
+            self.setMediaType(type);
             self.streamProcessor = streamProcessor;
             self.playbackController = streamProcessor.playbackController;
             self.fragmentController = streamProcessor.fragmentController;

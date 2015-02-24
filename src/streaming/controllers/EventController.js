@@ -41,7 +41,7 @@ MediaPlayer.dependencies.EventController = function(){
         start = function () {
             var self = this;
 
-            self.debug.log("Start Event Controller");
+            self.debug.log(self, "Start Event Controller");
             if (!isNaN(refreshDelay)) {
                 eventInterval = setInterval(onEventTimer.bind(this), refreshDelay);
             }
@@ -58,7 +58,7 @@ MediaPlayer.dependencies.EventController = function(){
             if(values && values.length > 0){
                 inlineEvents = values;
             }
-            self.debug.log("Added "+values.length+ " inline events");
+            self.debug.log(self, "Added "+values.length+ " inline events");
         },
 
         /**
@@ -70,7 +70,7 @@ MediaPlayer.dependencies.EventController = function(){
             for(var i=0;i<values.length;i++) {
                 var event = values[i];
                 inbandEvents[event.id] = event;
-                self.debug.log("Add inband event with id "+event.id);
+                self.debug.log(self, "Add inband event with id "+event.id);
             }
         },
 
@@ -96,7 +96,7 @@ MediaPlayer.dependencies.EventController = function(){
                     if (curr !== undefined) {
                         presentationTime = curr.presentationTime / curr.eventStream.timescale;
                         if (presentationTime === 0 || (presentationTime <= currentVideoTime && presentationTime + presentationTimeThreshold > currentVideoTime)) {
-                            self.debug.log("Start Event at " + currentVideoTime);
+                            self.debug.log(self, "Start Event at " + currentVideoTime);
                             if (curr.duration > 0) activeEvents.push(curr);
                             if (curr.eventStream.schemeIdUri == MPD_RELOAD_SCHEME && curr.eventStream.value == MPD_RELOAD_VALUE) refreshManifest.call(this);
                             events.splice(j, 1);
@@ -118,7 +118,7 @@ MediaPlayer.dependencies.EventController = function(){
                 for (var i = 0; i < activeEvents.length; i++) {
                     var curr = activeEvents[i];
                     if (curr !== null && (curr.duration + curr.presentationTime) / curr.eventStream.timescale < currentVideoTime) {
-                        self.debug.log("Remove Event at time " + currentVideoTime);
+                        self.debug.log(self, "Remove Event at time " + currentVideoTime);
                         curr = null;
                         activeEvents.splice(i, 1);
                     }
@@ -135,7 +135,7 @@ MediaPlayer.dependencies.EventController = function(){
             if (manifest.hasOwnProperty("Location")) {
                 url = manifest.Location;
             }
-            self.debug.log("Refresh manifest @ " + url);
+            self.debug.log(self, "Refresh manifest @ " + url);
             self.manifestLoader.load(url);
         };
 

@@ -98,7 +98,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
             downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
 
             if (totalTime <= 0) {
-                //self.debug.log("Don't know how long the download of the last fragment took, bailing.");
+                //self.debug.log(self, "Don't know how long the download of the last fragment took, bailing.");
                 callback(new MediaPlayer.rules.SwitchRequest());
                 return;
             }
@@ -111,7 +111,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
             averageDownloadRatio = getAverageDownloadRatio(AVERAGE_DOWNLOAD_RATIO_SAMPLE_AMOUNT);
 
             if (isNaN(averageDownloadRatio) || isNaN(downloadRatio) || isNaN(totalRatio)) {
-                //self.debug.log("The ratios are NaN, bailing.");
+                //self.debug.log(self, "The ratios are NaN, bailing.");
                 callback(new MediaPlayer.rules.SwitchRequest());
                 return;
             }
@@ -148,7 +148,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
                                 switchRatio = getSwitchRatio.call(self, sp, i, current);
                                 if ( averageDownloadRatio > switchRatio) {
                                     if (current !== i) {
-                                        //self.debug.log("averageDownloadRatio", averageDownloadRatio, switchRatio, i);
+                                        //self.debug.log(self, "averageDownloadRatio", averageDownloadRatio, switchRatio, i);
                                         switchRequest = new MediaPlayer.rules.SwitchRequest(i, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
                                     }
                                     break;
@@ -164,7 +164,7 @@ MediaPlayer.rules.DownloadRatioRule = function () {
             }
 
             if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                self.debug.log("DownloadRatioRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " priority: ",
+                self.debug.log(self, "DownloadRatioRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " priority: ",
                     switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "default" :
                         switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "strong" : "weak");
             }

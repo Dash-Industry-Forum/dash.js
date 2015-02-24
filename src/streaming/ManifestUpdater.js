@@ -30,7 +30,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             clear.call(this);
 
             if (!isNaN(refreshDelay)) {
-                this.debug.log("Refresh manifest in " + refreshDelay + " seconds.");
+                this.debug.log(this, "Refresh manifest in " + refreshDelay + " seconds.");
                 refreshTimer = setTimeout(onRefreshTimer.bind(this), Math.min(refreshDelay * 1000, Math.pow(2, 31) - 1), this);
             }
         },
@@ -64,7 +64,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
                 url = manifest.Location;
             }
 
-            //self.debug.log("Refresh manifest @ " + url);
+            //self.debug.log(self, "Refresh manifest @ " + url);
 
             self.manifestLoader.load(url);
         },
@@ -73,9 +73,9 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             if (e.error) return;
 
             this.manifestModel.setValue(e.data.manifest);
-            this.debug.log("Manifest has been refreshed.");
+            this.debug.log(this, "Manifest has been refreshed.");
 
-            //self.debug.log(manifestResult);
+            //self.debug.log(self, manifestResult);
             if (isStopped) return;
 
             update.call(this);
