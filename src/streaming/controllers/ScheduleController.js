@@ -141,7 +141,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             if (request) {
                 fragmentsToLoad--;
                 //self.debug.log(self, "Loading fragment: " + request.mediaType + ":" + request.startTime);
-                this.fragmentController.prepareFragmentForLoading(this, request);
+                this.fragmentController.prepareFragmentForLoading(fragmentModel, request);
             } else {
                 this.fragmentController.executePendingRequests();
             }

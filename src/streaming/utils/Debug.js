@@ -18,7 +18,7 @@ MediaPlayer.utils.Debug = function () {
 
     var logToBrowserConsole = true,
         showLogTimestamp = false,
-        showCalleeName = true,
+        showCalleeName = false,
         startTime = new Date().getTime();
 
     return {

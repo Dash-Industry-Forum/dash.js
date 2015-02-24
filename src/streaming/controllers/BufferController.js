@@ -594,10 +594,6 @@ MediaPlayer.dependencies.BufferController = function () {
             self.playbackController = streamProcessor.playbackController;
         },
 
-        getType: function () {
-            return type;
-        },
-
         getStreamProcessor: function() {
             return this.streamProcessor;
         },
