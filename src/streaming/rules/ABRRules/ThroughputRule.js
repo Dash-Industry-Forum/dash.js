@@ -89,7 +89,7 @@ MediaPlayer.rules.ThroughputRule = function () {
             storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
             averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic));
 
-            var adaptation = this.manifestExt.getAdaptationForType(manifest, 0, mediaType);
+            var adaptation = this.manifestExt.getAdaptationForType(manifest, mediaInfo.streamInfo.index, mediaType);
             var max = mediaInfo.trackCount - 1;
 
             if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
