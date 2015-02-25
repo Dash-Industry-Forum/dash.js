@@ -67,7 +67,6 @@
 <!--Rules -->
 <script src="streaming/rules/SwitchRequest.js"></script>
 <script src="streaming/rules/RulesContext.js"></script>
-<script src="streaming/rules/ABRRules/DownloadRatioRule.js"></script>
 <script src="streaming/rules/ABRRules/InsufficientBufferRule.js"></script>
 <script src="streaming/rules/ABRRules/LimitSwitchesRule.js"></script>
 <script src="streaming/rules/ABRRules/BufferOccupancyRule.js"></script>
