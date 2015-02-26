@@ -211,10 +211,10 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
     getContentProtectionData: function (adaptation) {
         "use strict";
-        if (!adaptation || !adaptation.hasOwnProperty("ContentProtection_asArray") || adaptation.ContentProtection_asArray.length === 0) {
+        if (!adaptation || !adaptation.Representation.hasOwnProperty("ContentProtection_asArray") || adaptation.Representation.ContentProtection_asArray.length === 0) {
             return null;
         }
-        return adaptation.ContentProtection_asArray;
+        return adaptation.Representation.ContentProtection_asArray;
     },
 
     getIsDynamic: function (manifest) {
