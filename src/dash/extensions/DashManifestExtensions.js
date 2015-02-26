@@ -214,7 +214,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         if (!adaptation || !adaptation.Representation.hasOwnProperty("ContentProtection_asArray") || adaptation.Representation.ContentProtection_asArray.length === 0) {
             return null;
         }
-        return adaptation.ContentProtection_asArray;
+        return adaptation.Representation.ContentProtection_asArray;
     },
 
     getIsDynamic: function (manifest) {
