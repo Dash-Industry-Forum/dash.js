@@ -19,7 +19,8 @@ MediaPlayer.utils.Debug = function () {
     var logToBrowserConsole = true,
         showLogTimestamp = false,
         showCalleeName = false,
-        startTime = new Date().getTime();
+        startTime = new Date().getTime(),
+        eventBus;
 
     return {
         system: undefined,
@@ -27,6 +28,7 @@ MediaPlayer.utils.Debug = function () {
 
         setup: function() {
             this.system.mapValue('log', this.log);
+            eventBus = this.eventBus;
         },
         /**
          * Prepends a timestamp in milliseconds to each log message.
@@ -97,13 +99,12 @@ MediaPlayer.utils.Debug = function () {
 
             if (logToBrowserConsole) {
                 console.log(message);
-                //console.log( (showLogTimestamp ? logTimestamp : "")  + (showCalleeName ? calleeName : "") + message);
             }
 
-            /*this.eventBus.dispatchEvent({
+            eventBus.dispatchEvent({
                 type: "log",
                 message: message
-            });*/
+            });
         }
     };
 };
