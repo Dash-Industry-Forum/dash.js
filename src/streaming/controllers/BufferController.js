@@ -71,7 +71,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel()) return;
 
-            self.log("Initialization finished loading: " + type);
+            self.log("Initialization finished loading");
 
             // cache the initialization data to use it next time the quality has changed
             initializationData[e.data.quality] = e.data.bytes;
@@ -124,7 +124,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 onMediaRejected.call(self, quality, index);
                 return;
             }
-            //self.log("Push (" + type + ") bytes: " + data.byteLength);
+            //self.log("Push bytes: " + data.byteLength);
             self.sourceBufferExt.append(buffer, data);
         },
 
@@ -163,14 +163,14 @@ MediaPlayer.dependencies.BufferController = function () {
             ranges = self.sourceBufferExt.getAllRanges(buffer);
 
             if (ranges) {
-                //self.log("Append " + type + " complete: " + ranges.length);
+                //self.log("Append complete: " + ranges.length);
                 if (ranges.length > 0) {
                     var i,
                         len;
 
-                    //self.log("Number of buffered " + type + " ranges: " + ranges.length);
+                    //self.log("Number of buffered ranges: " + ranges.length);
                     for (i = 0, len = ranges.length; i < len; i += 1) {
-                        self.log("Buffered " + type + " Range: " + ranges.start(i) + " - " + ranges.end(i));
+                        self.log("Buffered Range: " + ranges.start(i) + " - " + ranges.end(i));
                     }
                 }
             }
@@ -416,7 +416,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 }
             });
             this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, {hasSufficientBuffer: state});
-            this.log(hasSufficientBuffer ? ("Got enough " + type + " buffer to start.") : ("Waiting for more " + type + " buffer before starting playback."));
+            this.log(hasSufficientBuffer ? ("Got enough buffer to start.") : ("Waiting for more buffer before starting playback."));
         },
 
         updateBufferTimestampOffset = function(MSETimeOffset) {

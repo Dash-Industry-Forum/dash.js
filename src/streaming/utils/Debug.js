@@ -18,7 +18,7 @@ MediaPlayer.utils.Debug = function () {
 
     var logToBrowserConsole = true,
         showLogTimestamp = false,
-        showCalleeName = true,
+        showCalleeName = false,
         startTime = new Date().getTime();
 
     return {
@@ -70,31 +70,34 @@ MediaPlayer.utils.Debug = function () {
          */
         log: function () {
 
-            var logTime = null,
-                logTimestamp = null,
-                calleeName = null,
-                mediaType;
+            var message = "",
+                logTime = null,
+                mediaType = this.getMediaType();
 
             if (showLogTimestamp) {
                 logTime = new Date().getTime();
-                logTimestamp = "[" + (logTime - startTime) + "] ";
+                message += "[" + (logTime - startTime) + "]";
             }
 
             if (showCalleeName && this.getName) {
-                mediaType = this.getMediaType();
-                calleeName = "[" + this.getName() + "]" + (mediaType ? ("[" + mediaType + "]") : "") + " ";
+                message += "[" + this.getName() + "]";
             }
 
-            var message = arguments[0];
-            if (arguments.length > 1) {
-                message = "";
-                Array.apply(null, arguments).forEach(function(item) {
-                    message += item + " ";
-                });
+            if (mediaType) {
+                message += "[" + mediaType + "]";
             }
+
+            if (message.length > 0) {
+                message += " ";
+            }
+
+            Array.apply(null, arguments).forEach(function(item) {
+                message += item + " ";
+            });
 
             if (logToBrowserConsole) {
-                console.log( (showLogTimestamp ? logTimestamp : "")  + (showCalleeName ? calleeName : "") + message);
+                console.log(message);
+                //console.log( (showLogTimestamp ? logTimestamp : "")  + (showCalleeName ? calleeName : "") + message);
             }
 
             /*this.eventBus.dispatchEvent({

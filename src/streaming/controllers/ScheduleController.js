@@ -39,9 +39,9 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 initialPlayback = false;
             }
 
-            this.log(type + " start");
+            this.log("start");
 
-            //this.log("begin " + type + "validation");
+            //this.log("begin validation");
             validate.call(this);
         },
 
@@ -59,7 +59,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             isStopped = true;
 
-            this.log(type + " stop");
+            this.log("stop");
             // cancel the requests that have already been created, but not loaded yet.
             if (cancelPending) {
                 fragmentModel.cancelPendingRequests();
@@ -200,7 +200,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         onStreamCompleted = function(e) {
             if (e.data.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
 
-            this.log(type + " Stream is complete");
+            this.log("Stream is complete");
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON);
         },
 
@@ -244,7 +244,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             if (!e.data.hasSufficientBuffer && !self.playbackController.isSeeking()) {
-                self.log("Stalling " + type + " Buffer");
+                self.log("Stalling Buffer");
                 clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
             }
         },
@@ -314,7 +314,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var metrics = this.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = this.metricsExt.getCurrentManifestUpdate(metrics);
 
-            this.log(type + " seek: " + e.data.seekTime);
+            this.log("seek: " + e.data.seekTime);
             addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
 
             this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentTrackInfo.DVRWindow.end - this.playbackController.getTime()});
