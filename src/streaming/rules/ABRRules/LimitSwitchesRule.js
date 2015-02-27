@@ -23,7 +23,7 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
         qualitySwitchThreshold = 2000;
 
     return {
-        debug: undefined,
+        log: undefined,
         metricsModel: undefined,
 
         execute: function (context, callback) {
@@ -37,11 +37,11 @@ MediaPlayer.rules.LimitSwitchesRule = function () {
                 now = new Date().getTime(),
                 delay;
 
-            //self.debug.log(self, "Checking limit switches rule...");
+            //self.log("Checking limit switches rule...");
             delay = now - lastCheckTime;
 
             if (delay < qualitySwitchThreshold /*&& rs !== undefined && (now - rs.t.getTime()) < qualitySwitchThreshold*/) {
-                //self.debug.log(self, "Wait some time before allowing another switch unless with default priority");
+                //self.log("Wait some time before allowing another switch unless with default priority");
                 callback(new MediaPlayer.rules.SwitchRequest(current, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
                 return;
             }

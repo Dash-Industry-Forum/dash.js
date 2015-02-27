@@ -96,20 +96,20 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  null,
                                                  request.getAllResponseHeaders());
                 if (remainingAttempts > 0) {
-                    self.debug.log(self, "Failed loading manifest: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                    self.log("Failed loading manifest: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
                     remainingAttempts--;
                     setTimeout(function() {
                         doLoad.call(self, url, remainingAttempts);
                     }, RETRY_INTERVAL);
                 } else {
-                    self.debug.log(self, "Failed loading manifest: " + url + " no retry attempts left");
+                    self.log("Failed loading manifest: " + url + " no retry attempts left");
                     self.errHandler.downloadError("manifest", url, request);
                     self.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url + " no retry attempts left"));
                 }
             };
 
             try {
-                //this.debug.log(this, "Start loading manifest: " + url);
+                //this.log("Start loading manifest: " + url);
                 request.onload = onload;
                 request.onloadend = report;
                 request.onerror = report;
@@ -121,7 +121,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         };
 
     return {
-        debug: undefined,
+        log: undefined,
         parser: undefined,
         errHandler: undefined,
         metricsModel: undefined,

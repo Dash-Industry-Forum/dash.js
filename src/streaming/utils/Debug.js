@@ -18,11 +18,16 @@ MediaPlayer.utils.Debug = function () {
 
     var logToBrowserConsole = true,
         showLogTimestamp = false,
-        showCalleeName = false,
+        showCalleeName = true,
         startTime = new Date().getTime();
 
     return {
+        system: undefined,
         eventBus: undefined,
+
+        setup: function() {
+            this.system.mapValue('log', this.log);
+        },
         /**
          * Prepends a timestamp in milliseconds to each log message.
          * @param {boolean} value Set to true if you want to see a timestamp in each log message.
@@ -66,41 +71,36 @@ MediaPlayer.utils.Debug = function () {
         log: function () {
 
             var logTime = null,
-                logTimestamp = null;
+                logTimestamp = null,
+                calleeName = null,
+                mediaType;
 
-            if (showLogTimestamp)
-            {
+            if (showLogTimestamp) {
                 logTime = new Date().getTime();
                 logTimestamp = "[" + (logTime - startTime) + "] ";
+            }
+
+            if (showCalleeName && this.getName) {
+                mediaType = this.getMediaType();
+                calleeName = "[" + this.getName() + "]" + (mediaType ? ("[" + mediaType + "]") : "") + " ";
             }
 
             var message = arguments[0];
             if (arguments.length > 1) {
                 message = "";
                 Array.apply(null, arguments).forEach(function(item) {
-                    // Handle callee object as 1st parameter
-                    if (typeof(item) === "object" && item.getName) {
-                        if (showCalleeName) {
-                            message += "[" + item.getName() + "]";
-                            var mediaType = item.getMediaType();
-                            if (mediaType !== undefined) {
-                                message += "[" + mediaType + "]";
-                            }
-                        }
-                    } else {
-                        message += " " + item;
-                    }
+                    message += item + " ";
                 });
             }
 
             if (logToBrowserConsole) {
-                console.log( (showLogTimestamp ? logTimestamp : "")  + message);
+                console.log( (showLogTimestamp ? logTimestamp : "")  + (showCalleeName ? calleeName : "") + message);
             }
 
-            this.eventBus.dispatchEvent({
+            /*this.eventBus.dispatchEvent({
                 type: "log",
                 message: message
-            });
+            });*/
         }
     };
 };

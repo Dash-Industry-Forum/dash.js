@@ -317,8 +317,8 @@
             if (!e.error) {
                 this.manifestModel.setValue(e.data.manifest);
 
-                this.debug.log(this, "Manifest has loaded.");
-                //self.debug.log(self.manifestModel.getValue());
+                this.log("Manifest has loaded.");
+                //self.log(self.manifestModel.getValue());
 
                 // before composing streams, attempt to synchronize with some
                 // time source (if there are any available)
@@ -336,7 +336,7 @@
         manifestModel: undefined,
         manifestExt: undefined,
         adapter: undefined,
-        debug: undefined,
+        log: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
         videoExt: undefined,

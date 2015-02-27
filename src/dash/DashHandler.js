@@ -88,7 +88,7 @@ Dash.dependencies.DashHandler = function () {
                         paddedValue = zeroPadToLength(value.toString(8), width);
                         break;
                     default:
-                        this.debug.log(this, "Unsupported/invalid IEEE 1003.1 format identifier string in URL");
+                        this.log("Unsupported/invalid IEEE 1003.1 format identifier string in URL");
                         return url;
                     }
                 } else {
@@ -156,7 +156,7 @@ Dash.dependencies.DashHandler = function () {
             if (!representation) return null;
 
             request = generateInitRequest.call(self, representation, type);
-            //self.debug.log(self, "Got an initialization.");
+            //self.log("Got an initialization.");
 
             return request;
         },
@@ -168,9 +168,9 @@ Dash.dependencies.DashHandler = function () {
                 seg,
                 fTime;
 
-            //this.debug.log(this, "Checking for stream end...");
+            //this.log("Checking for stream end...");
             if (isDynamic) {
-                //this.debug.log(this, "Live never ends! (TODO)");
+                //this.log("Live never ends! (TODO)");
                 // TODO : Check the contents of the last box to signal end.
                 isFinished = false;
             } else {
@@ -182,7 +182,7 @@ Dash.dependencies.DashHandler = function () {
                     if (seg) {
                         fTime = seg.presentationStartTime - period.start;
                         sDuration = representation.adaptation.period.duration;
-                        this.debug.log(this, representation.segmentInfoType + ": " + fTime + " / " + sDuration);
+                        this.log(representation.segmentInfoType + ": " + fTime + " / " + sDuration);
                         isFinished = (fTime >= sDuration);
                     }
                 } else {
@@ -770,7 +770,7 @@ Dash.dependencies.DashHandler = function () {
 
             requestedTime = time;
 
-            self.debug.log(self, "Getting the request for time: " + time);
+            self.log("Getting the request for time: " + time);
 
             index = getIndexForSegments.call(self, time, representation, timeThreshold);
             getSegments.call(self, representation);
@@ -779,24 +779,24 @@ Dash.dependencies.DashHandler = function () {
                 index = getIndexForSegments.call(self, time, representation, timeThreshold);
             }
 
-            //self.debug.log(self, "Got segments.");
-            //self.debug.log(self, segments);
-            //self.debug.log(self, "Got a list of segments, so dig deeper.");
-            self.debug.log(self, "Index for time " + time + " is " + index);
+            //self.log("Got segments.");
+            //self.log(segments);
+            //self.log("Got a list of segments, so dig deeper.");
+            self.log("Index for time " + time + " is " + index);
 
             finished = isMediaFinished.call(self, representation);
 
-            //self.debug.log(self, "Stream finished? " + finished);
+            //self.log("Stream finished? " + finished);
             if (finished) {
                 request = new MediaPlayer.vo.FragmentRequest();
                 request.action = request.ACTION_COMPLETE;
                 request.index = index;
                 request.mediaType = type;
-                self.debug.log(self, "Signal complete.");
-                self.debug.log(request);
+                self.log("Signal complete.");
+                self.log(request);
             } else {
-                //self.debug.log(self, "Got a request.");
-                //self.debug.log(request);
+                //self.log("Got a request.");
+                //self.log(request);
                 segment = getSegmentByIndex(index, representation);
                 request = getRequestForSegment.call(self, segment);
             }
@@ -827,7 +827,7 @@ Dash.dependencies.DashHandler = function () {
                 return null;
             }
 
-            //self.debug.log(self, "Getting the next request.");
+            //self.log("Getting the next request.");
 
             if (index === -1) {
                 throw "You must call getSegmentRequestForTime first.";
@@ -837,22 +837,22 @@ Dash.dependencies.DashHandler = function () {
             index += 1;
             idx = index;
 
-            //self.debug.log(self, "New index: " + index);
+            //self.log("New index: " + index);
 
             finished = isMediaFinished.call(self, representation);
 
-            //self.debug.log(self, "Stream finished? " + finished);
+            //self.log("Stream finished? " + finished);
             if (finished) {
                 request = new MediaPlayer.vo.FragmentRequest();
                 request.action = request.ACTION_COMPLETE;
                 request.index = idx;
                 request.mediaType = type;
-                self.debug.log(self, "Signal complete.");
-                //self.debug.log(request);
+                self.log("Signal complete.");
+                //self.log(request);
             } else {
                 getSegments.call(self, representation);
-                //self.debug.log(self, "Got segments.");
-                //self.debug.log(segments);
+                //self.log("Got segments.");
+                //self.log(segments);
                 segment = getSegmentByIndex(idx, representation);
                 request = getRequestForSegment.call(self, segment);
             }
@@ -862,7 +862,7 @@ Dash.dependencies.DashHandler = function () {
 
         onInitializationLoaded = function(e) {
             var representation = e.data.representation;
-            //self.debug.log(self, "Got an initialization.");
+            //self.log("Got an initialization.");
             if (!representation.segments) return;
 
             this.notify(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation});
@@ -910,7 +910,7 @@ Dash.dependencies.DashHandler = function () {
         };
 
     return {
-        debug: undefined,
+        log: undefined,
         baseURLExt: undefined,
         timelineConverter: undefined,
         metricsModel: undefined,

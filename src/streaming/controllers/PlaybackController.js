@@ -75,7 +75,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         initialStart = function() {
             var initialSeekTime = getStreamStartTime.call(this, streamInfo);
-            this.debug.log(this, "Starting playback at offset: " + initialSeekTime);
+            this.log("Starting playback at offset: " + initialSeekTime);
             this.seek(initialSeekTime);
         },
 
@@ -123,35 +123,35 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackStart = function() {
-            this.debug.log(this, "<video> play");
+            this.log("<video> play");
             updateCurrentTime.call(this);
             startUpdatingWallclockTime.call(this);
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, {startTime: this.getTime()});
         },
 
         onPlaybackPlaying = function() {
-            this.debug.log(this, "<video> playing");
+            this.log("<video> playing");
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PLAYING, {playingTime: this.getTime()});
         },
 
         onPlaybackPaused = function() {
-            this.debug.log(this, "<video> pause");
+            this.log("<video> pause");
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED);
         },
 
         onPlaybackSeeking = function() {
-            this.debug.log(this, "<video> seek");
+            this.log("<video> seek");
             startUpdatingWallclockTime.call(this);
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime: this.getTime()});
         },
 
         onPlaybackSeeked = function() {
-            this.debug.log(this, "<video> seeked");
+            this.log("<video> seeked");
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKED);
         },
 
         onPlaybackTimeUpdated = function() {
-            //this.debug.log(this, "<video> timeupdate");
+            //this.log("<video> timeupdate");
             var time = this.getTime();
 
             if (time === currentTime) return;
@@ -161,7 +161,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackProgress = function() {
-            //this.debug.log(this, "<video> progress");
+            //this.log("<video> progress");
             var ranges = videoModel.getElement().buffered,
                 lastRange,
                 bufferEndTime,
@@ -177,12 +177,12 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackRateChanged = function() {
-            this.debug.log(this, "<video> ratechange: ", this.getPlaybackRate());
+            this.log("<video> ratechange: ", this.getPlaybackRate());
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED);
         },
 
         onPlaybackMetaDataLoaded = function() {
-            this.debug.log(this, "<video> loadedmetadata");
+            this.log("<video> loadedmetadata");
 
             if (!isDynamic || this.timelineConverter.isTimeSyncCompleted()) {
                 initialStart.call(this);
@@ -193,7 +193,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackEnded = function(/*e*/) {
-            this.debug.log(this, "<video> ended");
+            this.log("<video> ended");
             stopUpdatingWallclockTime.call(this);
         },
 
@@ -247,7 +247,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         };
 
     return {
-        debug: undefined,
+        log: undefined,
         timelineConverter: undefined,
         uriQueryFragModel: undefined,
         metricsModel: undefined,

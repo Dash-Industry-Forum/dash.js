@@ -19,7 +19,7 @@ MediaPlayer.utils.Capabilities = function () {
 MediaPlayer.utils.Capabilities.prototype = {
     constructor: MediaPlayer.utils.Capabilities,
     system: undefined,
-    debug: undefined,
+    log: undefined,
 
     supportsMediaSource: function () {
         "use strict";

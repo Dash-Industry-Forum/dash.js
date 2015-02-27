@@ -41,7 +41,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     latency = (requestVO.firstByteDate.getTime() - requestVO.requestStartDate.getTime());
                     download = (requestVO.requestEndDate.getTime() - requestVO.firstByteDate.getTime());
 
-                    self.debug.log(self, (succeeded ? "loaded " : "failed ") + requestVO.mediaType + ":" + requestVO.type + ":" + requestVO.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
+                    self.log((succeeded ? "loaded " : "failed ") + requestVO.mediaType + ":" + requestVO.type + ":" + requestVO.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
 
                     httpRequestMetrics.tresponse = requestVO.firstByteDate;
                     httpRequestMetrics.tfinish = requestVO.requestEndDate;
@@ -125,13 +125,13 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     handleLoaded(request, false);
 
                     if (remainingAttempts > 0) {
-                        self.debug.log(self, "Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                        self.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
                         remainingAttempts--;
                         setTimeout(function() {
                             doLoad.call(self, request, remainingAttempts);
                         }, RETRY_INTERVAL);
                     } else {
-                        self.debug.log(self, "Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
+                        self.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
                         self.errHandler.downloadError("content", request.url, req);
                         self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: request, bytes: null}, new MediaPlayer.vo.Error(null, "failed loading fragment", null));
                     }
@@ -167,7 +167,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
     return {
         metricsModel: undefined,
         errHandler: undefined,
-        debug: undefined,
+        log: undefined,
         requestModifierExt:undefined,
         notify: undefined,
         subscribe: undefined,

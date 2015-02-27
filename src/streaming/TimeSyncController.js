@@ -247,9 +247,9 @@ MediaPlayer.dependencies.TimeSyncController = function () {
 
                             setOffsetMs(offset);
 
-                            self.debug.log("Local time:      " + new Date(deviceTime));
-                            self.debug.log("Server time:     " + new Date(serverTime));
-                            self.debug.log("Difference (ms): " + offset);
+                            self.log("Local time:      " + new Date(deviceTime));
+                            self.log("Server time:     " + new Date(serverTime));
+                            self.log("Difference (ms): " + offset);
 
                             onComplete.call(self, serverTime, offset);
                         },
@@ -273,7 +273,7 @@ MediaPlayer.dependencies.TimeSyncController = function () {
         };
 
     return {
-        debug: undefined,
+        log: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,

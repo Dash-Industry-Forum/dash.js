@@ -34,14 +34,14 @@ MediaPlayer.dependencies.TextController = function () {
              if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel()) return;
 
              if (e.data.bytes !== null) {
-                 //self.debug.log("Push text track bytes: " + data.byteLength);
+                 //self.log("Push text track bytes: " + data.byteLength);
                  self.sourceBufferExt.append(buffer, e.data.bytes, self.videoModel);
              }
          };
 
     return {
         sourceBufferExt: undefined,
-        debug: undefined,
+        log: undefined,
         system: undefined,
         notify: undefined,
         subscribe: undefined,

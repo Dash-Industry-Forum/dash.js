@@ -17,7 +17,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
         onKeyMessage = function(e) {
             if (e.error) {
-                this.debug.log(e.error);
+                this.log(e.error);
             } else {
                 var keyMessageEvent = e.data;
                 this.protectionModel.keySystem.doLicenseRequest(keyMessageEvent.message,
@@ -27,7 +27,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
     return {
         system : undefined,
-        debug : undefined,
+        log : undefined,
         protectionExt: undefined,
 
         setup : function () {

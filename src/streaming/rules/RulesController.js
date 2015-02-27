@@ -80,7 +80,7 @@ MediaPlayer.rules.RulesController = function () {
 
     return {
         system: undefined,
-        debug: undefined,
+        log: undefined,
 
         SCHEDULING_RULE: 0,
         ABR_RULE: 1,
