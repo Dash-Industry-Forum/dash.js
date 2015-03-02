@@ -634,6 +634,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             tearDownMediaSource.call(this);
 
+            this.fragmentController.reset();
             this.fragmentController = undefined;
             this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, this);
             this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, this);
