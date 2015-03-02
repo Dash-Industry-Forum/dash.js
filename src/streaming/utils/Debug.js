@@ -73,8 +73,7 @@ MediaPlayer.utils.Debug = function () {
         log: function () {
 
             var message = "",
-                logTime = null,
-                mediaType = this.getMediaType();
+                logTime = null;
 
             if (showLogTimestamp) {
                 logTime = new Date().getTime();
@@ -85,8 +84,8 @@ MediaPlayer.utils.Debug = function () {
                 message += "[" + this.getName() + "]";
             }
 
-            if (mediaType) {
-                message += "[" + mediaType + "]";
+            if (this.getMediaType && this.getMediaType()) {
+                message += "[" + this.getMediaType() + "]";
             }
 
             if (message.length > 0) {
