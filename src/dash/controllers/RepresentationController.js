@@ -17,7 +17,7 @@ Dash.dependencies.RepresentationController = function () {
             currentRepresentation = getRepresentationForQuality.call(self, self.abrController.getQualityFor(type, self.streamProcessor.getStreamInfo()));
             data = dataValue;
 
-            if (type !== "video" && type !== "audio") {
+            if (type !== "video" && type !== "audio" && type !== "fragmentedText") {
                 updating = false;
                 self.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {data: data, currentRepresentation: currentRepresentation});
                 addRepresentationSwitch.call(self);

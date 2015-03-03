@@ -90,6 +90,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 bytes = e.data.bytes,
                 quality = e.data.quality,
                 index = e.data.index,
+                startTime = e.data.startTime,
                 request = this.streamProcessor.getFragmentModel().getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, quality: quality, index: index})[0],
                 currentTrack = this.streamProcessor.getTrackForQuality(quality),
                 eventStreamMedia = this.adapter.getEventsFor(currentTrack.mediaInfo, this.streamProcessor),
@@ -102,15 +103,15 @@ MediaPlayer.dependencies.BufferController = function () {
 
             bytes = deleteInbandEvents.call(this, bytes);
 
-            pendingMedia.push({bytes: bytes, quality: quality, index: index});
+            pendingMedia.push({bytes: bytes, quality: quality, index: index, startTime: startTime});
             sortArrayByProperty(pendingMedia, "index");
 
             appendNext.call(this);
 		},
 
-        appendToBuffer = function(data, quality, index) {
+        appendToBuffer = function(data, quality, index,startTime) {
             isAppendingInProgress = true;
-            appendedBytesInfo = {quality: quality, index: index};
+            appendedBytesInfo = {quality: quality, index: index,startTime:startTime};
 
             var self = this,
                 isInit = isNaN(index);
@@ -125,7 +126,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 return;
             }
             //self.log("Push bytes: " + data.byteLength);
-            self.sourceBufferExt.append(buffer, data);
+            self.sourceBufferExt.append(buffer, data, appendedBytesInfo);
         },
 
         onAppended = function(e) {
@@ -479,7 +480,7 @@ MediaPlayer.dependencies.BufferController = function () {
             if (pendingMedia.length === 0 || isBufferLevelOutrun || isAppendingInProgress || waitingForInit.call(this) || !hasEnoughSpaceToAppend.call(this)) return;
 
             data = pendingMedia.shift();
-            appendToBuffer.call(this, data.bytes, data.quality, data.index);
+            appendToBuffer.call(this, data.bytes, data.quality, data.index, data.startTime);
         },
 
         onDataUpdateCompleted = function(e) {

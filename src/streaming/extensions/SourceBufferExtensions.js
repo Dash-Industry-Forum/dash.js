@@ -31,7 +31,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         try {
             buffer = mediaSource.addSourceBuffer(codec);
         } catch(ex) {
-            if (mediaInfo.isText) {
+            if ((mediaInfo.isText)||(codec.indexOf('codecs="stpp"')!=-1)) {
                 buffer = self.system.getObject("textSourceBuffer");
             } else {
                 throw ex;
@@ -69,7 +69,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             return null;
         }
 
-        if (ranges !== null) {
+        if (ranges !== null && ranges !== undefined) {
             for (i = 0, len = ranges.length; i < len; i += 1) {
                 start = ranges.start(i);
                 end = ranges.end(i);
@@ -169,7 +169,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         }
     },
 
-    append: function (buffer, bytes) {
+    append: function (buffer, bytes,appendedBytesInfo) {
         var self = this,
             appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null);
 
@@ -177,7 +177,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
         try {
             self.waitForUpdateEnd(buffer, function() {
-                buffer[appendMethod](bytes);
+                buffer[appendMethod](bytes,appendedBytesInfo);
 
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 self.waitForUpdateEnd(buffer, function() {

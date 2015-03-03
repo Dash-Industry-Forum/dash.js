@@ -25,25 +25,61 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
             mimeType = type;
             this.videoModel = bufferController.videoModel;
             mediaInfo = bufferController.streamProcessor.getCurrentTrack().mediaInfo;
+            this.buffered =  this.system.getObject("customTimeRanges");
+            this.initializationSegmentReceived= false;
+            this.timescale= 90000;
         },
-
-        append: function (bytes) {
+        append: function (bytes,appendedBytesInfo) {
             var self = this,
                 result,
                 label,
                 lang,
-                /* global UTF8: true */
-                ccContent =  UTF8.decode( new Uint16Array(bytes));
+                samplesInfo,
+                i,
+                ccContent;
 
-            try {
-                result = self.getParser().parse(ccContent);
-                label = mediaInfo.id;
-                lang = mediaInfo.lang;
+            if(mimeType=="fragmentedText"){
+                if(!this.initializationSegmentReceived){
+                    this.initializationSegmentReceived=true;
+                    label = mediaInfo.id;
+                    lang = mediaInfo.lang;
+                    this.textTrackExtensions=self.getTextTrackExtensions();
+                    this.textTrackExtensions.addTextTrack(self.videoModel.getElement(), result, label, lang, true);
+                    self.eventBus.dispatchEvent({type:"updateend"});
+                    fragmentExt = self.system.getObject("fragmentExt");
+                    this.timescale= fragmentExt.getMediaTimescaleFromMoov(bytes.buffer);
+                }else{
+                    fragmentExt = self.system.getObject("fragmentExt");
 
-                self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, true);
-                self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
-            } catch(e) {
-                self.errHandler.closedCaptionsError(e, "parse", ccContent);
+                    samplesInfo=fragmentExt.getSamplesInfo(bytes.buffer);
+                    for(i= 0 ; i<samplesInfo.length ;i++) {
+                        if(!this.firstSubtitleStart){
+                            this.firstSubtitleStart=samplesInfo[0].cts-appendedBytesInfo.startTime*this.timescale;
+                        }
+                        samplesInfo[i].cts-=this.firstSubtitleStart;
+                        this.buffered.add(samplesInfo[i].cts/this.timescale,(samplesInfo[i].cts+samplesInfo[i].duration)/this.timescale);
+
+                        ccContent=UTF8.decode(new Uint8Array(bytes.buffer.slice(samplesInfo[i].offset,samplesInfo[i].offset+samplesInfo[i].size)));
+                        parser = this.system.getObject("ttmlParser");
+                        try{
+                            result = parser.parse(ccContent);
+                            this.textTrackExtensions.addCaptions(this.firstSubtitleStart/this.timescale,result);
+                        } catch(e) {
+                            //empty cue ?
+                        }
+                    }
+                }
+            }else{
+                ccContent=UTF8.decode(bytes);
+                try {
+                    result = self.getParser().parse(ccContent);
+                    label = mediaInfo.id;
+                    lang = mediaInfo.lang;
+                    self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, true);
+                    self.eventBus.dispatchEvent({type:"updateend"});
+                } catch(e) {
+                    self.errHandler.closedCaptionsError(e, "parse", ccContent);
+                }
             }
         },
 

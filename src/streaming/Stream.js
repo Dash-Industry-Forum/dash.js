@@ -265,7 +265,7 @@ MediaPlayer.dependencies.Stream = function () {
                     contentProtectionData,
                     buffer = null;
 
-                if (codecOrMime === mimeType) {
+                if ((type === "text")||(type === "fragmentedText")) {
                         buffer = createBuffer(mediaSource, mediaInfo);
                 } else {
                     codec = codecOrMime;
@@ -302,7 +302,12 @@ MediaPlayer.dependencies.Stream = function () {
                     processor.setMediaInfo(mediaInfo);
                     self.abrController.updateTopQualityIndex(mediaInfo);
                     self.adapter.updateData(processor);
-                    //self.log(type + " is ready!");
+                    if(type === "fragmentedText"){
+                        processor.bufferController.videoModel= self.videoModel;
+                        buffer.initialize(type,processor.bufferController);
+                    }
+
+                    //self.debug.log(type + " is ready!");
                 }
 
 
@@ -327,6 +332,7 @@ MediaPlayer.dependencies.Stream = function () {
             initializeMediaForType.call(self, "video", manifest);
             initializeMediaForType.call(self, "audio", manifest);
             initializeMediaForType.call(self, "text", manifest);
+            initializeMediaForType.call(self, "fragmentedText", manifest);
 
             //this.log("MediaSource initialized!");
         },
