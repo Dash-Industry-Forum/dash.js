@@ -18,10 +18,18 @@ MediaPlayer.utils.Debug = function () {
 
     var logToBrowserConsole = true,
         showLogTimestamp = false,
-        startTime = new Date().getTime();
+        showCalleeName = false,
+        startTime = new Date().getTime(),
+        eventBus;
 
     return {
+        system: undefined,
         eventBus: undefined,
+
+        setup: function() {
+            this.system.mapValue('log', this.log);
+            eventBus = this.eventBus;
+        },
         /**
          * Prepends a timestamp in milliseconds to each log message.
          * @param {boolean} value Set to true if you want to see a timestamp in each log message.
@@ -30,6 +38,15 @@ MediaPlayer.utils.Debug = function () {
          */
         setLogTimestampVisible: function(value) {
             showLogTimestamp = value;
+        },
+        /**
+         * Prepends the callee object name, and media type if available, to each log message.
+         * @param {boolean} value Set to true if you want to see a object name and media type in each log message.
+         * @default false
+         * @memberof MediaPlayer.utils.Debug#
+         */
+        showCalleeName: function(value) {
+            showCalleeName = value;
         },
         /**
          * Toggles logging to the browser's javascript console.  If you set to false you will still receive a log event with the same message.
@@ -55,28 +72,35 @@ MediaPlayer.utils.Debug = function () {
          */
         log: function () {
 
-            var logTime = null,
-                logTimestamp = null;
+            var message = "",
+                logTime = null;
 
-            if (showLogTimestamp)
-            {
+            if (showLogTimestamp) {
                 logTime = new Date().getTime();
-                logTimestamp = "[" + (logTime - startTime) + "] ";
+                message += "[" + (logTime - startTime) + "]";
             }
 
-            var message = arguments[0];
-            if (arguments.length > 1) {
-                message = "";
-                Array.apply(null, arguments).forEach(function(item) {
-                    message += " " + item;
-                });
+            if (showCalleeName && this.getName) {
+                message += "[" + this.getName() + "]";
             }
+
+            if (this.getMediaType && this.getMediaType()) {
+                message += "[" + this.getMediaType() + "]";
+            }
+
+            if (message.length > 0) {
+                message += " ";
+            }
+
+            Array.apply(null, arguments).forEach(function(item) {
+                message += item + " ";
+            });
 
             if (logToBrowserConsole) {
-                console.log( (showLogTimestamp ? logTimestamp : "")  + message);
+                console.log(message);
             }
 
-            this.eventBus.dispatchEvent({
+            eventBus.dispatchEvent({
                 type: "log",
                 message: message
             });

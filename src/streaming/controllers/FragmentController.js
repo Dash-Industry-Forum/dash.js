@@ -62,7 +62,7 @@ MediaPlayer.dependencies.FragmentController = function () {
                 bytes = self.process(e.data.response);
 
             if (bytes === null) {
-                self.debug.log("No " + request.mediaType + " bytes to push.");
+                self.log("No " + request.mediaType + " bytes to push.");
                 return;
             }
 
@@ -123,7 +123,7 @@ MediaPlayer.dependencies.FragmentController = function () {
 
     return {
         system: undefined,
-        debug: undefined,
+        log: undefined,
         scheduleRulesCollection: undefined,
         rulesController: undefined,
         notify: undefined,

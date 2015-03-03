@@ -166,7 +166,7 @@ Dash.dependencies.RepresentationController = function () {
 
     return {
         system: undefined,
-        debug: undefined,
+        log: undefined,
         manifestExt: undefined,
         manifestModel: undefined,
         metricsModel: undefined,

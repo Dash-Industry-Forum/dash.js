@@ -39,9 +39,9 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 initialPlayback = false;
             }
 
-            this.debug.log("ScheduleController " + type + " start.");
+            this.log("start");
 
-            //this.debug.log("ScheduleController begin " + type + " validation");
+            //this.log("begin validation");
             validate.call(this);
         },
 
@@ -59,7 +59,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             isStopped = true;
 
-            this.debug.log("ScheduleController " + type + " stop.");
+            this.log("stop");
             // cancel the requests that have already been created, but not loaded yet.
             if (cancelPending) {
                 fragmentModel.cancelPendingRequests();
@@ -84,8 +84,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             request = self.adapter.getInitRequest(self.streamProcessor, quality);
 
             if (request !== null) {
-                //self.debug.log("Loading initialization: " + request.mediaType + ":" + request.startTime);
-                //self.debug.log(request);
+                //self.log("Loading initialization: " + request.mediaType + ":" + request.startTime);
+                //self.log(request);
                 self.fragmentController.prepareFragmentForLoading(fragmentModel, request);
             }
 
@@ -140,7 +140,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             if (request) {
                 fragmentsToLoad--;
-                //self.debug.log("Loading fragment: " + request.mediaType + ":" + request.startTime);
+                //self.log("Loading fragment: " + request.mediaType + ":" + request.startTime);
                 this.fragmentController.prepareFragmentForLoading(fragmentModel, request);
             } else {
                 this.fragmentController.executePendingRequests();
@@ -200,7 +200,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         onStreamCompleted = function(e) {
             if (e.data.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
 
-            this.debug.log(type + " Stream is complete.");
+            this.log("Stream is complete");
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON);
         },
 
@@ -244,7 +244,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             if (!e.data.hasSufficientBuffer && !self.playbackController.isSeeking()) {
-                self.debug.log("Stalling " + type + " Buffer: " + type);
+                self.log("Stalling Buffer");
                 clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
             }
         },
@@ -314,7 +314,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var metrics = this.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = this.metricsExt.getCurrentManifestUpdate(metrics);
 
-            this.debug.log("ScheduleController " + type + " seek: " + e.data.seekTime);
+            this.log("seek: " + e.data.seekTime);
             addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
 
             this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentTrackInfo.DVRWindow.end - this.playbackController.getTime()});
@@ -358,7 +358,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         };
 
     return {
-        debug: undefined,
+        log: undefined,
         system: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
@@ -401,6 +401,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             type = typeValue;
+            self.setMediaType(type);
             self.streamProcessor = streamProcessor;
             self.playbackController = streamProcessor.playbackController;
             self.fragmentController = streamProcessor.fragmentController;

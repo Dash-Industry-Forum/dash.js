@@ -157,7 +157,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
     return {
         system: undefined,
-        debug: undefined,
+        log: undefined,
         metricsModel: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -218,7 +218,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                         req = arr[i];
 
                         if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
-                            //self.debug.log(request.mediaType + " Fragment already loaded for time: " + request.startTime);
+                            //self.log(request.mediaType + " Fragment already loaded for time: " + request.startTime);
                             isLoaded = true;
                             break;
                         }
@@ -365,7 +365,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     loadCurrentFragment.call(self, request);
                     break;
                 default:
-                    this.debug.log("Unknown request action.");
+                    this.log("Unknown request action.");
             }
         },
 

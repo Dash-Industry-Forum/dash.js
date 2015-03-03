@@ -329,7 +329,7 @@ Dash.dependencies.DashParser = function () {
         },
 
         internalParse = function (data, baseUrl) {
-            //this.debug.log("Doing parse.");
+            //this.log("Doing parse.");
 
             var manifest,
                 converter = new X2JS(matchers, '', true),
@@ -339,12 +339,12 @@ Dash.dependencies.DashParser = function () {
                 ironed = null;
 
             try {
-                //this.debug.log("Converting from XML.");
+                //this.log("Converting from XML.");
                 manifest = converter.xml_str2json(data);
                 json = new Date();
 
                 if (!manifest.hasOwnProperty("BaseURL")) {
-                    //this.debug.log("Setting baseURL: " + baseUrl);
+                    //this.log("Setting baseURL: " + baseUrl);
                     manifest.BaseURL = baseUrl;
                 } else {
                     // Setting manifest's BaseURL to the first BaseURL
@@ -361,11 +361,11 @@ Dash.dependencies.DashParser = function () {
                     manifest.Location = manifest.Location_asArray[0];
                 }
 
-                //this.debug.log("Flatten manifest properties.");
+                //this.log("Flatten manifest properties.");
                 iron.run(manifest);
                 ironed = new Date();
 
-                this.debug.log("Parsing complete: ( xml2json: " + (json.getTime() - start.getTime()) + "ms, objectiron: " + (ironed.getTime() - json.getTime()) + "ms, total: " + ((ironed.getTime() - start.getTime()) / 1000) + "s)");
+                this.log("Parsing complete: ( xml2json: " + (json.getTime() - start.getTime()) + "ms, objectiron: " + (ironed.getTime() - json.getTime()) + "ms, total: " + ((ironed.getTime() - start.getTime()) / 1000) + "s)");
             } catch (err) {
                 this.errHandler.manifestError("parsing the manifest failed", "parse", data);
                 return null;
@@ -374,7 +374,7 @@ Dash.dependencies.DashParser = function () {
         };
 
     return {
-        debug: undefined,
+        log: undefined,
         errHandler: undefined,
         parse: internalParse
     };

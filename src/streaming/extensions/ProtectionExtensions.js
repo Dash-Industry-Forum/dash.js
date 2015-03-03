@@ -18,7 +18,7 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
 
     return {
         system: undefined,
-        debug: undefined,
+        log: undefined,
 
         /**
          * Setup the key systems available in the player
@@ -157,14 +157,14 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
             var ksIdx, supportedKS = [],
                 pssh = MediaPlayer.dependencies.protection.CommonEncryption.parsePSSHList(initData);
 
-            for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
+                    for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
                 if (keySystems[ksIdx].uuid in pssh) {
                     supportedKS.push({
                         ks: keySystems[ksIdx],
                         initData: pssh[keySystems[ksIdx].uuid]
                     });
-                }
-            }
+                        }
+                    }
             return supportedKS;
         },
 
@@ -186,7 +186,7 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
             var supportedKS = this.getSupportedKeySystems(initData);
             if (supportedKS.length === 0) {
                 throw new Error("DRM system for this content not supported by the player!");
-            }
+                }
 
             var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(
                     [new MediaPlayer.vo.protection.MediaCapability(mediaInfos.audio.codec)],
@@ -209,11 +209,11 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
                     protMod.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
                     if (!event.error) {
                         var keySystemAccess = event.data;
-                        self.debug.log("KeySystem Access Granted (" + keySystemAccess.keySystem.systemString + ")!");
+                        self.log("KeySystem Access Granted (" + keySystemAccess.keySystem.systemString + ")!");
                         protCont.selectKeySystem(keySystemAccess);
                     } else {
-                        self.debug.log(event.error);
-                    }
+                        self.log(event.error);
+            }
                 };
 
                 protMod.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, cbObj);

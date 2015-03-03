@@ -75,7 +75,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         initialStart = function() {
             var initialSeekTime = getStreamStartTime.call(this, streamInfo);
-            this.debug.log("Starting playback at offset: " + initialSeekTime);
+            this.log("Starting playback at offset: " + initialSeekTime);
             this.seek(initialSeekTime);
         },
 
@@ -110,6 +110,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (!videoModel) return;
 
             videoModel.unlisten("play", onPlaybackStart);
+            videoModel.unlisten("playing", onPlaybackPlaying);
             videoModel.unlisten("pause", onPlaybackPaused);
             videoModel.unlisten("error", onPlaybackError);
             videoModel.unlisten("seeking", onPlaybackSeeking);
@@ -122,29 +123,35 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackStart = function() {
-            //this.debug.log("Got play event.");
+            this.log("<video> play");
             updateCurrentTime.call(this);
             startUpdatingWallclockTime.call(this);
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, {startTime: this.getTime()});
         },
 
+        onPlaybackPlaying = function() {
+            this.log("<video> playing");
+            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PLAYING, {playingTime: this.getTime()});
+        },
+
         onPlaybackPaused = function() {
-            //this.debug.log("Got pause event.");
+            this.log("<video> pause");
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED);
         },
 
         onPlaybackSeeking = function() {
-            //this.debug.log("Got seeking event.");
+            this.log("<video> seek");
             startUpdatingWallclockTime.call(this);
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime: this.getTime()});
         },
 
         onPlaybackSeeked = function() {
-            //this.debug.log("Seek complete.");
+            this.log("<video> seeked");
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKED);
         },
 
         onPlaybackTimeUpdated = function() {
+            //this.log("<video> timeupdate");
             var time = this.getTime();
 
             if (time === currentTime) return;
@@ -154,6 +161,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackProgress = function() {
+            //this.log("<video> progress");
             var ranges = videoModel.getElement().buffered,
                 lastRange,
                 bufferEndTime,
@@ -169,11 +177,12 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackRateChanged = function() {
+            this.log("<video> ratechange: ", this.getPlaybackRate());
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED);
         },
 
         onPlaybackMetaDataLoaded = function() {
-            this.debug.log("Got loadmetadata event.");
+            this.log("<video> loadedmetadata");
 
             if (!isDynamic || this.timelineConverter.isTimeSyncCompleted()) {
                 initialStart.call(this);
@@ -184,7 +193,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackEnded = function(/*e*/) {
-            this.debug.log("Got ended event.");
+            this.log("<video> ended");
             stopUpdatingWallclockTime.call(this);
         },
 
@@ -225,6 +234,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             videoModel = model;
 
             videoModel.listen("play", onPlaybackStart);
+            videoModel.listen("playing", onPlaybackPlaying);
             videoModel.listen("pause", onPlaybackPaused);
             videoModel.listen("error", onPlaybackError);
             videoModel.listen("seeking", onPlaybackSeeking);
@@ -237,7 +247,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         };
 
     return {
-        debug: undefined,
+        log: undefined,
         timelineConverter: undefined,
         uriQueryFragModel: undefined,
         metricsModel: undefined,
@@ -253,6 +263,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
 
             onPlaybackStart = onPlaybackStart.bind(this);
+            onPlaybackPlaying = onPlaybackPlaying.bind(this);
             onPlaybackPaused = onPlaybackPaused.bind(this);
             onPlaybackError = onPlaybackError.bind(this);
             onPlaybackSeeking = onPlaybackSeeking.bind(this);
@@ -345,6 +356,7 @@ MediaPlayer.dependencies.PlaybackController.prototype = {
 
 MediaPlayer.dependencies.PlaybackController.eventList = {
     ENAME_PLAYBACK_STARTED: "playbackStarted",
+    ENAME_PLAYBACK_PLAYING: "playbackPlaying",
     ENAME_PLAYBACK_STOPPED: "playbackStopped",
     ENAME_PLAYBACK_PAUSED: "playbackPaused",
     ENAME_PLAYBACK_SEEKING: "playbackSeeking",

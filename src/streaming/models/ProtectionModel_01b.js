@@ -103,7 +103,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR,
                                     new MediaPlayer.vo.protection.KeyError(sessionToken, msg));
                             } else {
-                                self.debug.log("No session token found for key error");
+                                self.log("No session token found for key error");
                             }
                             break;
 
@@ -117,7 +117,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED,
                                     sessionToken);
                             } else {
-                                self.debug.log("No session token found for key added");
+                                self.log("No session token found for key added");
                             }
                             break;
 
@@ -160,7 +160,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE,
                                     new MediaPlayer.vo.protection.KeyMessage(sessionToken, event.message, event.defaultURL));
                             } else {
-                                self.debug.log("No session token found for key message");
+                                self.log("No session token found for key message");
                             }
                             break;
                     }
@@ -201,7 +201,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
     return {
         system: undefined,
-        debug: undefined,
+        log: undefined,
         errHandler: undefined,
         notify: undefined,
         subscribe: undefined,

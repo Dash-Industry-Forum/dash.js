@@ -138,7 +138,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 segments.push(segment);
             }
 
-            this.debug.log("Parsed SIDX box: " + segments.length + " segments.");
+            this.log("Parsed SIDX box: " + segments.length + " segments.");
             return segments;
         },
 
@@ -158,7 +158,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 irange,
                 self = this;
 
-            self.debug.log("Searching for initialization.");
+            self.log("Searching for initialization.");
 
             while (type !== "moov" && pos < d.byteLength) {
                 size = d.getUint32(pos); // subtract 8 for including the size and type
@@ -189,7 +189,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 //        Be sure to detect EOF.
                 //        Throw error is no moov is found in the entire file.
                 //        Protection from loading the entire file?
-                self.debug.log("Loading more bytes to find initialization.");
+                self.log("Loading more bytes to find initialization.");
                 info.range.start = 0;
                 info.range.end = info.bytesLoaded + info.bytesToLoad;
 
@@ -221,7 +221,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 end = moov + size - 1;
                 irange = start + "-" + end;
 
-                self.debug.log("Found the initialization.  Range: " + irange);
+                self.log("Found the initialization.  Range: " + irange);
                 callback.call(self, irange);
             }
         },
@@ -241,7 +241,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                     request: request
                 };
 
-            self.debug.log("Start searching for initialization.");
+            self.log("Start searching for initialization.");
             info.range.start = 0;
             info.range.end = info.bytesToLoad;
 
@@ -272,7 +272,7 @@ Dash.dependencies.BaseURLExtensions = function () {
             };
 
             sendRequest.call(self, request, info);
-            self.debug.log("Perform init search: " + info.url);
+            self.log("Perform init search: " + info.url);
         },
 
         findSIDX = function (data, info, representation, callback) {
@@ -294,8 +294,8 @@ Dash.dependencies.BaseURLExtensions = function () {
                 loadMultiSidx = false,
                 self = this;
 
-            self.debug.log("Searching for SIDX box.");
-            self.debug.log(info.bytesLoaded + " bytes loaded.");
+            self.log("Searching for SIDX box.");
+            self.log(info.bytesLoaded + " bytes loaded.");
 
             while (type !== "sidx" && pos < d.byteLength) {
                 size = d.getUint32(pos); // subtract 8 for including the size and type
@@ -327,7 +327,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 // Case 2
                 // We don't have the entire box.
                 // Increase the number of bytes to read and load again.
-                self.debug.log("Found SIDX but we don't have all of it.");
+                self.log("Found SIDX but we don't have all of it.");
 
                 info.range.start = 0;
                 info.range.end = info.bytesLoaded + (size - bytesAvailable);
@@ -361,7 +361,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 info.range.start = pos - 8;
                 info.range.end = info.range.start + size;
 
-                self.debug.log("Found the SIDX box.  Start: " + info.range.start + " | End: " + info.range.end);
+                self.log("Found the SIDX box.  Start: " + info.range.start + " | End: " + info.range.end);
 //                sidxBytes = data.slice(info.range.start, info.range.end);
                 sidxBytes = new ArrayBuffer(info.range.end - info.range.start);
                 sidxOut = new Uint8Array(sidxBytes);
@@ -381,7 +381,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 }
 
                 if (loadMultiSidx) {
-                    self.debug.log("Initiate multiple SIDX load.");
+                    self.log("Initiate multiple SIDX load.");
 
                     var j, len, ss, se, r, segs = [],
                         count = 0,
@@ -407,7 +407,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                     }
 
                 } else {
-                    self.debug.log("Parsing segments from SIDX.");
+                    self.log("Parsing segments from SIDX.");
                     segments = parseSegments.call(self, sidxBytes, info.url, info.range.start);
                     callback.call(self, segments);
                 }
@@ -434,7 +434,7 @@ Dash.dependencies.BaseURLExtensions = function () {
             // We might not know exactly where the sidx box is.
             // Load the first n bytes (say 1500) and look for it.
             if (theRange === null) {
-                self.debug.log("No known range for SIDX request.");
+                self.log("No known range for SIDX request.");
                 info.searching = true;
                 info.range.start = 0;
                 info.range.end = info.bytesToLoad;
@@ -478,7 +478,7 @@ Dash.dependencies.BaseURLExtensions = function () {
             };
 
             sendRequest.call(self, request, info);
-            self.debug.log("Perform SIDX load: " + info.url);
+            self.log("Perform SIDX load: " + info.url);
         },
 
         sendRequest = function(request, info) {
@@ -500,7 +500,7 @@ Dash.dependencies.BaseURLExtensions = function () {
         };
 
     return {
-        debug: undefined,
+        log: undefined,
         errHandler: undefined,
         requestModifierExt:undefined,
         notify: undefined,
