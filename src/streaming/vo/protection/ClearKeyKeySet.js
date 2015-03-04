@@ -57,8 +57,8 @@ MediaPlayer.vo.protection.ClearKeyKeySet = function(keyPairs, type) {
                 alg: "A128KW"
             };
             // Remove base64 padding from each
-            key.k = btoa(String.fromCharCode.apply(null, this.keyPairs[i].key)).replace(/=/g, "");
-            key.kid = btoa(String.fromCharCode.apply(null, this.keyPairs[i].keyID)).replace(/=/g, "");
+            key.k = BASE64.encode(String.fromCharCode.apply(null, this.keyPairs[i].key)).replace(/=/g, "");
+            key.kid = BASE64.encode(String.fromCharCode.apply(null, this.keyPairs[i].keyID)).replace(/=/g, "");
             retval.keys.push(key);
         }
         if (this.type) {
