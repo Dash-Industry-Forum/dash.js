@@ -34,7 +34,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
             }
         },
 
-        onKeySystemSelected = function(e) {
+        onKeySystemSelected = function() {
             this.protectionModel.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
         };
 
