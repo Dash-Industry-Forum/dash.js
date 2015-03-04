@@ -60,6 +60,23 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
         },
         eventHandler = null,
 
+        // IE11 does not let you set MediaKeys until it has entered a certain
+        // readyState, so we need this logic to ensure we don't set the keys
+        // too early
+        setMediaKeys = function() {
+            // IE11 does not allow setting of media keys until
+            var doSetKeys = function() {
+                videoElement[api.setMediaKeys](mediaKeys);
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
+            };
+            if (videoElement.readyState >= 1) {
+                doSetKeys.call(this);
+            } else {
+                videoElement.addEventListener("loadedmetadata", doSetKeys.bind(this));
+            }
+
+        },
+
         // Function to create our session token objects which manage the EME
         // MediaKeySession and session-specific event handler
         createSessionToken = function(keySession, initData) {
@@ -200,8 +217,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
                 this.keySystem = ksAccess.keySystem;
                 keySystemAccess = ksAccess;
                 if (videoElement) {
-                    videoElement[api.setMediaKeys](mediaKeys);
-                    this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
+                    setMediaKeys.call(this);
                 }
                 this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
 
@@ -218,8 +234,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
             videoElement = mediaElement;
             videoElement.addEventListener(api.needkey, eventHandler);
             if (mediaKeys) {
-                videoElement[api.setMediaKeys](mediaKeys);
-                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
+                setMediaKeys.call(this);
             }
         },
 
@@ -229,8 +244,12 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
                 throw new Error("Can not create sessions until you have selected a key system");
             }
 
-            // TODO: Need to check for duplicate initData.  If we already have
-            // a KeySession for this exact initData, we shouldn't create a new session.
+            // Check for duplicate initData.
+            for (var i = 0; i < sessions.length; i++) {
+                if (this.protectionExt.initDataEquals(initData, sessions[i].initData)) {
+                    return;
+                }
+            }
 
             // Use the first video capability for the contentType.
             // TODO:  Not sure if there is a way to concatenate all capability data into a RFC6386-compatible format
@@ -247,7 +266,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
             // Add to our session list
             sessions.push(sessionToken);
 
-            return sessionToken;
+            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, sessionToken);
         },
 
         updateKeySession: function(sessionToken, message) {

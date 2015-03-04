@@ -106,14 +106,30 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
         },
 
         /**
+         * Check equality of initData array buffers.
+         *
+         * @param initData1 first initData
+         * @param initData2 second initData
+         * @returns {boolean} true if the initData arrays are equal in size and
+         * contents, false otherwise
+         */
+        initDataEquals: function(initData1, initData2) {
+            if (initData1.byteLength === initData2.byteLength) {
+                for (var j = 0; j < initData1.byteLength; j++) {
+                    if (initData1[j] !== initData2[j]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        },
+
+        /**
          * Returns a set of supported key systems and CENC intialization data
          * from the given array of ContentProtection elements.  Only
          * key systems that are supported by this player will be returned.
          * Key systems are returned in priority order (highest first).
-         *
-         * This can be called by code that wants to "pre-fetch" keys for media
-         * that is not currently being played using DRM-specific ContentProtection
-         * element data
          *
          * @param {Object[]} cps array of content protection elements parsed
          * from the manifest
@@ -129,6 +145,8 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
                 for(cpIdx = 0; cpIdx < cps.length; ++cpIdx) {
                     cp = cps[cpIdx];
                     if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
+
+                        // Look for DRM-specific ContentProtection
                         var initData = ks.getInitData(cp);
                         if (!!initData) {
                             supportedKS.push({
@@ -172,25 +190,28 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
          * Select a key system by using the priority-ordered key systems supported
          * by the player and the key systems supported by the content
          *
+         * @param {Object[]} supportedKS supported key systems
          * @param {MediaPlayer.models.ProtectionModel} protectionModel
          * @param {MediaPlayer.dependencies.ProtectionController} protectionController
-         * @param {Object} mediaInfos media information set
-         * @param {MediaPlayer.vo.MediaInfo} mediaInfos.video video media information
-         * @param {MediaPlayer.vo.MediaInfo} mediaInfos.audio audio media information
-         * @param {ArrayBuffer} initData the concatenated set of PSSH data found in
-         * the content indicating DRM support for this content
+         * @param {MediaPlayer.vo.MediaInfo} videoInfo video media information
+         * @param {MediaPlayer.vo.MediaInfo} audioInfo audio media information
          */
-        autoSelectKeySystem: function(protectionModel, protectionController, mediaInfos, initData) {
+        autoSelectKeySystem: function(supportedKS, protectionModel, protectionController, videoInfo, audioInfo) {
 
             // Does the initData contain a key system supported by the player?
-            var supportedKS = this.getSupportedKeySystems(initData);
             if (supportedKS.length === 0) {
                 throw new Error("DRM system for this content not supported by the player!");
                 }
 
+            var audioCapabilities = [], videoCapabilities = [];
+            if (videoInfo) {
+                videoCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(videoInfo.codec));
+            }
+            if (audioInfo) {
+                audioCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(audioInfo.codec));
+            }
             var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(
-                    [new MediaPlayer.vo.protection.MediaCapability(mediaInfos.audio.codec)],
-                    [new MediaPlayer.vo.protection.MediaCapability(mediaInfos.video.codec)]);
+                    audioCapabilities, videoCapabilities);
             var requestedKeySystems = [];
             for (var i = 0; i < supportedKS.length; i++) {
                 requestedKeySystems.push({ ks: supportedKS[i].ks, configs: [ksConfig] });
@@ -213,7 +234,7 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
                         protCont.selectKeySystem(keySystemAccess);
                     } else {
                         self.log(event.error);
-            }
+                    }
                 };
 
                 protMod.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, cbObj);
