@@ -37,7 +37,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
 
             try {
                 result = self.getParser().parse(ccContent);
-                label = mediaInfo.id;
+                label = mediaInfo.index;
                 lang = mediaInfo.lang;
 
                 self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, true);
