@@ -162,6 +162,31 @@
             "name": "D-Dash #6",
             "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=15&type=full",
             "browsers": ""
+        },
+        {
+            "name": "CableLabs Cenc WV",
+            "url": "http://html5.cablelabs.com:8100/cenc/wv/dash.mpd",
+            "browsers": "",
+            "protData": {
+                "com.widevine.alpha": {
+                    "laURL": "https://html5.cablelabs.com:8025"
+                }
+            }
+        },
+        {
+            "name": "CableLabs Cenc WV/CK",
+            "url": "http://html5.cablelabs.com:8100/cenc/wvck/dash.mpd",
+            "browsers": "",
+            "protData": {
+                "com.widevine.alpha": {
+                    "laURL": "https://html5.cablelabs.com:8025"
+                }
+            }
+        },
+        {
+            "name": "CableLabs Cenc PR/CK",
+            "url": "http://html5.cablelabs.com:8100/cenc/prck/dash.mpd",
+            "browsers": ""
         }
     ]
 }
