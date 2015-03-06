@@ -158,6 +158,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        protectionExt: undefined,
         keySystem: null,
 
         setup: function() {
