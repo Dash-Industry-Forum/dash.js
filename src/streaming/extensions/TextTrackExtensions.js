@@ -33,17 +33,19 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             for(var item in captionData) {
                 var currentItem = captionData[item];
                 var cue = new Cue(currentItem.start, currentItem.end, currentItem.data);
-                if (currentItem.styles.align !== undefined && cue.hasOwnProperty("align")) {
-                    cue.align = currentItem.styles.align;
-                }
-                if (currentItem.styles.line !== undefined && cue.hasOwnProperty("line")) {
-                    cue.line = currentItem.styles.line;
-                }
-                if (currentItem.styles.position !== undefined && cue.hasOwnProperty("position")) {
-                    cue.position = currentItem.styles.position ;
-                }
-                if (currentItem.styles.size !== undefined && cue.hasOwnProperty("size")) {
-                    cue.size = currentItem.styles.size;
+                if (currentItem.styles !== null) {
+                    if (currentItem.styles.align !== undefined && cue.hasOwnProperty("align")) {
+                        cue.align = currentItem.styles.align;
+                    }
+                    if (currentItem.styles.line !== undefined && cue.hasOwnProperty("line")) {
+                        cue.line = currentItem.styles.line;
+                    }
+                    if (currentItem.styles.position !== undefined && cue.hasOwnProperty("position")) {
+                        cue.position = currentItem.styles.position ;
+                    }
+                    if (currentItem.styles.size !== undefined && cue.hasOwnProperty("size")) {
+                        cue.size = currentItem.styles.size;
+                    }
                 }
                 track.addCue(cue);
             }
