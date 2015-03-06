@@ -30,7 +30,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 this.log("DRM: License request successful.  Session ID = " + e.data.requestData.getSessionID());
                 this.updateKeySession(e.data.requestData, e.data.message);
             } else {
-                this.debug.log("DRM: License request failed! -- " + e.error);
+                this.log("DRM: License request failed! -- " + e.error);
             }
         },
 
