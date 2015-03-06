@@ -57,7 +57,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                             keySystemAccess);
                 }).catch(function() {
                     if (++i < ksConfigurations.length) {
-                        requestKeySystemAccessInternal(ksConfigurations, i);
+                        requestKeySystemAccessInternal.call(self, ksConfigurations, i);
                     } else {
                         self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
                                 null, "Key system access denied!");
@@ -158,6 +158,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        protectionExt: undefined,
         keySystem: null,
 
         setup: function() {
