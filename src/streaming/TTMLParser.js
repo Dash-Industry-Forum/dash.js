@@ -69,8 +69,10 @@ MediaPlayer.utils.TTMLParser = function () {
                 hasHead = hasTt ? ttml.tt.hasOwnProperty("head") : false,
                 hasLayout = hasHead ? ttml.tt.head.hasOwnProperty("layout") : false,
                 hasStyling = hasHead ? ttml.tt.head.hasOwnProperty("styling") : false,
-                hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false,
+                hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false;
+                /* extend the support to other profiles
                 hasProfile = hasHead ? ttml.tt.head.hasOwnProperty("profile") : false;
+                */
 
             // R001 - A document must contain a tt element.
             // R002 - A document must contain both a head and body element.
@@ -148,7 +150,7 @@ MediaPlayer.utils.TTMLParser = function () {
                     throw errorMsg;
                 }
 
-                if(cue["smpte:backgroundImage"]!=undefined)
+                if(cue["smpte:backgroundImage"]!==undefined)
                 {
                     var images = ttml.tt.head.metadata.image_asArray;
                     for (j = 0; j < images.length; j += 1) {
@@ -156,6 +158,7 @@ MediaPlayer.utils.TTMLParser = function () {
                             captionArray.push({
                                 start: startTime,
                                 end: endTime,
+                                id:images[j]["xml:id"],
                                 data: "data:image/"+images[j].imagetype.toLowerCase()+";base64, " + images[j].__text,
                                 type: "image"
                             });

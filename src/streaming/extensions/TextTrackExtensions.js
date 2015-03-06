@@ -44,25 +44,26 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                 if(currentItem.type=="image"){
                     cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
                     cue.image=currentItem.data;
-                    cue.id=item;
+                    cue.id=currentItem.id;
                     cue.size=0; //discard the native display for this subtitles
                     cue.type="image"; // active image overlay
                     cue.onenter =  function () {
                         var img = new Image();
                         img.id = 'ttmlImage_'+this.id;
                         img.src = this.image;
-                        img.style.cssText ="z-index: 2147483648 ;pointer-events: none ;display: block; left: 0px; width: 100%; height: 100%; top: 0px; visibility: visible !important; position: absolute !important;"
+                        img.className = 'cue-image';
                         video.parentNode.appendChild(img);
-                    }
+                    };
 
                     cue.onexit =  function () {
                         var imgs = video.parentNode.childNodes;
+                        var i;
                         for(i=0;i<imgs.length;i++){
                             if(imgs[i].id=='ttmlImage_'+this.id){
                                 video.parentNode.removeChild(imgs[i]);
                             }
                         }
-                    }
+                    };
                 }
                 else{
                     cue = new Cue(currentItem.start, currentItem.end, currentItem.data);

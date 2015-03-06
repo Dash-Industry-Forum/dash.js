@@ -39,13 +39,14 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 ccContent;
 
             if(mimeType=="fragmentedText"){
+                var fragmentExt;
                 if(!this.initializationSegmentReceived){
                     this.initializationSegmentReceived=true;
                     label = mediaInfo.id;
                     lang = mediaInfo.lang;
                     this.textTrackExtensions=self.getTextTrackExtensions();
                     this.textTrackExtensions.addTextTrack(self.videoModel.getElement(), result, label, lang, true);
-                    self.eventBus.dispatchEvent({type:"updateend"});
+                    self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
                     fragmentExt = self.system.getObject("fragmentExt");
                     this.timescale= fragmentExt.getMediaTimescaleFromMoov(bytes.buffer);
                 }else{
@@ -59,8 +60,8 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                         samplesInfo[i].cts-=this.firstSubtitleStart;
                         this.buffered.add(samplesInfo[i].cts/this.timescale,(samplesInfo[i].cts+samplesInfo[i].duration)/this.timescale);
 
-                        ccContent=UTF8.decode(new Uint8Array(bytes.buffer.slice(samplesInfo[i].offset,samplesInfo[i].offset+samplesInfo[i].size)));
-                        parser = this.system.getObject("ttmlParser");
+                        ccContent=window.UTF8.decode(new Uint8Array(bytes.buffer.slice(samplesInfo[i].offset,samplesInfo[i].offset+samplesInfo[i].size)));
+                        var parser = this.system.getObject("ttmlParser");
                         try{
                             result = parser.parse(ccContent);
                             this.textTrackExtensions.addCaptions(this.firstSubtitleStart/this.timescale,result);
@@ -70,13 +71,13 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                     }
                 }
             }else{
-                ccContent=UTF8.decode(bytes);
+                ccContent=window.UTF8.decode(bytes);
                 try {
                     result = self.getParser().parse(ccContent);
                     label = mediaInfo.id;
                     lang = mediaInfo.lang;
                     self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, true);
-                    self.eventBus.dispatchEvent({type:"updateend"});
+                    self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
                 } catch(e) {
                     self.errHandler.closedCaptionsError(e, "parse", ccContent);
                 }
