@@ -175,7 +175,7 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             PSSHBox.set(uint8arraydecodedPROHeader, byteCursor);
             byteCursor += PROSize;
 
-            return PSSHBox;
+            return PSSHBox.buffer;
         },
 
         /* TODO: Implement me */

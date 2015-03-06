@@ -23,6 +23,19 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 this.protectionModel.keySystem.doLicenseRequest(keyMessageEvent.message,
                     keyMessageEvent.defaultURL, keyMessageEvent.sessionToken);
             }
+        },
+
+        onLicenseRequestComplete = function(e) {
+            if (!e.error) {
+                this.log("DRM: License request successful.  Session ID = " + e.data.requestData.getSessionID());
+                this.updateKeySession(e.data.requestData, e.data.message);
+            } else {
+                this.debug.log("DRM: License request failed! -- " + e.error);
+            }
+        },
+
+        onKeySystemSelected = function() {
+            this.protectionModel.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
         };
 
     return {
@@ -32,16 +45,23 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
         setup : function () {
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE] = onKeyMessage.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = onKeySystemSelected.bind(this);
+            this[MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE] = onLicenseRequestComplete.bind(this);
         },
 
         init: function (protectionModel) {
             this.protectionModel = protectionModel;
             keySystems = this.protectionExt.getKeySystems();
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, this);
         },
 
         teardown: function() {
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, this);
+            if (this.protectionModel.keySystem) {
+                this.protectionModel.keySystem.unsubscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
+            }
         },
 
         requestKeySystemAccess: function(ksConfiguration) {
@@ -49,6 +69,9 @@ MediaPlayer.dependencies.ProtectionController = function () {
         },
 
         selectKeySystem: function(keySystemAccess) {
+            if (this.protectionModel.keySystem) {
+                throw new Error("DRM: KeySystem already selected!");
+            }
             this.protectionModel.selectKeySystem(keySystemAccess);
         },
 

@@ -73,7 +73,7 @@ MediaPlayer.dependencies.protection.KeySystem = {
      * element.
      *
      * @param contentProtection the ContentProtection element
-     * @returns {Uint8Array} initialization data
+     * @returns {ArrayBuffer} initialization data
      *
      getInitData: function(contentProtection) { return null; },
      */

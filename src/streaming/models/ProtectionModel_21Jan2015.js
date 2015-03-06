@@ -231,8 +231,12 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                 throw new Error("Can not create sessions until you have selected a key system");
             }
 
-            // TODO: Need to check for duplicate initData.  If we already have
-            // a KeySession for this exact initData, we shouldn't create a new session.
+            // Check for duplicate initData.
+            for (var i = 0; i < sessions.length; i++) {
+                if (this.protectionExt.initDataEquals(initData, sessions[i].initData)) {
+                    return;
+                }
+            }
 
             var session = mediaKeys.createSession(sessionType);
             var sessionToken = createSessionToken.call(this, session, initData);
