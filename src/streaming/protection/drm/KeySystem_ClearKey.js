@@ -86,7 +86,7 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
                 for (i = 0; i < urlLen; i++) {
                     urlB64 += String.fromCharCode(dv.getUint8(byteCursor+i));
                 }
-                url = atob(urlB64);
+                url = BASE64.decode(urlB64);
                 url = url.replace(/&amp;/, '&');
 
                 var xhr = new XMLHttpRequest();
@@ -99,8 +99,8 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
                         }
                         for (i = 0; i < xhr.reponse.keys.length; i++) {
                             var keypair = xhr.response.keys[i],
-                                    keyid = atob(keypair.kid),
-                                    key = atob(keypair.k);
+                                    keyid = BASE64.decode(keypair.kid),
+                                    key = BASE64.decode(keypair.k);
                             keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyid, key));
                         }
                         var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs), requestData);
@@ -176,15 +176,6 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
         },
 
         getInitData: function(/*cpData*/) { return null; },
-
-        initDataEquals: function(initData1, initData2) {
-            if (initData1.length === initData2.length) {
-                if (btoa(initData1.buffer) === btoa(initData2.buffer)) {
-                    return true;
-                }
-            }
-            return false;
-        }
     };
 };
 
