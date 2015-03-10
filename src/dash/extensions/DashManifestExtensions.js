@@ -31,6 +31,14 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             result = false,
             found = false;
 
+        if((adaptation.Representation_asArray.length>0)&&
+           (adaptation.Representation_asArray[0].hasOwnProperty("codecs"))&&
+           (adaptation.Representation_asArray[0].codecs=="stpp")
+           ){
+            return type == "fragmentedText";
+        }
+
+
         if (col) {
             for (i = 0, len = col.length; i < len; i += 1) {
                 if (col[i].contentType === type) {
@@ -74,6 +82,12 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         "use strict";
 
         return this.getIsTypeOf(adaptation, "video");
+    },
+
+    getIsFragmentedText: function (adaptation) {
+        "use strict";
+
+        return this.getIsTypeOf(adaptation, "fragmentedText");
     },
 
     getIsText: function (adaptation) {
@@ -421,7 +435,17 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
             adaptationSet.index = i;
             adaptationSet.period = period;
-            adaptationSet.type = this.getIsAudio(a) ? "audio" : (this.getIsVideo(a) ? "video" : "text");
+            
+            if(this.getIsAudio(a)){
+                adaptationSet.type="audio";
+            }else if (this.getIsVideo(a)){
+                adaptationSet.type="video";
+            }else if (this.getIsFragmentedText(a)){
+                adaptationSet.type="fragmentedText";
+            }else{
+                adaptationSet.type="text";
+            }
+
             adaptations.push(adaptationSet);
         }
 

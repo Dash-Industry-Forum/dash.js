@@ -69,8 +69,10 @@ MediaPlayer.utils.TTMLParser = function () {
                 hasHead = hasTt ? ttml.tt.hasOwnProperty("head") : false,
                 hasLayout = hasHead ? ttml.tt.head.hasOwnProperty("layout") : false,
                 hasStyling = hasHead ? ttml.tt.head.hasOwnProperty("styling") : false,
-                hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false,
+                hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false;
+                /* extend the support to other profiles
                 hasProfile = hasHead ? ttml.tt.head.hasOwnProperty("profile") : false;
+                */
 
             // R001 - A document must contain a tt element.
             // R002 - A document must contain both a head and body element.
@@ -80,9 +82,10 @@ MediaPlayer.utils.TTMLParser = function () {
             }
 
             // R0008 - A document must contain a ttp:profile element where the use attribute of that element is specified as http://www.w3.org/ns/ttml/profile/sdp-us.
-            if (passed) {
+            /* extend the support to other profiles
+               if (passed) {
                 passed = hasProfile && (ttml.tt.head.profile.use === "http://www.w3.org/ns/ttml/profile/sdp-us");
-            }
+            }*/
 
             return passed;
         },
@@ -109,7 +112,9 @@ MediaPlayer.utils.TTMLParser = function () {
                 startTime,
                 endTime,
                 nsttp,
-                i;
+                text,
+                i,
+                j;
 
             ttml = converter.xml_str2json(data);
 
@@ -124,7 +129,11 @@ MediaPlayer.utils.TTMLParser = function () {
                 ttml.tt.frameRate = parseInt(ttml.tt[nsttp + ":frameRate"], 10);
             }
 
-            cues = ttml.tt.body.div_asArray[0].p_asArray;
+            if(ttml.tt.body.div_asArray){
+                cues = ttml.tt.body.div_asArray[0].p_asArray;
+            }else{
+                cues = ttml.tt.body.p_asArray;
+            }
 
             if (!cues || cues.length === 0) {
                 errorMsg = "TTML document does not contain any cues";
@@ -141,11 +150,35 @@ MediaPlayer.utils.TTMLParser = function () {
                     throw errorMsg;
                 }
 
-                captionArray.push({
-                    start: startTime,
-                    end: endTime,
-                    data: cue.__text
-                });
+                if(cue["smpte:backgroundImage"]!==undefined)
+                {
+                    var images = ttml.tt.head.metadata.image_asArray;
+                    for (j = 0; j < images.length; j += 1) {
+                        if(("#"+images[j]["xml:id"]) == cue["smpte:backgroundImage"]) {
+                            captionArray.push({
+                                start: startTime,
+                                end: endTime,
+                                id:images[j]["xml:id"],
+                                data: "data:image/"+images[j].imagetype.toLowerCase()+";base64, " + images[j].__text,
+                                type: "image"
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    if(cue.span_asArray){
+                        text=cue.span_asArray[0].__text;
+                    }else{
+                        text=cue.__text;
+                    }
+                    captionArray.push({
+                        start: startTime,
+                        end: endTime,
+                        data: text,
+                        type: "text"
+                    });
+                }
             }
 
             return captionArray;

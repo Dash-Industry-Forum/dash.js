@@ -28,6 +28,19 @@
     }
 }
 
+
+.cue-image{
+    z-index: 2147483648 ;
+    pointer-events: none ;
+    display: block; 
+    left: 0px; 
+    width: 100%; 
+    height: 100%; 
+    top: 0px; 
+    visibility: visible !important; 
+    position: absolute !important;
+}
+
 body {
     background: #eee;
     overflow-x: hidden;

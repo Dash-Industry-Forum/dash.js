@@ -9,7 +9,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
 
         createBufferControllerForType = function(type) {
             var self = this,
-            controllerName = (type === "video" || type === "audio") ? "bufferController" : "textController";
+            controllerName = (type === "video" || type === "audio" || type === "fragmentedText") ? "bufferController" : "textController";
 
             return self.system.getObject(controllerName);
         };
@@ -52,7 +52,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             trackController.subscribe(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, bufferController);
             fragmentController.subscribe(MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED, bufferController);
 
-            if (type === "video" || type === "audio") {
+            if (type === "video" || type === "audio" || type === "fragmentedText") {
                 abrController.subscribe(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, bufferController);
                 abrController.subscribe(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, trackController);
                 abrController.subscribe(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, scheduleController);
@@ -125,7 +125,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             fragmentModel.subscribe(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, scheduleController);
             fragmentLoader.subscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
 
-            if (type === "video" || type === "audio") {
+            if (type === "video" || type === "audio" || type === "fragmentedText") {
                 bufferController.subscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, fragmentModel);
                 bufferController.subscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, fragmentModel);
                 bufferController.subscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_REJECTED, fragmentModel);

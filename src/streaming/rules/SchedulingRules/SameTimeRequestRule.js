@@ -124,7 +124,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 model = fragmentModels[mIdx];
                 type = model.getContext().streamProcessor.getType();
 
-                if (type !== "video" && type !== "audio") continue;
+                if (type !== "video" && type !== "audio" && type !== "fragmentedText") continue;
 
                 pendingReqs = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
                 loadingLength = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING}).length;

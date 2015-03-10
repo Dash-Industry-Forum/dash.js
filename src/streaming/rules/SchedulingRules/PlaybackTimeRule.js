@@ -10,6 +10,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             seekTarget[streamId] = seekTarget[streamId] || {};
             seekTarget[streamId].audio = time;
             seekTarget[streamId].video = time;
+            seekTarget[streamId].fragmentedText=time;
         };
 
     return {

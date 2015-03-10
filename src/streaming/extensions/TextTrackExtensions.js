@@ -23,32 +23,67 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         addTextTrack: function(video, captionData,  label, scrlang, isDefaultTrack) {
 
             //TODO: Ability to define the KIND in the MPD - ie subtitle vs caption....
-            var track = video.addTextTrack("captions", label, scrlang);
+            this.track = video.addTextTrack("captions", label, scrlang);
             // track.default is an object property identifier that is a reserved word
             // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
             /*jshint -W024 */
-            track.default = isDefaultTrack;
-            track.mode = "showing";
+            this.track.default = isDefaultTrack;
+            this.track.mode = "showing";
+            this.video=video;
+            this.addCaptions(0, captionData);
+            return this.track;
+        },
 
+        addCaptions: function(timeOffset, captionData) {
             for(var item in captionData) {
+                var cue;
                 var currentItem = captionData[item];
-                var cue = new Cue(currentItem.start, currentItem.end, currentItem.data);
-                if (currentItem.styles.align !== undefined && cue.hasOwnProperty("align")) {
-                    cue.align = currentItem.styles.align;
-                }
-                if (currentItem.styles.line !== undefined && cue.hasOwnProperty("line")) {
-                    cue.line = currentItem.styles.line;
-                }
-                if (currentItem.styles.position !== undefined && cue.hasOwnProperty("position")) {
-                    cue.position = currentItem.styles.position ;
-                }
-                if (currentItem.styles.size !== undefined && cue.hasOwnProperty("size")) {
-                    cue.size = currentItem.styles.size;
-                }
-                track.addCue(cue);
-            }
+                var video=this.video;
 
-            return track;
+                //image subtitle extracted from TTML
+                if(currentItem.type=="image"){
+                    cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
+                    cue.image=currentItem.data;
+                    cue.id=currentItem.id;
+                    cue.size=0; //discard the native display for this subtitles
+                    cue.type="image"; // active image overlay
+                    cue.onenter =  function () {
+                        var img = new Image();
+                        img.id = 'ttmlImage_'+this.id;
+                        img.src = this.image;
+                        img.className = 'cue-image';
+                        video.parentNode.appendChild(img);
+                    };
+
+                    cue.onexit =  function () {
+                        var imgs = video.parentNode.childNodes;
+                        var i;
+                        for(i=0;i<imgs.length;i++){
+                            if(imgs[i].id=='ttmlImage_'+this.id){
+                                video.parentNode.removeChild(imgs[i]);
+                            }
+                        }
+                    };
+                }
+                else{
+                    cue = new Cue(currentItem.start, currentItem.end, currentItem.data);
+                    if(currentItem.styles){
+                        if (currentItem.styles.align !== undefined && cue.hasOwnProperty("align")) {
+                            cue.align = currentItem.styles.align;
+                        }
+                        if (currentItem.styles.line !== undefined && cue.hasOwnProperty("line")) {
+                            cue.line = currentItem.styles.line;
+                        }
+                        if (currentItem.styles.position !== undefined && cue.hasOwnProperty("position")) {
+                            cue.position = currentItem.styles.position ;
+                        }
+                        if (currentItem.styles.size !== undefined && cue.hasOwnProperty("size")) {
+                            cue.size = currentItem.styles.size;
+                        }
+                    }
+                }
+                this.track.addCue(cue);
+            }
         },
         deleteCues: function(video) {
             //when multiple tracks are supported - iterate through and delete all cues from all tracks.
