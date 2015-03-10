@@ -273,7 +273,7 @@
                         stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
                         stream.setPlaybackController(playbackCtrl);
                         playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, stream);
-                        playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, stream);
+                        playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, stream);
                         stream.initProtection(manifest);
                         stream.setAutoPlay(autoPlay);
                         stream.load(manifest);

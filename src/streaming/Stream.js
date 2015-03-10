@@ -20,7 +20,7 @@ MediaPlayer.dependencies.Stream = function () {
         streamProcessors = [],
         autoPlay = true,
         initialized = false,
-        loaded = false,
+        canPlay = false,
         errored = false,
         kid = null,
         updating = true,
@@ -351,14 +351,14 @@ MediaPlayer.dependencies.Stream = function () {
             checkIfInitializationCompleted.call(self);
         },
 
-        onLoad = function (/*e*/) {
+        onCanPlay = function (/*e*/) {
             this.log("element loaded!");
-            loaded = true;
+            canPlay = true;
             startAutoPlay.call(this);
         },
 
         startAutoPlay = function() {
-            if (!initialized || !loaded) return;
+            if (!initialized || !canPlay) return;
 
             // only first stream must be played automatically during playback initialization
             if (streamInfo.index === 0) {
@@ -551,7 +551,7 @@ MediaPlayer.dependencies.Stream = function () {
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFERING_COMPLETED] = onBufferingCompleted;
             this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR] = onError;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED] = onLoad;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY] = onCanPlay;
 
             // Protection event handlers
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY] = onNeedKey.bind(this);
@@ -668,7 +668,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.fragmentController.reset();
             this.fragmentController = undefined;
             this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, this);
-            this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, this);
+            this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, this);
             this.playbackController.reset();
             this.liveEdgeFinder.abortSearch();
             this.liveEdgeFinder.unsubscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.playbackController);
@@ -676,7 +676,7 @@ MediaPlayer.dependencies.Stream = function () {
             // streamcontroller expects this to be valid
             //this.videoModel = null;
 
-            loaded = false;
+            canPlay = false;
             updateError = {};
         },
 
