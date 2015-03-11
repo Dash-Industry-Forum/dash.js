@@ -66,7 +66,7 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
              */
 
             var psshData = MediaPlayer.dependencies.protection.CommonEncryption.getPSSHData(message),
-                dv = new DataView(psshData.buffer),
+                dv = new DataView(psshData),
                 byteCursor = 0,
                 ckType,
                 keyPairs = [];
@@ -132,9 +132,9 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
 
                 for (i = 0; i < numKeys; i++) {
                     var keyid, key;
-                    keyid = new Uint8Array(psshData.buffer.slice(byteCursor, byteCursor+16));
+                    keyid = new Uint8Array(psshData.slice(byteCursor, byteCursor+16));
                     byteCursor += 16;
-                    key = new Uint8Array(psshData.buffer.slice(byteCursor, byteCursor+16));
+                    key = new Uint8Array(psshData.slice(byteCursor, byteCursor+16));
                     byteCursor += 16;
                     keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyid, key));
                 }
