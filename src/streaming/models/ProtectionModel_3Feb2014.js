@@ -278,7 +278,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
                 session.update(message);
             } else {
                 // For clearkey, message is a MediaPlayer.vo.protection.ClearKeyKeySet
-                session.update(message.toJWKString());
+                session.update(JSON.stringify(message.toJWK()));
             }
         },
 

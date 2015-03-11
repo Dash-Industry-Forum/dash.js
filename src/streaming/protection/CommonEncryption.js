@@ -119,9 +119,9 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
             }
             byteCursor += 4;
 
-            /* Version must be 0 for now */
+            /* Version must be 0 or 1 */
             version = dv.getUint8(byteCursor);
-            if (version !== 0) {
+            if (version !== 0 && version !== 1) {
                 byteCursor = nextBox;
                 continue;
             }

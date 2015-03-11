@@ -47,7 +47,7 @@ MediaPlayer.vo.protection.ClearKeyKeySet = function(keyPairs, type) {
     /**
      * Convert this key set to its JSON Web Key (JWK) representation
      */
-    this.toJWKString = function() {
+    this.toJWK = function() {
         var i, numKeys = this.keyPairs.length,
             retval = {};
         retval.keys = [];
@@ -64,7 +64,7 @@ MediaPlayer.vo.protection.ClearKeyKeySet = function(keyPairs, type) {
         if (this.type) {
             retval.type = this.type;
         }
-        return JSON.stringify(retval);
+        return retval;
     };
 };
 
