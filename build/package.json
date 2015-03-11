@@ -11,5 +11,12 @@
     "grunt-jsdoc": "~0.5.7",
     "grunt-template-jasmine-istanbul": "=0.3.0",
     "jasmine-sinon": "~0.3.1"
+  },
+  "scripts": {
+    "test": "grunt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dash-Industry-Forum/dash.js.git"
   }
 }
