@@ -32,7 +32,7 @@
 MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
     "use strict";
 
-    var keySystemStr = "webkit-org.w3.clearkey",
+    var keySystemStr = "org.w3.clearkey",
         keySystemUUID = "10000000-0000-0000-0000-000000000000",
         protData,
 
@@ -175,7 +175,7 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
             requestClearKeyLicense.call(this, message, requestData);
         },
 
-        getInitData: function(/*cpData*/) { return null; },
+        getInitData: function(/*cpData*/) { return null; }
     };
 };
 
