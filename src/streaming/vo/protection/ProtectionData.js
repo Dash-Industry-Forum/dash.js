@@ -45,7 +45,7 @@ MediaPlayer.vo.protection.ProtectionData = function(laURL, httpRequestHeaders, b
     this.laURL = laURL;
     this.httpRequestHeaders = httpRequestHeaders;
     this.bearerToken = bearerToken;
-    this.clearkeys = clearkeys
+    this.clearkeys = clearkeys;
 };
 
 MediaPlayer.vo.protection.ProtectionData.prototype = {

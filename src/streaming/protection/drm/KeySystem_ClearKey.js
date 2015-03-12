@@ -97,8 +97,7 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
             }
             /* internal -- keys are retrieved from protectionExtensions */
             else if (protData.clearkeys) {
-                var keyPairs = [],
-                    protectionExt = this.system.getObject("protectionExt");
+                var keyPairs = [];
                 for (i = 0; i < jsonMsg.kids.length; i++) {
                     var keyID = jsonMsg.kids[i],
                         key = (protData.clearkeys.hasOwnProperty(keyID)) ? protData.clearkeys[keyID] : null;
@@ -114,7 +113,8 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
                 this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         event);
             } else {
-
+                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                        null, new Error('DRM: ClearKey has no way (URL or protection data) to retrieve keys'));
             }
         };
 
