@@ -26,7 +26,7 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
         EAAAABAAEAAQABAAAAAAAg: "B+TWU8+0XGYVjZP/zkIpBw",
         // A1B1C1D1-A2B2-A3B3-A4B4-A5B5C5D5E5F5: 0x2539FA84B987416009A7FBBA11B239AB
         obHB0aKyo7OktKW1xdXl9Q: "JTn6hLmHQWAJp/u6EbI5qw"
-    }
+    };
 
 };
 
