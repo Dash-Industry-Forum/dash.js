@@ -180,13 +180,29 @@
             "protData": {
                 "com.widevine.alpha": {
                     "laURL": "https://html5.cablelabs.com:8025"
+                },
+                "org.w3.clearkey": {
+                    "clearkeys": {
+                        "EAAAABAAEAAQABAAAAAAAQ": "OiobaN0r2bLusl6ExHdmaA",
+                        "EAAAABAAEAAQABAAAAAAAg": "B+TWU8+0XGYVjZP/zkIpBw",
+                        "obHB0aKyo7OktKW1xdXl9Q": "JTn6hLmHQWAJp/u6EbI5qw"
+                    }
                 }
             }
         },
         {
             "name": "CableLabs Cenc PR/CK",
             "url": "http://html5.cablelabs.com:8100/cenc/prck/dash.mpd",
-            "browsers": ""
+            "browsers": "",
+            "protData": {
+                "org.w3.clearkey": {
+                    "clearkeys": {
+                        "EAAAABAAEAAQABAAAAAAAQ": "OiobaN0r2bLusl6ExHdmaA",
+                        "EAAAABAAEAAQABAAAAAAAg": "B+TWU8+0XGYVjZP/zkIpBw",
+                        "obHB0aKyo7OktKW1xdXl9Q": "JTn6hLmHQWAJp/u6EbI5qw"
+                    }
+                }
+            }
         }
     ]
 }

@@ -96,12 +96,12 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
                 xhr.send();
             }
             /* internal -- keys are retrieved from protectionExtensions */
-            else {
+            else if (protData.clearkeys) {
                 var keyPairs = [],
                     protectionExt = this.system.getObject("protectionExt");
                 for (i = 0; i < jsonMsg.kids.length; i++) {
                     var keyID = jsonMsg.kids[i],
-                        key = protectionExt.getClearKeyKey(keyID);
+                        key = (protData.clearkeys.hasOwnProperty(keyID)) ? protData.clearkeys[keyID] : null;
                     if (!key) {
                         this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                                 null, new Error("DRM: ClearKey keyID (" + keyID + ") is not known!"));
@@ -113,6 +113,8 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
                 var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs), requestData);
                 this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         event);
+            } else {
+
             }
         };
 
@@ -120,7 +122,7 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
     return {
 
         system: undefined,
-        schemeIdURI: undefined,
+        schemeIdURI: "urn:uuid:" + keySystemUUID,
         systemString: keySystemStr,
         uuid: keySystemUUID,
         notify: undefined,
@@ -134,7 +136,6 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
          * default or CDM-provided values
          */
         init: function(protectionData) {
-            this.schemeIdURI = "urn:uuid:" + keySystemUUID;
             protData = protectionData;
         },
 

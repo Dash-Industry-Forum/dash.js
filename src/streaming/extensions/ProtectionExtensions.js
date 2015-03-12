@@ -18,16 +18,6 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
     this.keySystems = [];
 
     this.clearkeyKeySystem = undefined;
-    // hard-coded set of keys for testing ClearKey
-    this.clearkeys = {
-        // 10000000-1000-1000-1000-100000000001: 0x3A2A1B68DD2BD9B2EEB25E84C4776668
-        EAAAABAAEAAQABAAAAAAAQ: "OiobaN0r2bLusl6ExHdmaA",
-        // 10000000-1000-1000-1000-100000000002: 0x07E4D653CFB45C66158D93FFCE422907
-        EAAAABAAEAAQABAAAAAAAg: "B+TWU8+0XGYVjZP/zkIpBw",
-        // A1B1C1D1-A2B2-A3B3-A4B4-A5B5C5D5E5F5: 0x2539FA84B987416009A7FBBA11B239AB
-        obHB0aKyo7OktKW1xdXl9Q: "JTn6hLmHQWAJp/u6EbI5qw"
-    };
-
 };
 
 MediaPlayer.dependencies.ProtectionExtensions.prototype = {
@@ -85,17 +75,6 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      */
     getKeySystems: function() {
         return this.keySystems;
-    },
-
-    /**
-     * Returns one of our hard-coded ClearKey keys
-     *
-     * @param {string} keyID the base64-encoded keyID
-     * @return {string} the base64-encoded key, or null if the given
-     * keyID is unknown
-     */
-    getClearKeyKey: function(keyID) {
-        return (this.clearkeys.hasOwnProperty(keyID)) ? this.clearkeys[keyID] : null;
     },
 
     /**
