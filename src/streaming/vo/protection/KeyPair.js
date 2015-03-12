@@ -32,16 +32,12 @@
 /**
  * Represents a 128-bit keyID and 128-bit encryption key
  *
- * @param keyID {Uint8Array} 128-bit key ID
- * @param key {Uint8Array} 128-bit encryption key
+ * @param keyID {String} 128-bit key ID, base64 encoded, with no padding
+ * @param key {String} 128-bit encryption key, base64 encoded, with no padding
  * @constructor
  */
 MediaPlayer.vo.protection.KeyPair = function(keyID, key) {
     "use strict";
-    if (!keyID || keyID.length !== 16)
-        throw new Error("Illegal key ID length! Must be 16 bytes (128 bits)");
-    if (!key || key.length !== 16)
-        throw new Error("Illegal key length! Must be 16 bytes (128 bits)");
     this.keyID = keyID;
     this.key = key;
 };

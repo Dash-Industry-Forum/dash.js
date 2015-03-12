@@ -106,7 +106,8 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
                         this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                                 null, new Error("DRM: ClearKey keyID (" + keyID + ") is not known!"));
                     }
-                    keyPairs.push(new MediaPlayer.vo.protection.KeyPair((BASE64.decodeArray(keyID)).buffer, (BASE64.decodeArray(key)).buffer))
+                    // KeyIDs from CDM are not base64 padded.  Keys may or may not be padded
+                    keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyID, key));
                 }
 
                 var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs), requestData);
