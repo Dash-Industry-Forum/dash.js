@@ -70,8 +70,8 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
                         }
                         for (i = 0; i < xhr.response.keys.length; i++) {
                             var keypair = xhr.response.keys[i],
-                                    keyid = (BASE64.decodeArray(keypair.kid)).buffer,
-                                    key = (BASE64.decodeArray(keypair.k)).buffer;
+                                    keyid = keypair.kid.replace(/=/g, "");
+                                    key = keypair.k.replace(/=/g, "");
                             keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyid, key));
                         }
                         var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs), requestData);
