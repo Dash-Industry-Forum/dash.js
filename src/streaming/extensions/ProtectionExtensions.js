@@ -34,8 +34,8 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
     this.system = undefined;
     this.log = undefined;
     this.keySystems = [];
-    this.clearkeyKeySystem = undefined;
 
+    this.clearkeyKeySystem = undefined;
 };
 
 MediaPlayer.dependencies.ProtectionExtensions.prototype = {

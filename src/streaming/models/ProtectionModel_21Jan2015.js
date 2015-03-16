@@ -260,6 +260,9 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 
             // Send our request to the key session
             var self = this;
+            if (this.protectionExt.isClearKey(this.keySystem)) {
+                message = message.toJWK();
+            }
             session.update(message).catch(function (error) {
                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR,
                     new MediaPlayer.vo.protection.KeyError(sessionToken, "Error sending update() message! " + error.name));

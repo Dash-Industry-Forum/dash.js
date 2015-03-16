@@ -53,12 +53,12 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
     /**
      * Returns just the data portion of a single PSSH
      *
-     * @param pssh {Uint8Array} the PSSH
-     * @return {Uint8Array} data portion of the PSSH
+     * @param pssh {ArrayBuffer} the PSSH
+     * @return {ArrayBuffer} data portion of the PSSH
      */
     getPSSHData: function(pssh) {
         // Data begins 32 bytes into the box
-        return new Uint8Array(pssh.buffer.slice(32));
+        return pssh.slice(32);
     },
 
     /**
@@ -68,7 +68,7 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
      * @param {MediaPlayer.dependencies.protection.KeySystem} keySystem the desired
      * key system
      * @param {ArrayBuffer} initData 'cenc' initialization data.  Concatenated list of PSSH.
-     * @returns {Uint8Array} The PSSH box data corresponding to the given key system
+     * @returns {ArrayBuffer} The PSSH box data corresponding to the given key system
      * or null if a valid association could not be found.
      */
     getPSSHForKeySystem: function(keySystem, initData) {
@@ -86,7 +86,7 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
      * CDM as initialization data when CommonEncryption content is detected
      * @returns {object} an object that has a property named according to each of
      * the detected key system UUIDs (e.g. 00000000-0000-0000-0000-0000000000)
-     * and a Uint8Array (the entire PSSH box) as the property value
+     * and a ArrayBuffer (the entire PSSH box) as the property value
      */
     parsePSSHList: function(data) {
 
@@ -119,9 +119,9 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
             }
             byteCursor += 4;
 
-            /* Version must be 0 for now */
+            /* Version must be 0 or 1 */
             version = dv.getUint8(byteCursor);
-            if (version !== 0) {
+            if (version !== 0 && version !== 1) {
                 byteCursor = nextBox;
                 continue;
             }
@@ -169,7 +169,7 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
             byteCursor += 4;
 
             /* PSSH Data */
-            pssh[systemID] = new Uint8Array(dv.buffer.slice(boxStart, nextBox));
+            pssh[systemID] = dv.buffer.slice(boxStart, nextBox);
             byteCursor = nextBox;
         }
 
