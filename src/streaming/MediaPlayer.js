@@ -80,6 +80,7 @@ MediaPlayer = function (context) {
         autoPlay = true,
         scheduleWhilePaused = false,
         bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
+        proxyDownloaderUrls = null,
 
         isReady = function () {
             return (!!element && !!source);
@@ -101,6 +102,7 @@ MediaPlayer = function (context) {
 
             playing = true;
             //this.debug.log("Playback initiated!");
+            this.proxyDownloader.setup(proxyDownloaderUrls);
             streamController = system.getObject("streamController");
             streamController.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
             manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
@@ -258,6 +260,7 @@ MediaPlayer = function (context) {
         errHandler: undefined,
         uriQueryFragModel:undefined,
         videoElementExt:undefined,
+        proxyDownloader: undefined,
 
         setup: function() {
             metricsExt = system.getObject("metricsExt");
@@ -344,6 +347,22 @@ MediaPlayer = function (context) {
          */
         getAutoPlay: function () {
             return autoPlay;
+        },
+        
+        /**
+         * @param value
+         * @memberof MediaPlayer#
+         */
+        setProxyDownloaderUrls: function (value) {
+            proxyDownloaderUrls = value;
+        },
+
+        /**
+         * @returns {string} The current proxyDownloader working urls.
+         * @memberof MediaPlayer#
+         */
+        getProxyDownloaderUrls: function () {
+            return proxyDownloaderUrls;
         },
 
         /**

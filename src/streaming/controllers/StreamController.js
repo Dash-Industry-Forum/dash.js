@@ -332,14 +332,23 @@
 
         onManifestLoaded = function(e) {
             if (!e.error) {
-                this.manifestModel.setValue(e.data.manifest);
+                var self = this;
+                var manifestProcessing = function(manifest) {
+                    self.manifestModel.setValue(manifest);
+                    
+                    self.log("Manifest has loaded.");
+                    //self.log(self.manifestModel.getValue());
 
-                this.log("Manifest has loaded.");
-                //self.log(self.manifestModel.getValue());
+                    // before composing streams, attempt to synchronize with some
+                    // time source (if there are any available)
+                    self.timeSyncController.initialize(self.manifestExt.getUTCTimingSources(manifest));
+                };
 
-                // before composing streams, attempt to synchronize with some
-                // time source (if there are any available)
-                this.timeSyncController.initialize(this.manifestExt.getUTCTimingSources(e.data.manifest));
+                if (this.proxyDownloader.inUse()) {
+                    this.proxyDownloader.loadManifestMap(e.data.manifest, manifestProcessing);
+                } else {
+                    manifestProcessing(e.data.manifest);
+                }
             } else {
                 this.reset();
             }
@@ -366,6 +375,7 @@
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        proxyDownloader: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = onManifestLoaded;
