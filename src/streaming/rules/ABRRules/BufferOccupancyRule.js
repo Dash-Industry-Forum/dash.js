@@ -43,7 +43,7 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
                 mediaInfo = context.getMediaInfo(),
                 trackInfo = context.getTrackInfo(),
                 mediaType = mediaInfo.type,
-                waitToSwitchTime = trackInfo.fragmentDuration !== NaN ? trackInfo.fragmentDuration / 2 : 2,
+                waitToSwitchTime = !isNaN(trackInfo.fragmentDuration) ? trackInfo.fragmentDuration / 2 : 2,
                 current = context.getCurrentValue(),
                 metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
                 lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,

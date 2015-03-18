@@ -230,7 +230,7 @@ MediaPlayer.dependencies.AbrController = function () {
             for (var i = 0; i < ln; i +=1) {
                 bitrateInfo = bitrateList[i];
 
-                if (bitrate <= bitrateInfo.bitrate) return i;
+                if (bitrate*1000 <= bitrateInfo.bitrate) return i;
             }
 
             return (ln-1);
@@ -253,7 +253,7 @@ MediaPlayer.dependencies.AbrController = function () {
                 bitrateInfo = new MediaPlayer.vo.BitrateInfo();
                 bitrateInfo.mediaType = type;
                 bitrateInfo.qualityIndex = i;
-                bitrateInfo.bitrate = Math.round(bitrateList[i] / 1000);
+                bitrateInfo.bitrate = bitrateList[i];
                 infoList.push(bitrateInfo);
             }
 

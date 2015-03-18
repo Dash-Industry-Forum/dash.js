@@ -28,7 +28,10 @@
                 },
                 getStreamInfo: function() {
                     return {};
-                }
+                },
+				getMediaInfo: function() {
+					return {bitrateList:[]};
+				}
             }
         },
 

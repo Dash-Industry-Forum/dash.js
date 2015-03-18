@@ -39,7 +39,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         currentTrackInfo,
         initialPlayback = true,
         lastValidationTime = null,
-        lastABRRuleApplyTime = 0,
         isStopped = false,
         playListMetrics = null,
         playListTraceMetrics = null,
