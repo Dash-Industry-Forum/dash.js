@@ -118,7 +118,6 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
             }
         };
 
-
     return {
 
         system: undefined,
@@ -143,7 +142,7 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
             requestClearKeyLicense.call(this, message, requestData);
         },
 
-        getInitData: function(/*cpData*/) { return null; }
+        getInitData: MediaPlayer.dependencies.protection.CommonEncryption.parseInitDataFromContentProtection
     };
 };
 
