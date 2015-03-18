@@ -158,7 +158,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 return;
             }
 
-            this.abrController.getPlaybackQuality(this.streamProcessor);
             getNextFragment.call(self, onNextFragment.bind(self));
         },
 
@@ -181,6 +180,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
         validate = function () {
             var now = new Date().getTime(),
                 isEnoughTimeSinceLastValidation = lastValidationTime ? (now - lastValidationTime > fragmentModel.getLoadingTime()) : true;
+
+            this.abrController.getPlaybackQuality(this.streamProcessor);
 
             if (!isEnoughTimeSinceLastValidation || isStopped || (this.playbackController.isPaused() && (this.playbackController.getPlayedRanges().length > 0) &&
                 (!this.scheduleWhilePaused || isDynamic))) return;

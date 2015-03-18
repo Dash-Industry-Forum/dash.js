@@ -230,7 +230,7 @@ MediaPlayer.dependencies.AbrController = function () {
             for (var i = 0; i < ln; i +=1) {
                 bitrateInfo = bitrateList[i];
 
-                if (bitrate < bitrateInfo.bitrate) return i;
+                if (bitrate <= bitrateInfo.bitrate) return i;
             }
 
             return (ln-1);
