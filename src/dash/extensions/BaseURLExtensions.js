@@ -502,6 +502,7 @@ Dash.dependencies.BaseURLExtensions = function () {
             request.open("GET", this.requestModifierExt.modifyRequestURL(info.url));
             request.responseType = "arraybuffer";
             request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
+            request.setRequestHeader("Authorization", "Bearer " + this.proxyDownloader.getAccessToken());
             request = this.requestModifierExt.modifyRequestHeader(request);
             request.send(null);
         },
@@ -523,6 +524,7 @@ Dash.dependencies.BaseURLExtensions = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        proxyDownloader: undefined,
 
         loadSegments: function(representation, type, range) {
             loadSegments.call(this, representation, type, range, onLoaded.bind(this));

@@ -34,6 +34,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
     var RETRY_ATTEMPTS = 3,
         RETRY_INTERVAL = 500,
         xhrs = [],
+        access_token = null,
 
         doLoad = function (request, remainingAttempts) {
             var req = new XMLHttpRequest(),
@@ -97,6 +98,10 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
                 req.open("GET", self.requestModifierExt.modifyRequestURL(request.url), true);
                 req.responseType = "arraybuffer";
+                if (!access_token) {
+                    access_token = this.proxyDownloader.getAccessToken();
+                }
+                req.setRequestHeader("Authorization", "Bearer " + access_token);
                 req = self.requestModifierExt.modifyRequestHeader(req);
 /*
                 req.setRequestHeader("Cache-Control", "no-cache");
@@ -142,11 +147,22 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     handleLoaded(request, false);
 
                     if (remainingAttempts > 0) {
-                        self.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
-                        remainingAttempts--;
-                        setTimeout(function() {
-                            doLoad.call(self, request, remainingAttempts);
-                        }, RETRY_INTERVAL);
+                        var retry = function() {
+                            setTimeout(function() {
+                                doLoad.call(self, request, remainingAttempts);
+                            }, RETRY_INTERVAL);
+                        };
+
+                        if (req.status == 401) {
+                            self.proxyDownloader.refreshAccessToken(function(new_token) {
+                            access_token = new_token;
+                            retry();
+                            });
+                        } else {
+                            self.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                            remainingAttempts--;
+                            retry();
+                        }
                     } else {
                         self.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
                         self.errHandler.downloadError("content", request.url, req);
@@ -189,6 +205,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        proxyDownloader: undefined,
 
         load: function (req) {
 
