@@ -35,6 +35,7 @@ MediaPlayer.dependencies.AbrController = function () {
         topQualities = {},
         qualityDict = {},
         confidenceDict = {},
+        bitrateDict = {},
 
         getInternalQuality = function (type, id) {
             var quality;
@@ -77,6 +78,22 @@ MediaPlayer.dependencies.AbrController = function () {
         setTopQualityIndex = function (type, id, value) {
             topQualities[id] = topQualities[id] || {};
             topQualities[id][type] = value;
+        },
+
+        getInitialBitrate = function(type) {
+            var initialBitrate;
+
+            if (!bitrateDict.hasOwnProperty(type)) {
+                bitrateDict[type] = (type === "video") ? MediaPlayer.dependencies.AbrController.DEFAULT_VIDEO_BITRATE : MediaPlayer.dependencies.AbrController.DEFAULT_AUDIO_BITRATE;
+            }
+
+            initialBitrate = bitrateDict[type];
+
+            return initialBitrate;
+        },
+
+        setInitialBitrate = function(type, value) {
+            bitrateDict[type] = value;
         },
 
         getTopQualityIndex = function(type, id) {
@@ -182,8 +199,46 @@ MediaPlayer.dependencies.AbrController = function () {
         },
 
         /**
+         * @param type
+         * @param {number} value A value of the initial bitrate, kbps
+         * @memberof AbrController#
+         */
+        setInitialBitrateFor: function(type, value){
+            setInitialBitrate(type, value);
+        },
+
+        /**
+         * @param type
+         * @returns {number} A value of the initial bitrate, kbps
+         * @memberof AbrController#
+         */
+        getInitialBitrateFor: function(type){
+            return getInitialBitrate(type);
+        },
+
+        /**
          * @param mediaInfo
-         * @returns {Array}
+         * @param bitrate A bitrate value, kbps
+         * @returns {number} A quality index for the given bitrate
+         * @memberof AbrController#
+         */
+        getQualityForBitrate: function(mediaInfo, bitrate) {
+            var bitrateList = this.getBitrateList(mediaInfo),
+                ln = bitrateList.length,
+                bitrateInfo;
+
+            for (var i = 0; i < ln; i +=1) {
+                bitrateInfo = bitrateList[i];
+
+                if (bitrate*1000 <= bitrateInfo.bitrate) return i;
+            }
+
+            return (ln-1);
+        },
+
+        /**
+         * @param mediaInfo
+         * @returns {Array} A list of {@link MediaPlayer.vo.BitrateInfo} objects
          * @memberof AbrController#
          */
         getBitrateList: function(mediaInfo) {
@@ -237,6 +292,7 @@ MediaPlayer.dependencies.AbrController = function () {
             topQualities = {};
             qualityDict = {};
             confidenceDict = {};
+            bitrateDict = {};
         }
     };
 };
@@ -248,3 +304,8 @@ MediaPlayer.dependencies.AbrController.prototype = {
 MediaPlayer.dependencies.AbrController.eventList = {
     ENAME_QUALITY_CHANGED: "qualityChanged"
 };
+
+// Default initial video bitrate, kbps
+MediaPlayer.dependencies.AbrController.DEFAULT_VIDEO_BITRATE = 1000;
+// Default initial audio bitrate, kbps
+MediaPlayer.dependencies.AbrController.DEFAULT_AUDIO_BITRATE = 100;

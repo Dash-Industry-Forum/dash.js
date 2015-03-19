@@ -39,7 +39,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         currentTrackInfo,
         initialPlayback = true,
         lastValidationTime = null,
-        lastABRRuleApplyTime = 0,
         isStopped = false,
         playListMetrics = null,
         playListTraceMetrics = null,
@@ -179,16 +178,9 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         validate = function () {
             var now = new Date().getTime(),
-                isEnoughTimeSinceLastValidation = lastValidationTime ? (now - lastValidationTime > fragmentModel.getLoadingTime()) : true,
-                //manifestInfo = currentTrackInfo.mediaInfo.streamInfo.manifestInfo,
-                qualitySwitchThreshold = 1000; //TODO need to get average segment duration and cut that in half for interval to apply rule
+                isEnoughTimeSinceLastValidation = lastValidationTime ? (now - lastValidationTime > fragmentModel.getLoadingTime()) : true;
 
-
-            if (now - lastABRRuleApplyTime > qualitySwitchThreshold) {
-                lastABRRuleApplyTime = now;
-                this.abrController.getPlaybackQuality(this.streamProcessor);
-            }
-
+            this.abrController.getPlaybackQuality(this.streamProcessor);
 
             if (!isEnoughTimeSinceLastValidation || isStopped || (this.playbackController.isPaused() && (this.playbackController.getPlayedRanges().length > 0) &&
                 (!this.scheduleWhilePaused || isDynamic))) return;
