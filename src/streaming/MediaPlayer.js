@@ -101,7 +101,7 @@ MediaPlayer = function (context) {
 
             playing = true;
             this.debug.log("Playback initiated!");
-            checkLocalStorage.call(this);
+
             streamController = system.getObject("streamController");
             streamController.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
             manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
@@ -110,6 +110,7 @@ MediaPlayer = function (context) {
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.setProtectionData(protectionData);
+            checkInitialBitrate.call(this);
             streamController.load(source);
 
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
@@ -232,26 +233,33 @@ MediaPlayer = function (context) {
             }
         },
 
-        /**
-         * Checks local storage to see if there is valid, non-expired bit rate
-         * hinting from the last play session to use as a starting bit rate.
-         */
-        checkLocalStorage = function() {
-            if (window.localStorage){
+        checkInitialBitrate = function() {
                 ['video', 'audio'].forEach(function(value) {
-                    var key = MediaPlayer["LOCAL_STORAGE_"+value.toUpperCase()+"_BITRATE_KEY"],
-                        obj = JSON.parse(localStorage.getItem(key)) || {},
-                        isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= MediaPlayer.LOCAL_STORAGE_BITRATE_EXPIRATION || false,
-                        bitrate = parseInt(obj.bitrate);
+                    //first make sure player has not explicitly set a starting bit rate
+                    if (this.getInitialBitrateFor(value) === undefined) {
+                        //Checks local storage to see if there is valid, non-expired bit rate
+                        //hinting from the last play session to use as a starting bit rate. if not,
+                        // it uses the default video and audio value in MediaPlayer.dependencies.AbrController
+                        if (window.localStorage) {
+                            var key = MediaPlayer["LOCAL_STORAGE_"+value.toUpperCase()+"_BITRATE_KEY"],
+                                obj = JSON.parse(localStorage.getItem(key)) || {},
+                                isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= MediaPlayer.LOCAL_STORAGE_BITRATE_EXPIRATION || false,
+                                bitrate = parseInt(obj.bitrate);
 
-                    if (!isNaN(bitrate) && !isExpired) {
-                        this.setInitialBitrateFor(value, bitrate);
-                        this.debug.log("Last bitrate played for "+value+" was "+bitrate);
-                    } else if (isExpired){
-                        localStorage.removeItem(key);
+                            if (!isNaN(bitrate) && !isExpired) {
+                                this.setInitialBitrateFor(value, bitrate);
+                                this.debug.log("Last bitrate played for "+value+" was "+bitrate);
+                            } else if (isExpired){
+                                localStorage.removeItem(key);
+                            }
+                        }
+                        //check again to see if local storage value was set, if not use default value for startup.
+                        if (this.getInitialBitrateFor(value) === undefined) {
+                            this.setInitialBitrateFor(value, MediaPlayer.dependencies.AbrController["DEFAULT_"+value.toUpperCase()+"_BITRATE"]);
+                        }
                     }
+
                 }, this);
-            }
         };
 
     // Overload dijon getObject function
