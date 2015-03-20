@@ -100,7 +100,8 @@ MediaPlayer = function (context) {
             }
 
             playing = true;
-            //this.debug.log("Playback initiated!");
+            this.debug.log("Playback initiated!");
+            checkLocalStorage.call(this);
             streamController = system.getObject("streamController");
             streamController.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
             manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
@@ -228,6 +229,28 @@ MediaPlayer = function (context) {
                 rulesController.reset();
                 streamController = null;
                 playing = false;
+            }
+        },
+
+        /**
+         * Checks local storage to see if there is valid, non-expired bit rate
+         * hinting from the last play session to use as a starting bit rate.
+         */
+        checkLocalStorage = function() {
+            if (window.localStorage){
+                ['video', 'audio'].forEach(function(value) {
+                    var key = MediaPlayer["LOCAL_STORAGE_"+value.toUpperCase()+"_BITRATE_KEY"],
+                        obj = JSON.parse(localStorage.getItem(key)) || {},
+                        isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= MediaPlayer.LOCAL_STORAGE_BITRATE_EXPIRATION || false,
+                        bitrate = parseInt(obj.bitrate);
+
+                    if (!isNaN(bitrate) && !isExpired) {
+                        this.setInitialBitrateFor(value, bitrate);
+                        this.debug.log("Last bitrate played for "+value+" was "+bitrate);
+                    } else if (isExpired){
+                        localStorage.removeItem(key);
+                    }
+                }, this);
             }
         };
 
@@ -697,6 +720,9 @@ MediaPlayer.prototype = {
     constructor: MediaPlayer
 };
 
+MediaPlayer.LOCAL_STORAGE_VIDEO_BITRATE_KEY = "dashjs_vbitrate";
+MediaPlayer.LOCAL_STORAGE_AUDIO_BITRATE_KEY = "dashjs_abitrate";
+MediaPlayer.LOCAL_STORAGE_BITRATE_EXPIRATION = 3600000;
 MediaPlayer.dependencies = {};
 MediaPlayer.dependencies.protection = {};
 MediaPlayer.utils = {};

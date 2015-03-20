@@ -132,7 +132,7 @@
         },
 
         /*
-         * Called when current playback positon is changed.
+         * Called when current playback position is changed.
          * Used to determine the time current stream is finished and we should switch to the next stream.
          * TODO move to ???Extensions class
          */
@@ -157,7 +157,7 @@
         },
 
         /*
-         * Called when Seeking event is occured.
+         * Called when Seeking event is occurred.
          * TODO move to ???Extensions class
          */
         onSeeking = function(e) {

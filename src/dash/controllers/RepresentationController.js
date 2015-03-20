@@ -207,7 +207,13 @@ Dash.dependencies.RepresentationController = function () {
             if (e.data.mediaType !== self.streamProcessor.getType() || self.streamProcessor.getStreamInfo().id !== e.data.streamInfo.id) return;
 
             currentRepresentation = self.getRepresentationForQuality(e.data.newQuality);
+            setLocalStorage(e.data.mediaType, currentRepresentation.bandwidth);
             addRepresentationSwitch.call(self);
+        },
+
+        setLocalStorage = function(type, bitrate) {
+            if (!window.localStorage || (type !== "video" && type !== "audio")) return;
+            localStorage.setItem(MediaPlayer["LOCAL_STORAGE_"+type.toUpperCase()+"_BITRATE_KEY"], JSON.stringify({bitrate:bitrate/1000, timestamp:new Date().getTime()}));
         };
 
     return {
