@@ -75,6 +75,7 @@ MediaPlayer = function (context) {
         metricsExt,
         metricsModel,
         videoModel,
+        DOMStorage,
         initialized = false,
         playing = false,
         autoPlay = true,
@@ -100,7 +101,7 @@ MediaPlayer = function (context) {
             }
 
             playing = true;
-            //this.debug.log("Playback initiated!");
+            this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
             streamController.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
             manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
@@ -109,8 +110,8 @@ MediaPlayer = function (context) {
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.setProtectionData(protectionData);
+            DOMStorage.checkInitialBitrate();
             streamController.load(source);
-
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
@@ -231,6 +232,8 @@ MediaPlayer = function (context) {
             }
         };
 
+
+
     // Overload dijon getObject function
     var _getObject = dijon.System.prototype.getObject;
     dijon.System.prototype.getObject = function(name) {
@@ -266,6 +269,7 @@ MediaPlayer = function (context) {
             abrController = system.getObject("abrController");
             rulesController = system.getObject("rulesController");
             metricsModel = system.getObject("metricsModel");
+            DOMStorage = system.getObject("DOMStorage");
         },
 
         /**
@@ -328,6 +332,23 @@ MediaPlayer = function (context) {
                 stream = streamInfo ? streamController.getStreamById(streamInfo.id) : null;
 
             return (stream ? stream.getVideoModel() : videoModel);
+        },
+
+        /**
+         * Set to false if you would like to disable the last known bit rate from being stored during playback and used
+         * to set the initial bit rate for subsequent playback within the expiration window.
+         *
+         * The default expiration is one hour, defined in milliseconds. If expired, the default initial bit rate (closest to 1000 kpbs) will be used
+         * for that session and a new bit rate will be stored during that session.
+         *
+         * @param enable - Boolean - Will toggle if feature is enabled. True to enable, False to disable.
+         * @param ttl Number - (Optional) A value defined in milliseconds representing how long to cache the bit rate for. Time to live.
+         * @default enable = True, ttl = 360000 (1 hour)
+         * @memberof MediaPlayer#
+         *
+         */
+        enableLastBitrateCaching: function (enable, ttl) {
+            DOMStorage.enableLastBitrateCaching(enable, ttl);
         },
 
         /**
@@ -696,6 +717,7 @@ MediaPlayer = function (context) {
 MediaPlayer.prototype = {
     constructor: MediaPlayer
 };
+
 
 MediaPlayer.dependencies = {};
 MediaPlayer.dependencies.protection = {};

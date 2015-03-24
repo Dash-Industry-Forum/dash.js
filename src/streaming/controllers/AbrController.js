@@ -81,15 +81,7 @@ MediaPlayer.dependencies.AbrController = function () {
         },
 
         getInitialBitrate = function(type) {
-            var initialBitrate;
-
-            if (!bitrateDict.hasOwnProperty(type)) {
-                bitrateDict[type] = (type === "video") ? MediaPlayer.dependencies.AbrController.DEFAULT_VIDEO_BITRATE : MediaPlayer.dependencies.AbrController.DEFAULT_AUDIO_BITRATE;
-            }
-
-            initialBitrate = bitrateDict[type];
-
-            return initialBitrate;
+            return bitrateDict[type];
         },
 
         setInitialBitrate = function(type, value) {
@@ -292,7 +284,8 @@ MediaPlayer.dependencies.AbrController = function () {
             topQualities = {};
             qualityDict = {};
             confidenceDict = {};
-            bitrateDict = {};
+            //bitrateDict = {}; // We should let this setting persist over multiple sources. If we empty the object each time we
+            //attach source in media player then there is no way to set initial bit rate for the second media source and so on...
         }
     };
 };

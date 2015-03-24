@@ -363,6 +363,10 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 representation.id = r.id;
             }
 
+            if (r.hasOwnProperty('bandwidth')){
+                representation.bandwidth = r.bandwidth;
+            }
+
             if (r.hasOwnProperty("SegmentBase")) {
                 segmentInfo = r.SegmentBase;
                 representation.segmentInfoType = "SegmentBase";
