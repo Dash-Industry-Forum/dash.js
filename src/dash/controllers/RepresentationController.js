@@ -207,13 +207,14 @@ Dash.dependencies.RepresentationController = function () {
             if (e.data.mediaType !== self.streamProcessor.getType() || self.streamProcessor.getStreamInfo().id !== e.data.streamInfo.id) return;
 
             currentRepresentation = self.getRepresentationForQuality(e.data.newQuality);
-            setLocalStorage(e.data.mediaType, currentRepresentation.bandwidth);
+            setLocalStorage.call(self, e.data.mediaType, currentRepresentation.bandwidth);
             addRepresentationSwitch.call(self);
         },
 
         setLocalStorage = function(type, bitrate) {
-            if (!window.localStorage || (type !== "video" && type !== "audio")) return;
-            localStorage.setItem(MediaPlayer.utils.LocalStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_BITRATE_KEY"], JSON.stringify({bitrate:bitrate/1000, timestamp:new Date().getTime()}));
+            if (this.DOMStorage.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
+                localStorage.setItem(MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_BITRATE_KEY"], JSON.stringify({bitrate:bitrate/1000, timestamp:new Date().getTime()}));
+            }
         };
 
     return {
@@ -228,6 +229,7 @@ Dash.dependencies.RepresentationController = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        DOMStorage:undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;

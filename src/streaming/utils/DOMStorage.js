@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.LocalStorage = function () {
+MediaPlayer.utils.DOMStorage = function () {
 
     var enableLastBitrateCaching = true,
         checkInitialBitrate = function() {
@@ -38,10 +38,10 @@ MediaPlayer.utils.LocalStorage = function () {
                     //Checks local storage to see if there is valid, non-expired bit rate
                     //hinting from the last play session to use as a starting bit rate. if not,
                     // it uses the default video and audio value in MediaPlayer.dependencies.AbrController
-                    if (window.localStorage && enableLastBitrateCaching) {
-                        var key = MediaPlayer.utils.LocalStorage["LOCAL_STORAGE_"+value.toUpperCase()+"_BITRATE_KEY"],
+                    if (this.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) && enableLastBitrateCaching) {
+                        var key = MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+value.toUpperCase()+"_BITRATE_KEY"],
                             obj = JSON.parse(localStorage.getItem(key)) || {},
-                            isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= MediaPlayer.utils.LocalStorage.LOCAL_STORAGE_BITRATE_EXPIRATION || false,
+                            isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_BITRATE_EXPIRATION || false,
                             bitrate = parseInt(obj.bitrate);
 
                         if (!isNaN(bitrate) && !isExpired) {
@@ -68,7 +68,17 @@ MediaPlayer.utils.LocalStorage = function () {
         enableLastBitrateCaching: function(enable, ttl) {
             enableLastBitrateCaching = enable;
             if (ttl !== undefined && !isNaN(ttl) && typeof(ttl) === "number"){
-                MediaPlayer.utils.LocalStorage.LOCAL_STORAGE_BITRATE_EXPIRATION = ttl;
+                MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_BITRATE_EXPIRATION = ttl;
+            }
+        },
+        //type can be local, session
+        isSupported: function(type) {
+            if (type === MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) {
+                return window.localStorage || false;
+            } else if (type === MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION) {
+                return window.sessionStorage || false;
+            } else {
+                return false;
             }
         }
 
@@ -76,10 +86,12 @@ MediaPlayer.utils.LocalStorage = function () {
 };
 
 
-MediaPlayer.utils.LocalStorage.LOCAL_STORAGE_VIDEO_BITRATE_KEY = "dashjs_vbitrate";
-MediaPlayer.utils.LocalStorage.LOCAL_STORAGE_AUDIO_BITRATE_KEY = "dashjs_abitrate";
-MediaPlayer.utils.LocalStorage.LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
+MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_VIDEO_BITRATE_KEY = "dashjs_vbitrate";
+MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_AUDIO_BITRATE_KEY = "dashjs_abitrate";
+MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
+MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL = "local";
+MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION = "session";
 
-MediaPlayer.utils.LocalStorage.prototype = {
-    constructor: MediaPlayer.utils.LocalStorage
+MediaPlayer.utils.DOMStorage.prototype = {
+    constructor: MediaPlayer.utils.DOMStorage
 };

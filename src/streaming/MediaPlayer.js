@@ -75,7 +75,7 @@ MediaPlayer = function (context) {
         metricsExt,
         metricsModel,
         videoModel,
-        localStorage,
+        DOMStorage,
         initialized = false,
         playing = false,
         autoPlay = true,
@@ -102,7 +102,6 @@ MediaPlayer = function (context) {
 
             playing = true;
             this.debug.log("Playback initiated!");
-
             streamController = system.getObject("streamController");
             streamController.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
             manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
@@ -111,11 +110,8 @@ MediaPlayer = function (context) {
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.setProtectionData(protectionData);
-
-            localStorage.checkInitialBitrate();
-
+            DOMStorage.checkInitialBitrate();
             streamController.load(source);
-
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
@@ -273,7 +269,7 @@ MediaPlayer = function (context) {
             abrController = system.getObject("abrController");
             rulesController = system.getObject("rulesController");
             metricsModel = system.getObject("metricsModel");
-            localStorage = system.getObject("localStorage");
+            DOMStorage = system.getObject("DOMStorage");
         },
 
         /**
@@ -352,7 +348,7 @@ MediaPlayer = function (context) {
          *
          */
         enableLastBitrateCaching: function (enable, ttl) {
-            localStorage.enableLastBitrateCaching(enable, ttl);
+            DOMStorage.enableLastBitrateCaching(enable, ttl);
         },
 
         /**
