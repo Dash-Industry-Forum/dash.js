@@ -164,7 +164,31 @@
             "browsers": ""
         },
         {
-            "name": "CableLabs Cenc WV",
+            "name": "CableLabs Cenc ClearKey",
+            "url": "http://html5.cablelabs.com:8100/cenc/ck/dash.mpd",
+            "browsers": "",
+            "protData": {
+                "org.w3.clearkey": {
+                    "clearkeys": {
+                        "IAAAACAAIAAgACAAAAAAAg" : "5t1CjnbMFURBou087OSj2w"
+                    }
+                }
+            }
+        },
+        {
+            "name": "CableLabs Cenc ClearKey (InitData in MPD)",
+            "url": "http://html5.cablelabs.com:8100/cenc/ck/dash_initdata.mpd",
+            "browsers": "",
+            "protData": {
+                "org.w3.clearkey": {
+                    "clearkeys": {
+                        "IAAAACAAIAAgACAAAAAAAg" : "5t1CjnbMFURBou087OSj2w"
+                    }
+                }
+            }
+        },
+        {
+            "name": "CableLabs Cenc Widevine",
             "url": "http://html5.cablelabs.com:8100/cenc/wv/dash.mpd",
             "browsers": "",
             "protData": {
@@ -174,7 +198,7 @@
             }
         },
         {
-            "name": "CableLabs Cenc WV/CK",
+            "name": "CableLabs Cenc Widevine/ClearKey",
             "url": "http://html5.cablelabs.com:8100/cenc/wvck/dash.mpd",
             "browsers": "",
             "protData": {
@@ -183,26 +207,35 @@
                 },
                 "org.w3.clearkey": {
                     "clearkeys": {
-                        "EAAAABAAEAAQABAAAAAAAQ": "OiobaN0r2bLusl6ExHdmaA",
-                        "EAAAABAAEAAQABAAAAAAAg": "B+TWU8+0XGYVjZP/zkIpBw",
-                        "obHB0aKyo7OktKW1xdXl9Q": "JTn6hLmHQWAJp/u6EbI5qw"
+                        "H3JbV93QV3mPNBKQON2UtQ" : "ClKhDPHMtCouEx1vLGsJsA"
                     }
                 }
             }
         },
         {
-            "name": "CableLabs Cenc PR/CK",
-            "url": "http://html5.cablelabs.com:8100/cenc/prck/dash.mpd",
+            "name": "CableLabs Cenc Widevine/ClearKey (InitData in MPD)",
+            "url": "http://html5.cablelabs.com:8100/cenc/wvck/dash_initdata.mpd",
             "browsers": "",
             "protData": {
+                "com.widevine.alpha": {
+                    "laURL": "https://html5.cablelabs.com:8025"
+                },
                 "org.w3.clearkey": {
                     "clearkeys": {
-                        "EAAAABAAEAAQABAAAAAAAQ": "OiobaN0r2bLusl6ExHdmaA",
-                        "EAAAABAAEAAQABAAAAAAAg": "B+TWU8+0XGYVjZP/zkIpBw",
-                        "obHB0aKyo7OktKW1xdXl9Q": "JTn6hLmHQWAJp/u6EbI5qw"
+                        "H3JbV93QV3mPNBKQON2UtQ" : "ClKhDPHMtCouEx1vLGsJsA"
                     }
                 }
             }
+        },
+        {
+            "name": "CableLabs Cenc PlayReady",
+            "url": "http://html5.cablelabs.com:8100/cenc/pr/dash.mpd",
+            "browsers": ""
+        },
+        {
+            "name": "CableLabs Cenc PlayReady (InitData in MPD)",
+            "url": "http://html5.cablelabs.com:8100/cenc/pr/dash_initdata.mpd",
+            "browsers": ""
         }
     ]
 }
