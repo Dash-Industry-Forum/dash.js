@@ -42,7 +42,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         getStreamStartTime = function (streamInfo) {
             var presentationStartTime,
-                startTimeOffset = parseInt(this.uriQueryFragModel.getURIFragmentData.s);
+                startTimeOffset = parseInt(this.uriQueryFragModel.getURIFragmentData().s);
 
             if (isDynamic) {
 
