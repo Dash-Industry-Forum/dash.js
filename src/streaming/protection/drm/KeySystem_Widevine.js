@@ -90,16 +90,6 @@ MediaPlayer.dependencies.protection.KeySystem_Widevine = function() {
 
                 xhr.send(message);
             }
-        },
-
-        /* TODO: Implement me */
-        parseInitDataFromContentProtection = function(/*cpData*/) {
-            return null;
-        },
-
-        /* TODO: Implement me */
-        isInitDataEqual = function(/*initData1, initData2*/) {
-            return false;
         };
 
     return {
@@ -123,9 +113,7 @@ MediaPlayer.dependencies.protection.KeySystem_Widevine = function() {
 
         doLicenseRequest: requestLicense,
 
-        getInitData: parseInitDataFromContentProtection,
-
-        initDataEquals: isInitDataEqual
+        getInitData: MediaPlayer.dependencies.protection.CommonEncryption.parseInitDataFromContentProtection
     };
 };
 

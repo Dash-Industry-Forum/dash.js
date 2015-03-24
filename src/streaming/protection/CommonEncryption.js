@@ -80,6 +80,20 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
     },
 
     /**
+     * Parse a standard common encryption PSSH which contains a sinmple
+     * base64-encoding of the init data
+     *
+     * @param cpData the ContentProtection element
+     * @returns {ArrayBuffer} the init data or null if not found
+     */
+    parseInitDataFromContentProtection: function(cpData) {
+        if ("pssh" in cpData) {
+            return BASE64.decodeArray(cpData.pssh.__text).buffer;
+        }
+        return null;
+    },
+
+    /**
      * Parses list of PSSH boxes into keysystem-specific PSSH data
      *
      * @param data {ArrayBuffer} the concatenated list of PSSH boxes as provided by
