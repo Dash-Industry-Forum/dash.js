@@ -213,7 +213,7 @@ Dash.dependencies.RepresentationController = function () {
 
         setLocalStorage = function(type, bitrate) {
             if (!window.localStorage || (type !== "video" && type !== "audio")) return;
-            localStorage.setItem(MediaPlayer["LOCAL_STORAGE_"+type.toUpperCase()+"_BITRATE_KEY"], JSON.stringify({bitrate:bitrate/1000, timestamp:new Date().getTime()}));
+            localStorage.setItem(MediaPlayer.utils.LocalStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_BITRATE_KEY"], JSON.stringify({bitrate:bitrate/1000, timestamp:new Date().getTime()}));
         };
 
     return {

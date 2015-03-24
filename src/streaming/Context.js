@@ -56,6 +56,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('debug', MediaPlayer.utils.Debug);
             this.system.mapSingleton('eventBus', MediaPlayer.utils.EventBus);
             this.system.mapSingleton('capabilities', MediaPlayer.utils.Capabilities);
+            this.system.mapSingleton('localStorage', MediaPlayer.utils.LocalStorage);
             this.system.mapClass('customTimeRanges', MediaPlayer.utils.CustomTimeRanges);
 
             this.system.mapSingleton('textTrackExtensions', MediaPlayer.utils.TextTrackExtensions);

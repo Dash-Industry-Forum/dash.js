@@ -75,6 +75,7 @@ MediaPlayer = function (context) {
         metricsExt,
         metricsModel,
         videoModel,
+        localStorage,
         initialized = false,
         playing = false,
         autoPlay = true,
@@ -110,7 +111,9 @@ MediaPlayer = function (context) {
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.setProtectionData(protectionData);
-            checkInitialBitrate.call(this);
+
+            localStorage.checkInitialBitrate();
+
             streamController.load(source);
 
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
@@ -231,36 +234,9 @@ MediaPlayer = function (context) {
                 streamController = null;
                 playing = false;
             }
-        },
-
-        checkInitialBitrate = function() {
-                ['video', 'audio'].forEach(function(value) {
-                    //first make sure player has not explicitly set a starting bit rate
-                    if (this.getInitialBitrateFor(value) === undefined) {
-                        //Checks local storage to see if there is valid, non-expired bit rate
-                        //hinting from the last play session to use as a starting bit rate. if not,
-                        // it uses the default video and audio value in MediaPlayer.dependencies.AbrController
-                        if (window.localStorage) {
-                            var key = MediaPlayer["LOCAL_STORAGE_"+value.toUpperCase()+"_BITRATE_KEY"],
-                                obj = JSON.parse(localStorage.getItem(key)) || {},
-                                isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= MediaPlayer.LOCAL_STORAGE_BITRATE_EXPIRATION || false,
-                                bitrate = parseInt(obj.bitrate);
-
-                            if (!isNaN(bitrate) && !isExpired) {
-                                this.setInitialBitrateFor(value, bitrate);
-                                this.debug.log("Last bitrate played for "+value+" was "+bitrate);
-                            } else if (isExpired){
-                                localStorage.removeItem(key);
-                            }
-                        }
-                        //check again to see if local storage value was set, if not use default value for startup.
-                        if (this.getInitialBitrateFor(value) === undefined) {
-                            this.setInitialBitrateFor(value, MediaPlayer.dependencies.AbrController["DEFAULT_"+value.toUpperCase()+"_BITRATE"]);
-                        }
-                    }
-
-                }, this);
         };
+
+
 
     // Overload dijon getObject function
     var _getObject = dijon.System.prototype.getObject;
@@ -297,6 +273,7 @@ MediaPlayer = function (context) {
             abrController = system.getObject("abrController");
             rulesController = system.getObject("rulesController");
             metricsModel = system.getObject("metricsModel");
+            localStorage = system.getObject("localStorage");
         },
 
         /**
@@ -359,6 +336,23 @@ MediaPlayer = function (context) {
                 stream = streamInfo ? streamController.getStreamById(streamInfo.id) : null;
 
             return (stream ? stream.getVideoModel() : videoModel);
+        },
+
+        /**
+         * Set to false if you would like to disable the last known bit rate from being stored during playback and used
+         * to set the initial bit rate for subsequent playback within the expiration window.
+         *
+         * The default expiration is one hour, defined in milliseconds. If expired, the default initial bit rate (closest to 1000 kpbs) will be used
+         * for that session and a new bit rate will be stored during that session.
+         *
+         * @param enable - Boolean - Will toggle if feature is enabled. True to enable, False to disable.
+         * @param ttl Number - (Optional) A value defined in milliseconds representing how long to cache the bit rate for. Time to live.
+         * @default enable = True, ttl = 360000 (1 hour)
+         * @memberof MediaPlayer#
+         *
+         */
+        enableLastBitrateCaching: function (enable, ttl) {
+            localStorage.enableLastBitrateCaching(enable, ttl);
         },
 
         /**
@@ -728,9 +722,7 @@ MediaPlayer.prototype = {
     constructor: MediaPlayer
 };
 
-MediaPlayer.LOCAL_STORAGE_VIDEO_BITRATE_KEY = "dashjs_vbitrate";
-MediaPlayer.LOCAL_STORAGE_AUDIO_BITRATE_KEY = "dashjs_abitrate";
-MediaPlayer.LOCAL_STORAGE_BITRATE_EXPIRATION = 3600000;
+
 MediaPlayer.dependencies = {};
 MediaPlayer.dependencies.protection = {};
 MediaPlayer.utils = {};
