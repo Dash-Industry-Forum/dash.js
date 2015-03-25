@@ -41,7 +41,8 @@ Dash.dependencies.RepresentationController = function () {
             var self = this,
                 bitrate = null,
                 streamInfo = self.streamProcessor.getStreamInfo(),
-                quality;
+                quality,
+                maxQuality = self.abrController.getTopQualityIndexFor(type, streamInfo.id),
 
             updating = true;
             self.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
@@ -53,6 +54,10 @@ Dash.dependencies.RepresentationController = function () {
                 quality = self.abrController.getQualityForBitrate(self.streamProcessor.getMediaInfo(), bitrate);
             } else {
                 quality = self.abrController.getQualityFor(type, streamInfo);
+            }
+
+            if (quality > maxQuality) {
+                quality = maxQuality;
             }
 
             currentRepresentation = getRepresentationForQuality.call(self, quality);
