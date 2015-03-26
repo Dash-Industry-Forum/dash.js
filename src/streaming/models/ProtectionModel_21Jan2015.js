@@ -219,9 +219,9 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 
             var self = this;
             mediaKeys.setServerCertificate(serverCertificate).then(function() {
-                self.notify(MediaPlayer.models.ProtectionModel.ENAME_SERVER_CERTIFICATE_UPDATED);
+                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED);
             }).catch(function(error) {
-                self.notify(MediaPlayer.models.ProtectionModel.ENAME_SERVER_CERTIFICATE_UPDATED,
+                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED,
                         null, "Error updating server certificate -- " + error.name);
             });
         },
@@ -245,7 +245,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
             // Generate initial key request
             var self = this;
             session.generateRequest("cenc", initData).then(function() {
-                self.notify(MediaPlayer.models.ProtectionModel.ENAME_KEY_SESSION_CREATED, sessionToken);
+                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, sessionToken);
             }).catch(function(error) {
                 // TODO: Better error string
                 removeSession(sessionToken);

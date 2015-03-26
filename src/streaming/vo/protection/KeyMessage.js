@@ -32,8 +32,9 @@
 /**
  * EME-independent KeyMessage
  *
- * @param sessionToken the session to which the key message is associated
- * @param message the key message
+ * @param {MediaPlayer.vo.protection.SessionToken} sessionToken the session
+ * to which the key message is associated
+ * @param {ArrayBuffer} message the key message
  * @param [defaultURL] license acquisition URL provided by the CDM
  * @param [messageType] the message type.  One of "license-request",
  * "license-renewal", "license-release", "individualization-request"
