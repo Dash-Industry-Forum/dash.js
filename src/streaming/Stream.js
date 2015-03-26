@@ -1,15 +1,32 @@
-/*
- * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Digital Primates
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
- * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
 MediaPlayer.dependencies.Stream = function () {
     "use strict";
@@ -20,10 +37,9 @@ MediaPlayer.dependencies.Stream = function () {
         streamProcessors = [],
         autoPlay = true,
         initialized = false,
-        loaded = false,
+        canPlay = false,
         errored = false,
         kid = null,
-        initData = [],
         updating = true,
         streamInfo = null,
         updateError = {},
@@ -31,95 +47,146 @@ MediaPlayer.dependencies.Stream = function () {
         eventController = null,
 
         play = function () {
-            //this.debug.log("Attempting play...");
+            //this.log("Attempting play...");
 
             if (!initialized) {
                 return;
             }
 
-            //this.debug.log("Do play.");
+            //this.log("Do play.");
             this.playbackController.start();
         },
 
         pause = function () {
-            //this.debug.log("Do pause.");
+            //this.log("Do pause.");
             this.playbackController.pause();
         },
 
         seek = function (time) {
-            //this.debug.log("Attempting seek...");
+            //this.log("Attempting seek...");
 
             if (!initialized) {
                 return;
             }
 
-            this.debug.log("Do seek: " + time);
+            this.log("Do seek: " + time);
 
             this.playbackController.seek(time);
         },
 
         // Encrypted Media Extensions
+        pendingNeedKeyData = [],
+        keySystem = null,
+
+        handleEMEError = function(message) {
+            this.errHandler.mediaKeySessionError(message);
+            this.log(message);
+            this.reset();
+        },
+
+        createSession = function(needKeyInitData) {
+            var initData = MediaPlayer.dependencies.protection.CommonEncryption.getPSSHForKeySystem(keySystem, needKeyInitData);
+            if (initData) {
+                try {
+                    this.protectionController.createKeySession(initData, "temporary");
+                } catch (error) {
+                    handleEMEError.call(this, "Error creating key session! " + error.message);
+                }
+            } else {
+                handleEMEError.call(this,"Selected key system is " + keySystem.systemString + ".  needkey/encrypted event contains no initData corresponding to that key system!");
+            }
+        },
 
         onNeedKey = function (event) {
-            try {
-                var mediaInfo = mediaInfos.video,
-                    initData = this.protectionExt.autoSelectKeySystem(this.protectionModel, mediaInfo, event.data.initData);
+            // Ignore non-cenc initData
+            if (event.data.initDataType !== "cenc") {
+                this.log("DRM:  Only 'cenc' initData is supported!  Ignoring initData of type: " + event.data.initDataType);
+                return;
+            }
 
-                if (!!this.keySystem && this.keySystem !== this.protectionModel.keySystem) {
-                    throw new Error("DRM:  Changing key systems within a single Period is not allowed!");
+            // Some browsers return initData as Uint8Array (IE), some as ArrayBuffer (Chrome).
+            // Convert to ArrayBuffer
+            var abInitData = event.data.initData;
+            if (ArrayBuffer.isView(abInitData)) {
+                abInitData = abInitData.buffer;
+            }
+
+            if (keySystem) {
+                // We have a key system
+                createSession.call(this, abInitData);
+            }
+            else if (keySystem === undefined) {
+                // First time through, so we need to select a key system
+                keySystem = null;
+                pendingNeedKeyData.push(abInitData);
+                try {
+                    this.protectionExt.autoSelectKeySystem(this.protectionExt.getSupportedKeySystems(abInitData),
+                            this.protectionModel, this.protectionController, mediaInfos.video, mediaInfos.audio);
+                } catch (error) {
+                    handleEMEError.call(this, error.message);
                 }
-                if (!this.keySystem) {
-                    this.keySystem = this.protectionModel.keySystem;
-                    this.protectionModel.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
-                }
-                this.debug.log("DRM: Key required for - " + mediaInfo.codec);
-                this.protectionController.createKeySession(initData, mediaInfo.codec);
-            } catch (error) { // Thrown when media key system is not supported
-                this.errHandler.mediaKeySessionError(error.message);
-                this.debug.log(error.message);
-                this.reset();
+            } else {
+                // We are in the process of selecting a key system, so just save the data
+                pendingNeedKeyData.push(abInitData);
+            }
+        },
+
+        // This event handler is only used when initData is present in the media (i.e we
+        // are responding to needkey events).  If initData is present in the MPD, the
+        // handler in initProtection() is used instead
+        onKeySystemSelected = function() {
+            // ProtectionModel now has an associated KeySystem.  Process any pending initData
+            // generated by needkey/encrypted events
+            if (!keySystem) {
+                keySystem = this.protectionModel.keySystem;
+            }
+            for (var i = 0; i < pendingNeedKeyData.length; i++) {
+                createSession.call(this, pendingNeedKeyData[i]);
+            }
+            pendingNeedKeyData = [];
+        },
+
+        onServerCertificateUpdated = function(event) {
+            if (!event.error) {
+                this.log("DRM: License server certificate successfully updated.");
+            } else {
+                handleEMEError.call(this, event.error);
+            }
+        },
+
+        onKeySessionCreated = function(event) {
+            if (!event.error) {
+                this.log("DRM: Session created.  SessionID = " + event.data.getSessionID());
+            } else {
+                handleEMEError.call(this, event.error);
             }
         },
 
         onKeyAdded = function (/*event*/) {
-            this.debug.log("DRM: Key added.");
-        },
-
-        onLicenseRequestComplete = function(e) {
-            if (e.error) {
-                pause.call(this);
-                this.debug.log(e.error);
-                this.errHandler.mediaKeyMessageError(e.error);
-            } else {
-                this.debug.log("DRM: License request successful.  Session ID = " + e.data.requestData.sessionID);
-                this.protectionController.updateKeySession(e.data.requestData, e.data.message);
-            }
+            this.log("DRM: Key added.");
         },
 
         onKeyError = function (event) {
             var session = event.data.sessionToken,
-                sessionID = (session.sessionID) ? session.sessionID : "NONE",
                 msg;
-            msg = 'DRM: MediaKeyError - sessionId: ' + sessionID + '.  ' + event.data.error;
-            //pause.call(this);
-            this.debug.log(msg);
-            this.errHandler.mediaKeySessionError(msg);
-        },
-
-        onKeySessionCreated = function(event) {
-            this.debug.log("DRM: Session created.  SessionID = " + event.data.sessionID);
-        },
-
-        onKeySessionLoaded = function(event) {
-            this.debug.log("DRM: Session loaded.  SessionID = " + event.data.sessionID);
-        },
-
-        onKeySessionUnloaded = function(event) {
-            this.debug.log("DRM: Session unloaded.  SessionID = " + event.data.sessionID);
+            msg = 'DRM: MediaKeyError - sessionId: ' + session.getSessionID() + '.  ' + event.data.error;
+            handleEMEError.call(this, msg);
         },
 
         onKeySessionClosed = function(event) {
-            this.debug.log("DRM: Session closed.  SessionID = " + event.data.sessionID);
+            if (!event.error) {
+                this.log("DRM: Session closed.  SessionID = " + event.data);
+            } else {
+                this.log(event.data.error);
+            }
+        },
+
+        onKeySessionRemoved = function(event) {
+            if (!event.error) {
+                this.log("DRM: Session removed.  SessionID = " + event.data);
+            } else {
+                this.log(event.data.error);
+            }
         },
 
         // Media Source
@@ -129,8 +196,8 @@ MediaPlayer.dependencies.Stream = function () {
                 sourceUrl,
 
                 onMediaSourceOpen = function (e) {
-                    self.debug.log("MediaSource is open!");
-                    self.debug.log(e);
+                    self.log("MediaSource is open!");
+                    self.log(e);
                     window.URL.revokeObjectURL(sourceUrl);
 
                     mediaSourceArg.removeEventListener("sourceopen", onMediaSourceOpen);
@@ -139,14 +206,14 @@ MediaPlayer.dependencies.Stream = function () {
                     callback(mediaSourceArg);
                 };
 
-            //self.debug.log("MediaSource should be closed. The actual readyState is: " + mediaSourceArg.readyState);
+            //self.log("MediaSource should be closed. The actual readyState is: " + mediaSourceArg.readyState);
 
             mediaSourceArg.addEventListener("sourceopen", onMediaSourceOpen, false);
             mediaSourceArg.addEventListener("webkitsourceopen", onMediaSourceOpen, false);
 
             sourceUrl = self.mediaSourceExt.attachMediaSource(mediaSourceArg, self.videoModel);
 
-            //self.debug.log("MediaSource attached to video.  Waiting on open...");
+            //self.log("MediaSource attached to video.  Waiting on open...");
         },
 
         tearDownMediaSource = function () {
@@ -173,7 +240,6 @@ MediaPlayer.dependencies.Stream = function () {
             initialized = false;
 
             kid = null;
-            initData = [];
 
             mediaInfos = {};
 
@@ -183,10 +249,21 @@ MediaPlayer.dependencies.Stream = function () {
 
         initializeMediaForType = function(type, manifest) {
             var self = this,
-                mimeType,
+                mimeType = null,
                 codec,
                 getCodecOrMimeType = function(mediaInfo) {
                     return mediaInfo.codec;
+                },
+                createBuffer = function(mediaSource, mediaInfo) {
+                    var buffer = null;
+
+                    try{
+                        buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
+                    } catch (e) {
+                        self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
+                    }
+
+                    return buffer;
                 },
                 processor,
                 mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, type);
@@ -200,20 +277,16 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             if (mediaInfo !== null) {
-                //self.debug.log("Create " + type + " buffer.");
+                //self.log("Create " + type + " buffer.");
                 var codecOrMime = getCodecOrMimeType.call(self, mediaInfo),
                     contentProtectionData,
                     buffer = null;
 
-                if (codecOrMime === mimeType) {
-                    try{
-                        buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
-                    } catch (e) {
-                        self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
-                    }
+                if ((type === "text")||(type === "fragmentedText")) {
+                        buffer = createBuffer(mediaSource, mediaInfo);
                 } else {
                     codec = codecOrMime;
-                    self.debug.log(type + " codec: " + codec);
+                    self.log(type + " codec: " + codec);
                     mediaInfos[type] = mediaInfo;
 
                     contentProtectionData = mediaInfo.contentProtection;
@@ -227,19 +300,15 @@ MediaPlayer.dependencies.Stream = function () {
                         if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
                             var msg = type + "Codec (" + codec + ") is not supported.";
                             self.errHandler.manifestError(msg, "codec", manifest);
-                            self.debug.log(msg);
+                            self.log(msg);
                         } else {
-                            try {
-                                buffer = self.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
-                            } catch (e) {
-                                self.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
-                            }
+                            buffer = createBuffer(mediaSource, mediaInfo);
                         }
                     }
                 }
 
                 if (buffer === null) {
-                    self.debug.log("No buffer was created, skipping " + type + " data.");
+                    self.log("No buffer was created, skipping " + type + " data.");
                 } else {
                     // TODO : How to tell index handler live/duration?
                     // TODO : Pass to controller and then pass to each method on handler?
@@ -250,17 +319,22 @@ MediaPlayer.dependencies.Stream = function () {
                     processor.setMediaInfo(mediaInfo);
                     self.abrController.updateTopQualityIndex(mediaInfo);
                     self.adapter.updateData(processor);
+                    if(type === "fragmentedText"){
+                        processor.bufferController.videoModel= self.videoModel;
+                        buffer.initialize(type,processor.bufferController);
+                    }
+
                     //self.debug.log(type + " is ready!");
                 }
 
 
             } else {
-                self.debug.log("No " + type + " data.");
+                self.log("No " + type + " data.");
             }
         },
 
         initializeMediaSource = function () {
-            //this.debug.log("Getting MediaSource ready...");
+            //this.log("Getting MediaSource ready...");
 
             var self = this,
                 events;
@@ -270,13 +344,14 @@ MediaPlayer.dependencies.Stream = function () {
             events = self.adapter.getEventsFor(streamInfo);
             eventController.addInlineEvents(events);
             // Figure out some bits about the stream before building anything.
-            //self.debug.log("Gathering information for buffers. (1)");
+            //self.log("Gathering information for buffers. (1)");
 
             initializeMediaForType.call(self, "video", manifest);
             initializeMediaForType.call(self, "audio", manifest);
             initializeMediaForType.call(self, "text", manifest);
+            initializeMediaForType.call(self, "fragmentedText", manifest);
 
-            //this.debug.log("MediaSource initialized!");
+            //this.log("MediaSource initialized!");
         },
 
         initializePlayback = function () {
@@ -284,23 +359,23 @@ MediaPlayer.dependencies.Stream = function () {
                 manifestDuration,
                 mediaDuration;
 
-            //self.debug.log("Getting ready for playback...");
+            //self.log("Getting ready for playback...");
 
             manifestDuration = streamInfo.manifestInfo.duration;
             mediaDuration = self.mediaSourceExt.setDuration(mediaSource, manifestDuration);
-            self.debug.log("Duration successfully set to: " + mediaDuration);
+            self.log("Duration successfully set to: " + mediaDuration);
             initialized = true;
             checkIfInitializationCompleted.call(self);
         },
 
-        onLoad = function (/*e*/) {
-            this.debug.log("element loaded!");
-            loaded = true;
+        onCanPlay = function (/*e*/) {
+            this.log("element loaded!");
+            canPlay = true;
             startAutoPlay.call(this);
         },
 
         startAutoPlay = function() {
-            if (!initialized || !loaded) return;
+            if (!initialized || !canPlay) return;
 
             // only first stream must be played automatically during playback initialization
             if (streamInfo.index === 0) {
@@ -327,7 +402,7 @@ MediaPlayer.dependencies.Stream = function () {
             updating = false;
 
             self.eventBus.dispatchEvent({
-                type: "initialized",
+                type: MediaPlayer.events.STREAM_INITIALIZED,
                 data: {streamInfo: streamInfo}
             });
 
@@ -363,8 +438,8 @@ MediaPlayer.dependencies.Stream = function () {
 
             errored = true;
 
-            this.debug.log("Video Element Error: " + msg);
-            this.debug.log(e.error);
+            this.log("Video Element Error: " + msg);
+            this.log(e.error);
             this.errHandler.mediaSourceError(msg);
             this.reset();
         },
@@ -374,28 +449,28 @@ MediaPlayer.dependencies.Stream = function () {
             var self = this,
                 onMediaSourceSetup = function (mediaSourceResult) {
                     mediaSource = mediaSourceResult;
-                    //self.debug.log("MediaSource set up.");
+                    //self.log("MediaSource set up.");
                     initializeMediaSource.call(self);
 
                     if (streamProcessors.length === 0) {
                         var msg = "No streams to play.";
                         self.errHandler.manifestError(msg, "nostreams", manifest);
-                        self.debug.log(msg);
+                        self.log(msg);
                     } else {
                         self.liveEdgeFinder.initialize(streamProcessors[0]);
                         self.liveEdgeFinder.subscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, self.playbackController);
                         initializePlayback.call(self);
-                        //self.debug.log("Playback initialized!");
+                        //self.log("Playback initialized!");
                         startAutoPlay.call(self);
                     }
                 },
                 mediaSourceResult;
 
-            //self.debug.log("Stream start loading.");
+            //self.log("Stream start loading.");
 
             manifest = manifestResult;
             mediaSourceResult = self.mediaSourceExt.createMediaSource();
-            //self.debug.log("MediaSource created.");
+            //self.log("MediaSource created.");
 
             setUpMediaSource.call(self, mediaSourceResult, onMediaSourceSetup);
         },
@@ -454,7 +529,7 @@ MediaPlayer.dependencies.Stream = function () {
             updating = true;
             manifest = self.manifestModel.getValue();
             streamInfo = updatedStreamInfo;
-            self.debug.log("Manifest updated... set new data on buffers.");
+            self.log("Manifest updated... set new data on buffers.");
 
             if (eventController) {
                 events = self.adapter.getEventsFor(streamInfo);
@@ -481,32 +556,31 @@ MediaPlayer.dependencies.Stream = function () {
         playbackController: undefined,
         protectionExt: undefined,
         capabilities: undefined,
-        debug: undefined,
+        log: undefined,
         errHandler: undefined,
         liveEdgeFinder: undefined,
         abrController: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        eventList: {
-            ENAME_STREAM_UPDATED: "streamUpdated"
-        },
 
         setup: function () {
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFERING_COMPLETED] = onBufferingCompleted;
             this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR] = onError;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED] = onLoad;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY] = onCanPlay;
 
             // Protection event handlers
-            this[MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE] = onLicenseRequestComplete.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY] = onNeedKey.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = onKeySystemSelected.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED] = onServerCertificateUpdated.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED] = onKeyAdded.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR] = onKeyError.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED] = onKeySessionCreated.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_LOADED] = onKeySessionLoaded.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_UNLOADED] = onKeySessionUnloaded.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED] = onKeySessionClosed.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED] = onKeySessionRemoved.bind(this);
+
+            keySystem = undefined;
         },
 
         load: function(manifest) {
@@ -517,7 +591,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.videoModel = value;
         },
 
-        initProtection: function() {
+        initProtection: function(manifest) {
             if (this.capabilities.supportsEncryptedMedia()) {
                 this.protectionModel = this.system.getObject("protectionModel");
                 this.protectionModel.init(this.getVideoModel());
@@ -525,13 +599,51 @@ MediaPlayer.dependencies.Stream = function () {
                 this.protectionController = this.system.getObject("protectionController");
                 this.protectionController.init(this.protectionModel);
 
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
                 this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
                 this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
                 this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_LOADED, this);
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_UNLOADED, this);
                 this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
+
+                // Look for ContentProtection elements.  InitData can be provided by either the
+                // dash264drm:Pssh ContentProtection format or a DRM-specific format.
+                var audioInfo = this.adapter.getMediaInfoForType(manifest, streamInfo, "audio");
+                var videoInfo = this.adapter.getMediaInfoForType(manifest, streamInfo, "video");
+                var mediaInfo = (videoInfo) ? videoInfo : audioInfo; // We could have audio or video only
+
+                // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
+                // and video will be the same.  Just use one valid MediaInfo object
+                var supportedKS = this.protectionExt.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
+                if (supportedKS && supportedKS.length > 0) {
+
+                    // Handle KEY_SYSTEM_SELECTED events here instead.
+                    var ksSelected = {};
+                    var self = this;
+                    ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = function(event) {
+                        if (!event.error) {
+                            keySystem = self.protectionModel.keySystem;
+                            for (var ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
+                                if (keySystem === supportedKS[ksIdx].ks) {
+                                    createSession.call(self, supportedKS[ksIdx].initData);
+                                    break;
+                                }
+                            }
+                        } else {
+                            self.debug.log("DRM: Could not select key system from ContentProtection elements!  Falling back to needkey mechanism...");
+                            self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, self);
+                            self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, self);
+                        }
+                        self.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
+                    };
+                    keySystem = null;
+                    this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
+                    this.protectionExt.autoSelectKeySystem(supportedKS,
+                            this.protectionModel, this.protectionController, videoInfo, audioInfo);
+                } else { // needkey event will trigger key system selection
+                    this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
+                    this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, this);
+                }
             }
         },
 
@@ -552,16 +664,15 @@ MediaPlayer.dependencies.Stream = function () {
 
             if (!!this.protectionModel) {
                 this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
+                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
+                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, this);
+                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
                 this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
                 this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
                 this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
-                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_LOADED, this);
-                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_UNLOADED, this);
                 this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
-                if (!!this.keySystem) {
-                    this.keySystem.unsubscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
-                    this.keySystem = undefined;
-                }
+                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
+                keySystem = undefined;
 
                 this.protectionController.teardown();
                 this.protectionModel.teardown();
@@ -571,9 +682,10 @@ MediaPlayer.dependencies.Stream = function () {
 
             tearDownMediaSource.call(this);
 
+            this.fragmentController.reset();
             this.fragmentController = undefined;
             this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, this);
-            this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED, this);
+            this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, this);
             this.playbackController.reset();
             this.liveEdgeFinder.abortSearch();
             this.liveEdgeFinder.unsubscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.playbackController);
@@ -581,7 +693,7 @@ MediaPlayer.dependencies.Stream = function () {
             // streamcontroller expects this to be valid
             //this.videoModel = null;
 
-            loaded = false;
+            canPlay = false;
             updateError = {};
         },
 

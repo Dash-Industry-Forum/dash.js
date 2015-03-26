@@ -1,3 +1,33 @@
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
 MediaPlayer.dependencies.PlaybackController = function () {
     "use strict";
 
@@ -12,7 +42,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         getStreamStartTime = function (streamInfo) {
             var presentationStartTime,
-                startTimeOffset = parseInt(this.uriQueryFragModel.getURIFragmentData.s);
+                startTimeOffset = parseInt(this.uriQueryFragModel.getURIFragmentData().s);
 
             if (isDynamic) {
 
@@ -75,7 +105,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         initialStart = function() {
             var initialSeekTime = getStreamStartTime.call(this, streamInfo);
-            this.debug.log("Starting playback at offset: " + initialSeekTime);
+            this.log("Starting playback at offset: " + initialSeekTime);
             this.seek(initialSeekTime);
         },
 
@@ -110,6 +140,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (!videoModel) return;
 
             videoModel.unlisten("play", onPlaybackStart);
+            videoModel.unlisten("playing", onPlaybackPlaying);
             videoModel.unlisten("pause", onPlaybackPaused);
             videoModel.unlisten("error", onPlaybackError);
             videoModel.unlisten("seeking", onPlaybackSeeking);
@@ -121,30 +152,40 @@ MediaPlayer.dependencies.PlaybackController = function () {
             videoModel.unlisten("ended", onPlaybackEnded);
         },
 
+        onCanPlay = function(/*e*/) {
+            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY);
+        },
+
         onPlaybackStart = function() {
-            //this.debug.log("Got play event.");
+            this.log("<video> play");
             updateCurrentTime.call(this);
             startUpdatingWallclockTime.call(this);
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, {startTime: this.getTime()});
         },
 
+        onPlaybackPlaying = function() {
+            this.log("<video> playing");
+            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PLAYING, {playingTime: this.getTime()});
+        },
+
         onPlaybackPaused = function() {
-            //this.debug.log("Got pause event.");
+            this.log("<video> pause");
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED);
         },
 
         onPlaybackSeeking = function() {
-            //this.debug.log("Got seeking event.");
+            this.log("<video> seek");
             startUpdatingWallclockTime.call(this);
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime: this.getTime()});
         },
 
         onPlaybackSeeked = function() {
-            //this.debug.log("Seek complete.");
+            this.log("<video> seeked");
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKED);
         },
 
         onPlaybackTimeUpdated = function() {
+            //this.log("<video> timeupdate");
             var time = this.getTime();
 
             if (time === currentTime) return;
@@ -154,6 +195,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackProgress = function() {
+            //this.log("<video> progress");
             var ranges = videoModel.getElement().buffered,
                 lastRange,
                 bufferEndTime,
@@ -169,11 +211,12 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackRateChanged = function() {
+            this.log("<video> ratechange: ", this.getPlaybackRate());
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED);
         },
 
         onPlaybackMetaDataLoaded = function() {
-            this.debug.log("Got loadmetadata event.");
+            this.log("<video> loadedmetadata");
 
             if (!isDynamic || this.timelineConverter.isTimeSyncCompleted()) {
                 initialStart.call(this);
@@ -184,7 +227,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackEnded = function(/*e*/) {
-            this.debug.log("Got ended event.");
+            this.log("<video> ended");
             stopUpdatingWallclockTime.call(this);
         },
 
@@ -223,8 +266,9 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         setupVideoModel = function(model) {
             videoModel = model;
-
+            videoModel.listen("canplay", onCanPlay);
             videoModel.listen("play", onPlaybackStart);
+            videoModel.listen("playing", onPlaybackPlaying);
             videoModel.listen("pause", onPlaybackPaused);
             videoModel.listen("error", onPlaybackError);
             videoModel.listen("seeking", onPlaybackSeeking);
@@ -237,7 +281,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         };
 
     return {
-        debug: undefined,
+        log: undefined,
         timelineConverter: undefined,
         uriQueryFragModel: undefined,
         metricsModel: undefined,
@@ -252,7 +296,9 @@ MediaPlayer.dependencies.PlaybackController = function () {
             this[MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
 
+            onCanPlay = onCanPlay.bind(this);
             onPlaybackStart = onPlaybackStart.bind(this);
+            onPlaybackPlaying = onPlaybackPlaying.bind(this);
             onPlaybackPaused = onPlaybackPaused.bind(this);
             onPlaybackError = onPlaybackError.bind(this);
             onPlaybackSeeking = onPlaybackSeeking.bind(this);
@@ -293,6 +339,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         getPlaybackRate: function() {
             return videoModel.getPlaybackRate();
+        },
+
+        getPlayedRanges: function() {
+            return videoModel.getElement().played;
         },
 
         setLiveStartTime: function(value) {
@@ -344,7 +394,9 @@ MediaPlayer.dependencies.PlaybackController.prototype = {
 
 
 MediaPlayer.dependencies.PlaybackController.eventList = {
+    ENAME_CAN_PLAY: "canPlay",
     ENAME_PLAYBACK_STARTED: "playbackStarted",
+    ENAME_PLAYBACK_PLAYING: "playbackPlaying",
     ENAME_PLAYBACK_STOPPED: "playbackStopped",
     ENAME_PLAYBACK_PAUSED: "playbackPaused",
     ENAME_PLAYBACK_SEEKING: "playbackSeeking",

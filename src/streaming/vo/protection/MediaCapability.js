@@ -28,15 +28,18 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.vo.Period = function () {
-    "use strict";
-    this.id = null;
-    this.index = -1;
-    this.duration = NaN;
-    this.start = NaN;
-    this.mpd = null;
+/**
+ * A media capability
+ *
+ * @param {string} contentType MIME type and codecs (RFC6386)
+ * @param {string} [robustness]
+ * @constructor
+ */
+MediaPlayer.vo.protection.MediaCapability = function(contentType, robustness) {
+    this.contentType = contentType;
+    this.robustness = robustness;
 };
 
-Dash.vo.Period.prototype = {
-    constructor: Dash.vo.Period
+MediaPlayer.vo.protection.MediaCapability.prototype = {
+    constructor: MediaPlayer.vo.protection.MediaCapability
 };

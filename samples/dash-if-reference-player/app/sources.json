@@ -32,7 +32,7 @@
         { "url" : "http://dash.edgesuite.net/dash264/TestCases/5b/1/manifest.mpd","name" : "Multiple Periods 2", "browsers": "cdsbi" },
         { "url" : "http://tvnlive.dashdemo.edgesuite.net/live/manifest.mpd","name" : "Dynamic Segment Offering with MPD Update 2", "browsers": "cdsbi" },
         { "url" : "http://54.201.151.65/livesim/testpic_2s/Manifest.mpd","name" : "Dynamic Segment Offering with MPD Update 3", "browsers": "cdsbi" },
-        { "url" : "http://eu1.eastmark.net/pdash/testpic_6s/Manifest.mpd","name" : "Dynamic Segment Offering with MPD Update 4", "browsers": "cdsbi" },
+        { "url" : "http://vm2.dashif.org/livesim/testpic_6s/Manifest.mpd","name" : "Dynamic Segment Offering with MPD Update 4", "browsers": "cdsbi" },
         { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/1a/qualcomm/1/MultiRate.mpd","name" : "Single Resolution Multi-Rate HD 1", "browsers": "cdsbi" },
         { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/1a/qualcomm/2/MultiRate.mpd","name" : "Single Resolution Multi-Rate HD 2", "browsers": "cdsbi" },
         { "url" : "http://dash.edgesuite.net/dash264/TestCasesHD/1b/qualcomm/1/MultiRate.mpd","name" : "Single Resolution Multi-Rate HD 3", "browsers": "cdsbi" },
@@ -161,6 +161,80 @@
         {
             "name": "D-Dash #6",
             "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=15&type=full",
+            "browsers": ""
+        },
+        {
+            "name": "CableLabs Cenc ClearKey",
+            "url": "http://html5.cablelabs.com:8100/cenc/ck/dash.mpd",
+            "browsers": "",
+            "protData": {
+                "org.w3.clearkey": {
+                    "clearkeys": {
+                        "IAAAACAAIAAgACAAAAAAAg" : "5t1CjnbMFURBou087OSj2w"
+                    }
+                }
+            }
+        },
+        {
+            "name": "CableLabs Cenc ClearKey (InitData in MPD)",
+            "url": "http://html5.cablelabs.com:8100/cenc/ck/dash_initdata.mpd",
+            "browsers": "",
+            "protData": {
+                "org.w3.clearkey": {
+                    "clearkeys": {
+                        "IAAAACAAIAAgACAAAAAAAg" : "5t1CjnbMFURBou087OSj2w"
+                    }
+                }
+            }
+        },
+        {
+            "name": "CableLabs Cenc Widevine",
+            "url": "http://html5.cablelabs.com:8100/cenc/wv/dash.mpd",
+            "browsers": "",
+            "protData": {
+                "com.widevine.alpha": {
+                    "laURL": "https://html5.cablelabs.com:8025"
+                }
+            }
+        },
+        {
+            "name": "CableLabs Cenc Widevine/ClearKey",
+            "url": "http://html5.cablelabs.com:8100/cenc/wvck/dash.mpd",
+            "browsers": "",
+            "protData": {
+                "com.widevine.alpha": {
+                    "laURL": "https://html5.cablelabs.com:8025"
+                },
+                "org.w3.clearkey": {
+                    "clearkeys": {
+                        "H3JbV93QV3mPNBKQON2UtQ" : "ClKhDPHMtCouEx1vLGsJsA"
+                    }
+                }
+            }
+        },
+        {
+            "name": "CableLabs Cenc Widevine/ClearKey (InitData in MPD)",
+            "url": "http://html5.cablelabs.com:8100/cenc/wvck/dash_initdata.mpd",
+            "browsers": "",
+            "protData": {
+                "com.widevine.alpha": {
+                    "laURL": "https://html5.cablelabs.com:8025"
+                },
+                "org.w3.clearkey": {
+                    "clearkeys": {
+                        "H3JbV93QV3mPNBKQON2UtQ" : "ClKhDPHMtCouEx1vLGsJsA"
+                    }
+                }
+            }
+        },
+        {
+            "name": "CableLabs Cenc PlayReady",
+            "url": "http://html5.cablelabs.com:8100/cenc/pr/dash.mpd",
+            "browsers": ""
+        },
+        {
+            "name": "CableLabs Cenc PlayReady (InitData in MPD)",
+            "url": "http://html5.cablelabs.com:8100/cenc/pr/dash_initdata.mpd",
             "browsers": ""
         }
     ]

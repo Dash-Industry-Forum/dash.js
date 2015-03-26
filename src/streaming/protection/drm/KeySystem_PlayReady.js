@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2014-2015, Cable Television Laboratories, Inc.
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -13,7 +13,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *  this list of conditions and the following disclaimer in the documentation and/or
  *  other materials provided with the distribution.
- *  * Neither the name of Cable Television Laboratories, Inc. nor the names of its
+ *  * Neither the name of Dash Industry Forum nor the names of its
  *  contributors may be used to endorse or promote products derived from this software
  *  without specific prior written permission.
  *
@@ -133,14 +133,14 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             // *   protection system data size (4) - length of decoded PROHeader
             // *   decoded PROHeader data from MPD file
             var byteCursor = 0,
-                PROSize = 0,
-                PSSHSize = 0,
+                PROSize,
+                PSSHSize,
                 PSSHBoxType = new Uint8Array([0x70, 0x73, 0x73, 0x68, 0x00, 0x00, 0x00, 0x00 ]), //'PSSH' 8 bytes
                 playreadySystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86, 0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]),
                 uint8arraydecodedPROHeader = null,
-                PSSHBoxBuffer = null,
-                PSSHBox = null,
-                PSSHData = null;
+                PSSHBoxBuffer,
+                PSSHBox,
+                PSSHData;
 
             if ("pro" in cpData) {
                 uint8arraydecodedPROHeader = BASE64.decodeArray(cpData.pro.__text);
@@ -175,7 +175,7 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             PSSHBox.set(uint8arraydecodedPROHeader, byteCursor);
             byteCursor += PROSize;
 
-            return PSSHBox;
+            return PSSHBox.buffer;
         },
 
         /* TODO: Implement me */

@@ -1,20 +1,39 @@
 /**
- * @copyright The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Digital Primates
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
- * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
  *
- * @license THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
  * @class MediaPlayer
- * @param aContext - New instance of a dijon.js context (i.e. new Dash.di.DashContext()).  You can pass a custom context that extends Dash.di.DashContext to override item(s) in the DashContext.
+ * @param context - New instance of a dijon.js context (i.e. new Dash.di.DashContext()).  You can pass a custom context that extends Dash.di.DashContext to override item(s) in the DashContext.
  */
 /*jshint -W020 */
-MediaPlayer = function (aContext) {
+MediaPlayer = function (context) {
 
     "use strict";
 
@@ -43,8 +62,7 @@ MediaPlayer = function (aContext) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    var VERSION = "1.3.0",
-        context = aContext,
+    var VERSION = "1.4.0",
         system,
         manifestLoader,
         abrController,
@@ -57,6 +75,7 @@ MediaPlayer = function (aContext) {
         metricsExt,
         metricsModel,
         videoModel,
+        DOMStorage,
         initialized = false,
         playing = false,
         autoPlay = true,
@@ -82,7 +101,7 @@ MediaPlayer = function (aContext) {
             }
 
             playing = true;
-            //this.debug.log("Playback initiated!");
+            this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
             streamController.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, manifestUpdater);
             manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, streamController);
@@ -91,8 +110,8 @@ MediaPlayer = function (aContext) {
             streamController.setVideoModel(videoModel);
             streamController.setAutoPlay(autoPlay);
             streamController.setProtectionData(protectionData);
+            DOMStorage.checkInitialBitrate();
             streamController.load(source);
-
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
@@ -129,8 +148,7 @@ MediaPlayer = function (aContext) {
         },
 
         seek = function(value) {
-
-            videoModel.getElement().currentTime = this.getDVRSeekOffset(value);
+            this.getVideoModel().getElement().currentTime = this.getDVRSeekOffset(value);
         },
 
         time = function () {
@@ -151,34 +169,28 @@ MediaPlayer = function (aContext) {
             return range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize;
         },
 
-        timeAsUTC = function () {
+        getAsUTC = function(valToConvert) {
             var metric = getDVRInfoMetric.call(this),
                 availableFrom,
-                currentUTCTime;
+                utcValue;
 
             if (metric === null) {
                 return 0;
             }
 
             availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
-            currentUTCTime = this.time() + (availableFrom + metric.range.start);
 
-            return currentUTCTime;
+            utcValue = valToConvert + (availableFrom + metric.range.start);
+
+            return utcValue;
+        },
+
+        timeAsUTC = function () {
+            return getAsUTC.call(this, this.time());
         },
 
         durationAsUTC = function () {
-            var metric = getDVRInfoMetric.call(this),
-                availableFrom,
-                currentUTCDuration;
-
-            if (metric === null){
-                return 0;
-            }
-
-            availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
-            currentUTCDuration = (availableFrom + metric.range.start) + this.duration();
-
-            return currentUTCDuration;
+            return getAsUTC.call(this, this.duration());
         },
 
         formatUTC = function (time, locales, hour12) {
@@ -220,6 +232,20 @@ MediaPlayer = function (aContext) {
             }
         };
 
+
+
+    // Overload dijon getObject function
+    var _getObject = dijon.System.prototype.getObject;
+    dijon.System.prototype.getObject = function(name) {
+        var obj = _getObject.call(this, name);
+        if (typeof obj === "object" && !obj.getName) {
+            obj.getName = function () {return name;};
+            obj.setMediaType = function (mediaType) {obj.mediaType = mediaType;};
+            obj.getMediaType = function () {return obj.mediaType;};
+        }
+        return obj;
+    };
+
     // Set up DI.
     system = new dijon.System();
     system.mapValue("system", system);
@@ -243,6 +269,7 @@ MediaPlayer = function (aContext) {
             abrController = system.getObject("abrController");
             rulesController = system.getObject("rulesController");
             metricsModel = system.getObject("metricsModel");
+            DOMStorage = system.getObject("DOMStorage");
         },
 
         /**
@@ -301,7 +328,27 @@ MediaPlayer = function (aContext) {
          * @memberof MediaPlayer#
          */
         getVideoModel: function () {
-            return videoModel;
+            var streamInfo = streamController ? streamController.getActiveStreamInfo() : null,
+                stream = streamInfo ? streamController.getStreamById(streamInfo.id) : null;
+
+            return (stream ? stream.getVideoModel() : videoModel);
+        },
+
+        /**
+         * Set to false if you would like to disable the last known bit rate from being stored during playback and used
+         * to set the initial bit rate for subsequent playback within the expiration window.
+         *
+         * The default expiration is one hour, defined in milliseconds. If expired, the default initial bit rate (closest to 1000 kpbs) will be used
+         * for that session and a new bit rate will be stored during that session.
+         *
+         * @param enable - Boolean - Will toggle if feature is enabled. True to enable, False to disable.
+         * @param ttl Number - (Optional) A value defined in milliseconds representing how long to cache the bit rate for. Time to live.
+         * @default enable = True, ttl = 360000 (1 hour)
+         * @memberof MediaPlayer#
+         *
+         */
+        enableLastBitrateCaching: function (enable, ttl) {
+            DOMStorage.enableLastBitrateCaching(enable, ttl);
         },
 
         /**
@@ -366,8 +413,7 @@ MediaPlayer = function (aContext) {
          * @memberof MediaPlayer#
          */
         getMetricsFor: function (type) {
-            var metrics = metricsModel.getReadOnlyMetricsFor(type);
-            return metrics;
+            return metricsModel.getReadOnlyMetricsFor(type);
         },
 
         /**
@@ -398,6 +444,24 @@ MediaPlayer = function (aContext) {
                 stream = streamController.getStreamById(streamInfo.id);
 
             return stream.getBitrateListFor(type);
+        },
+
+        /**
+         * @param type
+         * @param {number} value A value of the initial bitrate, kbps
+         * @memberof MediaPlayer#
+         */
+        setInitialBitrateFor: function(type, value) {
+            abrController.setInitialBitrateFor(type, value);
+        },
+
+        /**
+         * @param type
+         * @returns {number} A value of the initial bitrate, kbps
+         * @memberof MediaPlayer#
+         */
+        getInitialBitrateFor: function(type) {
+            return abrController.getInitialBitrateFor(type);
         },
 
         /**
@@ -451,7 +515,7 @@ MediaPlayer = function (aContext) {
         /**
          * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
          *
-         * @param {VideoElement} view An HTML5 VideoElement that has already defined in the DOM.
+         * @param view An HTML5 VideoElement that has already defined in the DOM.
          *
          * @memberof MediaPlayer#
          */
@@ -654,6 +718,7 @@ MediaPlayer.prototype = {
     constructor: MediaPlayer
 };
 
+
 MediaPlayer.dependencies = {};
 MediaPlayer.dependencies.protection = {};
 MediaPlayer.utils = {};
@@ -663,3 +728,21 @@ MediaPlayer.vo.metrics = {};
 MediaPlayer.vo.protection = {};
 MediaPlayer.rules = {};
 MediaPlayer.di = {};
+
+/**
+ * The list of events supported by MediaPlayer
+ */
+MediaPlayer.events = {
+    METRICS_CHANGED: "metricschanged",
+    METRIC_CHANGED: "metricchanged",
+    METRIC_UPDATED: "metricupdated",
+    METRIC_ADDED: "metricadded",
+    MANIFEST_LOADED: "manifestloaded",
+    SWITCH_STREAM: "streamswitched",
+    STREAM_INITIALIZED: "streaminitialized",
+    TEXT_TRACK_ADDED: "texttrackadded",
+    BUFFER_LOADED: "bufferloaded",
+    BUFFER_EMPTY: "bufferstalled",
+    ERROR: "error",
+    LOG: "log"
+};

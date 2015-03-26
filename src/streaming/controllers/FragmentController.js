@@ -1,15 +1,32 @@
-/*
- * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
- * 
- * Copyright (c) 2013, Digital Primates
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
- * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
 MediaPlayer.dependencies.FragmentController = function () {
     "use strict";
@@ -62,14 +79,14 @@ MediaPlayer.dependencies.FragmentController = function () {
                 bytes = self.process(e.data.response);
 
             if (bytes === null) {
-                self.debug.log("No " + request.mediaType + " bytes to push.");
+                self.log("No " + request.mediaType + " bytes to push.");
                 return;
             }
 
             if (self.isInitializationRequest(request)) {
                 self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED, {bytes: bytes, quality: request.quality, fragmentModel: e.sender});
             }else {
-                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED, {bytes: bytes, quality: request.quality, index: request.index, fragmentModel: e.sender});
+                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED, {bytes: bytes, quality: request.quality, index: request.index, startTime: request.startTime, fragmentModel: e.sender});
             }
 
             executeRequests.call(this);
@@ -103,7 +120,7 @@ MediaPlayer.dependencies.FragmentController = function () {
                     if (r.mediaType !== mediaType) continue;
 
                     if (!(r instanceof MediaPlayer.vo.FragmentRequest)) {
-                        r = m.getPendingRequestForTime(r.startTime);
+                        r = m.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING, time: r.startTime})[0];
                     }
 
                     m.executeRequest(r);
@@ -123,10 +140,9 @@ MediaPlayer.dependencies.FragmentController = function () {
 
     return {
         system: undefined,
-        debug: undefined,
+        log: undefined,
         scheduleRulesCollection: undefined,
         rulesController: undefined,
-        fragmentLoader: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
@@ -137,6 +153,10 @@ MediaPlayer.dependencies.FragmentController = function () {
             this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
 
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
+
+            if (this.scheduleRulesCollection.sameTimeRequestRule) {
+                this.subscribe(MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED, this.scheduleRulesCollection.sameTimeRequestRule);
+            }
         },
 
         process: function (bytes) {
@@ -171,90 +191,11 @@ MediaPlayer.dependencies.FragmentController = function () {
             }
         },
 
-        isFragmentLoadedOrPending: function(context, request) {
-            var fragmentModel = findModel(context),
-                isLoaded;
-
-            if (!fragmentModel) {
-                return false;
-            }
-
-            isLoaded = fragmentModel.isFragmentLoadedOrPending(request);
-
-            return isLoaded;
-        },
-
-        getPendingRequests: function(context) {
-            var fragmentModel = findModel(context);
-
-            if (!fragmentModel) {
-                return null;
-            }
-
-            return fragmentModel.getPendingRequests();
-        },
-
-        getLoadingRequests: function(context) {
-            var fragmentModel = findModel(context);
-
-            if (!fragmentModel) {
-                return null;
-            }
-
-            return fragmentModel.getLoadingRequests();
-        },
-
 		isInitializationRequest: function(request){
 			return (request && request.type && request.type.toLowerCase().indexOf("initialization") !== -1);
 		},
 
-        getLoadingTime: function(context) {
-            var fragmentModel = findModel(context);
-
-            if (!fragmentModel) {
-                return null;
-            }
-
-            return fragmentModel.getLoadingTime();
-        },
-
-        getExecutedRequestForTime: function(model, time) {
-            if (model) {
-                return model.getExecutedRequestForTime(time);
-            }
-
-            return null;
-        },
-
-        removeExecutedRequest: function(model, request) {
-            if (model) {
-                model.removeExecutedRequest(request);
-            }
-        },
-
-        removeExecutedRequestsBeforeTime: function(model, time) {
-            if (model) {
-                model.removeExecutedRequestsBeforeTime(time);
-            }
-        },
-
-        cancelPendingRequestsForModel: function(model) {
-            if (model) {
-                model.cancelPendingRequests();
-            }
-        },
-
-        abortRequestsForModel: function(model) {
-            if (model) {
-                model.abortRequests();
-            }
-
-            executeRequests.call(this);
-        },
-
-        prepareFragmentForLoading: function(context, request) {
-            var fragmentModel = findModel(context);
-
+        prepareFragmentForLoading: function(fragmentModel, request) {
             if (!fragmentModel || !request) return;
             // Store the request and all the necessary callbacks in the model for deferred execution
             if (fragmentModel.addRequest(request)) {
@@ -266,9 +207,12 @@ MediaPlayer.dependencies.FragmentController = function () {
             executeRequests.call(this);
         },
 
-        resetModel: function(model) {
-            this.abortRequestsForModel(model);
-            this.cancelPendingRequestsForModel(model);
+        reset: function() {
+            fragmentModels = [];
+
+            if (this.scheduleRulesCollection.sameTimeRequestRule) {
+                this.unsubscribe(MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED, this.scheduleRulesCollection.sameTimeRequestRule);
+            }
         }
     };
 };

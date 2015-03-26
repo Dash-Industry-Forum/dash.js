@@ -1,3 +1,33 @@
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
 MediaPlayer.dependencies.ScheduleController = function () {
     "use strict";
 
@@ -9,7 +39,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         currentTrackInfo,
         initialPlayback = true,
         lastValidationTime = null,
-        lastABRRuleApplyTime = 0,
         isStopped = false,
         playListMetrics = null,
         playListTraceMetrics = null,
@@ -39,9 +68,9 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 initialPlayback = false;
             }
 
-            this.debug.log("ScheduleController " + type + " start.");
+            this.log("start");
 
-            //this.debug.log("ScheduleController begin " + type + " validation");
+            //this.log("begin validation");
             validate.call(this);
         },
 
@@ -59,10 +88,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             isStopped = true;
 
-            this.debug.log("ScheduleController " + type + " stop.");
+            this.log("stop");
             // cancel the requests that have already been created, but not loaded yet.
             if (cancelPending) {
-                this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
+                fragmentModel.cancelPendingRequests();
             }
 
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
@@ -84,9 +113,9 @@ MediaPlayer.dependencies.ScheduleController = function () {
             request = self.adapter.getInitRequest(self.streamProcessor, quality);
 
             if (request !== null) {
-                //self.debug.log("Loading initialization: " + request.mediaType + ":" + request.startTime);
-                //self.debug.log(request);
-                self.fragmentController.prepareFragmentForLoading(self, request);
+                //self.log("Loading initialization: " + request.mediaType + ":" + request.startTime);
+                //self.log(request);
+                self.fragmentController.prepareFragmentForLoading(fragmentModel, request);
             }
 
             return request;
@@ -115,7 +144,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 request = canceledRequests[i];
                 time = request.startTime + (request.duration / 2) + EPSILON;
                 request = this.adapter.getFragmentRequestForTime(this.streamProcessor, currentTrackInfo, time, {timeThreshold: 0});
-                this.fragmentController.prepareFragmentForLoading(this, request);
+                this.fragmentController.prepareFragmentForLoading(fragmentModel, request);
             }
         },
 
@@ -140,8 +169,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             if (request) {
                 fragmentsToLoad--;
-                //self.debug.log("Loading fragment: " + request.mediaType + ":" + request.startTime);
-                this.fragmentController.prepareFragmentForLoading(this, request);
+                //self.log("Loading fragment: " + request.mediaType + ":" + request.startTime);
+                this.fragmentController.prepareFragmentForLoading(fragmentModel, request);
             } else {
                 this.fragmentController.executePendingRequests();
             }
@@ -149,18 +178,12 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         validate = function () {
             var now = new Date().getTime(),
-                isEnoughTimeSinceLastValidation = lastValidationTime ? (now - lastValidationTime > this.fragmentController.getLoadingTime(this)) : true,
-                //manifestInfo = currentTrackInfo.mediaInfo.streamInfo.manifestInfo,
-                qualitySwitchThreshold = 1000; //TODO need to get average segment duration and cut that in half for interval to apply rule
+                isEnoughTimeSinceLastValidation = lastValidationTime ? (now - lastValidationTime > fragmentModel.getLoadingTime()) : true;
 
+            this.abrController.getPlaybackQuality(this.streamProcessor);
 
-            if (now - lastABRRuleApplyTime > qualitySwitchThreshold) {
-                lastABRRuleApplyTime = now;
-                this.abrController.getPlaybackQuality(this.streamProcessor);
-            }
-
-
-            if (!isEnoughTimeSinceLastValidation || isStopped || (this.playbackController.isPaused() && (!this.scheduleWhilePaused || isDynamic))) return;
+            if (!isEnoughTimeSinceLastValidation || isStopped || (this.playbackController.isPaused() && (this.playbackController.getPlayedRanges().length > 0) &&
+                (!this.scheduleWhilePaused || isDynamic))) return;
 
             lastValidationTime = now;
             getRequiredFragmentCount.call(this, onGetRequiredFragmentCount.bind(this));
@@ -200,7 +223,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         onStreamCompleted = function(e) {
             if (e.data.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
 
-            this.debug.log(type + " Stream is complete.");
+            this.log("Stream is complete");
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON);
         },
 
@@ -233,7 +256,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         onBufferCleared = function(e) {
             // after the data has been removed from the buffer we should remove the requests from the list of
             // the executed requests for which playback time is inside the time interval that has been removed from the buffer
-            this.fragmentController.removeExecutedRequestsBeforeTime(fragmentModel, e.data.to);
+            fragmentModel.removeExecutedRequestsBeforeTime(e.data.to);
 
             if (e.data.hasEnoughSpaceToAppend) {
                 doStart.call(this);
@@ -244,7 +267,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             if (!e.data.hasSufficientBuffer && !self.playbackController.isSeeking()) {
-                self.debug.log("Stalling " + type + " Buffer: " + type);
+                self.log("Stalling Buffer");
                 clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
             }
         },
@@ -308,13 +331,13 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onPlaybackSeeking = function(e) {
             if (!initialPlayback) {
-                this.fragmentController.cancelPendingRequestsForModel(fragmentModel);
+                fragmentModel.cancelPendingRequests();
             }
 
             var metrics = this.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = this.metricsExt.getCurrentManifestUpdate(metrics);
 
-            this.debug.log("ScheduleController " + type + " seek: " + e.data.seekTime);
+            this.log("seek: " + e.data.seekTime);
             addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
 
             this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentTrackInfo.DVRWindow.end - this.playbackController.getTime()});
@@ -358,7 +381,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         };
 
     return {
-        debug: undefined,
+        log: undefined,
         system: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
@@ -401,6 +424,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             type = typeValue;
+            self.setMediaType(type);
             self.streamProcessor = streamProcessor;
             self.playbackController = streamProcessor.playbackController;
             self.fragmentController = streamProcessor.fragmentController;
@@ -436,7 +460,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             doStop.call(self, true);
             self.bufferController.unsubscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, self.scheduleRulesCollection.bufferLevelRule);
             self.bufferController.unsubscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, self.scheduleRulesCollection.bufferLevelRule);
-            self.fragmentController.abortRequestsForModel(fragmentModel);
+            fragmentModel.abortRequests();
             self.fragmentController.detachModel(fragmentModel);
             clearMetrics.call(self);
             fragmentsToLoad = 0;

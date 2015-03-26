@@ -28,15 +28,23 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.vo.Period = function () {
-    "use strict";
-    this.id = null;
-    this.index = -1;
-    this.duration = NaN;
-    this.start = NaN;
-    this.mpd = null;
+
+/**
+ *
+ * @param {MediaPlayer.vo.protection.MediaCapability[]} audioCapabilities
+ * @param {MediaPlayer.vo.protection.MediaCapability[]} videoCapabilities
+ * @param {string} [distinctiveIdentifier]
+ * @param {string} [persistentState]
+ * @constructor
+ */
+MediaPlayer.vo.protection.KeySystemConfiguration = function(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState) {
+    this.initDataTypes = [ "cenc" ];
+    this.audioCapabilities = audioCapabilities;
+    this.videoCapabilities = videoCapabilities;
+    this.distinctiveIdentifier = distinctiveIdentifier;
+    this.persistentState = persistentState;
 };
 
-Dash.vo.Period.prototype = {
-    constructor: Dash.vo.Period
+MediaPlayer.vo.protection.KeySystemConfiguration.prototype = {
+    constructor: MediaPlayer.vo.protection.KeySystemConfiguration
 };

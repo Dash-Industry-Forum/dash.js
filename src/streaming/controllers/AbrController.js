@@ -1,15 +1,32 @@
-/*
- * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
- * 
- * Copyright (c) 2013, Digital Primates
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
- * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
 MediaPlayer.dependencies.AbrController = function () {
     "use strict";
@@ -18,6 +35,7 @@ MediaPlayer.dependencies.AbrController = function () {
         topQualities = {},
         qualityDict = {},
         confidenceDict = {},
+        bitrateDict = {},
 
         getInternalQuality = function (type, id) {
             var quality;
@@ -62,6 +80,14 @@ MediaPlayer.dependencies.AbrController = function () {
             topQualities[id][type] = value;
         },
 
+        getInitialBitrate = function(type) {
+            return bitrateDict[type];
+        },
+
+        setInitialBitrate = function(type, value) {
+            bitrateDict[type] = value;
+        },
+
         getTopQualityIndex = function(type, id) {
             var idx;
 
@@ -77,8 +103,7 @@ MediaPlayer.dependencies.AbrController = function () {
         };
 
     return {
-        debug: undefined,
-        adapter: undefined,
+        log: undefined,
         abrRulesCollection: undefined,
         rulesController: undefined,
         notify: undefined,
@@ -122,9 +147,9 @@ MediaPlayer.dependencies.AbrController = function () {
                     if (quality === oldQuality) return;
 
                     setInternalQuality(type, streamId, quality);
-                    //self.debug.log("New quality of " + quality);
+                    //self.log("New quality of " + quality);
                     setInternalConfidence(type, streamId, confidence);
-                    //self.debug.log("New confidence of " + confidence);
+                    //self.log("New confidence of " + confidence);
 
                     self.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
                 };
@@ -133,10 +158,10 @@ MediaPlayer.dependencies.AbrController = function () {
             confidence = getInternalConfidence(type, streamId);
 
 
-            //self.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
+            //self.log("ABR enabled? (" + autoSwitchBitrate + ")");
             if (!autoSwitchBitrate) return;
 
-            //self.debug.log("Check ABR rules.");
+            //self.log("Check ABR rules.");
             rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES);
             self.rulesController.applyRules(rules, streamProcessor, callback.bind(self), quality, function(currentValue, newValue) {
                 currentValue = currentValue === MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
@@ -166,8 +191,46 @@ MediaPlayer.dependencies.AbrController = function () {
         },
 
         /**
+         * @param type
+         * @param {number} value A value of the initial bitrate, kbps
+         * @memberof AbrController#
+         */
+        setInitialBitrateFor: function(type, value){
+            setInitialBitrate(type, value);
+        },
+
+        /**
+         * @param type
+         * @returns {number} A value of the initial bitrate, kbps
+         * @memberof AbrController#
+         */
+        getInitialBitrateFor: function(type){
+            return getInitialBitrate(type);
+        },
+
+        /**
          * @param mediaInfo
-         * @returns {Array}
+         * @param bitrate A bitrate value, kbps
+         * @returns {number} A quality index for the given bitrate
+         * @memberof AbrController#
+         */
+        getQualityForBitrate: function(mediaInfo, bitrate) {
+            var bitrateList = this.getBitrateList(mediaInfo),
+                ln = bitrateList.length,
+                bitrateInfo;
+
+            for (var i = 0; i < ln; i +=1) {
+                bitrateInfo = bitrateList[i];
+
+                if (bitrate*1000 <= bitrateInfo.bitrate) return i;
+            }
+
+            return (ln-1);
+        },
+
+        /**
+         * @param mediaInfo
+         * @returns {Array} A list of {@link MediaPlayer.vo.BitrateInfo} objects
          * @memberof AbrController#
          */
         getBitrateList: function(mediaInfo) {
@@ -196,7 +259,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
             max = mediaInfo.trackCount - 1;
 
-            if (getTopQualityIndex(type, streamId) === max) return;
+            if (getTopQualityIndex(type, streamId) === max) return max;
 
             setTopQualityIndex(type, streamId, max);
 
@@ -221,6 +284,8 @@ MediaPlayer.dependencies.AbrController = function () {
             topQualities = {};
             qualityDict = {};
             confidenceDict = {};
+            //bitrateDict = {}; // We should let this setting persist over multiple sources. If we empty the object each time we
+            //attach source in media player then there is no way to set initial bit rate for the second media source and so on...
         }
     };
 };
@@ -230,5 +295,10 @@ MediaPlayer.dependencies.AbrController.prototype = {
 };
 
 MediaPlayer.dependencies.AbrController.eventList = {
-    ENAME_QUALITY_CHANGED: "qualityChanged",
+    ENAME_QUALITY_CHANGED: "qualityChanged"
 };
+
+// Default initial video bitrate, kbps
+MediaPlayer.dependencies.AbrController.DEFAULT_VIDEO_BITRATE = 1000;
+// Default initial audio bitrate, kbps
+MediaPlayer.dependencies.AbrController.DEFAULT_AUDIO_BITRATE = 100;

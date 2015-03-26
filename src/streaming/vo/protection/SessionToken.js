@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2014-2015, Cable Television Laboratories, Inc.
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -13,7 +13,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *  this list of conditions and the following disclaimer in the documentation and/or
  *  other materials provided with the distribution.
- *  * Neither the name of Cable Television Laboratories, Inc. nor the names of its
+ *  * Neither the name of Dash Industry Forum nor the names of its
  *  contributors may be used to endorse or promote products derived from this software
  *  without specific prior written permission.
  *
@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /**
  * All session tokens returns by ProtectionModel implementations
  * are guaranteed to contain initialization data and optionally
@@ -43,19 +42,36 @@ MediaPlayer.models.SessionToken = function () {
 MediaPlayer.models.SessionToken.prototype = {
 
     /**
-     * The unique session ID designated to this session
-     *
-     * {Number} the session ID or null if the implementation does
-     * not support session IDs
-     */
-    sessionID: null,
-
-    /**
      * The initialization data used to create this session
      *
      * {Uint8Array} initialization data
      */
-    initData: null
+    initData: null,
+
+    /**
+     * The unique session ID designated to this session
+     *
+     * @return {string} the session ID or the empty string if the implementation
+     * does not support session IDs or the sessionID has not yet been established
+     */
+    getSessionID: function() { return ""; },
+
+    /**
+     * The time, in milliseconds since 01 January, 1970 UTC, after which
+     * the key(s) in the session will no longer be usable to decrypt
+     * media data, or NaN if no such time exists
+     *
+     * @returns {Number} the expiration time
+     */
+    getExpirationTime: function() { return NaN; },
+
+    /**
+     * Returns a read-only map of key IDs known to the session to the
+     * current status of the associated key.
+     *
+     * @returns {maplike<BufferSource,MediaKeyStatus>}
+     */
+    getKeyStatuses: function() { return null; }
 };
 
 

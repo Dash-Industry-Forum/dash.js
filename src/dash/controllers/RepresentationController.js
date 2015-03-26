@@ -1,3 +1,33 @@
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
 Dash.dependencies.RepresentationController = function () {
     "use strict";
 
@@ -8,16 +38,27 @@ Dash.dependencies.RepresentationController = function () {
         currentRepresentation,
 
         updateData = function(dataValue, adaptation, type) {
-            var self = this;
+            var self = this,
+                bitrate = null,
+                streamInfo = self.streamProcessor.getStreamInfo(),
+                quality;
 
             updating = true;
             self.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
 
             availableRepresentations = updateRepresentations.call(self, adaptation);
-            currentRepresentation = getRepresentationForQuality.call(self, self.abrController.getQualityFor(type, self.streamProcessor.getStreamInfo()));
+
+            if (data === null) {
+                bitrate = self.abrController.getInitialBitrateFor(type, streamInfo);
+                quality = self.abrController.getQualityForBitrate(self.streamProcessor.getMediaInfo(), bitrate);
+            } else {
+                quality = self.abrController.getQualityFor(type, streamInfo);
+            }
+
+            currentRepresentation = getRepresentationForQuality.call(self, quality);
             data = dataValue;
 
-            if (type !== "video" && type !== "audio") {
+            if (type !== "video" && type !== "audio" && type !== "fragmentedText") {
                 updating = false;
                 self.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {data: data, currentRepresentation: currentRepresentation});
                 addRepresentationSwitch.call(self);
@@ -46,6 +87,10 @@ Dash.dependencies.RepresentationController = function () {
 
         getRepresentationForQuality = function(quality) {
             return availableRepresentations[quality];
+        },
+
+        getQualityForRepresentation = function(representation) {
+            return availableRepresentations.indexOf(representation);
         },
 
         isAllRepresentationsUpdated = function() {
@@ -129,6 +174,7 @@ Dash.dependencies.RepresentationController = function () {
 
             if (isAllRepresentationsUpdated()) {
                 updating = false;
+                self.abrController.setPlaybackQuality(self.streamProcessor.getType(), self.streamProcessor.getStreamInfo(), getQualityForRepresentation.call(this, currentRepresentation));
                 self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - self.streamProcessor.playbackController.getTime()});
                 this.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {data: data, currentRepresentation: currentRepresentation});
                 addRepresentationSwitch.call(self);
@@ -161,12 +207,19 @@ Dash.dependencies.RepresentationController = function () {
             if (e.data.mediaType !== self.streamProcessor.getType() || self.streamProcessor.getStreamInfo().id !== e.data.streamInfo.id) return;
 
             currentRepresentation = self.getRepresentationForQuality(e.data.newQuality);
+            setLocalStorage.call(self, e.data.mediaType, currentRepresentation.bandwidth);
             addRepresentationSwitch.call(self);
+        },
+
+        setLocalStorage = function(type, bitrate) {
+            if (this.DOMStorage.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
+                localStorage.setItem(MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_BITRATE_KEY"], JSON.stringify({bitrate:bitrate/1000, timestamp:new Date().getTime()}));
+            }
         };
 
     return {
         system: undefined,
-        debug: undefined,
+        log: undefined,
         manifestExt: undefined,
         manifestModel: undefined,
         metricsModel: undefined,
@@ -176,6 +229,7 @@ Dash.dependencies.RepresentationController = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        DOMStorage:undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
