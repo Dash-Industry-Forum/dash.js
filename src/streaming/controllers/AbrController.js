@@ -36,6 +36,7 @@ MediaPlayer.dependencies.AbrController = function () {
         qualityDict = {},
         confidenceDict = {},
         bitrateDict = {},
+        streamProcessorDict={},
 
         getInternalQuality = function (type, id) {
             var quality;
@@ -88,18 +89,41 @@ MediaPlayer.dependencies.AbrController = function () {
             bitrateDict[type] = value;
         },
 
+        getMaxBitrate = function(type) {
+            if (bitrateDict.hasOwnProperty("max") && bitrateDict.max.hasOwnProperty(type)){
+                return bitrateDict.max[type];
+            }
+            return NaN;
+        },
+
+        //TODO  change bitrateDict structure to hold one object for video and audio with initial and max values internal.
+        // This means you need to update all the logic around intial bitrate DOMStorage, RebController etc...
+        setMaxBitrate = function(type, value) {
+            bitrateDict.max = bitrateDict.max || {};
+            bitrateDict.max[type] = value;
+        },
+
         getTopQualityIndex = function(type, id) {
             var idx;
 
             topQualities[id] = topQualities[id] || {};
 
             if (!topQualities[id].hasOwnProperty(type)) {
-                topQualities[id][type] = 0;
+                    topQualities[id][type] = 0;
             }
 
-            idx = topQualities[id][type];
+            idx = checkMaxBitrate.call(this, topQualities[id][type], type);
 
             return idx;
+        },
+
+        checkMaxBitrate = function(idx, type){
+            var maxBitrate = getMaxBitrate(type);
+            if (isNaN(maxBitrate)) {
+                return idx;
+            }
+            var maxIdx = this.getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
+            return Math.min (idx , maxIdx);
         };
 
     return {
@@ -109,6 +133,10 @@ MediaPlayer.dependencies.AbrController = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+
+        initialize: function(type, streamProcessor) {
+            streamProcessorDict[type] = streamProcessor;
+        },
 
         getAutoSwitchBitrate: function () {
             return autoSwitchBitrate;
@@ -128,7 +156,7 @@ MediaPlayer.dependencies.AbrController = function () {
                 confidence,
 
                 callback = function(res) {
-                    var topQualityIdx = getTopQualityIndex(type, streamId);
+                    var topQualityIdx = getTopQualityIndex.call(self, type, streamId);
 
                     quality = res.value;
                     confidence = res.confidence;
@@ -176,7 +204,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
             if (!isInt) throw "argument is not an integer";
 
-            if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && topQualities[id].hasOwnProperty(type) && newPlaybackQuality <= topQualities[id][type]) {
+            if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && newPlaybackQuality <= getTopQualityIndex.call(this, type, id)) {
                 setInternalQuality(type, streamInfo.id, newPlaybackQuality);
                 this.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality});
             }
@@ -206,6 +234,14 @@ MediaPlayer.dependencies.AbrController = function () {
          */
         getInitialBitrateFor: function(type){
             return getInitialBitrate(type);
+        },
+
+
+        setMaxAllowedBitrateFor:function(type, value) {
+            setMaxBitrate(type, value);
+        },
+        getMaxAllowedBitrateFor:function(type) {
+            return getMaxBitrate(type);
         },
 
         /**
@@ -258,9 +294,6 @@ MediaPlayer.dependencies.AbrController = function () {
                 max;
 
             max = mediaInfo.trackCount - 1;
-
-            if (getTopQualityIndex(type, streamId) === max) return max;
-
             setTopQualityIndex(type, streamId, max);
 
             return max;
@@ -273,19 +306,23 @@ MediaPlayer.dependencies.AbrController = function () {
                 audioQuality = self.getQualityFor("audio", streamInfo),
                 videoQuality = self.getQualityFor("video", streamInfo);
 
-            isAtTop = (audioQuality === getTopQualityIndex("audio", streamId)) &&
-                (videoQuality === getTopQualityIndex("video", streamId));
+            isAtTop = (audioQuality === getTopQualityIndex.call(this, "audio", streamId)) &&
+                (videoQuality === getTopQualityIndex.call(this, "video", streamId));
 
             return isAtTop;
         },
+
+        getTopQualityIndexFor:getTopQualityIndex,
 
         reset: function() {
             autoSwitchBitrate = true;
             topQualities = {};
             qualityDict = {};
             confidenceDict = {};
-            //bitrateDict = {}; // We should let this setting persist over multiple sources. If we empty the object each time we
-            //attach source in media player then there is no way to set initial bit rate for the second media source and so on...
+            streamProcessorDict = {};
+            //bitrateDict = {}; // Letting this setting persist over multiple sources.
+            // There is no way to set initial bit rate on subsequent media sources in a session if we renew the object each time
+            //attachSource is called in media player.
         }
     };
 };

@@ -146,6 +146,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             indexHandler.initialize(this);
             bufferController.initialize(type, buffer, mediaSource, self);
             scheduleController.initialize(type, this);
+            abrController.initialize(type, this);
 
             fragmentModel = this.getFragmentModel();
             fragmentModel.setLoader(fragmentLoader);

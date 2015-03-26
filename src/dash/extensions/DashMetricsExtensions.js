@@ -86,30 +86,6 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return null;
         },
 
-        adaptationIsType = function (adaptation, bufferType) {
-            return this.manifestExt.getIsTypeOf(adaptation, bufferType);
-        },
-
-        findMaxBufferIndex = function (period, bufferType) {
-            var adaptationSet,
-                adaptationSetArray,
-                representationArray,
-                adaptationSetArrayIndex;
-
-            if (!period || !bufferType) return -1;
-
-            adaptationSetArray = period.AdaptationSet_asArray;
-            for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
-                adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-                representationArray = adaptationSet.Representation_asArray;
-                if (adaptationIsType.call(this, adaptationSet, bufferType)) {
-                    return representationArray.length;
-                }
-            }
-
-            return -1;
-        },
-
         getBandwidthForRepresentation = function (representationId) {
             var self = this,
                 manifest = self.manifestModel.getValue(),
@@ -135,14 +111,15 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return representationIndex;
         },
 
-        getMaxIndexForBufferType = function (bufferType, periodIdx) {
-            var self = this,
-                manifest = self.manifestModel.getValue(),
-                maxIndex,
-                period = manifest.Period_asArray[periodIdx];
+        getMaxIndexForBufferType = function (bufferType, periodId) {
+            var abrController = this.system.getObject("abrController"),
+                idx=0;
 
-            maxIndex = findMaxBufferIndex.call(this, period, bufferType);
-            return maxIndex;
+            if (abrController) {
+                idx = abrController.getTopQualityIndexFor(bufferType, periodId);
+            }
+
+            return idx;
         },
 
         getCurrentRepresentationSwitch = function (metrics) {
@@ -374,6 +351,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
     return {
         manifestModel: undefined,
         manifestExt: undefined,
+        system:undefined,
         getBandwidthForRepresentation : getBandwidthForRepresentation,
         getIndexForRepresentation : getIndexForRepresentation,
         getMaxIndexForBufferType : getMaxIndexForBufferType,

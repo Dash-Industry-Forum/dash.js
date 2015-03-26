@@ -352,6 +352,34 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum bitrate allowed.
+         * If you set this property to a value lower than that currently playing, the switching engine will switch down to
+         * satisfy this requirement. If you set it to a value that is lower than the lowest bitrate, it will still play
+         * that lowest bitrate.
+         *
+         * You can set or remove this bitrate cap at anytime before or during playback.  To clear this setting you must use the API
+         * and set the value param to NaN.
+         *
+         * This feature is typically used to reserve higher bitrates for playback only when the player is in large or full-screen format.
+         *
+         * @param type String 'video' or 'audio' are the type options.
+         * @param value int value in kbps representing the maximum bitrate allowed.
+         * @memberof MediaPlayer#
+         */
+        setMaxAllowedBitrateFor:function(type, value) {
+            abrController.setMaxAllowedBitrateFor(type, value);
+        },
+
+        /**
+         * @param type String 'video' or 'audio' are the type options.
+         * @memberof MediaPlayer#
+         * @see {@link MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
+         */
+        getMaxAllowedBitrateFor:function(type) {
+            return abrController.getMaxAllowedBitrateFor(type);
+        },
+
+        /**
          * @param value
          * @memberof MediaPlayer#
          */
