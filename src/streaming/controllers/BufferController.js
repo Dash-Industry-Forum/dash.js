@@ -110,8 +110,9 @@ MediaPlayer.dependencies.BufferController = function () {
                 startTime = e.data.startTime,
                 request = this.streamProcessor.getFragmentModel().getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, quality: quality, index: index})[0],
                 currentTrack = this.streamProcessor.getTrackForQuality(quality),
-                eventStreamMedia = this.adapter.getEventsFor(currentTrack.mediaInfo, this.streamProcessor),
-                eventStreamTrack = this.adapter.getEventsFor(currentTrack, this.streamProcessor);
+                manifest = this.manifestModel.getValue(),
+                eventStreamMedia = this.adapter.getEventsFor(manifest, currentTrack.mediaInfo, this.streamProcessor),
+                eventStreamTrack = this.adapter.getEventsFor(manifest, currentTrack, this.streamProcessor);
 
             if(eventStreamMedia.length > 0 || eventStreamTrack.length > 0) {
                 events = handleInbandEvents.call(this, bytes, request, eventStreamMedia, eventStreamTrack);
@@ -568,6 +569,7 @@ MediaPlayer.dependencies.BufferController = function () {
         sourceBufferExt: undefined,
         eventBus: undefined,
         bufferMax: undefined,
+        manifestModel: undefined,
         mediaSourceExt: undefined,
         metricsModel: undefined,
         metricsExt: undefined,

@@ -52,6 +52,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         abrController: undefined,
         baseURLExt: undefined,
         adapter: undefined,
+        manifestModel: undefined,
 
         initialize: function (typeValue, buffer, videoModel, fragmentController, playbackController, mediaSource, streamValue, eventControllerValue) {
 
@@ -214,11 +215,11 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         },
 
         getCurrentTrack: function() {
-            return this.adapter.getCurrentTrackInfo(this.trackController);
+            return this.adapter.getCurrentTrackInfo(this.manifestModel.getValue(), this.trackController);
         },
 
         getTrackForQuality: function(quality) {
-            return this.adapter.getTrackInfoForQuality(this.trackController, quality);
+            return this.adapter.getTrackInfoForQuality(this.manifestModel.getValue(), this.trackController, quality);
         },
 
         isBufferingCompleted: function() {

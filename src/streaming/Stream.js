@@ -23,7 +23,6 @@
  *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
  *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
  *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
@@ -244,10 +243,9 @@ MediaPlayer.dependencies.Stream = function () {
             mediaInfos = {};
 
             mediaSource = null;
-            manifest = null;
         },
 
-        initializeMediaForType = function(type, manifest) {
+        initializeMediaForType = function(type) {
             var self = this,
                 mimeType = null,
                 codec,
@@ -318,7 +316,7 @@ MediaPlayer.dependencies.Stream = function () {
                     processor.initialize(mimeType || type, buffer, self.videoModel, self.fragmentController, self.playbackController, mediaSource, self, eventController);
                     processor.setMediaInfo(mediaInfo);
                     self.abrController.updateTopQualityIndex(mediaInfo);
-                    self.adapter.updateData(processor);
+                    self.adapter.updateData(manifest, processor);
                     if(type === "fragmentedText"){
                         processor.bufferController.videoModel= self.videoModel;
                         buffer.initialize(type,processor.bufferController);
@@ -346,10 +344,10 @@ MediaPlayer.dependencies.Stream = function () {
             // Figure out some bits about the stream before building anything.
             //self.log("Gathering information for buffers. (1)");
 
-            initializeMediaForType.call(self, "video", manifest);
-            initializeMediaForType.call(self, "audio", manifest);
-            initializeMediaForType.call(self, "text", manifest);
-            initializeMediaForType.call(self, "fragmentedText", manifest);
+            initializeMediaForType.call(self, "video");
+            initializeMediaForType.call(self, "audio");
+            initializeMediaForType.call(self, "text");
+            initializeMediaForType.call(self, "fragmentedText");
 
             //this.log("MediaSource initialized!");
         },
@@ -444,7 +442,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.reset();
         },
 
-        doLoad = function (manifestResult) {
+        doLoad = function () {
 
             var self = this,
                 onMediaSourceSetup = function (mediaSourceResult) {
@@ -468,7 +466,6 @@ MediaPlayer.dependencies.Stream = function () {
 
             //self.log("Stream start loading.");
 
-            manifest = manifestResult;
             mediaSourceResult = self.mediaSourceExt.createMediaSource();
             //self.log("MediaSource created.");
 
@@ -524,10 +521,10 @@ MediaPlayer.dependencies.Stream = function () {
                 i = 0,
                 mediaInfo,
                 events,
-                processor;
+                processor,
+                manifest = self.manifestModel.getValue();
 
             updating = true;
-            manifest = self.manifestModel.getValue();
             streamInfo = updatedStreamInfo;
             self.log("Manifest updated... set new data on buffers.");
 
@@ -583,15 +580,16 @@ MediaPlayer.dependencies.Stream = function () {
             keySystem = undefined;
         },
 
-        load: function(manifest) {
-            doLoad.call(this, manifest);
+        load: function() {
+            doLoad.call(this);
+            manifest = this.manifestModel.getValue();
         },
 
         setVideoModel: function(value) {
             this.videoModel = value;
         },
 
-        initProtection: function(manifest) {
+        initProtection: function() {
             if (this.capabilities.supportsEncryptedMedia()) {
                 this.protectionModel = this.system.getObject("protectionModel");
                 this.protectionModel.init(this.getVideoModel());
@@ -608,6 +606,7 @@ MediaPlayer.dependencies.Stream = function () {
 
                 // Look for ContentProtection elements.  InitData can be provided by either the
                 // dash264drm:Pssh ContentProtection format or a DRM-specific format.
+                var manifest = this.manifestModel.getValue();
                 var audioInfo = this.adapter.getMediaInfoForType(manifest, streamInfo, "audio");
                 var videoInfo = this.adapter.getMediaInfoForType(manifest, streamInfo, "video");
                 var mediaInfo = (videoInfo) ? videoInfo : audioInfo; // We could have audio or video only
@@ -680,6 +679,7 @@ MediaPlayer.dependencies.Stream = function () {
                 this.protectionModel = undefined;
             }
 
+            manifest = null;
             tearDownMediaSource.call(this);
 
             this.fragmentController.reset();

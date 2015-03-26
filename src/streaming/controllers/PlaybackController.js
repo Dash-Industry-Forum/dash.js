@@ -124,7 +124,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         onDataUpdateCompleted = function(e) {
             if (e.error) return;
 
-            var track = this.adapter.convertDataToTrack(e.data.currentRepresentation);
+            var track = this.adapter.convertDataToTrack(this.manifestModel.getValue(), e.data.currentRepresentation);
             streamInfo = track.mediaInfo.streamInfo;
             isDynamic = e.sender.streamProcessor.isDynamic();
             updateCurrentTime.call(this);
@@ -286,6 +286,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         uriQueryFragModel: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
+        manifestModel: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
