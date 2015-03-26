@@ -43,7 +43,6 @@
         STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
         isStreamSwitchingInProgress = false,
-        manifestLoader = null,
 
         play = function () {
             activeStream.play();
@@ -348,6 +347,7 @@
         system: undefined,
         videoModel: undefined,
         manifestUpdater: undefined,
+        manifestLoader: undefined,
         manifestModel: undefined,
         manifestExt: undefined,
         adapter: undefined,
@@ -416,13 +416,12 @@
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
 
-            manifestLoader = this.system.getObject("manifestLoader");
             this.manifestUpdater.subscribe(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
-            this.manifestUpdater.initialize(this, manifestLoader);
+            this.manifestUpdater.initialize(this, this.manifestLoader);
         },
 
         load: function (url) {
-            manifestLoader.load(url);
+            this.manifestLoader.load(url);
         },
 
         loadWithManifest: function (manifest) {
