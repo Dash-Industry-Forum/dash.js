@@ -78,27 +78,10 @@ MediaPlayer.models.VideoModel = function () {
             } else {
                 removeStalledStream.call(this, type);
             }
-        },
-
-        onBufferLevelStateChanged = function(e) {
-            var type = e.sender.streamProcessor.getType();
-
-            stallStream.call(this, type, !e.data.hasSufficientBuffer);
-        }
-        /*,
-        handleSetCurrentTimeNotification = function () {
-            if (element.currentTime !== _currentTime) {
-                element.currentTime = _currentTime;
-            }
-        }*/;
+        };
 
     return {
         system : undefined,
-
-        setup : function () {
-            this.bufferLevelStateChanged = onBufferLevelStateChanged;
-            //this.system.mapHandler("setCurrentTime", undefined, handleSetCurrentTimeNotification.bind(this));
-        },
 
         play: function () {
             element.play();
@@ -133,7 +116,24 @@ MediaPlayer.models.VideoModel = function () {
             // providing playbackRate property equals to zero.
             if (element.currentTime == currentTime) return;
 
-            element.currentTime = currentTime;
+            // TODO Despite the fact that MediaSource 'open' event has been fired IE11 cannot set videoElement.currentTime
+            // immediately (it throws InvalidStateError). It seems that this is related to videoElement.readyState property
+            // Initially it is 0, but soon after 'open' event it goes to 1 and setting currentTime is allowed. Chrome allows to
+            // set currentTime even if readyState = 0.
+            // setTimeout is used to workaround InvalidStateError in IE11
+            try{
+                element.currentTime = currentTime;
+            } catch (e) {
+                if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
+                    setTimeout(function(){
+                        element.currentTime = currentTime;
+                    }, 400);
+                }
+            }
+        },
+
+        setStallState: function(type, state) {
+            stallStream.call(this, type, state);
         },
 
         listen: function (type, callback) {

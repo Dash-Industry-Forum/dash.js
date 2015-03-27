@@ -32,7 +32,7 @@
 MediaPlayer.dependencies.FragmentModel = function () {
     "use strict";
 
-    var context,
+    var context = null,
         executedRequests = [],
         pendingRequests = [],
         loadingRequests = [],
@@ -389,6 +389,12 @@ MediaPlayer.dependencies.FragmentModel = function () {
         reset: function() {
             this.abortRequests();
             this.cancelPendingRequests();
+            context = null;
+            executedRequests = [];
+            pendingRequests = [];
+            loadingRequests = [];
+            rejectedRequests = [];
+            isLoadingPostponed = false;
         }
     };
 };

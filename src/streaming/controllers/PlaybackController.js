@@ -35,7 +35,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
         currentTime = 0,
         liveStartTime = NaN,
         wallclockTimeIntervalId = null,
-        commonEarliestTime = null,
+        commonEarliestTime = {},
+        firstAppended = {},
         streamInfo,
         videoModel,
         isDynamic,
@@ -104,6 +105,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         initialStart = function() {
+            if (firstAppended[streamInfo.id] || this.isSeeking()) return;
+
             var initialSeekTime = getStreamStartTime.call(this, streamInfo);
             this.log("Starting playback at offset: " + initialSeekTime);
             this.seek(initialSeekTime);
@@ -126,7 +129,6 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
             var track = this.adapter.convertDataToTrack(this.manifestModel.getValue(), e.data.currentRepresentation);
             streamInfo = track.mediaInfo.streamInfo;
-            isDynamic = e.sender.streamProcessor.isDynamic();
             updateCurrentTime.call(this);
         },
 
@@ -242,30 +244,39 @@ MediaPlayer.dependencies.PlaybackController = function () {
         onBytesAppended = function(e) {
             var bufferedStart,
                 ranges = e.data.bufferedRanges,
-                currentEarliestTime = commonEarliestTime,
-                playbackStart = getStreamStartTime.call(this, streamInfo),
-                track = e.sender.streamProcessor.getCurrentTrack(),
-                req;
+                id = streamInfo.id,
+                time = this.getTime(),
+                currentEarliestTime = commonEarliestTime[id];
+
+            // if index is zero it means that the first segment of the Period has been appended
+            if (e.data.index === 0) {
+                firstAppended[id] = true;
+            }
 
             if (!ranges || !ranges.length) return;
 
             bufferedStart = ranges.start(0);
-            commonEarliestTime = (commonEarliestTime === null) ? bufferedStart : Math.max(commonEarliestTime, bufferedStart);
+            commonEarliestTime[id] = (commonEarliestTime[id] === undefined) ? bufferedStart : Math.max(commonEarliestTime[id], bufferedStart);
 
-            if (currentEarliestTime === commonEarliestTime) return;
-
-            // since segments are appended out of order, we cannot blindly seek after the first appended segment.
-            // Do nothing till we make sure that the segment for initial time has been appended.
-            req = this.adapter.getFragmentRequestForTime(e.sender.streamProcessor, track, playbackStart, {keepIdx: false});
-
-            if (!req || req.index !== e.data.index) return;
+            // do nothing if common earliest time has not changed or if the firts segment has not been appended or if current
+            // time exceeds the common earliest time
+            if ((currentEarliestTime === commonEarliestTime[id]) || !firstAppended[id] || (time > commonEarliestTime[id])) return;
 
             // seek to the start of buffered range to avoid stalling caused by a shift between audio and video media time
-            this.seek(commonEarliestTime);
+            this.seek(commonEarliestTime[id]);
         },
 
-        setupVideoModel = function(model) {
-            videoModel = model;
+        onBufferLevelStateChanged = function(e) {
+            var type = e.sender.streamProcessor.getType(),
+                senderStreamInfo = e.sender.streamProcessor.getStreamInfo();
+
+            // do not stall playback when get an event from Stream that is not active
+            if (senderStreamInfo.id !== streamInfo.id) return;
+
+            videoModel.setStallState(type, !e.data.hasSufficientBuffer);
+        },
+
+        setupVideoModel = function() {
             videoModel.listen("canplay", onCanPlay);
             videoModel.listen("play", onPlaybackStart);
             videoModel.listen("playing", onPlaybackPlaying);
@@ -287,6 +298,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         metricsModel: undefined,
         metricsExt: undefined,
         manifestModel: undefined,
+        videoModel: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
@@ -296,6 +308,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
             this[MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
+            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED] = onBufferLevelStateChanged;
 
             onCanPlay = onCanPlay.bind(this);
             onPlaybackStart = onPlaybackStart.bind(this);
@@ -311,14 +324,21 @@ MediaPlayer.dependencies.PlaybackController = function () {
             onPlaybackEnded = onPlaybackEnded.bind(this);
         },
 
-        initialize: function(streamInfoValue, model) {
+        initialize: function(streamInfoValue) {
+            videoModel = this.videoModel;
             streamInfo = streamInfoValue;
-
-            if (videoModel === model) return;
-
+            commonEarliestTime = {};
             removeAllListeners.call(this);
-            setupVideoModel.call(this, model);
+            setupVideoModel.call(this);
+            isDynamic = streamInfo.manifestInfo.isDynamic;
         },
+
+        /**
+         * @param streamInfo object
+         * @returns {Number} object
+         * @memberof PlaybackController#
+         */
+        getStreamStartTime: getStreamStartTime,
 
         getTimeToStreamEnd: function() {
             var currentTime = videoModel.getCurrentTime();
@@ -373,7 +393,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         seek: function(time) {
-            if (time === this.getTime()) return;
+            if (!videoModel || time === this.getTime()) return;
+            this.log("Do seek: " + time);
             videoModel.setCurrentTime(time);
         },
 
@@ -384,7 +405,9 @@ MediaPlayer.dependencies.PlaybackController = function () {
             streamInfo = null;
             currentTime = 0;
             liveStartTime = NaN;
-            commonEarliestTime = null;
+            commonEarliestTime = {};
+            firstAppended = {};
+            isDynamic = undefined;
         }
     };
 };

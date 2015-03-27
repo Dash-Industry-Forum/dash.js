@@ -35,12 +35,12 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
 
     return {
         system:undefined,
+        videoModel: undefined,
         eventBus:undefined,
         errHandler: undefined,
 
         initialize: function (type, bufferController) {
             mimeType = type;
-            this.videoModel = bufferController.videoModel;
             mediaInfo = bufferController.streamProcessor.getCurrentTrack().mediaInfo;
             this.buffered =  this.system.getObject("customTimeRanges");
             this.initializationSegmentReceived= false;

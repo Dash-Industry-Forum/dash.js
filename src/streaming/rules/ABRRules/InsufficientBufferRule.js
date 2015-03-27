@@ -58,6 +58,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
     return {
         log: undefined,
         metricsModel: undefined,
+        playbackController: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
@@ -72,7 +73,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 streamInfo = context.getStreamInfo(),
                 trackInfo = context.getTrackInfo(),
                 duration = streamInfo.duration,
-                currentTime = context.getStreamProcessor().getPlaybackController().getTime(),
+                currentTime = self.playbackController.getTime(),
                 sp = context.getStreamProcessor(),
                 isDynamic = sp.isDynamic(),
                 lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,

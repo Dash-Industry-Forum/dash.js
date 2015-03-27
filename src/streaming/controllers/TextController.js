@@ -31,35 +31,28 @@
 MediaPlayer.dependencies.TextController = function () {
 
      var initialized = false,
-         mediaSource,
-         buffer,
-         type,
+         mediaSource = null,
+         buffer = null,
+         type = null,
 
          onDataUpdateCompleted = function(/*e*/) {
-             if (!initialized) {
-                 if (buffer.hasOwnProperty('initialize')) {
-                     buffer.initialize(type, this);
-                 }
-                 initialized = true;
-             }
              this.notify(MediaPlayer.dependencies.TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, {CCIndex: 0});
          },
 
          onInitFragmentLoaded = function (e) {
              var self = this;
 
-             if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel()) return;
+             if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel() || (!e.data.chunk.bytes)) return;
 
-             if (e.data.bytes !== null) {
-                 //self.log("Push text track bytes: " + data.byteLength);
-                 self.sourceBufferExt.append(buffer, e.data.bytes, self.videoModel);
-             }
+             self.sourceBufferExt.append(buffer, e.data.chunk.bytes, self.videoModel);
          };
 
     return {
         sourceBufferExt: undefined,
         log: undefined,
         system: undefined,
+        errHandler: undefined,
+        videoModel: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
@@ -69,15 +62,35 @@ MediaPlayer.dependencies.TextController = function () {
             this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitFragmentLoaded;
         },
 
-        initialize: function (typeValue, buffer, source, streamProcessor) {
+        initialize: function (typeValue, source, streamProcessor) {
             var self = this;
 
             type = typeValue;
-            self.setBuffer(buffer);
             self.setMediaSource(source);
-            self.videoModel = streamProcessor.videoModel;
             self.trackController = streamProcessor.trackController;
             self.streamProcessor = streamProcessor;
+        },
+
+        /**
+         * @param mediaInfo object
+         * @returns SourceBuffer object
+         * @memberof BufferController#
+         */
+        createBuffer: function(mediaInfo) {
+            try{
+                buffer = this.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
+
+                if (!initialized) {
+                    if (buffer.hasOwnProperty('initialize')) {
+                        buffer.initialize(type, this);
+                    }
+                    initialized = true;
+                }
+            } catch (e) {
+                this.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
+            }
+
+            return buffer;
         },
 
         getBuffer: function () {

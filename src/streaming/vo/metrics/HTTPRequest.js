@@ -77,4 +77,5 @@ MediaPlayer.vo.metrics.HTTPRequest.Trace.prototype = {
 };
 
 MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE = 'Media Segment';
+MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE = 'Initialization Segment';
 MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE = 'MPD';

@@ -1000,6 +1000,7 @@ Dash.dependencies.DashHandler = function () {
             currentTime = 0;
             requestedTime = undefined;
             index = -1;
+            isDynamic = undefined;
             this.unsubscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.trackController);
         },
 
