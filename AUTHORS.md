@@ -1,9 +1,8 @@
-# Dash.js Authors File
-#####Entries should be added as
-* GitHub Name (Required)
-* <Name and/or Organization> (Optional)
+# Dash.js Authors List
+#####Please add entries to the bottom of the list in the following format
+* @GitHub UserName (Required) <Name and/or Organization> (Optional)
 
-#####Authors - (please add your information to the bottom of the list)
+#Authors 
 * @nweber <Digital Primates>
 * @jefftapper <Jeff Tapper - Digital Primates>
 * @KozhinM <Mikail Kozhin - Microsoft Open Technologies>
