@@ -86,6 +86,30 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return null;
         },
 
+        adaptationIsType = function (adaptation, bufferType) {
+            return this.manifestExt.getIsTypeOf(adaptation, bufferType);
+        },
+
+        findMaxBufferIndex = function (period, bufferType) {
+            var adaptationSet,
+                adaptationSetArray,
+                representationArray,
+                adaptationSetArrayIndex;
+
+            if (!period || !bufferType) return -1;
+
+            adaptationSetArray = period.AdaptationSet_asArray;
+            for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
+                adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
+                representationArray = adaptationSet.Representation_asArray;
+                if (adaptationIsType.call(this, adaptationSet, bufferType)) {
+                    return representationArray.length;
+                }
+            }
+
+            return -1;
+        },
+
         getBandwidthForRepresentation = function (representationId) {
             var self = this,
                 manifest = self.manifestModel.getValue(),
@@ -111,7 +135,17 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return representationIndex;
         },
 
-        getMaxIndexForBufferType = function (bufferType, periodId) {
+        getMaxIndexForBufferType = function (bufferType, periodIdx) {
+            var self = this,
+                manifest = self.manifestModel.getValue(),
+                maxIndex,
+                period = manifest.Period_asArray[periodIdx];
+
+            maxIndex = findMaxBufferIndex.call(this, period, bufferType);
+            return maxIndex;
+        },
+
+        getMaxAllowedIndexForBufferType = function (bufferType, periodId) {
             var abrController = this.system.getObject("abrController"),
                 idx=0;
 
@@ -354,7 +388,29 @@ Dash.dependencies.DashMetricsExtensions = function () {
         system:undefined,
         getBandwidthForRepresentation : getBandwidthForRepresentation,
         getIndexForRepresentation : getIndexForRepresentation,
+        /**
+         * This method returns the current max index based on what is defined in the MPD.
+         *
+         * @param bufferType - String 'audio' or 'video',
+         * @param periodIdx - Make sure this is the period index not id
+         * @return int
+         * @memberof DashMetricsExtensions#
+         * @method
+         */
         getMaxIndexForBufferType : getMaxIndexForBufferType,
+        /**
+         * This method returns the current max index correlated to the max allowed bitrate
+         * explicitly set via the MediaPlayer's API setMaxAllowedBitrateFor.
+         *
+         * @param bufferType - String 'audio' or 'video',
+         * @param periodId - Make sure this is the period id not index.
+         * @return int
+         * @see {@link MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
+         * @see {@link DashMetricsExtensions#getMaxIndexForBufferType getMaxIndexForBufferType()}
+         * @memberof DashMetricsExtensions#
+         * @method
+         */
+        getMaxAllowedIndexForBufferType : getMaxAllowedIndexForBufferType,
         getCurrentRepresentationSwitch : getCurrentRepresentationSwitch,
         getCurrentBufferLevel : getCurrentBufferLevel,
         getCurrentPlaybackRate: getCurrentPlaybackRate,
