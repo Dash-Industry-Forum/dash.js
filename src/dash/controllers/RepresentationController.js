@@ -42,7 +42,7 @@ Dash.dependencies.RepresentationController = function () {
                 bitrate = null,
                 streamInfo = self.streamProcessor.getStreamInfo(),
                 quality,
-                maxQuality = self.abrController.getTopQualityIndexFor(type, streamInfo.id),
+                maxQuality = self.abrController.getTopQualityIndexFor(type, streamInfo.id);
 
             updating = true;
             self.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
