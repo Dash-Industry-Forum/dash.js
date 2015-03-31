@@ -182,12 +182,6 @@ MediaPlayer.dependencies.AbrController = function () {
             return Math.min( idx , Math.round(maxIdx * maxRepresentationRatio) );
         },
 
-        checkPortalSize = function(idx, type) {
-            if (type !== 'video' || !this.limitBitrateByPortal || !streamProcessorDict[type]) {
-                return idx;
-            }
-        },
-
         onFragmentLoadProgress = function(evt) {
             if (MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD === 0 && autoSwitchBitrate) { //check to see if there are parallel request or just one at a time.
                 var self = this,
@@ -224,6 +218,33 @@ MediaPlayer.dependencies.AbrController = function () {
                     return newValue;
                 });
             }
+        },
+
+        checkPortalSize = function(idx, type) {
+            if (type !== 'video' || !this.limitBitrateByPortal || !streamProcessorDict[type]) {
+                return idx;
+            }
+
+            var element = streamProcessorDict[type].videoModel.getElement(),
+                elementWidth = element.offsetWidth,
+                elementHeight = element.offsetHeight,
+                manifest = this.manifestModel.getValue(),
+                representation = this.manifestExt.getAdaptationForType(manifest, 0, type).Representation;
+
+            if (elementWidth > 0 && elementHeight > 0) {
+                while (
+                    idx > 0 &&
+                    (elementWidth < representation[idx].width || elementHeight < representation[idx].height) &&
+                    (
+                        elementWidth - representation[idx-1].width < representation[idx].width - elementWidth ||
+                        elementHeight - representation[idx-1].height < representation[idx].height - elementHeigh
+                    )
+                ) {
+                    idx = idx -1;
+                }
+            }
+
+            return idx;
         };
 
     return {
@@ -234,6 +255,8 @@ MediaPlayer.dependencies.AbrController = function () {
         subscribe: undefined,
         unsubscribe: undefined,
         streamController:undefined,
+        manifestExt: undefined,
+        manifestModel: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_PROGRESS] = onFragmentLoadProgress;
@@ -277,7 +300,7 @@ MediaPlayer.dependencies.AbrController = function () {
                         quality = topQualityIdx;
                     }
 
-                    oldQuality = getInternalQuality(type, streamId);
+                    oldQuality = getInternalQuality.call(this, type, streamId);
 
                     if (quality === oldQuality || (abandonmentStateDict[type].state === MediaPlayer.dependencies.AbrController.ABANDON_LOAD &&  quality > oldQuality)) return;
 
@@ -289,7 +312,7 @@ MediaPlayer.dependencies.AbrController = function () {
                     self.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
                 };
 
-            quality = getInternalQuality(type, streamId);
+            quality = getInternalQuality.call(this, type, streamId);
             confidence = getInternalConfidence(type, streamId);
 
 
@@ -306,7 +329,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
         setPlaybackQuality: function (type, streamInfo, newPlaybackQuality) {
             var id = streamInfo.id,
-                quality = getInternalQuality(type, id),
+                quality = getInternalQuality.call(this, type, id),
                 isInt = newPlaybackQuality !== null && !isNaN(newPlaybackQuality) && (newPlaybackQuality % 1 === 0);
 
             if (!isInt) throw "argument is not an integer";
@@ -326,7 +349,7 @@ MediaPlayer.dependencies.AbrController = function () {
         },
 
         getQualityFor: function (type, streamInfo) {
-            return getInternalQuality(type, streamInfo.id);
+            return getInternalQuality.call(this, type, streamInfo.id);
         },
 
         getConfidenceFor: function(type, streamInfo) {
