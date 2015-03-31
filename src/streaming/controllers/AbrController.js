@@ -226,25 +226,27 @@ MediaPlayer.dependencies.AbrController = function () {
             }
 
             var element = streamProcessorDict[type].videoModel.getElement(),
-                elementWidth = element.offsetWidth,
-                elementHeight = element.offsetHeight,
+                elementWidth = element.clientWidth,
+                elementHeight = element.clientHeight,
                 manifest = this.manifestModel.getValue(),
-                representation = this.manifestExt.getAdaptationForType(manifest, 0, type).Representation;
+                representation = this.manifestExt.getAdaptationForType(manifest, 0, type).Representation,
+                newIdx = idx;
 
             if (elementWidth > 0 && elementHeight > 0) {
                 while (
-                    idx > 0 &&
-                    (elementWidth < representation[idx].width || elementHeight < representation[idx].height) &&
-                    (
-                        elementWidth - representation[idx-1].width < representation[idx].width - elementWidth ||
-                        elementHeight - representation[idx-1].height < representation[idx].height - elementHeigh
-                    )
+                    newIdx > 0 &&
+                    elementWidth < representation[newIdx].width &&
+                    elementWidth - representation[newIdx-1].width < representation[newIdx].width - elementWidth
                 ) {
-                    idx = idx -1;
+                    newIdx = newIdx -1;
+                }
+
+                if (representation.length - 2 >= newIdx && representation[newIdx].width === representation[newIdx+1].width) {
+                    newIdx = Math.min(idx, newIdx+1);
                 }
             }
 
-            return idx;
+            return newIdx;
         };
 
     return {
@@ -257,6 +259,7 @@ MediaPlayer.dependencies.AbrController = function () {
         streamController:undefined,
         manifestExt: undefined,
         manifestModel: undefined,
+        limitBitrateByPortal: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_PROGRESS] = onFragmentLoadProgress;

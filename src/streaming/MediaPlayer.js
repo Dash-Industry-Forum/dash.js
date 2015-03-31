@@ -84,6 +84,7 @@ MediaPlayer = function (context) {
         playing = false,
         autoPlay = true,
         scheduleWhilePaused = false,
+        limitBitrateByPortal = true,
         bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
         useManifestDateHeaderTimeSource = true,
         UTCTimingSources = [],
@@ -128,6 +129,10 @@ MediaPlayer = function (context) {
                 streamController.loadWithManifest(source);
             }
             streamController.setUTCTimingSources(UTCTimingSources, useManifestDateHeaderTimeSource);
+
+            abrController = system.getObject('abrController');
+            abrController.limitBitrateByPortal = limitBitrateByPortal;
+
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
@@ -590,6 +595,22 @@ MediaPlayer = function (context) {
          */
         getScheduleWhilePaused: function() {
             return scheduleWhilePaused;
+        },
+
+        /**
+         * @param value
+         * @memberof MediaPlayer#
+         */
+        setLimitBitrateByPortal: function(value) {
+            limitBitrateByPortal = value;
+        },
+
+        /**
+         * @returns {boolean}
+         * @memberof MediaPlayer#
+         */
+        getLimitBitrateByPortal: function() {
+            return limitBitrateByPortal;
         },
 
         /**
