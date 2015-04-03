@@ -127,7 +127,11 @@ MediaPlayer.dependencies.PlaybackController = function () {
         onDataUpdateCompleted = function(e) {
             if (e.error) return;
 
-            var track = this.adapter.convertDataToTrack(this.manifestModel.getValue(), e.data.currentRepresentation);
+            var track = this.adapter.convertDataToTrack(this.manifestModel.getValue(), e.data.currentRepresentation),
+                info = track.mediaInfo.streamInfo;
+
+            if (streamInfo.id !== info.id) return;
+
             streamInfo = track.mediaInfo.streamInfo;
             updateCurrentTime.call(this);
         },
