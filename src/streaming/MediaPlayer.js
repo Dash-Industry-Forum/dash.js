@@ -282,6 +282,7 @@ MediaPlayer = function (context) {
          *
          */
         addEventListener: function (type, listener, useCapture) {
+            type = type.toLowerCase();
             this.eventBus.addEventListener(type, listener, useCapture);
         },
 
@@ -292,6 +293,7 @@ MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          */
         removeEventListener: function (type, listener, useCapture) {
+            type = type.toLowerCase();
             this.eventBus.removeEventListener(type, listener, useCapture);
         },
 

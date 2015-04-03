@@ -103,7 +103,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             request = this.adapter.getFragmentRequestForTime(streamProcessor, track, time, {keepIdx: keepIdx});
 
             if (useRejected && request && request.index !== rejected.index) {
-                request = this.adapter.getFragmentRequestForTime(streamProcessor, track, rejected.startTime + (rejected.duration / 2) + EPSILON, {keepIdx: keepIdx});
+                request = this.adapter.getFragmentRequestForTime(streamProcessor, track, rejected.startTime + (rejected.duration / 2) + EPSILON, {keepIdx: keepIdx, timeThreshold: 0});
             }
 
             while (request && streamProcessor.getFragmentModel().isFragmentLoadedOrPending(request)) {
