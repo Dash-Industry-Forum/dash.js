@@ -98,8 +98,13 @@ Dash.dependencies.RepresentationController = function () {
         },
 
         isAllRepresentationsUpdated = function() {
-            for (var i = 0, ln = availableRepresentations.length; i < ln; i += 1) {
-                if (availableRepresentations[i].segmentAvailabilityRange === null || availableRepresentations[i].initialization === null) return false;
+        	for (var i = 0, ln = availableRepresentations.length; i < ln; i += 1) {
+        		var segmentInfoType = availableRepresentations[i].segmentInfoType;
+        		if (availableRepresentations[i].segmentAvailabilityRange === null || availableRepresentations[i].initialization === null ||
+                		((segmentInfoType === "SegmentBase" || segmentInfoType === "BaseURL") && !availableRepresentations[i].segments)
+                	) {
+        			return false;
+        		}
             }
 
             return true;
