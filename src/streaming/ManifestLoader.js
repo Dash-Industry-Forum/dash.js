@@ -34,7 +34,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
     var RETRY_ATTEMPTS = 3,
         RETRY_INTERVAL = 500,
         parseBaseUrl = function (url) {
-            var base = null;
+            var base = "";
 
             if (url.indexOf("/") !== -1)
             {
