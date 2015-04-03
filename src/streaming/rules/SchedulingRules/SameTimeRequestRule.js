@@ -107,6 +107,8 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
         };
 
     return {
+        playbackController: undefined,
+
         setup: function() {
             this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
         },
@@ -141,7 +143,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 return;
             }
 
-            currentTime = fragmentModels[0].getContext().playbackController.getTime();
+            currentTime = this.playbackController.getTime();
             reqForCurrentTime = getForTime(fragmentModels, currentTime);
             req = reqForCurrentTime || findClosestToTime(fragmentModels, currentTime) || current;
 

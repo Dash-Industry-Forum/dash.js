@@ -607,6 +607,7 @@ MediaPlayer.dependencies.BufferController = function () {
         metricsModel: undefined,
         metricsExt: undefined,
         streamController: undefined,
+        playbackController: undefined,
         adapter: undefined,
         log: undefined,
         abrController: undefined,
@@ -646,7 +647,6 @@ MediaPlayer.dependencies.BufferController = function () {
             self.streamProcessor = streamProcessor;
             self.fragmentController = streamProcessor.fragmentController;
             self.scheduleController = streamProcessor.scheduleController;
-            self.playbackController = streamProcessor.playbackController;
             requiredQuality = self.abrController.getQualityFor(type, streamProcessor.getStreamInfo());
         },
 

@@ -49,6 +49,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
     return {
         adapter: undefined,
         sourceBufferExt: undefined,
+        playbackController: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
@@ -75,7 +76,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 rejected = sc.getFragmentModel().getRequests({state: MediaPlayer.dependencies.FragmentModel.states.REJECTED})[0],
                 keepIdx = !!rejected && !hasSeekTarget,
                 currentTime = this.adapter.getIndexHandlerTime(streamProcessor),
-                playbackTime = streamProcessor.playbackController.getTime(),
+                playbackTime = this.playbackController.getTime(),
                 rejectedEnd = rejected ? rejected.startTime + rejected.duration : null,
                 useRejected = !hasSeekTarget && rejected && ((rejectedEnd > playbackTime) && (rejected.startTime <= currentTime) || isNaN(currentTime)),
                 buffer = streamProcessor.bufferController.getBuffer(),

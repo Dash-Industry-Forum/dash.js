@@ -376,6 +376,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         scheduleWhilePaused: undefined,
         timelineConverter: undefined,
         abrController: undefined,
+        playbackController: undefined,
         adapter: undefined,
         scheduleRulesCollection: undefined,
         rulesController: undefined,
@@ -414,7 +415,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             type = typeValue;
             self.setMediaType(type);
             self.streamProcessor = streamProcessor;
-            self.playbackController = streamProcessor.playbackController;
             self.fragmentController = streamProcessor.fragmentController;
             self.liveEdgeFinder = streamProcessor.liveEdgeFinder;
             self.bufferController = streamProcessor.bufferController;

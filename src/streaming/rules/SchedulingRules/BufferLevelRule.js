@@ -118,6 +118,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
         metricsExt: undefined,
         metricsModel: undefined,
         abrController: undefined,
+        playbackController: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
@@ -150,7 +151,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 duration = streamInfo.manifestInfo.duration,
                 bufferedDuration = bufferLevel / Math.max(rate, 1),
                 fragmentDuration = track.fragmentDuration,
-                currentTime = scheduleCtrl.playbackController.getTime(),
+                currentTime = this.playbackController.getTime(),
                 timeToEnd = isDynamic ? Number.POSITIVE_INFINITY : duration - currentTime,
                 requiredBufferLength = Math.min(getRequiredBufferLength.call(this, isDynamic, duration, scheduleCtrl), timeToEnd),
                 remainingDuration = Math.max(requiredBufferLength - bufferedDuration, 0),
