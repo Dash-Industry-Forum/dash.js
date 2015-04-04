@@ -82,7 +82,7 @@ MediaPlayer = function (context) {
         bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
 
         isReady = function () {
-            return (!!element && (!!source || !!manifest));
+            return (!!element && !!source);
         },
 
         play = function () {
@@ -95,7 +95,7 @@ MediaPlayer = function (context) {
                 return;
             }
 
-            if (!element || (!source && !manifest)) {
+            if (!element || !source) {
                 throw "Missing view or source.";
             }
 
@@ -107,7 +107,7 @@ MediaPlayer = function (context) {
             streamController.setAutoPlay(autoPlay);
             streamController.setProtectionData(protectionData);
             DOMStorage.checkInitialBitrate();
-            if (source) {
+            if (typeof source === "string") {
                 streamController.load(source);
             } else {
                 streamController.loadWithManifest(manifest);
@@ -565,20 +565,26 @@ MediaPlayer = function (context) {
         },
 
         /**
-         * Use this method to set a source URL to a valid MPD manifest file.
+         * Use this method to set a source URL to a valid MPD manifest file OR
+         * a previously downloaded and parsed manifest object.
          *
-         * @param {string} url A URL to a valid MPD manifest file.
+         * @param {string|Object} source A URL to a valid MPD manifest file, or a
+         * parsed manifest object.
          * @throw "MediaPlayer not initialized!"
          *
          * @memberof MediaPlayer#
          */
-        attachSource: function (url) {
+        attachSource: function (urlOrManifest) {
             if (!initialized) {
                 throw "MediaPlayer not initialized!";
             }
 
-            this.uriQueryFragModel.reset();
-            source = this.uriQueryFragModel.parseURI(url);
+            if (typeof urlOrManifest === "string") {
+                this.uriQueryFragModel.reset();
+                source = this.uriQueryFragModel.parseURI(urlOrManifest);
+            } else {
+                source = urlOrManifest;
+            }
 
             // TODO : update
 
