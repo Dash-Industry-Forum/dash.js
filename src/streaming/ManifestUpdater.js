@@ -33,9 +33,8 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
     var refreshDelay = NaN,
         refreshTimer = null,
-        isStopped = false,
-        isUpdating = false,
-        streamController,
+        isStopped,
+        isUpdating,
         manifestLoader,
 
         clear = function () {
@@ -56,22 +55,17 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
         update = function (manifest) {
 
-            if (isStopped) return;
+            var delay,
+                timeSinceLastUpdate;
 
-            if (manifest) {
-                var delay,
-                    timeSinceLastUpdate;
+            this.manifestModel.setValue(manifest);
+            this.log("Manifest has been refreshed.");
 
-                this.manifestModel.setValue(manifest);
-                this.log("Manifest has been refreshed.");
+            delay = this.manifestExt.getRefreshDelay(manifest);
+            timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;
+            refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
 
-                delay = this.manifestExt.getRefreshDelay(manifest);
-                timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;
-                refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
-                start.call(this);
-
-                this.notify(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, {manifest:manifest});
-            }
+            this.notify(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, {manifest:manifest});
         },
 
         onRefreshTimer = function () {
@@ -79,7 +73,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
                 manifest,
                 url;
 
-            if (isUpdating) return;
+            if (isStopped || isUpdating) return;
 
             isUpdating = true;
             manifest = self.manifestModel.getValue();
@@ -101,11 +95,13 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
         },
 
         onPlaybackStarted = function(/*e*/) {
-            this.start();
+            isStopped = false;
+            start.call(this);
         },
 
         onPlaybackPaused = function(/*e*/) {
-            this.stop();
+            isStopped = true;
+            clear.call(this);
         },
 
         onStreamsComposed = function(/*e*/) {
@@ -130,9 +126,9 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED] = onPlaybackPaused;
         },
 
-        initialize: function (streamCtrl, loader) {
-            streamController = streamCtrl;
-            streamController.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, this);
+        initialize: function (loader) {
+            isUpdating = false;
+            isStopped = true;
             manifestLoader = loader;
             manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
         },
@@ -145,15 +141,9 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             return manifestLoader;
         },
 
-        start: function () {
-            isStopped = false;
-            update.call(this);
-        },
-
-        stop: function() {
+        reset: function() {
             isStopped = true;
             clear.call(this);
-            streamController.unsubscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, this);
             manifestLoader.unsubscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
         }
     };

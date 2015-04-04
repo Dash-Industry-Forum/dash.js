@@ -416,8 +416,9 @@
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
 
+            this.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
             this.manifestUpdater.subscribe(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
-            this.manifestUpdater.initialize(this, this.manifestLoader);
+            this.manifestUpdater.initialize(this.manifestLoader);
         },
 
         load: function (url) {
@@ -455,8 +456,9 @@
             }
 
             streams = [];
+            this.unsubscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
             this.manifestUpdater.unsubscribe(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
-            this.manifestUpdater.stop();
+            this.manifestUpdater.reset();
             this.metricsModel.clearAllCurrentMetrics();
             this.manifestModel.setValue(null);
             this.timelineConverter.reset();
