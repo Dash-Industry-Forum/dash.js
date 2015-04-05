@@ -1225,11 +1225,11 @@ var BASE64 = {};
 })("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
 
 if (undefined === btoa) {
-    var btoa = BASE64.encode;
+    window.btoa = BASE64.encode;
 }
 
 if (undefined === atob) {
-    var atob = BASE64.decode;
+    window.atob = BASE64.decode;
 }
 
 MediaPlayer = function(context) {
@@ -4468,7 +4468,7 @@ MediaPlayer.dependencies.ErrorHandler.prototype = {
 
 MediaPlayer.dependencies.FragmentLoader = function() {
     "use strict";
-    var RETRY_ATTEMPTS = 3, RETRY_INTERVAL = 500, xhrs = [], access_token = null, doLoad = function(request, remainingAttempts) {
+    var RETRY_ATTEMPTS = 6, RETRY_INTERVAL = 500, xhrs = [], access_token = null, doLoad = function(request, remainingAttempts) {
         var req = new XMLHttpRequest(), httpRequestMetrics = null, firstProgress = true, needFailureReport = true, lastTraceTime = null, self = this, handleLoaded = function(requestVO, succeeded) {
             needFailureReport = false;
             var currentTime = new Date(), bytes = req.response, latency, download;
@@ -4535,14 +4535,14 @@ MediaPlayer.dependencies.FragmentLoader = function() {
                         doLoad.call(self, request, remainingAttempts);
                     }, RETRY_INTERVAL);
                 };
+                self.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                remainingAttempts--;
                 if (req.status == 401) {
                     self.proxyDownloader.refreshAccessToken(function(new_token) {
                         access_token = new_token;
                         retry();
                     });
                 } else {
-                    self.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
-                    remainingAttempts--;
                     retry();
                 }
             } else {
@@ -8986,7 +8986,7 @@ MediaPlayer.models.ProtectionModel_01b = function() {
                     if (videos && videos.length !== 0) {
                         supportedVideo = [];
                         for (var videoIdx = 0; videoIdx < videos.length; videoIdx++) {
-                            if (ve.canPlayType(videos[videoIdx].contentType, systemString) !== "") {
+                            if (ve.canPlayType(videos[videoIdx].contentType) !== "") {
                                 supportedVideo.push(videos[videoIdx]);
                             }
                         }
@@ -9686,7 +9686,7 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
         return retVal;
     },
     getPSSHData: function(pssh) {
-        return pssh.slice(32);
+        return new Uint8Array(pssh.buffer.slice(32));
     },
     getPSSHForKeySystem: function(keySystem, initData) {
         var psshList = MediaPlayer.dependencies.protection.CommonEncryption.parsePSSHList(initData);
@@ -9712,7 +9712,7 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
             }
             byteCursor += 4;
             version = dv.getUint8(byteCursor);
-            if (version !== 0 && version !== 1) {
+            if (version !== 0) {
                 byteCursor = nextBox;
                 continue;
             }
@@ -9752,7 +9752,7 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
             systemID = systemID.toLowerCase();
             psshDataSize = dv.getUint32(byteCursor);
             byteCursor += 4;
-            pssh[systemID] = dv.buffer.slice(boxStart, nextBox);
+            pssh[systemID] = new Uint8Array(dv.buffer.slice(boxStart, nextBox));
             byteCursor = nextBox;
         }
         return pssh;
@@ -9775,65 +9775,75 @@ MediaPlayer.dependencies.protection.KeySystem_Access.prototype = {
 
 MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
     "use strict";
-    var keySystemStr = "org.w3.clearkey", keySystemUUID = "1077efec-c0b2-4d02-ace3-3c1e52e2fb4b", protData, requestClearKeyLicense = function(message, requestData) {
-        var self = this, i, laURL = protData && protData.laURL && protData.laURL !== "" ? protData.laURL : null;
-        var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
-        if (laURL) {
-            laURL += "/?";
-            for (i = 0; i < jsonMsg.kids.length; i++) {
-                laURL += jsonMsg.kids[i] + "&";
+    var keySystemStr = "webkit-org.w3.clearkey", keySystemUUID = "10000000-0000-0000-0000-000000000000", protData, requestClearKeyLicense = function(message, requestData) {
+        var i;
+        var psshData = MediaPlayer.dependencies.protection.CommonEncryption.getPSSHData(message), dv = new DataView(psshData.buffer), byteCursor = 0, ckType, keyPairs = [];
+        ckType = dv.getUint8(byteCursor);
+        byteCursor += 1;
+        if (ckType === 0) {
+            var url = "", urlB64 = "", urlLen = dv.getUint16(byteCursor);
+            byteCursor += 2;
+            for (i = 0; i < urlLen; i++) {
+                urlB64 += String.fromCharCode(dv.getUint8(byteCursor + i));
             }
-            laURL = laURL.substring(0, laURL.length - 1);
+            url = atob(urlB64);
+            url = url.replace(/&amp;/, "&");
             var xhr = new XMLHttpRequest();
+            var self = this;
             xhr.onload = function() {
                 if (xhr.status == 200) {
                     if (!xhr.response.hasOwnProperty("keys")) {
-                        self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error("DRM: ClearKey Remote update, Illegal response JSON"));
+                        this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error("DRM: ClearKey Remote update, Illegal response JSON"));
                     }
                     for (i = 0; i < xhr.response.keys.length; i++) {
-                        var keypair = xhr.response.keys[i], keyid = keypair.kid.replace(/=/g, "");
-                        key = keypair.k.replace(/=/g, "");
+                        var keypair = xhr.response.keys[i], keyid = new Uint8Array(atob(keypair.kid).split("").map(function(c) {
+                            return c.charCodeAt(0);
+                        })), key = new Uint8Array(atob(keypair.k).split("").map(function(c) {
+                            return c.charCodeAt(0);
+                        }));
                         keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyid, key));
                     }
                     var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs), requestData);
                     self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, event);
                 } else {
-                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error('DRM: ClearKey Remote update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + "), readyState is " + xhr.readyState));
+                    this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error('DRM: ClearKey Remote update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + "), readyState is " + xhr.readyState));
                 }
             };
             xhr.onabort = function() {
-                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error('DRM: ClearKey update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + "), readyState is " + xhr.readyState));
+                this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error('DRM: ClearKey update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + "), readyState is " + xhr.readyState));
             };
             xhr.onerror = function() {
-                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error('DRM: ClearKey update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + "), readyState is " + xhr.readyState));
+                this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error('DRM: ClearKey update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + "), readyState is " + xhr.readyState));
             };
-            xhr.open("GET", laURL);
+            xhr.open("GET", url);
             xhr.responseType = "json";
             xhr.send();
-        } else if (protData.clearkeys) {
-            var keyPairs = [];
-            for (i = 0; i < jsonMsg.kids.length; i++) {
-                var keyID = jsonMsg.kids[i], key = protData.clearkeys.hasOwnProperty(keyID) ? protData.clearkeys[keyID] : null;
-                if (!key) {
-                    this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error("DRM: ClearKey keyID (" + keyID + ") is not known!"));
-                }
-                keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyID, key));
+        } else if (ckType === 1) {
+            var numKeys = dv.getUint8(byteCursor);
+            byteCursor += 1;
+            for (i = 0; i < numKeys; i++) {
+                var keyid, key;
+                keyid = new Uint8Array(psshData.buffer.slice(byteCursor, byteCursor + 16));
+                byteCursor += 16;
+                key = new Uint8Array(psshData.buffer.slice(byteCursor, byteCursor + 16));
+                byteCursor += 16;
+                keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyid, key));
             }
             var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs), requestData);
             this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, event);
         } else {
-            self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error("DRM: ClearKey has no way (URL or protection data) to retrieve keys"));
+            this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, null, new Error("DRM: Illegal ClearKey type: " + ckType));
         }
     };
     return {
-        system: undefined,
-        schemeIdURI: "urn:uuid:" + keySystemUUID,
+        schemeIdURI: undefined,
         systemString: keySystemStr,
         uuid: keySystemUUID,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
         init: function(protectionData) {
+            this.schemeIdURI = "urn:uuid:" + keySystemUUID;
             protData = protectionData;
         },
         doLicenseRequest: function(message, laURL, requestData) {
@@ -9841,6 +9851,14 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
         },
         getInitData: function() {
             return null;
+        },
+        initDataEquals: function(initData1, initData2) {
+            if (initData1.length === initData2.length) {
+                if (btoa(initData1.buffer) === btoa(initData2.buffer)) {
+                    return true;
+                }
+            }
+            return false;
         }
     };
 };
@@ -11097,6 +11115,7 @@ MediaPlayer.utils.EventBus = function() {
 MediaPlayer.utils.ProxyDownloader = function() {
     "use strict";
     var serverUrls = null;
+    var access_token = null;
     return {
         setup: function(urls) {
             serverUrls = urls;
@@ -11112,8 +11131,7 @@ MediaPlayer.utils.ProxyDownloader = function() {
                     return;
                 }
                 var data = JSON.parse(req.responseText);
-                var access_token = data.access_token;
-                localStorage.setItem("access_token", access_token);
+                access_token = data.access_token;
                 var adaptationSets = manifest.Period.AdaptationSet;
                 var mappedObj = null;
                 for (var i = 0; i < adaptationSets.length; i++) {
@@ -11139,7 +11157,7 @@ MediaPlayer.utils.ProxyDownloader = function() {
             req.send(null);
         },
         getAccessToken: function() {
-            return localStorage.getItem("access_token");
+            return access_token;
         },
         refreshAccessToken: function(callback) {
             var req = new XMLHttpRequest();
@@ -11149,7 +11167,8 @@ MediaPlayer.utils.ProxyDownloader = function() {
                     return;
                 }
                 var data = JSON.parse(req.responseText);
-                callback(data.access_token);
+                access_token = data.access_token;
+                callback(access_token);
             };
             req.send(null);
         }

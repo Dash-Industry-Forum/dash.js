@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Dash Industry Forum.
+ * Copyright (c) 2014-2015, Cable Television Laboratories, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -13,7 +13,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *  this list of conditions and the following disclaimer in the documentation and/or
  *  other materials provided with the distribution.
- *  * Neither the name of Dash Industry Forum nor the names of its
+ *  * Neither the name of Cable Television Laboratories, Inc. nor the names of its
  *  contributors may be used to endorse or promote products derived from this software
  *  without specific prior written permission.
  *
@@ -53,12 +53,12 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
     /**
      * Returns just the data portion of a single PSSH
      *
-     * @param pssh {ArrayBuffer} the PSSH
-     * @return {ArrayBuffer} data portion of the PSSH
+     * @param pssh {Uint8Array} the PSSH
+     * @return {Uint8Array} data portion of the PSSH
      */
     getPSSHData: function(pssh) {
         // Data begins 32 bytes into the box
-        return pssh.slice(32);
+        return new Uint8Array(pssh.buffer.slice(32));
     },
 
     /**
@@ -68,7 +68,7 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
      * @param {MediaPlayer.dependencies.protection.KeySystem} keySystem the desired
      * key system
      * @param {ArrayBuffer} initData 'cenc' initialization data.  Concatenated list of PSSH.
-     * @returns {ArrayBuffer} The PSSH box data corresponding to the given key system
+     * @returns {Uint8Array} The PSSH box data corresponding to the given key system
      * or null if a valid association could not be found.
      */
     getPSSHForKeySystem: function(keySystem, initData) {
@@ -86,7 +86,7 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
      * CDM as initialization data when CommonEncryption content is detected
      * @returns {object} an object that has a property named according to each of
      * the detected key system UUIDs (e.g. 00000000-0000-0000-0000-0000000000)
-     * and a ArrayBuffer (the entire PSSH box) as the property value
+     * and a Uint8Array (the entire PSSH box) as the property value
      */
     parsePSSHList: function(data) {
 
@@ -119,9 +119,9 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
             }
             byteCursor += 4;
 
-            /* Version must be 0 or 1 */
+            /* Version must be 0 for now */
             version = dv.getUint8(byteCursor);
-            if (version !== 0 && version !== 1) {
+            if (version !== 0) {
                 byteCursor = nextBox;
                 continue;
             }
@@ -169,7 +169,7 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
             byteCursor += 4;
 
             /* PSSH Data */
-            pssh[systemID] = dv.buffer.slice(boxStart, nextBox);
+            pssh[systemID] = new Uint8Array(dv.buffer.slice(boxStart, nextBox));
             byteCursor = nextBox;
         }
 

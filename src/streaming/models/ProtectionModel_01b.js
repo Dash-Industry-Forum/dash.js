@@ -267,7 +267,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                     if (videos && videos.length !== 0) {
                         supportedVideo = []; // Indicates that we have a requested video config
                         for (var videoIdx = 0; videoIdx < videos.length; videoIdx++) {
-                            if (ve.canPlayType(videos[videoIdx].contentType, systemString) !== "") {
+                            if (ve.canPlayType(videos[videoIdx].contentType) !== "") {
                                 supportedVideo.push(videos[videoIdx]);
                             }
                         }

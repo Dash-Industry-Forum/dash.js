@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Dash Industry Forum.
+ * Copyright (c) 2014-2015, Cable Television Laboratories, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -13,7 +13,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *  this list of conditions and the following disclaimer in the documentation and/or
  *  other materials provided with the distribution.
- *  * Neither the name of Dash Industry Forum nor the names of its
+ *  * Neither the name of Cable Television Laboratories, Inc. nor the names of its
  *  contributors may be used to endorse or promote products derived from this software
  *  without specific prior written permission.
  *
@@ -32,97 +32,130 @@
 MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
     "use strict";
 
-    var keySystemStr = "org.w3.clearkey",
-        keySystemUUID = "1077efec-c0b2-4d02-ace3-3c1e52e2fb4b",
+    var keySystemStr = "webkit-org.w3.clearkey",
+        keySystemUUID = "10000000-0000-0000-0000-000000000000",
         protData,
 
         /**
          * Request a ClearKey license using PSSH-based message format that allows
          * multiple methodologies for retrieving/storing key information
          *
+         * @param notifier the KeySystem notifier that will receive the ENAME_LICENSE_REQUEST_COMPLETE
+         * event once the license retrieval process is complete
          * @param message the ClearKey PSSH
          * @param requestData request data to be passed back in the LicenseRequestComplete event
          */
-        requestClearKeyLicense = function(message, requestData) {
-            var self = this,
-                i,
-                laURL = (protData && protData.laURL && protData.laURL !== "") ? protData.laURL : null;
+        requestClearKeyLicense = function(message, /*laURL,*/ requestData) {
+            var i;
 
-            var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
+            /* The ClearKey PSSH data format is defined as below:
+             *
+             * clearkey_pssh_data {
+             *   unsigned int (8) type
+             *   if (type == 0) {
+             *     unsigned int(16)              url_length
+             *     unsigned int(8)[url_length]   url (base64-encoded)
+             *   }
+             *   else if (type == 1) {
+             *     unsigned int(8)               num_keys
+             *     for (i = 0; i < num_keys; i++) {
+             *       unsigned int(8)[16]         key_id
+             *       unsigned int(8)[16]         key
+             *     }
+             *   }
+             * }
+             */
 
-            /* Retrieve keys from remote server */
-            if (laURL) {
+            var psshData = MediaPlayer.dependencies.protection.CommonEncryption.getPSSHData(message),
+                dv = new DataView(psshData.buffer),
+                byteCursor = 0,
+                ckType,
+                keyPairs = [];
 
-                // Build query string
-                laURL += "/?";
-                for (i = 0; i < jsonMsg.kids.length; i++) {
-                    laURL += jsonMsg.kids[i] + "&";
+            /* Read the ClearKey data type (0=URL, 1=JSON) */
+            ckType = dv.getUint8(byteCursor);
+            byteCursor += 1;
+
+            /* URL -- Retrieve JWKs from remote server */
+            if (ckType === 0) {
+                var url = "",
+                        urlB64 = "",
+                        urlLen = dv.getUint16(byteCursor);
+
+                byteCursor += 2;
+
+                for (i = 0; i < urlLen; i++) {
+                    urlB64 += String.fromCharCode(dv.getUint8(byteCursor+i));
                 }
-                laURL = laURL.substring(0, laURL.length-1);
+                url = atob(urlB64);
+                url = url.replace(/&amp;/, '&');
 
                 var xhr = new XMLHttpRequest();
+                var self = this;
                 xhr.onload = function () {
                     if (xhr.status == 200) {
 
                         if (!xhr.response.hasOwnProperty("keys")) {
-                            self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                            this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                                     null, new Error('DRM: ClearKey Remote update, Illegal response JSON'));
                         }
                         for (i = 0; i < xhr.response.keys.length; i++) {
                             var keypair = xhr.response.keys[i],
-                                    keyid = keypair.kid.replace(/=/g, "");
-                                    key = keypair.k.replace(/=/g, "");
+                                    keyid = new Uint8Array(atob(keypair.kid).split("").map(function(c) { return c.charCodeAt(0); })),
+                                    key = new Uint8Array(atob(keypair.k).split("").map(function(c) { return c.charCodeAt(0); }));
                             keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyid, key));
                         }
                         var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs), requestData);
                         self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                                 event);
                     } else {
-                        self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                        this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                                 null, new Error('DRM: ClearKey Remote update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                     }
                 };
                 xhr.onabort = function () {
-                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                             null, new Error('DRM: ClearKey update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                 };
                 xhr.onerror = function () {
-                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                             null, new Error('DRM: ClearKey update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                 };
 
-                xhr.open('GET', laURL);
+                xhr.open('GET', url);
                 xhr.responseType = 'json';
                 xhr.send();
             }
-            /* internal -- keys are retrieved from protectionExtensions */
-            else if (protData.clearkeys) {
-                var keyPairs = [];
-                for (i = 0; i < jsonMsg.kids.length; i++) {
-                    var keyID = jsonMsg.kids[i],
-                        key = (protData.clearkeys.hasOwnProperty(keyID)) ? protData.clearkeys[keyID] : null;
-                    if (!key) {
-                        this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                                null, new Error("DRM: ClearKey keyID (" + keyID + ") is not known!"));
-                    }
-                    // KeyIDs from CDM are not base64 padded.  Keys may or may not be padded
-                    keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyID, key));
+            /* internal -- keys and keyIDs are in the PSSH itself */
+            else if (ckType === 1) {
+                var numKeys = dv.getUint8(byteCursor);
+
+                byteCursor += 1;
+
+                for (i = 0; i < numKeys; i++) {
+                    var keyid, key;
+                    keyid = new Uint8Array(psshData.buffer.slice(byteCursor, byteCursor+16));
+                    byteCursor += 16;
+                    key = new Uint8Array(psshData.buffer.slice(byteCursor, byteCursor+16));
+                    byteCursor += 16;
+                    keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyid, key));
                 }
 
                 var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs), requestData);
                 this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         event);
-            } else {
-                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                        null, new Error('DRM: ClearKey has no way (URL or protection data) to retrieve keys'));
             }
+            else {
+                this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                        null, new Error('DRM: Illegal ClearKey type: ' + ckType));
+            }
+
         };
 
 
     return {
 
-        system: undefined,
-        schemeIdURI: "urn:uuid:" + keySystemUUID,
+        schemeIdURI: undefined,
         systemString: keySystemStr,
         uuid: keySystemUUID,
         notify: undefined,
@@ -136,6 +169,7 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
          * default or CDM-provided values
          */
         init: function(protectionData) {
+            this.schemeIdURI = "urn:uuid:" + keySystemUUID;
             protData = protectionData;
         },
 
@@ -143,11 +177,19 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
             requestClearKeyLicense.call(this, message, requestData);
         },
 
-        getInitData: function(/*cpData*/) { return null; }
+        getInitData: function(/*cpData*/) { return null; },
+
+        initDataEquals: function(initData1, initData2) {
+            if (initData1.length === initData2.length) {
+                if (btoa(initData1.buffer) === btoa(initData2.buffer)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     };
 };
 
 MediaPlayer.dependencies.protection.KeySystem_ClearKey.prototype = {
     constructor: MediaPlayer.dependencies.protection.KeySystem_ClearKey
 };
-

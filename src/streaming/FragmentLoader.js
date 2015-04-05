@@ -31,7 +31,7 @@
 MediaPlayer.dependencies.FragmentLoader = function () {
     "use strict";
 
-    var RETRY_ATTEMPTS = 3,
+    var RETRY_ATTEMPTS = 6,
         RETRY_INTERVAL = 500,
         xhrs = [],
         access_token = null,
@@ -153,14 +153,15 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                             }, RETRY_INTERVAL);
                         };
 
+
+                        self.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                        remainingAttempts--;
                         if (req.status == 401) {
                             self.proxyDownloader.refreshAccessToken(function(new_token) {
-                            access_token = new_token;
-                            retry();
+                                access_token = new_token;
+                                retry();
                             });
                         } else {
-                            self.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
-                            remainingAttempts--;
                             retry();
                         }
                     } else {
