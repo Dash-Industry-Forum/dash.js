@@ -55,7 +55,7 @@ Dash.dependencies.DashAdapter = function () {
             return null;
         },
 
-        convertRepresentationToTrackInfo = function(representation) {
+        convertRepresentationToTrackInfo = function(manifest, representation) {
             var trackInfo = new MediaPlayer.vo.TrackInfo(),
                 a = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index],
                 r = this.manifestExt.getRepresentationFor(representation.index, a);
@@ -67,12 +67,12 @@ Dash.dependencies.DashAdapter = function () {
             trackInfo.fragmentDuration = representation.segmentDuration || (representation.segments && representation.segments.length > 0 ? representation.segments[0].duration : NaN);
             trackInfo.MSETimeOffset = representation.MSETimeOffset;
             trackInfo.useCalculatedLiveEdgeTime = representation.useCalculatedLiveEdgeTime;
-            trackInfo.mediaInfo = convertAdaptationToMediaInfo.call(this, representation.adaptation);
+            trackInfo.mediaInfo = convertAdaptationToMediaInfo.call(this, manifest, representation.adaptation);
 
             return trackInfo;
         },
 
-        convertAdaptationToMediaInfo = function(adaptation) {
+        convertAdaptationToMediaInfo = function(manifest, adaptation) {
             var mediaInfo = new MediaPlayer.vo.MediaInfo(),
                 self = this,
                 a = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
@@ -80,7 +80,7 @@ Dash.dependencies.DashAdapter = function () {
             mediaInfo.id = adaptation.id;
             mediaInfo.index = adaptation.index;
             mediaInfo.type = adaptation.type;
-            mediaInfo.streamInfo = convertPeriodToStreamInfo.call(this, adaptation.period);
+            mediaInfo.streamInfo = convertPeriodToStreamInfo.call(this, manifest, adaptation.period);
             mediaInfo.trackCount = this.manifestExt.getRepresentationCount(a);
             mediaInfo.lang = this.manifestExt.getLanguageForAdaptation(a);
             mediaInfo.codec = this.manifestExt.getCodec(a);
@@ -99,7 +99,7 @@ Dash.dependencies.DashAdapter = function () {
             return mediaInfo;
         },
 
-        convertPeriodToStreamInfo = function(period) {
+        convertPeriodToStreamInfo = function(manifest, period) {
             var streamInfo = new MediaPlayer.vo.StreamInfo(),
                 THRESHOLD = 1;
 
@@ -107,15 +107,14 @@ Dash.dependencies.DashAdapter = function () {
             streamInfo.index = period.index;
             streamInfo.start = period.start;
             streamInfo.duration = period.duration;
-            streamInfo.manifestInfo = convertMpdToManifestInfo.call(this, period.mpd);
+            streamInfo.manifestInfo = convertMpdToManifestInfo.call(this, manifest, period.mpd);
             streamInfo.isLast = Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
 
             return streamInfo;
         },
 
-        convertMpdToManifestInfo = function(mpd) {
-            var manifestInfo = new MediaPlayer.vo.ManifestInfo(),
-                manifest = this.manifestModel.getValue();
+        convertMpdToManifestInfo = function(manifest, mpd) {
+            var manifestInfo = new MediaPlayer.vo.ManifestInfo();
 
             manifestInfo.DVRWindowSize = mpd.timeShiftBufferDepth;
             manifestInfo.loadedTime = mpd.manifest.loadedTime;
@@ -140,7 +139,7 @@ Dash.dependencies.DashAdapter = function () {
 
             adaptations[periodId] = adaptations[periodId] || this.manifestExt.getAdaptationsForPeriod(manifest, periodInfo);
 
-            return convertAdaptationToMediaInfo.call(this, adaptations[periodId][idx]);
+            return convertAdaptationToMediaInfo.call(this, manifest, adaptations[periodId][idx]);
         },
 
         getStreamsInfoFromManifest = function(manifest) {
@@ -157,7 +156,7 @@ Dash.dependencies.DashAdapter = function () {
             ln = periods.length;
 
             for(i = 0; i < ln; i += 1) {
-                streams.push(convertPeriodToStreamInfo.call(this, periods[i]));
+                streams.push(convertPeriodToStreamInfo.call(this, manifest, periods[i]));
             }
 
             return streams;
@@ -166,7 +165,7 @@ Dash.dependencies.DashAdapter = function () {
         getMpdInfo = function(manifest) {
             var mpd = this.manifestExt.getMpd(manifest);
 
-            return convertMpdToManifestInfo.call(this, mpd);
+            return convertMpdToManifestInfo.call(this, manifest, mpd);
         },
 
         getInitRequest = function(streamProcessor, quality) {
@@ -201,11 +200,10 @@ Dash.dependencies.DashAdapter = function () {
             return streamProcessor.indexHandler.setCurrentTime(value);
         },
 
-        updateData = function(streamProcessor) {
+        updateData = function(manifest, streamProcessor) {
             var periodInfo = getPeriodForStreamInfo(streamProcessor.getStreamInfo()),
                 mediaInfo = streamProcessor.getMediaInfo(),
                 adaptation = getAdaptationForMediaInfo(mediaInfo),
-                manifest = this.manifestModel.getValue(),
                 type = streamProcessor.getType(),
                 id,
                 data;
@@ -216,16 +214,16 @@ Dash.dependencies.DashAdapter = function () {
             streamProcessor.trackController.updateData(data, adaptation, type);
         },
 
-        getTrackInfoForQuality = function(representationController, quality) {
+        getTrackInfoForQuality = function(manifest, representationController, quality) {
             var representation = representationController.getRepresentationForQuality(quality);
 
-            return representation ? convertRepresentationToTrackInfo.call(this, representation) : null;
+            return representation ? convertRepresentationToTrackInfo.call(this, manifest, representation) : null;
         },
 
-        getCurrentTrackInfo = function(representationController) {
+        getCurrentTrackInfo = function(manifest, representationController) {
             var representation = representationController.getCurrentRepresentation();
 
-            return representation ? convertRepresentationToTrackInfo.call(this, representation): null;
+            return representation ? convertRepresentationToTrackInfo.call(this, manifest, representation): null;
         },
 
         getEvent = function(eventBox, eventStreams, startTime) {
@@ -253,9 +251,8 @@ Dash.dependencies.DashAdapter = function () {
             return event;
         },
 
-        getEventsFor = function(info, streamProcessor) {
-            var manifest = this.manifestModel.getValue(),
-                events = [];
+        getEventsFor = function(manifest, info, streamProcessor) {
+            var events = [];
 
             if (info instanceof MediaPlayer.vo.StreamInfo) {
                 events = this.manifestExt.getEventsForPeriod(manifest, getPeriodForStreamInfo(info));
@@ -271,7 +268,6 @@ Dash.dependencies.DashAdapter = function () {
     return {
         system : undefined,
         manifestExt: undefined,
-        manifestModel: undefined,
         timelineConverter: undefined,
 
         metricsList: {

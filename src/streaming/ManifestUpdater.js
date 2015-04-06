@@ -33,8 +33,9 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
     var refreshDelay = NaN,
         refreshTimer = null,
-        isStopped = false,
-        isUpdating = false,
+        isStopped,
+        isUpdating,
+        manifestLoader,
 
         clear = function () {
             if (refreshTimer !== null) {
@@ -52,18 +53,19 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             }
         },
 
-        update = function () {
-            var self = this,
-                manifest = self.manifestModel.getValue(),
-                delay,
+        update = function (manifest) {
+
+            var delay,
                 timeSinceLastUpdate;
 
-            if (manifest !== undefined && manifest !== null) {
-                delay = self.manifestExt.getRefreshDelay(manifest);
-                timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;
-                refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
-                start.call(self);
-            }
+            this.manifestModel.setValue(manifest);
+            this.log("Manifest has been refreshed.");
+
+            delay = this.manifestExt.getRefreshDelay(manifest);
+            timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;
+            refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
+
+            this.notify(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, {manifest:manifest});
         },
 
         onRefreshTimer = function () {
@@ -71,7 +73,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
                 manifest,
                 url;
 
-            if (isUpdating) return;
+            if (isStopped || isUpdating) return;
 
             isUpdating = true;
             manifest = self.manifestModel.getValue();
@@ -83,27 +85,23 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
             //self.log("Refresh manifest @ " + url);
 
-            self.manifestLoader.load(url);
+            manifestLoader.load(url);
         },
 
         onManifestLoaded = function(e) {
-            if (e.error) return;
-
-            this.manifestModel.setValue(e.data.manifest);
-            this.log("Manifest has been refreshed.");
-
-            //self.log(manifestResult);
-            if (isStopped) return;
-
-            update.call(this);
+            if (!e.error) {
+                update.call(this, e.data.manifest);
+            }
         },
 
         onPlaybackStarted = function(/*e*/) {
-            this.start();
+            isStopped = false;
+            start.call(this);
         },
 
         onPlaybackPaused = function(/*e*/) {
-            this.stop();
+            isStopped = true;
+            clear.call(this);
         },
 
         onStreamsComposed = function(/*e*/) {
@@ -114,9 +112,11 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
     return {
         log: undefined,
         system: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
+        notify: undefined,
         manifestModel: undefined,
         manifestExt: undefined,
-        manifestLoader: undefined,
 
         setup: function () {
             // Listen to streamsComposed event to be aware that the streams have been composed
@@ -126,18 +126,33 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED] = onPlaybackPaused;
         },
 
-        start: function () {
-            isStopped = false;
-            update.call(this);
+        initialize: function (loader) {
+            isUpdating = false;
+            isStopped = true;
+            manifestLoader = loader;
+            manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
         },
 
-        stop: function() {
+        setManifest: function (m) {
+            update.call(this, m);
+        },
+
+        getManifestLoader: function () {
+            return manifestLoader;
+        },
+
+        reset: function() {
             isStopped = true;
             clear.call(this);
+            manifestLoader.unsubscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
         }
     };
 };
 
 MediaPlayer.dependencies.ManifestUpdater.prototype = {
     constructor: MediaPlayer.dependencies.ManifestUpdater
+};
+
+MediaPlayer.dependencies.ManifestUpdater.eventList = {
+    ENAME_MANIFEST_UPDATED: "manifestUpdated"
 };

@@ -291,9 +291,9 @@
                         stream.setPlaybackController(playbackCtrl);
                         playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, stream);
                         playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, stream);
-                        stream.initProtection(manifest);
+                        stream.initProtection();
                         stream.setAutoPlay(autoPlay);
-                        stream.load(manifest);
+                        stream.load();
                         stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, self);
                         streams.push(stream);
                     }
@@ -309,7 +309,7 @@
                     fireSwitchEvent.call(self, null, activeStream);
                 }
             } catch(e) {
-                self.errHandler.manifestError(e.message, "nostreamscomposed", self.manifestModel.getValue());
+                self.errHandler.manifestError(e.message, "nostreamscomposed", manifest);
                 self.reset();
             }
         },
@@ -330,10 +330,8 @@
             composeStreams.call(this);
         },
 
-        onManifestLoaded = function(e) {
+        onManifestUpdated = function(e) {
             if (!e.error) {
-                this.manifestModel.setValue(e.data.manifest);
-
                 this.log("Manifest has loaded.");
                 //self.log(self.manifestModel.getValue());
 
@@ -348,8 +346,8 @@
     return {
         system: undefined,
         videoModel: undefined,
-        manifestLoader: undefined,
         manifestUpdater: undefined,
+        manifestLoader: undefined,
         manifestModel: undefined,
         manifestExt: undefined,
         adapter: undefined,
@@ -368,7 +366,7 @@
         unsubscribe: undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = onManifestLoaded;
+            this[MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED] = onManifestUpdated;
             this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
 
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onSeeking;
@@ -417,10 +415,18 @@
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
+
+            this.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
+            this.manifestUpdater.subscribe(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
+            this.manifestUpdater.initialize(this.manifestLoader);
         },
 
         load: function (url) {
             this.manifestLoader.load(url);
+        },
+
+        loadWithManifest: function (manifest) {
+            this.manifestUpdater.setManifest(manifest);
         },
 
         reset: function () {
@@ -450,7 +456,9 @@
             }
 
             streams = [];
-            this.manifestUpdater.stop();
+            this.unsubscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
+            this.manifestUpdater.unsubscribe(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
+            this.manifestUpdater.reset();
             this.metricsModel.clearAllCurrentMetrics();
             this.manifestModel.setValue(null);
             this.timelineConverter.reset();

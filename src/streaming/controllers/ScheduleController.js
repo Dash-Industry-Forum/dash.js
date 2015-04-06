@@ -203,7 +203,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         onDataUpdateCompleted = function(e) {
             if (e.error) return;
 
-            currentTrackInfo = this.adapter.convertDataToTrack(e.data.currentRepresentation);
+            currentTrackInfo = this.adapter.convertDataToTrack(this.manifestModel.getValue(), e.data.currentRepresentation);
         },
 
         onStreamUpdated = function(e) {
@@ -384,6 +384,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         log: undefined,
         system: undefined,
         metricsModel: undefined,
+        manifestModel: undefined,
         metricsExt: undefined,
         scheduleWhilePaused: undefined,
         timelineConverter: undefined,
