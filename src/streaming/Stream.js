@@ -683,7 +683,9 @@ MediaPlayer.dependencies.Stream = function () {
             manifest = null;
             tearDownMediaSource.call(this);
 
-            this.fragmentController.reset();
+            if (this.fragmentController) {
+            	this.fragmentController.reset();
+            }
             this.fragmentController = undefined;
             this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, this);
             this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, this);

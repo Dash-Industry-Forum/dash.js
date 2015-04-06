@@ -74,7 +74,7 @@
 
             // We use width property to hide/show video element because when using display="none"/"block" playback
             // sometimes stops after switching.
-            activeVideoElement.style.width = "0px";
+            activeVideoElement.style.width = "0%";
             newVideoElement.style.width = "100%";
 
             copyVideoProperties(activeVideoElement, newVideoElement);
@@ -88,6 +88,12 @@
             playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, this);
             playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, this);
             playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, this);
+
+            //Add playback play/pause/stop/seeked notifications
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this);
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this);
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STOPPED, this);
+            playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKED, this);
         },
 
         detachVideoEvents = function (stream) {
@@ -101,6 +107,12 @@
                 playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, self);
                 playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, self);
                 playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, self);
+
+                //Add playback play/pause/stop/seeked notifications
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, self);
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, self);
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STOPPED, self);
+                playbackCtrl.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKED, self);
             },1);
         },
 
@@ -341,6 +353,19 @@
             } else {
                 this.reset();
             }
+        },
+        
+        //Add playback play/pause/stop/seeked notifications
+        onSeeked = function () {
+        },
+
+        onStarted = function() {
+        },
+
+        onPaused = function() {
+        },
+
+        onStopped = function() {   
         };
 
     return {
@@ -374,6 +399,12 @@
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onTimeupdate;
 
             this[MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncAttemptCompleted;
+
+            //Add playback play/pause/stop/seeked notifications
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKED] = onSeeked;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED] = onStarted;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED] = onPaused;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STOPPED] = onStopped;
         },
 
         setAutoPlay: function (value) {
