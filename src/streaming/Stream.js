@@ -539,7 +539,7 @@ MediaPlayer.dependencies.Stream = function () {
                 mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, processor.getType());
                 processor.setMediaInfo(mediaInfo);
                 this.abrController.updateTopQualityIndex(mediaInfo);
-                this.adapter.updateData(processor);
+                this.adapter.updateData(manifest, processor);
             }
         };
 

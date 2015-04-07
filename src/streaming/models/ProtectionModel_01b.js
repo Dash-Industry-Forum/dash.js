@@ -348,7 +348,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                 pendingSessions.push(newSession);
 
                 // Send our request to the CDM
-                videoElement[api.generateKeyRequest](this.keySystem.systemString, initData);
+                videoElement[api.generateKeyRequest](this.keySystem.systemString, new Uint8Array(initData));
 
                 return newSession;
 
