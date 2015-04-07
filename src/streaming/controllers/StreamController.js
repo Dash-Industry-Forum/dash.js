@@ -365,7 +365,7 @@
         onPaused = function() {
         },
 
-        onStopped = function() {   
+        onStopped = function() {
         };
 
     return {

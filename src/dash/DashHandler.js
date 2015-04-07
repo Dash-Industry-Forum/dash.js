@@ -225,7 +225,7 @@ Dash.dependencies.DashHandler = function () {
              * in the same way as for the last Media Segment in the Representation.
              */
             if (isNaN(duration)) {
-            	duration = representation.adaptation.period.duration;
+                duration = representation.adaptation.period.duration;
             }
 
             presentationStartTime = representation.adaptation.period.start + (index * duration);
@@ -394,10 +394,10 @@ Dash.dependencies.DashHandler = function () {
             start = representation.startNumber;
 
             if (isNaN(duration) && !isDynamic) {
-            	segmentRange = {start: start, end: start};
+                segmentRange = {start: start, end: start};
             }
             else {
-            	segmentRange = decideSegmentListRangeForTemplate.call(self, representation);
+                segmentRange = decideSegmentListRangeForTemplate.call(self, representation);
             }
 
             startIdx = segmentRange.start;
@@ -421,10 +421,10 @@ Dash.dependencies.DashHandler = function () {
             }
 
             if (isNaN(duration)) {
-            	representation.availableSegmentsNumber = 1;
+                representation.availableSegmentsNumber = 1;
             }
             else {
-            	representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
+                representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
             }
             
             return segments;

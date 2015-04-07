@@ -102,7 +102,7 @@ MediaPlayer.utils.TTMLParser = function () {
 			/* extend the support to other profiles
 			// Profile is not mandatory 
             if (passed && hasProfile) {
-	            passed = hasProfile && (ttml.tt.head.profile.use === "http://www.w3.org/ns/ttml/profile/sdp-us");
+                passed = hasProfile && (ttml.tt.head.profile.use === "http://www.w3.org/ns/ttml/profile/sdp-us");
             }*/
 
             return passed;

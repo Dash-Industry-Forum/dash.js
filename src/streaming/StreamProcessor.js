@@ -191,7 +191,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         },
 
         setMediaInfo: function(value) {
-        	if (value === mediaInfo || (value && mediaInfo && (value.type !== mediaInfo.type))) return;
+            if (value === mediaInfo || (value && mediaInfo && (value.type !== mediaInfo.type))) return;
 
             mediaInfo = value;
         },
