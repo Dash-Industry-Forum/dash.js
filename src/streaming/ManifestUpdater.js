@@ -66,6 +66,10 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
 
             this.notify(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, {manifest:manifest});
+
+            if (!isStopped) {
+                start.call(this);
+            }
         },
 
         onRefreshTimer = function () {
