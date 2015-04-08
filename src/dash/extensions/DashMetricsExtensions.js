@@ -30,7 +30,7 @@
  */
 Dash.dependencies.DashMetricsExtensions = function () {
     "use strict";
-    var findRepresentationIndexInPeriodArray = function (period, representationId) {
+    var findRepresentationIndex = function (period, representationId) {
             var adaptationSet,
                 adaptationSetArray,
                 representation,
@@ -53,7 +53,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return -1;
         },
 
-        findRepresentationInPeriodArray = function (period, representationId) {
+        findRepresentation = function (period, representationId) {
             var adaptationSet,
                 adaptationSetArray,
                 representation,
@@ -106,7 +106,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
                 representation,
                 period = manifest.Period_asArray[periodId];
 
-            representation = findRepresentationInPeriodArray.call(self, period, representationId);
+            representation = findRepresentation.call(self, period, representationId);
 
             if (representation === null) {
                 return null;
@@ -121,7 +121,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
                 representationIndex,
                 period = manifest.Period_asArray[periodIdx];
 
-            representationIndex = findRepresentationIndexInPeriodArray.call(self, period, representationId);
+            representationIndex = findRepresentationIndex.call(self, period, representationId);
             return representationIndex;
         },
 
