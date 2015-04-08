@@ -51,8 +51,8 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
             }
         },
 
-        onPlaybackSeeking = function (evt) {
-            bufferStateDict = {}
+        onPlaybackSeeking = function () {
+            bufferStateDict = {};
         };
 
     return {
