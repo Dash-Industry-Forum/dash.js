@@ -70,7 +70,8 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
     setDuration: function (source, value) {
         "use strict";
 
-        source.duration = value;
+        if (source.duration != value)
+            source.duration = value;
 
         return source.duration;
     },

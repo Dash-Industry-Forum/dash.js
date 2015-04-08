@@ -74,7 +74,7 @@
 
             // We use width property to hide/show video element because when using display="none"/"block" playback
             // sometimes stops after switching.
-            activeVideoElement.style.width = "0px";
+            activeVideoElement.style.width = "0%";
             newVideoElement.style.width = "100%";
 
             copyVideoProperties(activeVideoElement, newVideoElement);

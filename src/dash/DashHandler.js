@@ -218,6 +218,16 @@ Dash.dependencies.DashHandler = function () {
                 presentationEndTime;
 
             duration = representation.segmentDuration;
+
+            /*
+             * From spec - If neither @duration attribute nor SegmentTimeline element is present, then the Representation 
+             * shall contain exactly one Media Segment. The MPD start time is 0 and the MPD duration is obtained 
+             * in the same way as for the last Media Segment in the Representation.
+             */
+            if (isNaN(duration)) {
+                duration = representation.adaptation.period.duration;
+            }
+
             presentationStartTime = representation.adaptation.period.start + (index * duration);
             presentationEndTime = presentationStartTime + duration;
 
@@ -383,7 +393,12 @@ Dash.dependencies.DashHandler = function () {
 
             start = representation.startNumber;
 
-            segmentRange = decideSegmentListRangeForTemplate.call(self, representation);
+            if (isNaN(duration) && !isDynamic) {
+                segmentRange = {start: start, end: start};
+            }
+            else {
+                segmentRange = decideSegmentListRangeForTemplate.call(self, representation);
+            }
 
             startIdx = segmentRange.start;
             endIdx = segmentRange.end;
@@ -405,8 +420,13 @@ Dash.dependencies.DashHandler = function () {
                 seg = null;
             }
 
-            representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
-
+            if (isNaN(duration)) {
+                representation.availableSegmentsNumber = 1;
+            }
+            else {
+                representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
+            }
+            
             return segments;
         },
 
@@ -439,7 +459,7 @@ Dash.dependencies.DashHandler = function () {
 
             // if segments exist we should try to find the latest buffered time, which is the presentation time of the
             // segment for the current index
-            if (currentSegmentList) {
+            if (currentSegmentList && currentSegmentList.length > 0) {
                 originSegment = getSegmentByIndex(index, representation);
                 originAvailabilityTime = originSegment ? self.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, originSegment.presentationStartTime) :
                     (index > 0 ? (index * duration) : self.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime || currentSegmentList[0].presentationStartTime));

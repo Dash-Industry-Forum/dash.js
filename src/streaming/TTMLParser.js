@@ -99,8 +99,9 @@ MediaPlayer.utils.TTMLParser = function () {
             }
 
             // R0008 - A document must contain a ttp:profile element where the use attribute of that element is specified as http://www.w3.org/ns/ttml/profile/sdp-us.
-            /* extend the support to other profiles
-               if (passed) {
+			/* extend the support to other profiles
+			// Profile is not mandatory 
+            if (passed && hasProfile) {
                 passed = hasProfile && (ttml.tt.head.profile.use === "http://www.w3.org/ns/ttml/profile/sdp-us");
             }*/
 
