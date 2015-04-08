@@ -43,6 +43,8 @@ MediaPlayer.dependencies.Stream = function () {
         updating = true,
         streamInfo = null,
         updateError = {},
+        videoModel,
+        playbackController,
 
         eventController = null,
 
@@ -54,12 +56,12 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             //this.log("Do play.");
-            this.playbackController.start();
+            playbackController.start();
         },
 
         pause = function () {
             //this.log("Do pause.");
-            this.playbackController.pause();
+            playbackController.pause();
         },
 
         seek = function (time) {
@@ -71,7 +73,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             this.log("Do seek: " + time);
 
-            this.playbackController.seek(time);
+            playbackController.seek(time);
         },
 
         // Encrypted Media Extensions
@@ -211,7 +213,7 @@ MediaPlayer.dependencies.Stream = function () {
             mediaSourceArg.addEventListener("sourceopen", onMediaSourceOpen, false);
             mediaSourceArg.addEventListener("webkitsourceopen", onMediaSourceOpen, false);
 
-            sourceUrl = self.mediaSourceExt.attachMediaSource(mediaSourceArg, self.videoModel);
+            sourceUrl = self.mediaSourceExt.attachMediaSource(mediaSourceArg, videoModel);
 
             //self.log("MediaSource attached to video.  Waiting on open...");
         },
@@ -234,7 +236,7 @@ MediaPlayer.dependencies.Stream = function () {
             streamProcessors = [];
 
             if (!!mediaSource) {
-                self.mediaSourceExt.detachMediaSource(self.videoModel);
+                self.mediaSourceExt.detachMediaSource(videoModel);
             }
 
             initialized = false;
@@ -296,7 +298,7 @@ MediaPlayer.dependencies.Stream = function () {
                         //kid = self.protectionController.selectKeySystem(codec, contentProtection);
                         //self.protectionController.ensureKeySession(kid, codec, null);
 
-                        if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
+                        if (!self.capabilities.supportsCodec(videoModel.getElement(), codec)) {
                             var msg = type + "Codec (" + codec + ") is not supported.";
                             self.errHandler.manifestError(msg, "codec", manifest);
                             self.log(msg);
@@ -314,12 +316,12 @@ MediaPlayer.dependencies.Stream = function () {
 
                     processor = self.system.getObject("streamProcessor");
                     streamProcessors.push(processor);
-                    processor.initialize(mimeType || type, buffer, self.videoModel, self.fragmentController, self.playbackController, mediaSource, self, eventController);
+                    processor.initialize(mimeType || type, buffer, videoModel, self.fragmentController, playbackController, mediaSource, self, eventController);
                     processor.setMediaInfo(mediaInfo);
                     self.abrController.updateTopQualityIndex(mediaInfo);
                     self.adapter.updateData(manifest, processor);
                     if(type === "fragmentedText"){
-                        processor.bufferController.videoModel= self.videoModel;
+                        processor.bufferController.videoModel = videoModel;
                         buffer.initialize(type,processor.bufferController);
                     }
 
@@ -339,7 +341,7 @@ MediaPlayer.dependencies.Stream = function () {
                 events;
 
             eventController = self.system.getObject("eventController");
-            eventController.initialize(self.videoModel);
+            eventController.initialize(videoModel);
             events = self.adapter.getEventsFor(streamInfo);
             eventController.addInlineEvents(events);
             // Figure out some bits about the stream before building anything.
@@ -457,7 +459,7 @@ MediaPlayer.dependencies.Stream = function () {
                         self.log(msg);
                     } else {
                         self.liveEdgeFinder.initialize(streamProcessors[0]);
-                        self.liveEdgeFinder.subscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, self.playbackController);
+                        self.liveEdgeFinder.subscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, playbackController);
                         initializePlayback.call(self);
                         //self.log("Playback initialized!");
                         startAutoPlay.call(self);
@@ -541,7 +543,11 @@ MediaPlayer.dependencies.Stream = function () {
                 this.abrController.updateTopQualityIndex(mediaInfo);
                 this.adapter.updateData(manifest, processor);
             }
+        },
+
+        initProtection = function() {
         };
+
 
     return {
         system: undefined,
@@ -551,7 +557,6 @@ MediaPlayer.dependencies.Stream = function () {
         sourceBufferExt: undefined,
         adapter: undefined,
         fragmentController: undefined,
-        playbackController: undefined,
         protectionExt: undefined,
         capabilities: undefined,
         log: undefined,
@@ -581,20 +586,20 @@ MediaPlayer.dependencies.Stream = function () {
             keySystem = undefined;
         },
 
-        load: function() {
-            doLoad.call(this);
-            manifest = this.manifestModel.getValue();
-        },
+        initialize: function(strmInfo, vModel, autoPl) {
+            streamInfo = strmInfo;
+            videoModel = vModel;
+            playbackController = this.system.getObject("playbackController");
+            playbackController.initialize(streamInfo, videoModel);
+            playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, this);
+            playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, this);
+            autoPlay = autoPl;
 
-        setVideoModel: function(value) {
-            this.videoModel = value;
-        },
-
-        initProtection: function() {
+            // Initialize protection system
             if (this.capabilities.supportsEncryptedMedia()) {
                 this.protectionModel = this.system.getObject("protectionModel");
-                this.protectionModel.init(this.getVideoModel());
-                this.protectionModel.setMediaElement(this.videoModel.getElement());
+                this.protectionModel.init();
+                this.protectionModel.setMediaElement(videoModel.getElement());
                 this.protectionController = this.system.getObject("protectionController");
                 this.protectionController.init(this.protectionModel);
 
@@ -647,12 +652,13 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
-        getVideoModel: function() {
-            return this.videoModel;
+        load: function() {
+            doLoad.call(this);
+            manifest = this.manifestModel.getValue();
         },
 
-        setAutoPlay: function (value) {
-            autoPlay = value;
+        getVideoModel: function() {
+            return videoModel;
         },
 
         getAutoPlay: function () {
@@ -685,9 +691,9 @@ MediaPlayer.dependencies.Stream = function () {
 
             this.fragmentController.reset();
             this.fragmentController = undefined;
-            this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, this);
-            this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, this);
-            this.playbackController.reset();
+            playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, this);
+            playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, this);
+            playbackController.reset();
             this.liveEdgeFinder.abortSearch();
             this.liveEdgeFinder.unsubscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.playbackController);
 
@@ -714,10 +720,6 @@ MediaPlayer.dependencies.Stream = function () {
             return streamInfo.id;
         },
 
-        setStreamInfo: function(stream) {
-            streamInfo = stream;
-        },
-
         getStreamInfo: function() {
             return streamInfo;
         },
@@ -738,13 +740,8 @@ MediaPlayer.dependencies.Stream = function () {
             eventController.reset();
         },
 
-        setPlaybackController: function(value) {
-            this.playbackController = value;
-            value.initialize(streamInfo, this.videoModel);
-        },
-
         getPlaybackController: function() {
-            return this.playbackController;
+            return playbackController;
         },
 
         isUpdating: function() {

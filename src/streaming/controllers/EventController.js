@@ -40,6 +40,7 @@ MediaPlayer.dependencies.EventController = function(){
         presentationTimeThreshold = refreshDelay / 1000,
         MPD_RELOAD_SCHEME = "urn:mpeg:dash:event:2012",
         MPD_RELOAD_VALUE = 1,
+        videoModel,
 
         reset = function() {
             clear();
@@ -102,7 +103,7 @@ MediaPlayer.dependencies.EventController = function(){
 
         triggerEvents = function(events) {
             var self = this,
-                currentVideoTime = this.videoModel.getCurrentTime(),
+                currentVideoTime = videoModel.getCurrentTime(),
                 presentationTime;
 
             /* == Trigger events that are ready == */
@@ -130,7 +131,7 @@ MediaPlayer.dependencies.EventController = function(){
             var self = this;
 
             if(activeEvents) {
-                var currentVideoTime = this.videoModel.getCurrentTime();
+                var currentVideoTime = videoModel.getCurrentTime();
 
                 for (var i = 0; i < activeEvents.length; i++) {
                     var curr = activeEvents[i];
@@ -165,14 +166,8 @@ MediaPlayer.dependencies.EventController = function(){
         reset : reset,
         clear : clear,
         start: start,
-        getVideoModel: function() {
-            return this.videoModel;
-        },
-        setVideoModel:function(value) {
-            this.videoModel = value;
-        },
-        initialize:function(videoModel) {
-            this.setVideoModel(videoModel);
+        initialize: function(vModel) {
+            videoModel = vModel;
         }
     };
 

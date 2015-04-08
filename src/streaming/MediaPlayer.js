@@ -102,10 +102,7 @@ MediaPlayer = function (context) {
             playing = true;
             this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
-            streamController.initialize();
-            streamController.setVideoModel(videoModel);
-            streamController.setAutoPlay(autoPlay);
-            streamController.setProtectionData(protectionData);
+            streamController.initialize(videoModel, autoPlay, protectionData);
             DOMStorage.checkInitialBitrate();
             if (typeof source === "string") {
                 streamController.load(source);
