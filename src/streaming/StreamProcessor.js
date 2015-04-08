@@ -187,10 +187,12 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             return stream.getStreamInfo();
         },
 
-        setMediaInfo: function(value) {
-            if (value === mediaInfo || (value && mediaInfo && (value.type !== mediaInfo.type))) return;
+        updateMediaInfo: function(manifest, newMediaInfo) {
+            if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
+                mediaInfo = newMediaInfo;
+            }
 
-            mediaInfo = value;
+            this.adapter.updateData(manifest, this);
         },
 
         getMediaInfo: function() {

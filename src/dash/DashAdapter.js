@@ -210,7 +210,6 @@ Dash.dependencies.DashAdapter = function () {
 
             id = mediaInfo.id;
             data = id ? this.manifestExt.getAdaptationForId(id, manifest, periodInfo.index) : this.manifestExt.getAdaptationForIndex(mediaInfo.index, manifest, periodInfo.index);
-            streamProcessor.setMediaInfo(mediaInfo);
             streamProcessor.trackController.updateData(data, adaptation, type);
         },
 

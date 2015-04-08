@@ -206,9 +206,8 @@ MediaPlayer.dependencies.Stream = function () {
                 streamProcessor = self.system.getObject("streamProcessor");
                 streamProcessors.push(streamProcessor);
                 streamProcessor.initialize(mimeType || type, self.fragmentController, mediaSource, self, eventController);
-                streamProcessor.setMediaInfo(mediaInfo);
                 self.abrController.updateTopQualityIndex(mediaInfo);
-                self.adapter.updateData(manifest, streamProcessor);
+                streamProcessor.updateMediaInfo(manifest, mediaInfo);
                 //self.debug.log(type + " is ready!");
             } else {
                 self.log("No " + type + " data.");
@@ -349,9 +348,8 @@ MediaPlayer.dependencies.Stream = function () {
             for (i; i < ln; i +=1) {
                 controller = streamProcessors[i];
                 mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, controller.getType());
-                controller.setMediaInfo(mediaInfo);
                 this.abrController.updateTopQualityIndex(mediaInfo);
-                this.adapter.updateData(manifest, controller);
+                controller.updateMediaInfo(manifest, mediaInfo);
             }
         };
 
