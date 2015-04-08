@@ -70,6 +70,9 @@ MediaPlayer.utils.VirtualBuffer = function () {
     return {
         system:undefined,
         sourceBufferExt: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
 
         /**
          * Adds DataChunk to array of chunks
@@ -89,6 +92,7 @@ MediaPlayer.utils.VirtualBuffer = function () {
 
             if (!isNaN(start) && !isNaN(end)) {
                 data[streamId][mediaType].buffered.add(start, end);
+                this.notify(MediaPlayer.utils.VirtualBuffer.eventList.CHUNK_APPENDED, {chunk: chunk});
             }
         },
 
@@ -177,4 +181,8 @@ MediaPlayer.utils.VirtualBuffer = function () {
 
 MediaPlayer.utils.VirtualBuffer.prototype = {
     constructor: MediaPlayer.utils.VirtualBuffer
+};
+
+MediaPlayer.utils.VirtualBuffer.eventList = {
+    CHUNK_APPENDED: "chunkAppended"
 };

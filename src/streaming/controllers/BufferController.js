@@ -572,6 +572,10 @@ MediaPlayer.dependencies.BufferController = function () {
             switchInitData.call(self);
         },
 
+        onChunkAppended = function(/*e*/) {
+            addBufferMetrics.call(this);
+        },
+
         switchInitData = function() {
             var self = this,
                 streamId = getStreamId.call(self),
@@ -634,8 +638,11 @@ MediaPlayer.dependencies.BufferController = function () {
 
             onAppended = onAppended.bind(this);
             onRemoved = onRemoved.bind(this);
+            onChunkAppended = onChunkAppended.bind(this);
             this.sourceBufferExt.subscribe(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);
             this.sourceBufferExt.subscribe(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, this, onRemoved);
+
+            this.virtualBuffer.subscribe(MediaPlayer.utils.VirtualBuffer.eventList.CHUNK_APPENDED, this, onChunkAppended);
         },
 
         initialize: function (typeValue, source, streamProcessor) {
@@ -710,6 +717,8 @@ MediaPlayer.dependencies.BufferController = function () {
             self.sourceBufferExt.unsubscribe(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, onAppended);
             self.sourceBufferExt.unsubscribe(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, self, onRemoved);
             appendedBytesInfo = null;
+
+            this.virtualBuffer.unsubscribe(MediaPlayer.utils.VirtualBuffer.eventList.CHUNK_APPENDED, self, onChunkAppended);
 
             isBufferLevelOutrun = false;
             isAppendingInProgress = false;
