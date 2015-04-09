@@ -43,6 +43,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         playListMetrics = null,
         playListTraceMetrics = null,
         playListTraceMetricsClosed = true,
+        segmentAbandonmentInProgress = false,
 
         clearPlayListTraceMetrics = function (endTime, stopreason) {
             var duration = 0,
@@ -131,7 +132,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             });
         },
 
-        replaceCanceledPendingRequests = function(canceledRequests) {
+        replaceCanceledRequests = function(canceledRequests) {
             var ln = canceledRequests.length,
             // EPSILON is used to avoid javascript floating point issue, e.g. if request.startTime = 19.2,
             // request.duration = 3.83, than request.startTime + request.startTime = 19.2 + 1.92 = 21.119999999999997
@@ -282,7 +283,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 throw "Unexpected error!";
             }
 
-            replaceCanceledPendingRequests.call(self, canceledReqs);
+            replaceCanceledRequests.call(self, canceledReqs);
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
         },
 
@@ -365,6 +366,42 @@ MediaPlayer.dependencies.ScheduleController = function () {
             if (currentTrackInfo) {
                 startOnReady.call(self);
             }
+        },
+
+        onFragmentLoadProgress = function(evt) {
+
+            if (this.fragmentAbandonmentEnabled) {
+
+                var self = this,
+                    rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.ABANDON_FRAGMENT_RULES),
+                    callback = function (switchRequest) {
+
+                        if (switchRequest.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
+                                !segmentAbandonmentInProgress) {
+
+                            segmentAbandonmentInProgress = true;
+
+                            var requests = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING}),
+                                    newQuality = switchRequest.value;
+
+                            fragmentModel.abortRequests();
+                            //TODO make work with audio as well? Not sure this feature is needed for audio.
+                            self.abrController.setAbandonmentStateFor('video', MediaPlayer.rules.AbandonRequestsRule.ABANDON_LOAD);
+                            self.abrController.setPlaybackQuality("video", self.streamController.getActiveStreamInfo() , newQuality);
+                            replaceCanceledRequests.call(self, requests);
+
+                            setTimeout(function () {
+                                self.abrController.setAbandonmentStateFor('video', MediaPlayer.rules.AbandonRequestsRule.ALLOW_LOAD);
+                                segmentAbandonmentInProgress = false;
+                            }, MediaPlayer.rules.AbandonRequestsRule.ABANDON_TIMEOUT);
+
+                        }
+                    };
+
+                self.rulesController.applyRules(rules, self.streamProcessor, callback, evt, function(currentValue, newValue) {
+                    return newValue;
+                });
+            }
         };
 
     return {
@@ -374,9 +411,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
         manifestModel: undefined,
         metricsExt: undefined,
         scheduleWhilePaused: undefined,
+        fragmentAbandonmentEnabled:undefined,
         timelineConverter: undefined,
         abrController: undefined,
         playbackController: undefined,
+        streamController:undefined,
         adapter: undefined,
         scheduleRulesCollection: undefined,
         rulesController: undefined,
@@ -407,6 +446,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED] = onPlaybackRateChanged;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
+
+            this[MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_PROGRESS] = onFragmentLoadProgress;
         },
 
         initialize: function(typeValue, streamProcessor) {
@@ -431,6 +472,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             if (self.scheduleRulesCollection.playbackTimeRule) {
                 self.scheduleRulesCollection.playbackTimeRule.setScheduleController(self);
+            }
+
+            if (self.scheduleRulesCollection.abandonRequestRule) {
+                self.scheduleRulesCollection.abandonRequestRule.setScheduleController(self);
             }
         },
 

@@ -37,6 +37,7 @@ MediaPlayer.dependencies.AbrController = function () {
         confidenceDict = {},
         bitrateDict = {},
         streamProcessorDict={},
+        abandonmentStateDict = {},
 
         getInternalQuality = function (type, id) {
             var quality;
@@ -136,6 +137,8 @@ MediaPlayer.dependencies.AbrController = function () {
 
         initialize: function(type, streamProcessor) {
             streamProcessorDict[type] = streamProcessor;
+            abandonmentStateDict[type] = abandonmentStateDict[type] || {};
+            abandonmentStateDict[type].state = MediaPlayer.rules.AbandonRequestsRule.ALLOW_LOAD;
         },
 
         getAutoSwitchBitrate: function () {
@@ -156,6 +159,7 @@ MediaPlayer.dependencies.AbrController = function () {
                 confidence,
 
                 callback = function(res) {
+
                     var topQualityIdx = getTopQualityIndex.call(self, type, streamId);
 
                     quality = res.value;
@@ -172,7 +176,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
                     oldQuality = getInternalQuality(type, streamId);
 
-                    if (quality === oldQuality) return;
+                    if (quality === oldQuality || (abandonmentStateDict[type].state === MediaPlayer.rules.AbandonRequestsRule.ABANDON_LOAD &&  quality > oldQuality)) return;
 
                     setInternalQuality(type, streamId, quality);
                     //self.log("New quality of " + quality);
@@ -195,6 +199,7 @@ MediaPlayer.dependencies.AbrController = function () {
                 currentValue = currentValue === MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
                 return Math.max(currentValue, newValue);
             });
+
         },
 
         setPlaybackQuality: function (type, streamInfo, newPlaybackQuality) {
@@ -216,6 +221,10 @@ MediaPlayer.dependencies.AbrController = function () {
 
         getConfidenceFor: function(type, streamInfo) {
             return getInternalConfidence(type, streamInfo.id);
+        },
+
+        setAbandonmentStateFor: function (type, state) {
+            abandonmentStateDict[type].state = state;
         },
 
         /**
@@ -320,9 +329,7 @@ MediaPlayer.dependencies.AbrController = function () {
             qualityDict = {};
             confidenceDict = {};
             streamProcessorDict = {};
-            //bitrateDict = {}; // Letting this setting persist over multiple sources.
-            // There is no way to set initial bit rate on subsequent media sources in a session if we renew the object each time
-            //attachSource is called in media player.
+            abandonmentStateDict = {};
         }
     };
 };

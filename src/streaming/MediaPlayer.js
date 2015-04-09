@@ -82,6 +82,7 @@ MediaPlayer = function (context) {
         playing = false,
         autoPlay = true,
         scheduleWhilePaused = false,
+        fragmentAbandonmentEnabled = true,
         bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
         useManifestDateHeaderTimeSource = true,
         UTCTimingSources = [],
@@ -123,6 +124,8 @@ MediaPlayer = function (context) {
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
+            system.mapValue("fragmentAbandonmentEnabled", fragmentAbandonmentEnabled);
+            system.mapOutlet("fragmentAbandonmentEnabled", "scheduleController");
             system.mapValue("bufferMax", bufferMax);
             system.mapOutlet("bufferMax", "bufferController");
 
@@ -757,6 +760,30 @@ MediaPlayer = function (context) {
             if (isReady.call(this)) {
                 doAutoPlay.call(this);
             }
+        },
+
+        /**
+         * Use this method to attach an already parsed manifest
+         *
+         * @param m the manifest
+         */
+        attachManifest: function (m) {
+            manifest = m;
+        },
+
+        /**
+         * Attach KeySystem-specific data to use for License Acquisition with EME
+         * @param data and object containing property names corresponding to key
+         * system name strings and associated values being instances of
+         * MediaPlayer.vo.protection.ProtectionData
+         */
+        attachProtectionData: function(data) {
+            protectionData = data;
+        },
+
+		
+        enableFragmentAbandonment: function(enable) {
+            fragmentAbandonmentEnabled = enable;
         },
 
         /**
