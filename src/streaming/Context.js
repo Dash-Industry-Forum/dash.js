@@ -104,6 +104,8 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('liveEdgeWithTimeSynchronizationRule', MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule);
             this.system.mapSingleton('synchronizationRulesCollection', MediaPlayer.rules.SynchronizationRulesCollection);
 
+            this.system.mapSingleton('xlinkController', MediaPlayer.dependencies.XlinkController);
+            this.system.mapSingleton('xlinkLoader', MediaPlayer.dependencies.XlinkLoader);
             this.system.mapClass('streamProcessor', MediaPlayer.dependencies.StreamProcessor);
             this.system.mapClass('eventController', MediaPlayer.dependencies.EventController);
             this.system.mapClass('textController', MediaPlayer.dependencies.TextController);
