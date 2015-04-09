@@ -42,6 +42,7 @@
         STREAM_BUFFER_END_THRESHOLD = 6,
         STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
+        videoModel,
         isStreamSwitchingInProgress = false,
 
         play = function () {
@@ -249,8 +250,7 @@
                 manifest = self.manifestModel.getValue(),
                 metrics = self.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
-                videoModel = activeStream ? activeStream.getVideoModel() : self.getVideoModel(),
-                playbackCtrl,
+                vModel = activeStream ? activeStream.getVideoModel() : videoModel,
                 streamInfo,
                 pLen,
                 sLen,
@@ -268,8 +268,8 @@
                     throw new Error("There are no streams");
                 }
 
-                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: videoModel.getCurrentTime(),
-                    buffered: videoModel.getElement().buffered, presentationStartTime: streamsInfo[0].start,
+                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: vModel.getCurrentTime(),
+                    buffered: vModel.getElement().buffered, presentationStartTime: streamsInfo[0].start,
                     clientTimeOffset: self.timelineConverter.getClientTimeOffset()});
 
                 for (pIdx = 0, pLen = streamsInfo.length; pIdx < pLen; pIdx += 1) {
@@ -284,17 +284,11 @@
                     // If the Stream object does not exist we probably loaded the manifest the first time or it was
                     // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
                     if (!stream) {
+                        vModel = pIdx === 0 ? videoModel : createVideoModel.call(self);
                         stream = self.system.getObject("stream");
-                        playbackCtrl = self.system.getObject("playbackController");
-                        stream.setStreamInfo(streamInfo);
-                        stream.setVideoModel(pIdx === 0 ? self.videoModel : createVideoModel.call(self));
-                        stream.setPlaybackController(playbackCtrl);
-                        playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, stream);
-                        playbackCtrl.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, stream);
-                        stream.initProtection();
-                        stream.setAutoPlay(autoPlay);
-                        stream.load();
                         stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, self);
+                        stream.initialize(streamInfo, vModel, autoPlay);
+                        stream.load();
                         streams.push(stream);
                     }
                     self.metricsModel.addManifestUpdateStreamInfo(manifestUpdateInfo, streamInfo.id, streamInfo.index, streamInfo.start, streamInfo.duration);
@@ -345,7 +339,6 @@
 
     return {
         system: undefined,
-        videoModel: undefined,
         manifestUpdater: undefined,
         manifestLoader: undefined,
         manifestModel: undefined,
@@ -376,24 +369,8 @@
             this[MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncAttemptCompleted;
         },
 
-        setAutoPlay: function (value) {
-            autoPlay = value;
-        },
-
         getAutoPlay: function () {
             return autoPlay;
-        },
-
-        setProtectionData: function (value) {
-            this.protectionExt.init(value);
-        },
-
-        getVideoModel: function () {
-            return this.videoModel;
-        },
-
-        setVideoModel: function (value) {
-            this.videoModel = value;
         },
 
         getActiveStreamInfo: function() {
@@ -411,7 +388,7 @@
             })[0];
         },
 
-        initialize: function () {
+        initialize: function (vModel, autoPl, protectionData) {
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
@@ -419,6 +396,10 @@
             this.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
             this.manifestUpdater.subscribe(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
             this.manifestUpdater.initialize(this.manifestLoader);
+
+            autoPlay = autoPl;
+            videoModel = vModel;
+            this.protectionExt.init(protectionData);
         },
 
         load: function (url) {
@@ -435,8 +416,8 @@
                 detachVideoEvents.call(this, activeStream);
 
                 //switch back to the original video element
-                if (activeStream.getVideoModel() !== this.getVideoModel()) {
-                    switchVideoModel.call(this, activeStream.getVideoModel(), this.getVideoModel());
+                if (activeStream.getVideoModel() !== videoModel) {
+                    switchVideoModel.call(this, activeStream.getVideoModel(), videoModel);
                 }
             }
 
@@ -450,7 +431,7 @@
                 stream.unsubscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this);
                 stream.reset();
                 // remove all video elements except the original one
-                if (stream.getVideoModel() !== this.getVideoModel()) {
+                if (stream.getVideoModel() !== videoModel) {
                     removeVideoElement(stream.getVideoModel().getElement());
                 }
             }
@@ -465,6 +446,8 @@
             this.adapter.reset();
             isStreamSwitchingInProgress = false;
             activeStream = null;
+            videoModel = null;
+            autoPlay = true;
         },
 
         play: play,
