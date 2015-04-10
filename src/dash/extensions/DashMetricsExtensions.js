@@ -30,27 +30,22 @@
  */
 Dash.dependencies.DashMetricsExtensions = function () {
     "use strict";
-    var findRepresentationIndexInPeriodArray = function (periodArray, representationId) {
-            var period,
-                adaptationSet,
+    var findRepresentationIndex = function (period, representationId) {
+            var adaptationSet,
                 adaptationSetArray,
                 representation,
                 representationArray,
-                periodArrayIndex,
                 adaptationSetArrayIndex,
                 representationArrayIndex;
 
-            for (periodArrayIndex = 0; periodArrayIndex < periodArray.length; periodArrayIndex = periodArrayIndex + 1) {
-                period = periodArray[periodArrayIndex];
-                adaptationSetArray = period.AdaptationSet_asArray;
-                for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
-                    adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-                    representationArray = adaptationSet.Representation_asArray;
-                    for (representationArrayIndex = 0; representationArrayIndex < representationArray.length; representationArrayIndex = representationArrayIndex + 1) {
-                        representation = representationArray[representationArrayIndex];
-                        if (representationId === representation.id) {
-                            return representationArrayIndex;
-                        }
+            adaptationSetArray = period.AdaptationSet_asArray;
+            for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
+                adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
+                representationArray = adaptationSet.Representation_asArray;
+                for (representationArrayIndex = 0; representationArrayIndex < representationArray.length; representationArrayIndex = representationArrayIndex + 1) {
+                    representation = representationArray[representationArrayIndex];
+                    if (representationId === representation.id) {
+                        return representationArrayIndex;
                     }
                 }
             }
@@ -58,27 +53,22 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return -1;
         },
 
-        findRepresentationInPeriodArray = function (periodArray, representationId) {
-            var period,
-                adaptationSet,
+        findRepresentation = function (period, representationId) {
+            var adaptationSet,
                 adaptationSetArray,
                 representation,
                 representationArray,
-                periodArrayIndex,
                 adaptationSetArrayIndex,
                 representationArrayIndex;
 
-            for (periodArrayIndex = 0; periodArrayIndex < periodArray.length; periodArrayIndex = periodArrayIndex + 1) {
-                period = periodArray[periodArrayIndex];
-                adaptationSetArray = period.AdaptationSet_asArray;
-                for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
-                    adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-                    representationArray = adaptationSet.Representation_asArray;
-                    for (representationArrayIndex = 0; representationArrayIndex < representationArray.length; representationArrayIndex = representationArrayIndex + 1) {
-                        representation = representationArray[representationArrayIndex];
-                        if (representationId === representation.id) {
-                            return representation;
-                        }
+            adaptationSetArray = period.AdaptationSet_asArray;
+            for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
+                adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
+                representationArray = adaptationSet.Representation_asArray;
+                for (representationArrayIndex = 0; representationArrayIndex < representationArray.length; representationArrayIndex = representationArrayIndex + 1) {
+                    representation = representationArray[representationArrayIndex];
+                    if (representationId === representation.id) {
+                        return representation;
                     }
                 }
             }
@@ -110,13 +100,13 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return -1;
         },
 
-        getBandwidthForRepresentation = function (representationId) {
+        getBandwidthForRepresentation = function (representationId, periodId) {
             var self = this,
                 manifest = self.manifestModel.getValue(),
                 representation,
-                periodArray = manifest.Period_asArray;
+                period = manifest.Period_asArray[periodId];
 
-            representation = findRepresentationInPeriodArray.call(self, periodArray, representationId);
+            representation = findRepresentation.call(self, period, representationId);
 
             if (representation === null) {
                 return null;
@@ -125,13 +115,13 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return representation.bandwidth;
         },
 
-        getIndexForRepresentation = function (representationId) {
+        getIndexForRepresentation = function (representationId, periodIdx) {
             var self = this,
                 manifest = self.manifestModel.getValue(),
                 representationIndex,
-                periodArray = manifest.Period_asArray;
+                period = manifest.Period_asArray[periodIdx];
 
-            representationIndex = findRepresentationIndexInPeriodArray.call(self, periodArray, representationId);
+            representationIndex = findRepresentationIndex.call(self, period, representationId);
             return representationIndex;
         },
 

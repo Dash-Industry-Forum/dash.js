@@ -62,6 +62,22 @@ MediaPlayer.dependencies.FragmentController = function () {
             });
         },
 
+        createDataChunk = function(bytes, request, streamId) {
+            var chunk = new MediaPlayer.vo.DataChunk();
+
+            chunk.streamId = streamId;
+            chunk.mediaType = request.mediaType;
+            chunk.segmentType = request.type;
+            chunk.start = request.startTime;
+            chunk.duration = request.duration;
+            chunk.end = chunk.start + chunk.duration;
+            chunk.bytes = bytes;
+            chunk.index = request.index;
+            chunk.quality = request.quality;
+
+            return chunk;
+        },
+
         onFragmentLoadingStart = function(e) {
             var self = this,
                 request = e.data.request;
@@ -76,18 +92,21 @@ MediaPlayer.dependencies.FragmentController = function () {
         onFragmentLoadingCompleted = function(e) {
             var self = this,
                 request = e.data.request,
-                bytes = self.process(e.data.response);
+                bytes = self.process(e.data.response),
+                streamId = e.sender.getContext().streamProcessor.getStreamInfo().id,
+                isInit = this.isInitializationRequest(request),
+                eventName = isInit ? MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED :
+                    MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED,
+                chunk;
 
             if (bytes === null) {
                 self.log("No " + request.mediaType + " bytes to push.");
                 return;
             }
 
-            if (self.isInitializationRequest(request)) {
-                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED, {bytes: bytes, quality: request.quality, fragmentModel: e.sender});
-            }else {
-                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED, {bytes: bytes, quality: request.quality, index: request.index, startTime: request.startTime, fragmentModel: e.sender});
-            }
+            chunk = createDataChunk.call(this, bytes, request, streamId);
+
+            self.notify(eventName, {chunk: chunk, fragmentModel: e.sender});
 
             executeRequests.call(this);
         },
@@ -192,7 +211,7 @@ MediaPlayer.dependencies.FragmentController = function () {
         },
 
 		isInitializationRequest: function(request){
-			return (request && request.type && request.type.toLowerCase().indexOf("initialization") !== -1);
+			return (request && request.type && request.type === MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE);
 		},
 
         prepareFragmentForLoading: function(fragmentModel, request) {

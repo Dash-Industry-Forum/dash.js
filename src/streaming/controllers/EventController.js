@@ -160,20 +160,12 @@ MediaPlayer.dependencies.EventController = function(){
         manifestUpdater: undefined,
         log: undefined,
         system: undefined,
+        videoModel: undefined,
         addInlineEvents : addInlineEvents,
         addInbandEvents : addInbandEvents,
         reset : reset,
         clear : clear,
-        start: start,
-        getVideoModel: function() {
-            return this.videoModel;
-        },
-        setVideoModel:function(value) {
-            this.videoModel = value;
-        },
-        initialize:function(videoModel) {
-            this.setVideoModel(videoModel);
-        }
+        start: start
     };
 
 };

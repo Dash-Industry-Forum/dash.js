@@ -187,17 +187,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             lastValidationTime = now;
             getRequiredFragmentCount.call(this, onGetRequiredFragmentCount.bind(this));
-
-        },
-
-        clearMetrics = function () {
-            var self = this;
-
-            if (type === null || type === "") {
-                return;
-            }
-
-            self.metricsModel.clearCurrentMetricsForType(type);
         },
 
         onDataUpdateCompleted = function(e) {
@@ -272,9 +261,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
-        onBufferLevelUpdated = function(e) {
-            var self = this;
-            self.metricsModel.addBufferLevel(type, new Date(), e.data.bufferLevel);
+        onBufferLevelUpdated = function(/*e*/) {
             validate.call(this);
         },
 
@@ -389,6 +376,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         scheduleWhilePaused: undefined,
         timelineConverter: undefined,
         abrController: undefined,
+        playbackController: undefined,
         adapter: undefined,
         scheduleRulesCollection: undefined,
         rulesController: undefined,
@@ -427,7 +415,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             type = typeValue;
             self.setMediaType(type);
             self.streamProcessor = streamProcessor;
-            self.playbackController = streamProcessor.playbackController;
             self.fragmentController = streamProcessor.fragmentController;
             self.liveEdgeFinder = streamProcessor.liveEdgeFinder;
             self.bufferController = streamProcessor.bufferController;
@@ -463,7 +450,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.bufferController.unsubscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, self.scheduleRulesCollection.bufferLevelRule);
             fragmentModel.abortRequests();
             self.fragmentController.detachModel(fragmentModel);
-            clearMetrics.call(self);
             fragmentsToLoad = 0;
         },
 

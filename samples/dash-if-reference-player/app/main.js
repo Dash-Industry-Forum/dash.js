@@ -222,14 +222,16 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             fillmoving("video", httpRequests);
             fillmoving("audio", httpRequests);
 
+            var streamIdx = $scope.streamInfo.index;
+
             if (repSwitch !== null) {
-                bitrateIndexValue = metricsExt.getIndexForRepresentation(repSwitch.to);
-                bandwidthValue = metricsExt.getBandwidthForRepresentation(repSwitch.to);
+                bitrateIndexValue = metricsExt.getIndexForRepresentation(repSwitch.to, streamIdx);
+                bandwidthValue = metricsExt.getBandwidthForRepresentation(repSwitch.to, streamIdx);
                 bandwidthValue = bandwidthValue / 1000;
                 bandwidthValue = Math.round(bandwidthValue);
             }
 
-            numBitratesValue = metricsExt.getMaxIndexForBufferType(type, $scope.streamInfo.index);
+            numBitratesValue = metricsExt.getMaxIndexForBufferType(type, streamIdx);
 
             if (bufferLevel !== null) {
                 bufferLengthValue = bufferLevel.level.toPrecision(5);
@@ -534,7 +536,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     player.addEventListener(MediaPlayer.events.ERROR, onError.bind(this));
     player.addEventListener(MediaPlayer.events.METRIC_CHANGED, metricChanged.bind(this));
     player.addEventListener(MediaPlayer.events.METRIC_UPDATED, metricUpdated.bind(this));
-    player.addEventListener(MediaPlayer.events.SWITCH_STREAM, streamSwitch.bind(this));
+    player.addEventListener(MediaPlayer.events.STREAM_SWITCH_COMPLETED, streamSwitch.bind(this));
 
     player.attachView(video);
     player.setAutoPlay(true);

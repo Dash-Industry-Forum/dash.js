@@ -58,12 +58,13 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('capabilities', MediaPlayer.utils.Capabilities);
             this.system.mapSingleton('DOMStorage', MediaPlayer.utils.DOMStorage);
             this.system.mapClass('customTimeRanges', MediaPlayer.utils.CustomTimeRanges);
+            this.system.mapSingleton('virtualBuffer', MediaPlayer.utils.VirtualBuffer);
 
             this.system.mapSingleton('textTrackExtensions', MediaPlayer.utils.TextTrackExtensions);
             this.system.mapSingleton('vttParser', MediaPlayer.utils.VTTParser);
             this.system.mapSingleton('ttmlParser', MediaPlayer.utils.TTMLParser);
 
-            this.system.mapClass('videoModel', MediaPlayer.models.VideoModel);
+            this.system.mapSingleton('videoModel', MediaPlayer.models.VideoModel);
             this.system.mapSingleton('manifestModel', MediaPlayer.models.ManifestModel);
             this.system.mapSingleton('metricsModel', MediaPlayer.models.MetricsModel);
             this.system.mapSingleton('uriQueryFragModel', MediaPlayer.models.URIQueryAndFragmentModel);
@@ -81,7 +82,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('videoExt', MediaPlayer.dependencies.VideoModelExtensions);
             this.system.mapSingleton('protectionExt', MediaPlayer.dependencies.ProtectionExtensions);
             this.system.mapClass('protectionController', MediaPlayer.dependencies.ProtectionController);
-            this.system.mapClass('playbackController', MediaPlayer.dependencies.PlaybackController);
+            this.system.mapSingleton('playbackController', MediaPlayer.dependencies.PlaybackController);
 
             mapProtectionModel.call(this); // Determines EME API support and version
 

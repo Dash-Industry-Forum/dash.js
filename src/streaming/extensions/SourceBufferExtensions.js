@@ -131,6 +131,21 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         }
     },
 
+    getTotalBufferedTime: function(buffer) {
+        var ranges = this.getAllRanges(buffer),
+            totalBufferedTime = 0,
+            ln,
+            i;
+
+        if (!ranges) return totalBufferedTime;
+
+        for (i = 0, ln = ranges.length; i < ln; i += 1) {
+            totalBufferedTime += ranges.end(i) - ranges.start(i);
+        }
+
+        return totalBufferedTime;
+    },
+
     getBufferLength: function (buffer, time, tolerance) {
         "use strict";
 
@@ -186,7 +201,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         }
     },
 
-    append: function (buffer, bytes,appendedBytesInfo) {
+    append: function (buffer, bytes) {
         var self = this,
             appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null);
 
@@ -194,7 +209,7 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
         try {
             self.waitForUpdateEnd(buffer, function() {
-                buffer[appendMethod](bytes,appendedBytesInfo);
+                buffer[appendMethod](bytes);
 
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 self.waitForUpdateEnd(buffer, function() {
