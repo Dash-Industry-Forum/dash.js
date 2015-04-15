@@ -854,6 +854,24 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * @param type
+         * @param {number} value A value of the initial ratio, between 0 and 1
+         * @memberof MediaPlayer#
+         */
+        setInitialRepresentationRatioFor: function(type, value) {
+            abrController.setInitialRepresentationRatioFor(type, value);
+        },
+
+        /**
+         * @param type
+         * @returns {number} A value of the initial ratio, between 0 and 1
+         * @memberof MediaPlayer#
+         */
+        getInitialRepresentationRatioFor: function(type) {
+            return abrController.getInitialRepresentationRatioFor(type);
+        },
+
+        /**
          * @returns {boolean} Current state of adaptive bitrate switching
          * @memberof MediaPlayer#
          *
