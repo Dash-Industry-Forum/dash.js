@@ -67,10 +67,10 @@ MediaPlayer = function (context) {
         abrController,
         element,
         source,
+        protectionController = null,
         protectionData = null,
         streamController,
         rulesController,
-        manifest,
         playbackController,
         metricsExt,
         metricsModel,
@@ -108,14 +108,12 @@ MediaPlayer = function (context) {
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
 
-            streamController.initialize();
-            streamController.setAutoPlay(autoPlay);
-            streamController.setProtectionData(protectionData);
+            streamController.initialize(autoPlay, protectionController, protectionData);
             DOMStorage.checkInitialBitrate();
             if (typeof source === "string") {
                 streamController.load(source);
             } else {
-                streamController.loadWithManifest(manifest);
+                streamController.loadWithManifest(source);
             }
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
@@ -606,13 +604,19 @@ MediaPlayer = function (context) {
             }
         },
 
+        getSystem: function() {
+            return system;
+        },
+
         /**
-         * Use this method to attach an already parsed manifest
+         * Attach a pre-configured protection controller to this player, including
+         * existing protection model and key sessions
          *
-         * @param m the manifest
+         * @param {MediaPlayer.dependencies.ProtectionController} protectionCtrl the protection
+         * controller
          */
-        attachManifest: function (m) {
-            manifest = m;
+        attachProtectionController: function(protectionCtrl) {
+            protectionController = protectionCtrl;
         },
 
         /**
@@ -633,7 +637,8 @@ MediaPlayer = function (context) {
         reset: function() {
             this.attachSource(null);
             this.attachView(null);
-            manifest = null;
+            protectionController = null;
+            protectionData = null;
         },
 
         /**
