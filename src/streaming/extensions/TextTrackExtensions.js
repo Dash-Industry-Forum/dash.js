@@ -83,7 +83,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     };
                 }
                 else{
-                    cue = new Cue(currentItem.start, currentItem.end, currentItem.data);
+                    cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, currentItem.data);
                     if(currentItem.styles){
                         if (currentItem.styles.align !== undefined && cue.hasOwnProperty("align")) {
                             cue.align = currentItem.styles.align;
