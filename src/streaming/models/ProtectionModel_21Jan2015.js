@@ -203,7 +203,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 
         setMediaElement: function(mediaElement) {
             if (videoElement) {
-                videoElement.removeEventListener("encrypted", eventHandler().bind(this));
+                videoElement.removeEventListener("encrypted", eventHandler);
             }
             videoElement = mediaElement;
             videoElement.addEventListener("encrypted", eventHandler);
