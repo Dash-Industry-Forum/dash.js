@@ -185,26 +185,19 @@ Dash.dependencies.DashHandler = function () {
                 seg,
                 fTime;
 
-            //this.log("Checking for stream end...");
-            if (isDynamic) {
-                //this.log("Live never ends! (TODO)");
-                // TODO : Check the contents of the last box to signal end.
+            if (index < 0) {
                 isFinished = false;
-            } else {
-                if (index < 0) {
-                    isFinished = false;
-                } else if (index < representation.availableSegmentsNumber) {
-                    seg = getSegmentByIndex(index, representation);
+            } else if (isDynamic || index < representation.availableSegmentsNumber) {
+                seg = getSegmentByIndex(index, representation);
 
-                    if (seg) {
-                        fTime = seg.presentationStartTime - period.start;
-                        sDuration = representation.adaptation.period.duration;
-                        this.log(representation.segmentInfoType + ": " + fTime + " / " + sDuration);
-                        isFinished = (fTime >= sDuration);
-                    }
-                } else {
-                    isFinished = true;
+                if (seg) {
+                    fTime = seg.presentationStartTime - period.start;
+                    sDuration = representation.adaptation.period.duration;
+                    this.log(representation.segmentInfoType + ": " + fTime + " / " + sDuration);
+                    isFinished = (fTime >= sDuration);
                 }
+            } else {
+                isFinished = true;
             }
 
             return isFinished;
@@ -449,6 +442,8 @@ Dash.dependencies.DashHandler = function () {
             if (!periodRelativeRange) {
                 periodRelativeRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
             }
+
+            periodRelativeRange.start = Math.max(periodRelativeRange.start, 0);
 
             if (isDynamic && !self.timelineConverter.isTimeSyncCompleted()) {
                 start = Math.floor(periodRelativeRange.start / duration);
@@ -803,6 +798,7 @@ Dash.dependencies.DashHandler = function () {
                 idx = index,
                 keepIdx = options ? options.keepIdx : false,
                 timeThreshold = options ? options.timeThreshold : null,
+                ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false,
                 self = this;
 
             if (!representation) {
@@ -825,7 +821,7 @@ Dash.dependencies.DashHandler = function () {
             //self.log("Got a list of segments, so dig deeper.");
             self.log("Index for time " + time + " is " + index);
 
-            finished = isMediaFinished.call(self, representation);
+            finished = !ignoreIsFinished ? isMediaFinished.call(self, representation) : false;
 
             //self.log("Stream finished? " + finished);
             if (finished) {
@@ -854,7 +850,7 @@ Dash.dependencies.DashHandler = function () {
 
             representation.segments = null;
             representation.segmentAvailabilityRange = {start: time - step, end: time + step};
-            return getForTime.call(this, representation, time, {keepIdx: false});
+            return getForTime.call(this, representation, time, {keepIdx: false, ignoreIsFinished: true});
         },
 
         getNext = function (representation) {

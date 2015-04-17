@@ -37,6 +37,8 @@ MediaPlayer.dependencies.Stream = function () {
         kid = null,
         streamInfo = null,
         updateError = {},
+        isUpdating = false,
+        isInitialized = false,
 
         eventController = null,
 
@@ -223,6 +225,7 @@ MediaPlayer.dependencies.Stream = function () {
             events = self.adapter.getEventsFor(streamInfo);
             eventController.addInlineEvents(events);
 
+            isUpdating = true;
             initializeMediaForType.call(self, "video", mediaSource);
             initializeMediaForType.call(self, "audio", mediaSource);
             initializeMediaForType.call(self, "text", mediaSource);
@@ -231,6 +234,7 @@ MediaPlayer.dependencies.Stream = function () {
             createBuffers.call(self);
 
             isMediaInitialized = true;
+            isUpdating = false;
 
             if (streamProcessors.length === 0) {
                 var msg = "No streams to play.";
@@ -252,20 +256,22 @@ MediaPlayer.dependencies.Stream = function () {
                 error = hasError ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.Stream.DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null,
                 i = 0;
 
-            if (!isMediaInitialized || isStreamActivated) return;
-
             for (i; i < ln; i += 1) {
-                if (streamProcessors[i].isUpdating()) return;
+                if (streamProcessors[i].isUpdating() || isUpdating) return;
             }
 
-            isStreamActivated = true;
+            isInitialized = true;
 
             self.eventBus.dispatchEvent({
                 type: MediaPlayer.events.STREAM_INITIALIZED,
                 data: {streamInfo: streamInfo}
             });
 
-            self.notify(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, null, error);
+            self.notify(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, {streamInfo: streamInfo}, error);
+
+            if (!isMediaInitialized || isStreamActivated) return;
+
+            isStreamActivated = true;
         },
 
         getMediaInfo = function(type) {
@@ -345,12 +351,18 @@ MediaPlayer.dependencies.Stream = function () {
                 eventController.addInlineEvents(events);
             }
 
+            isUpdating = true;
+            isInitialized = false;
+
             for (i; i < ln; i +=1) {
                 controller = streamProcessors[i];
                 mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, controller.getType());
                 this.abrController.updateTopQualityIndex(mediaInfo);
                 controller.updateMediaInfo(manifest, mediaInfo);
             }
+
+            isUpdating = false;
+            checkIfInitializationCompleted.call(self);
         };
 
     return {
@@ -512,6 +524,8 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             streamProcessors = [];
+            isUpdating = false;
+            isInitialized = false;
 
             kid = null;
 
@@ -577,6 +591,10 @@ MediaPlayer.dependencies.Stream = function () {
          */
         isActivated: function() {
             return isStreamActivated;
+        },
+
+        isInitialized: function() {
+            return isInitialized;
         },
 
         updateData: updateData

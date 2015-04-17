@@ -87,7 +87,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
                 callback(new MediaPlayer.rules.SwitchRequest(null, p));
             } else {
                 // continue searching for a first available fragment
-                req = this.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, searchTime);
+                req = this.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, searchTime, {ignoreIsFinished: true});
                 findLiveEdge.call(this, searchTime, onSearchForFragmentSucceeded, onSearchForFragmentFailed, req);
             }
         },
@@ -112,7 +112,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
                 // otherwise start binary search to find live edge
                 if (lastSearchTime === liveEdgeInitialSearchPosition) {
                     searchTime = lastSearchTime + fragmentDuration;
-                    req = self.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, searchTime);
+                    req = self.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, searchTime, {ignoreIsFinished: true});
                     findLiveEdge.call(self, searchTime, function() {
                         binarySearch.call(self, true, searchTime);
                     }, function(){
@@ -146,7 +146,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
             } else {
                 // update the search time and continue searching
                 searchTime = ((liveEdgeSearchRange.start + liveEdgeSearchRange.end) / 2);
-                req = this.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, searchTime);
+                req = this.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, searchTime, {ignoreIsFinished: true});
                 findLiveEdge.call(this, searchTime, onSearchForFragmentSucceeded, onSearchForFragmentFailed, req);
             }
         };
@@ -189,7 +189,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
             // we have to use half of the availability interval (window) as a search step to ensure that we find a fragment in the window
             liveEdgeSearchStep = Math.floor((DVRWindow.end - DVRWindow.start) / 2);
             // start search from finding a request for the initial search time
-            request = self.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, liveEdgeInitialSearchPosition);
+            request = self.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, liveEdgeInitialSearchPosition, {ignoreIsFinished: true});
             findLiveEdge.call(self, liveEdgeInitialSearchPosition, onSearchForFragmentSucceeded, onSearchForFragmentFailed, request);
         },
 
