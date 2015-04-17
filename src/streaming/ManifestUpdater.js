@@ -33,8 +33,8 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
     var refreshDelay = NaN,
         refreshTimer = null,
-        isStopped,
-        isUpdating,
+        isStopped = true,
+        isUpdating = false,
         manifestLoader,
 
         clear = function () {
@@ -147,8 +147,10 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
         reset: function() {
             isStopped = true;
+            isUpdating = false;
             clear.call(this);
             manifestLoader.unsubscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
+            refreshDelay = NaN;
         }
     };
 };

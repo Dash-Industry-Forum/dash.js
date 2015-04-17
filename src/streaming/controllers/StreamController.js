@@ -42,6 +42,7 @@
         autoPlay = true,
         canPlay = false,
         isStreamSwitchingInProgress = false,
+        isUpdating = false,
         hasMediaError = false,
         mediaSource,
 
@@ -170,8 +171,12 @@
         },
 
         getNextStream = function() {
-            var nextIndex = activeStream.getStreamIndex() + 1;
-            return (nextIndex < streams.length) ? streams[nextIndex] : null;
+            var start = activeStream.getStreamInfo().start,
+                duration = activeStream.getStreamInfo().duration;
+
+            return streams.filter(function(stream){
+                return (stream.getStreamInfo().start === (start + duration));
+            })[0];
         },
 
         getStreamForTime = function(time) {
@@ -285,6 +290,7 @@
                 pIdx,
                 sIdx,
                 streamsInfo,
+                remainingStreams = [],
                 stream;
 
             if (!manifest) return;
@@ -300,12 +306,15 @@
                     buffered: self.videoModel.getElement().buffered, presentationStartTime: streamsInfo[0].start,
                     clientTimeOffset: self.timelineConverter.getClientTimeOffset()});
 
+                isUpdating = true;
+
                 for (pIdx = 0, pLen = streamsInfo.length; pIdx < pLen; pIdx += 1) {
                     streamInfo = streamsInfo[pIdx];
                     for (sIdx = 0, sLen = streams.length; sIdx < sLen; sIdx += 1) {
                         // If the stream already exists we just need to update the values we got from the updated manifest
                         if (streams[sIdx].getId() === streamInfo.id) {
                             stream = streams[sIdx];
+                            remainingStreams.push(stream);
                             stream.updateData(streamInfo);
                         }
                     }
@@ -316,11 +325,17 @@
                         stream.setStreamInfo(streamInfo);
                         stream.initProtection();
                         stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, self);
-                        streams.push(stream);
+                        remainingStreams.push(stream);
+
+                        if (activeStream) {
+                            stream.updateData(streamInfo);
+                        }
                     }
                     self.metricsModel.addManifestUpdateStreamInfo(manifestUpdateInfo, streamInfo.id, streamInfo.index, streamInfo.start, streamInfo.duration);
                     stream = null;
                 }
+
+                streams = remainingStreams;
 
                 // If the active stream has not been set up yet, let it be the first Stream in the list
                 if (!activeStream) {
@@ -334,13 +349,18 @@
                 if (!mediaSource) {
                     setupMediaSource.call(this);
                 }
+
+                isUpdating = false;
+                checkIfUpdateCompleted.call(self);
             } catch(e) {
                 self.errHandler.manifestError(e.message, "nostreamscomposed", manifest);
                 self.reset();
             }
         },
 
-        onStreamUpdated = function(/*e*/) {
+        checkIfUpdateCompleted = function() {
+            if (isUpdating) return;
+
             var self = this,
                 ln = streams.length,
                 i = 0;
@@ -348,10 +368,14 @@
             startAutoPlay.call(this);
 
             for (i; i < ln; i += 1) {
-                if (!streams[i].isActivated()) return;
+                if (!streams[i].isInitialized()) return;
             }
 
             self.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED);
+        },
+
+        onStreamUpdated = function(/*e*/) {
+            checkIfUpdateCompleted.call(this);
         },
 
         onTimeSyncAttemptCompleted = function (/*e*/) {
@@ -486,9 +510,11 @@
             this.metricsModel.clearAllCurrentMetrics();
             this.manifestModel.setValue(null);
             this.timelineConverter.reset();
+            this.liveEdgeFinder.reset();
             this.adapter.reset();
             this.virtualBuffer.reset();
             isStreamSwitchingInProgress = false;
+            isUpdating = false;
             activeStream = null;
             canPlay = false;
             hasMediaError = false;

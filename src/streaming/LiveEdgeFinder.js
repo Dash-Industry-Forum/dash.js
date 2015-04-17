@@ -34,14 +34,16 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
     var isSearchStarted = false,
         searchStartTime = NaN,
         rules,
+        liveEdge = null,
         ruleSet = MediaPlayer.rules.SynchronizationRulesCollection.prototype.BEST_GUESS_RULES,
 
         onSearchCompleted = function(req) {
-            var liveEdge = req.value,
-                searchTime = (new Date().getTime() - searchStartTime) / 1000;
+            var searchTime = (new Date().getTime() - searchStartTime) / 1000;
 
-                this.notify(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime},
-                    liveEdge === null ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null);
+            liveEdge = req.value;
+
+            this.notify(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime},
+                liveEdge === null ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null);
         },
 
         onStreamUpdated = function(e) {
@@ -89,6 +91,15 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
         abortSearch: function() {
             isSearchStarted = false;
             searchStartTime = NaN;
+        },
+
+        getLiveEdge: function(){
+            return liveEdge;
+        },
+
+        reset: function(){
+            this.abortSearch();
+            liveEdge = null;
         }
     };
 };

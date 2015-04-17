@@ -113,7 +113,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         updateCurrentTime = function() {
-            if (this.isPaused() || !isDynamic) return;
+            if (this.isPaused() || !isDynamic || videoModel.getElement().readyState === 0) return;
 
             var currentTime = this.getTime(),
                 actualTime = getActualPresentationTime.call(this, currentTime),
@@ -259,7 +259,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
             if (!ranges || !ranges.length) return;
 
-            bufferedStart = ranges.start(0);
+            bufferedStart = Math.max(ranges.start(0), streamInfo.start);
             commonEarliestTime[id] = (commonEarliestTime[id] === undefined) ? bufferedStart : Math.max(commonEarliestTime[id], bufferedStart);
 
             // do nothing if common earliest time has not changed or if the firts segment has not been appended or if current
@@ -335,6 +335,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             removeAllListeners.call(this);
             setupVideoModel.call(this);
             isDynamic = streamInfo.manifestInfo.isDynamic;
+            liveStartTime = streamInfoValue.start;
         },
 
         /**

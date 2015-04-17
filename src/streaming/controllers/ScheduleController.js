@@ -143,7 +143,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             for (i = 0; i < ln; i += 1) {
                 request = canceledRequests[i];
                 time = request.startTime + (request.duration / 2) + EPSILON;
-                request = this.adapter.getFragmentRequestForTime(this.streamProcessor, currentTrackInfo, time, {timeThreshold: 0});
+                request = this.adapter.getFragmentRequestForTime(this.streamProcessor, currentTrackInfo, time, {timeThreshold: 0, ignoreIsFinished: true});
                 this.fragmentController.prepareFragmentForLoading(fragmentModel, request);
             }
         },
@@ -200,7 +200,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             currentTrackInfo = this.streamProcessor.getCurrentTrack();
 
-            if (!isDynamic) {
+            if (!isDynamic || this.liveEdgeFinder.getLiveEdge() !== null) {
                 ready = true;
             }
 
@@ -352,7 +352,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 currentLiveStart = self.playbackController.getLiveStartTime(),
                 actualStartTime;
             // get a request for a start time
-            request = self.adapter.getFragmentRequestForTime(self.streamProcessor, currentTrackInfo, startTime);
+            request = self.adapter.getFragmentRequestForTime(self.streamProcessor, currentTrackInfo, startTime, {ignoreIsFinished: true});
             actualStartTime = request.startTime;
 
             if (isNaN(currentLiveStart) || (actualStartTime > currentLiveStart)) {
