@@ -1234,7 +1234,7 @@ if (undefined === atob) {
 
 MediaPlayer = function(context) {
     "use strict";
-    var VERSION = "1.4.0", system, abrController, element, source, protectionData = null, streamController, rulesController, manifest, playbackController, metricsExt, metricsModel, videoModel, DOMStorage, initialized = false, playing = false, autoPlay = true, scheduleWhilePaused = false, bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED, isReady = function() {
+    var VERSION = "1.4.0", system, abrController, element, source, protectionController = null, protectionData = null, streamController, rulesController, playbackController, metricsExt, metricsModel, videoModel, DOMStorage, initialized = false, playing = false, autoPlay = true, scheduleWhilePaused = false, bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED, isReady = function() {
         return !!element && !!source;
     }, play = function() {
         if (!initialized) {
@@ -1254,14 +1254,12 @@ MediaPlayer = function(context) {
         playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
         playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
         playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
-        streamController.initialize();
-        streamController.setAutoPlay(autoPlay);
-        streamController.setProtectionData(protectionData);
+        streamController.initialize(autoPlay, protectionController, protectionData);
         DOMStorage.checkInitialBitrate();
         if (typeof source === "string") {
             streamController.load(source);
         } else {
-            streamController.loadWithManifest(manifest);
+            streamController.loadWithManifest(source);
         }
         system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
         system.mapOutlet("scheduleWhilePaused", "stream");
@@ -1469,6 +1467,24 @@ MediaPlayer = function(context) {
         addABRRules: function(newRulesCollection) {
             updateRules.call(this, rulesController.ABR_RULE, newRulesCollection, false);
         },
+        createProtection: function() {
+            return system.getObject("protectionController");
+        },
+        retrieveManifest: function(url, callback) {
+            (function(manifestUrl) {
+                var manifestLoader = system.getObject("manifestLoader"), uriQueryFragModel = system.getObject("uriQueryFragModel"), cbObj = {};
+                cbObj[MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = function(e) {
+                    if (!e.error) {
+                        callback(e.data.manifest);
+                    } else {
+                        callback(null, e.error);
+                    }
+                    manifestLoader.unsubscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
+                };
+                manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, cbObj);
+                manifestLoader.load(uriQueryFragModel.parseURI(manifestUrl));
+            })(url);
+        },
         attachView: function(view) {
             if (!initialized) {
                 throw "MediaPlayer not initialized!";
@@ -1484,7 +1500,7 @@ MediaPlayer = function(context) {
                 doAutoPlay.call(this);
             }
         },
-        attachSource: function(urlOrManifest) {
+        attachSource: function(urlOrManifest, protectionCtrl, data) {
             if (!initialized) {
                 throw "MediaPlayer not initialized!";
             }
@@ -1494,21 +1510,18 @@ MediaPlayer = function(context) {
             } else {
                 source = urlOrManifest;
             }
+            protectionController = protectionCtrl;
+            protectionData = data;
             doReset.call(this);
             if (isReady.call(this)) {
                 doAutoPlay.call(this);
             }
         },
-        attachManifest: function(m) {
-            manifest = m;
-        },
-        attachProtectionData: function(data) {
-            protectionData = data;
-        },
         reset: function() {
             this.attachSource(null);
             this.attachView(null);
-            manifest = null;
+            protectionController = null;
+            protectionData = null;
         },
         play: play,
         isReady: isReady,
@@ -4978,81 +4991,10 @@ MediaPlayer.dependencies.Notifier.prototype = {
 
 MediaPlayer.dependencies.Stream = function() {
     "use strict";
-    var streamProcessors = [], isStreamActivated = false, isMediaInitialized = false, kid = null, streamInfo = null, updateError = {}, isUpdating = false, isInitialized = false, eventController = null, pendingNeedKeyData = [], keySystem = null, handleEMEError = function(message) {
-        this.errHandler.mediaKeySessionError(message);
-        this.log(message);
+    var streamProcessors = [], isStreamActivated = false, isMediaInitialized = false, streamInfo = null, updateError = {}, isUpdating = false, isInitialized = false, protectionController, ownProtectionController = false, eventController = null, onProtectionError = function(event) {
+        this.errHandler.mediaKeySessionError(event.data);
+        this.log(event.data);
         this.reset();
-    }, createSession = function(needKeyInitData) {
-        var initData = MediaPlayer.dependencies.protection.CommonEncryption.getPSSHForKeySystem(keySystem, needKeyInitData);
-        if (initData) {
-            try {
-                this.protectionController.createKeySession(initData, "temporary");
-            } catch (error) {
-                handleEMEError.call(this, "Error creating key session! " + error.message);
-            }
-        } else {
-            handleEMEError.call(this, "Selected key system is " + keySystem.systemString + ".  needkey/encrypted event contains no initData corresponding to that key system!");
-        }
-    }, onNeedKey = function(event) {
-        if (event.data.initDataType !== "cenc") {
-            this.log("DRM:  Only 'cenc' initData is supported!  Ignoring initData of type: " + event.data.initDataType);
-            return;
-        }
-        var abInitData = event.data.initData;
-        if (ArrayBuffer.isView(abInitData)) {
-            abInitData = abInitData.buffer;
-        }
-        if (keySystem) {
-            createSession.call(this, abInitData);
-        } else if (keySystem === undefined) {
-            keySystem = null;
-            pendingNeedKeyData.push(abInitData);
-            try {
-                this.protectionExt.autoSelectKeySystem(this.protectionExt.getSupportedKeySystems(abInitData), this.protectionModel, this.protectionController, getMediaInfo.call(this, "video"), getMediaInfo.call(this, "audio"));
-            } catch (error) {
-                handleEMEError.call(this, error.message);
-            }
-        } else {
-            pendingNeedKeyData.push(abInitData);
-        }
-    }, onKeySystemSelected = function() {
-        if (!keySystem) {
-            keySystem = this.protectionModel.keySystem;
-        }
-        for (var i = 0; i < pendingNeedKeyData.length; i++) {
-            createSession.call(this, pendingNeedKeyData[i]);
-        }
-        pendingNeedKeyData = [];
-    }, onServerCertificateUpdated = function(event) {
-        if (!event.error) {
-            this.log("DRM: License server certificate successfully updated.");
-        } else {
-            handleEMEError.call(this, event.error);
-        }
-    }, onKeySessionCreated = function(event) {
-        if (!event.error) {
-            this.log("DRM: Session created.  SessionID = " + event.data.getSessionID());
-        } else {
-            handleEMEError.call(this, event.error);
-        }
-    }, onKeyAdded = function() {
-        this.log("DRM: Key added.");
-    }, onKeyError = function(event) {
-        var session = event.data.sessionToken, msg;
-        msg = "DRM: MediaKeyError - sessionId: " + session.getSessionID() + ".  " + event.data.error;
-        handleEMEError.call(this, msg);
-    }, onKeySessionClosed = function(event) {
-        if (!event.error) {
-            this.log("DRM: Session closed.  SessionID = " + event.data);
-        } else {
-            this.log(event.data.error);
-        }
-    }, onKeySessionRemoved = function(event) {
-        if (!event.error) {
-            this.log("DRM: Session removed.  SessionID = " + event.data);
-        } else {
-            this.log(event.data.error);
-        }
     }, initializeMediaForType = function(type, mediaSource) {
         var self = this, mimeType = null, manifest = self.manifestModel.getValue(), codec, getCodecOrMimeType = function(mediaInfo) {
             return mediaInfo.codec;
@@ -5189,7 +5131,6 @@ MediaPlayer.dependencies.Stream = function() {
         videoModel: undefined,
         fragmentController: undefined,
         playbackController: undefined,
-        protectionExt: undefined,
         capabilities: undefined,
         log: undefined,
         errHandler: undefined,
@@ -5201,56 +5142,21 @@ MediaPlayer.dependencies.Stream = function() {
         setup: function() {
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFERING_COMPLETED] = onBufferingCompleted;
             this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY] = onNeedKey.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = onKeySystemSelected.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED] = onServerCertificateUpdated.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED] = onKeyAdded.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR] = onKeyError.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED] = onKeySessionCreated.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED] = onKeySessionClosed.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED] = onKeySessionRemoved.bind(this);
-            keySystem = undefined;
+            this[MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR] = onProtectionError.bind(this);
         },
-        initProtection: function() {
+        initialize: function(strmInfo, protectionCtrl, protectionData) {
+            streamInfo = strmInfo;
             if (this.capabilities.supportsEncryptedMedia()) {
-                this.protectionModel = this.system.getObject("protectionModel");
-                this.protectionModel.init(this.videoModel);
-                this.protectionModel.setMediaElement(this.videoModel.getElement());
-                this.protectionController = this.system.getObject("protectionController");
-                this.protectionController.init(this.protectionModel);
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
-                var manifest = this.manifestModel.getValue(), audioInfo = this.adapter.getMediaInfoForType(manifest, streamInfo, "audio"), videoInfo = this.adapter.getMediaInfoForType(manifest, streamInfo, "video"), mediaInfo = videoInfo ? videoInfo : audioInfo;
-                var supportedKS = this.protectionExt.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
-                if (supportedKS && supportedKS.length > 0) {
-                    var ksSelected = {};
-                    var self = this;
-                    ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = function(event) {
-                        if (!event.error) {
-                            keySystem = self.protectionModel.keySystem;
-                            for (var ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
-                                if (keySystem === supportedKS[ksIdx].ks) {
-                                    createSession.call(self, supportedKS[ksIdx].initData);
-                                    break;
-                                }
-                            }
-                        } else {
-                            self.debug.log("DRM: Could not select key system from ContentProtection elements!  Falling back to needkey mechanism...");
-                            self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, self);
-                            self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, self);
-                        }
-                        self.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
-                    };
-                    keySystem = null;
-                    this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
-                    this.protectionExt.autoSelectKeySystem(supportedKS, this.protectionModel, this.protectionController, videoInfo, audioInfo);
-                } else {
-                    this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
-                    this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, this);
+                if (!protectionCtrl) {
+                    protectionCtrl = this.system.getObject("protectionController");
+                    ownProtectionController = true;
+                }
+                protectionController = protectionCtrl;
+                protectionController.subscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
+                protectionController.setMediaElement(this.videoModel.getElement());
+                protectionController.init(this.manifestModel.getValue());
+                if (protectionData) {
+                    protectionController.setProtectionData(protectionData);
                 }
             }
         },
@@ -5273,22 +5179,6 @@ MediaPlayer.dependencies.Stream = function() {
         },
         reset: function(errored) {
             this.playbackController.pause();
-            if (!!this.protectionModel) {
-                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
-                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
-                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, this);
-                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
-                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
-                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
-                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
-                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
-                this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
-                keySystem = undefined;
-                this.protectionController.teardown();
-                this.protectionModel.teardown();
-                this.protectionController = undefined;
-                this.protectionModel = undefined;
-            }
             var ln = streamProcessors.length, i = 0, processors;
             for (i; i < ln; i += 1) {
                 processors = streamProcessors[i];
@@ -5301,13 +5191,20 @@ MediaPlayer.dependencies.Stream = function() {
             streamProcessors = [];
             isUpdating = false;
             isInitialized = false;
-            kid = null;
             if (this.fragmentController) {
                 this.fragmentController.reset();
             }
             this.fragmentController = undefined;
             this.liveEdgeFinder.abortSearch();
             this.liveEdgeFinder.unsubscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.playbackController);
+            if (protectionController) {
+                protectionController.unsubscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
+                if (ownProtectionController) {
+                    protectionController.teardown();
+                    protectionController = null;
+                    ownProtectionController = false;
+                }
+            }
             isMediaInitialized = false;
             isStreamActivated = false;
             updateError = {};
@@ -5323,9 +5220,6 @@ MediaPlayer.dependencies.Stream = function() {
         },
         getId: function() {
             return streamInfo.id;
-        },
-        setStreamInfo: function(stream) {
-            streamInfo = stream;
         },
         getStreamInfo: function() {
             return streamInfo;
@@ -7296,7 +7190,7 @@ MediaPlayer.dependencies.PlaybackController.eventList = {
 
 MediaPlayer.dependencies.ProtectionController = function() {
     "use strict";
-    var keySystems = null, onKeyMessage = function(e) {
+    var keySystems = null, pendingNeedKeyData = [], audioInfo, videoInfo, onKeyMessage = function(e) {
         if (e.error) {
             this.log(e.error);
         } else {
@@ -7312,21 +7206,135 @@ MediaPlayer.dependencies.ProtectionController = function() {
         }
     }, onKeySystemSelected = function() {
         this.protectionModel.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
+        if (!this.keySystem) {
+            this.keySystem = this.protectionModel.keySystem;
+        }
+        for (var i = 0; i < pendingNeedKeyData.length; i++) {
+            this.createKeySession(pendingNeedKeyData[i]);
+        }
+        pendingNeedKeyData = [];
+    }, onNeedKey = function(event) {
+        if (event.data.initDataType !== "cenc") {
+            this.log("DRM:  Only 'cenc' initData is supported!  Ignoring initData of type: " + event.data.initDataType);
+            return;
+        }
+        var abInitData = event.data.initData;
+        if (ArrayBuffer.isView(abInitData)) {
+            abInitData = abInitData.buffer;
+        }
+        if (this.keySystem) {
+            this.createKeySession(abInitData);
+        } else if (this.keySystem === undefined) {
+            this.keySystem = null;
+            pendingNeedKeyData.push(abInitData);
+            try {
+                this.protectionExt.autoSelectKeySystem(this.protectionExt.getSupportedKeySystems(abInitData), this, videoInfo, audioInfo);
+            } catch (error) {
+                this.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, "DRM: Unable to select a key system from needkey initData. -- " + error.message);
+            }
+        } else {
+            pendingNeedKeyData.push(abInitData);
+        }
+    }, onKeySystemAccessComplete = function(event) {
+        if (!event.error) {
+            this.log("KeySystem Access Granted");
+        } else {
+            this.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, "DRM: KeySystem Access Denied! -- " + event.error);
+        }
+    }, onServerCertificateUpdated = function(event) {
+        if (!event.error) {
+            this.log("DRM: License server certificate successfully updated.");
+        } else {
+            this.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, "DRM: Failed to update license server certificate. -- " + event.error);
+        }
+    }, onKeySessionCreated = function(event) {
+        if (!event.error) {
+            this.log("DRM: Session created.  SessionID = " + event.data.getSessionID());
+        } else {
+            this.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, "DRM: Failed to create key session. -- " + event.error);
+        }
+    }, onKeyAdded = function() {
+        this.log("DRM: Key added.");
+    }, onKeyError = function(event) {
+        this.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, "DRM: MediaKeyError - sessionId: " + event.data.sessionToken.getSessionID() + ".  " + event.data.error);
+    }, onKeySessionClosed = function(event) {
+        if (!event.error) {
+            this.log("DRM: Session closed.  SessionID = " + event.data);
+        } else {
+            this.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, "DRM Failed to close key session. -- " + event.error);
+        }
+    }, onKeySessionRemoved = function(event) {
+        if (!event.error) {
+            this.log("DRM: Session removed.  SessionID = " + event.data);
+        } else {
+            this.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, "DRM: Failed to remove key session. -- " + event.error);
+        }
     };
     return {
         system: undefined,
         log: undefined,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
         protectionExt: undefined,
+        keySystem: undefined,
+        sessionType: "temporary",
         setup: function() {
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE] = onKeyMessage.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = onKeySystemSelected.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = onKeySystemAccessComplete.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY] = onNeedKey.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED] = onServerCertificateUpdated.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED] = onKeyAdded.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR] = onKeyError.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED] = onKeySessionCreated.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED] = onKeySessionClosed.bind(this);
+            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED] = onKeySessionRemoved.bind(this);
             this[MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE] = onLicenseRequestComplete.bind(this);
-        },
-        init: function(protectionModel) {
-            this.protectionModel = protectionModel;
             keySystems = this.protectionExt.getKeySystems();
+            this.protectionModel = this.system.getObject("protectionModel");
+            this.protectionModel.init();
+        },
+        init: function(manifest) {
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, this);
+            var adapter = this.system.getObject("adapter"), streamInfo = adapter.getStreamsInfo(manifest)[0];
+            audioInfo = adapter.getMediaInfoForType(manifest, streamInfo, "audio");
+            videoInfo = adapter.getMediaInfoForType(manifest, streamInfo, "video");
+            var mediaInfo = videoInfo ? videoInfo : audioInfo;
+            var supportedKS = this.protectionExt.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
+            if (supportedKS && supportedKS.length > 0) {
+                var ksSelected = {};
+                var self = this;
+                ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = function(event) {
+                    if (!event.error) {
+                        self.keySystem = self.protectionModel.keySystem;
+                        self.keySystem.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, self);
+                        for (var ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
+                            if (self.keySystem === supportedKS[ksIdx].ks) {
+                                self.createKeySession(supportedKS[ksIdx].initData);
+                                break;
+                            }
+                        }
+                    } else {
+                        self.log("DRM: Could not select key system from ContentProtection elements!  Falling back to needkey mechanism...");
+                        self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, self);
+                        self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, self);
+                    }
+                    self.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
+                };
+                this.keySystem = null;
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
+                this.protectionExt.autoSelectKeySystem(supportedKS, this, videoInfo, audioInfo);
+            } else {
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, this);
+            }
         },
         teardown: function() {
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
@@ -7334,6 +7342,16 @@ MediaPlayer.dependencies.ProtectionController = function() {
             if (this.protectionModel.keySystem) {
                 this.protectionModel.keySystem.unsubscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
             }
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
+            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
+            this.keySystem = undefined;
+            this.protectionModel.teardown();
+            this.protectionModel = undefined;
         },
         requestKeySystemAccess: function(ksConfiguration) {
             this.protectionModel.requestKeySystemAccess(ksConfiguration);
@@ -7344,8 +7362,17 @@ MediaPlayer.dependencies.ProtectionController = function() {
             }
             this.protectionModel.selectKeySystem(keySystemAccess);
         },
-        createKeySession: function(initData, sessionType) {
-            this.protectionModel.createKeySession(initData, sessionType);
+        createKeySession: function(initData) {
+            var initDataForKS = MediaPlayer.dependencies.protection.CommonEncryption.getPSSHForKeySystem(this.keySystem, initData);
+            if (initDataForKS) {
+                try {
+                    this.protectionModel.createKeySession(initDataForKS, this.sessionType);
+                } catch (error) {
+                    this.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, "Error creating key session! " + error.message);
+                }
+            } else {
+                this.log("Selected key system is " + this.keySystem.systemString + ".  needkey/encrypted event contains no initData corresponding to that key system!");
+            }
         },
         updateKeySession: function(sessionToken, message) {
             this.protectionModel.updateKeySession(sessionToken, message);
@@ -7361,8 +7388,21 @@ MediaPlayer.dependencies.ProtectionController = function() {
         },
         setServerCertificate: function(serverCertificate) {
             this.protectionModel.setServerCertificate(serverCertificate);
+        },
+        setMediaElement: function(element) {
+            this.protectionModel.setMediaElement(element);
+        },
+        setSessionType: function(sessionType) {
+            this.sessionType = sessionType;
+        },
+        setProtectionData: function(data) {
+            this.protectionExt.init(data);
         }
     };
+};
+
+MediaPlayer.dependencies.ProtectionController.eventList = {
+    ENAME_PROTECTION_ERROR: "protectionError"
 };
 
 MediaPlayer.dependencies.ProtectionController.prototype = {
@@ -7640,7 +7680,7 @@ MediaPlayer.dependencies.ScheduleController.prototype = {
 
 MediaPlayer.dependencies.StreamController = function() {
     "use strict";
-    var streams = [], activeStream, STREAM_END_THRESHOLD = .2, autoPlay = true, canPlay = false, isStreamSwitchingInProgress = false, isUpdating = false, hasMediaError = false, mediaSource, attachEvents = function(stream) {
+    var streams = [], activeStream, protectionController, protectionData, STREAM_END_THRESHOLD = .2, autoPlay = true, canPlay = false, isStreamSwitchingInProgress = false, isUpdating = false, hasMediaError = false, mediaSource, attachEvents = function(stream) {
         stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
         stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
     }, detachEvents = function(stream) {
@@ -7808,8 +7848,7 @@ MediaPlayer.dependencies.StreamController = function() {
                 }
                 if (!stream) {
                     stream = self.system.getObject("stream");
-                    stream.setStreamInfo(streamInfo);
-                    stream.initProtection();
+                    stream.initialize(streamInfo, protectionController, protectionData);
                     stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, self);
                     remainingStreams.push(stream);
                     if (activeStream) {
@@ -7890,14 +7929,8 @@ MediaPlayer.dependencies.StreamController = function() {
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY] = onCanPlay;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR] = onError;
         },
-        setAutoPlay: function(value) {
-            autoPlay = value;
-        },
         getAutoPlay: function() {
             return autoPlay;
-        },
-        setProtectionData: function(value) {
-            this.protectionExt.init(value);
         },
         getActiveStreamInfo: function() {
             return activeStream ? activeStream.getStreamInfo() : null;
@@ -7910,7 +7943,10 @@ MediaPlayer.dependencies.StreamController = function() {
                 return item.getId() === id;
             })[0];
         },
-        initialize: function() {
+        initialize: function(autoPl, protCtrl, protData) {
+            autoPlay = autoPl;
+            protectionController = protCtrl;
+            protectionData = protData;
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
@@ -7956,6 +7992,8 @@ MediaPlayer.dependencies.StreamController = function() {
             activeStream = null;
             canPlay = false;
             hasMediaError = false;
+            protectionController = null;
+            protectionData = null;
             if (!mediaSource) return;
             this.mediaSourceExt.detachMediaSource(this.videoModel);
             mediaSource = null;
@@ -8332,7 +8370,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
         }
         return supportedKS;
     },
-    autoSelectKeySystem: function(supportedKS, protectionModel, protectionController, videoInfo, audioInfo) {
+    autoSelectKeySystem: function(supportedKS, protectionController, videoInfo, audioInfo) {
         if (supportedKS.length === 0) {
             throw new Error("DRM system for this content not supported by the player!");
         }
@@ -8352,21 +8390,21 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
             });
         }
         var self = this;
-        (function(protMod, protCont) {
+        (function(protCtrl) {
             var cbObj = {};
             cbObj[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
-                protMod.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
+                protCtrl.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
                 if (!event.error) {
                     var keySystemAccess = event.data;
                     self.log("KeySystem Access Granted (" + keySystemAccess.keySystem.systemString + ")!");
-                    protCont.selectKeySystem(keySystemAccess);
+                    protCtrl.selectKeySystem(keySystemAccess);
                 } else {
                     self.log(event.error);
                 }
             };
-            protMod.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, cbObj);
-            protCont.requestKeySystemAccess(requestedKeySystems);
-        })(protectionModel, protectionController);
+            protCtrl.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, cbObj);
+            protCtrl.requestKeySystemAccess(requestedKeySystems);
+        })(protectionController);
     }
 };
 

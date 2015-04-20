@@ -615,7 +615,7 @@ MediaPlayer = function (context) {
          * a previously downloaded and parsed manifest object.  Optionally, can
          * also provide protection information
          *
-         * @param {string|Object} source A URL to a valid MPD manifest file, or a
+         * @param {string|Object} urlOrManifest A URL to a valid MPD manifest file, or a
          * parsed manifest object.
          * @param {MediaPlayer.dependencies.ProtectionController} [protectionCtrl] optional
          * protection controller
