@@ -63,6 +63,9 @@ MediaPlayer.utils.VirtualBuffer = function () {
             data.video = {buffered: new MediaPlayer.utils.CustomTimeRanges()};
             data.video[MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
             data.video[MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE] = [];
+            data.fragmentedText = {buffered: new MediaPlayer.utils.CustomTimeRanges()};
+            data.fragmentedText[MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
+            data.fragmentedText[MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE] = [];
 
             return data;
         };
