@@ -67,10 +67,10 @@ MediaPlayer = function (context) {
         abrController,
         element,
         source,
+        protectionController = null,
         protectionData = null,
         streamController,
         rulesController,
-        manifest,
         playbackController,
         metricsExt,
         metricsModel,
@@ -108,14 +108,12 @@ MediaPlayer = function (context) {
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
 
-            streamController.initialize();
-            streamController.setAutoPlay(autoPlay);
-            streamController.setProtectionData(protectionData);
+            streamController.initialize(autoPlay, protectionController, protectionData);
             DOMStorage.checkInitialBitrate();
             if (typeof source === "string") {
                 streamController.load(source);
             } else {
-                streamController.loadWithManifest(manifest);
+                streamController.loadWithManifest(source);
             }
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
@@ -547,6 +545,43 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * Create a ProtectionController and associated ProtectionModel for use with
+         * a single piece of content.
+         *
+         * @return {MediaPlayer.dependencies.ProtectionController} protection controller
+         */
+        createProtection: function() {
+            return system.getObject("protectionController");
+        },
+
+        /**
+         * Allows application to retrieve a manifest
+         *
+         * @param {string} url the manifest url
+         * @param {function} callback function that accepts two parameters.  The first is
+         * a successfully parsed manifest or null, the second is a string that contains error
+         * information in the case that the first parameter is null
+         */
+        retrieveManifest: function(url, callback) {
+            (function(manifestUrl) {
+                var manifestLoader = system.getObject("manifestLoader"),
+                    uriQueryFragModel = system.getObject("uriQueryFragModel"),
+                    cbObj = {};
+                cbObj[MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = function(e) {
+                    if (!e.error) {
+                        callback(e.data.manifest);
+                    } else {
+                        callback(null, e.error);
+                    }
+                    manifestLoader.unsubscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
+                };
+
+                manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, cbObj);
+                manifestLoader.load(uriQueryFragModel.parseURI(manifestUrl));
+            })(url);
+        },
+
+        /**
          * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
          *
          * @param view An HTML5 VideoElement that has already defined in the DOM.
@@ -577,15 +612,21 @@ MediaPlayer = function (context) {
 
         /**
          * Use this method to set a source URL to a valid MPD manifest file OR
-         * a previously downloaded and parsed manifest object.
+         * a previously downloaded and parsed manifest object.  Optionally, can
+         * also provide protection information
          *
-         * @param {string|Object} source A URL to a valid MPD manifest file, or a
+         * @param {string|Object} urlOrManifest A URL to a valid MPD manifest file, or a
          * parsed manifest object.
+         * @param {MediaPlayer.dependencies.ProtectionController} [protectionCtrl] optional
+         * protection controller
+         * @param {MediaPlayer.vo.protection.ProtectionData} [data] object containing
+         * property names corresponding to key system name strings and associated
+         * values being instances of
          * @throw "MediaPlayer not initialized!"
          *
          * @memberof MediaPlayer#
          */
-        attachSource: function (urlOrManifest) {
+        attachSource: function (urlOrManifest, protectionCtrl, data) {
             if (!initialized) {
                 throw "MediaPlayer not initialized!";
             }
@@ -597,6 +638,9 @@ MediaPlayer = function (context) {
                 source = urlOrManifest;
             }
 
+            protectionController = protectionCtrl;
+            protectionData = data;
+
             // TODO : update
 
             doReset.call(this);
@@ -607,25 +651,6 @@ MediaPlayer = function (context) {
         },
 
         /**
-         * Use this method to attach an already parsed manifest
-         *
-         * @param m the manifest
-         */
-        attachManifest: function (m) {
-            manifest = m;
-        },
-
-        /**
-         * Attach KeySystem-specific data to use for License Acquisition with EME
-         * @param data and object containing property names corresponding to key
-         * system name strings and associated values being instances of
-         * MediaPlayer.vo.protection.ProtectionData
-         */
-        attachProtectionData: function(data) {
-            protectionData = data;
-        },
-
-        /**
          * Sets the MPD source and the video element to null.
          *
          * @memberof MediaPlayer#
@@ -633,7 +658,8 @@ MediaPlayer = function (context) {
         reset: function() {
             this.attachSource(null);
             this.attachView(null);
-            manifest = null;
+            protectionController = null;
+            protectionData = null;
         },
 
         /**

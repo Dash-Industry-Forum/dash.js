@@ -214,12 +214,11 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      * by the player and the key systems supported by the content
      *
      * @param {Object[]} supportedKS supported key systems
-     * @param {MediaPlayer.models.ProtectionModel} protectionModel
      * @param {MediaPlayer.dependencies.ProtectionController} protectionController
      * @param {MediaPlayer.vo.MediaInfo} videoInfo video media information
      * @param {MediaPlayer.vo.MediaInfo} audioInfo audio media information
      */
-    autoSelectKeySystem: function(supportedKS, protectionModel, protectionController, videoInfo, audioInfo) {
+    autoSelectKeySystem: function(supportedKS, protectionController, videoInfo, audioInfo) {
 
         // Does the initData contain a key system supported by the player?
         if (supportedKS.length === 0) {
@@ -243,27 +242,27 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
         // Since ProtectionExtensions is a singleton, we need to create an IIFE to wrap the
         // event callback and save the values of protectionModel and protectionController.
         var self = this;
-        (function(protMod, protCont) {
+        (function(protCtrl) {
 
             // Callback object for KEY_SYSTEM_ACCESS_COMPLETE event
             var cbObj = {};
 
             // Subscribe for event and then perform request
             cbObj[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
-                protMod.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
+                protCtrl.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
                 if (!event.error) {
                     var keySystemAccess = event.data;
                     self.log("KeySystem Access Granted (" + keySystemAccess.keySystem.systemString + ")!");
-                    protCont.selectKeySystem(keySystemAccess);
+                    protCtrl.selectKeySystem(keySystemAccess);
                 } else {
                     self.log(event.error);
                 }
             };
 
-            protMod.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, cbObj);
-            protCont.requestKeySystemAccess(requestedKeySystems);
+            protCtrl.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, cbObj);
+            protCtrl.requestKeySystemAccess(requestedKeySystems);
 
-        })(protectionModel, protectionController);
+        })(protectionController);
     }
 };
 

@@ -38,6 +38,8 @@
 
     var streams = [],
         activeStream,
+        protectionController,
+        protectionData,
         STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
         canPlay = false,
@@ -322,8 +324,7 @@
                     // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
                     if (!stream) {
                         stream = self.system.getObject("stream");
-                        stream.setStreamInfo(streamInfo);
-                        stream.initProtection();
+                        stream.initialize(streamInfo, protectionController, protectionData);
                         stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, self);
                         remainingStreams.push(stream);
 
@@ -432,18 +433,11 @@
 
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY] = onCanPlay;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR] = onError;
-        },
 
-        setAutoPlay: function (value) {
-            autoPlay = value;
         },
 
         getAutoPlay: function () {
             return autoPlay;
-        },
-
-        setProtectionData: function (value) {
-            this.protectionExt.init(value);
         },
 
         getActiveStreamInfo: function() {
@@ -465,7 +459,10 @@
             })[0];
         },
 
-        initialize: function () {
+        initialize: function (autoPl, protCtrl, protData) {
+            autoPlay = autoPl;
+            protectionController = protCtrl;
+            protectionData = protData;
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
@@ -518,6 +515,9 @@
             activeStream = null;
             canPlay = false;
             hasMediaError = false;
+
+            protectionController = null;
+            protectionData = null;
 
             if (!mediaSource) return;
 
