@@ -44,7 +44,7 @@ MediaPlayer.dependencies.TextController = function () {
 
              if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel() || (!e.data.chunk.bytes)) return;
 
-             self.sourceBufferExt.append(buffer, e.data.chunk.bytes, self.videoModel);
+             self.sourceBufferExt.append(buffer, e.data.chunk);
          };
 
     return {

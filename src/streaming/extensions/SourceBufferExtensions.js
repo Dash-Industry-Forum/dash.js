@@ -201,15 +201,16 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         }
     },
 
-    append: function (buffer, bytes) {
+    append: function (buffer, chunk) {
         var self = this,
+            bytes = chunk.bytes,
             appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null);
 
         if (!appendMethod) return;
 
         try {
             self.waitForUpdateEnd(buffer, function() {
-                buffer[appendMethod](bytes);
+                buffer[appendMethod](bytes, chunk);
 
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 self.waitForUpdateEnd(buffer, function() {
