@@ -57,6 +57,10 @@ MediaPlayer.dependencies.BufferController = function () {
 
             try {
                 sourceBuffer = this.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
+
+                if (sourceBuffer && sourceBuffer.hasOwnProperty("initialize")) {
+                    sourceBuffer.initialize(type, this);
+                }
             } catch (e) {
                 this.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
             }
@@ -161,7 +165,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 return;
             }
             //self.log("Push bytes: " + data.byteLength);
-            self.sourceBufferExt.append(buffer, chunk.bytes);
+            self.sourceBufferExt.append(buffer, chunk);
         },
 
         onAppended = function(e) {
