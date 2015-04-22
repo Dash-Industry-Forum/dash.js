@@ -263,22 +263,6 @@ Dash.dependencies.DashAdapter = function () {
             }
 
             return events;
-        },
-
-        getQulityIndexForBitrate = function (streamProcessor, targetBandwidth) {
-            var mediaInfo = streamProcessor.getMediaInfo(),
-                manifest = this.manifestModel.getValue(),
-                adaptation = this.manifestExt.getAdaptationForType(manifest, mediaInfo.streamInfo.index, mediaInfo.type),
-                max = mediaInfo.trackCount - 1;
-
-            for ( var i = max ; i > 0; i-- )
-            {
-                var repBandwidth = this.manifestExt.getRepresentationFor(i, adaptation).bandwidth;
-                if (targetBandwidth >= repBandwidth) {
-                    return i;
-                }
-            }
-            return 0;
         };
 
     return {
@@ -310,7 +294,6 @@ Dash.dependencies.DashAdapter = function () {
         getDataForTrack: getRepresentationForTrackInfo,
         getDataForMedia: getAdaptationForMediaInfo,
         getDataForStream: getPeriodForStreamInfo,
-        getQulityIndexForBitrate:getQulityIndexForBitrate,
         getStreamsInfo: getStreamsInfoFromManifest,
         getManifestInfo: getMpdInfo,
         getMediaInfoForType: getMediaInfoForType,

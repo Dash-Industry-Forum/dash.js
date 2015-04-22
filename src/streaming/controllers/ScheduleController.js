@@ -44,6 +44,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         playListTraceMetrics = null,
         playListTraceMetricsClosed = true,
         segmentAbandonmentInProgress = false,
+        abandonmentTimeout,
 
         clearPlayListTraceMetrics = function (endTime, stopreason) {
             var duration = 0,
@@ -390,7 +391,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                             self.abrController.setPlaybackQuality("video", self.streamController.getActiveStreamInfo() , newQuality);
                             replaceCanceledRequests.call(self, requests);
 
-                            setTimeout(function () {
+                            abandonmentTimeout = setTimeout(function () {
                                 self.abrController.setAbandonmentStateFor('video', MediaPlayer.rules.AbandonRequestsRule.ALLOW_LOAD);
                                 segmentAbandonmentInProgress = false;
                             }, MediaPlayer.rules.AbandonRequestsRule.ABANDON_TIMEOUT);
@@ -496,6 +497,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             fragmentModel.abortRequests();
             self.fragmentController.detachModel(fragmentModel);
             fragmentsToLoad = 0;
+            segmentAbandonmentInProgress = false;
+            clearTimeout(abandonmentTimeout);
         },
 
         start: doStart,

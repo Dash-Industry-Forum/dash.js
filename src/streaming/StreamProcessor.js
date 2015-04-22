@@ -176,6 +176,10 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             return type;
         },
 
+        getABRController:function() {
+            return this.abrController;
+        },
+
         getFragmentLoader: function () {
             return this.fragmentLoader;
         },
@@ -315,6 +319,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             fragmentModel.unsubscribe(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED, fragmentController);
             fragmentModel.unsubscribe(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, scheduleController);
             fragmentLoader.unsubscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
+            fragmentLoader.unsubscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_PROGRESS, scheduleController);
             fragmentModel.reset();
 
             indexHandler.reset();

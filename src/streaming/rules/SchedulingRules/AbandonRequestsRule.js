@@ -44,7 +44,7 @@ MediaPlayer.rules.AbandonRequestsRule = function () {
     return {
         metricsExt: undefined,
         log:undefined,
-        adapter:undefined,
+
 
         setScheduleController: function(scheduleControllerValue) {
             var id = scheduleControllerValue.streamProcessor.getStreamInfo().id;
@@ -62,6 +62,7 @@ MediaPlayer.rules.AbandonRequestsRule = function () {
                 trackInfo = context.getTrackInfo(),
                 req = progressEvent.data.request,
                 scheduleCtrl = scheduleController[streamId][mediaType],
+                abrController = context.getStreamProcessor().getABRController(),
                 fragmentModel = scheduleCtrl.getFragmentModel(),
                 concurrentReqs = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING}).length,
                 fragmentInfo,
@@ -101,7 +102,7 @@ MediaPlayer.rules.AbandonRequestsRule = function () {
                         return;
                     }else if (fragmentInfo.allowToLoad !== false) {
                         fragmentInfo.allowToLoad = false;
-                        var newQuality = this.adapter.getQulityIndexForBitrate(context.getStreamProcessor(), fragmentInfo.measuredBandwidthInKbps*1000);
+                        var newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps);
                         switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
                     }
                 }

@@ -75,7 +75,6 @@ MediaPlayer.rules.ThroughputRule = function () {
         log: undefined,
         metricsExt: undefined,
         metricsModel: undefined,
-        adapter:undefined,
 
         execute: function (context, callback) {
             var self = this,
@@ -86,6 +85,7 @@ MediaPlayer.rules.ThroughputRule = function () {
                 trackInfo = context.getTrackInfo(),
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 streamProcessor = context.getStreamProcessor(),
+                abrController = streamProcessor.getABRController(),
                 isDynamic= streamProcessor.isDynamic(),
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
                 waitToSwitchTime = !isNaN(trackInfo.fragmentDuration) ? trackInfo.fragmentDuration / 2 : 2,
@@ -113,7 +113,7 @@ MediaPlayer.rules.ThroughputRule = function () {
             if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
                 (bufferLevelVO.level >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD*2) || isDynamic))
             {
-                var newQuality = self.adapter.getQulityIndexForBitrate(streamProcessor, averageThroughput);
+                var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput/1000);
                 switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
             }
 
