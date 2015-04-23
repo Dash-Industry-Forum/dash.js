@@ -201,8 +201,15 @@ Dash.dependencies.RepresentationController = function () {
 
             // we need to update checkTime after we have found the live edge because its initial value
             // does not take into account clientServerTimeShift
-            var manifest = this.manifestModel.getValue();
-            currentRepresentation.adaptation.period.mpd.checkTime = this.manifestExt.getCheckTime(manifest, currentRepresentation.adaptation.period);
+            var manifest = this.manifestModel.getValue(),
+                period = currentRepresentation.adaptation.period,
+                streamInfo = this.streamController.getActiveStreamInfo();
+
+            if (streamInfo.isLast) {
+                period.mpd.checkTime = this.manifestExt.getCheckTime(manifest, period);
+                period.duration = this.manifestExt.getEndTimeForLastPeriod(this.manifestModel.getValue(), period) - period.start;
+                streamInfo.duration = period.duration;
+            }
         },
 
         onBufferLevelUpdated = function(/*e*/) {
@@ -233,6 +240,7 @@ Dash.dependencies.RepresentationController = function () {
         metricsModel: undefined,
         metricsExt: undefined,
         abrController: undefined,
+        streamController: undefined,
         timelineConverter: undefined,
         notify: undefined,
         subscribe: undefined,

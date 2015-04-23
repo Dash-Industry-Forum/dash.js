@@ -108,7 +108,7 @@ Dash.dependencies.DashAdapter = function () {
             streamInfo.start = period.start;
             streamInfo.duration = period.duration;
             streamInfo.manifestInfo = convertMpdToManifestInfo.call(this, manifest, period.mpd);
-            streamInfo.isLast = Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
+            streamInfo.isLast = (manifest.Period_asArray.length === 1) || (Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD);
 
             return streamInfo;
         },
@@ -152,6 +152,7 @@ Dash.dependencies.DashAdapter = function () {
 
             mpd = this.manifestExt.getMpd(manifest);
             periods = this.manifestExt.getRegularPeriods(manifest, mpd);
+            mpd.checkTime = this.manifestExt.getCheckTime(manifest, periods[0]);
             adaptations = {};
             ln = periods.length;
 
