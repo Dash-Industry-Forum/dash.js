@@ -390,6 +390,10 @@ MediaPlayer.dependencies.Stream = function () {
             return streamInfo;
         },
 
+        hasMedia: function(type){
+            return (getMediaInfo.call(this, type) !== null);
+        },
+
         /**
          * @param type
          * @returns {Array}

@@ -250,11 +250,15 @@ MediaPlayer.dependencies.PlaybackController = function () {
                 ranges = e.data.bufferedRanges,
                 id = streamInfo.id,
                 time = this.getTime(),
+                type = e.sender.streamProcessor.getType(),
+                stream = this.system.getObject("streamController").getStreamById(streamInfo.id),
                 currentEarliestTime = commonEarliestTime[id];
 
             // if index is zero it means that the first segment of the Period has been appended
             if (e.data.index === 0) {
-                firstAppended[id] = true;
+                firstAppended[id] = firstAppended[id] || {};
+                firstAppended[id][type] = true;
+                firstAppended.ready = !((stream.hasMedia("audio") && !firstAppended[id].audio) || (stream.hasMedia("video") && !firstAppended[id].video));
             }
 
             if (!ranges || !ranges.length) return;
@@ -264,7 +268,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
             // do nothing if common earliest time has not changed or if the firts segment has not been appended or if current
             // time exceeds the common earliest time
-            if ((currentEarliestTime === commonEarliestTime[id]) || !firstAppended[id] || (time > commonEarliestTime[id])) return;
+            if ((currentEarliestTime === commonEarliestTime[id]) || !firstAppended.ready || (time > commonEarliestTime[id])) return;
 
             // seek to the start of buffered range to avoid stalling caused by a shift between audio and video media time
             this.seek(commonEarliestTime[id]);
@@ -296,6 +300,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         };
 
     return {
+        system: undefined,
         log: undefined,
         timelineConverter: undefined,
         uriQueryFragModel: undefined,

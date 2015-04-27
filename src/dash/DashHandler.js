@@ -616,11 +616,7 @@ Dash.dependencies.DashHandler = function () {
             lastIdx = segments.length - 1;
             if (isDynamic && isNaN(this.timelineConverter.getExpectedLiveEdge())) {
                 lastSegment = segments[lastIdx];
-                // live edge time is calculated as floor((NOW - (mpd@availabilityStartTime) - (d * 1.5))
-                // where d - segment duration,
-                // 1.5 is used because segment duration can vary by +-50%
-                // NOW - mpd@availabilityStartTime = lastSegment.presentationStartTime + d
-                liveEdge = lastSegment.presentationStartTime - (lastSegment.duration / 2);
+                liveEdge = lastSegment.presentationStartTime;
                 metrics = this.metricsModel.getMetricsFor("stream");
                 // the last segment is supposed to be a live edge
                 this.timelineConverter.setExpectedLiveEdge(liveEdge);
