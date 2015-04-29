@@ -644,6 +644,10 @@ Dash.dependencies.DashHandler = function () {
                 hasSegments = representation.segmentInfoType !== "BaseURL" && representation.segmentInfoType !== "SegmentBase",
                 error;
 
+            if (!representation.segmentDuration && !representation.segments) {
+                updateSegmentList.call(self, representation);
+            }
+
             representation.segmentAvailabilityRange = null;
             representation.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
@@ -655,7 +659,10 @@ Dash.dependencies.DashHandler = function () {
 
             if (!keepIdx) index = -1;
 
-            updateSegmentList.call(self, representation);
+            if (representation.segmentDuration) {
+                updateSegmentList.call(self, representation);
+            }
+
             if (!hasInitialization) {
                 self.baseURLExt.loadInitialization(representation);
             }
