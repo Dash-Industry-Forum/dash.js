@@ -527,6 +527,35 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum representation allowed,
+         * as a proportion of the size of the representation set.
+         *
+         * You can set or remove this cap at anytime before or during playback. To clear this setting you must use the API
+         * and set the value param to NaN.
+         *
+         * If both this and maxAllowedBitrate are defined, maxAllowedBitrate is evaluated first, then maxAllowedRepresentation,
+         * i.e. the lowest value from executing these rules is used.
+         *
+         * This feature is typically used to reserve higher representations for playback only when connected over a fast connection.
+         *
+         * @param type String 'video' or 'audio' are the type options.
+         * @param value number between 0 and 1, where 1 is allow all representations, and 0 is allow only the lowest.
+         * @memberof MediaPlayer#
+         */
+        setMaxAllowedRepresentationRatioFor:function(type, value) {
+            abrController.setMaxAllowedRepresentationRatioFor(type, value);
+        },
+
+        /**
+         * @param type String 'video' or 'audio' are the type options.
+         * @memberof MediaPlayer#
+         * @see {@link MediaPlayer#setMaxAllowedRepresentationRatioFor setMaxAllowedRepresentationRatioFor()}
+         */
+        getMaxAllowedRepresentationRatioFor:function(type) {
+            return abrController.getMaxAllowedRepresentationRatioFor(type);
+        },
+
+        /**
          * <p>Set to false to prevent stream from auto-playing when the view is attached.</p>
          *
          * @param value {boolean}
