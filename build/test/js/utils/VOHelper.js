@@ -79,7 +79,7 @@
             req.startTime = NaN;
             req.duration = NaN;
 
-            if (type === "Media Segment") {
+            if (type === "MediaSegment") {
                 req.url = "http://dash.edgesuite.net/envivio/dashpr/clear/video4/0.m4s";
                 req.startTime = 0;
                 req.duration = 4;
@@ -107,11 +107,11 @@
         },
 
         getMediaRequest: function() {
-            return createRequest("Media Segment");
+            return createRequest("MediaSegment");
         },
 
         getInitRequest: function() {
-            return createRequest("Initialization Segment");
+            return createRequest("InitializationSegment");
         },
 
         getCompleteRequest: function() {

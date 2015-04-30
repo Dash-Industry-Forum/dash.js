@@ -1,4 +1,4 @@
-﻿/**
+/**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
@@ -51,6 +51,7 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
                 lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
                 lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
                 isBufferRich = false,
+                level,
                 maxIndex = mediaInfo.representationCount - 1,
                 switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
@@ -61,10 +62,11 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
             }
 
             if (lastBufferLevelVO !== null && lastBufferStateVO !== null) {
+                level = lastBufferLevelVO.level / 1000;
                 // This will happen when another rule tries to switch from top to any other.
                 // If there is enough buffer why not try to stay at high level.
-                if (lastBufferLevelVO.level > lastBufferStateVO.target) {
-                    isBufferRich = (lastBufferLevelVO.level - lastBufferStateVO.target) > MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD;
+                if (level > lastBufferStateVO.target) {
+                    isBufferRich = (level - lastBufferStateVO.target) > MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD;
                     if (isBufferRich && mediaInfo.representationCount > 1) {
                         switchRequest = new MediaPlayer.rules.SwitchRequest(maxIndex, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
                     }

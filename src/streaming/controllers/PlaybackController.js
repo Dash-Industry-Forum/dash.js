@@ -179,7 +179,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         onPlaybackPaused = function() {
             this.log("<video> pause");
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED);
+            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, {ended: videoModel.hasEnded()});
         },
 
         onPlaybackSeeking = function() {
@@ -200,7 +200,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (time === currentTime) return;
 
             currentTime = time;
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, {timeToEnd: this.getTimeToStreamEnd()});
+            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, {timeToEnd: this.getTimeToStreamEnd(), time: time});
         },
 
         onPlaybackProgress = function() {
@@ -220,8 +220,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackRateChanged = function() {
-            this.log("<video> ratechange: ", this.getPlaybackRate());
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED);
+            var rate = this.getPlaybackRate();
+
+            this.log("<video> ratechange: ", rate);
+            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, {playbackRate: rate});
         },
 
         onPlaybackMetaDataLoaded = function() {

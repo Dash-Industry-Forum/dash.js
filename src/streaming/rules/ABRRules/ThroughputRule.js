@@ -1,4 +1,4 @@
-﻿/**
+/**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
@@ -92,6 +92,7 @@ MediaPlayer.rules.ThroughputRule = function () {
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
                 waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2,
                 downloadTime,
+                bytes,
                 averageThroughput,
                 lastRequestThroughput,
                 bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
@@ -106,10 +107,14 @@ MediaPlayer.rules.ThroughputRule = function () {
                 return;
             }
 
-            downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
-
             if (lastRequest.trace.length) {
-                lastRequestThroughput = Math.round((lastRequest.trace[lastRequest.trace.length - 1].b * 8 ) / downloadTime);
+                downloadTime = (lastRequest._tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
+
+                bytes = lastRequest.trace.reduce(function (a, b) {
+                    return a + b.b[0];
+                }, 0);
+
+                lastRequestThroughput = Math.round(bytes * 8) / downloadTime;
                 storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
             }
 
@@ -119,7 +124,7 @@ MediaPlayer.rules.ThroughputRule = function () {
             if (abrController.getAbandonmentStateFor(mediaType) !== MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
 
                 if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
-                    (bufferLevelVO.level >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD*2) || isDynamic)) {
+                    ((bufferLevelVO.level) >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD_MS*2) || isDynamic)) {
                     var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
                     switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
                 }
