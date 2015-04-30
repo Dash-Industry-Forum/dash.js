@@ -39,8 +39,9 @@ MediaPlayer.dependencies.XlinkLoader = function () {
                 self = this,
                 report,
                 onload,
+                progress,
+                firstProgressCall = true,
                 content,
-                loadedTime = null,
                 needFailureReport = true,
                 requestTime = new Date();
 
@@ -52,15 +53,14 @@ MediaPlayer.dependencies.XlinkLoader = function () {
 
                 self.metricsModel.addHttpRequest("stream",
                     null,
-                    "XLink",
+                    MediaPlayer.vo.metrics.HTTPRequest.XLINK_EXPANSION_TYPE,
                     url,
-                    null,
+                    request.responseURL || null,
                     null,
                     requestTime,
-                    loadedTime,
-                    null,
+                    request.firstByteDate || null,
+                    new Date(),
                     request.status,
-                    null,
                     null,
                     request.getAllResponseHeaders());
 
@@ -90,14 +90,14 @@ MediaPlayer.dependencies.XlinkLoader = function () {
 
                 self.metricsModel.addHttpRequest("stream",
                     null,
-                    "xlink",
+                    MediaPlayer.vo.metrics.HTTPRequest.XLINK_EXPANSION_TYPE,
                     url,
-                    null,
+                    request.responseURL || null,
                     null,
                     requestTime,
+                    request.firstByteDate || null,
                     new Date(),
                     request.status,
-                    null,
                     null,
                     request.getAllResponseHeaders());
 
@@ -117,8 +117,15 @@ MediaPlayer.dependencies.XlinkLoader = function () {
                         resolveObject: resolveObject
                     }, new Error("Failed loading xlink Element: " + url + " no retry attempts left"));
                 }
+            };
 
-
+            progress = function (event) {
+                if (firstProgressCall) {
+                    firstProgressCall = false;
+                    if (!event.lengthComputable || (event.lengthComputable && event.total != event.loaded)) {
+                        request.firstByteDate = new Date();
+                    }
+                }
             };
 
             try {
@@ -126,6 +133,7 @@ MediaPlayer.dependencies.XlinkLoader = function () {
                 request.onload = onload;
                 request.onloadend = report;
                 request.onerror = report;
+                request.onprogress = progress;
                 request.open("GET", self.requestModifierExt.modifyRequestURL(url), true);
                 request.send();
             } catch (e) {

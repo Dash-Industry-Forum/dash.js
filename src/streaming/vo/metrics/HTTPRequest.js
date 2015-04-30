@@ -76,6 +76,13 @@ MediaPlayer.vo.metrics.HTTPRequest.Trace.prototype = {
     constructor : MediaPlayer.vo.metrics.HTTPRequest.Trace
 };
 
-MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE = 'Media Segment';
-MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE = 'Initialization Segment';
+// these should possibly be MPD, XLinkExpansion, InitializationSegment,
+// MediaSegment, IndexSegment, BitstreamSwitchingSegment, other. See
+// ISO 23009-1 D.4.3
 MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE = 'MPD';
+MediaPlayer.vo.metrics.HTTPRequest.XLINK_EXPANSION_TYPE = 'XLink Expansion';
+MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE = 'Initialization Segment';
+MediaPlayer.vo.metrics.HTTPRequest.INDEX_SEGMENT_TYPE = 'Index Segment';
+MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE = 'Media Segment';
+MediaPlayer.vo.metrics.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'Bitstream Switching Segment';
+MediaPlayer.vo.metrics.HTTPRequest.OTHER_TYPE = 'other';
