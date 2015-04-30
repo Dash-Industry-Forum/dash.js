@@ -501,7 +501,8 @@ MediaPlayer.dependencies.Stream = function () {
             return isInitialized;
         },
 
-        updateData: updateData
+        updateData: updateData,
+        getProcessors: getProcessors
     };
 };
 
