@@ -37,11 +37,12 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
         parseURI = function (uri) {
             if (!uri) return null;
 
-            var URIFragmentData = [];
-                /*testQuery = new RegExp(/[?]/),
+            var URIFragmentData = [],
+                testQuery = new RegExp(/[?]/),
                 testFragment = new RegExp(/[#]/),
                 isQuery = testQuery.test(uri),
-                isFragment = testFragment.test(uri);*/
+                isFragment = testFragment.test(uri),
+                mappedArr;
 
             function reduceArray(previousValue, currentValue, index, array) {
                 var arr =  array[0].split(/[=]/);
@@ -50,7 +51,7 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
                 return array;
             }
 
-            /*function mapArray(currentValue, index, array) {
+            function mapArray(currentValue, index, array) {
                 if (index > 0)
                 {
                     if (isQuery && URIQueryData.length === 0) {
@@ -61,7 +62,9 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
                 }
 
                 return array;
-            }*/
+            }
+
+            mappedArr = uri.split(/[?#]/).map(mapArray);
 
             if (URIQueryData.length > 0) {
                 URIQueryData = URIQueryData.reduce(reduceArray, null);
