@@ -279,7 +279,7 @@ MediaPlayer = function (context) {
             metricsModel = system.getObject("metricsModel");
             DOMStorage = system.getObject("DOMStorage");
             playbackController = system.getObject("playbackController");
-            this.addUTCTimingSource(DEFAULT_TIME_SOURCE_SCHEME, DEFAULT_TIME_SERVER);
+            this.restoreDefaultUTCTimingSources();
         },
 
         /**
@@ -653,10 +653,19 @@ MediaPlayer = function (context) {
          * to using a binary search to discover the live edge</p>
          *
          * @memberof MediaPlayer#
-         * @see {@link MediaPlayer#removeUTCTimingSource removeUTCTimingSource()}
+         * @see {@link MediaPlayer#restoreDefaultUTCTimingSources restoreDefaultUTCTimingSources()}
          */
         clearAllUTCTimingSources: function() {
             UTCTimingSources = [];
+        },
+
+        /**
+         * <p>Allows you to restore the default time sources after calling {@link MediaPlayer#clearAllUTCTimingSources clearAllUTCTimingSources()}</p>
+         * @memberof MediaPlayer#
+         * @see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
+         */
+        restoreDefaultUTCTimingSources: function() {
+            this.addUTCTimingSource(DEFAULT_TIME_SOURCE_SCHEME, DEFAULT_TIME_SERVER);
         },
 
         /**
