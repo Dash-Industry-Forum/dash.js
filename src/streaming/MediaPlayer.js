@@ -63,6 +63,8 @@ MediaPlayer = function (context) {
  * 7) Push fragmemt bytes into SourceBuffer.
  */
     var VERSION = "1.4.0",
+        DEFAULT_TIME_SERVER = "http://time.akamai.com/?iso",
+        DEFAULT_TIME_SOURCE_SCHEME = "urn:mpeg:dash:utc:http-xsdate:2014",
         system,
         abrController,
         element,
@@ -81,6 +83,7 @@ MediaPlayer = function (context) {
         autoPlay = true,
         scheduleWhilePaused = false,
         bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
+        UTCTimingSources = [],
 
         isReady = function () {
             return (!!element && !!source);
@@ -115,6 +118,7 @@ MediaPlayer = function (context) {
             } else {
                 streamController.loadWithManifest(source);
             }
+            streamController.setUTCTimingSources(UTCTimingSources);
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
@@ -275,6 +279,7 @@ MediaPlayer = function (context) {
             metricsModel = system.getObject("metricsModel");
             DOMStorage = system.getObject("DOMStorage");
             playbackController = system.getObject("playbackController");
+            this.addUTCTimingSource(DEFAULT_TIME_SOURCE_SCHEME, DEFAULT_TIME_SERVER);
         },
 
         /**
@@ -579,6 +584,79 @@ MediaPlayer = function (context) {
                 manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, cbObj);
                 manifestLoader.load(uriQueryFragModel.parseURI(manifestUrl));
             })(url);
+        },
+
+        /**
+         * <p>Allows you to set a scheme and server source for UTC live edge detection for dynamic streams.
+         * If UTCTiming is defined in the manifest, it will take precedence over any time source manually added.</p>
+         * <p>If you have exposed the Date header, use the method {@link MediaPlayer#clearAllUTCTimingSources clearAllUTCTimingSources()}.
+         * This will allow the date header on the manifest to be used instead of a time server</p>
+         *
+         * @param {string} schemeIdUri -
+         * <ul>
+         * <li>urn:mpeg:dash:utc:http-head:2014</li>
+         * <li>urn:mpeg:dash:utc:http-xsdate:2014</li>
+         * <li>urn:mpeg:dash:utc:http-iso:2014</li>
+         * <li>urn:mpeg:dash:utc:direct:2014</li>
+         * </ul>
+         * <p>Some specs referencing early ISO23009-1 drafts incorrectly use
+         * 2012 in the URI, rather than 2014. support these for now.</p>
+         * <ul>
+         * <li>urn:mpeg:dash:utc:http-head:2012</li>
+         * <li>urn:mpeg:dash:utc:http-xsdate:2012</li>
+         * <li>urn:mpeg:dash:utc:http-iso:2012</li>
+         * <li>urn:mpeg:dash:utc:direct:2012</li>
+         * </ul>
+         *
+         * @param {string} value - Path to a time source.
+         *
+         * @default
+         * <ul>
+         *     <li>schemeIdUri:urn:mpeg:dash:utc:http-xsdate:2014</li>
+         *     <li>value:http://time.akamai.com</li>
+         * </ul>
+         *
+         * @memberof MediaPlayer#
+         * @see
+         * {@link MediaPlayer#removeUTCTimingSource removeUTCTimingSource()}
+         */
+        addUTCTimingSource: function (schemeIdUri, value){
+            this.removeUTCTimingSource(schemeIdUri, value);//check if it already exists and remove if so.
+            var vo = new Dash.vo.UTCTiming();
+            vo.schemeIdUri = schemeIdUri;
+            vo.value = value;
+            UTCTimingSources.push(vo);
+        },
+
+
+        /**
+         * <p>Allows you to remove a UTC time source. Both schemeIdUri and value need to match the Dash.vo.UTCTiming properties in order for the
+         * entry to be removed from the array</p>
+         * @param {string} schemeIdUri - see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
+         * @param {string} value - see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
+         * @memberof MediaPlayer#
+         * @see {@link MediaPlayer#clearAllUTCTimingSources clearAllUTCTimingSources()}
+         */
+        removeUTCTimingSource: function(schemeIdUri, value) {
+            UTCTimingSources.forEach(function(obj, idx){
+               if (obj.schemeIdUri === schemeIdUri && obj.value === value){
+                    UTCTimingSources.splice(idx, 1);
+               }
+            });
+        },
+
+        /**
+         * <p>Allows you to clear the stored array of time sources.</p>
+         * <p>Example use: If you have exposed the Date header, calling this method
+         * will allow the date header on the manifest to be used instead of the time server.</p>
+         * <p>Example use: Calling this method, assuming there is not an exposed date header on the manifest,  will default back
+         * to using a binary search to discover the live edge</p>
+         *
+         * @memberof MediaPlayer#
+         * @see {@link MediaPlayer#removeUTCTimingSource removeUTCTimingSource()}
+         */
+        clearAllUTCTimingSources: function() {
+            UTCTimingSources = [];
         },
 
         /**
