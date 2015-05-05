@@ -1234,7 +1234,7 @@ if (undefined === atob) {
 
 MediaPlayer = function(context) {
     "use strict";
-    var VERSION = "1.4.0", system, abrController, element, source, protectionController = null, protectionData = null, streamController, rulesController, playbackController, metricsExt, metricsModel, videoModel, DOMStorage, initialized = false, playing = false, autoPlay = true, scheduleWhilePaused = false, bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED, isReady = function() {
+    var VERSION = "1.4.0", DEFAULT_TIME_SERVER = "http://time.akamai.com/?iso", DEFAULT_TIME_SOURCE_SCHEME = "urn:mpeg:dash:utc:http-xsdate:2014", system, abrController, element, source, protectionController = null, protectionData = null, streamController, rulesController, playbackController, metricsExt, metricsModel, videoModel, DOMStorage, initialized = false, playing = false, autoPlay = true, scheduleWhilePaused = false, bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED, useManifestDateHeaderTimeSource = true, UTCTimingSources = [], isReady = function() {
         return !!element && !!source;
     }, play = function() {
         if (!initialized) {
@@ -1261,6 +1261,7 @@ MediaPlayer = function(context) {
         } else {
             streamController.loadWithManifest(source);
         }
+        streamController.setUTCTimingSources(UTCTimingSources, useManifestDateHeaderTimeSource);
         system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
         system.mapOutlet("scheduleWhilePaused", "stream");
         system.mapOutlet("scheduleWhilePaused", "scheduleController");
@@ -1376,6 +1377,7 @@ MediaPlayer = function(context) {
             metricsModel = system.getObject("metricsModel");
             DOMStorage = system.getObject("DOMStorage");
             playbackController = system.getObject("playbackController");
+            this.restoreDefaultUTCTimingSources();
         },
         addEventListener: function(type, listener, useCapture) {
             type = type.toLowerCase();
@@ -1484,6 +1486,29 @@ MediaPlayer = function(context) {
                 manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, cbObj);
                 manifestLoader.load(uriQueryFragModel.parseURI(manifestUrl));
             })(url);
+        },
+        addUTCTimingSource: function(schemeIdUri, value) {
+            this.removeUTCTimingSource(schemeIdUri, value);
+            var vo = new Dash.vo.UTCTiming();
+            vo.schemeIdUri = schemeIdUri;
+            vo.value = value;
+            UTCTimingSources.push(vo);
+        },
+        removeUTCTimingSource: function(schemeIdUri, value) {
+            UTCTimingSources.forEach(function(obj, idx) {
+                if (obj.schemeIdUri === schemeIdUri && obj.value === value) {
+                    UTCTimingSources.splice(idx, 1);
+                }
+            });
+        },
+        clearDefaultUTCTimingSources: function() {
+            UTCTimingSources = [];
+        },
+        restoreDefaultUTCTimingSources: function() {
+            this.addUTCTimingSource(DEFAULT_TIME_SOURCE_SCHEME, DEFAULT_TIME_SERVER);
+        },
+        enableManifestDateHeaderTimeSource: function(value) {
+            useManifestDateHeaderTimeSource = value;
         },
         attachView: function(view) {
             if (!initialized) {
@@ -1740,7 +1765,7 @@ Dash.dependencies.DashAdapter = function() {
         streamInfo.start = period.start;
         streamInfo.duration = period.duration;
         streamInfo.manifestInfo = convertMpdToManifestInfo.call(this, manifest, period.mpd);
-        streamInfo.isLast = Math.abs(streamInfo.start + streamInfo.duration - streamInfo.manifestInfo.duration) < THRESHOLD;
+        streamInfo.isLast = manifest.Period_asArray.length === 1 || Math.abs(streamInfo.start + streamInfo.duration - streamInfo.manifestInfo.duration) < THRESHOLD;
         return streamInfo;
     }, convertMpdToManifestInfo = function(manifest, mpd) {
         var manifestInfo = new MediaPlayer.vo.ManifestInfo();
@@ -1763,6 +1788,7 @@ Dash.dependencies.DashAdapter = function() {
         if (!manifest) return null;
         mpd = this.manifestExt.getMpd(manifest);
         periods = this.manifestExt.getRegularPeriods(manifest, mpd);
+        mpd.checkTime = this.manifestExt.getCheckTime(manifest, periods[0]);
         adaptations = {};
         ln = periods.length;
         for (i = 0; i < ln; i += 1) {
@@ -2232,7 +2258,7 @@ Dash.dependencies.DashHandler = function() {
         lastIdx = segments.length - 1;
         if (isDynamic && isNaN(this.timelineConverter.getExpectedLiveEdge())) {
             lastSegment = segments[lastIdx];
-            liveEdge = lastSegment.presentationStartTime - lastSegment.duration / 2;
+            liveEdge = lastSegment.presentationStartTime;
             metrics = this.metricsModel.getMetricsFor("stream");
             this.timelineConverter.setExpectedLiveEdge(liveEdge);
             this.metricsModel.updateManifestUpdateInfo(this.metricsExt.getCurrentManifestUpdate(metrics), {
@@ -2249,6 +2275,9 @@ Dash.dependencies.DashHandler = function() {
         return representation;
     }, updateRepresentation = function(representation, keepIdx) {
         var self = this, hasInitialization = representation.initialization, hasSegments = representation.segmentInfoType !== "BaseURL" && representation.segmentInfoType !== "SegmentBase", error;
+        if (!representation.segmentDuration && !representation.segments) {
+            updateSegmentList.call(self, representation);
+        }
         representation.segmentAvailabilityRange = null;
         representation.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
         if (representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start && !representation.useCalculatedLiveEdgeTime) {
@@ -2261,7 +2290,9 @@ Dash.dependencies.DashHandler = function() {
             return;
         }
         if (!keepIdx) index = -1;
-        updateSegmentList.call(self, representation);
+        if (representation.segmentDuration) {
+            updateSegmentList.call(self, representation);
+        }
         if (!hasInitialization) {
             self.baseURLExt.loadInitialization(representation);
         }
@@ -2777,7 +2808,7 @@ Dash.dependencies.TimelineConverter = function() {
         var start = representation.adaptation.period.start, end = start + representation.adaptation.period.duration, range = {
             start: start,
             end: end
-        }, checkTime, now;
+        }, d = representation.segmentDuration || (representation.segments && representation.segments.length ? representation.segments[representation.segments.length - 1].duration : 0), checkTime, now;
         if (!isDynamic) return range;
         if (!isClientServerTimeSyncCompleted && representation.segmentAvailabilityRange) {
             return representation.segmentAvailabilityRange;
@@ -2785,7 +2816,7 @@ Dash.dependencies.TimelineConverter = function() {
         checkTime = representation.adaptation.period.mpd.checkTime;
         now = calcPresentationTimeFromWallTime(new Date(), representation.adaptation.period);
         start = Math.max(now - representation.adaptation.period.mpd.timeShiftBufferDepth, 0);
-        end = isNaN(checkTime) ? now : Math.min(checkTime, now);
+        end = (isNaN(checkTime) ? now : Math.min(checkTime, now)) - d;
         range = {
             start: start,
             end: end
@@ -2960,8 +2991,12 @@ Dash.dependencies.RepresentationController = function() {
         if (e.error) return;
         updateAvailabilityWindow.call(this, true);
         this.indexHandler.updateRepresentation(currentRepresentation, false);
-        var manifest = this.manifestModel.getValue();
-        currentRepresentation.adaptation.period.mpd.checkTime = this.manifestExt.getCheckTime(manifest, currentRepresentation.adaptation.period);
+        var manifest = this.manifestModel.getValue(), period = currentRepresentation.adaptation.period, streamInfo = this.streamController.getActiveStreamInfo();
+        if (streamInfo.isLast) {
+            period.mpd.checkTime = this.manifestExt.getCheckTime(manifest, period);
+            period.duration = this.manifestExt.getEndTimeForLastPeriod(this.manifestModel.getValue(), period) - period.start;
+            streamInfo.duration = period.duration;
+        }
     }, onBufferLevelUpdated = function() {
         addDVRMetric.call(this);
     }, onQualityChanged = function(e) {
@@ -2986,6 +3021,7 @@ Dash.dependencies.RepresentationController = function() {
         metricsModel: undefined,
         metricsExt: undefined,
         abrController: undefined,
+        streamController: undefined,
         timelineConverter: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -3708,9 +3744,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         if (periods.length === 0) {
             return periods;
         }
-        mpd.checkTime = self.getCheckTime(manifest, periods[0]);
         if (vo1 !== null && isNaN(vo1.duration)) {
-            vo1.duration = self.getEndTimeForLastPeriod(mpd) - vo1.start;
+            vo1.duration = self.getEndTimeForLastPeriod(manifest, vo1) - vo1.start;
         }
         return periods;
     },
@@ -3747,12 +3782,12 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         }
         return checkTime;
     },
-    getEndTimeForLastPeriod: function(mpd) {
-        var periodEnd;
-        if (mpd.manifest.mediaPresentationDuration) {
-            periodEnd = mpd.manifest.mediaPresentationDuration;
-        } else if (!isNaN(mpd.checkTime)) {
-            periodEnd = mpd.checkTime;
+    getEndTimeForLastPeriod: function(manifest, period) {
+        var periodEnd, checkTime = this.getCheckTime(manifest, period);
+        if (manifest.mediaPresentationDuration) {
+            periodEnd = manifest.mediaPresentationDuration;
+        } else if (!isNaN(checkTime)) {
+            periodEnd = checkTime;
         } else {
             throw new Error("Must have @mediaPresentationDuration or @minimumUpdatePeriod on MPD or an explicit @duration on the last period.");
         }
@@ -5224,6 +5259,9 @@ MediaPlayer.dependencies.Stream = function() {
         getStreamInfo: function() {
             return streamInfo;
         },
+        hasMedia: function(type) {
+            return getMediaInfo.call(this, type) !== null;
+        },
         getBitrateListFor: function(type) {
             var mediaInfo = getMediaInfo.call(this, type);
             return this.abrController.getBitrateList(mediaInfo);
@@ -5589,7 +5627,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function() {
             this.initializationSegmentReceived = false;
             this.timescale = 9e4;
         },
-        append: function(bytes, appendedBytesInfo) {
+        append: function(bytes, chunk) {
             var self = this, result, label, lang, samplesInfo, i, ccContent;
             if (mimeType == "fragmentedText") {
                 var fragmentExt;
@@ -5609,7 +5647,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function() {
                     samplesInfo = fragmentExt.getSamplesInfo(bytes.buffer);
                     for (i = 0; i < samplesInfo.length; i++) {
                         if (!this.firstSubtitleStart) {
-                            this.firstSubtitleStart = samplesInfo[0].cts - appendedBytesInfo.startTime * this.timescale;
+                            this.firstSubtitleStart = samplesInfo[0].cts - chunk.start * this.timescale;
                         }
                         samplesInfo[i].cts -= this.firstSubtitleStart;
                         this.buffered.add(samplesInfo[i].cts / this.timescale, (samplesInfo[i].cts + samplesInfo[i].duration) / this.timescale);
@@ -5666,7 +5704,7 @@ MediaPlayer.dependencies.TextSourceBuffer.prototype = {
 
 MediaPlayer.dependencies.TimeSyncController = function() {
     "use strict";
-    var HTTP_TIMEOUT_MS = 5e3, offsetToDeviceTimeMs = 0, isSynchronizing = false, isInitialised = false, setIsSynchronizing = function(value) {
+    var HTTP_TIMEOUT_MS = 5e3, offsetToDeviceTimeMs = 0, isSynchronizing = false, isInitialised = false, useManifestDateHeaderTimeSource, setIsSynchronizing = function(value) {
         isSynchronizing = value;
     }, getIsSynchronizing = function() {
         return isSynchronizing;
@@ -5747,14 +5785,28 @@ MediaPlayer.dependencies.TimeSyncController = function() {
         "urn:mpeg:dash:utc:http-ntp:2014": notSupportedHandler,
         "urn:mpeg:dash:utc:ntp:2014": notSupportedHandler,
         "urn:mpeg:dash:utc:sntp:2014": notSupportedHandler
+    }, checkForDateHeader = function() {
+        var metrics = this.metricsModel.getReadOnlyMetricsFor("stream"), dateHeaderValue = this.metricsExt.getLatestMPDRequestHeaderValueByID(metrics, "Date"), dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
+        if (!isNaN(dateHeaderTime)) {
+            setOffsetMs(dateHeaderTime - new Date().getTime());
+            completeTimeSyncSequence.call(this, false, dateHeaderTime / 1e3, offsetToDeviceTimeMs);
+        } else {
+            completeTimeSyncSequence.call(this, true);
+        }
+    }, completeTimeSyncSequence = function(failed, time, offset) {
+        setIsSynchronizing(false);
+        this.notify(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, {
+            time: time,
+            offset: offset
+        }, failed ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE) : null);
     }, attemptSync = function(sources, sourceIndex) {
         var self = this, index = sourceIndex || 0, source = sources[index], onComplete = function(time, offset) {
             var failed = !time || !offset;
-            setIsSynchronizing(false);
-            self.notify(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, {
-                time: time,
-                offset: offset
-            }, failed ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE) : null);
+            if (failed && useManifestDateHeaderTimeSource) {
+                checkForDateHeader.call(self);
+            } else {
+                completeTimeSyncSequence.call(self, failed, time, offset);
+            }
         };
         setIsSynchronizing(true);
         if (source) {
@@ -5782,10 +5834,13 @@ MediaPlayer.dependencies.TimeSyncController = function() {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        metricsModel: undefined,
+        metricsExt: undefined,
         getOffsetToDeviceTimeMs: function() {
             return getOffsetMs();
         },
-        initialize: function(timingSources) {
+        initialize: function(timingSources, useManifestDateHeader) {
+            useManifestDateHeaderTimeSource = useManifestDateHeader;
             if (!getIsSynchronizing()) {
                 attemptSync.call(this, timingSources);
                 setIsInitialised(true);
@@ -6169,6 +6224,9 @@ MediaPlayer.dependencies.BufferController = function() {
         var sourceBuffer = null;
         try {
             sourceBuffer = this.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
+            if (sourceBuffer && sourceBuffer.hasOwnProperty("initialize")) {
+                sourceBuffer.initialize(type, this);
+            }
         } catch (e) {
             this.errHandler.mediaSourceError("Error creating " + type + " source buffer.");
         }
@@ -6227,7 +6285,7 @@ MediaPlayer.dependencies.BufferController = function() {
             onMediaRejected.call(self, quality, chunk.index);
             return;
         }
-        self.sourceBufferExt.append(buffer, chunk.bytes);
+        self.sourceBufferExt.append(buffer, chunk);
     }, onAppended = function(e) {
         if (buffer !== e.data.buffer) return;
         if (this.isBufferingCompleted() && this.streamProcessor.getStreamInfo().isLast) {
@@ -6262,12 +6320,12 @@ MediaPlayer.dependencies.BufferController = function() {
                 }
             }
         }
-        onAppendToBufferCompleted.call(self, appendedBytesInfo.quality, appendedBytesInfo.index);
         self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED, {
             quality: appendedBytesInfo.quality,
             index: appendedBytesInfo.index,
             bufferedRanges: ranges
         });
+        onAppendToBufferCompleted.call(self, appendedBytesInfo.quality, appendedBytesInfo.index);
     }, updateBufferLevel = function() {
         var self = this, currentTime = self.playbackController.getTime();
         bufferLevel = self.sourceBufferExt.getBufferLength(buffer, currentTime);
@@ -7043,14 +7101,16 @@ MediaPlayer.dependencies.PlaybackController = function() {
             time: new Date()
         });
     }, onBytesAppended = function(e) {
-        var bufferedStart, ranges = e.data.bufferedRanges, id = streamInfo.id, time = this.getTime(), currentEarliestTime = commonEarliestTime[id];
+        var bufferedStart, ranges = e.data.bufferedRanges, id = streamInfo.id, time = this.getTime(), type = e.sender.streamProcessor.getType(), stream = this.system.getObject("streamController").getStreamById(streamInfo.id), currentEarliestTime = commonEarliestTime[id];
         if (e.data.index === 0) {
-            firstAppended[id] = true;
+            firstAppended[id] = firstAppended[id] || {};
+            firstAppended[id][type] = true;
+            firstAppended.ready = !(stream.hasMedia("audio") && !firstAppended[id].audio || stream.hasMedia("video") && !firstAppended[id].video);
         }
         if (!ranges || !ranges.length) return;
         bufferedStart = Math.max(ranges.start(0), streamInfo.start);
         commonEarliestTime[id] = commonEarliestTime[id] === undefined ? bufferedStart : Math.max(commonEarliestTime[id], bufferedStart);
-        if (currentEarliestTime === commonEarliestTime[id] || !firstAppended[id] || time > commonEarliestTime[id]) return;
+        if (currentEarliestTime === commonEarliestTime[id] || !firstAppended.ready || time > commonEarliestTime[id]) return;
         this.seek(commonEarliestTime[id]);
     }, onBufferLevelStateChanged = function(e) {
         var type = e.sender.streamProcessor.getType(), senderStreamInfo = e.sender.streamProcessor.getStreamInfo();
@@ -7071,6 +7131,7 @@ MediaPlayer.dependencies.PlaybackController = function() {
         videoModel.listen("ended", onPlaybackEnded);
     };
     return {
+        system: undefined,
         log: undefined,
         timelineConverter: undefined,
         uriQueryFragModel: undefined,
@@ -7134,6 +7195,9 @@ MediaPlayer.dependencies.PlaybackController = function() {
         },
         getLiveStartTime: function() {
             return liveStartTime;
+        },
+        getLiveDelay: function() {
+            return streamInfo.manifestInfo.minBufferTime * 2;
         },
         start: function() {
             videoModel.play();
@@ -7581,7 +7645,7 @@ MediaPlayer.dependencies.ScheduleController = function() {
         validate.call(this);
     }, onLiveEdgeSearchCompleted = function(e) {
         if (e.error) return;
-        var self = this, liveEdgeTime = e.data.liveEdge, manifestInfo = currentTrackInfo.mediaInfo.streamInfo.manifestInfo, startTime = liveEdgeTime - Math.min(manifestInfo.minBufferTime * 2, manifestInfo.DVRWindowSize / 2), request, metrics = self.metricsModel.getMetricsFor("stream"), manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics), currentLiveStart = self.playbackController.getLiveStartTime(), actualStartTime;
+        var self = this, liveEdgeTime = e.data.liveEdge, manifestInfo = currentTrackInfo.mediaInfo.streamInfo.manifestInfo, startTime = liveEdgeTime - Math.min(self.playbackController.getLiveDelay(), manifestInfo.DVRWindowSize / 2), request, metrics = self.metricsModel.getMetricsFor("stream"), manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics), currentLiveStart = self.playbackController.getLiveStartTime(), actualStartTime;
         request = self.adapter.getFragmentRequestForTime(self.streamProcessor, currentTrackInfo, startTime, {
             ignoreIsFinished: true
         });
@@ -7680,7 +7744,7 @@ MediaPlayer.dependencies.ScheduleController.prototype = {
 
 MediaPlayer.dependencies.StreamController = function() {
     "use strict";
-    var streams = [], activeStream, protectionController, protectionData, STREAM_END_THRESHOLD = .2, autoPlay = true, canPlay = false, isStreamSwitchingInProgress = false, isUpdating = false, hasMediaError = false, mediaSource, attachEvents = function(stream) {
+    var streams = [], activeStream, protectionController, protectionData, STREAM_END_THRESHOLD = .2, autoPlay = true, canPlay = false, isStreamSwitchingInProgress = false, isUpdating = false, hasMediaError = false, mediaSource, UTCTimingSources, useManifestDateHeaderTimeSource, attachEvents = function(stream) {
         stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
         stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
     }, detachEvents = function(stream) {
@@ -7890,7 +7954,8 @@ MediaPlayer.dependencies.StreamController = function() {
     }, onManifestUpdated = function(e) {
         if (!e.error) {
             this.log("Manifest has loaded.");
-            this.timeSyncController.initialize(this.manifestExt.getUTCTimingSources(e.data.manifest));
+            var manifestUTCTimingSources = this.manifestExt.getUTCTimingSources(e.data.manifest), allUTCTimingSources = manifestUTCTimingSources.concat(UTCTimingSources);
+            this.timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource);
         } else {
             this.reset();
         }
@@ -7937,6 +8002,10 @@ MediaPlayer.dependencies.StreamController = function() {
         },
         isStreamActive: function(streamInfo) {
             return activeStream.getId() === streamInfo.id;
+        },
+        setUTCTimingSources: function(value, value2) {
+            UTCTimingSources = value;
+            useManifestDateHeaderTimeSource = value2;
         },
         getStreamById: function(id) {
             return streams.filter(function(item) {
@@ -8017,7 +8086,7 @@ MediaPlayer.dependencies.TextController = function() {
     }, onInitFragmentLoaded = function(e) {
         var self = this;
         if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel() || !e.data.chunk.bytes) return;
-        self.sourceBufferExt.append(buffer, e.data.chunk.bytes, self.videoModel);
+        self.sourceBufferExt.append(buffer, e.data.chunk);
     };
     return {
         sourceBufferExt: undefined,
@@ -8542,12 +8611,12 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
             intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
         }
     },
-    append: function(buffer, bytes) {
-        var self = this, appendMethod = "append" in buffer ? "append" : "appendBuffer" in buffer ? "appendBuffer" : null;
+    append: function(buffer, chunk) {
+        var self = this, bytes = chunk.bytes, appendMethod = "append" in buffer ? "append" : "appendBuffer" in buffer ? "appendBuffer" : null;
         if (!appendMethod) return;
         try {
             self.waitForUpdateEnd(buffer, function() {
-                buffer[appendMethod](bytes);
+                buffer[appendMethod](bytes, chunk);
                 self.waitForUpdateEnd(buffer, function() {
                     self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {
                         buffer: buffer,
@@ -9972,7 +10041,7 @@ MediaPlayer.models.URIQueryAndFragmentModel = function() {
     "use strict";
     var URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData(), URIQueryData = [], parseURI = function(uri) {
         if (!uri) return null;
-        var URIFragmentData = [];
+        var URIFragmentData = [], testQuery = new RegExp(/[?]/), testFragment = new RegExp(/[#]/), isQuery = testQuery.test(uri), isFragment = testFragment.test(uri), mappedArr;
         function reduceArray(previousValue, currentValue, index, array) {
             var arr = array[0].split(/[=]/);
             array.push({
@@ -9982,6 +10051,17 @@ MediaPlayer.models.URIQueryAndFragmentModel = function() {
             array.shift();
             return array;
         }
+        function mapArray(currentValue, index, array) {
+            if (index > 0) {
+                if (isQuery && URIQueryData.length === 0) {
+                    URIQueryData = array[index].split(/[&]/);
+                } else if (isFragment) {
+                    URIFragmentData = array[index].split(/[&]/);
+                }
+            }
+            return array;
+        }
+        mappedArr = uri.split(/[?#]/).map(mapArray);
         if (URIQueryData.length > 0) {
             URIQueryData = URIQueryData.reduce(reduceArray, null);
         }
@@ -10776,9 +10856,11 @@ MediaPlayer.rules.BufferLevelRule = function() {
             return (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) / 1e3;
         }
         return 0;
-    }, decideBufferLength = function(minBufferTime, duration) {
+    }, decideBufferLength = function(minBufferTime, duration, isDynamic) {
         var minBufferTarget;
-        if (isNaN(duration) || MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
+        if (isDynamic) {
+            minBufferTarget = this.playbackController.getLiveDelay();
+        } else if (isNaN(duration) || MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
             minBufferTarget = Math.max(MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
         } else if (minBufferTime >= duration) {
             minBufferTarget = Math.min(duration, MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME);
@@ -10787,7 +10869,7 @@ MediaPlayer.rules.BufferLevelRule = function() {
         }
         return minBufferTarget;
     }, getRequiredBufferLength = function(isDynamic, duration, scheduleController) {
-        var self = this, criticalBufferLevel = scheduleController.bufferController.getCriticalBufferLevel(), vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"), ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"), minBufferTarget = decideBufferLength.call(this, scheduleController.bufferController.getMinBufferTime(), duration), currentBufferTarget = minBufferTarget, bufferMax = scheduleController.bufferController.bufferMax, requiredBufferLength = 0;
+        var self = this, criticalBufferLevel = scheduleController.bufferController.getCriticalBufferLevel(), vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"), ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"), minBufferTarget = decideBufferLength.call(this, scheduleController.bufferController.getMinBufferTime(), duration, isDynamic), currentBufferTarget = minBufferTarget, bufferMax = scheduleController.bufferController.bufferMax, requiredBufferLength = 0;
         if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN) {
             requiredBufferLength = minBufferTarget;
         } else if (bufferMax === MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY) {
@@ -11596,6 +11678,11 @@ MediaPlayer.utils.VirtualBuffer = function() {
         };
         data.video[MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
         data.video[MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE] = [];
+        data.fragmentedText = {
+            buffered: new MediaPlayer.utils.CustomTimeRanges()
+        };
+        data.fragmentedText[MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
+        data.fragmentedText[MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE] = [];
         return data;
     };
     return {
