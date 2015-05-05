@@ -384,6 +384,15 @@ MediaPlayer.dependencies.PlaybackController = function () {
             return liveStartTime;
         },
 
+        /**
+         * Gets a desirable delay for the live edge to avoid a risk of getting 404 when playing at the bleeding edge
+         * @returns {Number} object
+         * @memberof PlaybackController#
+         * */
+        getLiveDelay: function() {
+            return streamInfo.manifestInfo.minBufferTime * 2;
+        },
+
         start: function() {
             videoModel.play();
         },
