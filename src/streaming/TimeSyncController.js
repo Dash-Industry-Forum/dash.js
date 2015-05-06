@@ -39,6 +39,7 @@ MediaPlayer.dependencies.TimeSyncController = function () {
         offsetToDeviceTimeMs = 0,
         isSynchronizing = false,
         isInitialised = false,
+        useManifestDateHeaderTimeSource,
 
         setIsSynchronizing = function (value) {
             isSynchronizing = value;
@@ -259,7 +260,7 @@ MediaPlayer.dependencies.TimeSyncController = function () {
                 // callback to emit event to listeners
                 onComplete = function (time, offset) {
                     var failed = !time || !offset;
-                    if(failed) {
+                    if(failed && useManifestDateHeaderTimeSource) {
                         //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.
                         checkForDateHeader.call(self);
                     }else {
@@ -319,7 +320,8 @@ MediaPlayer.dependencies.TimeSyncController = function () {
             return getOffsetMs();
         },
 
-        initialize: function (timingSources) {
+        initialize: function (timingSources, useManifestDateHeader) {
+            useManifestDateHeaderTimeSource = useManifestDateHeader;
             if (!getIsSynchronizing()) {
                 attemptSync.call(this, timingSources);
                 setIsInitialised(true);

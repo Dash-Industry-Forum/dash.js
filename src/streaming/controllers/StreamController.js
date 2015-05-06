@@ -48,6 +48,7 @@
         hasMediaError = false,
         mediaSource,
         UTCTimingSources,
+        useManifestDateHeaderTimeSource,
 
         attachEvents = function (stream) {
             stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
@@ -393,7 +394,7 @@
                 var manifestUTCTimingSources = this.manifestExt.getUTCTimingSources(e.data.manifest),
                     allUTCTimingSources = manifestUTCTimingSources.concat(UTCTimingSources); //manifest utc time source(s) take precedence over default or explicitly added sources.
 
-                this.timeSyncController.initialize(allUTCTimingSources);
+                this.timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource);
             } else {
                 this.reset();
             }
@@ -451,8 +452,9 @@
             return (activeStream.getId() === streamInfo.id);
         },
 
-        setUTCTimingSources: function(value) {
+        setUTCTimingSources: function(value, value2) {
             UTCTimingSources = value;
+            useManifestDateHeaderTimeSource = value2;
         },
 
         /**

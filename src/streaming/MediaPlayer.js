@@ -83,6 +83,7 @@ MediaPlayer = function (context) {
         autoPlay = true,
         scheduleWhilePaused = false,
         bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
+        useManifestDateHeaderTimeSource = true,
         UTCTimingSources = [],
 
         isReady = function () {
@@ -118,7 +119,7 @@ MediaPlayer = function (context) {
             } else {
                 streamController.loadWithManifest(source);
             }
-            streamController.setUTCTimingSources(UTCTimingSources);
+            streamController.setUTCTimingSources(UTCTimingSources, useManifestDateHeaderTimeSource);
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
@@ -589,7 +590,7 @@ MediaPlayer = function (context) {
         /**
          * <p>Allows you to set a scheme and server source for UTC live edge detection for dynamic streams.
          * If UTCTiming is defined in the manifest, it will take precedence over any time source manually added.</p>
-         * <p>If you have exposed the Date header, use the method {@link MediaPlayer#clearAllUTCTimingSources clearAllUTCTimingSources()}.
+         * <p>If you have exposed the Date header, use the method {@link MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}.
          * This will allow the date header on the manifest to be used instead of a time server</p>
          *
          * @param {string} schemeIdUri -
@@ -635,7 +636,7 @@ MediaPlayer = function (context) {
          * @param {string} schemeIdUri - see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
          * @param {string} value - see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
          * @memberof MediaPlayer#
-         * @see {@link MediaPlayer#clearAllUTCTimingSources clearAllUTCTimingSources()}
+         * @see {@link MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}
          */
         removeUTCTimingSource: function(schemeIdUri, value) {
             UTCTimingSources.forEach(function(obj, idx){
@@ -655,17 +656,38 @@ MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#restoreDefaultUTCTimingSources restoreDefaultUTCTimingSources()}
          */
-        clearAllUTCTimingSources: function() {
+        clearDefaultUTCTimingSources: function() {
             UTCTimingSources = [];
         },
 
         /**
-         * <p>Allows you to restore the default time sources after calling {@link MediaPlayer#clearAllUTCTimingSources clearAllUTCTimingSources()}</p>
+         * <p>Allows you to restore the default time sources after calling {@link MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}</p>
+         *
+         * @default
+         * <ul>
+         *     <li>schemeIdUri:urn:mpeg:dash:utc:http-xsdate:2014</li>
+         *     <li>value:http://time.akamai.com</li>
+         * </ul>
+         *
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
          */
         restoreDefaultUTCTimingSources: function() {
             this.addUTCTimingSource(DEFAULT_TIME_SOURCE_SCHEME, DEFAULT_TIME_SERVER);
+        },
+
+
+        /**
+         * <p>Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection. The
+         * use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
+         * {@link MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()} </p>
+         *
+         * @default True
+         * @memberof MediaPlayer#
+         * @see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
+         */
+        enableManifestDateHeaderTimeSource: function(value) {
+            useManifestDateHeaderTimeSource = value;
         },
 
         /**
