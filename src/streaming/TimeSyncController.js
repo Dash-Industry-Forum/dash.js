@@ -37,9 +37,9 @@ MediaPlayer.dependencies.TimeSyncController = function () {
         // the offset between the time returned from the time source
         // and the client time at that point, in milliseconds.
         offsetToDeviceTimeMs = 0,
-
         isSynchronizing = false,
         isInitialised = false,
+        useManifestDateHeaderTimeSource,
 
         setIsSynchronizing = function (value) {
             isSynchronizing = value;
@@ -219,6 +219,32 @@ MediaPlayer.dependencies.TimeSyncController = function () {
             "urn:mpeg:dash:utc:sntp:2014":          notSupportedHandler
         },
 
+        checkForDateHeader = function(){
+            var metrics = this.metricsModel.getReadOnlyMetricsFor("stream"),
+                dateHeaderValue = this.metricsExt.getLatestMPDRequestHeaderValueByID(metrics, "Date"),
+                dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
+
+            if (!isNaN(dateHeaderTime)) {
+                setOffsetMs(dateHeaderTime - new Date().getTime());
+                completeTimeSyncSequence.call(this, false, dateHeaderTime/1000, offsetToDeviceTimeMs);
+            }else {
+                completeTimeSyncSequence.call(this, true);
+            }
+        },
+
+        completeTimeSyncSequence = function (failed, time, offset){
+
+            setIsSynchronizing(false);
+            this.notify(
+                MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED,
+                {
+                    time: time,
+                    offset: offset
+                },
+                failed ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE) : null
+            );
+        },
+
         attemptSync = function (sources, sourceIndex) {
 
             var self = this,
@@ -234,17 +260,12 @@ MediaPlayer.dependencies.TimeSyncController = function () {
                 // callback to emit event to listeners
                 onComplete = function (time, offset) {
                     var failed = !time || !offset;
-
-                    setIsSynchronizing(false);
-
-                    self.notify(
-                        MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED,
-                        {
-                            time: time,
-                            offset: offset
-                        },
-                        failed ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE) : null
-                    );
+                    if(failed && useManifestDateHeaderTimeSource) {
+                        //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.
+                        checkForDateHeader.call(self);
+                    }else {
+                        completeTimeSyncSequence.call(self, failed, time, offset);
+                    }
                 };
 
             setIsSynchronizing(true);
@@ -292,12 +313,15 @@ MediaPlayer.dependencies.TimeSyncController = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        metricsModel:undefined,
+        metricsExt:undefined,
 
         getOffsetToDeviceTimeMs: function () {
             return getOffsetMs();
         },
 
-        initialize: function (timingSources) {
+        initialize: function (timingSources, useManifestDateHeader) {
+            useManifestDateHeaderTimeSource = useManifestDateHeader;
             if (!getIsSynchronizing()) {
                 attemptSync.call(this, timingSources);
                 setIsInitialised(true);
