@@ -345,7 +345,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this,
                 liveEdgeTime = e.data.liveEdge,
                 manifestInfo = currentTrackInfo.mediaInfo.streamInfo.manifestInfo,
-                startTime = liveEdgeTime - Math.min((manifestInfo.minBufferTime * 2), manifestInfo.DVRWindowSize / 2),
+                startTime = liveEdgeTime - Math.min((self.playbackController.getLiveDelay()), manifestInfo.DVRWindowSize / 2),
                 request,
                 metrics = self.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),

@@ -43,10 +43,13 @@ MediaPlayer.rules.BufferLevelRule = function () {
             return 0;
         },
 
-        decideBufferLength = function (minBufferTime, duration) {
+        decideBufferLength = function (minBufferTime, duration, isDynamic) {
             var minBufferTarget;
 
-            if (isNaN(duration) || MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
+            // For dynamic streams buffer length must not exceed a value of the live edge delay.
+            if (isDynamic) {
+                minBufferTarget = this.playbackController.getLiveDelay();
+            } else if (isNaN(duration) || MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
                 minBufferTarget = Math.max(MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME, minBufferTime);
             } else if (minBufferTime >= duration) {
                 minBufferTarget = Math.min(duration, MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME);
@@ -62,7 +65,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 criticalBufferLevel = scheduleController.bufferController.getCriticalBufferLevel(),
                 vmetrics = self.metricsModel.getReadOnlyMetricsFor("video"),
                 ametrics = self.metricsModel.getReadOnlyMetricsFor("audio"),
-                minBufferTarget = decideBufferLength.call(this, scheduleController.bufferController.getMinBufferTime(), duration),
+                minBufferTarget = decideBufferLength.call(this, scheduleController.bufferController.getMinBufferTime(), duration, isDynamic),
                 currentBufferTarget = minBufferTarget,
                 bufferMax = scheduleController.bufferController.bufferMax,
                 //isLongFormContent = (duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
