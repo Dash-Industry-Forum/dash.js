@@ -81,6 +81,12 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  null,
                                                  request.getAllResponseHeaders());
 
+                // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
+                if (request.responseURL) {
+                    baseUrl = parseBaseUrl(request.responseURL);
+                    url = request.responseURL;
+                }
+
                 manifest = self.parser.parse(request.responseText, baseUrl);
 
                 if (manifest) {
