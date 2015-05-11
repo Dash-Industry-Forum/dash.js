@@ -1,4 +1,5 @@
-# dash.js
+
+<img src="https://cloud.githubusercontent.com/assets/7049474/6138495/99534942-b14f-11e4-9f4e-02cbd157d503.png" width="400">
 
 JSHint and Jasmine status: [![JSHint and Jasmine](http://img.shields.io/travis/Dash-Industry-Forum/dash.js/development.svg?style=flat-square)](https://travis-ci.org/Dash-Industry-Forum/dash.js)
 
