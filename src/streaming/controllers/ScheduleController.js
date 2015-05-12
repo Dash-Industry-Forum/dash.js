@@ -43,7 +43,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         playListMetrics = null,
         playListTraceMetrics = null,
         playListTraceMetricsClosed = true,
-        segmentAbandonmentInProgress = false,
         abandonmentTimeout,
 
         clearPlayListTraceMetrics = function (endTime, stopreason) {
@@ -370,38 +369,36 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onFragmentLoadProgress = function(evt) {
-
             if (this.fragmentAbandonmentEnabled) {
-
                 var self = this,
                     rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.ABANDON_FRAGMENT_RULES),
                     callback = function (switchRequest) {
 
-                        if (switchRequest.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
-                                !segmentAbandonmentInProgress) {
-
-                            segmentAbandonmentInProgress = true;
+                        if (switchRequest.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) {
 
                             var requests = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING}),
-                                    newQuality = switchRequest.value;
+                                newQuality = switchRequest.value,
+                                currentQuality = self.abrController.getQualityFor(type, self.streamController.getActiveStreamInfo());
 
-                            fragmentModel.abortRequests();
-                            //TODO make work with audio as well? Not sure this feature is needed for audio.
-                            self.abrController.setAbandonmentStateFor('video', MediaPlayer.rules.AbandonRequestsRule.ABANDON_LOAD);
-                            self.abrController.setPlaybackQuality("video", self.streamController.getActiveStreamInfo() , newQuality);
-                            replaceCanceledRequests.call(self, requests);
 
-                            abandonmentTimeout = setTimeout(function () {
-                                self.abrController.setAbandonmentStateFor('video', MediaPlayer.rules.AbandonRequestsRule.ALLOW_LOAD);
-                                segmentAbandonmentInProgress = false;
-                            }, MediaPlayer.rules.AbandonRequestsRule.ABANDON_TIMEOUT);
+                            if (newQuality != currentQuality){
 
+                                fragmentModel.abortRequests();
+                                self.abrController.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ABANDON_LOAD);
+                                self.abrController.setPlaybackQuality(type, self.streamController.getActiveStreamInfo() , newQuality);
+                                replaceCanceledRequests.call(self, requests);
+
+                                abandonmentTimeout = setTimeout(function () {
+                                    self.abrController.setAbandonmentStateFor('video', MediaPlayer.dependencies.AbrController.ALLOW_LOAD);
+                                }, MediaPlayer.dependencies.AbrController.ABANDON_TIMEOUT);
+                            }
                         }
                     };
 
                 self.rulesController.applyRules(rules, self.streamProcessor, callback, evt, function(currentValue, newValue) {
                     return newValue;
                 });
+
             }
         };
 
@@ -412,6 +409,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         manifestModel: undefined,
         metricsExt: undefined,
         scheduleWhilePaused: undefined,
+        numOfParallelRequestAllowed:undefined,
         fragmentAbandonmentEnabled:undefined,
         timelineConverter: undefined,
         abrController: undefined,
@@ -463,6 +461,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             isDynamic = streamProcessor.isDynamic();
             fragmentModel = this.fragmentController.getModel(this);
 
+            MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD = self.numOfParallelRequestAllowed;
+
             if (self.scheduleRulesCollection.bufferLevelRule) {
                 self.scheduleRulesCollection.bufferLevelRule.setScheduleController(self);
             }
@@ -497,7 +497,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             fragmentModel.abortRequests();
             self.fragmentController.detachModel(fragmentModel);
             fragmentsToLoad = 0;
-            segmentAbandonmentInProgress = false;
             clearTimeout(abandonmentTimeout);
         },
 
@@ -509,3 +508,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 MediaPlayer.dependencies.ScheduleController.prototype = {
     constructor: MediaPlayer.dependencies.ScheduleController
 };
+
+
+MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD = 0;

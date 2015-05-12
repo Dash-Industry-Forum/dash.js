@@ -67,7 +67,7 @@ MediaPlayer.rules.ThroughputRule = function () {
                 arr.shift();
             }
 
-            return averageThroughput;
+            return averageThroughput * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY;
         };
 
 
@@ -99,7 +99,8 @@ MediaPlayer.rules.ThroughputRule = function () {
             if (now - lastSwitchTime < waitToSwitchTime ||
                 !metrics || lastRequest === null ||
                 lastRequest.type !== MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE ||
-                bufferStateVO === null || bufferLevelVO === null) {
+                bufferStateVO === null || bufferLevelVO === null ||
+                abrController.getAbandonmentStateFor(mediaType) === MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
                 callback(switchRequest);
                 return;
             }
