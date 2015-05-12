@@ -268,6 +268,7 @@ Dash.dependencies.DashAdapter = function () {
     return {
         system : undefined,
         manifestExt: undefined,
+        manifestModel:undefined,
         timelineConverter: undefined,
 
         metricsList: {
@@ -293,7 +294,6 @@ Dash.dependencies.DashAdapter = function () {
         getDataForTrack: getRepresentationForTrackInfo,
         getDataForMedia: getAdaptationForMediaInfo,
         getDataForStream: getPeriodForStreamInfo,
-
         getStreamsInfo: getStreamsInfoFromManifest,
         getManifestInfo: getMpdInfo,
         getMediaInfoForType: getMediaInfoForType,

@@ -67,7 +67,7 @@ MediaPlayer.rules.ThroughputRule = function () {
                 arr.shift();
             }
 
-            return averageThroughput;
+            return averageThroughput * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY;
         };
 
 
@@ -75,8 +75,6 @@ MediaPlayer.rules.ThroughputRule = function () {
         log: undefined,
         metricsExt: undefined,
         metricsModel: undefined,
-        manifestExt:undefined,
-        manifestModel:undefined,
 
         execute: function (context, callback) {
             var self = this,
@@ -85,9 +83,10 @@ MediaPlayer.rules.ThroughputRule = function () {
                 mediaType = mediaInfo.type,
                 current = context.getCurrentValue(),
                 trackInfo = context.getTrackInfo(),
-                manifest = this.manifestModel.getValue(),
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
-                isDynamic= context.getStreamProcessor().isDynamic(),
+                streamProcessor = context.getStreamProcessor(),
+                abrController = streamProcessor.getABRController(),
+                isDynamic= streamProcessor.isDynamic(),
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
                 waitToSwitchTime = !isNaN(trackInfo.fragmentDuration) ? trackInfo.fragmentDuration / 2 : 2,
                 downloadTime,
@@ -100,7 +99,8 @@ MediaPlayer.rules.ThroughputRule = function () {
             if (now - lastSwitchTime < waitToSwitchTime ||
                 !metrics || lastRequest === null ||
                 lastRequest.type !== MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE ||
-                bufferStateVO === null || bufferLevelVO === null) {
+                bufferStateVO === null || bufferLevelVO === null ||
+                abrController.getAbandonmentStateFor(mediaType) === MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
                 callback(switchRequest);
                 return;
             }
@@ -111,21 +111,11 @@ MediaPlayer.rules.ThroughputRule = function () {
             storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
             averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic));
 
-            var adaptation = this.manifestExt.getAdaptationForType(manifest, mediaInfo.streamInfo.index, mediaType);
-            var max = mediaInfo.trackCount - 1;
-
             if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
                 (bufferLevelVO.level >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD*2) || isDynamic))
             {
-                for ( var i = max ; i > 0; i-- )
-                {
-                    var repBandwidth = this.manifestExt.getRepresentationFor(i, adaptation).bandwidth;
-                    if (averageThroughput >= repBandwidth) {
-                        switchRequest = new MediaPlayer.rules.SwitchRequest(i, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
-                        lastSwitchTime = now;
-                        break;
-                    }
-                }
+                var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput/1000);
+                switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
             }
 
             if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {

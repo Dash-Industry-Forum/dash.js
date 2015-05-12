@@ -65,6 +65,7 @@ MediaPlayer = function (context) {
     var VERSION = "1.4.0",
         DEFAULT_TIME_SERVER = "http://time.akamai.com/?iso",
         DEFAULT_TIME_SOURCE_SCHEME = "urn:mpeg:dash:utc:http-xsdate:2014",
+        numOfParallelRequestAllowed = 0,
         system,
         abrController,
         element,
@@ -82,6 +83,7 @@ MediaPlayer = function (context) {
         playing = false,
         autoPlay = true,
         scheduleWhilePaused = false,
+        fragmentAbandonmentEnabled = true,
         bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
         useManifestDateHeaderTimeSource = true,
         UTCTimingSources = [],
@@ -123,9 +125,12 @@ MediaPlayer = function (context) {
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
+            system.mapValue("numOfParallelRequestAllowed", numOfParallelRequestAllowed);
+            system.mapOutlet("numOfParallelRequestAllowed", "scheduleController");
+            system.mapValue("fragmentAbandonmentEnabled", fragmentAbandonmentEnabled);
+            system.mapOutlet("fragmentAbandonmentEnabled", "scheduleController");
             system.mapValue("bufferMax", bufferMax);
             system.mapOutlet("bufferMax", "bufferController");
-
             rulesController.initialize();
         },
 
@@ -359,6 +364,23 @@ MediaPlayer = function (context) {
          */
         enableLastBitrateCaching: function (enable, ttl) {
             DOMStorage.enableLastBitrateCaching(enable, ttl);
+        },
+
+
+        /**
+         * Setting this value to something greater than 0 will result in that many parallel requests (per media type). Having concurrent request
+         * may help with latency but will alter client bandwidth detection. This may slow the responsiveness of the
+         * ABR heuristics.  It will also deactivate the AbandonRequestsRule, which at this time, only works accurately when parallel request are turned off.
+         *
+         * We do not suggest setting this value greater than 4.
+         *
+         * @value - Number of parallel request allowed at one time.
+         * @default 0
+         * @memberof MediaPlayer#
+         *
+         */
+        setNumOfParallelRequestAllowed: function (value){
+            numOfParallelRequestAllowed = value;
         },
 
         /**
@@ -757,6 +779,30 @@ MediaPlayer = function (context) {
             if (isReady.call(this)) {
                 doAutoPlay.call(this);
             }
+        },
+
+        /**
+         * Use this method to attach an already parsed manifest
+         *
+         * @param m the manifest
+         */
+        attachManifest: function (m) {
+            manifest = m;
+        },
+
+        /**
+         * Attach KeySystem-specific data to use for License Acquisition with EME
+         * @param data and object containing property names corresponding to key
+         * system name strings and associated values being instances of
+         * MediaPlayer.vo.protection.ProtectionData
+         */
+        attachProtectionData: function(data) {
+            protectionData = data;
+        },
+
+		
+        enableFragmentAbandonment: function(enable) {
+            fragmentAbandonmentEnabled = enable;
         },
 
         /**
