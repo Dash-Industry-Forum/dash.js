@@ -99,6 +99,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('pendingRequestsRule', MediaPlayer.rules.PendingRequestsRule);
             this.system.mapClass('playbackTimeRule', MediaPlayer.rules.PlaybackTimeRule);
             this.system.mapClass('sameTimeRequestRule', MediaPlayer.rules.SameTimeRequestRule);
+            this.system.mapClass('abandonRequestRule', MediaPlayer.rules.AbandonRequestsRule);
             this.system.mapSingleton('scheduleRulesCollection', MediaPlayer.rules.ScheduleRulesCollection);
 
             this.system.mapClass('liveEdgeBinarySearchRule', MediaPlayer.rules.LiveEdgeBinarySearchRule);
