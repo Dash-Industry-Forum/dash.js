@@ -58,7 +58,7 @@ videojs.Dashjs.prototype.src = function(src) {
 
   var protData = options.protData || {
       "com.widevine.alpha": {
-          "laURL": "http://wvlic.qa.brightcove.com/proxy/30328521339202"
+          "laURL": "http://wvlic.qa.brightcove.com/proxy/30328739210202"
       }
   };
 
