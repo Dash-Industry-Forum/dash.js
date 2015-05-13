@@ -31,8 +31,7 @@
 MediaPlayer.rules.SameTimeRequestRule = function () {
     "use strict";
 
-    var LOADING_REQUEST_THRESHOLD = 4,
-        lastMediaRequestIdxs = {},
+    var lastMediaRequestIdxs = {},
 
         findClosestToTime = function(fragmentModels, time) {
             var req,
@@ -163,7 +162,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
                 if (model.getIsPostponed() && !isNaN(req.startTime)) continue;
 
-                if (loadingLength > LOADING_REQUEST_THRESHOLD) {
+                if (loadingLength > MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD) {
                     callback(new MediaPlayer.rules.SwitchRequest([], p));
                     return;
                 }
