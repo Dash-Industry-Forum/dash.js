@@ -35,7 +35,6 @@ MediaPlayer.rules.AbandonRequestsRule = function () {
         ABANDON_MULTIPLIER = 1.5,
         fragmentDict = {},
         abandonDict = {},
-        scheduleController = {},
 
         setFragmentRequestDict = function (type, id) {
             fragmentDict[type] = fragmentDict[type] || {};
@@ -62,29 +61,19 @@ MediaPlayer.rules.AbandonRequestsRule = function () {
         metricsExt: undefined,
         log:undefined,
 
-        setScheduleController: function(scheduleControllerValue) {
-            var id = scheduleControllerValue.streamProcessor.getStreamInfo().id;
-            scheduleController[id] = scheduleController[id] || {};
-            scheduleController[id][scheduleControllerValue.streamProcessor.getType()] = scheduleControllerValue;
-        },
-
         execute: function(context, callback) {
 
             var now = new Date().getTime(),
                 mediaInfo = context.getMediaInfo(),
                 mediaType = mediaInfo.type,
-                streamId = context.getStreamInfo().id,
                 progressEvent = context.getCurrentValue(),
                 trackInfo = context.getTrackInfo(),
                 req = progressEvent.data.request,
-                scheduleCtrl = scheduleController[streamId][mediaType],
                 abrController = context.getStreamProcessor().getABRController(),
-                fragmentModel = scheduleCtrl.getFragmentModel(),
-                concurrentCount = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING}).length,
                 fragmentInfo,
                 switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
-            if (concurrentCount === 1  && !isNaN(req.index)) {
+            if (!isNaN(req.index)) {
                 setFragmentRequestDict(mediaType, req.index);
                 fragmentInfo = fragmentDict[mediaType][req.index];
 
@@ -111,7 +100,7 @@ MediaPlayer.rules.AbandonRequestsRule = function () {
                     fragmentInfo.measuredBandwidthInKbps = Math.round((fragmentInfo.bytesLoaded*8/fragmentInfo.elapsedTime) * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY);
                     //fragmentInfo.measuredBandwidthInKbps = (concurrentCount > 1) ? getAggragateBandwidth.call(this, mediaType, concurrentCount) :  Math.round(fragmentInfo.bytesLoaded*8/fragmentInfo.elapsedTime);
                     fragmentInfo.estimatedTimeOfDownload = (fragmentInfo.bytesTotal*8*0.001/fragmentInfo.measuredBandwidthInKbps).toFixed(2);
-                    this.log("XXX","id: ",fragmentInfo.id,  "kbps: ", fragmentInfo.measuredBandwidthInKbps, "etd: ",fragmentInfo.estimatedTimeOfDownload, "et: ", fragmentInfo.elapsedTime/1000);
+                    //this.log("XXX","id: ",fragmentInfo.id,  "kbps: ", fragmentInfo.measuredBandwidthInKbps, "etd: ",fragmentInfo.estimatedTimeOfDownload, "et: ", fragmentInfo.elapsedTime/1000);
 
                     if (fragmentInfo.estimatedTimeOfDownload < (fragmentInfo.segmentDuration * ABANDON_MULTIPLIER) || trackInfo.quality === 0) {
                         callback(switchRequest);
@@ -134,7 +123,6 @@ MediaPlayer.rules.AbandonRequestsRule = function () {
         reset: function() {
             fragmentDict = {};
             abandonDict = {};
-            scheduleController = {};
         }
     };
 };

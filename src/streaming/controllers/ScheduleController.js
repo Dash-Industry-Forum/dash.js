@@ -370,34 +370,37 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onFragmentLoadProgress = function(evt) {
 
-            var self = this,
-                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.ABANDON_FRAGMENT_RULES),
-                callback = function (switchRequest) {
+            if (MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD === 0) { //check to see if there are parallel request or just one at a time.
 
-                    if (switchRequest.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) {
+                var self = this,
+                    rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.ABANDON_FRAGMENT_RULES),
+                    callback = function (switchRequest) {
 
-                        var requests = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING}),
-                            newQuality = switchRequest.value,
-                            currentQuality = self.abrController.getQualityFor(type, self.streamController.getActiveStreamInfo());
+                        if (switchRequest.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) {
+
+                            var requests = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING}),
+                                newQuality = switchRequest.value,
+                                currentQuality = self.abrController.getQualityFor(type, self.streamController.getActiveStreamInfo());
 
 
-                        if (newQuality != currentQuality){
+                            if (newQuality != currentQuality){
 
-                            fragmentModel.abortRequests();
-                            self.abrController.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ABANDON_LOAD);
-                            self.abrController.setPlaybackQuality(type, self.streamController.getActiveStreamInfo() , newQuality);
-                            replaceCanceledRequests.call(self, requests);
+                                fragmentModel.abortRequests();
+                                self.abrController.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ABANDON_LOAD);
+                                self.abrController.setPlaybackQuality(type, self.streamController.getActiveStreamInfo() , newQuality);
+                                replaceCanceledRequests.call(self, requests);
 
-                            abandonmentTimeout = setTimeout(function () {
-                                self.abrController.setAbandonmentStateFor('video', MediaPlayer.dependencies.AbrController.ALLOW_LOAD);
-                            }, MediaPlayer.dependencies.AbrController.ABANDON_TIMEOUT);
+                                abandonmentTimeout = setTimeout(function () {
+                                    self.abrController.setAbandonmentStateFor('video', MediaPlayer.dependencies.AbrController.ALLOW_LOAD);
+                                }, MediaPlayer.dependencies.AbrController.ABANDON_TIMEOUT);
+                            }
                         }
-                    }
-                };
+                    };
 
-            self.rulesController.applyRules(rules, self.streamProcessor, callback, evt, function(currentValue, newValue) {
-                return newValue;
-            });
+                self.rulesController.applyRules(rules, self.streamProcessor, callback, evt, function(currentValue, newValue) {
+                    return newValue;
+                });
+            }
         };
 
     return {
@@ -469,11 +472,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             if (self.scheduleRulesCollection.playbackTimeRule) {
                 self.scheduleRulesCollection.playbackTimeRule.setScheduleController(self);
             }
-
-            if (self.scheduleRulesCollection.abandonRequestRule) {
-                self.scheduleRulesCollection.abandonRequestRule.setScheduleController(self);
-            }
-
         },
 
         getFragmentModel: function() {
