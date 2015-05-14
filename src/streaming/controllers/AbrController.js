@@ -139,23 +139,25 @@ MediaPlayer.dependencies.AbrController = function () {
                     fragmentModel = schduleController.getFragmentModel(),
                     callback = function (switchRequest) {
 
+                        function setupTimeout(type){
+                            abandonmentTimeout = setTimeout(function () {
+                                self.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ALLOW_LOAD);
+                            }, MediaPlayer.dependencies.AbrController.ABANDON_TIMEOUT);
+                        }
+
                         if (switchRequest.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) {
 
                             var requests = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING}),
                                 newQuality = switchRequest.value,
                                 currentQuality = self.getQualityFor(type, self.streamController.getActiveStreamInfo());
 
-
-                            if (newQuality != currentQuality){
+                            if (newQuality < currentQuality){
 
                                 fragmentModel.abortRequests();
                                 self.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ABANDON_LOAD);
                                 self.setPlaybackQuality(type, self.streamController.getActiveStreamInfo() , newQuality);
                                 schduleController.replaceCanceledRequests(requests);
-
-                                abandonmentTimeout = setTimeout(function () {
-                                    self.abrController.setAbandonmentStateFor('video', MediaPlayer.dependencies.AbrController.ALLOW_LOAD);
-                                }, MediaPlayer.dependencies.AbrController.ABANDON_TIMEOUT);
+                                setupTimeout(type);
                             }
                         }
                     };
@@ -379,6 +381,7 @@ MediaPlayer.dependencies.AbrController = function () {
             streamProcessorDict = {};
             abandonmentStateDict = {};
             clearTimeout(abandonmentTimeout);
+            abandonmentTimeout = null;
         }
     };
 };
