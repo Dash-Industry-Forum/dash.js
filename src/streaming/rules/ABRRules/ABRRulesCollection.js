@@ -31,17 +31,21 @@
 MediaPlayer.rules.ABRRulesCollection = function () {
     "use strict";
 
-    var qualitySwitchRules = [];
+    var qualitySwitchRules = [],
+        adandonFragmentRules = [];
 
     return {
         insufficientBufferRule: undefined,
         bufferOccupancyRule:undefined,
         throughputRule:undefined,
+        abandonRequestRule:undefined,
 
         getRules: function (type) {
             switch (type) {
                 case MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES:
                     return qualitySwitchRules;
+                case MediaPlayer.rules.ABRRulesCollection.prototype.ABANDON_FRAGMENT_RULES:
+                    return adandonFragmentRules;
                 default:
                     return null;
             }
@@ -51,11 +55,13 @@ MediaPlayer.rules.ABRRulesCollection = function () {
             qualitySwitchRules.push(this.insufficientBufferRule);
             qualitySwitchRules.push(this.throughputRule);
             qualitySwitchRules.push(this.bufferOccupancyRule);
+            adandonFragmentRules.push(this.abandonRequestRule);
         }
     };
 };
 
 MediaPlayer.rules.ABRRulesCollection.prototype = {
     constructor: MediaPlayer.rules.ABRRulesCollection,
-    QUALITY_SWITCH_RULES: "qualitySwitchRules"
+    QUALITY_SWITCH_RULES: "qualitySwitchRules",
+    ABANDON_FRAGMENT_RULES: "abandonFragmentRules"
 };

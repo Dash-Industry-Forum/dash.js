@@ -45,6 +45,8 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
                 mediaType = mediaInfo.type,
                 waitToSwitchTime = !isNaN(trackInfo.fragmentDuration) ? trackInfo.fragmentDuration / 2 : 2,
                 current = context.getCurrentValue(),
+                streamProcessor = context.getStreamProcessor(),
+                abrController = streamProcessor.getABRController(),
                 metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
                 lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
                 lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
@@ -52,7 +54,8 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
                 maxIndex = mediaInfo.trackCount - 1,
                 switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
-            if (now - lastSwitchTime < waitToSwitchTime) {
+            if (now - lastSwitchTime < waitToSwitchTime ||
+                abrController.getAbandonmentStateFor(mediaType) === MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
                 callback(switchRequest);
                 return;
             }

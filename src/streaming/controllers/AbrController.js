@@ -38,6 +38,7 @@ MediaPlayer.dependencies.AbrController = function () {
         bitrateDict = {},
         streamProcessorDict={},
         abandonmentStateDict = {},
+        abandonmentTimeout,
 
         getInternalQuality = function (type, id) {
             var quality;
@@ -125,6 +126,44 @@ MediaPlayer.dependencies.AbrController = function () {
             }
             var maxIdx = this.getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
             return Math.min (idx , maxIdx);
+        },
+
+        onFragmentLoadProgress = function(evt) {
+
+            if (MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD === 0) { //check to see if there are parallel request or just one at a time.
+
+                var self = this,
+                    type = evt.data.request.mediaType,
+                    rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.ABANDON_FRAGMENT_RULES),
+                    schduleController = streamProcessorDict[type].getScheduleController(),
+                    fragmentModel = schduleController.getFragmentModel(),
+                    callback = function (switchRequest) {
+
+                        if (switchRequest.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) {
+
+                            var requests = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING}),
+                                newQuality = switchRequest.value,
+                                currentQuality = self.getQualityFor(type, self.streamController.getActiveStreamInfo());
+
+
+                            if (newQuality != currentQuality){
+
+                                fragmentModel.abortRequests();
+                                self.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ABANDON_LOAD);
+                                self.setPlaybackQuality(type, self.streamController.getActiveStreamInfo() , newQuality);
+                                schduleController.replaceCanceledRequests(requests);
+
+                                abandonmentTimeout = setTimeout(function () {
+                                    self.abrController.setAbandonmentStateFor('video', MediaPlayer.dependencies.AbrController.ALLOW_LOAD);
+                                }, MediaPlayer.dependencies.AbrController.ABANDON_TIMEOUT);
+                            }
+                        }
+                    };
+
+                self.rulesController.applyRules(rules, streamProcessorDict[type], callback, evt, function(currentValue, newValue) {
+                    return newValue;
+                });
+            }
         };
 
     return {
@@ -134,6 +173,11 @@ MediaPlayer.dependencies.AbrController = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        streamController:undefined,
+
+        setup: function() {
+            this[MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_PROGRESS] = onFragmentLoadProgress;
+        },
 
         initialize: function(type, streamProcessor) {
             streamProcessorDict[type] = streamProcessor;
@@ -334,6 +378,7 @@ MediaPlayer.dependencies.AbrController = function () {
             confidenceDict = {};
             streamProcessorDict = {};
             abandonmentStateDict = {};
+            clearTimeout(abandonmentTimeout);
         }
     };
 };

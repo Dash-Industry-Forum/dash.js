@@ -33,15 +33,14 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
 
     var fragmentsToScheduleRules = [],
         fragmentsToExecuteRules = [],
-        nextFragmentRules = [],
-        adandonFragmentRules = [];
+        nextFragmentRules = [];
+
 
     return {
         bufferLevelRule: undefined,
         pendingRequestsRule: undefined,
         playbackTimeRule: undefined,
         sameTimeRequestRule: undefined,
-        abandonRequestRule:undefined,
 
         getRules: function (type) {
             switch (type) {
@@ -51,8 +50,6 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
                     return nextFragmentRules;
                 case MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_EXECUTE_RULES:
                     return fragmentsToExecuteRules;
-                case MediaPlayer.rules.ScheduleRulesCollection.prototype.ABANDON_FRAGMENT_RULES:
-                    return adandonFragmentRules;
                 default:
                     return null;
             }
@@ -63,7 +60,6 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
             fragmentsToScheduleRules.push(this.pendingRequestsRule);
             nextFragmentRules.push(this.playbackTimeRule);
             fragmentsToExecuteRules.push(this.sameTimeRequestRule);
-            adandonFragmentRules.push(this.abandonRequestRule);
         }
     };
 };
@@ -72,6 +68,5 @@ MediaPlayer.rules.ScheduleRulesCollection.prototype = {
     constructor: MediaPlayer.rules.ScheduleRulesCollection,
     FRAGMENTS_TO_SCHEDULE_RULES: "fragmentsToScheduleRules",
     NEXT_FRAGMENT_RULES: "nextFragmentRules",
-    FRAGMENTS_TO_EXECUTE_RULES: "fragmentsToExecuteRules",
-    ABANDON_FRAGMENT_RULES: "abandonFragmentRules"
+    FRAGMENTS_TO_EXECUTE_RULES: "fragmentsToExecuteRules"
 };

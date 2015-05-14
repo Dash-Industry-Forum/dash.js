@@ -85,12 +85,10 @@ MediaPlayer.rules.ThroughputRule = function () {
                 mediaType = mediaInfo.type,
                 current = context.getCurrentValue(),
                 trackInfo = context.getTrackInfo(),
-
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 streamProcessor = context.getStreamProcessor(),
                 abrController = streamProcessor.getABRController(),
                 isDynamic= streamProcessor.isDynamic(),
-
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
                 waitToSwitchTime = !isNaN(trackInfo.fragmentDuration) ? trackInfo.fragmentDuration / 2 : 2,
                 downloadTime,
