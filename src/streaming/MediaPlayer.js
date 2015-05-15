@@ -34,9 +34,122 @@
  */
 'use strict';
 
+// MediaPlayer Imports
+import MediaPlayerBase from './MediaPlayer.js';
+import Context from './Context.js';
+
+import AbrController from './controllers/AbrController.js';
 import BufferController from './controllers/BufferController.js';
+import EventController from './controllers/EventController.js';
+import FragmentController from './controllers/FragmentController.js';
 import PlaybackController from './controllers/PlaybackController.js';
+import ProtectionController from './controllers/ProtectionController.js';
+import ScheduleController from './controllers/ScheduleController.js';
+import StreamController from './controllers/StreamController.js';
+import TextController from './controllers/TextController.js';
+import XlinkController from './controllers/XlinkController.js';
+
+import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
+import ProtectionExtensions from './extensions/ProtectionExtensions.js';
+import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
+import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
+import TextTrackExtensions from './extensions/TextTrackExtensions.js';
+import VideoModelExtensions from './extensions/VideoModelExtensions.js';
+
+import FragmentModel from './models/FragmentModel.js';
+import ManifestModel from './models/ManifestModel.js';
+import MetricsModel from './models/MetricsModel.js';
+import ProtectionModel from './models/ProtectionModel.js';
+import ProtectionModel_01b from './models/ProtectionModel_01b.js';
+import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
+import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
+import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
+import VideoModel from './models/VideoModel.js';
+
+import CommonEncryption from './protection/CommonEncryption.js';
+import KeySystem from './protection/drm/KeySystem.js';
+import KeySystem_Access from './protection/drm/KeySystem_Access.js';
+import KeySystem_ClearKey from './protection/drm/KeySystem_ClearKey.js';
+import KeySystem_PlayReady from './protection/drm/KeySystem_PlayReady.js';
+import KeySystem_Widevine from './protection/drm/KeySystem_Widevine.js';
+
+//import AbandonRequestsRule from './rules/ABRRules/AbandonRequestsRule.js';
+import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
+import BufferOccupancyRule from './rules/ABRRules/BufferOccupancyRule.js';
+import InsufficientBufferRule from './rules/ABRRules/InsufficientBufferRule.js';
+import ThroughputRule from './rules/ABRRules/ThroughputRule.js';
+
+import RulesContext from './rules/RulesContext.js';
+import RulesController from './rules/RulesController.js';
+
+import BufferLevelRule from './rules/SchedulingRules/BufferLevelRule.js';
+import PendingRequestsRule from './rules/SchedulingRules/PendingRequestsRule.js';
+import PlaybackTimeRule from './rules/SchedulingRules/PlaybackTimeRule.js';
+import SameTimeRequestRule from './rules/SchedulingRules/SameTimeRequestRule.js';
+import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
+
+import SwitchRequest from './rules/SwitchRequest.js';
+
+import LiveEdgeBinarySearchRule from './rules/SynchronizationRules/LiveEdgeBinarySearchRule.js';
+import LiveEdgeWithTimeSynchronizationRule from './rules/SynchronizationRules/LiveEdgeWithTimeSynchronizationRule.js';
+import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
+
+import ErrorHandler from './ErrorHandler.js';
+import FragmentLoader from './FragmentLoader.js';
+import LiveEdgeFinder from './LiveEdgeFinder.js';
 import ManifestLoader from './ManifestLoader.js';
+import ManifestUpdater from './ManifestUpdater.js';
+import Notifier from './Notifier.js';
+import Stream from './Stream.js';
+import StreamProcessor from './StreamProcessor.js';
+import TextSourceBuffer from './TextSourceBuffer.js';
+import TimeSyncController from './TimeSyncController.js';
+import XlinkLoader from './XlinkLoader.js';
+import TTMLParser from './TTMLParser.js';
+import VTTParser from './VTTParser.js';
+
+import Capabilities from './utils/Capabilities.js';
+import CustomTimeRanges from './utils/CustomTimeRanges.js';
+import Debug from './utils/Debug.js';
+import DOMStorage from './utils/DOMStorage.js';
+import EventBus from './utils/EventBus.js';
+import VirtualBuffer from './utils/VirtualBuffer.js';
+
+import BitrateInfo from './vo/BitrateInfo.js';
+import DataChunk from './vo/DataChunk.js';
+import Error from './vo/Error.js';
+import MediaPlayerEvent from './vo/Event.js';
+import FragmentRequest from './vo/FragmentRequest.js';
+import ManifestInfo from './vo/ManifestInfo.js';
+import MediaInfo from './vo/MediaInfo.js';
+import StreamInfo from './vo/StreamInfo.js';
+import TrackInfo from './vo/TrackInfo.js';
+import URIFragmentData from './vo/URIFragmentData.js';
+
+import MetricsList from './vo/MetricsList.js';
+import SessionToken from './vo/protection/SessionToken.js';
+
+import BufferLevel from './vo/metrics/BufferLevel.js';
+import BufferState from './vo/metrics/BufferState.js';
+import DroppedFrames from './vo/metrics/DroppedFrames.js';
+import DVRInfo from './vo/metrics/DVRInfo.js';
+import HTTPRequest from './vo/metrics/HTTPRequest.js';
+import ManifestUpdate from './vo/metrics/ManifestUpdate.js';
+import PlayList from './vo/metrics/PlayList.js';
+import TrackSwitch from './vo/metrics/RepresentationSwitch.js';
+import SchedulingInfo from './vo/metrics/SchedulingInfo.js';
+import TCPConnection from './vo/metrics/TCPConnection.js';
+
+import ClearKeyKeySet from './vo/protection/ClearKeyKeySet.js';
+import KeyError from './vo/protection/KeyError.js';
+import KeyMessage from './vo/protection/KeyMessage.js';
+import KeyPair from './vo/protection/KeyPair.js';
+import KeySystemAccess from './vo/protection/KeySystemAccess.js';
+import KeySystemConfiguration from './vo/protection/KeySystemConfiguration.js';
+import LicenseRequestComplete from './vo/protection/LicenseRequestComplete.js';
+import MediaCapability from './vo/protection/MediaCapability.js';
+import NeedKey from './vo/protection/NeedKey.js';
+import ProtectionData from './vo/protection/ProtectionData.js';
 
 let MediaPlayer = function (context) {
 /*
@@ -796,16 +909,139 @@ MediaPlayer.prototype = {
     constructor: MediaPlayer
 };
 
+MediaPlayer.dependencies = {
+    // controllers
+    AbrController: AbrController,
+    BufferController: BufferController,
+    EventController: EventController,
+    FragmentController: FragmentController,
+    PlaybackController: PlaybackController,
+    ProtectionController: ProtectionController,
+    ScheduleController: ScheduleController,
+    StreamController: StreamController,
+    TextController: TextController,
+    XlinkController: XlinkController,
 
-MediaPlayer.dependencies = {};
-MediaPlayer.dependencies.protection = {};
-MediaPlayer.utils = {};
-MediaPlayer.models = {};
-MediaPlayer.vo = {};
-MediaPlayer.vo.metrics = {};
-MediaPlayer.vo.protection = {};
-MediaPlayer.rules = {};
-MediaPlayer.di = {};
+    // base?
+    ErrorHandler: ErrorHandler,
+    FragmentLoader: FragmentLoader,
+    LiveEdgeFinder: LiveEdgeFinder,
+    ManifestLoader: ManifestLoader,
+    ManifestUpdater: ManifestUpdater,
+    Notifier: Notifier,
+    Stream: Stream,
+    StreamProcessor: StreamProcessor,
+    TextSourceBuffer: TextSourceBuffer,
+    TimeSyncController: TimeSyncController,
+    XlinkLoader: XlinkLoader,
+
+    // extensions
+    MediaSourceExtensions: MediaSourceExtensions,
+    ProtectionExtensions: ProtectionExtensions,
+    RequestModifierExtensions: RequestModifierExtensions,
+    SourceBufferExtensions: SourceBufferExtensions,
+    TextTrackExtensions: TextTrackExtensions,
+    VideoModelExtensions: VideoModelExtensions,
+
+    // models
+    FragmentModel: FragmentModel,
+
+    protection: {
+        CommonEncryption: CommonEncryption,
+        KeySystem: KeySystem,
+        KeySystem_Access: KeySystem_Access,
+        KeySystem_ClearKey: KeySystem_ClearKey,
+        KeySystem_PlayReady: KeySystem_PlayReady,
+        KeySystem_Widevine: KeySystem_Widevine,
+    }
+};
+
+MediaPlayer.utils = {
+    Capabilities: Capabilities,
+    CustomTimeRanges: CustomTimeRanges,
+    Debug: Debug,
+    DOMStorage: DOMStorage,
+    EventBus: EventBus,
+    VirtualBuffer: VirtualBuffer,
+
+    // base?
+    TTMLParser: TTMLParser,
+    VTTParser: VTTParser,
+};
+
+MediaPlayer.models = {
+    ManifestModel: ManifestModel,
+    MetricsModel: MetricsModel,
+    ProtectionModel: ProtectionModel,
+    ProtectionModel_01b: ProtectionModel_01b,
+    ProtectionModel_21Jan2015: ProtectionModel_21Jan2015,
+    ProtectionModel_3Feb2014: ProtectionModel_3Feb2014,
+    URIQueryAndFragmentModel: URIQueryAndFragmentModel,
+    VideoModel: VideoModel,
+    MetricsList: MetricsList,
+    SessionToken: SessionToken
+};
+
+MediaPlayer.vo = {
+    BitrateInfo: BitrateInfo,
+    DataChunk: DataChunk,
+    Error: Error,
+    Event: MediaPlayerEvent,
+    FragmentRequest: FragmentRequest,
+    ManifestInfo: ManifestInfo,
+    MediaInfo: MediaInfo,
+    StreamInfo: StreamInfo,
+    TrackInfo: TrackInfo,
+    URIFragmentData: URIFragmentData,
+
+    metrics: {
+        BufferLevel: BufferLevel,
+        BufferState: BufferState,
+        DroppedFrames: DroppedFrames,
+        DVRInfo: DVRInfo,
+        HTTPRequest: HTTPRequest,
+        ManifestUpdate: ManifestUpdate,
+        PlayList: PlayList,
+        RepresentationSwitch: TrackSwitch,
+        SchedulingInfo: SchedulingInfo,
+        TCPConnection: TCPConnection
+    },
+    protection: {
+        ClearKeyKeySet: ClearKeyKeySet,
+        KeyError: KeyError,
+        KeyMessage: KeyMessage,
+        KeyPair: KeyPair,
+        KeySystemAccess: KeySystemAccess,
+        KeySystemConfiguration: KeySystemConfiguration,
+        LicenseRequestComplete: LicenseRequestComplete,
+        MediaCapability: MediaCapability,
+        NeedKey: NeedKey,
+        ProtectionData: ProtectionData
+    }
+};
+
+MediaPlayer.rules = {
+//    AbandonRequestsRule: AbandonRequestsRule,
+    ABRRulesCollection: ABRRulesCollection,
+    BufferOccupancyRule: BufferOccupancyRule,
+    InsufficientBufferRule: InsufficientBufferRule,
+    ThroughputRule: ThroughputRule,
+    RulesContext: RulesContext,
+    RulesController: RulesController,
+    BufferLevelRule: BufferLevelRule,
+    PendingRequestsRule: PendingRequestsRule,
+    PlaybackTimeRule: PlaybackTimeRule,
+    SameTimeRequestRule: SameTimeRequestRule,
+    ScheduleRulesCollection: ScheduleRulesCollection,
+    SwitchRequest: SwitchRequest,
+    LiveEdgeBinarySearchRule: LiveEdgeBinarySearchRule,
+    LiveEdgeWithTimeSynchronizationRule: LiveEdgeWithTimeSynchronizationRule,
+    SynchronizationRulesCollection: SynchronizationRulesCollection
+};
+
+MediaPlayer.di = {
+    Context: Context
+};
 
 /**
  * The list of events supported by MediaPlayer

@@ -81,7 +81,7 @@ module.exports = function(grunt) {
         options: {
           browserifyOptions: {
             debug: true,
-            standalone: 'dash'
+            //standalone: ['Dash','MediaPlayer']
           },
           plugin: [
             [ 'browserify-derequire' ]
@@ -101,7 +101,7 @@ module.exports = function(grunt) {
           watch: true,
           keepAlive: true,
           browserifyOptions: {
-            standalone: 'dash'
+            //standalone: 'dash'
           },
           transform: ['babelify'],
           plugin: [
@@ -109,29 +109,108 @@ module.exports = function(grunt) {
           ]
         }
       }
+    },
+    jasmine: {
+      tests: {
+        src: [
+            'build/temp/Dash.js',
+            'src/lib/**/*.js'
+        ],
+        options: {
+          host: 'http://127.0.0.1:8000',
+          keepRunner: true,
+          outfile: 'build/temp/_SpecRunner.html',
+          helpers: [
+            'test/js/utils/Helpers.js',
+            'test/js/utils/SpecHelper.js',
+            'test/js/utils/ObjectsHelper.js',
+            'test/js/utils/MPDHelper.js',
+            'test/js/utils/VOHelper.js'
+          ],
+          specs: [
+            'test/js/dash/TimelineConverterSpec.js',
+            'test/js/dash/DashHandlerSpec.js',
+            'test/js/dash/RepresentationControllerSpec.js',
+            'test/js/streaming/MediaPlayerSpec.js',
+            'test/js/streaming/FragmentControllerSpec.js',
+            'test/js/streaming/FragmentModelSpec.js',
+            'test/js/streaming/AbrControllerSpec.js'
+          ],
+          vendor: [
+            'src/lib/xml2json.js',
+            'src/lib/objectiron.js',
+            'src/lib/Math.js',
+            'src/lib/long.js',
+            'src/lib/dijon.js',
+            'src/lib/base64.js'
+          ],
+          template: require('grunt-template-jasmine-istanbul'),
+          templateOptions: {
+            coverage: './reports/coverage.json',
+            report: './reports/coverage',
+            files: './build/temp/Dash.js'
+          },
+          junit: {
+            path: grunt.option('jsunit-path'),
+            consolidate: true
+          }
+        }
+      }
+    },
+    connect: {
+      default_options: {},
+      dev: {
+        options: {
+          port: 9999,
+          keepalive: true
+        }
+      }
+    },
+    jsdoc: {
+        dist: {
+            options: {
+                destination: 'docs/jsdocs',
+                configure: 'build/jsdoc/jsdoc_conf.json'
+            }
+        }
     }
   });
 
   // load all the npm grunt tasks
   require('load-grunt-tasks')(grunt);
-  grunt.loadNpmTasks('videojs-doc-generator');
-  grunt.loadNpmTasks('chg');
 
   grunt.registerTask('build', [
     'clean:build',
-    //'jshint',
+    //'jshint', //TODO: lots of failures heres
     'browserify:build',
-    'concat:all',
- //   'exorcise',
- //   'uglify'
+    'concat:all'
+  ]);
+
+  grunt.registerTask('minimize', [
+    'exorcise',
+    'uglify'
   ]);
 
   grunt.registerTask('dist', [
     'clean:dist',
     'build',
+    'minimize',
     'copy:dist'
   ]);
 
+  grunt.registerTask('test', [
+    'connect:default_options',
+    'jasmine'
+  ]);
+
   // Default task.
-  grunt.registerTask('default', ['dist']);
+  grunt.registerTask('default', [
+    'dist',
+    'test',
+    'jsdoc'
+  ]);
+
+  grunt.registerTask('watch', [
+    'browserify:watch'
+  ]);
 };

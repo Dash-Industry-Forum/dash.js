@@ -1,9 +1,12 @@
-import MediaPlayer from '../src/streaming/MediaPlayer.js';
-import DashContext from '../src/dash/DashContext.js';
+/// We make a global namespace for backward-compatability purposes
+// Browserify (more accurately UMD) does not allow for multiple exported modules
+// at once so this a quick and ugly hack for now
 
-let DashObj = {
-  MediaPlayer: MediaPlayer,
-  DashContext: DashContext
-};
+import Dash from './dash/Dash.js';
+import MediaPlayer from './streaming/MediaPlayer.js';
 
-export default DashObj;
+global.Dash = Dash;
+global.MediaPlayer = MediaPlayer;
+
+export { Dash };
+export { MediaPlayer };
