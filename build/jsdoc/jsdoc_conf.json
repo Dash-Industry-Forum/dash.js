@@ -3,10 +3,10 @@
         "allowUnknownTags": true
     },
     "source": {
-        "include": ["../src/streaming/", "../src/dash/"]
+        "include": ["./src/streaming/", "./src/dash/"]
     },
     "plugins": [],
-    "templates": {	
+    "templates": {
 		"cleverLinks"           : false,
 		"monospaceLinks"        : true,
 		"dateFormat"            : "ddd MMM Do YYYY",
