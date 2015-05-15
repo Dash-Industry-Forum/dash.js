@@ -37,6 +37,8 @@ MediaPlayer.dependencies.AbrController = function () {
         confidenceDict = {},
         bitrateDict = {},
         streamProcessorDict={},
+        abandonmentStateDict = {},
+        abandonmentTimeout,
 
         getInternalQuality = function (type, id) {
             var quality;
@@ -124,6 +126,46 @@ MediaPlayer.dependencies.AbrController = function () {
             }
             var maxIdx = this.getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
             return Math.min (idx , maxIdx);
+        },
+
+        onFragmentLoadProgress = function(evt) {
+
+            if (MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD === 0) { //check to see if there are parallel request or just one at a time.
+
+                var self = this,
+                    type = evt.data.request.mediaType,
+                    rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.ABANDON_FRAGMENT_RULES),
+                    schduleController = streamProcessorDict[type].getScheduleController(),
+                    fragmentModel = schduleController.getFragmentModel(),
+                    callback = function (switchRequest) {
+
+                        function setupTimeout(type){
+                            abandonmentTimeout = setTimeout(function () {
+                                self.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ALLOW_LOAD);
+                            }, MediaPlayer.dependencies.AbrController.ABANDON_TIMEOUT);
+                        }
+
+                        if (switchRequest.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) {
+
+                            var requests = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING}),
+                                newQuality = switchRequest.value,
+                                currentQuality = self.getQualityFor(type, self.streamController.getActiveStreamInfo());
+
+                            if (newQuality < currentQuality){
+
+                                fragmentModel.abortRequests();
+                                self.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ABANDON_LOAD);
+                                self.setPlaybackQuality(type, self.streamController.getActiveStreamInfo() , newQuality);
+                                schduleController.replaceCanceledRequests(requests);
+                                setupTimeout(type);
+                            }
+                        }
+                    };
+
+                self.rulesController.applyRules(rules, streamProcessorDict[type], callback, evt, function(currentValue, newValue) {
+                    return newValue;
+                });
+            }
         };
 
     return {
@@ -133,9 +175,16 @@ MediaPlayer.dependencies.AbrController = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        streamController:undefined,
+
+        setup: function() {
+            this[MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_PROGRESS] = onFragmentLoadProgress;
+        },
 
         initialize: function(type, streamProcessor) {
             streamProcessorDict[type] = streamProcessor;
+            abandonmentStateDict[type] = abandonmentStateDict[type] || {};
+            abandonmentStateDict[type].state = MediaPlayer.dependencies.AbrController.ALLOW_LOAD;
         },
 
         getAutoSwitchBitrate: function () {
@@ -172,7 +221,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
                     oldQuality = getInternalQuality(type, streamId);
 
-                    if (quality === oldQuality) return;
+                    if (quality === oldQuality || (abandonmentStateDict[type].state === MediaPlayer.dependencies.AbrController.ABANDON_LOAD &&  quality > oldQuality)) return;
 
                     setInternalQuality(type, streamId, quality);
                     //self.log("New quality of " + quality);
@@ -208,6 +257,14 @@ MediaPlayer.dependencies.AbrController = function () {
                 setInternalQuality(type, streamInfo.id, newPlaybackQuality);
                 this.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality});
             }
+        },
+
+        setAbandonmentStateFor: function (type, state) {
+            abandonmentStateDict[type].state = state;
+        },
+
+        getAbandonmentStateFor: function (type) {
+            return abandonmentStateDict[type].state;
         },
 
         getQualityFor: function (type, streamInfo) {
@@ -247,7 +304,7 @@ MediaPlayer.dependencies.AbrController = function () {
         /**
          * @param mediaInfo
          * @param bitrate A bitrate value, kbps
-         * @returns {number} A quality index for the given bitrate
+         * @returns {number} A quality index <= for the given bitrate
          * @memberof AbrController#
          */
         getQualityForBitrate: function(mediaInfo, bitrate) {
@@ -258,7 +315,9 @@ MediaPlayer.dependencies.AbrController = function () {
             for (var i = 0; i < ln; i +=1) {
                 bitrateInfo = bitrateList[i];
 
-                if (bitrate*1000 <= bitrateInfo.bitrate) return i;
+                if (bitrate*1000 <= bitrateInfo.bitrate) {
+                    return Math.max(i-1, 0);
+                }
             }
 
             return (ln-1);
@@ -320,9 +379,9 @@ MediaPlayer.dependencies.AbrController = function () {
             qualityDict = {};
             confidenceDict = {};
             streamProcessorDict = {};
-            //bitrateDict = {}; // Letting this setting persist over multiple sources.
-            // There is no way to set initial bit rate on subsequent media sources in a session if we renew the object each time
-            //attachSource is called in media player.
+            abandonmentStateDict = {};
+            clearTimeout(abandonmentTimeout);
+            abandonmentTimeout = null;
         }
     };
 };
@@ -339,3 +398,7 @@ MediaPlayer.dependencies.AbrController.eventList = {
 MediaPlayer.dependencies.AbrController.DEFAULT_VIDEO_BITRATE = 1000;
 // Default initial audio bitrate, kbps
 MediaPlayer.dependencies.AbrController.DEFAULT_AUDIO_BITRATE = 100;
+MediaPlayer.dependencies.AbrController.ABANDON_LOAD = "abandonload";
+MediaPlayer.dependencies.AbrController.ALLOW_LOAD = "allowload";
+MediaPlayer.dependencies.AbrController.ABANDON_TIMEOUT = 10000;
+MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY = 0.9;

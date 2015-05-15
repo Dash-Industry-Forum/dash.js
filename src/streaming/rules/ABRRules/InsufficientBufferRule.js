@@ -70,15 +70,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 mediaType = context.getMediaInfo().type,
                 current = context.getCurrentValue(),
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
-                streamInfo = context.getStreamInfo(),
-                trackInfo = context.getTrackInfo(),
-                duration = streamInfo.duration,
-                currentTime = self.playbackController.getTime(),
-                sp = context.getStreamProcessor(),
-                isDynamic = sp.isDynamic(),
-                lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
                 lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
-                lowBufferMark = Math.min(trackInfo.fragmentDuration, MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD),
                 switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
             if (now - lastSwitchTime < waitToSwitchTime ||
@@ -91,16 +83,6 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
             // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
             if (lastBufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
                 switchRequest = new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
-
-            } else if ( !isDynamic &&
-                        bufferStateDict[mediaType].state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
-                        lastBufferLevelVO.level < (lowBufferMark * 2) &&
-                        currentTime < (duration - lowBufferMark * 2)) {
-
-                var p = lastBufferLevelVO.level > lowBufferMark ?
-                    MediaPlayer.rules.SwitchRequest.prototype.DEFAULT : MediaPlayer.rules.SwitchRequest.prototype.STRONG;
-
-                switchRequest = new MediaPlayer.rules.SwitchRequest(Math.max(current - 1, 0), p);
             }
 
             if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
@@ -108,6 +90,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                     switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
                         switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
             }
+
             lastSwitchTime = now;
             callback(switchRequest);
         },

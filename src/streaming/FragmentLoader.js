@@ -116,11 +116,18 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                             httpRequestMetrics.tresponse = currentTime;
                         }
                     }
+
+                    if (event.lengthComputable) {
+                        request.bytesLoaded = event.loaded;
+                        request.bytesTotal = event.total;
+                    }
+
                     self.metricsModel.appendHttpTrace(httpRequestMetrics,
                                                       currentTime,
                                                       currentTime.getTime() - lastTraceTime.getTime(),
                                                       [req.response ? req.response.byteLength : 0]);
                     lastTraceTime = currentTime;
+                    self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_PROGRESS, {request: request});
                 };
 
                 req.onload = function () {
@@ -231,5 +238,6 @@ MediaPlayer.dependencies.FragmentLoader.prototype = {
 
 MediaPlayer.dependencies.FragmentLoader.eventList = {
     ENAME_LOADING_COMPLETED: "loadingCompleted",
+    ENAME_LOADING_PROGRESS: "loadingProgress",
     ENAME_CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted"
 };

@@ -44,6 +44,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         playListTraceMetrics = null,
         playListTraceMetricsClosed = true,
 
+
         clearPlayListTraceMetrics = function (endTime, stopreason) {
             var duration = 0,
                 startTime = null;
@@ -131,7 +132,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             });
         },
 
-        replaceCanceledPendingRequests = function(canceledRequests) {
+        replaceCanceledRequests = function(canceledRequests) {
             var ln = canceledRequests.length,
             // EPSILON is used to avoid javascript floating point issue, e.g. if request.startTime = 19.2,
             // request.duration = 3.83, than request.startTime + request.startTime = 19.2 + 1.92 = 21.119999999999997
@@ -282,7 +283,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 throw "Unexpected error!";
             }
 
-            replaceCanceledPendingRequests.call(self, canceledReqs);
+            replaceCanceledRequests.call(self, canceledReqs);
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
         },
 
@@ -367,6 +368,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         };
 
+
+
     return {
         log: undefined,
         system: undefined,
@@ -380,6 +383,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         adapter: undefined,
         scheduleRulesCollection: undefined,
         rulesController: undefined,
+        numOfParallelRequestAllowed:undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
@@ -420,6 +424,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.bufferController = streamProcessor.bufferController;
             isDynamic = streamProcessor.isDynamic();
             fragmentModel = this.fragmentController.getModel(this);
+            MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD = self.numOfParallelRequestAllowed;
 
             if (self.scheduleRulesCollection.bufferLevelRule) {
                 self.scheduleRulesCollection.bufferLevelRule.setScheduleController(self);
@@ -442,6 +447,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             return fragmentsToLoad;
         },
 
+        replaceCanceledRequests:replaceCanceledRequests,
+
         reset: function() {
             var self = this;
 
@@ -461,3 +468,5 @@ MediaPlayer.dependencies.ScheduleController = function () {
 MediaPlayer.dependencies.ScheduleController.prototype = {
     constructor: MediaPlayer.dependencies.ScheduleController
 };
+
+MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD = 0;
