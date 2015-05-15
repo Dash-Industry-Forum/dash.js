@@ -29,7 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
+import KeySystem from './KeySystem.js';
+import KeyPair from '../../vo/protection/KeyPair.js';
+import LicenseRequestComplete from '../../vo/protection/LicenseRequestComplete.js';
+import ClearKeyKeySet from '../../vo/protection/ClearKeyKeySet.js';
+import CommonEncryption from '../CommonEncryption.js';
+import Error from '../../vo/Error.js';
+
+let KeySystem_PlayReady = function() {
     "use strict";
 
     var keySystemStr = "com.microsoft.playready",
@@ -59,16 +66,16 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
                 }
             }
             else {
-                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                    null, new MediaPlayer.vo.Error(null, 'DRM: playready update, can not find Challenge in keyMessage', null));
+                self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    null, new Error(null, 'DRM: playready update, can not find Challenge in keyMessage', null));
             }
 
             var headerNameList = xmlDoc.getElementsByTagName("name");
             var headerValueList = xmlDoc.getElementsByTagName("value");
 
             if (headerNameList.length != headerValueList.length) {
-                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                    null, new MediaPlayer.vo.Error(null, 'DRM: playready update, invalid header name/value pair in keyMessage', null));
+                self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    null, new Error(null, 'DRM: playready update, invalid header name/value pair in keyMessage', null));
             }
 
             for (var i = 0; i < headerNameList.length; i++) {
@@ -82,21 +89,21 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             var xhr = new XMLHttpRequest();
             xhr.onload = function () {
                 if (xhr.status == 200) {
-                    var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new Uint8Array(xhr.response), requestData);
-                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    var event = new LicenseRequestComplete(new Uint8Array(xhr.response), requestData);
+                    self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         event);
                 } else {
-                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                        null, new MediaPlayer.vo.Error(null, 'DRM: playready update, XHR status is "' + xhr.statusText + '" (' + xhr.status + '), expected to be 200. readyState is ' + xhr.readyState, null));
+                    self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                        null, new Error(null, 'DRM: playready update, XHR status is "' + xhr.statusText + '" (' + xhr.status + '), expected to be 200. readyState is ' + xhr.readyState, null));
                 }
             };
             xhr.onabort = function () {
-                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                    null, new MediaPlayer.vo.Error(null, 'DRM: playready update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState, null));
+                self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    null, new Error(null, 'DRM: playready update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState, null));
             };
             xhr.onerror = function () {
-                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                    null, new MediaPlayer.vo.Error(null, 'DRM: playready update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState, null));
+                self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    null, new Error(null, 'DRM: playready update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState, null));
             };
 
             xhr.open('POST', (protData && protData.laURL && protData.laURL !== "") ? protData.laURL : laURL);
@@ -210,7 +217,8 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
     };
 };
 
-MediaPlayer.dependencies.protection.KeySystem_PlayReady.prototype = {
-    constructor: MediaPlayer.dependencies.protection.KeySystem_PlayReady
+KeySystem_PlayReady.prototype = {
+    constructor: KeySystem_PlayReady
 };
 
+export default KeySystem_PlayReady;

@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.dependencies.protection.CommonEncryption = {
+let CommonEncryption = {
 
     /**
      * Find and return the ContentProtection element in the given array
@@ -72,7 +72,7 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
      * or null if a valid association could not be found.
      */
     getPSSHForKeySystem: function(keySystem, initData) {
-        var psshList = MediaPlayer.dependencies.protection.CommonEncryption.parsePSSHList(initData);
+        var psshList = CommonEncryption.parsePSSHList(initData);
         if (psshList.hasOwnProperty(keySystem.uuid.toLowerCase())) {
             return psshList[keySystem.uuid.toLowerCase()];
         }
@@ -190,3 +190,5 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
         return pssh;
     }
 };
+
+export default CommonEncryption;

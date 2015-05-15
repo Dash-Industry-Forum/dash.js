@@ -28,7 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.PlaybackTimeRule = function () {
+
+import SwitchRequest from '../SwitchRequest.js';
+import PlaybackController from '../../controllers/PlaybackController.js';
+import FragmentModel from '../../models/FragmentModel.js';
+
+let PlaybackTimeRule = function () {
     "use strict";
 
     var seekTarget = {},
@@ -52,7 +57,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
         playbackController: undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
         },
 
         setScheduleController: function(scheduleControllerValue) {
@@ -72,8 +77,8 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 track = streamProcessor.getCurrentTrack(),
                 st = seekTarget ? seekTarget[mediaType] : null,
                 hasSeekTarget = (st !== undefined) && (st !== null),
-                p = hasSeekTarget ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
-                rejected = sc.getFragmentModel().getRequests({state: MediaPlayer.dependencies.FragmentModel.states.REJECTED})[0],
+                p = hasSeekTarget ? SwitchRequest.prototype.STRONG  : SwitchRequest.prototype.DEFAULT,
+                rejected = sc.getFragmentModel().getRequests({state: FragmentModel.states.REJECTED})[0],
                 keepIdx = !!rejected && !hasSeekTarget,
                 currentTime = this.adapter.getIndexHandlerTime(streamProcessor),
                 playbackTime = this.playbackController.getTime(),
@@ -91,7 +96,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             }
 
             if (isNaN(time)) {
-                callback(new MediaPlayer.rules.SwitchRequest(null, p));
+                callback(new SwitchRequest(null, p));
                 return;
             }
 
@@ -127,7 +132,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 this.adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
             }
 
-            callback(new MediaPlayer.rules.SwitchRequest(request, p));
+            callback(new SwitchRequest(request, p));
         },
 
         reset: function() {
@@ -137,6 +142,8 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
     };
 };
 
-MediaPlayer.rules.PlaybackTimeRule.prototype = {
-    constructor: MediaPlayer.rules.PlaybackTimeRule
+PlaybackTimeRule.prototype = {
+    constructor: PlaybackTimeRule
 };
+
+export default PlaybackTimeRule;

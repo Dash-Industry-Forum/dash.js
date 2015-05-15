@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.TTMLParser = function () {
+let TTMLParser = function () {
     "use strict";
 
     /*
@@ -100,7 +100,7 @@ MediaPlayer.utils.TTMLParser = function () {
 
             // R0008 - A document must contain a ttp:profile element where the use attribute of that element is specified as http://www.w3.org/ns/ttml/profile/sdp-us.
 			/* extend the support to other profiles
-			// Profile is not mandatory 
+			// Profile is not mandatory
             if (passed && hasProfile) {
                 passed = hasProfile && (ttml.tt.head.profile.use === "http://www.w3.org/ns/ttml/profile/sdp-us");
             }*/
@@ -206,3 +206,5 @@ MediaPlayer.utils.TTMLParser = function () {
         parse: internalParse
     };
 };
+
+export default TTMLParser;

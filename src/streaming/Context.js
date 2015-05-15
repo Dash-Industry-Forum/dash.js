@@ -28,19 +28,92 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.di.Context = function () {
+
+import Debug from './utils/Debug.js';
+import EventBus from './utils/EventBus.js';
+import Capabilities from './utils/Capabilities.js';
+import DOMStorage from './utils/DOMStorage.js';
+import CustomTimeRanges from './utils/CustomTimeRanges.js';
+import VirtualBuffer from './utils/VirtualBuffer.js';
+
+import TextTrackExtensions from './extensions/TextTrackExtensions.js';
+import VTTParser from './VTTParser.js';
+import TTMLParser from './TTMLParser.js';
+
+import VideoModel from './models/VideoModel.js';
+import ManifestModel from './models/ManifestModel.js';
+import MetricsModel from './models/MetricsModel.js';
+import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
+
+import KeySystem_PlayReady from './protection/drm/KeySystem_PlayReady.js';
+import KeySystem_Widevine from './protection/drm/KeySystem_Widevine.js';
+import KeySystem_ClearKey from './protection/drm/KeySystem_ClearKey.js';
+
+import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
+import TextSourceBuffer from './TextSourceBuffer.js';
+import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
+import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
+import AbrController from './controllers/AbrController.js';
+import ErrorHandler from './ErrorHandler.js';
+import VideoModelExtensions from './extensions/VideoModelExtensions.js';
+import ProtectionExtensions from './extensions/ProtectionExtensions.js';
+import ProtectionController from './controllers/ProtectionController.js';
+import PlaybackController from './controllers/PlaybackController.js';
+
+import LiveEdgeFinder from './LiveEdgeFinder.js';
+
+import MetricsList from './vo/MetricsList.js';
+import InsufficientBufferRule from './rules/ABRRules/InsufficientBufferRule.js';
+import BufferOccupancyRule from './rules/ABRRules/BufferOccupancyRule.js';
+import ThroughputRule from './rules/ABRRules/ThroughputRule.js';
+import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
+
+import RulesController from './rules/RulesController.js';
+import BufferLevelRule from './rules/SchedulingRules/BufferLevelRule.js';
+import PendingRequestsRule from './rules/SchedulingRules/PendingRequestsRule.js';
+import PlaybackTimeRule from './rules/SchedulingRules/PlaybackTimeRule.js';
+import SameTimeRequestRule from './rules/SchedulingRules/SameTimeRequestRule.js';
+import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
+
+import LiveEdgeBinarySearchRule from './rules/SynchronizationRules/LiveEdgeBinarySearchRule.js';
+import LiveEdgeWithTimeSynchronizationRule from './rules/SynchronizationRules/LiveEdgeWithTimeSynchronizationRule.js';
+import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
+
+import XlinkController from './controllers/XlinkController.js';
+import XlinkLoader from './XlinkLoader.js';
+import StreamProcessor from './StreamProcessor.js';
+import EventController from './controllers/EventController.js';
+import TextController from './controllers/TextController.js';
+import BufferController from './controllers/BufferController.js';
+import ManifestLoader from './ManifestLoader.js';
+import ManifestUpdater from './ManifestUpdater.js';
+import FragmentController from './controllers/FragmentController.js';
+import FragmentLoader from './FragmentLoader.js';
+import FragmentModel from './models/FragmentModel.js';
+import StreamController from './controllers/StreamController.js';
+import Stream from './Stream.js';
+import ScheduleController from './controllers/ScheduleController.js';
+import TimeSyncController from './TimeSyncController.js';
+
+import Notifier from './Notifier.js';
+
+import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
+import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
+import ProtectionModel_01b from './models/ProtectionModel_01b.js';
+
+let Context = function () {
     "use strict";
 
     var mapProtectionModel = function() {
         var videoElement = document.createElement("video");
 
         // Detect EME APIs.  Look for newest API versions first
-        if (MediaPlayer.models.ProtectionModel_21Jan2015.detect(videoElement)) {
-            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_21Jan2015);
-        } else if (MediaPlayer.models.ProtectionModel_3Feb2014.detect(videoElement)) {
-            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_3Feb2014);
-        } else if (MediaPlayer.models.ProtectionModel_01b.detect(videoElement)) {
-            this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_01b);
+        if (ProtectionModel_21Jan2015.detect(videoElement)) {
+            this.system.mapClass('protectionModel', ProtectionModel_21Jan2015);
+        } else if (ProtectionModel_3Feb2014.detect(videoElement)) {
+            this.system.mapClass('protectionModel', ProtectionModel_3Feb2014);
+        } else if (ProtectionModel_01b.detect(videoElement)) {
+            this.system.mapClass('protectionModel', ProtectionModel_01b);
         } else {
             var debug = this.system.getObject("debug");
             debug.log("No supported version of EME detected on this user agent!");
@@ -53,75 +126,77 @@ MediaPlayer.di.Context = function () {
         setup : function () {
             this.system.autoMapOutlets = true;
 
-            this.system.mapSingleton('debug', MediaPlayer.utils.Debug);
-            this.system.mapSingleton('eventBus', MediaPlayer.utils.EventBus);
-            this.system.mapSingleton('capabilities', MediaPlayer.utils.Capabilities);
-            this.system.mapSingleton('DOMStorage', MediaPlayer.utils.DOMStorage);
-            this.system.mapClass('customTimeRanges', MediaPlayer.utils.CustomTimeRanges);
-            this.system.mapSingleton('virtualBuffer', MediaPlayer.utils.VirtualBuffer);
+            this.system.mapSingleton('debug', Debug);
+            this.system.mapSingleton('eventBus', EventBus);
+            this.system.mapSingleton('capabilities', Capabilities);
+            this.system.mapSingleton('DOMStorage', DOMStorage);
+            this.system.mapClass('customTimeRanges', CustomTimeRanges);
+            this.system.mapSingleton('virtualBuffer', VirtualBuffer);
 
-            this.system.mapSingleton('textTrackExtensions', MediaPlayer.utils.TextTrackExtensions);
-            this.system.mapSingleton('vttParser', MediaPlayer.utils.VTTParser);
-            this.system.mapSingleton('ttmlParser', MediaPlayer.utils.TTMLParser);
+            this.system.mapSingleton('textTrackExtensions', TextTrackExtensions);
+            this.system.mapSingleton('vttParser', VTTParser);
+            this.system.mapSingleton('ttmlParser', TTMLParser);
 
-            this.system.mapSingleton('videoModel', MediaPlayer.models.VideoModel);
-            this.system.mapSingleton('manifestModel', MediaPlayer.models.ManifestModel);
-            this.system.mapSingleton('metricsModel', MediaPlayer.models.MetricsModel);
-            this.system.mapSingleton('uriQueryFragModel', MediaPlayer.models.URIQueryAndFragmentModel);
+            this.system.mapSingleton('videoModel', VideoModel);
+            this.system.mapSingleton('manifestModel', ManifestModel);
+            this.system.mapSingleton('metricsModel', MetricsModel);
+            this.system.mapSingleton('uriQueryFragModel', URIQueryAndFragmentModel);
 
-            this.system.mapSingleton('ksPlayReady', MediaPlayer.dependencies.protection.KeySystem_PlayReady);
-            this.system.mapSingleton('ksWidevine', MediaPlayer.dependencies.protection.KeySystem_Widevine);
-            this.system.mapSingleton('ksClearKey', MediaPlayer.dependencies.protection.KeySystem_ClearKey);
+            this.system.mapSingleton('ksPlayReady', KeySystem_PlayReady);
+            this.system.mapSingleton('ksWidevine', KeySystem_Widevine);
+            this.system.mapSingleton('ksClearKey', KeySystem_ClearKey);
 
-            this.system.mapSingleton('requestModifierExt', MediaPlayer.dependencies.RequestModifierExtensions);
-            this.system.mapSingleton('textSourceBuffer', MediaPlayer.dependencies.TextSourceBuffer);
-            this.system.mapSingleton('mediaSourceExt', MediaPlayer.dependencies.MediaSourceExtensions);
-            this.system.mapSingleton('sourceBufferExt', MediaPlayer.dependencies.SourceBufferExtensions);
-            this.system.mapSingleton('abrController', MediaPlayer.dependencies.AbrController);
-            this.system.mapSingleton('errHandler', MediaPlayer.dependencies.ErrorHandler);
-            this.system.mapSingleton('videoExt', MediaPlayer.dependencies.VideoModelExtensions);
-            this.system.mapSingleton('protectionExt', MediaPlayer.dependencies.ProtectionExtensions);
-            this.system.mapClass('protectionController', MediaPlayer.dependencies.ProtectionController);
-            this.system.mapSingleton('playbackController', MediaPlayer.dependencies.PlaybackController);
+            this.system.mapSingleton('requestModifierExt', RequestModifierExtensions);
+            this.system.mapSingleton('textSourceBuffer', TextSourceBuffer);
+            this.system.mapSingleton('mediaSourceExt', MediaSourceExtensions);
+            this.system.mapSingleton('sourceBufferExt', SourceBufferExtensions);
+            this.system.mapSingleton('abrController', AbrController);
+            this.system.mapSingleton('errHandler', ErrorHandler);
+            this.system.mapSingleton('videoExt', VideoModelExtensions);
+            this.system.mapSingleton('protectionExt', ProtectionExtensions);
+            this.system.mapClass('protectionController', ProtectionController);
+            this.system.mapSingleton('playbackController', PlaybackController);
 
             mapProtectionModel.call(this); // Determines EME API support and version
 
-            this.system.mapSingleton('liveEdgeFinder', MediaPlayer.dependencies.LiveEdgeFinder);
+            this.system.mapSingleton('liveEdgeFinder', LiveEdgeFinder);
 
-            this.system.mapClass('metrics', MediaPlayer.models.MetricsList);
-            this.system.mapClass('insufficientBufferRule', MediaPlayer.rules.InsufficientBufferRule);
-            this.system.mapClass('bufferOccupancyRule', MediaPlayer.rules.BufferOccupancyRule);
-            this.system.mapClass('throughputRule', MediaPlayer.rules.ThroughputRule);
-            this.system.mapSingleton('abrRulesCollection', MediaPlayer.rules.ABRRulesCollection);
+            this.system.mapClass('metrics', MetricsList);
+            this.system.mapClass('insufficientBufferRule', InsufficientBufferRule);
+            this.system.mapClass('bufferOccupancyRule', BufferOccupancyRule);
+            this.system.mapClass('throughputRule', ThroughputRule);
+            this.system.mapSingleton('abrRulesCollection', ABRRulesCollection);
 
-            this.system.mapSingleton('rulesController', MediaPlayer.rules.RulesController);
-            this.system.mapClass('bufferLevelRule', MediaPlayer.rules.BufferLevelRule);
-            this.system.mapClass('pendingRequestsRule', MediaPlayer.rules.PendingRequestsRule);
-            this.system.mapClass('playbackTimeRule', MediaPlayer.rules.PlaybackTimeRule);
-            this.system.mapClass('sameTimeRequestRule', MediaPlayer.rules.SameTimeRequestRule);
-            this.system.mapSingleton('scheduleRulesCollection', MediaPlayer.rules.ScheduleRulesCollection);
+            this.system.mapSingleton('rulesController', RulesController);
+            this.system.mapClass('bufferLevelRule', BufferLevelRule);
+            this.system.mapClass('pendingRequestsRule', PendingRequestsRule);
+            this.system.mapClass('playbackTimeRule', PlaybackTimeRule);
+            this.system.mapClass('sameTimeRequestRule', SameTimeRequestRule);
+            this.system.mapSingleton('scheduleRulesCollection', ScheduleRulesCollection);
 
-            this.system.mapClass('liveEdgeBinarySearchRule', MediaPlayer.rules.LiveEdgeBinarySearchRule);
-            this.system.mapClass('liveEdgeWithTimeSynchronizationRule', MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule);
-            this.system.mapSingleton('synchronizationRulesCollection', MediaPlayer.rules.SynchronizationRulesCollection);
+            this.system.mapClass('liveEdgeBinarySearchRule', LiveEdgeBinarySearchRule);
+            this.system.mapClass('liveEdgeWithTimeSynchronizationRule', LiveEdgeWithTimeSynchronizationRule);
+            this.system.mapSingleton('synchronizationRulesCollection', SynchronizationRulesCollection);
 
-            this.system.mapSingleton('xlinkController', MediaPlayer.dependencies.XlinkController);
-            this.system.mapSingleton('xlinkLoader', MediaPlayer.dependencies.XlinkLoader);
-            this.system.mapClass('streamProcessor', MediaPlayer.dependencies.StreamProcessor);
-            this.system.mapClass('eventController', MediaPlayer.dependencies.EventController);
-            this.system.mapClass('textController', MediaPlayer.dependencies.TextController);
-            this.system.mapClass('bufferController', MediaPlayer.dependencies.BufferController);
-            this.system.mapClass('manifestLoader', MediaPlayer.dependencies.ManifestLoader);
-            this.system.mapSingleton('manifestUpdater', MediaPlayer.dependencies.ManifestUpdater);
-            this.system.mapClass('fragmentController', MediaPlayer.dependencies.FragmentController);
-            this.system.mapClass('fragmentLoader', MediaPlayer.dependencies.FragmentLoader);
-            this.system.mapClass('fragmentModel', MediaPlayer.dependencies.FragmentModel);
-            this.system.mapSingleton('streamController', MediaPlayer.dependencies.StreamController);
-            this.system.mapClass('stream', MediaPlayer.dependencies.Stream);
-            this.system.mapClass('scheduleController', MediaPlayer.dependencies.ScheduleController);
-            this.system.mapSingleton('timeSyncController', MediaPlayer.dependencies.TimeSyncController);
+            this.system.mapSingleton('xlinkController', XlinkController);
+            this.system.mapSingleton('xlinkLoader', XlinkLoader);
+            this.system.mapClass('streamProcessor', StreamProcessor);
+            this.system.mapClass('eventController', EventController);
+            this.system.mapClass('textController', TextController);
+            this.system.mapClass('bufferController', BufferController);
+            this.system.mapClass('manifestLoader', ManifestLoader);
+            this.system.mapSingleton('manifestUpdater', ManifestUpdater);
+            this.system.mapClass('fragmentController', FragmentController);
+            this.system.mapClass('fragmentLoader', FragmentLoader);
+            this.system.mapClass('fragmentModel', FragmentModel);
+            this.system.mapSingleton('streamController', StreamController);
+            this.system.mapClass('stream', Stream);
+            this.system.mapClass('scheduleController', ScheduleController);
+            this.system.mapSingleton('timeSyncController', TimeSyncController);
 
-            this.system.mapSingleton('notifier', MediaPlayer.dependencies.Notifier);
+            this.system.mapSingleton('notifier', Notifier);
         }
     };
 };
+
+export default Context;

@@ -28,7 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.AbrController = function () {
+
+import ABRRulesCollection from '../rules/ABRRules/ABRRulesCollection';
+import SwitchRequest from '../rules/SwitchRequest';
+import BitrateInfo from '../vo/BitrateInfo.js';
+
+let AbrController = function () {
     "use strict";
 
     var autoSwitchBitrate = true,
@@ -179,7 +184,7 @@ MediaPlayer.dependencies.AbrController = function () {
                     setInternalConfidence(type, streamId, confidence);
                     //self.log("New confidence of " + confidence);
 
-                    self.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
+                    self.notify(AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
                 };
 
             quality = getInternalQuality(type, streamId);
@@ -190,9 +195,9 @@ MediaPlayer.dependencies.AbrController = function () {
             if (!autoSwitchBitrate) return;
 
             //self.log("Check ABR rules.");
-            rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES);
+            rules = self.abrRulesCollection.getRules(ABRRulesCollection.prototype.QUALITY_SWITCH_RULES);
             self.rulesController.applyRules(rules, streamProcessor, callback.bind(self), quality, function(currentValue, newValue) {
-                currentValue = currentValue === MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
+                currentValue = currentValue === SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
                 return Math.max(currentValue, newValue);
             });
         },
@@ -206,7 +211,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
             if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && newPlaybackQuality <= getTopQualityIndex.call(this, type, id)) {
                 setInternalQuality(type, streamInfo.id, newPlaybackQuality);
-                this.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality});
+                this.notify(AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality});
             }
         },
 
@@ -266,7 +271,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
         /**
          * @param mediaInfo
-         * @returns {Array} A list of {@link MediaPlayer.vo.BitrateInfo} objects
+         * @returns {Array} A list of {@link BitrateInfo} objects
          * @memberof AbrController#
          */
         getBitrateList: function(mediaInfo) {
@@ -278,7 +283,7 @@ MediaPlayer.dependencies.AbrController = function () {
                 bitrateInfo;
 
             for (var i = 0, ln = bitrateList.length; i < ln; i += 1) {
-                bitrateInfo = new MediaPlayer.vo.BitrateInfo();
+                bitrateInfo = new BitrateInfo();
                 bitrateInfo.mediaType = type;
                 bitrateInfo.qualityIndex = i;
                 bitrateInfo.bitrate = bitrateList[i];
@@ -327,15 +332,17 @@ MediaPlayer.dependencies.AbrController = function () {
     };
 };
 
-MediaPlayer.dependencies.AbrController.prototype = {
-    constructor: MediaPlayer.dependencies.AbrController
+AbrController.prototype = {
+    constructor: AbrController
 };
 
-MediaPlayer.dependencies.AbrController.eventList = {
+AbrController.eventList = {
     ENAME_QUALITY_CHANGED: "qualityChanged"
 };
 
 // Default initial video bitrate, kbps
-MediaPlayer.dependencies.AbrController.DEFAULT_VIDEO_BITRATE = 1000;
+AbrController.DEFAULT_VIDEO_BITRATE = 1000;
 // Default initial audio bitrate, kbps
-MediaPlayer.dependencies.AbrController.DEFAULT_AUDIO_BITRATE = 100;
+AbrController.DEFAULT_AUDIO_BITRATE = 100;
+
+export default AbrController;

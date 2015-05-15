@@ -29,7 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 /*globals MediaPlayer*/
-MediaPlayer.dependencies.TimeSyncController = function () {
+
+import Error from './vo/Error.js';
+
+let TimeSyncController = function () {
     "use strict";
 
     var HTTP_TIMEOUT_MS = 5000,
@@ -238,12 +241,12 @@ MediaPlayer.dependencies.TimeSyncController = function () {
                     setIsSynchronizing(false);
 
                     self.notify(
-                        MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED,
+                        TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED,
                         {
                             time: time,
                             offset: offset
                         },
-                        failed ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE) : null
+                        failed ? new Error(TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE) : null
                     );
                 };
 
@@ -311,12 +314,14 @@ MediaPlayer.dependencies.TimeSyncController = function () {
     };
 };
 
-MediaPlayer.dependencies.TimeSyncController.prototype = {
-    constructor: MediaPlayer.dependencies.TimeSyncController
+TimeSyncController.prototype = {
+    constructor: TimeSyncController
 };
 
-MediaPlayer.dependencies.TimeSyncController.eventList = {
+TimeSyncController.eventList = {
     ENAME_TIME_SYNCHRONIZATION_COMPLETED: "timeSynchronizationComplete"
 };
 
-MediaPlayer.dependencies.TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE = 1;
+TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE = 1;
+
+export default TimeSyncController;

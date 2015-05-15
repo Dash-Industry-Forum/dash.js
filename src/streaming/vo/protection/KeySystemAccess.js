@@ -34,18 +34,19 @@
  * given piece of content and key system requirements.  Used to initialize license
  * acquisition operations.
  *
- * @param {MediaPlayer.dependencies.protection.KeySystem} keySystem the key system
- * @param {MediaPlayer.vo.protection.KeySystemConfiguration} ksConfiguration the
+ * @param {KeySystem} keySystem the key system
+ * @param {KeySystemConfiguration} ksConfiguration the
  * subset of configurations passed to the key system access request that are supported
  * by this user agent
  * @constructor
  */
-MediaPlayer.vo.protection.KeySystemAccess = function(keySystem, ksConfiguration) {
+let KeySystemAccess = function(keySystem, ksConfiguration) {
     this.keySystem = keySystem;
     this.ksConfiguration = ksConfiguration;
 };
 
-MediaPlayer.vo.protection.KeySystemAccess.prototype = {
-    constructor: MediaPlayer.vo.protection.KeySystemAccess
+KeySystemAccess.prototype = {
+    constructor: KeySystemAccess
 };
 
+export default KeySystemAccess;

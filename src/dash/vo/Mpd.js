@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.vo.Mpd = function () {
+let Mpd = function () {
     "use strict";
     this.manifest = null;
     this.suggestedPresentationDelay = 0;
@@ -41,6 +41,8 @@ Dash.vo.Mpd = function () {
     this.isClientServerTimeSyncCompleted = false;
 };
 
-Dash.vo.Mpd.prototype = {
-    constructor: Dash.vo.Mpd
+Mpd.prototype = {
+    constructor: Mpd
 };
+
+export default Mpd;

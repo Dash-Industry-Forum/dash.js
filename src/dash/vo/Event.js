@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.vo.Event = function () {
+let Event = function () {
     "use strict";
     this.duration = NaN;
     this.presentationTime = NaN;
@@ -39,6 +39,8 @@ Dash.vo.Event = function () {
 
 };
 
-Dash.vo.Event.prototype = {
-    constructor: Dash.vo.Event
+Event.prototype = {
+    constructor: Event
 };
+
+export default Event;

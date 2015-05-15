@@ -28,7 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.InsufficientBufferRule = function () {
+
+import SwitchRequest from '../SwitchRequest.js';
+import BufferController from '../../controllers/BufferController.js';
+
+let InsufficientBufferRule = function () {
     "use strict";
     /*
      * This rule is intended to be sure that our buffer doesn't run dry.
@@ -46,7 +50,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
         setBufferInfo = function (type, state) {
             bufferStateDict[type] = bufferStateDict[type] || {};
             bufferStateDict[type].state = state;
-            if (state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED && !bufferStateDict[type].firstBufferLoadedEvent) {
+            if (state === BufferController.BUFFER_LOADED && !bufferStateDict[type].firstBufferLoadedEvent) {
                 bufferStateDict[type].firstBufferLoadedEvent = true;
             }
         },
@@ -61,7 +65,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
         playbackController: undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
         },
 
         execute: function (context, callback) {
@@ -78,8 +82,8 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 isDynamic = sp.isDynamic(),
                 lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
                 lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
-                lowBufferMark = Math.min(trackInfo.fragmentDuration, MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD),
-                switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
+                lowBufferMark = Math.min(trackInfo.fragmentDuration, BufferController.LOW_BUFFER_THRESHOLD),
+                switchRequest = new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
 
             if (now - lastSwitchTime < waitToSwitchTime ||
                 lastBufferStateVO === null) {
@@ -89,24 +93,24 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
 
             setBufferInfo(mediaType, lastBufferStateVO.state);
             // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
-            if (lastBufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
-                switchRequest = new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
+            if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
+                switchRequest = new SwitchRequest(0, SwitchRequest.prototype.STRONG);
 
             } else if ( !isDynamic &&
-                        bufferStateDict[mediaType].state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
+                        bufferStateDict[mediaType].state === BufferController.BUFFER_LOADED &&
                         lastBufferLevelVO.level < (lowBufferMark * 2) &&
                         currentTime < (duration - lowBufferMark * 2)) {
 
                 var p = lastBufferLevelVO.level > lowBufferMark ?
-                    MediaPlayer.rules.SwitchRequest.prototype.DEFAULT : MediaPlayer.rules.SwitchRequest.prototype.STRONG;
+                    SwitchRequest.prototype.DEFAULT : SwitchRequest.prototype.STRONG;
 
-                switchRequest = new MediaPlayer.rules.SwitchRequest(Math.max(current - 1, 0), p);
+                switchRequest = new SwitchRequest(Math.max(current - 1, 0), p);
             }
 
-            if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
+            if (switchRequest.value !== SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
                 self.log("InsufficientBufferRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                    switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
-                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
+                    switchRequest.priority === SwitchRequest.prototype.DEFAULT ? "Default" :
+                        switchRequest.priority === SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
             }
             lastSwitchTime = now;
             callback(switchRequest);
@@ -119,6 +123,8 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
     };
 };
 
-MediaPlayer.rules.InsufficientBufferRule.prototype = {
-    constructor: MediaPlayer.rules.InsufficientBufferRule
+InsufficientBufferRule.prototype = {
+    constructor: InsufficientBufferRule
 };
+
+export default InsufficientBufferRule;

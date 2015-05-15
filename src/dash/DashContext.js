@@ -28,26 +28,41 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.di.DashContext = function () {
+
+import DashParser from './DashParser.js';
+import DashHandler from './DashHandler.js';
+import BaseURLExtensions from './extensions/BaseURLExtensions.js';
+import FragmentExtensions from './extensions/FragmentExtensions.js';
+import RepresentationController from './controllers/RepresentationController.js';
+import DashManifestExtensions from './extensions/DashManifestExtensions.js';
+import DashMetricsExtensions from './extensions/DashMetricsExtensions.js';
+import TimelineConverter from './TimelineConverter.js';
+import DashAdapter from './DashAdapter.js';
+
+let DashContext = function () {
     "use strict";
 
     return {
         system : undefined,
         setup : function () {
-            Dash.di.DashContext.prototype.setup.call(this);
+            DashContext.prototype.setup.call(this);
 
-            this.system.mapClass('parser', Dash.dependencies.DashParser);
-            this.system.mapClass('indexHandler', Dash.dependencies.DashHandler);
-            this.system.mapSingleton('baseURLExt', Dash.dependencies.BaseURLExtensions);
-            this.system.mapClass('fragmentExt', Dash.dependencies.FragmentExtensions);
-            this.system.mapClass('trackController', Dash.dependencies.RepresentationController);
-            this.system.mapSingleton('manifestExt', Dash.dependencies.DashManifestExtensions);
-            this.system.mapSingleton('metricsExt', Dash.dependencies.DashMetricsExtensions);
-            this.system.mapSingleton('timelineConverter', Dash.dependencies.TimelineConverter);
-            this.system.mapSingleton('adapter', Dash.dependencies.DashAdapter);
+            this.system.mapClass('parser', DashParser);
+            this.system.mapClass('indexHandler', DashHandler);
+            this.system.mapSingleton('baseURLExt', BaseURLExtensions);
+            this.system.mapClass('fragmentExt', FragmentExtensions);
+            this.system.mapClass('trackController', RepresentationController);
+            this.system.mapSingleton('manifestExt', DashManifestExtensions);
+            this.system.mapSingleton('metricsExt', DashMetricsExtensions);
+            this.system.mapSingleton('timelineConverter', TimelineConverter);
+            this.system.mapSingleton('adapter', DashAdapter);
         }
     };
 };
 
-Dash.di.DashContext.prototype = new MediaPlayer.di.Context();
-Dash.di.DashContext.prototype.constructor = Dash.di.DashContext;
+import MediaContext from '../Context.js';
+
+DashContext.prototype = new MediaContext();
+DashContext.prototype.constructor = MediaContext;
+
+export default DashContext;

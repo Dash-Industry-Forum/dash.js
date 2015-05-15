@@ -36,13 +36,14 @@
  * @param errorString an informational error message
  * @constructor
  */
-MediaPlayer.vo.protection.KeyError = function(sessionToken, errorString) {
+let KeyError = function(sessionToken, errorString) {
     "use strict";
     this.sessionToken = sessionToken;
     this.error = errorString;
 };
 
-MediaPlayer.vo.protection.KeyError.prototype = {
-    constructor: MediaPlayer.vo.protection.KeyError
+KeyError.prototype = {
+    constructor: KeyError
 };
 
+export default KeyError;

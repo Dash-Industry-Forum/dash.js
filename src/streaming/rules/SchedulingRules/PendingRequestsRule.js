@@ -28,7 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.PendingRequestsRule = function () {
+
+import SwitchRequest from '../SwitchRequest.js';
+import FragmentModel from '../../models/FragmentModel.js';
+
+let PendingRequestsRule = function () {
     "use strict";
 
     var LIMIT = 3,
@@ -49,28 +53,28 @@ MediaPlayer.rules.PendingRequestsRule = function () {
                 current = context.getCurrentValue(),
                 sc = scheduleController[streamId][mediaType],
                 model = sc.getFragmentModel(),
-                requests = model.getRequests({state: [MediaPlayer.dependencies.FragmentModel.states.PENDING, MediaPlayer.dependencies.FragmentModel.states.LOADING]}),
-                rejectedRequests = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.REJECTED}),
+                requests = model.getRequests({state: [FragmentModel.states.PENDING, FragmentModel.states.LOADING]}),
+                rejectedRequests = model.getRequests({state: FragmentModel.states.REJECTED}),
                 rLn = rejectedRequests.length,
                 ln = requests.length,
                 count = Math.max(current - ln, 0);
 
             if (rLn > 0) {
-                callback(new MediaPlayer.rules.SwitchRequest(rLn, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
+                callback(new SwitchRequest(rLn, SwitchRequest.prototype.DEFAULT));
                 return;
             }
 
             if (ln > LIMIT) {
-                callback(new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
+                callback(new SwitchRequest(0, SwitchRequest.prototype.DEFAULT));
                 return;
             }
 
             if (current === 0) {
-                callback(new MediaPlayer.rules.SwitchRequest(count, MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE));
+                callback(new SwitchRequest(count, SwitchRequest.prototype.NO_CHANGE));
                 return;
             }
 
-            callback(new MediaPlayer.rules.SwitchRequest(count, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
+            callback(new SwitchRequest(count, SwitchRequest.prototype.DEFAULT));
         },
 
         reset: function() {
@@ -79,6 +83,8 @@ MediaPlayer.rules.PendingRequestsRule = function () {
     };
 };
 
-MediaPlayer.rules.PendingRequestsRule.prototype = {
-    constructor: MediaPlayer.rules.PendingRequestsRule
+PendingRequestsRule.prototype = {
+    constructor: PendingRequestsRule
 };
+
+export default PendingRequestsRule;

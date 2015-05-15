@@ -28,7 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.XlinkLoader = function () {
+
+import Error from './vo/Error.js';
+
+let XlinkLoader = function () {
     "use strict";
     var RETRY_ATTEMPTS = 1,
         RETRY_INTERVAL = 500,
@@ -69,16 +72,16 @@ MediaPlayer.dependencies.XlinkLoader = function () {
 
                 if (content) {
                     element.resolvedContent = content;
-                    self.notify(MediaPlayer.dependencies.XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
+                    self.notify(XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
                         element: element,
                         resolveObject: resolveObject
                     });
                 } else {
                     element.resolvedContent = null;
-                    self.notify(MediaPlayer.dependencies.XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
+                    self.notify(XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
                         element: element,
                         resolveObject: resolveObject
-                    }, new MediaPlayer.vo.Error(null, "Failed loading Xlink element: " + url, null));
+                    }, new Error(null, "Failed loading Xlink element: " + url, null));
                 }
             };
 
@@ -111,7 +114,7 @@ MediaPlayer.dependencies.XlinkLoader = function () {
                     console.log("Failed loading Xlink content: " + url + " no retry attempts left");
                     self.errHandler.downloadError("xlink", url, request);
                     element.resolvedContent = null;
-                    self.notify(MediaPlayer.dependencies.XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
+                    self.notify(XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
                         element: element,
                         resolveObject: resolveObject
                     }, new Error("Failed loading xlink Element: " + url + " no retry attempts left"));
@@ -146,7 +149,7 @@ MediaPlayer.dependencies.XlinkLoader = function () {
             if (url === RESOLVE_TO_ZERO) {
                 element.resolvedContent = null;
                 element.resolved = true;
-                this.notify(MediaPlayer.dependencies.XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
+                this.notify(XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
                     element: element,
                     resolveObject: resolveObject
                 });
@@ -157,10 +160,12 @@ MediaPlayer.dependencies.XlinkLoader = function () {
     };
 };
 
-MediaPlayer.dependencies.XlinkLoader.prototype = {
-    constructor: MediaPlayer.dependencies.XlinkLoader
+XlinkLoader.prototype = {
+    constructor: XlinkLoader
 };
 
-MediaPlayer.dependencies.XlinkLoader.eventList = {
+XlinkLoader.eventList = {
     ENAME_XLINKELEMENT_LOADED: "xlinkElementLoaded"
 };
+
+export default XlinkLoader;

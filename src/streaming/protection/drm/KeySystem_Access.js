@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-MediaPlayer.dependencies.protection.KeySystem_Access = function() {
+let KeySystem_Access = function() {
     "use strict";
 };
 
-MediaPlayer.dependencies.protection.KeySystem_Access.prototype = {
-    constructor: MediaPlayer.dependencies.protection.KeySystem_Access
+KeySystem_Access.prototype = {
+    constructor: KeySystem_Access
 };
 
+export default KeySystem_Access;

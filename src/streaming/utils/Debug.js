@@ -28,7 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.Debug = function () {
+
+let Debug = function () {
     "use strict";
 
     var logToBrowserConsole = true,
@@ -122,3 +123,5 @@ MediaPlayer.utils.Debug = function () {
         }
     };
 };
+
+export default Debug;

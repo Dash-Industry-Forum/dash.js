@@ -28,7 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.SameTimeRequestRule = function () {
+
+import SwitchRequest from '../SwitchRequest.js';
+import FragmentController from '../../controllers/FragmentController.js';
+import FragmentModel from '../../models/FragmentModel.js';
+
+let SameTimeRequestRule = function () {
     "use strict";
 
     var LOADING_REQUEST_THRESHOLD = 4,
@@ -44,7 +49,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 ln = fragmentModels.length;
 
             for (i; i < ln; i += 1) {
-                pendingReqs = fragmentModels[i].getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
+                pendingReqs = fragmentModels[i].getRequests({state: FragmentModel.states.PENDING});
                 sortRequestsByProperty.call(this, pendingReqs, "index");
 
                 for (j = 0, pln = pendingReqs.length; j < pln; j++) {
@@ -71,7 +76,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 i;
 
             for (i = 0; i < ln; i += 1) {
-                req = fragmentModels[i].getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING, time: currentTime})[0];
+                req = fragmentModels[i].getRequests({state: FragmentModel.states.PENDING, time: currentTime})[0];
 
                 if (req && (!r || req.startTime > r.startTime)) {
                     r = req;
@@ -110,7 +115,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
         playbackController: undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
+            this[FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
         },
 
         setFragmentModels: function(fragmentModels, streamid) {
@@ -121,7 +126,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
         execute: function(context, callback) {
             var streamId = context.getStreamInfo().id,
                 current = context.getCurrentValue(),
-                p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
+                p = SwitchRequest.prototype.DEFAULT,
                 fragmentModels = this.fragmentModels[streamId],
                 type,
                 model,
@@ -139,7 +144,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 loadingLength;
 
             if (!fragmentModels || !mLength) {
-                callback(new MediaPlayer.rules.SwitchRequest([], p));
+                callback(new SwitchRequest([], p));
                 return;
             }
 
@@ -148,7 +153,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
             req = reqForCurrentTime || findClosestToTime(fragmentModels, currentTime) || current;
 
             if (!req) {
-                callback(new MediaPlayer.rules.SwitchRequest([], p));
+                callback(new SwitchRequest([], p));
                 return;
             }
 
@@ -158,13 +163,13 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
                 if (type !== "video" && type !== "audio" && type !== "fragmentedText") continue;
 
-                pendingReqs = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
-                loadingLength = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING}).length;
+                pendingReqs = model.getRequests({state: FragmentModel.states.PENDING});
+                loadingLength = model.getRequests({state: FragmentModel.states.LOADING}).length;
 
                 if (model.getIsPostponed() && !isNaN(req.startTime)) continue;
 
                 if (loadingLength > LOADING_REQUEST_THRESHOLD) {
-                    callback(new MediaPlayer.rules.SwitchRequest([], p));
+                    callback(new SwitchRequest([], p));
                     return;
                 }
 
@@ -175,7 +180,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                     continue;
                 }
 
-                sameTimeReq = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING, time: time})[0];
+                sameTimeReq = model.getRequests({state: FragmentModel.states.PENDING, time: time})[0];
 
                 // if a target fragment is the first fragment in the mpd and we have not found a match fragment for the same time,
                 // we need to look for a first fragment by index as well, because there may be a time shift between audio and video,
@@ -192,8 +197,8 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                     continue;
                 }
 
-                sameTimeReq = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING, time: time})[0] ||
-                    model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, time: time})[0];
+                sameTimeReq = model.getRequests({state: FragmentModel.states.LOADING, time: time})[0] ||
+                    model.getRequests({state: FragmentModel.states.EXECUTED, time: time})[0];
 
                 if (!sameTimeReq && (req.index !== getLastMediaRequestIdx.call(this, streamId, req.mediaType))) {
                     shouldWait = true;
@@ -206,11 +211,11 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
             });
 
             if (shouldWait) {
-                callback(new MediaPlayer.rules.SwitchRequest([], p));
+                callback(new SwitchRequest([], p));
                 return;
             }
 
-            callback(new MediaPlayer.rules.SwitchRequest(reqsToExecute, p));
+            callback(new SwitchRequest(reqsToExecute, p));
         },
 
         reset: function() {
@@ -219,6 +224,8 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
     };
 };
 
-MediaPlayer.rules.SameTimeRequestRule.prototype = {
-    constructor: MediaPlayer.rules.SameTimeRequestRule
+SameTimeRequestRule.prototype = {
+    constructor: SameTimeRequestRule
 };
+
+export default SameTimeRequestRule;

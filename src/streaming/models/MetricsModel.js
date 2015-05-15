@@ -28,7 +28,20 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.models.MetricsModel = function () {
+
+import MediaPlayer from '../MediaPlayer.js';
+import TCPConnection from '../vo/metrics/TCPConnection.js';
+import HTTPRequest from '../vo/metrics/HTTPRequest.js';
+import TrackSwitch from '../vo/metrics/RepresentationSwitch.js';
+import BufferLevel from '../vo/metrics/BufferLevel.js';
+import BufferState from '../vo/metrics/BufferState.js';
+import DVRInfo from '../vo/metrics/DVRInfo.js';
+import DroppedFrames from '../vo/metrics/DroppedFrames.js';
+import ManifestUpdate from '../vo/metrics/ManifestUpdate.js';
+import SchedulingInfo from '../vo/metrics/SchedulingInfo.js';
+import PlayList from '../vo/metrics/PlayList.js';
+
+let MetricsModel = function () {
     "use strict";
 
     return {
@@ -100,7 +113,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         addTcpConnection: function (mediaType, tcpid, dest, topen, tclose, tconnect) {
-            var vo = new MediaPlayer.vo.metrics.TCPConnection();
+            var vo = new TCPConnection();
 
             vo.tcpid = tcpid;
             vo.dest = dest;
@@ -115,7 +128,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         addHttpRequest: function (mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, interval, mediaduration, responseHeaders) {
-            var vo = new MediaPlayer.vo.metrics.HTTPRequest();
+            var vo = new HTTPRequest();
 
             vo.stream = mediaType;
             vo.tcpid = tcpid;
@@ -137,7 +150,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         appendHttpTrace: function (httpRequest, s, d, b) {
-            var vo = new MediaPlayer.vo.metrics.HTTPRequest.Trace();
+            var vo = new HTTPRequest.Trace();
 
             vo.s = s;
             vo.d = d;
@@ -150,7 +163,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         addTrackSwitch: function (mediaType, t, mt, to, lto) {
-            var vo = new MediaPlayer.vo.metrics.TrackSwitch();
+            var vo = new TrackSwitch();
 
             vo.t = t;
             vo.mt = mt;
@@ -164,7 +177,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         addBufferLevel: function (mediaType, t, level) {
-            var vo = new MediaPlayer.vo.metrics.BufferLevel();
+            var vo = new BufferLevel();
             vo.t = t;
             vo.level = level;
             this.getMetricsFor(mediaType).BufferLevel.push(vo);
@@ -174,7 +187,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         addBufferState: function (mediaType, state, target) {
-            var vo = new MediaPlayer.vo.metrics.BufferState();
+            var vo = new BufferState();
             vo.target = target;
             vo.state = state;
             this.getMetricsFor(mediaType).BufferState.push(vo);
@@ -186,7 +199,7 @@ MediaPlayer.models.MetricsModel = function () {
 
         addDVRInfo: function (mediaType, currentTime, mpd, range)
         {
-            var vo = new MediaPlayer.vo.metrics.DVRInfo();
+            var vo = new DVRInfo();
 
             vo.time = currentTime ;
             vo.range = range;
@@ -199,7 +212,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         addDroppedFrames: function (mediaType, quality) {
-            var vo = new MediaPlayer.vo.metrics.DroppedFrames(),
+            var vo = new DroppedFrames(),
                 list = this.getMetricsFor(mediaType).DroppedFrames;
 
             vo.time = quality.creationTime;
@@ -216,7 +229,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         addSchedulingInfo: function(mediaType, t, type, startTime, availabilityStartTime, duration, quality, range, state) {
-            var vo = new MediaPlayer.vo.metrics.SchedulingInfo();
+            var vo = new SchedulingInfo();
 
             vo.mediaType = mediaType;
             vo.t = t;
@@ -237,7 +250,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         addManifestUpdate: function(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
-            var vo = new MediaPlayer.vo.metrics.ManifestUpdate(),
+            var vo = new ManifestUpdate(),
                 metrics = this.getMetricsFor("stream");
 
             vo.mediaType = mediaType;
@@ -266,7 +279,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         addManifestUpdateStreamInfo: function(manifestUpdate, id, index, start, duration) {
-            var vo = new MediaPlayer.vo.metrics.ManifestUpdate.StreamInfo();
+            var vo = new ManifestUpdate.StreamInfo();
 
             vo.id = id;
             vo.index = index;
@@ -280,7 +293,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         addManifestUpdateTrackInfo: function(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
-            var vo = new MediaPlayer.vo.metrics.ManifestUpdate.TrackInfo();
+            var vo = new ManifestUpdate.TrackInfo();
 
             vo.id = id;
             vo.index = index;
@@ -297,7 +310,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         addPlayList: function (mediaType, start, mstart, starttype) {
-            var vo = new MediaPlayer.vo.metrics.PlayList();
+            var vo = new PlayList();
 
             vo.stream = mediaType;
             vo.start = start;
@@ -311,7 +324,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         appendPlayListTrace: function (playList, trackId, subreplevel, start, mstart, duration, playbackspeed, stopreason) {
-            var vo = new MediaPlayer.vo.metrics.PlayList.Trace();
+            var vo = new PlayList.Trace();
 
             vo.representationid = trackId;
             vo.subreplevel = subreplevel;
@@ -329,6 +342,8 @@ MediaPlayer.models.MetricsModel = function () {
     };
 };
 
-MediaPlayer.models.MetricsModel.prototype = {
-    constructor: MediaPlayer.models.MetricsModel
+MetricsModel.prototype = {
+    constructor: MetricsModel
 };
+
+export default MetricsModel;

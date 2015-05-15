@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.vo.EventStream = function () {
+let EventStream = function () {
     "use strict";
     this.adaptionSet = null;
     this.representation = null;
@@ -38,6 +38,8 @@ Dash.vo.EventStream = function () {
     this.schemeIdUri = "";
 };
 
-Dash.vo.EventStream.prototype = {
-    constructor: Dash.vo.EventStream
+EventStream.prototype = {
+    constructor: EventStream
 };
+
+export default EventStream;

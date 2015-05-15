@@ -29,7 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.dependencies.protection.KeySystem_Widevine = function() {
+import KeySystem from './KeySystem.js';
+import KeyPair from '../../vo/protection/KeyPair.js';
+import LicenseRequestComplete from '../../vo/protection/LicenseRequestComplete.js';
+import ClearKeyKeySet from '../../vo/protection/ClearKeyKeySet.js';
+import CommonEncryption from '../CommonEncryption.js';
+
+let KeySystem_Widevine = function() {
     "use strict";
 
     var keySystemStr = "com.widevine.alpha",
@@ -47,29 +53,29 @@ MediaPlayer.dependencies.protection.KeySystem_Widevine = function() {
 
             url = (protData && protData.laURL && protData.laURL !== "") ? protData.laURL : laURL;
             if (!url) {
-                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                     null, new Error('DRM: No valid Widevine Proxy Server URL specified!'));
             } else {
                 xhr.open('POST', url, true);
                 xhr.responseType = 'arraybuffer';
                 xhr.onload = function() {
                     if (this.status == 200) {
-                        var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new Uint8Array(this.response), requestData);
-                        self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                        var event = new LicenseRequestComplete(new Uint8Array(this.response), requestData);
+                        self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                             event);
                     } else {
-                        self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                        self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                             null, new Error('DRM: widevine update, XHR status is "' + xhr.statusText + '" (' + xhr.status +
                                         '), expected to be 200. readyState is ' + xhr.readyState) +
                                         ".  Response is " + ((this.response) ? String.fromCharCode.apply(null, new Uint8Array(this.response)) : "NONE"));
                     }
                 };
                 xhr.onabort = function () {
-                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         null, new Error('DRM: widevine update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                 };
                 xhr.onerror = function () {
-                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         null, new Error('DRM: widevine update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                 };
 
@@ -113,11 +119,12 @@ MediaPlayer.dependencies.protection.KeySystem_Widevine = function() {
 
         doLicenseRequest: requestLicense,
 
-        getInitData: MediaPlayer.dependencies.protection.CommonEncryption.parseInitDataFromContentProtection
+        getInitData: CommonEncryption.parseInitDataFromContentProtection
     };
 };
 
-MediaPlayer.dependencies.protection.KeySystem_Widevine.prototype = {
-    constructor: MediaPlayer.dependencies.protection.KeySystem_Widevine
+KeySystem_Widevine.prototype = {
+    constructor: KeySystem_Widevine
 };
 
+export default KeySystem_Widevine;

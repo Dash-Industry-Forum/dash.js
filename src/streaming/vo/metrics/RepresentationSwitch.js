@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.TrackSwitch = function () {
+let TrackSwitch = function () {
     "use strict";
 
     this.t = null;      // Real-Time | Time of the switch event.
@@ -37,6 +37,8 @@ MediaPlayer.vo.metrics.TrackSwitch = function () {
     this.lto = null;    // If not present, this metrics concerns the Representation as a whole. If present, lto indicates the value of SubRepresentation@level within Representation identifying the switch-to level of the Representation.
 };
 
-MediaPlayer.vo.metrics.TrackSwitch.prototype = {
-    constructor: MediaPlayer.vo.metrics.TrackSwitch
+TrackSwitch.prototype = {
+    constructor: TrackSwitch
 };
+
+export default TrackSwitch;

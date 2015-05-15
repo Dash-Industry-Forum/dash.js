@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.models.VideoModel = function () {
+let VideoModel = function () {
     "use strict";
 
     var element,
@@ -158,6 +158,8 @@ MediaPlayer.models.VideoModel = function () {
     };
 };
 
-MediaPlayer.models.VideoModel.prototype = {
-    constructor: MediaPlayer.models.VideoModel
+VideoModel.prototype = {
+    constructor: VideoModel
 };
+
+export default VideoModel;

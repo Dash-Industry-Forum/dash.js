@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.TrackInfo = function () {
+let TrackInfo = function () {
     "use strict";
     this.id = null;
     this.quality = null;
@@ -38,6 +38,8 @@ MediaPlayer.vo.TrackInfo = function () {
     this.MSETimeOffset = null;
 };
 
-MediaPlayer.vo.TrackInfo.prototype = {
-    constructor: MediaPlayer.vo.TrackInfo
+TrackInfo.prototype = {
+    constructor: TrackInfo
 };
+
+export default TrackInfo;

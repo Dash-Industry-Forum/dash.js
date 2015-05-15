@@ -28,10 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.models.URIQueryAndFragmentModel = function () {
+
+import URIFragmentData from '../vo/URIFragmentData.js';
+
+let URIQueryAndFragmentModel = function () {
     "use strict";
 
-    var URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData(),
+    var URIFragmentDataVO = new URIFragmentData(),
         URIQueryData = [],
 
         parseURI = function (uri) {
@@ -90,12 +93,14 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
         },
 
         reset: function() {
-            URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData();
+            URIFragmentDataVO = new URIFragmentData();
             URIQueryData = [];
         }
     };
 };
 
-MediaPlayer.models.URIQueryAndFragmentModel.prototype = {
-    constructor: MediaPlayer.models.URIQueryAndFragmentModel
+URIQueryAndFragmentModel.prototype = {
+    constructor: URIQueryAndFragmentModel
 };
+
+export default URIQueryAndFragmentModel;

@@ -32,7 +32,7 @@
 /*
 *  Represents a data structure that keep all the necessary info about a single init/media segment
 * */
-MediaPlayer.vo.DataChunk = function () {
+let DataChunk = function () {
     "use strict";
     this.streamId = null;
     this.mediaType = null;
@@ -45,6 +45,8 @@ MediaPlayer.vo.DataChunk = function () {
     this.duration = NaN;
 };
 
-MediaPlayer.vo.DataChunk.prototype = {
-    constructor: MediaPlayer.vo.DataChunk
+DataChunk.prototype = {
+    constructor: DataChunk
 };
+
+export default DataChunk;

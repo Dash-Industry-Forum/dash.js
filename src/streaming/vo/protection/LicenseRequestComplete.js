@@ -36,13 +36,14 @@
  * @param requestData a request-specific data object
  * @constructor
  */
-MediaPlayer.vo.protection.LicenseRequestComplete = function(message, requestData) {
+let LicenseRequestComplete = function(message, requestData) {
     "use strict";
     this.message = message;
     this.requestData = requestData;
 };
 
-MediaPlayer.vo.protection.LicenseRequestComplete.prototype = {
-    constructor: MediaPlayer.vo.protection.LicenseRequestComplete
+LicenseRequestComplete.prototype = {
+    constructor: LicenseRequestComplete
 };
 
+export default LicenseRequestComplete;

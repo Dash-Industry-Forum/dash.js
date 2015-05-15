@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.dependencies.DashMetricsExtensions = function () {
+let DashMetricsExtensions = function () {
     "use strict";
     var findRepresentationIndex = function (period, representationId) {
             var adaptationSet,
@@ -415,6 +415,8 @@ Dash.dependencies.DashMetricsExtensions = function () {
     };
 };
 
-Dash.dependencies.DashMetricsExtensions.prototype = {
-    constructor: Dash.dependencies.DashMetricsExtensions
+DashMetricsExtensions.prototype = {
+    constructor: DashMetricsExtensions
 };
+
+export default DashMetricsExtensions;

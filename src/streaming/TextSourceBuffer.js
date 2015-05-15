@@ -28,7 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.TextSourceBuffer = function () {
+import MediaPlayer from './MediaPlayer.js';
+
+let TextSourceBuffer = function () {
 
     var mediaInfo,
         mimeType;
@@ -131,6 +133,8 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
     };
 };
 
-MediaPlayer.dependencies.TextSourceBuffer.prototype = {
-    constructor: MediaPlayer.dependencies.TextSourceBuffer
+TextSourceBuffer.prototype = {
+    constructor: TextSourceBuffer
 };
+
+export default TextSourceBuffer;

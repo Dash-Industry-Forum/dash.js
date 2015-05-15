@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.FragmentRequest = function () {
+let FragmentRequest = function () {
     "use strict";
     this.action = "download";
     this.startTime = NaN;
@@ -48,8 +48,10 @@ MediaPlayer.vo.FragmentRequest = function () {
     this.wallStartTime = null;
 };
 
-MediaPlayer.vo.FragmentRequest.prototype = {
-    constructor: MediaPlayer.vo.FragmentRequest,
+FragmentRequest.prototype = {
+    constructor: FragmentRequest,
     ACTION_DOWNLOAD: "download",
     ACTION_COMPLETE: "complete"
 };
+
+export default FragmentRequest;

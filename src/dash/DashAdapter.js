@@ -28,7 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.dependencies.DashAdapter = function () {
+
+import TrackInfo from '../streaming/vo/TrackInfo.js';
+import MediaInfo from '../streaming/vo/MediaInfo.js';
+import StreamInfo from '../streaming/vo/StreamInfo.js';
+import ManifestInfo from '../streaming/vo/ManifestInfo.js';
+import Event from './vo/Event.js';
+
+let DashAdapter = function () {
     "use strict";
     var periods = [],
         adaptations = {},
@@ -56,7 +63,7 @@ Dash.dependencies.DashAdapter = function () {
         },
 
         convertRepresentationToTrackInfo = function(manifest, representation) {
-            var trackInfo = new MediaPlayer.vo.TrackInfo(),
+            var trackInfo = new TrackInfo(),
                 a = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index],
                 r = this.manifestExt.getRepresentationFor(representation.index, a);
 
@@ -73,7 +80,7 @@ Dash.dependencies.DashAdapter = function () {
         },
 
         convertAdaptationToMediaInfo = function(manifest, adaptation) {
-            var mediaInfo = new MediaPlayer.vo.MediaInfo(),
+            var mediaInfo = new MediaInfo(),
                 self = this,
                 a = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
 
@@ -100,7 +107,7 @@ Dash.dependencies.DashAdapter = function () {
         },
 
         convertPeriodToStreamInfo = function(manifest, period) {
-            var streamInfo = new MediaPlayer.vo.StreamInfo(),
+            var streamInfo = new StreamInfo(),
                 THRESHOLD = 1;
 
             streamInfo.id = period.id;
@@ -114,7 +121,7 @@ Dash.dependencies.DashAdapter = function () {
         },
 
         convertMpdToManifestInfo = function(manifest, mpd) {
-            var manifestInfo = new MediaPlayer.vo.ManifestInfo();
+            var manifestInfo = new ManifestInfo();
 
             manifestInfo.DVRWindowSize = mpd.timeShiftBufferDepth;
             manifestInfo.loadedTime = mpd.manifest.loadedTime;
@@ -227,7 +234,7 @@ Dash.dependencies.DashAdapter = function () {
         },
 
         getEvent = function(eventBox, eventStreams, startTime) {
-            var event = new Dash.vo.Event(),
+            var event = new Event(),
                 schemeIdUri = eventBox[0],
                 value = eventBox[1],
                 timescale = eventBox[2],
@@ -254,11 +261,11 @@ Dash.dependencies.DashAdapter = function () {
         getEventsFor = function(manifest, info, streamProcessor) {
             var events = [];
 
-            if (info instanceof MediaPlayer.vo.StreamInfo) {
+            if (info instanceof StreamInfo) {
                 events = this.manifestExt.getEventsForPeriod(manifest, getPeriodForStreamInfo(info));
-            } else if (info instanceof MediaPlayer.vo.MediaInfo) {
+            } else if (info instanceof MediaInfo) {
                 events = this.manifestExt.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info));
-            } else if (info instanceof MediaPlayer.vo.TrackInfo) {
+            } else if (info instanceof TrackInfo) {
                 events = this.manifestExt.getEventStreamForRepresentation(manifest, getRepresentationForTrackInfo(info, streamProcessor.trackController));
             }
 
@@ -319,6 +326,8 @@ Dash.dependencies.DashAdapter = function () {
     };
 };
 
-Dash.dependencies.DashAdapter.prototype = {
-    constructor: Dash.dependencies.DashAdapter
+DashAdapter.prototype = {
+    constructor: DashAdapter
 };
+
+export default DashAdapter;

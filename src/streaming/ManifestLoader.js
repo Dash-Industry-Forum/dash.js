@@ -28,7 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.ManifestLoader = function () {
+
+import XlinkController from './controllers/XlinkController.js';
+import Error from './vo/Error.js';
+
+let ManifestLoader = function () {
     "use strict";
 
     var RETRY_ATTEMPTS = 3,
@@ -89,7 +93,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                     self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, loadedTime, manifest.availabilityStartTime);
                     self.xlinkController.resolveManifestOnLoad(manifest);
                 } else {
-                    self.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: null}, new MediaPlayer.vo.Error(null, "Failed loading manifest: " + url, null));
+                    self.notify(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: null}, new Error(null, "Failed loading manifest: " + url, null));
                 }
             };
 
@@ -121,7 +125,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 } else {
                     self.log("Failed loading manifest: " + url + " no retry attempts left");
                     self.errHandler.downloadError("manifest", url, request);
-                    self.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url + " no retry attempts left"));
+                    self.notify(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url + " no retry attempts left"));
                 }
             };
 
@@ -137,7 +141,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
             }
         },
         onXlinkReady = function(event) {
-            this.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: event.data.manifest});
+            this.notify(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: event.data.manifest});
         };
 
     return {
@@ -156,15 +160,17 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         },
         setup: function() {
             onXlinkReady = onXlinkReady.bind(this);
-            this.xlinkController.subscribe(MediaPlayer.dependencies.XlinkController.eventList.ENAME_XLINK_READY,this,onXlinkReady);
+            this.xlinkController.subscribe(XlinkController.eventList.ENAME_XLINK_READY,this,onXlinkReady);
         }
     };
 };
 
-MediaPlayer.dependencies.ManifestLoader.prototype = {
-    constructor: MediaPlayer.dependencies.ManifestLoader
+ManifestLoader.prototype = {
+    constructor: ManifestLoader
 };
 
-MediaPlayer.dependencies.ManifestLoader.eventList = {
+ManifestLoader.eventList = {
     ENAME_MANIFEST_LOADED: "manifestLoaded"
 };
+
+export default ManifestLoader;

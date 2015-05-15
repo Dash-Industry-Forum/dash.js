@@ -35,11 +35,11 @@
  *
  * @constructor
  */
-MediaPlayer.models.SessionToken = function () {
+let SessionToken = function () {
     "use strict";
 };
 
-MediaPlayer.models.SessionToken.prototype = {
+SessionToken.prototype = {
 
     /**
      * The initialization data used to create this session
@@ -74,5 +74,5 @@ MediaPlayer.models.SessionToken.prototype = {
     getKeyStatuses: function() { return null; }
 };
 
-
+export default SessionToken;
 

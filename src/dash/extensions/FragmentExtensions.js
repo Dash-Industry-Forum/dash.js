@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import Error from '../../streaming/vo/Error.js';
+
 function intTobitArray(integer,integerSizeInBit)
 {
     var bitArray = [];
@@ -38,7 +40,7 @@ function intTobitArray(integer,integerSizeInBit)
     return bitArray;
 }
 
-Dash.dependencies.FragmentExtensions = function () {
+let FragmentExtensions = function () {
     "use strict";
 
 var TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX =0,
@@ -273,7 +275,7 @@ var TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX =0,
                 tfhd,
                 tfdt,
                 dataOffset;
-                
+
             tfhd= parseTFHD(ab);
             tfdt= parseTFDT(ab);
 
@@ -292,7 +294,7 @@ var TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX =0,
                 if (type !== "moof" && type !== "traf" && type !== "trun") {
                     pos += size - 8;
                 }
-                
+
                 if(type == "moof"){
                     moofPosition=pos-8;
                 }
@@ -301,7 +303,7 @@ var TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX =0,
             if (pos === d.byteLength) {
                 throw "Error finding live offset.";
             }
-    
+
             pos += 1; //version
             pos += 1; // useless flag byte
             flags=d.getUint16(pos); //flag
@@ -309,9 +311,9 @@ var TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX =0,
             flagsBits=intTobitArray(flags,16);
             sampleCount = d.getUint32(pos);
             pos += 4;
-            
+
             sampleDts= tfdt.base_media_decode_time;
-            
+
             if(flagsBits[TRUN_DATA_OFFSET_PRESENT_FLAG_INDEX]){
                 dataOffset=d.getUint32(pos)+tfhd.baseDataOffset;
                 pos += 4;
@@ -323,7 +325,7 @@ var TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX =0,
                 pos += 4;
             }
 
-            
+
             sampleList=[];
             for(i=0;i<sampleCount;i++){
                 if(flagsBits[TRUN_SAMPLE_DURATION_PRESENT_FLAG_INDEX]){
@@ -362,7 +364,7 @@ var TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX =0,
             }
             return sampleList;
         },
-        
+
 
         loadFragment = function (media) {
             var self = this,
@@ -370,25 +372,25 @@ var TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX =0,
                 url = media,
                 loaded = false,
                 errorStr = "Error loading fragment: " + url,
-                error = new MediaPlayer.vo.Error(null, errorStr, null),
+                error = new Error(null, errorStr, null),
                 parsed;
 
             request.onloadend = function () {
                 if (!loaded) {
                     errorStr = "Error loading fragment: " + url;
-                    self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: null}, error);
+                    self.notify(FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: null}, error);
                 }
             };
 
             request.onload = function () {
                 loaded = true;
                 parsed = parseTFDT(request.response);
-                self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: parsed});
+                self.notify(FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: parsed});
             };
 
             request.onerror = function () {
                 errorStr = "Error loading fragment: " + url;
-                self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: null}, error);
+                self.notify(FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: null}, error);
             };
 
             request.responseType = "arraybuffer";
@@ -410,10 +412,12 @@ var TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX =0,
     };
 };
 
-Dash.dependencies.FragmentExtensions.prototype = {
-    constructor: Dash.dependencies.FragmentExtensions
+FragmentExtensions.prototype = {
+    constructor: FragmentExtensions
 };
 
-Dash.dependencies.FragmentExtensions.eventList = {
+FragmentExtensions.eventList = {
     ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
 };
+
+export default FragmentExtensions;

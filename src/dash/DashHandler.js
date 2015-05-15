@@ -28,7 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.dependencies.DashHandler = function () {
+
+import Segment from './vo/Segment.js';
+import FragmentRequest from '../streaming/vo/FragmentRequest.js';
+import Error from '../streaming/vo/Error.js';
+
+let DashHandler = function () {
     "use strict";
 
     var index = -1,
@@ -149,7 +154,7 @@ Dash.dependencies.DashHandler = function () {
         generateInitRequest = function(representation, mediaType) {
             var self = this,
                 period,
-                request = new MediaPlayer.vo.FragmentRequest(),
+                request = new FragmentRequest(),
                 presentationStartTime;
 
             period = representation.adaptation.period;
@@ -213,8 +218,8 @@ Dash.dependencies.DashHandler = function () {
             duration = representation.segmentDuration;
 
             /*
-             * From spec - If neither @duration attribute nor SegmentTimeline element is present, then the Representation 
-             * shall contain exactly one Media Segment. The MPD start time is 0 and the MPD duration is obtained 
+             * From spec - If neither @duration attribute nor SegmentTimeline element is present, then the Representation
+             * shall contain exactly one Media Segment. The MPD start time is 0 and the MPD duration is obtained
              * in the same way as for the last Media Segment in the Representation.
              */
             if (isNaN(duration)) {
@@ -224,7 +229,7 @@ Dash.dependencies.DashHandler = function () {
             presentationStartTime = representation.adaptation.period.start + (index * duration);
             presentationEndTime = presentationStartTime + duration;
 
-            seg = new Dash.vo.Segment();
+            seg = new Segment();
 
             seg.representation = representation;
             seg.duration = duration;
@@ -419,7 +424,7 @@ Dash.dependencies.DashHandler = function () {
             else {
                 representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
             }
-            
+
             return segments;
         },
 
@@ -510,7 +515,7 @@ Dash.dependencies.DashHandler = function () {
             presentationStartTime = self.timelineConverter.calcPresentationTimeFromMediaTime(scaledTime, representation);
             presentationEndTime = presentationStartTime + scaledDuration;
 
-            seg = new Dash.vo.Segment();
+            seg = new Segment();
 
             seg.representation = representation;
             seg.duration = scaledDuration;
@@ -652,8 +657,8 @@ Dash.dependencies.DashHandler = function () {
             representation.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
             if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
-                error = new MediaPlayer.vo.Error(Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE, "no segments are available yet", {availabilityDelay: Math.abs(representation.segmentAvailabilityRange.end)});
-                self.notify(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation}, error);
+                error = new Error(DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE, "no segments are available yet", {availabilityDelay: Math.abs(representation.segmentAvailabilityRange.end)});
+                self.notify(DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation}, error);
                 return;
             }
 
@@ -672,7 +677,7 @@ Dash.dependencies.DashHandler = function () {
             }
 
             if (hasInitialization && hasSegments) {
-                self.notify(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation});
+                self.notify(DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation});
             }
         },
 
@@ -765,7 +770,7 @@ Dash.dependencies.DashHandler = function () {
                 return null;
             }
 
-            var request = new MediaPlayer.vo.FragmentRequest(),
+            var request = new FragmentRequest(),
                 representation = segment.representation,
                 bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth,
@@ -828,7 +833,7 @@ Dash.dependencies.DashHandler = function () {
 
             //self.log("Stream finished? " + finished);
             if (finished) {
-                request = new MediaPlayer.vo.FragmentRequest();
+                request = new FragmentRequest();
                 request.action = request.ACTION_COMPLETE;
                 request.index = index;
                 request.mediaType = type;
@@ -883,7 +888,7 @@ Dash.dependencies.DashHandler = function () {
 
             //self.log("Stream finished? " + finished);
             if (finished) {
-                request = new MediaPlayer.vo.FragmentRequest();
+                request = new FragmentRequest();
                 request.action = request.ACTION_COMPLETE;
                 request.index = idx;
                 request.mediaType = type;
@@ -905,7 +910,7 @@ Dash.dependencies.DashHandler = function () {
             //self.log("Got an initialization.");
             if (!representation.segments) return;
 
-            this.notify(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation});
+            this.notify(DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation});
         },
 
         onSegmentsLoaded = function(e) {
@@ -946,7 +951,7 @@ Dash.dependencies.DashHandler = function () {
 
             if (!representation.initialization) return;
 
-            this.notify(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation});
+            this.notify(DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation});
         };
 
     return {
@@ -960,12 +965,12 @@ Dash.dependencies.DashHandler = function () {
         unsubscribe: undefined,
 
         setup: function() {
-            this[Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED] = onInitializationLoaded;
-            this[Dash.dependencies.BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED] = onSegmentsLoaded;
+            this[BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED] = onInitializationLoaded;
+            this[BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED] = onSegmentsLoaded;
         },
 
         initialize: function(streamProcessor) {
-            this.subscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, streamProcessor.trackController);
+            this.subscribe(DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, streamProcessor.trackController);
             type = streamProcessor.getType();
             this.setMediaType(type);
             isDynamic = streamProcessor.isDynamic();
@@ -1000,7 +1005,7 @@ Dash.dependencies.DashHandler = function () {
             requestedTime = undefined;
             index = -1;
             isDynamic = undefined;
-            this.unsubscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.trackController);
+            this.unsubscribe(DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.trackController);
         },
 
         getInitRequest: getInit,
@@ -1011,12 +1016,14 @@ Dash.dependencies.DashHandler = function () {
     };
 };
 
-Dash.dependencies.DashHandler.prototype = {
-    constructor: Dash.dependencies.DashHandler
+DashHandler.prototype = {
+    constructor: DashHandler
 };
 
-Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
+DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
 
-Dash.dependencies.DashHandler.eventList = {
+DashHandler.eventList = {
     ENAME_REPRESENTATION_UPDATED: "representationUpdated"
 };
+
+export default DashHandler;

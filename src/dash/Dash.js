@@ -28,15 +28,73 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Context from './DashContext.js';
+import MediaPlayer from '../streaming/MediaPlayer.js';
 
-/*jshint -W020 */
-Dash = (function () {
-    "use strict";
+'use strict';
 
-    return {
-        modules: {},
-        dependencies: {},
-        vo: {},
-        di: {}
-    };
-}());
+let Dash = {
+    modules: {},
+    dependencies: {},
+    vo: {},
+    di: {},
+    /**
+     *  A new MediaPlayer is instantiated for the supplied videoElement and optional source and context.  If no context is provided,
+     *  a default DashContext is used. If no source is provided, the videoElement is interrogated to extract the first source whose
+     *  type is application/dash+xml.
+     * The autoplay property of the videoElement is preserved. Any preload attribute is ignored. This method should be called after the page onLoad event is dispatched.
+     * @param video
+     * @param source
+     * @param context
+     * @returns {MediaPlayer}
+     */
+    create: function (video, source, context) {
+        if (typeof video === "undefined" || video.nodeName != "VIDEO") return null;
+
+        var player, videoID = (video.id || video.name || "video element");
+        context = context || new Context();
+        source = source || [].slice.call(video.querySelectorAll("source")).filter(function(s){return s.type == Dash.supportedManifestMimeTypes.mimeType;})[0];
+
+        player = new MediaPlayer(context);
+        player.startup();
+        player.attachView(video);
+        player.setAutoPlay(video.autoplay);
+        player.attachSource(source.src);
+        player.getDebug().log("Converted " + videoID + " to dash.js player and added content: " + source.src);
+        return player;
+    },
+
+    /**
+     * Searches the provided scope for all instances of the indicated className. If no scope is provided, document is used. If no className is
+     * specified, dashjs-player is used. It then looks for those video elements which have a source element defined with a type matching 'application/dash+xml'.
+     * A new MediaPlayer is instantiated for each matching video element and the appropriate source is assigned.
+     * The autoplay property of the video element is preserved. Any preload attribute is ignored. This method should be called after the page onLoad event is dispatched.
+     * Returns an array holding all the MediaPlayer instances that were added by this method.
+     * @param className
+     * @param scope
+     * @param context
+     * @returns {Array} an array of MediaPlayer objects
+     */
+    createAll: function (className, scope, context) {
+        var aPlayers = [];
+        className = className || ".dashjs-player";
+        scope = scope || document;
+        context = context || new Context();
+        var videos = scope.querySelectorAll(className);
+        for (var i = 0; i < videos.length; i++) {
+            var player = Dash.create(videos[i], undefined , context);
+            aPlayers.push(player);
+        }
+        return aPlayers;
+    },
+
+    /**
+     * Returns the mime-type identifier for any source content to be accepted as a dash manifest by the Dash.create() method.
+     * @type {string}
+     */
+    supportedManifestMimeTypes: {
+        mimeType: "application/dash+xml"
+    }
+};
+
+export default Dash;

@@ -28,7 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
+
+import SwitchRequest from '../SwitchRequest.js';
+import FragmentLoader from '../../FragmentLoader.js';
+
+
+let LiveEdgeBinarySearchRule = function () {
     "use strict";
 
     var SEARCH_TIME_SPAN = 12 * 60 * 60, // set the time span that limits our search range to a 12 hours in seconds
@@ -38,7 +43,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
         trackInfo = null,
         useBinarySearch = false,
         fragmentDuration = NaN,
-        p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
+        p = SwitchRequest.prototype.DEFAULT,
         callback,
         fragmentLoader,
         streamProcessor,
@@ -54,7 +59,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
                 findLiveEdge.call(self, searchTime, onSuccess, onError, req);
             } else {
                 var handler = function(e) {
-                    fragmentLoader.unsubscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
+                    fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
                     if (e.data.exists) {
                         onSuccess.call(self, e.data.request, searchTime);
                     } else {
@@ -62,7 +67,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
                     }
                 };
 
-                fragmentLoader.subscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
+                fragmentLoader.subscribe(FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
                 fragmentLoader.checkForExistence(request);
             }
         },
@@ -84,7 +89,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
 
             // if the search time is out of the range bounds we have not be able to find live edge, stop trying
             if (searchTime < liveEdgeSearchRange.start && searchTime > liveEdgeSearchRange.end) {
-                callback(new MediaPlayer.rules.SwitchRequest(null, p));
+                callback(new SwitchRequest(null, p));
             } else {
                 // continue searching for a first available fragment
                 req = this.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, searchTime, {ignoreIsFinished: true});
@@ -102,7 +107,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
                 // if the fragment duration is unknown we cannot use binary search because we will not be able to
                 // decide when to stop the search, so let the start time of the current fragment be a liveEdge
                 if (!trackInfo.fragmentDuration) {
-                    callback(new MediaPlayer.rules.SwitchRequest(startTime, p));
+                    callback(new SwitchRequest(startTime, p));
                     return;
                 }
                 useBinarySearch = true;
@@ -116,7 +121,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
                     findLiveEdge.call(self, searchTime, function() {
                         binarySearch.call(self, true, searchTime);
                     }, function(){
-                        callback(new MediaPlayer.rules.SwitchRequest(searchTime, p));
+                        callback(new SwitchRequest(searchTime, p));
                     }, req);
 
                     return;
@@ -142,7 +147,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
             if (isSearchCompleted) {
                 // search completed, we should take the time of the last found fragment. If the last search succeded we
                 // take this time. Otherwise, we should subtract the time of the search step which is equal to fragment duaration
-                callback(new MediaPlayer.rules.SwitchRequest((lastSearchSucceeded ? lastSearchTime : (lastSearchTime - fragmentDuration)), p));
+                callback(new SwitchRequest((lastSearchSucceeded ? lastSearchTime : (lastSearchTime - fragmentDuration)), p));
             } else {
                 // update the search time and continue searching
                 searchTime = ((liveEdgeSearchRange.start + liveEdgeSearchRange.end) / 2);
@@ -180,7 +185,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
                 // Thus, we need to switch an expected live edge and actual live edge for SegmentTimelne streams.
                 var actualLiveEdge = self.timelineConverter.getExpectedLiveEdge();
                 self.timelineConverter.setExpectedLiveEdge(liveEdgeInitialSearchPosition);
-                callback(new MediaPlayer.rules.SwitchRequest(actualLiveEdge, p));
+                callback(new SwitchRequest(actualLiveEdge, p));
                 return;
             }
 
@@ -206,6 +211,8 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
     };
 };
 
-MediaPlayer.rules.LiveEdgeBinarySearchRule.prototype = {
-    constructor: MediaPlayer.rules.LiveEdgeBinarySearchRule
+LiveEdgeBinarySearchRule.prototype = {
+    constructor: LiveEdgeBinarySearchRule
 };
+
+export default LiveEdgeBinarySearchRule;

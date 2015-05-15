@@ -41,13 +41,15 @@
  * Corresponding property values are keys, base64-encoded (no padding).
  * @constructor
  */
-MediaPlayer.vo.protection.ProtectionData = function(laURL, httpRequestHeaders, bearerToken, clearkeys) {
+let ProtectionData = function(laURL, httpRequestHeaders, bearerToken, clearkeys) {
     this.laURL = laURL;
     this.httpRequestHeaders = httpRequestHeaders;
     this.bearerToken = bearerToken;
     this.clearkeys = clearkeys;
 };
 
-MediaPlayer.vo.protection.ProtectionData.prototype = {
-    constructor: MediaPlayer.vo.protection.ProtectionData
+ProtectionData.prototype = {
+    constructor: ProtectionData
 };
+
+export default ProtectionData;

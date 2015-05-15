@@ -29,7 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
+import KeySystem from './KeySystem.js';
+import KeyPair from '../../vo/protection/KeyPair.js';
+import LicenseRequestComplete from '../../vo/protection/LicenseRequestComplete.js';
+import ClearKeyKeySet from '../../vo/protection/ClearKeyKeySet.js';
+import CommonEncryption from '../CommonEncryption.js';
+
+let KeySystem_ClearKey = function() {
     "use strict";
 
     var keySystemStr = "org.w3.clearkey",
@@ -65,29 +71,29 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
                     if (xhr.status == 200) {
 
                         if (!xhr.response.hasOwnProperty("keys")) {
-                            self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                            self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                                     null, new Error('DRM: ClearKey Remote update, Illegal response JSON'));
                         }
                         for (i = 0; i < xhr.response.keys.length; i++) {
                             var keypair = xhr.response.keys[i],
                                     keyid = keypair.kid.replace(/=/g, "");
                                     key = keypair.k.replace(/=/g, "");
-                            keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyid, key));
+                            keyPairs.push(new KeyPair(keyid, key));
                         }
-                        var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs), requestData);
-                        self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                        var event = new LicenseRequestComplete(new ClearKeyKeySet(keyPairs), requestData);
+                        self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                                 event);
                     } else {
-                        self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                        self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                                 null, new Error('DRM: ClearKey Remote update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                     }
                 };
                 xhr.onabort = function () {
-                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                             null, new Error('DRM: ClearKey update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                 };
                 xhr.onerror = function () {
-                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                             null, new Error('DRM: ClearKey update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
                 };
 
@@ -102,18 +108,18 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
                     var keyID = jsonMsg.kids[i],
                         key = (protData.clearkeys.hasOwnProperty(keyID)) ? protData.clearkeys[keyID] : null;
                     if (!key) {
-                        this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                        this.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                                 null, new Error("DRM: ClearKey keyID (" + keyID + ") is not known!"));
                     }
                     // KeyIDs from CDM are not base64 padded.  Keys may or may not be padded
-                    keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyID, key));
+                    keyPairs.push(new KeyPair(keyID, key));
                 }
 
-                var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs), requestData);
-                this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                var event = new LicenseRequestComplete(new ClearKeyKeySet(keyPairs), requestData);
+                this.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         event);
             } else {
-                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                self.notify(KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         null, new Error('DRM: ClearKey has no way (URL or protection data) to retrieve keys'));
             }
         };
@@ -142,11 +148,12 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
             requestClearKeyLicense.call(this, message, requestData);
         },
 
-        getInitData: MediaPlayer.dependencies.protection.CommonEncryption.parseInitDataFromContentProtection
+        getInitData: CommonEncryption.parseInitDataFromContentProtection
     };
 };
 
-MediaPlayer.dependencies.protection.KeySystem_ClearKey.prototype = {
-    constructor: MediaPlayer.dependencies.protection.KeySystem_ClearKey
+KeySystem_ClearKey.prototype = {
+    constructor: KeySystem_ClearKey
 };
 
+export default KeySystem_ClearKey;

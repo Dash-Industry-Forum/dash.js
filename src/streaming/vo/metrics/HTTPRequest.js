@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.HTTPRequest = function () {
+let HTTPRequest = function () {
     "use strict";
 
     this.stream = null;         // type of stream ("audio" | "video" etc..)
@@ -55,11 +55,11 @@ MediaPlayer.vo.metrics.HTTPRequest = function () {
     this.trace = [];            // Throughput traces, for successful requests only.
 };
 
-MediaPlayer.vo.metrics.HTTPRequest.prototype = {
-    constructor: MediaPlayer.vo.metrics.HTTPRequest
+HTTPRequest.prototype = {
+    constructor: HTTPRequest
 };
 
-MediaPlayer.vo.metrics.HTTPRequest.Trace = function () {
+HTTPRequest.Trace = function () {
     "use strict";
 
     /*
@@ -72,10 +72,12 @@ MediaPlayer.vo.metrics.HTTPRequest.Trace = function () {
     this.b = [];
 };
 
-MediaPlayer.vo.metrics.HTTPRequest.Trace.prototype = {
-    constructor : MediaPlayer.vo.metrics.HTTPRequest.Trace
+HTTPRequest.Trace.prototype = {
+    constructor : HTTPRequest.Trace
 };
 
-MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE = 'Media Segment';
-MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE = 'Initialization Segment';
-MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE = 'MPD';
+HTTPRequest.MEDIA_SEGMENT_TYPE = 'Media Segment';
+HTTPRequest.INIT_SEGMENT_TYPE = 'Initialization Segment';
+HTTPRequest.MPD_TYPE = 'MPD';
+
+export default HTTPRequest;

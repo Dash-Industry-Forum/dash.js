@@ -33,7 +33,16 @@
  * Implemented in:
  *   Chrome 40 with chrome://flags -- Enable Encrypted Media Extensions
  */
-MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
+
+import ProtectionModel from './ProtectionModel.js';
+import NeedKey from '../vo/protection/NeedKey.js';
+import KeyError from '../vo/protection/KeyError.js';
+import KeyMessage from '../vo/protection/KeyMessage.js';
+import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
+import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
+import SessionToken from '../vo/protection/SessionToken.js';
+
+let ProtectionModel_21Jan2015 = function () {
 
     var videoElement = null,
         mediaKeys = null,
@@ -51,15 +60,15 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                     // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
                     var configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
                             mediaKeySystemAccess.getConfiguration() : null;
-                    var keySystemAccess = new MediaPlayer.vo.protection.KeySystemAccess(keySystem, configuration);
+                    var keySystemAccess = new KeySystemAccess(keySystem, configuration);
                     keySystemAccess.mksa = mediaKeySystemAccess;
-                    self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
+                    self.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
                             keySystemAccess);
                 }).catch(function() {
                     if (++i < ksConfigurations.length) {
                         requestKeySystemAccessInternal.call(self, ksConfigurations, i);
                     } else {
-                        self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
+                        self.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
                                 null, "Key system access denied!");
                     }
                 });
@@ -76,8 +85,8 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                     switch (event.type) {
 
                         case "encrypted":
-                            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY,
-                                new MediaPlayer.vo.protection.NeedKey(event.initData, event.initDataType));
+                            self.notify(ProtectionModel.eventList.ENAME_NEED_KEY,
+                                new NeedKey(event.initData, event.initDataType));
                             break;
                     }
                 }
@@ -101,7 +110,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 
             var self = this;
             var token = {
-                prototype: (new MediaPlayer.models.SessionToken()).prototype,
+                prototype: (new SessionToken()).prototype,
                 session: session,
                 initData: initData,
 
@@ -112,13 +121,13 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                     switch (event.type) {
 
                         case "keystatuseschange":
-                            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED,
+                            self.notify(ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED,
                                     this);
                             break;
 
                         case "message":
-                            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE,
-                                    new MediaPlayer.vo.protection.KeyMessage(this, event.message, undefined, event.messageType));
+                            self.notify(ProtectionModel.eventList.ENAME_KEY_MESSAGE,
+                                    new KeyMessage(this, event.message, undefined, event.messageType));
                             break;
                     }
                 },
@@ -143,7 +152,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
             // Register callback for session closed Promise
             session.closed.then(function () {
                 removeSession(token);
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED,
+                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED,
                         token.getSessionID());
             });
 
@@ -192,10 +201,10 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                 if (videoElement) {
                     videoElement.setMediaKeys(mediaKeys);
                 }
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
+                self.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
 
             }).catch(function() {
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED,
+                self.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED,
                         null, "Error selecting keys system (" + keySystemAccess.keySystem.systemString + ")! Could not create MediaKeys -- TODO");
 
             });
@@ -219,9 +228,9 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 
             var self = this;
             mediaKeys.setServerCertificate(serverCertificate).then(function() {
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED);
+                self.notify(ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED);
             }).catch(function(error) {
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED,
+                self.notify(ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED,
                         null, "Error updating server certificate -- " + error.name);
             });
         },
@@ -245,11 +254,11 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
             // Generate initial key request
             var self = this;
             session.generateRequest("cenc", initData).then(function() {
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, sessionToken);
+                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, sessionToken);
             }).catch(function(error) {
                 // TODO: Better error string
                 removeSession(sessionToken);
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED,
+                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED,
                         null, "Error generating key request -- " + error.name);
             });
         },
@@ -264,8 +273,8 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                 message = message.toJWK();
             }
             session.update(message).catch(function (error) {
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR,
-                    new MediaPlayer.vo.protection.KeyError(sessionToken, "Error sending update() message! " + error.name));
+                self.notify(ProtectionModel.eventList.ENAME_KEY_ERROR,
+                    new KeyError(sessionToken, "Error sending update() message! " + error.name));
             });
         },
 
@@ -281,14 +290,14 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
             session.load(sessionID).then(function (success) {
                 if (success) {
                     var sessionToken = createSessionToken.call(this, session);
-                    self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED,
+                    self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED,
                         sessionToken);
                 } else {
-                    self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED,
+                    self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED,
                         null, "Could not load session! Invalid Session ID (" + sessionID + ")");
                 }
             }).catch(function (error) {
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED,
+                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED,
                         null, "Could not load session (" + sessionID + ")! " + error.name);
             });
         },
@@ -299,10 +308,10 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 
             var self = this;
             session.remove().then(function () {
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED,
+                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED,
                         sessionToken.getSessionID());
             }).catch(function (error) {
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED,
+                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED,
                         null, "Error removing session (" + sessionToken.getSessionID() + "). " + error.name);
             });
         },
@@ -318,7 +327,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
             // Send our request to the key session
             var self = this;
             session.close().catch(function(error) {
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED,
+                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED,
                         null, "Error closing session (" + sessionToken.getSessionID() + ") " + error.name);
             });
         }
@@ -332,7 +341,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
  * used for detecting APIs
  * @returns {Boolean} true if support was detected, false otherwise
  */
-MediaPlayer.models.ProtectionModel_21Jan2015.detect = function(videoElement) {
+ProtectionModel_21Jan2015.detect = function(videoElement) {
     if (videoElement.onencrypted === undefined ||
             videoElement.mediaKeys === undefined) {
         return false;
@@ -345,7 +354,8 @@ MediaPlayer.models.ProtectionModel_21Jan2015.detect = function(videoElement) {
     return true;
 };
 
-MediaPlayer.models.ProtectionModel_21Jan2015.prototype = {
-    constructor: MediaPlayer.models.ProtectionModel_21Jan2015
+ProtectionModel_21Jan2015.prototype = {
+    constructor: ProtectionModel_21Jan2015
 };
 
+export default ProtectionModel_21Jan2015;

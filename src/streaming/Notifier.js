@@ -28,7 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.Notifier = function () {
+
+import Event from './vo/Event.js';
+
+let Notifier = function () {
     "use strict";
 
     var OBSERVABLE_ID_PROP = "observableId",
@@ -56,7 +59,7 @@ MediaPlayer.dependencies.Notifier = function () {
 
         notify: function (/*eventName[, args]*/) {
             var eventId = arguments[0] + getId.call(this),
-                event = new MediaPlayer.vo.Event();
+                event = new Event();
 
             event.sender =  this;
             event.type = arguments[0];
@@ -90,6 +93,8 @@ MediaPlayer.dependencies.Notifier = function () {
     };
 };
 
-MediaPlayer.dependencies.Notifier.prototype = {
-    constructor: MediaPlayer.dependencies.Notifier
+Notifier.prototype = {
+    constructor: Notifier
 };
+
+export default Notifier;

@@ -36,7 +36,7 @@
  * of the Encrypted Media Extensions (EME) APIs that have been implemented
  * in a user agent
  */
-MediaPlayer.models.ProtectionModel = {
+let ProtectionModel = {
 
     /**
      * Determine if the user-agent supports one of the given key systems and
@@ -147,7 +147,7 @@ MediaPlayer.models.ProtectionModel = {
      */
 };
 
-MediaPlayer.models.ProtectionModel.eventList = {
+ProtectionModel.eventList = {
     ENAME_NEED_KEY: "needkey",
     ENAME_KEY_SYSTEM_ACCESS_COMPLETE: "keySystemAccessComplete",
     ENAME_KEY_SYSTEM_SELECTED: "keySystemSelected",
@@ -161,3 +161,5 @@ MediaPlayer.models.ProtectionModel.eventList = {
     ENAME_KEY_SESSION_CLOSED: "keySessionClosed",
     ENAME_KEY_STATUSES_CHANGED: "keyStatusesChanged"
 };
+
+export default ProtectionModel;

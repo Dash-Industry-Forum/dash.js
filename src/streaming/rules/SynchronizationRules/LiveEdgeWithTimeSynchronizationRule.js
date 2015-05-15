@@ -30,8 +30,9 @@
  */
 
 /*global MediaPlayer*/
+import SwitchRequest from '../SwitchRequest.js';
 
-MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule = function () {
+let LiveEdgeWithTimeSynchronizationRule = function () {
     "use strict";
 
     return {
@@ -41,15 +42,17 @@ MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule = function () {
         // playback will fail to start and some other action should be taken.
         execute: function (context, callback) {
             callback(
-                new MediaPlayer.rules.SwitchRequest(
+                new SwitchRequest(
                     context.getTrackInfo().DVRWindow.end,
-                    MediaPlayer.rules.SwitchRequest.prototype.DEFAULT
+                    SwitchRequest.prototype.DEFAULT
                 )
             );
         }
     };
 };
 
-MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule.prototype = {
-    constructor: MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule
+LiveEdgeWithTimeSynchronizationRule.prototype = {
+    constructor: LiveEdgeWithTimeSynchronizationRule
 };
+
+export default LiveEdgeWithTimeSynchronizationRule;

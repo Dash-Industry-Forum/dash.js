@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.EventBus = function () {
+let EventBus = function () {
     "use strict";
 
     var registrations,
@@ -75,3 +75,5 @@ MediaPlayer.utils.EventBus = function () {
         }
     };
 };
+
+export default EventBus;

@@ -31,13 +31,13 @@
 
 /**
  *
- * @param {MediaPlayer.vo.protection.MediaCapability[]} audioCapabilities
- * @param {MediaPlayer.vo.protection.MediaCapability[]} videoCapabilities
+ * @param {MediaCapability[]} audioCapabilities
+ * @param {MediaCapability[]} videoCapabilities
  * @param {string} [distinctiveIdentifier]
  * @param {string} [persistentState]
  * @constructor
  */
-MediaPlayer.vo.protection.KeySystemConfiguration = function(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState) {
+let KeySystemConfiguration = function(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState) {
     this.initDataTypes = [ "cenc" ];
     this.audioCapabilities = audioCapabilities;
     this.videoCapabilities = videoCapabilities;
@@ -45,6 +45,8 @@ MediaPlayer.vo.protection.KeySystemConfiguration = function(audioCapabilities, v
     this.persistentState = persistentState;
 };
 
-MediaPlayer.vo.protection.KeySystemConfiguration.prototype = {
-    constructor: MediaPlayer.vo.protection.KeySystemConfiguration
+KeySystemConfiguration.prototype = {
+    constructor: KeySystemConfiguration
 };
+
+export default KeySystemConfiguration;

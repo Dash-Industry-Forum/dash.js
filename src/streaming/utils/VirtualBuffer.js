@@ -32,7 +32,11 @@
 /**
  * Represents data structure to keep and drive {@link MediaPlayer.vo.DataChunk}
  */
-MediaPlayer.utils.VirtualBuffer = function () {
+
+import CustomTimeRanges from './CustomTimeRanges.js';
+import HTTPRequest from '../vo/metrics/HTTPRequest.js';
+
+let VirtualBuffer = function () {
     var data = {},
 
         sortArrayByProperty = function(array, sortProp) {
@@ -57,15 +61,15 @@ MediaPlayer.utils.VirtualBuffer = function () {
         createDataStorage = function() {
             var data = {};
 
-            data.audio = {buffered: new MediaPlayer.utils.CustomTimeRanges()};
-            data.audio[MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
-            data.audio[MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE] = [];
-            data.video = {buffered: new MediaPlayer.utils.CustomTimeRanges()};
-            data.video[MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
-            data.video[MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE] = [];
-            data.fragmentedText = {buffered: new MediaPlayer.utils.CustomTimeRanges()};
-            data.fragmentedText[MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
-            data.fragmentedText[MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE] = [];
+            data.audio = {buffered: new CustomTimeRanges()};
+            data.audio[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
+            data.audio[HTTPRequest.INIT_SEGMENT_TYPE] = [];
+            data.video = {buffered: new CustomTimeRanges()};
+            data.video[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
+            data.video[HTTPRequest.INIT_SEGMENT_TYPE] = [];
+            data.fragmentedText = {buffered: new CustomTimeRanges()};
+            data.fragmentedText[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
+            data.fragmentedText[HTTPRequest.INIT_SEGMENT_TYPE] = [];
 
             return data;
         };
@@ -95,7 +99,7 @@ MediaPlayer.utils.VirtualBuffer = function () {
 
             if (!isNaN(start) && !isNaN(end)) {
                 data[streamId][mediaType].buffered.add(start, end);
-                this.notify(MediaPlayer.utils.VirtualBuffer.eventList.CHUNK_APPENDED, {chunk: chunk});
+                this.notify(VirtualBuffer.eventList.CHUNK_APPENDED, {chunk: chunk});
             }
         },
 
@@ -182,10 +186,12 @@ MediaPlayer.utils.VirtualBuffer = function () {
     };
 };
 
-MediaPlayer.utils.VirtualBuffer.prototype = {
-    constructor: MediaPlayer.utils.VirtualBuffer
+VirtualBuffer.prototype = {
+    constructor: VirtualBuffer
 };
 
-MediaPlayer.utils.VirtualBuffer.eventList = {
+VirtualBuffer.eventList = {
     CHUNK_APPENDED: "chunkAppended"
 };
+
+export default VirtualBuffer;

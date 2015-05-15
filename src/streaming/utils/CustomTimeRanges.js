@@ -28,21 +28,21 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-  
-MediaPlayer.utils.CustomTimeRanges = function () {
+
+let CustomTimeRanges = function () {
     return {
-        
+
         customTimeRangeArray:[],
         length :0,
-        
-        
+
+
         add: function(start,end){
             var i=0;
-            
+
             for(i=0;(i<this.customTimeRangeArray.length)&&(start>this.customTimeRangeArray[i].start);i++);
-            
+
             this.customTimeRangeArray.splice(i, 0, {start:start,end:end});
-            
+
             for(i=0;i<this.customTimeRangeArray.length-1;i++){
                 if(this.mergeRanges(i,i+1)){
                     i--;
@@ -63,7 +63,7 @@ MediaPlayer.utils.CustomTimeRanges = function () {
                 //|--------------Range to remove ---------------|
                     this.customTimeRangeArray.splice(i,1);
                     i--;
-                    
+
                 }else if(start>this.customTimeRangeArray[i].start && end<this.customTimeRangeArray[i].end) {
                 //|-----------------Range i----------------|
                 //        |-------Range to remove -----|
@@ -92,14 +92,14 @@ MediaPlayer.utils.CustomTimeRanges = function () {
         mergeRanges : function(rangeIndex1,rangeIndex2) {
             var range1=this.customTimeRangeArray[rangeIndex1];
             var range2=this.customTimeRangeArray[rangeIndex2];
-            
+
             if (range1.start <=  range2.start && range2.start <= range1.end && range1.end <= range2.end) {
             //|-----------Range1----------|
             //                    |-----------Range2----------|
                 range1.end=range2.end;
                 this.customTimeRangeArray.splice(rangeIndex2,1);
                 return true;
-                
+
             } else if (range2.start <= range1.start && range1.start <= range2.end && range2.end <= range1.end) {
             //                |-----------Range1----------|
             //|-----------Range2----------|
@@ -119,7 +119,7 @@ MediaPlayer.utils.CustomTimeRanges = function () {
             }
             return false;
         },
-        
+
         start : function(index) {
             return this.customTimeRangeArray[index].start;
         },
@@ -129,9 +129,9 @@ MediaPlayer.utils.CustomTimeRanges = function () {
     };
 
 };
- 
-MediaPlayer.utils.CustomTimeRanges.prototype = {
-    constructor: MediaPlayer.utils.CustomTimeRanges
+
+CustomTimeRanges.prototype = {
+    constructor: CustomTimeRanges
 };
- 
- 
+
+export default CustomTimeRanges;

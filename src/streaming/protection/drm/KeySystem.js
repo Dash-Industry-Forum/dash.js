@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.dependencies.protection.KeySystem = {
+let KeySystem = {
 
     /**
      * Key system name string (e.g. 'org.w3.clearkey')
@@ -95,3 +95,4 @@ MediaPlayer.dependencies.protection.KeySystem = {
     }
 };
 
+export default KeySystem;

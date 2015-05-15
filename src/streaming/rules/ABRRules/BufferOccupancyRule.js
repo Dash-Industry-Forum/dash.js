@@ -28,7 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.BufferOccupancyRule = function () {
+
+import SwitchRequest from '../SwitchRequest.js';
+import BufferController from '../../controllers/BufferController.js';
+
+let BufferOccupancyRule = function () {
     "use strict";
 
     var lastSwitchTime = 0;
@@ -50,7 +54,7 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
                 lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
                 isBufferRich = false,
                 maxIndex = mediaInfo.trackCount - 1,
-                switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
+                switchRequest = new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
 
             if (now - lastSwitchTime < waitToSwitchTime) {
                 callback(switchRequest);
@@ -61,17 +65,17 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
                 // This will happen when another rule tries to switch from top to any other.
                 // If there is enough buffer why not try to stay at high level.
                 if (lastBufferLevelVO.level > lastBufferStateVO.target) {
-                    isBufferRich = (lastBufferLevelVO.level - lastBufferStateVO.target) > MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD;
+                    isBufferRich = (lastBufferLevelVO.level - lastBufferStateVO.target) > BufferController.RICH_BUFFER_THRESHOLD;
                     if (isBufferRich && mediaInfo.trackCount > 1) {
-                        switchRequest = new MediaPlayer.rules.SwitchRequest(maxIndex, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
+                        switchRequest = new SwitchRequest(maxIndex, SwitchRequest.prototype.STRONG);
                     }
                 }
             }
 
-            if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
+            if (switchRequest.value !== SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
                 self.log("BufferOccupancyRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                    switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
-                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
+                    switchRequest.priority === SwitchRequest.prototype.DEFAULT ? "Default" :
+                        switchRequest.priority === SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
             }
 
             callback(switchRequest);
@@ -83,6 +87,8 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
     };
 };
 
-MediaPlayer.rules.BufferOccupancyRule.prototype = {
-    constructor: MediaPlayer.rules.BufferOccupancyRule
+BufferOccupancyRule.prototype = {
+    constructor: BufferOccupancyRule
 };
+
+export default BufferOccupancyRule;

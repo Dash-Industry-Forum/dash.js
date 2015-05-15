@@ -28,7 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.ErrorHandler = function () {
+
+import MediaPlayer from './MediaPlayer.js';
+
+let ErrorHandler = function () {
     "use strict";
     var errorEvent = MediaPlayer.events.ERROR;
 
@@ -104,6 +107,8 @@ MediaPlayer.dependencies.ErrorHandler = function () {
     };
 };
 
-MediaPlayer.dependencies.ErrorHandler.prototype = {
-    constructor: MediaPlayer.dependencies.ErrorHandler
+ErrorHandler.prototype = {
+    constructor: ErrorHandler
 };
+
+export default ErrorHandler;

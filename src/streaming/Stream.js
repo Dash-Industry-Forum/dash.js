@@ -28,7 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.Stream = function () {
+
+import LiveEdgeFinder from './LiveEdgeFinder.js';
+import MediaPlayer from './MediaPlayer.js';
+import BufferController from './controllers/BufferController.js';
+import RepresentationController from '../dash/controllers/RepresentationController.js';
+import ProtectionController from './controllers/ProtectionController.js';
+
+let Stream = function () {
     "use strict";
 
     var streamProcessors = [],
@@ -132,7 +139,7 @@ MediaPlayer.dependencies.Stream = function () {
                 self.log(msg);
             } else {
                 self.liveEdgeFinder.initialize(streamProcessors[0]);
-                self.liveEdgeFinder.subscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, self.playbackController);
+                self.liveEdgeFinder.subscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, self.playbackController);
                 //self.log("Playback initialized!");
             }
 
@@ -143,7 +150,7 @@ MediaPlayer.dependencies.Stream = function () {
             var self = this,
                 ln = streamProcessors.length,
                 hasError = !!updateError.audio || !!updateError.video,
-                error = hasError ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.Stream.DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null,
+                error = hasError ? new MediaPlayer.vo.Error(Stream.DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null,
                 i = 0;
 
             for (i; i < ln; i += 1) {
@@ -157,7 +164,7 @@ MediaPlayer.dependencies.Stream = function () {
                 data: {streamInfo: streamInfo}
             });
 
-            self.notify(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, {streamInfo: streamInfo}, error);
+            self.notify(Stream.eventList.ENAME_STREAM_UPDATED, {streamInfo: streamInfo}, error);
 
             if (!isMediaInitialized || isStreamActivated) return;
 
@@ -193,7 +200,7 @@ MediaPlayer.dependencies.Stream = function () {
                 if (!processors[i].isBufferingCompleted()) return;
             }
 
-            this.notify(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, {streamInfo: streamInfo});
+            this.notify(Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, {streamInfo: streamInfo});
         },
 
         onDataUpdateCompleted = function(e) {
@@ -274,11 +281,11 @@ MediaPlayer.dependencies.Stream = function () {
         unsubscribe: undefined,
 
         setup: function () {
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFERING_COMPLETED] = onBufferingCompleted;
-            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            this[BufferController.eventList.ENAME_BUFFERING_COMPLETED] = onBufferingCompleted;
+            this[RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
 
             // Protection event handlers
-            this[MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR] = onProtectionError.bind(this);
+            this[ProtectionController.eventList.ENAME_PROTECTION_ERROR] = onProtectionError.bind(this);
         },
 
         initialize: function(strmInfo, protectionCtrl, protectionData) {
@@ -289,7 +296,7 @@ MediaPlayer.dependencies.Stream = function () {
                     ownProtectionController = true;
                 }
                 protectionController = protectionCtrl;
-                protectionController.subscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
+                protectionController.subscribe(ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
                 protectionController.setMediaElement(this.videoModel.getElement());
                 protectionController.init(this.manifestModel.getValue());
                 if (protectionData) {
@@ -354,10 +361,10 @@ MediaPlayer.dependencies.Stream = function () {
             }
             this.fragmentController = undefined;
             this.liveEdgeFinder.abortSearch();
-            this.liveEdgeFinder.unsubscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.playbackController);
+            this.liveEdgeFinder.unsubscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.playbackController);
 
             if (protectionController) {
-                protectionController.unsubscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
+                protectionController.unsubscribe(ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
                 if (ownProtectionController) {
                     protectionController.teardown();
                     protectionController = null;
@@ -430,13 +437,15 @@ MediaPlayer.dependencies.Stream = function () {
     };
 };
 
-MediaPlayer.dependencies.Stream.prototype = {
-    constructor: MediaPlayer.dependencies.Stream
+Stream.prototype = {
+    constructor: Stream
 };
 
-MediaPlayer.dependencies.Stream.DATA_UPDATE_FAILED_ERROR_CODE = 1;
+Stream.DATA_UPDATE_FAILED_ERROR_CODE = 1;
 
-MediaPlayer.dependencies.Stream.eventList = {
+Stream.eventList = {
     ENAME_STREAM_UPDATED: "streamUpdated",
     ENAME_STREAM_BUFFERING_COMPLETED: "streamBufferingCompleted"
 };
+
+export default Stream;

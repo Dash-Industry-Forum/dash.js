@@ -28,7 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.RulesController = function () {
+
+import RulesContext from './RulesContext.js';
+import SwitchRequest from './SwitchRequest.js';
+import ABRRulesCollection from './ABRRules/ABRRulesCollection.js';
+import ScheduleRulesCollection from './schedulingRules/ScheduleRulesCollection.js';
+import SynchronizationRulesCollection from './synchronizationRules/SynchronizationRulesCollection.js';
+
+let RulesController = function () {
     "use strict";
 
     var rules = {},
@@ -51,7 +58,7 @@ MediaPlayer.rules.RulesController = function () {
         },
 
         getRulesContext = function(streamProcessor, currentValue) {
-            return new MediaPlayer.rules.RulesContext(streamProcessor, currentValue);
+            return new RulesContext(streamProcessor, currentValue);
         },
 
         normalizeRule = function(rule) {
@@ -59,7 +66,7 @@ MediaPlayer.rules.RulesController = function () {
 
             rule.execute = function(context, callback) {
                 var normalizedCallback = function(result) {
-                    callback.call(rule, new MediaPlayer.rules.SwitchRequest(result.value, result.priority));
+                    callback.call(rule, new SwitchRequest(result.value, result.priority));
                 };
 
                 exec(context, normalizedCallback);
@@ -146,39 +153,39 @@ MediaPlayer.rules.RulesController = function () {
                     var value,
                         confidence;
 
-                    if (result.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                    if (result.value !== SwitchRequest.prototype.NO_CHANGE) {
                         values[result.priority] = overrideFunc(values[result.priority], result.value);
                     }
 
                     if (--rulesCount) return;
 
-                    if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                        confidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
-                        value = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
+                    if (values[SwitchRequest.prototype.WEAK] !== SwitchRequest.prototype.NO_CHANGE) {
+                        confidence = SwitchRequest.prototype.WEAK;
+                        value = values[SwitchRequest.prototype.WEAK];
                     }
 
-                    if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                        confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-                        value = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
+                    if (values[SwitchRequest.prototype.DEFAULT] !== SwitchRequest.prototype.NO_CHANGE) {
+                        confidence = SwitchRequest.prototype.DEFAULT;
+                        value = values[SwitchRequest.prototype.DEFAULT];
                     }
 
-                    if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                        confidence = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
-                        value = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
+                    if (values[SwitchRequest.prototype.STRONG] !== SwitchRequest.prototype.NO_CHANGE) {
+                        confidence = SwitchRequest.prototype.STRONG;
+                        value = values[SwitchRequest.prototype.STRONG];
                     }
 
-                    if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
-                        confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
-                        confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+                    if (confidence != SwitchRequest.prototype.STRONG &&
+                        confidence != SwitchRequest.prototype.WEAK) {
+                        confidence = SwitchRequest.prototype.DEFAULT;
                     }
 
                     callback({value: (value !== undefined) ? value : current, confidence: confidence});
 
                 };
 
-            values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-            values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-            values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
+            values[SwitchRequest.prototype.STRONG] = SwitchRequest.prototype.NO_CHANGE;
+            values[SwitchRequest.prototype.WEAK] = SwitchRequest.prototype.NO_CHANGE;
+            values[SwitchRequest.prototype.DEFAULT] = SwitchRequest.prototype.NO_CHANGE;
 
             for (i = 0; i < ln; i += 1) {
                 rule = rulesArr[i];
@@ -196,12 +203,12 @@ MediaPlayer.rules.RulesController = function () {
             var abrRules = rules[this.ABR_RULE],
                 schedulingRules = rules[this.SCHEDULING_RULE],
                 synchronizationRules = rules[this.SYNC_RULE],
-                allRules = (abrRules.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES)|| []).
-                    concat(schedulingRules.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES) || []).
-                    concat(schedulingRules.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES) || []).
-                    concat(schedulingRules.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_EXECUTE_RULES) || []).
-                    concat(synchronizationRules.getRules(MediaPlayer.rules.SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES) || []).
-                    concat(synchronizationRules.getRules(MediaPlayer.rules.SynchronizationRulesCollection.prototype.BEST_GUESS_RULES) || []),
+                allRules = (abrRules.getRules(ABRRulesCollection.prototype.QUALITY_SWITCH_RULES)|| []).
+                    concat(schedulingRules.getRules(ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES) || []).
+                    concat(schedulingRules.getRules(ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES) || []).
+                    concat(schedulingRules.getRules(ScheduleRulesCollection.prototype.FRAGMENTS_TO_EXECUTE_RULES) || []).
+                    concat(synchronizationRules.getRules(SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES) || []).
+                    concat(synchronizationRules.getRules(SynchronizationRulesCollection.prototype.BEST_GUESS_RULES) || []),
                 ln = allRules.length,
                 rule,
                 i;
@@ -219,6 +226,8 @@ MediaPlayer.rules.RulesController = function () {
     };
 };
 
-MediaPlayer.rules.RulesController.prototype = {
-    constructor: MediaPlayer.rules.RulesController
+RulesController.prototype = {
+    constructor: RulesController
 };
+
+export default RulesController;

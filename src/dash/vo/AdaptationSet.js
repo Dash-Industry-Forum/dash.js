@@ -28,13 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.vo.AdaptationSet = function () {
+let AdaptationSet = function () {
     "use strict";
     this.period = null;
     this.index = -1;
     this.type = null;
 };
 
-Dash.vo.AdaptationSet.prototype = {
-    constructor: Dash.vo.AdaptationSet
+AdaptationSet.prototype = {
+    constructor: AdaptationSet
 };
+
+export default AdaptationSet;

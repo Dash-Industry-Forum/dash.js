@@ -32,7 +32,7 @@
 /**
  * EME-independent KeyMessage
  *
- * @param {MediaPlayer.vo.protection.SessionToken} sessionToken the session
+ * @param {SessionToken} sessionToken the session
  * to which the key message is associated
  * @param {ArrayBuffer} message the key message
  * @param [defaultURL] license acquisition URL provided by the CDM
@@ -40,7 +40,7 @@
  * "license-renewal", "license-release", "individualization-request"
  * @constructor
  */
-MediaPlayer.vo.protection.KeyMessage = function(sessionToken, message, defaultURL, messageType) {
+let KeyMessage = function(sessionToken, message, defaultURL, messageType) {
     "use strict";
     this.sessionToken = sessionToken;
     this.message = message;
@@ -48,7 +48,8 @@ MediaPlayer.vo.protection.KeyMessage = function(sessionToken, message, defaultUR
     this.messageType = messageType;
 };
 
-MediaPlayer.vo.protection.KeyMessage.prototype = {
-    constructor: MediaPlayer.vo.protection.KeyMessage
+KeyMessage.prototype = {
+    constructor: KeyMessage
 };
 
+export default KeyMessage;

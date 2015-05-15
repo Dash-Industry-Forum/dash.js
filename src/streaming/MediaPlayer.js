@@ -32,11 +32,13 @@
  * @class MediaPlayer
  * @param context - New instance of a dijon.js context (i.e. new Dash.di.DashContext()).  You can pass a custom context that extends Dash.di.DashContext to override item(s) in the DashContext.
  */
-/*jshint -W020 */
-MediaPlayer = function (context) {
+'use strict';
 
-    "use strict";
+import BufferController from './controllers/BufferController.js';
+import PlaybackController from './controllers/PlaybackController.js';
+import ManifestLoader from './ManifestLoader.js';
 
+let MediaPlayer = function (context) {
 /*
  * Initialization:
  *
@@ -80,7 +82,7 @@ MediaPlayer = function (context) {
         playing = false,
         autoPlay = true,
         scheduleWhilePaused = false,
-        bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
+        bufferMax = BufferController.BUFFER_SIZE_REQUIRED,
 
         isReady = function () {
             return (!!element && !!source);
@@ -103,10 +105,10 @@ MediaPlayer = function (context) {
             playing = true;
             this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
-            playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, streamController);
-            playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
-            playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
-            playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
+            playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, streamController);
+            playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
+            playbackController.subscribe(PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
+            playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
 
             streamController.initialize(autoPlay, protectionController, protectionData);
             DOMStorage.checkInitialBitrate();
@@ -224,10 +226,10 @@ MediaPlayer = function (context) {
 
         doReset = function() {
             if (playing && streamController) {
-                playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, streamController);
-                playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
-                playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
-                playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
+                playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, streamController);
+                playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
+                playbackController.unsubscribe(PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
+                playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
 
                 streamController.reset();
                 abrController.reset();
@@ -567,16 +569,16 @@ MediaPlayer = function (context) {
                 var manifestLoader = system.getObject("manifestLoader"),
                     uriQueryFragModel = system.getObject("uriQueryFragModel"),
                     cbObj = {};
-                cbObj[MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = function(e) {
+                cbObj[ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = function(e) {
                     if (!e.error) {
                         callback(e.data.manifest);
                     } else {
                         callback(null, e.error);
                     }
-                    manifestLoader.unsubscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
+                    manifestLoader.unsubscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
                 };
 
-                manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, cbObj);
+                manifestLoader.subscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, cbObj);
                 manifestLoader.load(uriQueryFragModel.parseURI(manifestUrl));
             })(url);
         },
@@ -823,3 +825,5 @@ MediaPlayer.events = {
     ERROR: "error",
     LOG: "log"
 };
+
+export default MediaPlayer;

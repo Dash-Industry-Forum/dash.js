@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.Capabilities = function () {
+let Capabilities = function () {
     "use strict";
 };
 
 
-MediaPlayer.utils.Capabilities.prototype = {
-    constructor: MediaPlayer.utils.Capabilities,
+Capabilities.prototype = {
+    constructor: Capabilities,
     system: undefined,
     log: undefined,
 
@@ -70,3 +70,5 @@ MediaPlayer.utils.Capabilities.prototype = {
 
 
 };
+
+export default Capabilities;

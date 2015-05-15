@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.XlinkController = function () {
+let XlinkController = function () {
     "use strict";
 
     var matchers,
@@ -99,7 +99,7 @@ MediaPlayer.dependencies.XlinkController = function () {
 
             mergeElementsBack.call(this, resolveObject);
             if (resolveObject.resolveType === RESOLVE_TYPE_ONACTUATE) {
-                this.notify(MediaPlayer.dependencies.XlinkController.eventList.ENAME_XLINK_READY, {manifest: manifest});
+                this.notify(XlinkController.eventList.ENAME_XLINK_READY, {manifest: manifest});
             }
             if (resolveObject.resolveType === RESOLVE_TYPE_ONLOAD) {
                 switch (resolveObject.type) {
@@ -118,7 +118,7 @@ MediaPlayer.dependencies.XlinkController = function () {
                         break;
                     case ELEMENT_TYPE_ADAPTATIONSET:
                         // TODO: Resolve SegmentList here
-                        this.notify(MediaPlayer.dependencies.XlinkController.eventList.ENAME_XLINK_READY, {manifest: manifest});
+                        this.notify(XlinkController.eventList.ENAME_XLINK_READY, {manifest: manifest});
                         break;
                 }
             }
@@ -224,7 +224,7 @@ MediaPlayer.dependencies.XlinkController = function () {
 
         setup: function () {
             onXlinkElementLoaded = onXlinkElementLoaded.bind(this);
-            this.xlinkLoader.subscribe(MediaPlayer.dependencies.XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, this, onXlinkElementLoaded);
+            this.xlinkLoader.subscribe(XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, this, onXlinkElementLoaded);
         },
 
         resolveManifestOnLoad: function (manifest) {
@@ -239,11 +239,13 @@ MediaPlayer.dependencies.XlinkController = function () {
     };
 };
 
-MediaPlayer.dependencies.XlinkController.prototype = {
-    constructor: MediaPlayer.dependencies.XlinkController
+XlinkController.prototype = {
+    constructor: XlinkController
 };
 
-MediaPlayer.dependencies.XlinkController.eventList = {
+XlinkController.eventList = {
     ENAME_XLINK_ALLELEMENTSLOADED: "xlinkAllElementsLoaded",
     ENAME_XLINK_READY: "xlinkReady"
 };
+
+export default XlinkController;

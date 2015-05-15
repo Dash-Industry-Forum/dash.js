@@ -28,7 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.FragmentController = function () {
+
+import FragmentModel from '../models/FragmentModel.js';
+import FragmentRequest from '../vo/FragmentRequest.js';
+import HTTPRequest from '../vo/metrics/HTTPRequest.js';
+import SourceBufferExtensions from '../extensions/SourceBufferExtensions.js';
+import ScheduleRulesCollection from '../rules/SchedulingRules/ScheduleRulesCollection.js';
+import DataChunk from '../vo/DataChunk.js';
+import BufferController from './BufferController.js';
+
+let FragmentController = function () {
     "use strict";
 
     var fragmentModels = [],
@@ -51,7 +60,7 @@ MediaPlayer.dependencies.FragmentController = function () {
             var self =this,
                 streamProcessor = fragmentModels[0].getContext().streamProcessor,
                 streamId = streamProcessor.getStreamInfo().id,
-                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_EXECUTE_RULES);
+                rules = self.scheduleRulesCollection.getRules(ScheduleRulesCollection.prototype.FRAGMENTS_TO_EXECUTE_RULES);
 
             if (rules.indexOf(this.scheduleRulesCollection.sameTimeRequestRule) !== -1) {
                 this.scheduleRulesCollection.sameTimeRequestRule.setFragmentModels(fragmentModels, streamId);
@@ -63,7 +72,7 @@ MediaPlayer.dependencies.FragmentController = function () {
         },
 
         createDataChunk = function(bytes, request, streamId) {
-            var chunk = new MediaPlayer.vo.DataChunk();
+            var chunk = new DataChunk();
 
             chunk.streamId = streamId;
             chunk.mediaType = request.mediaType;
@@ -83,9 +92,9 @@ MediaPlayer.dependencies.FragmentController = function () {
                 request = e.data.request;
 
             if (self.isInitializationRequest(request)) {
-                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADING_START, {request: request, fragmentModel: e.sender});
+                self.notify(FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADING_START, {request: request, fragmentModel: e.sender});
             }else {
-                self.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START, {request: request, fragmentModel: e.sender});
+                self.notify(FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START, {request: request, fragmentModel: e.sender});
             }
         },
 
@@ -95,8 +104,8 @@ MediaPlayer.dependencies.FragmentController = function () {
                 bytes = self.process(e.data.response),
                 streamId = e.sender.getContext().streamProcessor.getStreamInfo().id,
                 isInit = this.isInitializationRequest(request),
-                eventName = isInit ? MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED :
-                    MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED,
+                eventName = isInit ? FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED :
+                    FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED,
                 chunk;
 
             if (bytes === null) {
@@ -112,7 +121,7 @@ MediaPlayer.dependencies.FragmentController = function () {
         },
 
         onStreamCompleted = function(e) {
-            this.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED, {request: e.data.request, fragmentModel: e.sender});
+            this.notify(FragmentController.eventList.ENAME_STREAM_COMPLETED, {request: e.data.request, fragmentModel: e.sender});
         },
 
         onBufferLevelBalanced = function(/*e*/) {
@@ -138,8 +147,8 @@ MediaPlayer.dependencies.FragmentController = function () {
 
                     if (r.mediaType !== mediaType) continue;
 
-                    if (!(r instanceof MediaPlayer.vo.FragmentRequest)) {
-                        r = m.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING, time: r.startTime})[0];
+                    if (!(r instanceof FragmentRequest)) {
+                        r = m.getRequests({state: FragmentModel.states.PENDING, time: r.startTime})[0];
                     }
 
                     m.executeRequest(r);
@@ -167,14 +176,14 @@ MediaPlayer.dependencies.FragmentController = function () {
         unsubscribe: undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = onFragmentLoadingStart;
-            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
-            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
+            this[FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = onFragmentLoadingStart;
+            this[FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
+            this[FragmentModel.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
 
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
+            this[BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
 
             if (this.scheduleRulesCollection.sameTimeRequestRule) {
-                this.subscribe(MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED, this.scheduleRulesCollection.sameTimeRequestRule);
+                this.subscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, this.scheduleRulesCollection.sameTimeRequestRule);
             }
         },
 
@@ -211,7 +220,7 @@ MediaPlayer.dependencies.FragmentController = function () {
         },
 
 		isInitializationRequest: function(request){
-			return (request && request.type && request.type === MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE);
+			return (request && request.type && request.type === HTTPRequest.INIT_SEGMENT_TYPE);
 		},
 
         prepareFragmentForLoading: function(fragmentModel, request) {
@@ -230,20 +239,22 @@ MediaPlayer.dependencies.FragmentController = function () {
             fragmentModels = [];
 
             if (this.scheduleRulesCollection.sameTimeRequestRule) {
-                this.unsubscribe(MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED, this.scheduleRulesCollection.sameTimeRequestRule);
+                this.unsubscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, this.scheduleRulesCollection.sameTimeRequestRule);
             }
         }
     };
 };
 
-MediaPlayer.dependencies.FragmentController.prototype = {
-    constructor: MediaPlayer.dependencies.FragmentController
+FragmentController.prototype = {
+    constructor: FragmentController
 };
 
-MediaPlayer.dependencies.FragmentController.eventList = {
+FragmentController.eventList = {
     ENAME_STREAM_COMPLETED: "streamCompleted",
     ENAME_INIT_FRAGMENT_LOADING_START: "initFragmentLoadingStart",
     ENAME_MEDIA_FRAGMENT_LOADING_START: "mediaFragmentLoadingStart",
     ENAME_INIT_FRAGMENT_LOADED: "initFragmentLoaded",
     ENAME_MEDIA_FRAGMENT_LOADED: "mediaFragmentLoaded"
 };
+
+export default FragmentController;

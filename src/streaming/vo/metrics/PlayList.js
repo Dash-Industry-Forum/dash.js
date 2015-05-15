@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.PlayList = function () {
+let PlayList = function () {
     "use strict";
 
     this.stream = null;     // type of stream ("audio" | "video" etc..)
@@ -42,7 +42,7 @@ MediaPlayer.vo.metrics.PlayList = function () {
     this.trace = [];        // List of streams of continuous rendering of decoded samples.
 };
 
-MediaPlayer.vo.metrics.PlayList.Trace = function () {
+PlayList.Trace = function () {
     "use strict";
 
     /*
@@ -70,20 +70,22 @@ MediaPlayer.vo.metrics.PlayList.Trace = function () {
     this.stopreason = null;
 };
 
-MediaPlayer.vo.metrics.PlayList.prototype = {
-    constructor: MediaPlayer.vo.metrics.PlayList
+PlayList.prototype = {
+    constructor: PlayList
 };
 
 /* Public Static Constants */
-MediaPlayer.vo.metrics.PlayList.INITIAL_PLAY_START_REASON = "initial_start";
-MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON = "seek";
+PlayList.INITIAL_PLAY_START_REASON = "initial_start";
+PlayList.SEEK_START_REASON = "seek";
 
-MediaPlayer.vo.metrics.PlayList.Trace.prototype = {
-    constructor: MediaPlayer.vo.metrics.PlayList.Trace()
+PlayList.Trace.prototype = {
+    constructor: PlayList.Trace()
 };
 
 /* Public Static Constants */
-MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON = "user_request";
-MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON = "representation_switch";
-MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON = "end_of_content";
-MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON = "rebuffering";
+PlayList.Trace.USER_REQUEST_STOP_REASON = "user_request";
+PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON = "representation_switch";
+PlayList.Trace.END_OF_CONTENT_STOP_REASON = "end_of_content";
+PlayList.Trace.REBUFFERING_REASON = "rebuffering";
+
+export default PlayList;

@@ -36,13 +36,14 @@
  * @param key {String} 128-bit encryption key, base64 encoded, with no padding
  * @constructor
  */
-MediaPlayer.vo.protection.KeyPair = function(keyID, key) {
+let KeyPair = function(keyID, key) {
     "use strict";
     this.keyID = keyID;
     this.key = key;
 };
 
-MediaPlayer.vo.protection.KeyPair.prototype = {
-    constructor: MediaPlayer.vo.protection.KeyPair
+KeyPair.prototype = {
+    constructor: KeyPair
 };
 
+export default KeyPair;

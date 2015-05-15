@@ -31,7 +31,7 @@
 
 /*globals MediaPlayer*/
 
-MediaPlayer.rules.SynchronizationRulesCollection = function () {
+let SynchronizationRulesCollection = function () {
     "use strict";
 
     var withAccurateTimeSourceRules = [],
@@ -43,9 +43,9 @@ MediaPlayer.rules.SynchronizationRulesCollection = function () {
 
         getRules: function (type) {
             switch (type) {
-            case MediaPlayer.rules.SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES:
+            case SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES:
                 return withAccurateTimeSourceRules;
-            case MediaPlayer.rules.SynchronizationRulesCollection.prototype.BEST_GUESS_RULES:
+            case SynchronizationRulesCollection.prototype.BEST_GUESS_RULES:
                 return bestGuestRules;
             default:
                 return null;
@@ -59,8 +59,10 @@ MediaPlayer.rules.SynchronizationRulesCollection = function () {
     };
 };
 
-MediaPlayer.rules.SynchronizationRulesCollection.prototype = {
-    constructor: MediaPlayer.rules.SynchronizationRulesCollection,
+SynchronizationRulesCollection.prototype = {
+    constructor: SynchronizationRulesCollection,
     TIME_SYNCHRONIZED_RULES: "withAccurateTimeSourceRules",
     BEST_GUESS_RULES: "bestGuestRules"
 };
+
+export default SynchronizationRulesCollection;

@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.vo.Period = function () {
+let Period = function () {
     "use strict";
     this.id = null;
     this.index = -1;
@@ -37,6 +37,8 @@ Dash.vo.Period = function () {
     this.mpd = null;
 };
 
-Dash.vo.Period.prototype = {
-    constructor: Dash.vo.Period
+Period.prototype = {
+    constructor: Period
 };
+
+export default Period;

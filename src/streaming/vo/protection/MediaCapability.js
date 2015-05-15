@@ -35,11 +35,13 @@
  * @param {string} [robustness]
  * @constructor
  */
-MediaPlayer.vo.protection.MediaCapability = function(contentType, robustness) {
+let MediaCapability = function(contentType, robustness) {
     this.contentType = contentType;
     this.robustness = robustness;
 };
 
-MediaPlayer.vo.protection.MediaCapability.prototype = {
-    constructor: MediaPlayer.vo.protection.MediaCapability
+MediaCapability.prototype = {
+    constructor: MediaCapability
 };
+
+export default MediaCapability;

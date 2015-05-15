@@ -28,7 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.ProtectionExtensions = function () {
+
+import MediaCapability from '../vo/protection/MediaCapability.js';
+import CommonEncryption from '../protection/CommonEncryption.js';
+import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
+import ProtectionModel from '../models/ProtectionModel.js';
+
+let ProtectionExtensions = function () {
     "use strict";
 
     this.system = undefined;
@@ -38,8 +44,8 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
     this.clearkeyKeySystem = undefined;
 };
 
-MediaPlayer.dependencies.ProtectionExtensions.prototype = {
-    constructor: MediaPlayer.dependencies.ProtectionExtensions,
+ProtectionExtensions.prototype = {
+    constructor: ProtectionExtensions,
 
     /**
      * Setup the key systems available in the player
@@ -196,7 +202,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
          */
     getSupportedKeySystems: function(initData) {
         var ksIdx, supportedKS = [],
-                pssh = MediaPlayer.dependencies.protection.CommonEncryption.parsePSSHList(initData);
+                pssh = CommonEncryption.parsePSSHList(initData);
 
         for (ksIdx = 0; ksIdx < this.keySystems.length; ++ksIdx) {
             if (this.keySystems[ksIdx].uuid in pssh) {
@@ -227,12 +233,12 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
 
         var audioCapabilities = [], videoCapabilities = [];
         if (videoInfo) {
-            videoCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(videoInfo.codec));
+            videoCapabilities.push(new MediaCapability(videoInfo.codec));
         }
         if (audioInfo) {
-            audioCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(audioInfo.codec));
+            audioCapabilities.push(new MediaCapability(audioInfo.codec));
         }
-        var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(
+        var ksConfig = new KeySystemConfiguration(
                 audioCapabilities, videoCapabilities);
         var requestedKeySystems = [];
         for (var i = 0; i < supportedKS.length; i++) {
@@ -248,8 +254,8 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
             var cbObj = {};
 
             // Subscribe for event and then perform request
-            cbObj[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
-                protCtrl.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
+            cbObj[ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
+                protCtrl.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
                 if (!event.error) {
                     var keySystemAccess = event.data;
                     self.log("KeySystem Access Granted (" + keySystemAccess.keySystem.systemString + ")!");
@@ -259,10 +265,11 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 }
             };
 
-            protCtrl.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, cbObj);
+            protCtrl.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, cbObj);
             protCtrl.requestKeySystemAccess(requestedKeySystems);
 
         })(protectionController);
     }
 };
 
+export default ProtectionExtensions;

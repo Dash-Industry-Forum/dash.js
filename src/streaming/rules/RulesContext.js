@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.RulesContext = function (streamProcessor, currentValue) {
+let RulesContext = function (streamProcessor, currentValue) {
     "use strict";
     var trackInfo = streamProcessor.getCurrentTrack(),
         sp = streamProcessor;
@@ -62,6 +62,8 @@ MediaPlayer.rules.RulesContext = function (streamProcessor, currentValue) {
     };
 };
 
-MediaPlayer.rules.RulesContext.prototype = {
-    constructor: MediaPlayer.rules.RulesContext
+RulesContext.prototype = {
+    constructor: RulesContext
 };
+
+export default RulesContext;
