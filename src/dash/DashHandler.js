@@ -32,6 +32,7 @@
 import Segment from './vo/Segment.js';
 import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import Error from '../streaming/vo/Error.js';
+import BaseURLExtensions from './extensions/BaseURLExtensions.js';
 
 let DashHandler = function () {
     "use strict";

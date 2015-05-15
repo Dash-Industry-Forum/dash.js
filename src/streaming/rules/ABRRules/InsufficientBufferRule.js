@@ -31,6 +31,7 @@
 
 import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
+import PlaybackController from '../../controllers/PlaybackController.js';
 
 let InsufficientBufferRule = function () {
     "use strict";

@@ -60,7 +60,7 @@ let DashContext = function () {
     };
 };
 
-import MediaContext from '../Context.js';
+import MediaContext from '../streaming/Context.js';
 
 DashContext.prototype = new MediaContext();
 DashContext.prototype.constructor = MediaContext;

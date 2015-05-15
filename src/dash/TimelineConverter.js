@@ -30,7 +30,7 @@
  */
 
 import LiveEdgeFinder from '../streaming/LiveEdgeFinder.js';
-import TimeSyncController from '../steaming/TimeSyncController.js';
+import TimeSyncController from '../streaming/TimeSyncController.js';
 
 let TimelineConverter = function () {
     "use strict";

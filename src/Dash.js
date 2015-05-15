@@ -1,9 +1,9 @@
 import MediaPlayer from '../src/streaming/MediaPlayer.js';
-import Context from '../src/streaming/Context.js';
+import DashContext from '../src/dash/DashContext.js';
 
 let DashObj = {
   MediaPlayer: MediaPlayer,
-  Context: Context
+  DashContext: DashContext
 };
 
 export default DashObj;
