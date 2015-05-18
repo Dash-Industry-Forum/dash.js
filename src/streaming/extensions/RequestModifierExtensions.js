@@ -28,15 +28,56 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.RequestModifierExtensions = function () {
+MediaPlayer.dependencies.RequestModifierExtensions = function() {
     "use strict";
-    return {
-        modifyRequestURL : function (url) {
+
+    var isVUDU = true;
+    var api_ = {
+        prepareRequestVUDU: function(info, data){
+            // if no customization needed, then simply return data
+            var respdata = {};
+
+            respdata.method = data.method;
+            respdata.body = data.body;
+
+            var newUrl = data.url;
+            if (!!info.range){
+                if ("string" === typeof(info.range)){
+                    newUrl += "/range/"+info.range;
+                }
+                else if ("undefined" !== typeof(info.range.start)) {
+                    newUrl += "/range/"+info.range.start + "-"+info.range.end;
+                }
+            }
+
+            if (!!window.ancinus.hackUriSuffix){
+                newUrl += "?"+window.ancinus.hackUriSuffix;
+            }
+            respdata.url = newUrl;
+
+            var newHeaders = {};
+            for (var header in data.headers){
+                if ("range" === header.toLowerCase()){
+                    continue;
+                }
+                newHeaders[header] = data.headers[header];
+            }
+            respdata.headers = newHeaders;
+
+            return respdata;
+        },
+        modifyRequestURL: function(url) {
             return url;
         },
-
-        modifyRequestHeader : function (request) {
+        modifyRequestHeader: function(request) {
             return request;
         }
     };
+
+    if (isVUDU){
+        api_.prepareRequest = api_.prepareRequestVUDU;
+    }
+
+    return api_;
 };
+
