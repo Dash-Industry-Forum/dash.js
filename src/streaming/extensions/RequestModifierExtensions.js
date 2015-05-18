@@ -41,7 +41,7 @@ MediaPlayer.dependencies.RequestModifierExtensions = function () {
             var newUrl = data.url;
             if (!!info.range){
                 if ("string" === typeof(info.range)){
-                    newUrl += "/range/"+info.range;
+                    newUrl += "/ByteRange/"+info.range;
                 }
                 else if ("undefined" !== typeof(info.range.start)) {
                     newUrl += "/ByteRange/"+info.range.start + "-"+info.range.end;
