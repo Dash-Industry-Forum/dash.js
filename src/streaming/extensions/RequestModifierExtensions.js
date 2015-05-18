@@ -28,13 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.RequestModifierExtensions = function() {
+MediaPlayer.dependencies.RequestModifierExtensions = function () {
     "use strict";
-
-    var isVUDU = true;
-    var api_ = {
-        prepareRequestVUDU: function(info, data){
-            // if no customization needed, then simply return data
+    return {
+        prepareRequest: function(info, data){
+            // if no customization needed, then simply return data, or omit this function
             var respdata = {};
 
             respdata.method = data.method;
@@ -46,18 +44,20 @@ MediaPlayer.dependencies.RequestModifierExtensions = function() {
                     newUrl += "/range/"+info.range;
                 }
                 else if ("undefined" !== typeof(info.range.start)) {
-                    newUrl += "/range/"+info.range.start + "-"+info.range.end;
+                    newUrl += "/ByteRange/"+info.range.start + "-"+info.range.end;
                 }
             }
 
-            if (!!window.ancinus.hackUriSuffix){
-                newUrl += "?"+window.ancinus.hackUriSuffix;
+            if (!!window.sessionUriSuffix){
+                newUrl += "/SessionMagic/"+window.sessionUriSuffix;
             }
             respdata.url = newUrl;
 
             var newHeaders = {};
             for (var header in data.headers){
                 if ("range" === header.toLowerCase()){
+                    // Exclude "range" header in request to server.
+                    // Range was passed on URL
                     continue;
                 }
                 newHeaders[header] = data.headers[header];
@@ -66,18 +66,12 @@ MediaPlayer.dependencies.RequestModifierExtensions = function() {
 
             return respdata;
         },
-        modifyRequestURL: function(url) {
+        modifyRequestURL : function (url) {
             return url;
         },
-        modifyRequestHeader: function(request) {
+
+        modifyRequestHeader : function (request) {
             return request;
         }
     };
-
-    if (isVUDU){
-        api_.prepareRequest = api_.prepareRequestVUDU;
-    }
-
-    return api_;
 };
-
