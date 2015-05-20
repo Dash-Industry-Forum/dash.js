@@ -101,8 +101,7 @@ MediaPlayer.rules.ThroughputRule = function () {
             if (now - lastSwitchTime < waitToSwitchTime ||
                 !metrics || lastRequest === null ||
                 lastRequest.type !== MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE ||
-                bufferStateVO === null || bufferLevelVO === null ||
-                abrController.getAbandonmentStateFor(mediaType) === MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
+                bufferStateVO === null || bufferLevelVO === null) {
                 callback(switchRequest);
                 return;
             }
@@ -114,6 +113,7 @@ MediaPlayer.rules.ThroughputRule = function () {
             averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic));
 
             if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
+                abrController.getAbandonmentStateFor(mediaType) !== MediaPlayer.dependencies.AbrController.ABANDON_LOAD &&
                 (bufferLevelVO.level >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD*2) || isDynamic))
             {
                 var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput/1000);

@@ -109,8 +109,8 @@ MediaPlayer.rules.AbandonRequestsRule = function () {
                         var newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY);
                         switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
                         abandonDict[fragmentInfo.id] = fragmentInfo;
-                        delete fragmentDict[mediaType][fragmentInfo.id];
                         this.log("AbandonRequestsRule ( ", mediaType, "frag id",fragmentInfo.id,") is asking to abandon and switch to quality to ", newQuality, " measured bandwidth was", fragmentInfo.measuredBandwidthInKbps);
+                        delete fragmentDict[mediaType][fragmentInfo.id];
                     }
                 }else if (fragmentInfo.bytesLoaded === fragmentInfo.bytesTotal) {
                     delete fragmentDict[mediaType][fragmentInfo.id];
