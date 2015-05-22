@@ -92,14 +92,14 @@ MediaPlayer.dependencies.FragmentController = function () {
         onFragmentLoadingCompleted = function(e) {
             var self = this,
                 request = e.data.request,
-                bytes = self.process(e.data.response),
+                bytes = e.data.response,
                 streamId = e.sender.getContext().streamProcessor.getStreamInfo().id,
                 isInit = this.isInitializationRequest(request),
                 eventName = isInit ? MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED :
                     MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED,
                 chunk;
 
-            if (bytes === null) {
+            if (!bytes) {
                 self.log("No " + request.mediaType + " bytes to push.");
                 return;
             }

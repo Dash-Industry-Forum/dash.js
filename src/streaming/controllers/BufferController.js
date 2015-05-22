@@ -237,14 +237,11 @@ MediaPlayer.dependencies.BufferController = function () {
 
         handleInbandEvents = function(data,request,mediaInbandEvents,trackInbandEvents) {
             var events = [],
-                i = 0,
-                identifier,
-                size,
-                expTwo = Math.pow(256,2),
-                expThree = Math.pow(256,3),
+                eventBoxes,
                 fragmentStarttime = Math.max(isNaN(request.startTime) ? 0 : request.startTime,0),
                 eventStreams = [],
                 event,
+                isoFile,
                 inbandEvents;
 
             inbandEventFound = false;
@@ -253,40 +250,16 @@ MediaPlayer.dependencies.BufferController = function () {
             for(var loop = 0; loop < inbandEvents.length; loop++) {
                 eventStreams[inbandEvents[loop].schemeIdUri] = inbandEvents[loop];
             }
-            while(i<data.length) {
-                identifier = String.fromCharCode(data[i+4],data[i+5],data[i+6],data[i+7]); // box identifier
-                size = data[i]*expThree + data[i+1]*expTwo + data[i+2]*256 + data[i+3]*1; // size of the box
-                if( identifier == "moov" || identifier == "moof") {
-                    break;
-                } else if(identifier == "emsg") {
-                    inbandEventFound = true;
-                    var eventBox = ["","",0,0,0,0,""],
-                        arrIndex = 0,
-                        j = i+12; //fullbox header is 12 bytes, thats why we start at 12
 
-                    while(j < size+i) {
-                        /* == string terminates with 0, this indicates end of attribute == */
-                        if(arrIndex === 0 || arrIndex == 1 || arrIndex == 6) {
-                            if(data[j] !== 0) {
-                                eventBox[arrIndex] += String.fromCharCode(data[j]);
-                            } else {
-                                arrIndex += 1;
-                            }
-                            j += 1;
-                        } else {
-                            eventBox[arrIndex] = data[j]*expThree + data[j+1]*expTwo + data[j+2]*256 + data[j+3]*1;
-                            j += 4;
-                            arrIndex += 1;
-                        }
-                    }
+            isoFile = this.boxParser.parse(data);
+            eventBoxes = isoFile.getBoxes("emsg");
 
-                    event = this.adapter.getEvent(eventBox, eventStreams, fragmentStarttime);
+            for (var i = 0, ln = eventBoxes.length; i < ln; i += 1) {
+                event = this.adapter.getEvent(eventBoxes[i], eventStreams, fragmentStarttime);
 
-                    if (event) {
-                        events.push(event);
-                    }
+                if (event) {
+                    events.push(event);
                 }
-                i += size;
             }
 
             return events;
@@ -619,6 +592,7 @@ MediaPlayer.dependencies.BufferController = function () {
         adapter: undefined,
         log: undefined,
         abrController: undefined,
+        boxParser: undefined,
         system: undefined,
         notify: undefined,
         subscribe: undefined,
