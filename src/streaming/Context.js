@@ -59,10 +59,12 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('DOMStorage', MediaPlayer.utils.DOMStorage);
             this.system.mapClass('customTimeRanges', MediaPlayer.utils.CustomTimeRanges);
             this.system.mapSingleton('virtualBuffer', MediaPlayer.utils.VirtualBuffer);
+            this.system.mapClass('isoFile', MediaPlayer.utils.IsoFile);
 
             this.system.mapSingleton('textTrackExtensions', MediaPlayer.utils.TextTrackExtensions);
             this.system.mapSingleton('vttParser', MediaPlayer.utils.VTTParser);
             this.system.mapSingleton('ttmlParser', MediaPlayer.utils.TTMLParser);
+            this.system.mapSingleton('boxParser', MediaPlayer.utils.BoxParser);
 
             this.system.mapSingleton('videoModel', MediaPlayer.models.VideoModel);
             this.system.mapSingleton('manifestModel', MediaPlayer.models.ManifestModel);

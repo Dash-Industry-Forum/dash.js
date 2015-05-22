@@ -228,13 +228,13 @@ Dash.dependencies.DashAdapter = function () {
 
         getEvent = function(eventBox, eventStreams, startTime) {
             var event = new Dash.vo.Event(),
-                schemeIdUri = eventBox[0],
-                value = eventBox[1],
-                timescale = eventBox[2],
-                presentationTimeDelta = eventBox[3],
-                duration = eventBox[4],
-                id = eventBox[5],
-                messageData = eventBox[6],
+                schemeIdUri = eventBox.scheme_id_uri,
+                value = eventBox.value,
+                timescale = eventBox.timescale,
+                presentationTimeDelta = eventBox.presentation_time_delta,
+                duration = eventBox.event_duration,
+                id = eventBox.id,
+                messageData = eventBox.message_data,
                 presentationTime = startTime*timescale+presentationTimeDelta;
 
             if (!eventStreams[schemeIdUri]) return null;
