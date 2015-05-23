@@ -196,12 +196,6 @@ MediaPlayer.dependencies.ProtectionController = function () {
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
-            /*
-             TODO:  This event is causing failures in Stream.js.  The message causes a PROTECTION_ERROR notification which
-             triggers the call of Stream.reset().  Stream.reset() unsubscribes from PROTECTION_ERROR messages which makes
-             Notifier very unhappy.  Need to fix that bug first.
-              */
-            //this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
 
             // Look for ContentProtection elements.  InitData can be provided by either the
             // dash264drm:Pssh ContentProtection format or a DRM-specific format.
@@ -210,6 +204,15 @@ MediaPlayer.dependencies.ProtectionController = function () {
             audioInfo = adapter.getMediaInfoForType(manifest, streamInfo, "audio");
             videoInfo = adapter.getMediaInfoForType(manifest, streamInfo, "video");
             var mediaInfo = (videoInfo) ? videoInfo : audioInfo; // We could have audio or video only
+            var self = this;
+
+            // If we fail to select a key system using initData in the MPD, we will fall back to
+            // listening for needkey events
+            var useNeedKey = function() {
+                self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, self);
+                self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, self);
+                self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, self);
+            };
 
             // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
             // and video will be the same.  Just use one valid MediaInfo object
@@ -218,7 +221,13 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
                 // Handle KEY_SYSTEM_SELECTED events here instead.
                 var ksSelected = {};
-                var self = this;
+                ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
+                    if (event.error) {
+                        self.log("DRM: Could not select key system from ContentProtection elements!  Falling back to needkey mechanism...");
+                        useNeedKey();
+                        self.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
+                    }
+                };
                 ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = function(event) {
                     if (!event.error) {
                         self.keySystem = self.protectionModel.keySystem;
@@ -231,17 +240,14 @@ MediaPlayer.dependencies.ProtectionController = function () {
                         }
                     } else {
                         self.log("DRM: Could not select key system from ContentProtection elements!  Falling back to needkey mechanism...");
-                        self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, self);
-                        self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, self);
+                        useNeedKey();
                     }
-                    self.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
                 };
-                this.keySystem = null;
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected, undefined, true);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, ksSelected, undefined, true);
                 this.protectionExt.autoSelectKeySystem(supportedKS, this, videoInfo, audioInfo);
             } else { // needkey event will trigger key system selection
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, this);
+                useNeedKey();
             }
         },
 
