@@ -45,6 +45,7 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
          */
         requestClearKeyLicense = function(message, requestData) {
             var self = this,
+                keyPairs = [],
                 i,
                 laURL = (protData && protData.laURL && protData.laURL !== "") ? protData.laURL : null;
 
@@ -97,7 +98,6 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
             }
             /* internal -- keys are retrieved from protectionExtensions */
             else if (protData.clearkeys) {
-                var keyPairs = [];
                 for (i = 0; i < jsonMsg.kids.length; i++) {
                     var keyID = jsonMsg.kids[i],
                         key = (protData.clearkeys.hasOwnProperty(keyID)) ? protData.clearkeys[keyID] : null;
