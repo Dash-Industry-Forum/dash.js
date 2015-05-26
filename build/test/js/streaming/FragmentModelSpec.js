@@ -43,8 +43,8 @@ describe("FragmentModel", function () {
         });
 
         it("should detect duplicated requests", function () {
-            expect(fragmentModel.isFragmentLoadedOrPending(initRequest)).toBeTruthy();
-            expect(fragmentModel.isFragmentLoadedOrPending(mediaRequest)).toBeTruthy();
+            expect(fragmentModel.isFragmentLoadedOrPendingAndNotDiscarded(initRequest)).toBeTruthy();
+            expect(fragmentModel.isFragmentLoadedOrPendingAndNotDiscarded(mediaRequest)).toBeTruthy();
         });
 
         it("should return pending requests", function () {

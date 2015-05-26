@@ -32,7 +32,7 @@
 				getMediaInfo: function() {
 					return {bitrateList:[]};
 				}
-            }
+            };
         },
 
         setup = function() {
