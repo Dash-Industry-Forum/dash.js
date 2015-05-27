@@ -366,7 +366,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             if (r.hasOwnProperty('bandwidth')){
                 representation.bandwidth = r.bandwidth;
             }
-
+            if (r.hasOwnProperty('maxPlayoutRate')){
+                representation.maxPlayoutRate = r.maxPlayoutRate;
+            }
             if (r.hasOwnProperty("SegmentBase")) {
                 segmentInfo = r.SegmentBase;
                 representation.segmentInfoType = "SegmentBase";
