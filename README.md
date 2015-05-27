@@ -1,22 +1,22 @@
 
-<img src="https://cloud.githubusercontent.com/assets/7049474/6138495/99534942-b14f-11e4-9f4e-02cbd157d503.png" width="400">
+<img src="https://cloud.githubusercontent.com/assets/2762250/7824984/985c3e76-03bc-11e5-807b-1402bde4fe56.png" width="400">
 
 JSHint and Jasmine status: [![JSHint and Jasmine](http://img.shields.io/travis/Dash-Industry-Forum/dash.js/development.svg?style=flat-square)](https://travis-ci.org/Dash-Industry-Forum/dash.js)
 
-A reference client implementation for the playback of MPEG DASH via JavaScript and compliant browsers. Learn more about DASH IF Reference Client.
+A reference client implementation for the playback of MPEG DASH via JavaScript and compliant browsers. Learn more about DASH IF Reference Client on our [wiki](https://github.com/Dash-Industry-Forum/dash.js/wiki).
 
 If your intent is to use the player code without contributing back to this project, then use the MASTER branch which holds the approved and stable public releases.
 
 If your goal is to improve or extend the code and contribute back to this project, then you should make your changes in, and submit a pull request against, the DEVELOPMENT branch. Read through our wiki section on https://github.com/Dash-Industry-Forum/dash.js/wiki/How-to-Contribute for a walk-through of the contribution process.
 
-All new work should be in the development branch. Master is now reserved to tag builds.
+All new work should be in the development branch. Master is now reserved for tagged builds.
 
 ## Quick Start for Users
 If you just want a DASH player to use and don't need to see the code or commit to this project, then follow the instructions below. If you are a developer and want to work with this code base, then skip down to the "Quick Start for Developers" section.
 
 Put the following code in your web page
 ```
-<script src="http://players.edgesuite.net/dash.js/latest/dash.all.js"></script>
+<script src="http://cdn.dashjs.org/latest/dash.all.js"></script>
 ...
 <body onLoad="Dash.createAll()">
    <div>
