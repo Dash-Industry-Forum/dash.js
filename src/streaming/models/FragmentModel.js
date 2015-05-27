@@ -352,13 +352,17 @@ MediaPlayer.dependencies.FragmentModel = function () {
         },
 
         abortRequests: function() {
+            var reqs = [];
             this.fragmentLoader.abort();
 
-            for (var i = 0, ln = loadingRequests.length; i < ln; i += 1) {
-                removeRequest.call(this, executedRequests, loadingRequests[i]);
+            while (loadingRequests.length > 0) {
+                reqs.push(loadingRequests[0]);
+                removeRequest.call(this, loadingRequests, loadingRequests[0]);
             }
 
             loadingRequests = [];
+            
+            return reqs;
         },
 
         executeRequest: function(request) {
