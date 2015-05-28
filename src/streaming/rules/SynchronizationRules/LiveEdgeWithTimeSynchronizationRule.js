@@ -35,17 +35,31 @@ MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule = function () {
     "use strict";
 
     return {
+        timelineConverter: undefined,
+
         // if the time has been synchronized correctly (which it must have been
         // to end up executing this rule), the last entry in the DVR window
         // should be the live edge. if that is incorrect for whatever reason,
         // playback will fail to start and some other action should be taken.
         execute: function (context, callback) {
-            callback(
-                new MediaPlayer.rules.SwitchRequest(
-                    context.getTrackInfo().DVRWindow.end,
-                    MediaPlayer.rules.SwitchRequest.prototype.DEFAULT
-                )
-            );
+            var trackInfo = context.getTrackInfo(),
+                liveEdgeInitialSearchPosition = trackInfo.DVRWindow.end,
+                p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+
+            if (trackInfo.useCalculatedLiveEdgeTime) {
+                //By default an expected live edge is the end of the last segment.
+                // A calculated live edge ('end' property of a range returned by TimelineConverter.calcSegmentAvailabilityRange)
+                // is used as an initial point for finding the actual live edge.
+                // But for SegmentTimeline mpds (w/o a negative @r) the end of the
+                // last segment is the actual live edge. At the same time, calculated live edge is an expected live edge.
+                // Thus, we need to switch an expected live edge and actual live edge for SegmentTimelne streams.
+                var actualLiveEdge = this.timelineConverter.getExpectedLiveEdge();
+                this.timelineConverter.setExpectedLiveEdge(liveEdgeInitialSearchPosition);
+                this.timelineConverter.setTimeSyncCompleted(false);
+                callback(new MediaPlayer.rules.SwitchRequest(actualLiveEdge, p));
+            } else {
+                callback(new MediaPlayer.rules.SwitchRequest(liveEdgeInitialSearchPosition, p));
+            }
         }
     };
 };

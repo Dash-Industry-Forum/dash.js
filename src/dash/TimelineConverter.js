@@ -192,6 +192,10 @@ Dash.dependencies.TimelineConverter = function () {
             return isClientServerTimeSyncCompleted;
         },
 
+        setTimeSyncCompleted: function(value) {
+            isClientServerTimeSyncCompleted = value;
+        },
+
         getClientTimeOffset: function() {
             return clientServerTimeShift;
         },
