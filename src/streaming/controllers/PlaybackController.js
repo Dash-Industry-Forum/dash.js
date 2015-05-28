@@ -40,6 +40,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
         streamInfo,
         videoModel,
         isDynamic,
+        liveDelayFragmentCount = NaN,
+        useSuggestedPresentationDelay,
 
         getStreamStartTime = function (streamInfo) {
             var presentationStartTime,
@@ -307,6 +309,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         metricsModel: undefined,
         metricsExt: undefined,
         manifestModel: undefined,
+        manifestExt: undefined,
         videoModel: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -384,13 +387,29 @@ MediaPlayer.dependencies.PlaybackController = function () {
             return liveStartTime;
         },
 
+        setLiveDelayAttributes: function(count, useSPD) {
+            liveDelayFragmentCount = count;
+            useSuggestedPresentationDelay = useSPD;
+        },
+
         /**
          * Gets a desirable delay for the live edge to avoid a risk of getting 404 when playing at the bleeding edge
          * @returns {Number} object
          * @memberof PlaybackController#
          * */
-        getLiveDelay: function() {
-            return streamInfo.manifestInfo.minBufferTime * 2;
+        getLiveDelay: function(fragmentDuration) {
+            var delay,
+                mpd = this.manifestExt.getMpd(this.manifestModel.getValue());
+
+            if (useSuggestedPresentationDelay && mpd.hasOwnProperty("suggestedPresentationDelay")) {
+                delay = mpd.suggestedPresentationDelay;
+            } else if (!isNaN(fragmentDuration)) {
+                delay = fragmentDuration * liveDelayFragmentCount;
+            } else {
+                delay = streamInfo.manifestInfo.minBufferTime * 2;
+            }
+
+            return delay;
         },
 
         start: function() {
@@ -427,6 +446,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
             commonEarliestTime = {};
             firstAppended = {};
             isDynamic = undefined;
+            useSuggestedPresentationDelay = undefined;
+            liveDelayFragmentCount = NaN;
         }
     };
 };

@@ -86,6 +86,8 @@ MediaPlayer = function (context) {
         bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
         useManifestDateHeaderTimeSource = true,
         UTCTimingSources = [],
+        liveDelayFragmentCount = 4,
+        usePresentationDelay = false,
 
         isReady = function () {
             return (!!element && !!source);
@@ -112,6 +114,7 @@ MediaPlayer = function (context) {
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
+            playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
 
             streamController.initialize(autoPlay, protectionController, protectionData);
             DOMStorage.checkInitialBitrate();
@@ -347,6 +350,33 @@ MediaPlayer = function (context) {
             return videoModel;
         },
 
+
+
+        /**
+         * <p>Changing this value will lower or increase live stream latency.  The detected segment duration will be multiplied by this value
+         * to define a time in seconds to delay a live stream from the live edge.</p>
+         * <p>Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.</p>
+         *
+         * @param value {int} Represents how many segment durations to delay the live stream.
+         * @default 4
+         * @memberof MediaPlayer#
+         * @see {@link MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
+         */
+        setLiveDelayFragmentCount: function(value) {
+            liveDelayFragmentCount = value;
+        },
+
+        /**
+         * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
+         * @param value {Boolean}
+         * @default false
+         * @memberof MediaPlayer#
+         * @see {@link MediaPlayer#setLiveDelayFragmentCount setLiveDelayFragmentCount()}
+         */
+        useSuggestedPresentationDelay: function(value) {
+            usePresentationDelay = value;
+        },
+
         /**
          * Set to false if you would like to disable the last known bit rate from being stored during playback and used
          * to set the initial bit rate for subsequent playback within the expiration window.
@@ -371,7 +401,7 @@ MediaPlayer = function (context) {
          *
          * We do not suggest setting this value greater than 4.
          *
-         * @value - Number of parallel request allowed at one time.
+         * @value {int} Number of parallel request allowed at one time.
          * @default 0
          * @memberof MediaPlayer#
          *
@@ -391,8 +421,8 @@ MediaPlayer = function (context) {
          *
          * This feature is typically used to reserve higher bitrates for playback only when the player is in large or full-screen format.
          *
-         * @param type String 'video' or 'audio' are the type options.
-         * @param value int value in kbps representing the maximum bitrate allowed.
+         * @param type {String} 'video' or 'audio' are the type options.
+         * @param value {int} Value in kbps representing the maximum bitrate allowed.
          * @memberof MediaPlayer#
          */
         setMaxAllowedBitrateFor:function(type, value) {
@@ -400,7 +430,7 @@ MediaPlayer = function (context) {
         },
 
         /**
-         * @param type String 'video' or 'audio' are the type options.
+         * @param type {String} 'video' or 'audio' are the type options.
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
          */
@@ -409,15 +439,20 @@ MediaPlayer = function (context) {
         },
 
         /**
-         * @param value
+         * <p>Set to false to prevent stream from auto-playing when the view is attached.</p>
+         *
+         * @param value {Boolean}
+         * @default true
          * @memberof MediaPlayer#
+         * @see {@link MediaPlayer#attachView attachView()}
+         *
          */
         setAutoPlay: function (value) {
             autoPlay = value;
         },
 
         /**
-         * @returns {boolean} The current autoPlay state.
+         * @returns {Boolean} The current autoPlay state.
          * @memberof MediaPlayer#
          */
         getAutoPlay: function () {
@@ -881,11 +916,9 @@ MediaPlayer = function (context) {
          * NOTE - If you do not need the raw offset value (i.e. media analytics, tracking, etc) consider using the {@link MediaPlayer#seek seek()} method
          * which will calculate this value for you and set the video element's currentTime property all in one simple call.
          *
-         * @param {number} value A relative time, in seconds, based on the return value of the {@link MediaPlayer#duration duration()} method is expected.
+         * @param value {Number} A relative time, in seconds, based on the return value of the {@link MediaPlayer#duration duration()} method is expected.
          * @returns A value that is relative the available range within the timeShiftBufferLength (DVR Window).
-         *
          * @see {@link MediaPlayer#seek seek()}
-         *
          * @memberof MediaPlayer#
          * @method
          */
