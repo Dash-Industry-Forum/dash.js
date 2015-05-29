@@ -71,7 +71,7 @@ Dash.dependencies.BaseURLExtensions = function () {
 
             this.log("Searching for initialization.");
 
-            if (moov) {
+            if (moov && moov.isComplete) {
                 start = ftyp ? ftyp.offset : moov.offset;
                 end = moov.offset + moov.size - 1;
                 initRange = start + "-" + end;
