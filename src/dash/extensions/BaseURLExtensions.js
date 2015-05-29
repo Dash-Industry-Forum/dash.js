@@ -155,20 +155,24 @@ Dash.dependencies.BaseURLExtensions = function () {
             request.onload = function () {
                 if (request.status < 200 || request.status > 299) return;
 
+                var extraBytes = info.bytesToLoad,
+                    loadedLength = request.response.byteLength;
+
                 needFailureReport = false;
                 info.bytesLoaded = info.range.end;
                 isoFile = self.boxParser.parse(request.response);
                 sidx = isoFile.getBox("sidx");
 
                 if (!sidx || !sidx.isComplete) {
-                    var extraBytes = info.range.bytesToLoad;
-
                     if (sidx && sidx.size) {
                         extraBytes = info.bytesLoaded + sidx.size - (isoFile.getOffset() - sidx.offset);
+                    } else if ((loadedLength > Dash.dependencies.BaseURLExtensions.SIDX_SEARCH_LIMIT) || (loadedLength < info.bytesLoaded)) {
+                        // if we have reached a search limit or if we have reached the end of the file we have to stop trying to find sidx
+                        callback.call(self, null, representation, type);
+                    } else {
+                        info.range.end = info.bytesLoaded + extraBytes;
+                        loadSegments.call(self, representation, type, info.range, info, callback);
                     }
-
-                    info.range.end = info.bytesLoaded + extraBytes;
-                    loadSegments.call(self, representation, type, info.range, info, callback);
                 } else {
                     var ref = sidx.references,
                         loadMultiSidx,
@@ -268,6 +272,8 @@ Dash.dependencies.BaseURLExtensions = function () {
 Dash.dependencies.BaseURLExtensions.prototype = {
     constructor: Dash.dependencies.BaseURLExtensions
 };
+
+Dash.dependencies.BaseURLExtensions.SIDX_SEARCH_LIMIT = 10000;
 
 Dash.dependencies.BaseURLExtensions.eventList = {
     ENAME_INITIALIZATION_LOADED: "initializationLoaded",
