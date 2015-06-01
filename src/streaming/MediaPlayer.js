@@ -333,7 +333,7 @@ MediaPlayer = function (context) {
         },
 
         /**
-         * Use this method to access the dash.js debugger.
+         * Use this method to access the dash.js logging class.
          *
          * @returns {@link MediaPlayer.utils.Debug Debug.js (Singleton)}
          * @memberof MediaPlayer#
@@ -368,7 +368,7 @@ MediaPlayer = function (context) {
 
         /**
          * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
-         * @param value {Boolean}
+         * @param value {boolean}
          * @default false
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#setLiveDelayFragmentCount setLiveDelayFragmentCount()}
@@ -430,7 +430,7 @@ MediaPlayer = function (context) {
         },
 
         /**
-         * @param type {String} 'video' or 'audio' are the type options.
+         * @param type {string} 'video' or 'audio' are the type options.
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
          */
@@ -441,7 +441,7 @@ MediaPlayer = function (context) {
         /**
          * <p>Set to false to prevent stream from auto-playing when the view is attached.</p>
          *
-         * @param value {Boolean}
+         * @param value {boolean}
          * @default true
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#attachView attachView()}
@@ -452,7 +452,7 @@ MediaPlayer = function (context) {
         },
 
         /**
-         * @returns {Boolean} The current autoPlay state.
+         * @returns {boolean} The current autoPlay state.
          * @memberof MediaPlayer#
          */
         getAutoPlay: function () {
@@ -557,15 +557,19 @@ MediaPlayer = function (context) {
         },
 
         /**
-         * @returns {object}
+         * @returns {boolean} Current state of adaptive bitrate switching
          * @memberof MediaPlayer#
+         *
          */
         getAutoSwitchQuality : function () {
             return abrController.getAutoSwitchBitrate();
         },
 
         /**
-         * @param value
+         * Set to false to switch off adaptive bitrate switching.
+         *
+         * @param value {boolean}
+         * @default {boolean} true
          * @memberof MediaPlayer#
          */
         setAutoSwitchQuality : function (value) {
@@ -573,6 +577,26 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * <p>Allows you to override the default Scheduling Rules with a custom collection.</p>
+         *
+         * <pre>
+         * You need to use a custom context by extend DashContext.js and passing to MediaPlayer upon instantiation.
+         *
+         * //CustomRuleCollection code example.
+         *
+         *  MediaPlayer.rules.CustomRuleCollection = function () {
+         *      "use strict";
+         *  }
+         *
+         *  MediaPlayer.rules.CustomRuleCollection.prototype = new MediaPlayer.rules.ABRRulesCollection();
+         *  MediaPlayer.rules.CustomRuleCollection.prototype.constructor = MediaPlayer.rules.ABRRulesCollection;
+         *  MediaPlayer.rules.CustomRuleCollection.prototype.QUALITY_SWITCH_RULES = [new MediaPlayer.rules.CustomRuleCollection()];
+         *
+         *  MediaPlayer.rules.CustomRuleCollection.prototype = {
+         *      constructor: MediaPlayer.rules.CustomRuleCollection
+         *  };
+         * </pre>
+         *
          * @param newRulesCollection
          * @memberof MediaPlayer#
          */
@@ -581,6 +605,26 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * <p>Allows you to add a custom Scheduling rule to the existing stack of default rules.</p>
+         *
+         * <pre>
+         * You need to use a custom context by extend DashContext.js and passing to MediaPlayer upon instantiation.
+         *
+         * //CustomRuleCollection code example.
+         *
+         *  MediaPlayer.rules.CustomRuleCollection = function () {
+         *      "use strict";
+         *  }
+         *
+         *  MediaPlayer.rules.CustomRuleCollection.prototype = new MediaPlayer.rules.ABRRulesCollection();
+         *  MediaPlayer.rules.CustomRuleCollection.prototype.constructor = MediaPlayer.rules.ABRRulesCollection;
+         *  MediaPlayer.rules.CustomRuleCollection.prototype.QUALITY_SWITCH_RULES = [new MediaPlayer.rules.CustomRuleCollection()];
+         *
+         *  MediaPlayer.rules.CustomRuleCollection.prototype = {
+         *      constructor: MediaPlayer.rules.CustomRuleCollection
+         *  };
+         * </pre>
+         *
          * @param newRulesCollection
          * @memberof MediaPlayer#
          */
@@ -589,6 +633,26 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * <p>Allows you to override the default ABR Rules with a custom collection.</p>
+         *
+         * <pre>
+         * You need to use a custom context by extend DashContext.js and passing to MediaPlayer upon instantiation.
+         *
+         * //CustomRuleCollection code example.
+         *
+         *  MediaPlayer.rules.CustomRuleCollection = function () {
+         *      "use strict";
+         *  }
+         *
+         *  MediaPlayer.rules.CustomRuleCollection.prototype = new MediaPlayer.rules.ABRRulesCollection();
+         *  MediaPlayer.rules.CustomRuleCollection.prototype.constructor = MediaPlayer.rules.ABRRulesCollection;
+         *  MediaPlayer.rules.CustomRuleCollection.prototype.QUALITY_SWITCH_RULES = [new MediaPlayer.rules.CustomRuleCollection()];
+         *
+         *  MediaPlayer.rules.CustomRuleCollection.prototype = {
+         *      constructor: MediaPlayer.rules.CustomRuleCollection
+         *  };
+         * </pre>
+         *
          * @param newRulesCollection
          * @memberof MediaPlayer#
          */
@@ -597,6 +661,26 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * <p>Allows you to add a custom ABR rule to the existing stack of default rules.</p>
+         *
+         * <pre>
+         * You need to use a custom context by extend DashContext.js and passing to MediaPlayer upon instantiation.
+         *
+         * //CustomRuleCollection code example.
+         *
+         *  MediaPlayer.rules.CustomRuleCollection = function () {
+         *      "use strict";
+         *  }
+         *
+         *  MediaPlayer.rules.CustomRuleCollection.prototype = new MediaPlayer.rules.ABRRulesCollection();
+         *  MediaPlayer.rules.CustomRuleCollection.prototype.constructor = MediaPlayer.rules.ABRRulesCollection;
+         *  MediaPlayer.rules.CustomRuleCollection.prototype.QUALITY_SWITCH_RULES = [new MediaPlayer.rules.CustomRuleCollection()];
+         *
+         *  MediaPlayer.rules.CustomRuleCollection.prototype = {
+         *      constructor: MediaPlayer.rules.CustomRuleCollection
+         *  };
+         * </pre>
+         *
          * @param newRulesCollection
          * @memberof MediaPlayer#
          */
@@ -646,7 +730,6 @@ MediaPlayer = function (context) {
          * If UTCTiming is defined in the manifest, it will take precedence over any time source manually added.</p>
          * <p>If you have exposed the Date header, use the method {@link MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}.
          * This will allow the date header on the manifest to be used instead of a time server</p>
-         *
          * @param {string} schemeIdUri -
          * <ul>
          * <li>urn:mpeg:dash:utc:http-head:2014</li>
@@ -662,18 +745,14 @@ MediaPlayer = function (context) {
          * <li>urn:mpeg:dash:utc:http-iso:2012</li>
          * <li>urn:mpeg:dash:utc:direct:2012</li>
          * </ul>
-         *
          * @param {string} value - Path to a time source.
-         *
          * @default
          * <ul>
          *     <li>schemeIdUri:urn:mpeg:dash:utc:http-xsdate:2014</li>
          *     <li>value:http://time.akamai.com</li>
          * </ul>
-         *
          * @memberof MediaPlayer#
-         * @see
-         * {@link MediaPlayer#removeUTCTimingSource removeUTCTimingSource()}
+         * @see {@link MediaPlayer#removeUTCTimingSource removeUTCTimingSource()}
          */
         addUTCTimingSource: function (schemeIdUri, value){
             this.removeUTCTimingSource(schemeIdUri, value);//check if it already exists and remove if so.
@@ -736,7 +815,7 @@ MediaPlayer = function (context) {
          * use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
          * {@link MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()} </p>
          *
-         * @default True
+         * @default {boolean} True
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
          */
@@ -747,8 +826,7 @@ MediaPlayer = function (context) {
         /**
          * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
          *
-         * @param view An HTML5 VideoElement that has already defined in the DOM.
-         *
+         * @param view An HTML5 VideoElement that has already been defined in the DOM.
          * @memberof MediaPlayer#
          */
         attachView: function (view) {
@@ -778,7 +856,7 @@ MediaPlayer = function (context) {
          * a previously downloaded and parsed manifest object.  Optionally, can
          * also provide protection information
          *
-         * @param {string|Object} urlOrManifest A URL to a valid MPD manifest file, or a
+         * @param {string | object} urlOrManifest A URL to a valid MPD manifest file, or a
          * parsed manifest object.
          * @param {MediaPlayer.dependencies.ProtectionController} [protectionCtrl] optional
          * protection controller
@@ -829,7 +907,6 @@ MediaPlayer = function (context) {
          * The play method initiates playback of the media defined by the {@link MediaPlayer#attachSource attachSource()} method.
          *
          * @see {@link MediaPlayer#attachSource attachSource()}
-         *
          * @memberof MediaPlayer#
          * @method
          */
@@ -841,7 +918,6 @@ MediaPlayer = function (context) {
          * @returns {boolean} The current ready state of the MediaPlayer
          * @see {@link MediaPlayer#attachView attachView()}
          * @see {@link MediaPlayer#attachSource attachSource()}
-         *
          * @memberof MediaPlayer#
          * @method
          */
@@ -851,9 +927,8 @@ MediaPlayer = function (context) {
          * Sets the currentTime property of the attached video element.  If it is a live stream with a
          * timeShiftBufferLength, then the DVR window offset will be automatically calculated.
          *
-         * @param {number} value A relative time, in seconds, based on the return value of the {@link MediaPlayer#duration duration()} method is expected
+         * @param value {number} A relative time, in seconds, based on the return value of the {@link MediaPlayer#duration duration()} method is expected
          * @see {@link MediaPlayer#getDVRSeekOffset getDVRSeekOffset()}
-         *
          * @memberof MediaPlayer#
          * @method
          */
@@ -862,8 +937,7 @@ MediaPlayer = function (context) {
         /**
          * Current time of the playhead, in seconds.
          *
-         * @returns {number} Returns the current playhead time of the media.
-         *
+         * @returns {number} The current playhead time of the media.
          * @memberof MediaPlayer#
          * @method
          */
@@ -872,8 +946,7 @@ MediaPlayer = function (context) {
         /**
          * Duration of the media's playback, in seconds.
          *
-         * @returns {number} Returns the current duration of the media.
-         *
+         * @returns {number} The current duration of the media.
          * @memberof MediaPlayer#
          * @method
          */
@@ -883,8 +956,7 @@ MediaPlayer = function (context) {
          * Use this method to get the current playhead time as an absolute value, the time in seconds since midnight UTC, Jan 1 1970.
          * Note - this property only has meaning for live streams
          *
-         * @returns {number} Returns the current playhead time as UTC timestamp.
-         *
+         * @returns {number} The current playhead time as UTC timestamp.
          * @memberof MediaPlayer#
          * @method
          */
@@ -894,8 +966,7 @@ MediaPlayer = function (context) {
          * Use this method to get the current duration as an absolute value, the time in seconds since midnight UTC, Jan 1 1970.
          * Note - this property only has meaning for live streams.
          *
-         * @returns {number} Returns the current duration as UTC timestamp.
-         *
+         * @returns {number} The current duration as UTC timestamp.
          * @memberof MediaPlayer#
          * @method
          */
@@ -905,7 +976,6 @@ MediaPlayer = function (context) {
          * The timeShiftBufferLength (DVR Window), in seconds.
          *
          * @returns {number} The window of allowable play time behind the live point of a live stream.
-         *
          * @memberof MediaPlayer#
          * @method
          */
@@ -916,8 +986,8 @@ MediaPlayer = function (context) {
          * NOTE - If you do not need the raw offset value (i.e. media analytics, tracking, etc) consider using the {@link MediaPlayer#seek seek()} method
          * which will calculate this value for you and set the video element's currentTime property all in one simple call.
          *
-         * @param value {Number} A relative time, in seconds, based on the return value of the {@link MediaPlayer#duration duration()} method is expected.
-         * @returns A value that is relative the available range within the timeShiftBufferLength (DVR Window).
+         * @param value {number} A relative time, in seconds, based on the return value of the {@link MediaPlayer#duration duration()} method is expected.
+         * @returns {number} A value that is relative the available range within the timeShiftBufferLength (DVR Window).
          * @see {@link MediaPlayer#seek seek()}
          * @memberof MediaPlayer#
          * @method
@@ -930,8 +1000,7 @@ MediaPlayer = function (context) {
          * @param {number} time - UTC timestamp to be converted into date and time.
          * @param {string} locales - a region identifier (i.e. en_US).
          * @param {boolean} hour12 - 12 vs 24 hour. Set to true for 12 hour time formatting.
-         * @returns {string} a formatted time and date string.
-         *
+         * @returns {string} A formatted time and date string.
          * @memberof MediaPlayer#
          * @method
          */
@@ -940,9 +1009,8 @@ MediaPlayer = function (context) {
         /**
          * A utility method which converts seconds into TimeCode (i.e. 300 --> 05:00).
          *
-         * @param value - A number in seconds to be converted into a time code format.
+         * @param value {number} A number in seconds to be converted into a formatted time code.
          * @returns {string} A formatted time code string.
-         *
          * @memberof MediaPlayer#
          * @method
          */
