@@ -174,6 +174,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
         teardown: function() {
             if (videoElement) {
                 videoElement.removeEventListener("encrypted", eventHandler);
+                videoElement.setMediaKeys(null);
             }
             for (var i = 0; i < sessions.length; i++) {
                 this.closeKeySession(sessions[i]);
