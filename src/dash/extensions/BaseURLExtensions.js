@@ -159,20 +159,28 @@ Dash.dependencies.BaseURLExtensions = function () {
                     loadedLength = request.response.byteLength;
 
                 needFailureReport = false;
-                info.bytesLoaded = info.range.end;
+                info.bytesLoaded = info.range.end - info.range.start;
                 isoFile = self.boxParser.parse(request.response);
                 sidx = isoFile.getBox("sidx");
 
                 if (!sidx || !sidx.isComplete) {
-                    if (sidx && sidx.size) {
-                        extraBytes = info.bytesLoaded + sidx.size - (isoFile.getOffset() - sidx.offset);
-                    } else if ((loadedLength > Dash.dependencies.BaseURLExtensions.SIDX_SEARCH_LIMIT) || (loadedLength < info.bytesLoaded)) {
+                    if (sidx) {
+                        info.range.start = sidx.offset || info.range.start;
+                        info.range.end = sidx.size ? (info.range.start + sidx.size) : info.bytesLoaded + extraBytes;
+                    } else if (loadedLength < info.bytesLoaded) {
                         // if we have reached a search limit or if we have reached the end of the file we have to stop trying to find sidx
                         callback.call(self, null, representation, type);
+                        return;
                     } else {
+                        var lastBox = isoFile.getLastBox();
+
+                        if (lastBox) {
+                            info.range.start = lastBox.offset + lastBox.size;
+                        }
+
                         info.range.end = info.bytesLoaded + extraBytes;
-                        loadSegments.call(self, representation, type, info.range, info, callback);
                     }
+                    loadSegments.call(self, representation, type, info.range, info, callback);
                 } else {
                     var ref = sidx.references,
                         loadMultiSidx,
@@ -184,12 +192,11 @@ Dash.dependencies.BaseURLExtensions = function () {
 
                     if (loadMultiSidx) {
                         self.log("Initiate multiple SIDX load.");
-                        info.range.start = sidx.offset;
                         info.range.end = info.range.start + sidx.size;
 
                         var j, len, ss, se, r, segs = [],
                             count = 0,
-                            offset = info.range.start + sidx.size + sidx.first_offset,
+                            offset = (sidx.offset || info.range.start) + sidx.size,
                             tmpCallback = function(segments) {
                                 if (segments) {
                                     segs = segs.concat(segments);
@@ -272,8 +279,6 @@ Dash.dependencies.BaseURLExtensions = function () {
 Dash.dependencies.BaseURLExtensions.prototype = {
     constructor: Dash.dependencies.BaseURLExtensions
 };
-
-Dash.dependencies.BaseURLExtensions.SIDX_SEARCH_LIMIT = 10000;
 
 Dash.dependencies.BaseURLExtensions.eventList = {
     ENAME_INITIALIZATION_LOADED: "initializationLoaded",

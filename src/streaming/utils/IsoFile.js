@@ -231,6 +231,19 @@ MediaPlayer.utils.IsoFile = function () {
         },
 
         /**
+         * @returns {@link MediaPlayer.vo.IsoBox}
+         * @memberof IsoFile#
+         */
+        getLastBox: function() {
+            if (!parsedIsoFile || !parsedIsoFile.boxes || !parsedIsoFile.boxes.length) return null;
+
+            var type = parsedIsoFile.boxes[parsedIsoFile.boxes.length-1].type,
+                boxes = getBoxes.call(this, type);
+
+            return boxes[boxes.length-1];
+        },
+
+        /**
          * @returns {Number}
          * @memberof IsoFile#
          */
