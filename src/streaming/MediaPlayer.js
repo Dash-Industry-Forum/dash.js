@@ -1026,6 +1026,7 @@ MediaPlayer.prototype = {
 
 MediaPlayer.dependencies = {};
 MediaPlayer.dependencies.protection = {};
+MediaPlayer.dependencies.protection.servers = {};
 MediaPlayer.utils = {};
 MediaPlayer.models = {};
 MediaPlayer.vo = {};
