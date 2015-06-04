@@ -176,9 +176,10 @@ Dash.dependencies.BaseURLExtensions = function () {
 
                         if (lastBox && lastBox.size) {
                             info.range.start = lastBox.offset + lastBox.size;
+                            info.range.end = info.range.start + extraBytes;
+                        } else {
+                            info.range.end += extraBytes;
                         }
-
-                        info.range.end = info.range.start + extraBytes;
                     }
                     loadSegments.call(self, representation, type, info.range, info, callback);
                 } else {
