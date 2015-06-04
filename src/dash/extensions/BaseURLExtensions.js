@@ -166,7 +166,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 if (!sidx || !sidx.isComplete) {
                     if (sidx) {
                         info.range.start = sidx.offset || info.range.start;
-                        info.range.end = sidx.size ? (info.range.start + sidx.size) : info.bytesLoaded + extraBytes;
+                        info.range.end = info.range.start + (sidx.size || extraBytes);
                     } else if (loadedLength < info.bytesLoaded) {
                         // if we have reached a search limit or if we have reached the end of the file we have to stop trying to find sidx
                         callback.call(self, null, representation, type);
@@ -174,11 +174,11 @@ Dash.dependencies.BaseURLExtensions = function () {
                     } else {
                         var lastBox = isoFile.getLastBox();
 
-                        if (lastBox) {
+                        if (lastBox && lastBox.size) {
                             info.range.start = lastBox.offset + lastBox.size;
                         }
 
-                        info.range.end = info.bytesLoaded + extraBytes;
+                        info.range.end = info.range.start + extraBytes;
                     }
                     loadSegments.call(self, representation, type, info.range, info, callback);
                 } else {
