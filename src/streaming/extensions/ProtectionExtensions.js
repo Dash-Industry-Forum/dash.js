@@ -258,17 +258,18 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      *     <li>CastLabs DRMToday</li>
      * </ul>
      *
-     * @param keySystem {MediaPlayer.dependencies.protection.KeySystem} the key system
-     * associated with this license request
+     * @param protCtrl {MediaPlayer.dependencies.ProtectionController} the ProtectionController
+     * making the request
      * @param protData {MediaPlayer.vo.protection.ProtectionData} protection data to use for the
      * request
      * @param message {ArrayBuffer} the key message from the CDM
      * @param laURL {String} License requests will be sent to this URL (DEPRECATED!)
      * @param requestData object that will be returned in the ENAME_LICENSE_REQUEST_COMPLETE event
      */
-    requestLicense: function(keySystem, protData, message, laURL, requestData) {
+    requestLicense: function(protCtrl, protData, message, laURL, requestData) {
 
-        var licenseServerData = null;
+        var licenseServerData = null,
+            keySystem = protCtrl.keySystem;
         if (protData && protData.hasOwnProperty("drmtoday")) {
             licenseServerData = this.system.getObject("serverDRMToday");
         } else if (keySystem.systemString === "com.widevine.alpha") {
@@ -278,7 +279,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
         } else if (keySystem.systemString === "org.w3.clearkey") {
             licenseServerData = this.system.getObject("serverClearKey");
         } else {
-            this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+            protCtrl.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                     null, new Error('DRM: Unknown key system! -- ' + keySystem.keySystemStr));
             return;
         }
@@ -289,12 +290,12 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
                 var clearkeys = licenseServerData.getClearKeysFromProtectionData(protData, message);
                 if (clearkeys) {
                     var event = new MediaPlayer.vo.protection.LicenseRequestComplete(clearkeys, requestData);
-                    this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                    protCtrl.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                             event);
                     return;
                 }
             } catch (error) {
-                this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                protCtrl.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         null, error.message);
                 return;
             }
@@ -302,15 +303,14 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
 
         // All remaining key system scenarios require a request to a remote license server
         var xhr = new XMLHttpRequest(),
-            url = (protData && protData.laURL && protData.laURL !== "") ? protData.laURL : laURL,
-            self = this;
+            url = (protData && protData.laURL && protData.laURL !== "") ? protData.laURL : laURL;
 
         // Possibly update the URL based on the message
         url = licenseServerData.getServerURLFromMessage(url, message);
 
         // Ensure valid license server URL
         if (!url) {
-            this.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+            protCtrl.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                     null, new Error('DRM: No license server URL specified!'));
             return;
         }
@@ -320,21 +320,21 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
         xhr.onload = function() {
             if (this.status == 200) {
                 var event = new MediaPlayer.vo.protection.LicenseRequestComplete(licenseServerData.getLicenseMessage(this.response, keySystem.systemString), requestData);
-                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                protCtrl.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         event);
             } else {
-                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                protCtrl.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         null, new Error('DRM: ' + keySystem.systemString + ' update, XHR status is "' + this.statusText + '" (' + this.status +
                                 '), expected to be 200. readyState is ' + this.readyState) +
                                 ".  Response is " + ((this.response) ? licenseServerData.getErrorResponse(this.response, keySystem.systemString) : "NONE"));
             }
         };
         xhr.onabort = function () {
-            self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+            protCtrl.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                     null, new Error('DRM: ' + keySystem.systemString + ' update, XHR aborted. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState));
         };
         xhr.onerror = function () {
-            self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+            protCtrl.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                     null, new Error('DRM: ' + keySystem.systemString + ' update, XHR error. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState));
         };
 
