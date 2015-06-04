@@ -237,6 +237,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         onPlaybackEnded = function(/*e*/) {
             this.log("<video> ended");
             stopUpdatingWallclockTime.call(this);
+            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ENDED);
         },
 
         onPlaybackError = function(event) {
@@ -270,7 +271,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
             // do nothing if common earliest time has not changed or if the firts segment has not been appended or if current
             // time exceeds the common earliest time
-            if ((currentEarliestTime === commonEarliestTime[id]) || !firstAppended.ready || (time > commonEarliestTime[id])) return;
+            if ((currentEarliestTime === commonEarliestTime[id] && (time === currentEarliestTime)) || !firstAppended.ready || (time > commonEarliestTime[id])) return;
 
             // seek to the start of buffered range to avoid stalling caused by a shift between audio and video media time
             this.seek(commonEarliestTime[id]);
@@ -463,6 +464,7 @@ MediaPlayer.dependencies.PlaybackController.eventList = {
     ENAME_PLAYBACK_PLAYING: "playbackPlaying",
     ENAME_PLAYBACK_STOPPED: "playbackStopped",
     ENAME_PLAYBACK_PAUSED: "playbackPaused",
+    ENAME_PLAYBACK_ENDED: "playbackEnded",
     ENAME_PLAYBACK_SEEKING: "playbackSeeking",
     ENAME_PLAYBACK_SEEKED: "playbackSeeked",
     ENAME_PLAYBACK_TIME_UPDATED: "playbackTimeUpdated",
