@@ -281,6 +281,7 @@ MediaPlayer.models.MetricsModel = function () {
 
                 return vo;
             }
+            return null;
         },
 
         addManifestUpdateTrackInfo: function(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
@@ -300,6 +301,7 @@ MediaPlayer.models.MetricsModel = function () {
 
                 return vo;
             }
+            return null;
         },
 
         addPlayList: function (mediaType, start, mstart, starttype) {
