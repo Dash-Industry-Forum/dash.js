@@ -170,17 +170,19 @@ Dash.dependencies.RepresentationController = function () {
                 return;
             }
 
-            for (var i = 0; i < manifestUpdateInfo.trackInfo.length; i += 1) {
-                repInfo = manifestUpdateInfo.trackInfo[i];
-                if (repInfo.index === r.index && repInfo.mediaType === self.streamProcessor.getType()) {
-                    alreadyAdded = true;
-                    break;
+            if (manifestUpdateInfo) {
+                for (var i = 0; i < manifestUpdateInfo.trackInfo.length; i += 1) {
+                    repInfo = manifestUpdateInfo.trackInfo[i];
+                    if (repInfo.index === r.index && repInfo.mediaType === self.streamProcessor.getType()) {
+                        alreadyAdded = true;
+                        break;
+                    }
                 }
-            }
 
-            if (!alreadyAdded) {
-                self.metricsModel.addManifestUpdateTrackInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
-                    self.streamProcessor.getType(),r.presentationTimeOffset, r.startNumber, r.segmentInfoType);
+                if (!alreadyAdded) {
+                    self.metricsModel.addManifestUpdateTrackInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
+                            self.streamProcessor.getType(),r.presentationTimeOffset, r.startNumber, r.segmentInfoType);
+                }
             }
 
             if (isAllRepresentationsUpdated()) {
