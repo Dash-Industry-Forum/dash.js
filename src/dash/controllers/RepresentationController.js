@@ -153,11 +153,13 @@ Dash.dependencies.RepresentationController = function () {
 
             var self = this,
                 r = e.data.representation,
-                metrics = self.metricsModel.getMetricsFor("stream"),
-                manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
+                streamMetrics = self.metricsModel.getMetricsFor("stream"),
+                metrics = self.metricsModel.getMetricsFor(this.getCurrentRepresentation().adaptation.type),
+                manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(streamMetrics),
                 repInfo,
                 err,
-                alreadyAdded = false;
+                alreadyAdded = false,
+                repSwitch;
 
             if (e.error && e.error.code === Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE) {
                 addDVRMetric.call(this);
@@ -185,6 +187,13 @@ Dash.dependencies.RepresentationController = function () {
                 updating = false;
                 self.abrController.setPlaybackQuality(self.streamProcessor.getType(), self.streamProcessor.getStreamInfo(), getQualityForRepresentation.call(this, currentRepresentation));
                 self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - self.streamProcessor.playbackController.getTime()});
+
+                repSwitch = self.metricsExt.getCurrentRepresentationSwitch(metrics);
+
+                if (!repSwitch) {
+                    addRepresentationSwitch.call(self);
+                }
+
                 this.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {data: data, currentRepresentation: currentRepresentation});
             }
         },
