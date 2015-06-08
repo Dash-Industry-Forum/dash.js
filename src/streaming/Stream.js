@@ -161,6 +161,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             if (!isMediaInitialized || isStreamActivated) return;
 
+            protectionController.init(getMediaInfo.call(this, "audio"), getMediaInfo.call(this, "video"));
             isStreamActivated = true;
         },
 
@@ -291,7 +292,6 @@ MediaPlayer.dependencies.Stream = function () {
                 protectionController = protectionCtrl;
                 protectionController.subscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
                 protectionController.setMediaElement(this.videoModel.getElement());
-                protectionController.init(this.manifestModel.getValue());
                 if (protectionData) {
                     protectionController.setProtectionData(protectionData);
                 }
