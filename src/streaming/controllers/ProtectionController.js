@@ -197,7 +197,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
             this.protectionModel.init();
         },
 
-        init: function (manifest) {
+        init: function (aInfo, vInfo) {
 
             // Subscribe to events
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
@@ -210,10 +210,8 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
             // Look for ContentProtection elements.  InitData can be provided by either the
             // dash264drm:Pssh ContentProtection format or a DRM-specific format.
-            var adapter = this.system.getObject("adapter"),
-                streamInfo = adapter.getStreamsInfo(manifest)[0]; // TODO: Single period only for now.
-            audioInfo = adapter.getMediaInfoForType(manifest, streamInfo, "audio");
-            videoInfo = adapter.getMediaInfoForType(manifest, streamInfo, "video");
+            audioInfo = aInfo;
+            videoInfo = vInfo;
             var mediaInfo = (videoInfo) ? videoInfo : audioInfo; // We could have audio or video only
             var self = this;
 
