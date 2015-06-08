@@ -33,6 +33,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
     var keySystems = null,
         pendingNeedKeyData = [],
+        pendingLicenseRequests = [],
         audioInfo,
         videoInfo,
         protDataSet,
@@ -51,6 +52,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 this.log(e.error);
             } else {
                 var keyMessageEvent = e.data;
+                pendingLicenseRequests.push(keyMessageEvent.sessionToken);
                 this.protectionExt.requestLicense(this.keySystem, getProtData(this.keySystem),
                     keyMessageEvent.message, keyMessageEvent.defaultURL,
                     keyMessageEvent.sessionToken);
@@ -58,11 +60,22 @@ MediaPlayer.dependencies.ProtectionController = function () {
         },
 
         onLicenseRequestComplete = function(e) {
-            if (!e.error) {
-                this.log("DRM: License request successful.  Session ID = " + e.data.requestData.getSessionID());
-                this.updateKeySession(e.data.requestData, e.data.message);
-            } else {
-                this.log("DRM: License request failed! -- " + e.error);
+            // Determine if this event is for us
+            var i, sessionToken = (e.error) ? e.data : e.data.requestData;
+            for (i = 0; i < pendingLicenseRequests.length; i++) {
+                if (pendingLicenseRequests[i] === sessionToken) {
+                    pendingLicenseRequests.splice(i, 1);
+
+                    // It is for us, now process the event
+                    if (!e.error) {
+                        this.log("DRM: License request successful.  Session ID = " + e.data.requestData.getSessionID());
+                        this.updateKeySession(sessionToken, e.data.message);
+                    } else {
+                        this.log("DRM: License request failed! -- " + e.error);
+                    }
+
+                    break;
+                }
             }
         },
 
