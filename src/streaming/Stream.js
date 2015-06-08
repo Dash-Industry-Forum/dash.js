@@ -161,7 +161,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             if (!isMediaInitialized || isStreamActivated) return;
 
-            protectionController.init(getMediaInfo.call(this, "audio"), getMediaInfo.call(this, "video"));
+            protectionController.init(self.manifestModel.getValue(), getMediaInfo.call(this, "audio"), getMediaInfo.call(this, "video"));
             isStreamActivated = true;
         },
 
