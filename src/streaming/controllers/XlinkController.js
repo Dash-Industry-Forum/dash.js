@@ -79,13 +79,20 @@ MediaPlayer.dependencies.XlinkController = function () {
 
         onXlinkElementLoaded = function (event) {
             var element,
-                resolveObject;
+                resolveObject,
+                index,
+                openingTag = '<response>',
+                closingTag = '</response>',
+                mergedContent = '';
 
             element = event.data.element;
             resolveObject = event.data.resolveObject;
             // if the element resolved into content parse the content
             if (element.resolvedContent) {
-                element.resolvedContent = converter.xml_str2json(element.resolvedContent);
+                // we add a parent elements so the converter is able to parse multiple elements of the same type which are not wrapped inside a container
+                index = element.resolvedContent.indexOf('>') + 1; //find the closing position of the xml tag
+                mergedContent = element.resolvedContent.substr(0,index) + openingTag + element.resolvedContent.substr(index) + closingTag;
+                element.resolvedContent = converter.xml_str2json(mergedContent);
             }
             if (isResolvingFinished.call(this, resolveObject)) {
                 onXlinkAllElementsLoaded.call(this, resolveObject);
@@ -226,13 +233,24 @@ MediaPlayer.dependencies.XlinkController = function () {
             onXlinkElementLoaded = onXlinkElementLoaded.bind(this);
             this.xlinkLoader.subscribe(MediaPlayer.dependencies.XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, this, onXlinkElementLoaded);
         },
-
+        /**
+         * <p>Triggers the resolution of the xlink.onLoad attributes in the manifest file </p>
+         * @param manifest
+         */
         resolveManifestOnLoad: function (manifest) {
             resolveManifestOnLoad.call(this, manifest);
         },
+        /**
+         *
+         * @param value
+         */
         setMatchers: function (value) {
             matchers = value;
         },
+        /**
+         *
+         * @param value
+         */
         setIron: function (value) {
             iron = value;
         }
