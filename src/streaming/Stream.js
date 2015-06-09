@@ -112,7 +112,7 @@ MediaPlayer.dependencies.Stream = function () {
                 events;
 
             eventController = self.system.getObject("eventController");
-            events = self.adapter.getEventsFor(streamInfo);
+            events = self.adapter.getEventsFor(manifest, streamInfo);
             eventController.addInlineEvents(events);
 
             isUpdating = true;
@@ -238,7 +238,7 @@ MediaPlayer.dependencies.Stream = function () {
             self.log("Manifest updated... set new data on buffers.");
 
             if (eventController) {
-                events = self.adapter.getEventsFor(streamInfo);
+                events = self.adapter.getEventsFor(manifest, streamInfo);
                 eventController.addInlineEvents(events);
             }
 
