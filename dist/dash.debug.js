@@ -5118,7 +5118,7 @@ MediaPlayer.dependencies.Stream = function() {
     }, initializeMedia = function(mediaSource) {
         var self = this, manifest = self.manifestModel.getValue(), events;
         eventController = self.system.getObject("eventController");
-        events = self.adapter.getEventsFor(streamInfo);
+        events = self.adapter.getEventsFor(manifest, streamInfo);
         eventController.addInlineEvents(events);
         isUpdating = true;
         initializeMediaForType.call(self, "video", mediaSource);
@@ -5194,7 +5194,7 @@ MediaPlayer.dependencies.Stream = function() {
         streamInfo = updatedStreamInfo;
         self.log("Manifest updated... set new data on buffers.");
         if (eventController) {
-            events = self.adapter.getEventsFor(streamInfo);
+            events = self.adapter.getEventsFor(manifest, streamInfo);
             eventController.addInlineEvents(events);
         }
         isUpdating = true;
