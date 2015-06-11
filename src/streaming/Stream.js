@@ -112,7 +112,7 @@ MediaPlayer.dependencies.Stream = function () {
                 events;
 
             eventController = self.system.getObject("eventController");
-            events = self.adapter.getEventsFor(streamInfo);
+            events = self.adapter.getEventsFor(manifest, streamInfo);
             eventController.addInlineEvents(events);
 
             isUpdating = true;
@@ -161,6 +161,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             if (!isMediaInitialized || isStreamActivated) return;
 
+            protectionController.init(self.manifestModel.getValue(), getMediaInfo.call(this, "audio"), getMediaInfo.call(this, "video"));
             isStreamActivated = true;
         },
 
@@ -237,7 +238,7 @@ MediaPlayer.dependencies.Stream = function () {
             self.log("Manifest updated... set new data on buffers.");
 
             if (eventController) {
-                events = self.adapter.getEventsFor(streamInfo);
+                events = self.adapter.getEventsFor(manifest, streamInfo);
                 eventController.addInlineEvents(events);
             }
 
@@ -291,7 +292,6 @@ MediaPlayer.dependencies.Stream = function () {
                 protectionController = protectionCtrl;
                 protectionController.subscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
                 protectionController.setMediaElement(this.videoModel.getElement());
-                protectionController.init(this.manifestModel.getValue());
                 if (protectionData) {
                     protectionController.setProtectionData(protectionData);
                 }
