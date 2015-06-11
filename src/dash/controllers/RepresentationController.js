@@ -147,6 +147,10 @@ Dash.dependencies.RepresentationController = function () {
                 };
 
             updating = false;
+            self.eventBus.dispatchEvent({
+                type: Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_POSTPONED,
+                data: {delay: delay}
+            });
             setTimeout(update.bind(this), delay);
         },
 
@@ -260,6 +264,7 @@ Dash.dependencies.RepresentationController = function () {
         unsubscribe: undefined,
         DOMStorage:undefined,
         liveDelayFragmentCount:undefined,
+        eventBus: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
@@ -303,5 +308,6 @@ Dash.dependencies.RepresentationController.SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1
 
 Dash.dependencies.RepresentationController.eventList = {
     ENAME_DATA_UPDATE_COMPLETED: "dataUpdateCompleted",
-    ENAME_DATA_UPDATE_STARTED: "dataUpdateStarted"
+    ENAME_DATA_UPDATE_STARTED: "dataUpdateStarted",
+    ENAME_DATA_UPDATE_POSTPONED: "dataUpdatePostponed"
 };
