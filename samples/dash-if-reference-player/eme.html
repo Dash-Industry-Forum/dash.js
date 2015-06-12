@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html ng-app="DashPlayer" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
+
+    <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-glyphicons.css">
+    <link rel="stylesheet" href="app/css/main.css">
+    <link rel="stylesheet" href="app/css/eme.css">
+
+    <!-- http://jquery.com/ -->
+    <script src="app/lib/jquery/jquery-1.10.2.min.js"></script>
+
+    <!-- http://angularjs.org/ -->
+    <script src="app/lib/angular/angular.min.js"></script>
+    <script src="app/lib/angular/angular-resource.min.js"></script>
+
+    <!-- http://getbootstrap.com/ -->
+    <script src="app/lib/bootstrap/js/bootstrap.min.js"></script>
+
+    <script src="../../dist/dash.debug.js"></script>
+
+    <!-- App -->
+    <script src="app/eme-main.js"></script>
+</head>
+<body ng-controller="DashController">
+    <div class="modal fade" id="streamModal">
+        <div class="modal-dialog">
+            <div class="list-group modal-list">
+                <a
+                   ng-repeat="item in availableStreams"
+                   href="#"
+                   class="list-group-item"
+                   ng-click="setStream(item)"
+                   data-dismiss="modal">
+                    {{item.name}}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row title-header">
+            <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
+            <span id="big-title">Reference Client</span>
+            <span>{{version}}</span>
+
+            <div class="github">
+                <iframe
+                    id="star-button"
+                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=watch&count=true&size=large"
+                    height="30"
+                    width="170"
+                    frameborder="0"
+                    scrolling="0"
+                    allowTransparency="true"
+                    class="hidden-xs github-button">
+                </iframe>
+                <iframe
+                    id="fork-button"
+                    src="http://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=fork&count=true&size=large"
+                    height="30"
+                    width="170"
+                    frameborder="0"
+                    scrolling="0"
+                    allowTransparency="true github-button">
+                </iframe>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="input-group">
+                <div id="desktop-streams" class="input-group-btn">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                        Stream <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li
+                            ng-repeat="item in availableStreams"
+                            ng-click="setStream(item)">
+                            <a>{{item.name}}</a>
+                        </li>
+                    </ul>
+                </div>
+                <div id="mobile-streams" class="input-group-btn">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" href="#streamModal">
+                        Stream <span class="caret"></span>
+                    </button>
+                </div>
+                <input type="text" class="form-control" placeholder="manifest" ng-model="selectedItem.url">
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" type="button" ng-click="doLoad()">Play</button>
+                    <button class="btn btn-primary" type="button" ng-click="doLicenseFetch()">Fetch Licenses</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="dash-video-player col-md-9">
+                <video controls="true"></video>
+            </div>
+            <div class="col-md-3">
+                <div class="shrink panel panel-default">
+                    <div class="panel-heading panel-top">
+                        <h1 class="panel-title">New Session Properties</h1>
+                    </div>
+                    <div class="panel-body">
+                        <h5>Session Type</h5>
+                        <div id="session-type" class="btn-group-vertical" data-toggle="buttons">
+                            <label class="btn btn-default active">
+                                <input type="radio" id="temporary" autocomplete="off" checked>temporary
+                            </label>
+                            <label class="btn btn-default">
+                                <input type="radio" id="persistent-license" autocomplete="off">persistent-license
+                            </label>
+                            <label class="btn btn-default">
+                                <input type="radio" id="persistent-release-message" autocomplete="off">persistent-release
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <h3>Protection Information</h3>
+            </div>
+        </div>
+
+
+        <div class="row" ng-repeat="d in drmData">
+            <div class="panel panel-info">
+                <div class="panel-heading panel-top">
+                    <span class="panel-title">{{d.url}}</span>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default" ng-click="play(d)">Play</button>
+                        <button type="button" class="btn btn-default" ng-click="delete(d)">Delete</button>
+                    </div>
+                </div>
+                <div class="col-sm-12" ng-show="d.ksconfig">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <h4 ng-show="d.protCtrl.protectionModel.keySystem" class="keysystem shrink">Key System: <span class="label label-success">{{d.protCtrl.protectionModel.keySystem.systemString}}</span></h4>
+                            <div><b>Init Data Types: </b>{{arrayToCommaSeparated(d.ksconfig.initDataTypes)}}</div>
+                            <div><b>Persistent State: </b><span ng-show="d.ksconfig.persistentState">{{d.ksconfig.persistentState}}</span></div>
+                            <div><b>Distinctive Identifier: </b><span ng-show="d.ksconfig.distinctiveIdentifier">{{d.ksconfig.distinctiveIdentifier}}</span></div>
+                        </div>
+                        <div class="col-sm-4">
+                            <h5>Video Configs</h5>
+                            <ul class="list-group">
+                                <li class="list-group-item" ng-repeat="video in d.ksconfig.videoCapabilities">
+                                    <div><b>ContentType: </b>{{video.contentType}}</div>
+                                    <div><b>Robustness: </b>{{video.robustness}}</div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-sm-4">
+                            <h5>Audio Configs</h5>
+                            <ul class="list-group">
+                                <li class="list-group-item" ng-repeat="audio in d.ksconfig.audioCapabilities">
+                                    <div><b>ContentType: </b>{{audio.contentType}}</div>
+                                    <div><b>Robustness: </b>{{audio.robustness}}</div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="errormessage" ng-show="d.error"><span class="label label-danger">ERROR</span><span class="errormessage">{{d.error}}</span></div>
+                <div class="panel panel-default sessionPanel" ng-repeat="s in d.sessions">
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">SessionID: {{s.sessionToken.getSessionID()}}</span>
+                        <div class="btn-group">
+                            <button type="button" ng-disabled="!s.removed" class="btn btn-default" ng-click="d.protCtrl.loadKeySession(s.sessionID)">Load</button>
+                            <button type="button" ng-disabled="s.removed" class="btn btn-default" ng-click="d.protCtrl.removeKeySession(s.sessionToken)">Remove</button>
+                            <button type="button" class="btn btn-default" ng-click="d.protCtrl.closeKeySession(s.sessionToken)">Close</button>
+                        </div>
+                    </div>
+                    <div class="keymessage" ng-show="s.lastMessage">{{s.lastMessage}}</div>
+                    <h5 ng-show="s.getExpirationTime()">Expiration: {{s.getExpirationTime()}}</h5>
+                    <table ng-show="s.keystatus && s.keystatus.length > 0" class="table table-bordered table-hover">
+                        <tr>
+                            <th>Key ID</th>
+                            <th class="centered">Key Status</th>
+                        </tr>
+                        <tr ng-repeat="keystatus in s.keystatus">
+                            <td class="keyid">{{keystatus.key}}</td>
+                            <td ng-class="{true: 'success'}[keystatus.status=='usable']" class="centered">{{keystatus.status}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-area">
+        <div class="container">
+            <div class="row">
+                <div class="compat-box col-md-5">
+                    <h3>Compatibility Notes:</h3>
+                    <ul class="list-group">
+                        <li class="list-group-item"><a href="https://github.com/Dash-Industry-Forum/dash.js">This project can be forked on GitHub.</a></li>
+                        <li class="list-group-item">Use your browser's JavaScript console to view detailed information about stream playback.</li>
+                        <li class="list-group-item"><a href="../getting-started-basic-embed/auto-load-single-video.html">See a base implementation here.</a></li>
+                        <li class="list-group-item">A browser that supports MSE (Media Source Extensions) is required.</li>
+                        <li class="list-group-item">As of 2/1/2015 supported on the following browsers: Desktop Chrome, Desktop Internet Explorer 11 under WIn8.1, Mobile Chrome for Android and Safari on Mac Yosemite</li>
+                        <li class="list-group-item">Use the most up-to-date version of your browser for the best compatibility.</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h3 class="footer-text">Player Libraries:</h3>
+                    <a
+                        ng-repeat="item in playerLibraries"
+                        class="footer-text"
+                        href="{{item.link}}"
+                        target="_blank">
+                        {{item.name}}
+                    </a>
+                    <h3 class="footer-text">Showcase Libraries:</h3>
+                    <a
+                        ng-repeat="item in showcaseLibraries"
+                        class="footer-text"
+                        href="{{item.link}}"
+                        target="_blank">
+                        {{item.name}}
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <h3 class="footer-text">Contributors:</h3>
+                    <a
+                        ng-repeat="item in contributors"
+                        class="footer-text"
+                        href="{{item.link}}"
+                        target="_blank">
+                        <img ng-show="hasLogo(item)" ng-src="{{item.logo}}" alt="{{item.link}}"/>
+                        <span class="contributor" ng-show="!hasLogo(item)">{{item.name}}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

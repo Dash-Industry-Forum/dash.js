@@ -1,17 +1,33 @@
-/*
- * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Digital Primates
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
- * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 
 Dash.dependencies.DashManifestExtensions = function () {
     "use strict";
@@ -30,6 +46,14 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             representation,
             result = false,
             found = false;
+
+        if((adaptation.Representation_asArray.length>0)&&
+           (adaptation.Representation_asArray[0].hasOwnProperty("codecs"))&&
+           (adaptation.Representation_asArray[0].codecs=="stpp")
+           ){
+            return type == "fragmentedText";
+        }
+
 
         if (col) {
             for (i = 0, len = col.length; i < len; i += 1) {
@@ -74,6 +98,12 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         "use strict";
 
         return this.getIsTypeOf(adaptation, "video");
+    },
+
+    getIsFragmentedText: function (adaptation) {
+        "use strict";
+
+        return this.getIsTypeOf(adaptation, "fragmentedText");
     },
 
     getIsText: function (adaptation) {
@@ -190,10 +220,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
     getCodec: function (adaptation) {
         "use strict";
-        var representation = adaptation.Representation_asArray[0],
-            codec = (representation.mimeType + ';codecs="' + representation.codecs + '"');
+        var representation = adaptation.Representation_asArray[0];
 
-        return codec;
+        return (representation.mimeType + ';codecs="' + representation.codecs + '"');
     },
 
     getMimeType: function (adaptation) {
@@ -261,7 +290,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         if (manifest.hasOwnProperty("mediaPresentationDuration")) {
             mpdDuration = manifest.mediaPresentationDuration;
         } else {
-            mpdDuration = Number.POSITIVE_INFINITY;
+            mpdDuration = Number.MAX_VALUE;
         }
 
         return mpdDuration;
@@ -289,6 +318,26 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return adaptation.Representation_asArray.length;
     },
 
+    /**
+     * @param adaptation
+     * @returns {Array}
+     * @memberof DashManifestExtensions#
+     */
+    getBitrateListForAdaptation: function(adaptation) {
+        if (!adaptation || !adaptation.Representation_asArray || !adaptation.Representation_asArray.length) return null;
+
+        var a = this.processAdaptation(adaptation),
+            reps = a.Representation_asArray,
+            ln = reps.length,
+            bitrateList = [];
+
+        for (var i = 0; i < ln; i += 1) {
+            bitrateList.push(reps[i].bandwidth);
+        }
+
+        return bitrateList;
+    },
+
     getRepresentationFor: function (index, adaptation) {
         "use strict";
         return adaptation.Representation_asArray[index];
@@ -314,6 +363,12 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 representation.id = r.id;
             }
 
+            if (r.hasOwnProperty('bandwidth')){
+                representation.bandwidth = r.bandwidth;
+            }
+            if (r.hasOwnProperty('maxPlayoutRate')){
+                representation.maxPlayoutRate = r.maxPlayoutRate;
+            }
             if (r.hasOwnProperty("SegmentBase")) {
                 segmentInfo = r.SegmentBase;
                 representation.segmentInfoType = "SegmentBase";
@@ -402,7 +457,17 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
             adaptationSet.index = i;
             adaptationSet.period = period;
-            adaptationSet.type = this.getIsAudio(a) ? "audio" : (this.getIsVideo(a) ? "video" : "text");
+            
+            if(this.getIsAudio(a)){
+                adaptationSet.type="audio";
+            }else if (this.getIsVideo(a)){
+                adaptationSet.type="video";
+            }else if (this.getIsFragmentedText(a)){
+                adaptationSet.type="fragmentedText";
+            }else{
+                adaptationSet.type="text";
+            }
+
             adaptations.push(adaptationSet);
         }
 
@@ -481,12 +546,11 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             return periods;
         }
 
-        mpd.checkTime = self.getCheckTime(manifest, periods[0]);
         // The last Period extends until the end of the Media Presentation.
         // The difference between the PeriodStart time of the last Period
         // and the mpd duration
         if (vo1 !== null && isNaN(vo1.duration)) {
-            vo1.duration = self.getEndTimeForLastPeriod(mpd) - vo1.start;
+            vo1.duration = self.getEndTimeForLastPeriod(manifest, vo1) - vo1.start;
         }
 
         return periods;
@@ -527,9 +591,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         // TODO The client typically should not use the time at which it actually successfully received the MPD, but should
         // take into account delay due to MPD delivery and processing. The fetch is considered successful fetching
         // either if the client obtains an updated MPD or the client verifies that the MPD has not been updated since the previous fetching.
-        var fetchTime = this.timelineConverter.calcPresentationTimeFromWallTime(manifest.loadedTime, period);
 
-        return fetchTime;
+        return this.timelineConverter.calcPresentationTimeFromWallTime(manifest.loadedTime, period);
     },
 
     getCheckTime: function(manifest, period) {
@@ -550,17 +613,18 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return checkTime;
     },
 
-    getEndTimeForLastPeriod: function(mpd) {
-        var periodEnd;
+    getEndTimeForLastPeriod: function(manifest, period) {
+        var periodEnd,
+            checkTime = this.getCheckTime(manifest, period);
 
         // if the MPD@mediaPresentationDuration attribute is present, then PeriodEndTime is defined as the end time of the Media Presentation.
         // if the MPD@mediaPresentationDuration attribute is not present, then PeriodEndTime is defined as FetchTime + MPD@minimumUpdatePeriod
 
-        if (mpd.manifest.mediaPresentationDuration) {
-            periodEnd = mpd.manifest.mediaPresentationDuration;
-        } else if (!isNaN(mpd.checkTime)) {
+        if (manifest.mediaPresentationDuration) {
+            periodEnd = manifest.mediaPresentationDuration;
+        } else if (!isNaN(checkTime)) {
             // in this case the Period End Time should match CheckTime
-            periodEnd = mpd.checkTime;
+            periodEnd = checkTime;
         } else {
             throw new Error("Must have @mediaPresentationDuration or @minimumUpdatePeriod on MPD or an explicit @duration on the last period.");
         }
@@ -613,62 +677,45 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return events;
     },
 
-    getEventStreamForAdaptationSet : function (manifest, adaptation) {
+    getEventStreams: function(inbandStreams, representation) {
+        var eventStreams = [];
 
-        var eventStreams = [],
-            inbandStreams = manifest.Period_asArray[adaptation.period.index].
-                AdaptationSet_asArray[adaptation.index].InbandEventStream_asArray;
+        if(!inbandStreams) return eventStreams;
 
-        if(inbandStreams) {
-            for(var i = 0; i < inbandStreams.length ; i += 1 ) {
-                var eventStream = new Dash.vo.EventStream();
-                eventStream.timescale = 1;
+        for(var i = 0; i < inbandStreams.length ; i++ ) {
+            var eventStream = new Dash.vo.EventStream();
+            eventStream.timescale = 1;
+            eventStream.representation =  representation;
 
-                if(inbandStreams[i].hasOwnProperty("schemeIdUri")) {
-                    eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
-                } else {
-                    throw "Invalid EventStream. SchemeIdUri has to be set";
-                }
-                if(inbandStreams[i].hasOwnProperty("timescale")) {
-                    eventStream.timescale = inbandStreams[i].timescale;
-                }
-                if(inbandStreams[i].hasOwnProperty("value")) {
-                    eventStream.value = inbandStreams[i].value;
-                }
-                eventStreams.push(eventStream);
+            if(inbandStreams[i].hasOwnProperty("schemeIdUri")) {
+                eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
+            } else {
+                throw "Invalid EventStream. SchemeIdUri has to be set";
             }
+            if(inbandStreams[i].hasOwnProperty("timescale")) {
+                eventStream.timescale = inbandStreams[i].timescale;
+            }
+            if(inbandStreams[i].hasOwnProperty("value")) {
+                eventStream.value = inbandStreams[i].value;
+            }
+            eventStreams.push(eventStream);
         }
+
         return eventStreams;
     },
 
-    getEventStreamForRepresentation : function (manifest, representation) {
+    getEventStreamForAdaptationSet : function (manifest, adaptation) {
+        var inbandStreams = manifest.Period_asArray[adaptation.period.index].
+                AdaptationSet_asArray[adaptation.index].InbandEventStream_asArray;
 
-        var eventStreams = [],
-            inbandStreams = manifest.Period_asArray[representation.adaptation.period.index].
+        return this.getEventStreams(inbandStreams, null);
+    },
+
+    getEventStreamForRepresentation : function (manifest, representation) {
+        var inbandStreams = manifest.Period_asArray[representation.adaptation.period.index].
                 AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].InbandEventStream_asArray;
 
-        if(inbandStreams) {
-            for(var i = 0; i < inbandStreams.length ; i++ ) {
-                var eventStream = new Dash.vo.EventStream();
-                eventStream.timescale = 1;
-                eventStream.representation = representation;
-
-                if(inbandStreams[i].hasOwnProperty("schemeIdUri")) {
-                    eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
-                } else {
-                    throw "Invalid EventStream. SchemeIdUri has to be set";
-                }
-                if(inbandStreams[i].hasOwnProperty("timescale")) {
-                    eventStream.timescale = inbandStreams[i].timescale;
-                }
-                if(inbandStreams[i].hasOwnProperty("value")) {
-                    eventStream.value = inbandStreams[i].value;
-                }
-                eventStreams.push(eventStream);
-            }
-        }
-
-        return eventStreams;
+        return this.getEventStreams(inbandStreams, representation);
     },
 
     getUTCTimingSources : function (manifest) {

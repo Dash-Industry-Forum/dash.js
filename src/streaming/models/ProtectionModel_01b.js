@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2014-2015, Cable Television Laboratories, Inc.
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -13,7 +13,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *  this list of conditions and the following disclaimer in the documentation and/or
  *  other materials provided with the distribution.
- *  * Neither the name of Cable Television Laboratories, Inc. nor the names of its
+ *  * Neither the name of Dash Industry Forum nor the names of its
  *  contributors may be used to endorse or promote products derived from this software
  *  without specific prior written permission.
  *
@@ -67,7 +67,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
                         case api.needkey:
                             self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY,
-                                new MediaPlayer.vo.protection.NeedKey(event.initData));
+                                new MediaPlayer.vo.protection.NeedKey(event.initData, "cenc"));
                             break;
 
                         case api.keyerror:
@@ -103,7 +103,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR,
                                     new MediaPlayer.vo.protection.KeyError(sessionToken, msg));
                             } else {
-                                self.debug.log("No session token found for key error");
+                                self.log("No session token found for key error");
                             }
                             break;
 
@@ -117,7 +117,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED,
                                     sessionToken);
                             } else {
-                                self.debug.log("No session token found for key added");
+                                self.log("No session token found for key added");
                             }
                             break;
 
@@ -132,7 +132,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
                                 // Attempt to find an uninitialized token with this sessionID
                                 sessionToken = findSessionByID(sessions, event.sessionId);
-                                if (!sessionToken) {
+                                if (!sessionToken && pendingSessions.length > 0) {
 
                                     // This is the first message for our latest session, so set the
                                     // sessionID and add it to our list
@@ -140,7 +140,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                                     sessions.push(sessionToken);
                                     sessionToken.sessionID = event.sessionId;
                                 }
-                            } else { // SessionIDs not supported
+                            } else if (pendingSessions.length > 0) { // SessionIDs not supported
 
                                 sessionToken = pendingSessions.shift();
                                 sessions.push(sessionToken);
@@ -160,7 +160,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE,
                                     new MediaPlayer.vo.protection.KeyMessage(sessionToken, event.message, event.defaultURL));
                             } else {
-                                self.debug.log("No session token found for key message");
+                                self.log("No session token found for key message");
                             }
                             break;
                     }
@@ -173,7 +173,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
          * Helper function to retrieve the stored session token based on a given
          * sessionID value
          *
-         * @param sessionArray {[]} the array of sessions to search
+         * @param sessionArray {Array} the array of sessions to search
          * @param sessionID the sessionID to search for
          * @returns {*} the session token with the given sessionID
          */
@@ -201,7 +201,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
     return {
         system: undefined,
-        debug: undefined,
+        log: undefined,
         errHandler: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -215,8 +215,6 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
         /**
          * Initialize this protection model
-         *
-         * @param element
          */
         init: function() {
             var tmpVideoElement = document.createElement("video");
@@ -232,12 +230,76 @@ MediaPlayer.models.ProtectionModel_01b = function () {
             }
         },
 
-        isSupported: function(keySystem, contentType) {
-            return (videoElement.canPlayType(contentType, keySystem.systemString) !== "");
+        requestKeySystemAccess: function(ksConfigurations) {
+            var ve = videoElement;
+            if (!ve) { // Must have a video element to do this capability tests
+                ve = document.createElement("video");
+            }
+
+            // Try key systems in order, first one with supported key system configuration
+            // is used
+            var found = false;
+            for (var ksIdx = 0; ksIdx < ksConfigurations.length; ksIdx++) {
+                var systemString = ksConfigurations[ksIdx].ks.systemString;
+                var configs = ksConfigurations[ksIdx].configs;
+                var supportedAudio = null;
+                var supportedVideo = null;
+
+                // Try key system configs in order, first one with supported audio/video
+                // is used
+                for (var configIdx = 0; configIdx < configs.length; configIdx++) {
+                    //var audios = configs[configIdx].audioCapabilities;
+                    var videos = configs[configIdx].videoCapabilities;
+
+                    // Look for supported audio container/codecs
+                    /*
+                    if (audios && audios.length !== 0) {
+                        supportedAudio = []; // Indicates that we have a requested audio config
+                        for (var audioIdx = 0; audioIdx < audios.length; audioIdx++) {
+                            if (ve.canPlayType(audios[audioIdx].contentType, systemString) !== "") {
+                                supportedAudio.push(audios[audioIdx]);
+                            }
+                        }
+                    }
+                    */
+
+                    // Look for supported video container/codecs
+                    if (videos && videos.length !== 0) {
+                        supportedVideo = []; // Indicates that we have a requested video config
+                        for (var videoIdx = 0; videoIdx < videos.length; videoIdx++) {
+                            if (ve.canPlayType(videos[videoIdx].contentType, systemString) !== "") {
+                                supportedVideo.push(videos[videoIdx]);
+                            }
+                        }
+                    }
+
+                    // No supported audio or video in this configuration OR we have
+                    // requested audio or video configuration that is not supported
+                    if ((!supportedAudio && !supportedVideo) ||
+                            (supportedAudio && supportedAudio.length === 0) ||
+                            (supportedVideo && supportedVideo.length === 0)) {
+                        continue;
+                    }
+
+                    // This configuration is supported
+                    found = true;
+                    var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(supportedAudio, supportedVideo);
+                    var ks = this.protectionExt.getKeySystemBySystemString(systemString);
+                    var ksAccess = new MediaPlayer.vo.protection.KeySystemAccess(ks, ksConfig);
+                    this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
+                            ksAccess);
+                    break;
+                }
+            }
+            if (!found) {
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
+                        null, "Key system access denied! -- No valid audio/video content configurations detected!");
+            }
         },
 
-        selectKeySystem: function(keySystem) {
-            this.keySystem = keySystem;
+        selectKeySystem: function(keySystemAccess) {
+            this.keySystem = keySystemAccess.keySystem;
+            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
         },
 
         setMediaElement: function(mediaElement) {
@@ -249,15 +311,27 @@ MediaPlayer.models.ProtectionModel_01b = function () {
             videoElement.addEventListener(api.needkey, eventHandler);
             videoElement.addEventListener(api.keymessage, eventHandler);
             videoElement.addEventListener(api.keyadded, eventHandler);
+            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
         },
 
-        createKeySession: function(initData/*, contentType, initDataType*/) {
+        createKeySession: function(initData /*, keySystemType */) {
 
             if (!this.keySystem) {
                 throw new Error("Can not create sessions until you have selected a key system");
             }
 
-            // TODO: Detect duplicate init data
+            // Check for duplicate initData.
+            var i;
+            for (i = 0; i < sessions.length; i++) {
+                if (this.protectionExt.initDataEquals(initData, sessions[i].initData)) {
+                    return;
+                }
+            }
+            for (i = 0; i < pendingSessions.length; i++) {
+                if (this.protectionExt.initDataEquals(initData, pendingSessions[i].initData)) {
+                    return;
+                }
+            }
 
             // Determine if creating a new session is allowed
             if (moreSessionsAllowed || sessions.length === 0) {
@@ -265,12 +339,16 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                 var newSession = {
                     prototype: (new MediaPlayer.models.SessionToken()).prototype,
                     sessionID: null,
-                    initData: initData
+                    initData: initData,
+
+                    getSessionID: function() {
+                        return this.sessionID;
+                    }
                 };
                 pendingSessions.push(newSession);
 
                 // Send our request to the CDM
-                videoElement[api.generateKeyRequest](this.keySystem.systemString, initData);
+                videoElement[api.generateKeyRequest](this.keySystem.systemString, new Uint8Array(initData));
 
                 return newSession;
 
@@ -300,7 +378,11 @@ MediaPlayer.models.ProtectionModel_01b = function () {
             videoElement[api.cancelKeyRequest](this.keySystem.systemString, sessionToken.sessionID);
         },
 
-        setServerCertificate: function(/*serverCertificate*/) { /* Not supported */ }
+        setServerCertificate: function(/*serverCertificate*/) { /* Not supported */ },
+
+        loadKeySession: function(/*sessionID*/) { /* Not supported */ },
+
+        removeKeySession: function(/*sessionToken*/) { /* Not supported */ }
     };
 };
 

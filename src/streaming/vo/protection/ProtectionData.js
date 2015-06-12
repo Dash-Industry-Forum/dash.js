@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2014-2015, Cable Television Laboratories, Inc.
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -13,7 +13,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *  this list of conditions and the following disclaimer in the documentation and/or
  *  other materials provided with the distribution.
- *  * Neither the name of Cable Television Laboratories, Inc. nor the names of its
+ *  * Neither the name of Dash Industry Forum nor the names of its
  *  contributors may be used to endorse or promote products derived from this software
  *  without specific prior written permission.
  *
@@ -33,15 +33,17 @@
  * Data used to customize KeySystems and override default or CDM-provided
  * values
  *
- * @param laURL
- * @param httpRequestHeaders
- * @param bearerToken
+ * @param {string} laURL a license acquisition URL to use with this key system
+ * @param {Object} httpRequestHeaders headers to add to the http request
+ * @param {Object} clearkeys defines a set of clear keys that are available to
+ * the key system.  Object properties are base64-encoded keyIDs (with no padding).
+ * Corresponding property values are keys, base64-encoded (no padding).
  * @constructor
  */
-MediaPlayer.vo.protection.ProtectionData = function(laURL, httpRequestHeaders, bearerToken) {
+MediaPlayer.vo.protection.ProtectionData = function(laURL, httpRequestHeaders, clearkeys) {
     this.laURL = laURL;
     this.httpRequestHeaders = httpRequestHeaders;
-    this.bearerToken = bearerToken;
+    this.clearkeys = clearkeys;
 };
 
 MediaPlayer.vo.protection.ProtectionData.prototype = {

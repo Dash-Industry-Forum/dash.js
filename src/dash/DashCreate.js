@@ -22,12 +22,19 @@
  */
 Dash.create = function(video, source, context)
 {
-    if (typeof video === undefined || video.nodeName != "VIDEO") return;
+    if (typeof video === "undefined" || video.nodeName != "VIDEO") return null;
 
     var player, videoID = (video.id || video.name || "video element");
     context = context || new Dash.di.DashContext();
     source = source || [].slice.call(video.querySelectorAll("source")).filter(function(s){return s.type == Dash.supportedManifestMimeTypes.mimeType;})[0];
-
+    if (source === undefined && video.src)
+    {
+        source = document.createElement("source");
+        source.src = video.src;
+    } else if (source === undefined && !video.src)
+    {
+        return null;
+    }
     player = new MediaPlayer(context);
     player.startup();
     player.attachView(video);

@@ -29,10 +29,15 @@
             <br/>This is a standard mp4 (non-dash)<p/>
         </div>
         <div>
-            <video class="dashjs-player" poster="http://mediapm.edgesuite.net/will/dash/temp/poster.png"controls="true">
+            <video class="dashjs-player" poster="http://mediapm.edgesuite.net/will/dash/temp/poster.png" controls="true">
                 <source src="http://dash.edgesuite.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/Sintel/sintel_480p_heaac2_0.mpd" type="application/dash+xml"/>
             </video>
-            <br/>This is a dash.js player that should not autostart
+            <br/>This is a dash.js player that should not autostart<p/>
+        </div>
+        <div>
+            <video class="dashjs-player" autoplay src="http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd" controls="true">
+            </video>
+            <br/>This is a dash.js player that where the manifest is defined via the src attribute of the video element.
         </div>
     </body>
 </html>

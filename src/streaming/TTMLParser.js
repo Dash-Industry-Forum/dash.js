@@ -1,15 +1,32 @@
-/*
- * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Akamai Technologies
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
- * •  Neither the name of the Akamai Technologies nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
 MediaPlayer.utils.TTMLParser = function () {
     "use strict";
@@ -69,8 +86,10 @@ MediaPlayer.utils.TTMLParser = function () {
                 hasHead = hasTt ? ttml.tt.hasOwnProperty("head") : false,
                 hasLayout = hasHead ? ttml.tt.head.hasOwnProperty("layout") : false,
                 hasStyling = hasHead ? ttml.tt.head.hasOwnProperty("styling") : false,
-                hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false,
+                hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false;
+                /* extend the support to other profiles
                 hasProfile = hasHead ? ttml.tt.head.hasOwnProperty("profile") : false;
+                */
 
             // R001 - A document must contain a tt element.
             // R002 - A document must contain both a head and body element.
@@ -80,9 +99,11 @@ MediaPlayer.utils.TTMLParser = function () {
             }
 
             // R0008 - A document must contain a ttp:profile element where the use attribute of that element is specified as http://www.w3.org/ns/ttml/profile/sdp-us.
-            if (passed) {
+			/* extend the support to other profiles
+			// Profile is not mandatory 
+            if (passed && hasProfile) {
                 passed = hasProfile && (ttml.tt.head.profile.use === "http://www.w3.org/ns/ttml/profile/sdp-us");
-            }
+            }*/
 
             return passed;
         },
@@ -109,7 +130,9 @@ MediaPlayer.utils.TTMLParser = function () {
                 startTime,
                 endTime,
                 nsttp,
-                i;
+                text,
+                i,
+                j;
 
             ttml = converter.xml_str2json(data);
 
@@ -124,7 +147,11 @@ MediaPlayer.utils.TTMLParser = function () {
                 ttml.tt.frameRate = parseInt(ttml.tt[nsttp + ":frameRate"], 10);
             }
 
-            cues = ttml.tt.body.div_asArray[0].p_asArray;
+            if(ttml.tt.body.div_asArray){
+                cues = ttml.tt.body.div_asArray[0].p_asArray;
+            }else{
+                cues = ttml.tt.body.p_asArray;
+            }
 
             if (!cues || cues.length === 0) {
                 errorMsg = "TTML document does not contain any cues";
@@ -141,11 +168,35 @@ MediaPlayer.utils.TTMLParser = function () {
                     throw errorMsg;
                 }
 
-                captionArray.push({
-                    start: startTime,
-                    end: endTime,
-                    data: cue.__text
-                });
+                if(cue["smpte:backgroundImage"]!==undefined)
+                {
+                    var images = ttml.tt.head.metadata.image_asArray;
+                    for (j = 0; j < images.length; j += 1) {
+                        if(("#"+images[j]["xml:id"]) == cue["smpte:backgroundImage"]) {
+                            captionArray.push({
+                                start: startTime,
+                                end: endTime,
+                                id:images[j]["xml:id"],
+                                data: "data:image/"+images[j].imagetype.toLowerCase()+";base64, " + images[j].__text,
+                                type: "image"
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    if(cue.span_asArray){
+                        text=cue.span_asArray[0].__text;
+                    }else{
+                        text=cue.__text;
+                    }
+                    captionArray.push({
+                        start: startTime,
+                        end: endTime,
+                        data: text,
+                        type: "text"
+                    });
+                }
             }
 
             return captionArray;

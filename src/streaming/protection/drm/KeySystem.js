@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2014-2015, Cable Television Laboratories, Inc.
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -13,7 +13,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *  this list of conditions and the following disclaimer in the documentation and/or
  *  other materials provided with the distribution.
- *  * Neither the name of Cable Television Laboratories, Inc. nor the names of its
+ *  * Neither the name of Dash Industry Forum nor the names of its
  *  contributors may be used to endorse or promote products derived from this software
  *  without specific prior written permission.
  *
@@ -58,40 +58,37 @@ MediaPlayer.dependencies.protection.KeySystem = {
      */
 
     /**
-     * Request a content key/license from a remote server
-     *
-     * @param msg the request message from the CDM
-     * @param laURL default URL provided by the CDM
-     * @param requestData object that will be returned in the
-     * ENAME_LICENSE_REQUEST_COMPLETE event
-     *
-     doLicenseRequest: function(msg, laURL, requestData) {},
-     */
-
-    /**
      * Parse DRM-specific init data from the ContentProtection
      * element.
      *
      * @param contentProtection the ContentProtection element
-     * @returns {Uint8Array} initialization data
+     * @returns {ArrayBuffer} initialization data
      *
      getInitData: function(contentProtection) { return null; },
      */
 
     /**
-     * Checks for equality of initialization data.  CDMs may send "needkey"
-     * events multiple times for the same initialization data, and players may
-     * wish to avoid creating new sessions for each needkey event if the init
-     * data is the same.
+     * For some key systems, the CDM message contains HTTP headers that
+     * can be parsed by the application and attached to the license request.
+     * Returns a header object with key/value pairs as object properties/values
      *
-     * @param initData1
-     * @param initData2
+     * @param {ArrayBuffer} message the CDM message
+     * @returns {Object} headers parsed from CDM message or null
+     getRequestHeadersFromMessage: function(message) { return null; },
+     */
+
+    /**
+     * For some key systems, the CDM message contains more than just the
+     * license request.  This method will pull the license request from
+     * the CDM message
      *
-     initDataEquals: function(initData1, initData2) {},
+     * @param message {ArrayBuffer} the CDM message
+     * @returns {Uint8Array} the license request message
+     getLicenseRequestFromMessage: function(message) { return message; }
      */
 
     eventList: {
-        ENAME_LICENSE_REQUEST_COMPLETE: "licenseRequestComplete",
+        ENAME_LICENSE_REQUEST_COMPLETE: "licenseRequestComplete"
     }
 };
 

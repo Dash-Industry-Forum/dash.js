@@ -1,44 +1,143 @@
-/*
- * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Akamai Technologies
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
- * •  Neither the name of the Akamai Technologies nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
 MediaPlayer.utils.VTTParser = function () {
     "use strict";
 
-    var convertCuePointTimes = function(time) {
-        var timeArray = time.split( ":"),
-            len = timeArray.length - 1;
+    /**
+     *
+     * @type {RegExp}
+     */
+    var regExNewLine = /(?:\r\n|\r|\n)/gm,
+        regExToken = /-->/,
+        regExWhiteSpace = /(^[\s]+|[\s]+$)/g,
+        regExWhiteSpaceWordBoundry = /\s\b/g,
 
-        time = parseInt( timeArray[len-1], 10 ) * 60 + parseFloat( timeArray[len], 10 );
 
-        if ( len === 2 ) {
-            time += parseInt( timeArray[0], 10 ) * 3600;
-        }
+        convertCuePointTimes = function(time) {
+            var timeArray = time.split( ":"),
+                len = timeArray.length - 1;
 
-        return time;
-    };
+            time = parseInt( timeArray[len-1], 10 ) * 60 + parseFloat( timeArray[len]);
+
+            if ( len === 2 ) {
+                time += parseInt( timeArray[0], 10 ) * 3600;
+            }
+
+            return time;
+        },
+
+        parseItemAttributes = function (data) {
+            var vttCuePoints = data.split(regExToken);
+            var arr = vttCuePoints[1].split(regExWhiteSpaceWordBoundry);
+            arr.shift(); //remove first array index it is empty...
+            vttCuePoints[1] = arr[0];
+            arr.shift();
+            return {cuePoints:vttCuePoints, styles:getCaptionStyles(arr)};
+        },
+
+        getCaptionStyles = function (arr) {
+            var styleObject = {};
+            arr.forEach(function (element) {
+                if (element.split(/:/).length > 1){
+                    var val = element.split(/:/)[1];
+                    if (val && val.search(/%/) != -1){
+                        val = parseInt(val.replace(/%/, ""));
+                    }
+                    if (element.match(/align/) || element.match(/A/)){
+                        styleObject.align = val;
+                    }
+                    if (element.match(/line/) || element.match(/L/) ){
+                        styleObject.line = val;
+                    }
+                    if (element.match(/position/) || element.match(/P/) ){
+                        styleObject.position = val;
+                    }
+                    if (element.match(/size/) || element.match(/S/)){
+                        styleObject.size = val;
+                    }
+                }
+            });
+
+            return styleObject;
+        },
+
+        /**
+         * VTT can have multiple lines to display per cuepoint.
+         * */
+        getSublines = function(data, idx){
+            var lineCount,
+                i = idx,
+                subline = "",
+                lineData = "";
+
+            while(data[i] !== "" && i < data.length) {
+                i++;
+            }
+
+            lineCount = i - idx;
+            if (lineCount > 1){
+                for(var j = 0; j < lineCount; j++){
+                    lineData = data[(idx + j)];
+                    if(!lineData.match(regExToken)){
+                        subline += lineData;
+                        if (j !== lineCount-1) {
+                            subline += "\n";
+                        }
+                    }
+                    else {
+                        // caption text should not have '-->' in it
+                        subline = "";
+                        break;
+                    }
+                }
+            } else {
+                lineData = data[idx];
+                if(!lineData.match(regExToken))
+                    subline = lineData;
+            }
+            return decodeURI(subline);
+        };
 
     return {
-
+    
+        log: undefined,
         parse: function (data)
         {
-            var regExNewLine = /(?:\r\n|\r|\n)/gm,
-                regExToken = /-->/,
-                regExWhiteSpace = /(^[\s]+|[\s]+$)/g,
-                captionArray = [],
-                len;
+            var captionArray = [],
+                len,
+                lastStartTime;
 
             data = data.split( regExNewLine );
             len = data.length;
+            lastStartTime = -1;
 
             for (var i = 0 ; i < len; i++)
             {
@@ -48,16 +147,31 @@ MediaPlayer.utils.VTTParser = function () {
                 {
                     if (item.match(regExToken))
                     {
-                        var cuePoints = item.split(regExToken);
-                        //vtt has sublines so more will need to be done here
-                        var sublines = data[i+1];
+                        var attributes = parseItemAttributes(item),
+                            cuePoints = attributes.cuePoints,
+                            styles = attributes.styles,
+                            text = getSublines(data, i+1),
+                            startTime = convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, '')),
+                            endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
 
-                        //TODO Make VO external so other parsers can use.
-                        captionArray.push({
-                            start:convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, '')),
-                            end:convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, '')),
-                            data:sublines
-                        });
+                        if((!Number.isNaN(startTime) && !Number.isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
+                            if (text !== ""){
+                                lastStartTime = startTime;
+                                //TODO Make VO external so other parsers can use.
+                                captionArray.push({
+                                    start:startTime,
+                                    end:endTime,
+                                    data:text,
+                                    styles:styles
+                                });
+                            }
+                            else {
+                                this.log("Skipping cue due to empty/malformed cue text");
+                            }
+                        }
+                        else {
+                            this.log("Skipping cue due to incorrect cue timing");
+                        }
                     }
                 }
             }

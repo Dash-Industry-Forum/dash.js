@@ -32,7 +32,12 @@
         {
             "name": "Fraunhofer Fokus",
             "logo": "app/img/fh_fokus.png",
-            "link": "http://www.fokus.fraunhofer.de/en/fame/index.html"
+            "link": "https://www.fokus.fraunhofer.de/go/fame"
+        },
+        {
+            "name": "CableLabs",
+            "logo": "app/img/cablelabs.png",
+            "link": "http://www.cablelabs.com"
         }
     ]
 }

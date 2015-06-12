@@ -45,8 +45,11 @@
     <script src="../../src/streaming/Context.js"></script>
     <script src="../../src/streaming/ErrorHandler.js"></script>
     <script src="../../src/streaming/utils/Capabilities.js"></script>
+    <script src="../../src/streaming/utils/DOMStorage.js"></script>
     <script src="../../src/streaming/utils/EventBus.js"></script>
     <script src="../../src/streaming/utils/Debug.js"></script>
+    <script src="../../src/streaming/utils/CustomTimeRanges.js"></script>
+    <script src="../../src/streaming/utils/VirtualBuffer.js"></script>
     <script src="../../src/streaming/extensions/RequestModifierExtensions.js"></script>
     <script src="../../src/streaming/models/VideoModel.js"></script>
     <script src="../../src/streaming/vo/FragmentRequest.js"></script>
@@ -56,6 +59,8 @@
     <script src="../../src/streaming/vo/ManifestInfo.js"></script>
     <script src="../../src/streaming/vo/Event.js"></script>
     <script src="../../src/streaming/vo/Error.js"></script>
+    <script src="../../src/streaming/vo/BitrateInfo.js"></script>
+    <script src="../../src/streaming/vo/DataChunk.js"></script>
     <script src="../../src/streaming/ManifestLoader.js"></script>
     <script src="../../src/streaming/ManifestUpdater.js"></script>
     <script src="../../src/streaming/models/ManifestModel.js"></script>
@@ -78,11 +83,14 @@
     <script src="../../src/streaming/controllers/EventController.js"></script>
     <script src="../../src/streaming/models/URIQueryAndFragmentModel.js"></script>
     <script src="../../src/streaming/vo/URIFragmentData.js"></script>
+    <script src="../../src/streaming/controllers/XlinkController.js"></script>
+    <script src="../../src/streaming/XlinkLoader.js"></script>
 
     <!--Protection-->
     <script src="../../src/streaming/models/ProtectionModel.js"></script>
     <script src="../../src/streaming/models/ProtectionModel_01b.js"></script>
     <script src="../../src/streaming/models/ProtectionModel_3Feb2014.js"></script>
+    <script src="../../src/streaming/models/ProtectionModel_21Jan2015.js"></script>
     <script src="../../src/streaming/vo/protection/ClearKeyKeySet.js"></script>
     <script src="../../src/streaming/vo/protection/KeyPair.js"></script>
     <script src="../../src/streaming/vo/protection/SessionToken.js"></script>
@@ -98,23 +106,30 @@
     <script src="../../src/streaming/protection/drm/KeySystem_Widevine.js"></script>
     <script src="../../src/streaming/protection/drm/KeySystem.js"></script>
 
+    <script src="../../src/streaming/protection/servers/ClearKey.js"></script>
+    <script src="../../src/streaming/protection/servers/PlayReady.js"></script>
+    <script src="../../src/streaming/protection/servers/Widevine.js"></script>
+    <script src="../../src/streaming/protection/servers/DRMToday.js"></script>
+
     <script src="../../src/streaming/vo/protection/KeyError.js"></script>
     <script src="../../src/streaming/vo/protection/KeyMessage.js"></script>
     <script src="../../src/streaming/vo/protection/LicenseRequestComplete.js"></script>
     <script src="../../src/streaming/vo/protection/NeedKey.js"></script>
     <script src="../../src/streaming/vo/protection/ProtectionData.js"></script>
+    <script src="../../src/streaming/vo/protection/KeySystemAccess.js"></script>
+    <script src="../../src/streaming/vo/protection/KeySystemConfiguration.js"></script>
+    <script src="../../src/streaming/vo/protection/MediaCapability.js"></script>
 
     <!--Rules-->
     <script src="../../src/streaming/rules/SwitchRequest.js"></script>
     <script src="../../src/streaming/rules/RulesContext.js"></script>
     <script src="../../src/streaming/rules/RulesController.js"></script>
 
-    <script src="../../src/streaming/rules/ABRRules/DownloadRatioRule.js"></script>
     <script src="../../src/streaming/rules/ABRRules/InsufficientBufferRule.js"></script>
-    <script src="../../src/streaming/rules/ABRRules/LimitSwitchesRule.js"></script>
     <script src="../../src/streaming/rules/ABRRules/ABRRulesCollection.js"></script>
     <script src="../../src/streaming/rules/ABRRules/BufferOccupancyRule.js"></script>
     <script src="../../src/streaming/rules/ABRRules/ThroughputRule.js"></script>
+    <script src="../../src/streaming/rules/ABRRules/AbandonRequestsRule.js"></script>
 
     <script src="../../src/streaming/rules/SchedulingRules/ScheduleRulesCollection.js"></script>
     <script src="../../src/streaming/rules/SchedulingRules/BufferLevelRule.js"></script>
@@ -497,7 +512,7 @@
                     <ul class="list-group">
                         <li class="list-group-item"><a href="https://github.com/Dash-Industry-Forum/dash.js">This project can be forked on GitHub.</a></li>
                         <li class="list-group-item">Use your browser's JavaScript console to view detailed information about stream playback.</li>
-                        <li class="list-group-item"><a href="../basic-page-embed/auto-load-single-video.html">See a base implementation here.</a></li>
+                        <li class="list-group-item"><a href="../getting-started-basic-embed/auto-load-single-video.html">See a base implementation here.</a></li>
                         <li class="list-group-item">A browser that supports MSE (Media Source Extensions) is required.</li>
                         <li class="list-group-item">As of 2/1/2015 supported on the following browsers: Desktop Chrome, Desktop Internet Explorer 11 under WIn8.1, Mobile Chrome for Android and Safari on Mac Yosemite</li>
                         <li class="list-group-item">Use the most up-to-date version of your browser for the best compatibility.</li>

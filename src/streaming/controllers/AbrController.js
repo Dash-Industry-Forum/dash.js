@@ -1,15 +1,32 @@
-/*
- * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
- * 
- * Copyright (c) 2013, Digital Primates
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
- * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
 MediaPlayer.dependencies.AbrController = function () {
     "use strict";
@@ -18,6 +35,10 @@ MediaPlayer.dependencies.AbrController = function () {
         topQualities = {},
         qualityDict = {},
         confidenceDict = {},
+        bitrateDict = {},
+        streamProcessorDict={},
+        abandonmentStateDict = {},
+        abandonmentTimeout,
 
         getInternalQuality = function (type, id) {
             var quality;
@@ -62,48 +83,108 @@ MediaPlayer.dependencies.AbrController = function () {
             topQualities[id][type] = value;
         },
 
+        getInitialBitrate = function(type) {
+            return bitrateDict[type];
+        },
+
+        setInitialBitrate = function(type, value) {
+            bitrateDict[type] = value;
+        },
+
+        getMaxBitrate = function(type) {
+            if (bitrateDict.hasOwnProperty("max") && bitrateDict.max.hasOwnProperty(type)){
+                return bitrateDict.max[type];
+            }
+            return NaN;
+        },
+
+        //TODO  change bitrateDict structure to hold one object for video and audio with initial and max values internal.
+        // This means you need to update all the logic around intial bitrate DOMStorage, RebController etc...
+        setMaxBitrate = function(type, value) {
+            bitrateDict.max = bitrateDict.max || {};
+            bitrateDict.max[type] = value;
+        },
+
         getTopQualityIndex = function(type, id) {
             var idx;
 
             topQualities[id] = topQualities[id] || {};
 
             if (!topQualities[id].hasOwnProperty(type)) {
-                topQualities[id][type] = 0;
+                    topQualities[id][type] = 0;
             }
 
-            idx = topQualities[id][type];
+            idx = checkMaxBitrate.call(this, topQualities[id][type], type);
 
             return idx;
         },
 
-        onDataUpdateCompleted = function(e) {
-            if (e.error) return;
+        checkMaxBitrate = function(idx, type){
+            var maxBitrate = getMaxBitrate(type);
+            if (isNaN(maxBitrate)) {
+                return idx;
+            }
+            var maxIdx = this.getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
+            return Math.min (idx , maxIdx);
+        },
 
-            var self = this,
-                mediaInfo = this.adapter.convertDataToTrack(e.data.currentRepresentation).mediaInfo,
-                type = mediaInfo.type,
-                streamId = mediaInfo.streamInfo.id,
-                max;
+        onFragmentLoadProgress = function(evt) {
 
-            max = mediaInfo.trackCount - 1;
+            if (MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD === 0) { //check to see if there are parallel request or just one at a time.
 
-            if (getTopQualityIndex(type, streamId) === max) return;
+                var self = this,
+                    type = evt.data.request.mediaType,
+                    rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.ABANDON_FRAGMENT_RULES),
+                    schduleController = streamProcessorDict[type].getScheduleController(),
+                    fragmentModel = schduleController.getFragmentModel(),
+                    callback = function (switchRequest) {
 
-            setTopQualityIndex(type, streamId, max);
-            self.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_TOP_QUALITY_INDEX_CHANGED, {mediaType: type, streamInfo: mediaInfo.streamInfo, maxIndex: max});
+                        function setupTimeout(type){
+                            abandonmentTimeout = setTimeout(function () {
+                                self.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ALLOW_LOAD);
+                            }, MediaPlayer.dependencies.AbrController.ABANDON_TIMEOUT);
+                        }
+
+                        if (switchRequest.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) {
+
+                            var requests = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING}),
+                                newQuality = switchRequest.value,
+                                currentQuality = self.getQualityFor(type, self.streamController.getActiveStreamInfo());
+
+                            if (newQuality < currentQuality){
+
+                                fragmentModel.abortRequests();
+                                self.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ABANDON_LOAD);
+                                self.setPlaybackQuality(type, self.streamController.getActiveStreamInfo() , newQuality);
+                                schduleController.replaceCanceledRequests(requests);
+                                setupTimeout(type);
+                            }
+                        }
+                    };
+
+                self.rulesController.applyRules(rules, streamProcessorDict[type], callback, evt, function(currentValue, newValue) {
+                    return newValue;
+                });
+            }
         };
 
     return {
-        debug: undefined,
-        adapter: undefined,
+        log: undefined,
         abrRulesCollection: undefined,
         rulesController: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        streamController:undefined,
 
         setup: function() {
-            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            this[MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_PROGRESS] = onFragmentLoadProgress;
+        },
+
+        initialize: function(type, streamProcessor) {
+            streamProcessorDict[type] = streamProcessor;
+            abandonmentStateDict[type] = abandonmentStateDict[type] || {};
+            abandonmentStateDict[type].state = MediaPlayer.dependencies.AbrController.ALLOW_LOAD;
         },
 
         getAutoSwitchBitrate: function () {
@@ -124,7 +205,7 @@ MediaPlayer.dependencies.AbrController = function () {
                 confidence,
 
                 callback = function(res) {
-                    var topQualityIdx = getTopQualityIndex(type, streamId);
+                    var topQualityIdx = getTopQualityIndex.call(self, type, streamId);
 
                     quality = res.value;
                     confidence = res.confidence;
@@ -140,12 +221,12 @@ MediaPlayer.dependencies.AbrController = function () {
 
                     oldQuality = getInternalQuality(type, streamId);
 
-                    if (quality === oldQuality) return;
+                    if (quality === oldQuality || (abandonmentStateDict[type].state === MediaPlayer.dependencies.AbrController.ABANDON_LOAD &&  quality > oldQuality)) return;
 
                     setInternalQuality(type, streamId, quality);
-                    //self.debug.log("New quality of " + quality);
+                    //self.log("New quality of " + quality);
                     setInternalConfidence(type, streamId, confidence);
-                    //self.debug.log("New confidence of " + confidence);
+                    //self.log("New confidence of " + confidence);
 
                     self.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
                 };
@@ -154,10 +235,10 @@ MediaPlayer.dependencies.AbrController = function () {
             confidence = getInternalConfidence(type, streamId);
 
 
-            //self.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
+            //self.log("ABR enabled? (" + autoSwitchBitrate + ")");
             if (!autoSwitchBitrate) return;
 
-            //self.debug.log("Check ABR rules.");
+            //self.log("Check ABR rules.");
             rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES);
             self.rulesController.applyRules(rules, streamProcessor, callback.bind(self), quality, function(currentValue, newValue) {
                 currentValue = currentValue === MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
@@ -172,10 +253,18 @@ MediaPlayer.dependencies.AbrController = function () {
 
             if (!isInt) throw "argument is not an integer";
 
-            if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && topQualities[id].hasOwnProperty(type) && newPlaybackQuality <= topQualities[id][type]) {
+            if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && newPlaybackQuality <= getTopQualityIndex.call(this, type, id)) {
                 setInternalQuality(type, streamInfo.id, newPlaybackQuality);
                 this.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality});
             }
+        },
+
+        setAbandonmentStateFor: function (type, state) {
+            abandonmentStateDict[type].state = state;
+        },
+
+        getAbandonmentStateFor: function (type) {
+            return abandonmentStateDict[type].state;
         },
 
         getQualityFor: function (type, streamInfo) {
@@ -186,6 +275,89 @@ MediaPlayer.dependencies.AbrController = function () {
             return getInternalConfidence(type, streamInfo.id);
         },
 
+        /**
+         * @param type
+         * @param {number} value A value of the initial bitrate, kbps
+         * @memberof AbrController#
+         */
+        setInitialBitrateFor: function(type, value){
+            setInitialBitrate(type, value);
+        },
+
+        /**
+         * @param type
+         * @returns {number} A value of the initial bitrate, kbps
+         * @memberof AbrController#
+         */
+        getInitialBitrateFor: function(type){
+            return getInitialBitrate(type);
+        },
+
+
+        setMaxAllowedBitrateFor:function(type, value) {
+            setMaxBitrate(type, value);
+        },
+        getMaxAllowedBitrateFor:function(type) {
+            return getMaxBitrate(type);
+        },
+
+        /**
+         * @param mediaInfo
+         * @param bitrate A bitrate value, kbps
+         * @returns {number} A quality index <= for the given bitrate
+         * @memberof AbrController#
+         */
+        getQualityForBitrate: function(mediaInfo, bitrate) {
+            var bitrateList = this.getBitrateList(mediaInfo),
+                ln = bitrateList.length,
+                bitrateInfo;
+
+            for (var i = 0; i < ln; i +=1) {
+                bitrateInfo = bitrateList[i];
+
+                if (bitrate*1000 <= bitrateInfo.bitrate) {
+                    return Math.max(i-1, 0);
+                }
+            }
+
+            return (ln-1);
+        },
+
+        /**
+         * @param mediaInfo
+         * @returns {Array} A list of {@link MediaPlayer.vo.BitrateInfo} objects
+         * @memberof AbrController#
+         */
+        getBitrateList: function(mediaInfo) {
+            if (!mediaInfo || !mediaInfo.bitrateList) return null;
+
+            var bitrateList = mediaInfo.bitrateList,
+                type = mediaInfo.type,
+                infoList = [],
+                bitrateInfo;
+
+            for (var i = 0, ln = bitrateList.length; i < ln; i += 1) {
+                bitrateInfo = new MediaPlayer.vo.BitrateInfo();
+                bitrateInfo.mediaType = type;
+                bitrateInfo.qualityIndex = i;
+                bitrateInfo.bitrate = bitrateList[i];
+                infoList.push(bitrateInfo);
+            }
+
+            return infoList;
+        },
+
+        updateTopQualityIndex: function(mediaInfo) {
+            var type = mediaInfo.type,
+                streamId = mediaInfo.streamInfo.id,
+                max;
+
+            max = mediaInfo.trackCount - 1;
+            setTopQualityIndex(type, streamId, max);
+
+            return max;
+        },
+
         isPlayingAtTopQuality: function(streamInfo) {
             var self = this,
                 isAtTop,
@@ -193,17 +365,23 @@ MediaPlayer.dependencies.AbrController = function () {
                 audioQuality = self.getQualityFor("audio", streamInfo),
                 videoQuality = self.getQualityFor("video", streamInfo);
 
-            isAtTop = (audioQuality === getTopQualityIndex("audio", streamId)) &&
-                (videoQuality === getTopQualityIndex("video", streamId));
+            isAtTop = (audioQuality === getTopQualityIndex.call(this, "audio", streamId)) &&
+                (videoQuality === getTopQualityIndex.call(this, "video", streamId));
 
             return isAtTop;
         },
+
+        getTopQualityIndexFor:getTopQualityIndex,
 
         reset: function() {
             autoSwitchBitrate = true;
             topQualities = {};
             qualityDict = {};
             confidenceDict = {};
+            streamProcessorDict = {};
+            abandonmentStateDict = {};
+            clearTimeout(abandonmentTimeout);
+            abandonmentTimeout = null;
         }
     };
 };
@@ -213,6 +391,14 @@ MediaPlayer.dependencies.AbrController.prototype = {
 };
 
 MediaPlayer.dependencies.AbrController.eventList = {
-    ENAME_QUALITY_CHANGED: "qualityChanged",
-    ENAME_TOP_QUALITY_INDEX_CHANGED: "topQualityIndexChanged"
+    ENAME_QUALITY_CHANGED: "qualityChanged"
 };
+
+// Default initial video bitrate, kbps
+MediaPlayer.dependencies.AbrController.DEFAULT_VIDEO_BITRATE = 1000;
+// Default initial audio bitrate, kbps
+MediaPlayer.dependencies.AbrController.DEFAULT_AUDIO_BITRATE = 100;
+MediaPlayer.dependencies.AbrController.ABANDON_LOAD = "abandonload";
+MediaPlayer.dependencies.AbrController.ALLOW_LOAD = "allowload";
+MediaPlayer.dependencies.AbrController.ABANDON_TIMEOUT = 10000;
+MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY = 0.9;

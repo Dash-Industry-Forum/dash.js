@@ -1,19 +1,34 @@
 /**
- * @copyright The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2014, British Broadcasting Corporation
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- * - Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
- * - Neither the name of the British Broadcasting Corporation nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
  *
- * @license THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 /*globals MediaPlayer*/
-
 MediaPlayer.dependencies.TimeSyncController = function () {
     "use strict";
 
@@ -22,9 +37,9 @@ MediaPlayer.dependencies.TimeSyncController = function () {
         // the offset between the time returned from the time source
         // and the client time at that point, in milliseconds.
         offsetToDeviceTimeMs = 0,
-
         isSynchronizing = false,
         isInitialised = false,
+        useManifestDateHeaderTimeSource,
 
         setIsSynchronizing = function (value) {
             isSynchronizing = value;
@@ -204,6 +219,32 @@ MediaPlayer.dependencies.TimeSyncController = function () {
             "urn:mpeg:dash:utc:sntp:2014":          notSupportedHandler
         },
 
+        checkForDateHeader = function(){
+            var metrics = this.metricsModel.getReadOnlyMetricsFor("stream"),
+                dateHeaderValue = this.metricsExt.getLatestMPDRequestHeaderValueByID(metrics, "Date"),
+                dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
+
+            if (!isNaN(dateHeaderTime)) {
+                setOffsetMs(dateHeaderTime - new Date().getTime());
+                completeTimeSyncSequence.call(this, false, dateHeaderTime/1000, offsetToDeviceTimeMs);
+            }else {
+                completeTimeSyncSequence.call(this, true);
+            }
+        },
+
+        completeTimeSyncSequence = function (failed, time, offset){
+
+            setIsSynchronizing(false);
+            this.notify(
+                MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED,
+                {
+                    time: time,
+                    offset: offset
+                },
+                failed ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE) : null
+            );
+        },
+
         attemptSync = function (sources, sourceIndex) {
 
             var self = this,
@@ -219,17 +260,12 @@ MediaPlayer.dependencies.TimeSyncController = function () {
                 // callback to emit event to listeners
                 onComplete = function (time, offset) {
                     var failed = !time || !offset;
-
-                    setIsSynchronizing(false);
-
-                    self.notify(
-                        MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED,
-                        {
-                            time: time,
-                            offset: offset
-                        },
-                        failed ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE) : null
-                    );
+                    if(failed && useManifestDateHeaderTimeSource) {
+                        //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.
+                        checkForDateHeader.call(self);
+                    }else {
+                        completeTimeSyncSequence.call(self, failed, time, offset);
+                    }
                 };
 
             setIsSynchronizing(true);
@@ -247,9 +283,9 @@ MediaPlayer.dependencies.TimeSyncController = function () {
 
                             setOffsetMs(offset);
 
-                            self.debug.log("Local time:      " + new Date(deviceTime));
-                            self.debug.log("Server time:     " + new Date(serverTime));
-                            self.debug.log("Difference (ms): " + offset);
+                            self.log("Local time:      " + new Date(deviceTime));
+                            self.log("Server time:     " + new Date(serverTime));
+                            self.log("Difference (ms): " + offset);
 
                             onComplete.call(self, serverTime, offset);
                         },
@@ -273,16 +309,19 @@ MediaPlayer.dependencies.TimeSyncController = function () {
         };
 
     return {
-        debug: undefined,
+        log: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        metricsModel:undefined,
+        metricsExt:undefined,
 
         getOffsetToDeviceTimeMs: function () {
             return getOffsetMs();
         },
 
-        initialize: function (timingSources) {
+        initialize: function (timingSources, useManifestDateHeader) {
+            useManifestDateHeaderTimeSource = useManifestDateHeader;
             if (!getIsSynchronizing()) {
                 attemptSync.call(this, timingSources);
                 setIsInitialised(true);

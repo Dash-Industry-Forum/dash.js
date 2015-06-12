@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2014-2015, Cable Television Laboratories, Inc.
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -13,7 +13,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *  this list of conditions and the following disclaimer in the documentation and/or
  *  other materials provided with the distribution.
- *  * Neither the name of Cable Television Laboratories, Inc. nor the names of its
+ *  * Neither the name of Dash Industry Forum nor the names of its
  *  contributors may be used to endorse or promote products derived from this software
  *  without specific prior written permission.
  *
@@ -33,99 +33,19 @@ MediaPlayer.dependencies.protection.KeySystem_Widevine = function() {
     "use strict";
 
     var keySystemStr = "com.widevine.alpha",
-        keySystemUUID = "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed",
-        protData,
-
-        requestLicense = function(message, laURL, requestData) {
-            var xhr = new XMLHttpRequest(),
-                headers = {},
-                key,
-                headerOverrides,
-                headerName,
-                url,
-                self = this;
-
-            url = (protData && protData.laURL && protData.laURL !== "") ? protData.laURL : laURL;
-            if (!url) {
-                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                    null, new Error('DRM: No valid Widevine Proxy Server URL specified!'));
-            } else {
-                xhr.open('POST', url, true);
-                xhr.responseType = 'arraybuffer';
-                xhr.onload = function() {
-                    if (this.status == 200) {
-                        var event = new MediaPlayer.vo.protection.LicenseRequestComplete(new Uint8Array(this.response), requestData);
-                        self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                            event);
-                    } else {
-                        self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                            null, new Error('DRM: widevine update, XHR status is "' + xhr.statusText + '" (' + xhr.status +
-                                        '), expected to be 200. readyState is ' + xhr.readyState) +
-                                        ".  Response is " + ((this.response) ? String.fromCharCode.apply(null, new Uint8Array(this.response)) : "NONE"));
-                    }
-                };
-                xhr.onabort = function () {
-                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                        null, new Error('DRM: widevine update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
-                };
-                xhr.onerror = function () {
-                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                        null, new Error('DRM: widevine update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
-                };
-
-                headerOverrides = (protData) ? protData.httpRequestHeaders: null;
-                if (headerOverrides) {
-                    for (key in headerOverrides) {
-                        headers[key] = headerOverrides[key];
-                    }
-                }
-
-                for (headerName in headers) {
-                    if ('authorization' === headerName.toLowerCase()) {
-                        xhr.withCredentials = true;
-                    }
-
-                    xhr.setRequestHeader(headerName, headers[headerName]);
-                }
-
-                xhr.send(message);
-            }
-        },
-
-        /* TODO: Implement me */
-        parseInitDataFromContentProtection = function(/*cpData*/) {
-            return null;
-        },
-
-        /* TODO: Implement me */
-        isInitDataEqual = function(/*initData1, initData2*/) {
-            return false;
-        };
+        keySystemUUID = "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed";
 
     return {
 
         schemeIdURI: "urn:uuid:" + keySystemUUID,
         systemString: keySystemStr,
         uuid: keySystemUUID,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
 
-        /**
-         * Initialize this key system
-         *
-         * @param protectionData {ProtectionData} data providing overrides for
-         * default or CDM-provided values
-         */
-        init: function(protectionData) {
-            protData = protectionData;
-        },
+        getInitData: MediaPlayer.dependencies.protection.CommonEncryption.parseInitDataFromContentProtection,
 
-        doLicenseRequest: requestLicense,
+        getRequestHeadersFromMessage: function(/*message*/) { return null; },
 
-        getInitData: parseInitDataFromContentProtection,
-
-        initDataEquals: isInitDataEqual
+        getLicenseRequestFromMessage: function(message) { return new Uint8Array(message); }
     };
 };
 

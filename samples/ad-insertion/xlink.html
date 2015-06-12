@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html ng-app="DashPlayer" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Dash JavaScript Player</title>
+    <meta name="description" content="" />
+    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
+    <link href="style.css" rel="stylesheet" type="text/css" />
+	<script src="../../dist/dash.debug.js"></script>
+
+</head>
+<body ng-controller="DashController">
+
+</div>
+
+<div class="container" style="margin-top:20px;">
+
+    <a href="http://www.fokus.fraunhofer.de/go/fame"><img src="images/fame.png" style="position:absolute;top:20px;left:30px;" /></a>
+    <a href="http://www.fokus.fraunhofer.de/go/fame"><img src="images/fokus.png" style="position:absolute;top:20px;left:200px;height:65px;" /></a>
+    <img src="images/famium.png" style="position:absolute;top:20px;left:500px;" />
+
+    <div id="info_area">
+        <div id="info_item" style="width: 750px; height: 800px;">
+            <b>Xlink Sample Site</b>
+
+ <ul>
+     <li id="xlink-two-per" class="xlink-item">Two Periods (onLoad)</li>
+<pre>
+&lt;Period xlink:href="http://se-mashup.fokus.fraunhofer.de:8080/dashjs/period_timescapes" xlink:actuate="onLoad"/&gt;
+&lt;Period xlink:href="urn:mpeg:dash:resolve-to-zero:2013" xlink:actuate="onLoad"/&gt;
+&lt;Period xlink:href="http://se-mashup.fokus.fraunhofer.de:8080/dashjs/period_komp" xlink:actuate="onLoad"/&gt;
+</pre>
+     <li id="xlink-three-per" class="xlink-item">Three Periods (onLoad)</li>
+<pre>
+&lt;Period xlink:href="http://se-mashup.fokus.fraunhofer.de:8080/dashjs/period_timescapes" xlink:actuate="onLoad"/&gt;
+&lt;Period xlink:href="urn:mpeg:dash:resolve-to-zero:2013" xlink:actuate="onLoad"/&gt;
+&lt;Period xlink:href="http://se-mashup.fokus.fraunhofer.de:8080/dashjs/period_komp" xlink:actuate="onLoad"/&gt;
+&lt;Period xlink:href="http://se-mashup.fokus.fraunhofer.de:8080/dashjs/period_timescapes_2" xlink:actuate="onLoad"/&gt;
+</pre>
+     <li id="xlink-two-of-one" class="xlink-item">One Period into two Periods (onLoad)</li>
+<pre>
+&lt;Period xlink:href="http://se-mashup.fokus.fraunhofer.de:8080/dashjs/period_timescapes_komp" xlink:actuate="onLoad"/&gt;
+</pre>
+     <li id="xlink-three-of-two" class="xlink-item">Two Periods into three Periods (onLoad)</li>
+<pre>
+&lt;Period xlink:href="http://se-mashup.fokus.fraunhofer.de:8080/dashjs/period_timescapes_komp" xlink:actuate="onLoad"/&gt;
+&lt;Period xlink:href="http://se-mashup.fokus.fraunhofer.de:8080/dashjs/period_timescapes_2" xlink:actuate="onLoad"/&gt;
+</pre>
+     <li id="xlink-one-as" class="xlink-item">One AdaptationSet (onLoad)</li>
+<pre>
+&lt;Period&gt;
+&lt;AdaptationSet xlink:href="http://se-mashup.fokus.fraunhofer.de:8080/dashjs/singleas_timescapes" xlink:actuate="onLoad"&gt;
+&lt;Period/&gt;
+</pre>
+     <li id="xlink-one-ases" class="xlink-item">One AdaptationSet and one Eventstream(onLoad)</li>
+<pre>
+&lt;Period&gt;
+&lt;AdaptationSet xlink:href="http://se-mashup.fokus.fraunhofer.de:8080/dashjs/singleas_timescapes" xlink:actuate="onLoad"&gt;
+&lt;EventStream xlink:href="http://se-mashup.fokus.fraunhofer.de:8080/dashjs/reloades_timescapes" xlink:actuate="onLoad"/&gt;
+&lt;Period/&gt;
+</pre>
+ </ul>
+            <div><a href="index.html">Back to selection</a></div>
+
+        </div>
+    </div>
+    <div class="dash-video-player" style="position:absolute; left:820px;top:170px; width:640px" >
+        <video controls="true" id="vid" width="640" height="360"></video>
+    </div>
+</div>
+
+<div class="footer-area">
+
+</div>
+
+<script>
+    (function(){
+        var context = new Dash.di.DashContext();
+        var player = new MediaPlayer(context);
+        player.startup();
+        player.attachView(document.querySelector("#vid"));
+
+        document.getElementById('xlink-two-per').addEventListener('click',function() {
+            player.attachSource('http://se-mashup.fokus.fraunhofer.de:8080/dash/assets/xlink/twoperiods.mpd');
+        });
+        document.getElementById('xlink-three-per').addEventListener('click',function() {
+            player.attachSource('http://se-mashup.fokus.fraunhofer.de:8080/dash/assets/xlink/threeperiods.mpd');
+        });
+        document.getElementById('xlink-two-of-one').addEventListener('click',function() {
+            player.attachSource('http://se-mashup.fokus.fraunhofer.de:8080/dash/assets/xlink/twoperiods_of_one.mpd');
+        });
+        document.getElementById('xlink-three-of-two').addEventListener('click',function() {
+            player.attachSource('http://se-mashup.fokus.fraunhofer.de:8080/dash/assets/xlink/threeperiods_of_two.mpd');
+        });
+        document.getElementById('xlink-one-as').addEventListener('click',function() {
+            player.attachSource('http://se-mashup.fokus.fraunhofer.de:8080/dash/assets/xlink/singleas.mpd');
+        });
+        document.getElementById('xlink-one-ases').addEventListener('click',function() {
+            player.attachSource('http://se-mashup.fokus.fraunhofer.de:8080/dash/assets/xlink/singleases.mpd');
+        });
+    })();
+
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Samples players for dash.js</title>
+</head>
+<body>
+<img src="https://cloud.githubusercontent.com/assets/2762250/7824984/985c3e76-03bc-11e5-807b-1402bde4fe56.png" width="300">
+<p/>
+dash.js is a framework which enables the creation of many different MSE/EME players. This page provides a starting point to examine all the various samples available. Many samples ship with this code base, others are hosted elsewhere.
+<p/>
+<strong>Local examples </strong> available in the /samples/ folder. They are described according to the subfolder name in which they are located:
+<table style="width:1000px">
+    <tr><td colspan="2">/dash-if-reference-player</td></tr>
+    <tr><td style="width:80px"></td><td><a href="dash-if-reference-player/index.html">index.html</a> - The DASH IF Reference player. The <a href="http://dashif.org">DASH Industry Forum</a> is  a non-profit industry forum formed to catalyze the adoption of MPEG-DASH. They define common versions of DASH which other standards bodies (such as DVB and HbbTV) then formalize. This player is intended to provide a reference implementation. Note the player is just a UI on top of the same framework used in all these samples. In using dash.js you are inheriting much of the latest thinking of the DASH ecosystem.</td></tr>
+    <tr><td style="width:80px"></td><td><a href="dash-if-reference-player/eme.html">eme.html</a> - a version of the DASH IF Reference player optimized for debugging EME applications. </td></tr>
+
+    <tr><td colspan="2">/basic-page-embed</td></tr>
+    <tr><td style="width:80px"></td><td><a href="getting-started-basic-embed/auto-load-single-video-src.html">auto-load-single-video-src.html</a> - the simplest means of using a dash.js player in a web page. The mpd src is specified within the @src attribute of the video element. The "auto-load" refers to the fact that this page calls the Dash.createAll() method onLoad in order to automatically convert all video elements of class 'dashjs-player' in to a functioning DASH player.</td></tr>
+    <tr><td style="width:80px"></td><td><a href="getting-started-basic-embed/auto-load-single-video.html">auto-load-single-video.html</a> - the mpd source is specified within the child Source element of the video element. Note that the Source@type attribute must be set to "application/dash+xml" in order for it to be automatically used. </td></tr>
+    <tr><td style="width:80px"></td><td><a href="getting-started-basic-embed/auto-load-single-video-with-context-and-source.html">auto-load-single-video-with-context-and-source.html</a> - while the Dash.CreateAll() method is handy for automated instantiation within a page, the Dash.create() method takes three optional parameters to give you more control. This example illustrates calling Dash.create() in four different ways. The first simply specifies a target video element with a child source element. The second specifies a target video element with a src attribute. The third specifies the video element and a dynamically generated source object. The fourth specifies the video element, a source object and a custom DashContext object.  </td></tr>
+    <tr><td style="width:80px"></td><td><a href="getting-started-basic-embed/auto-load-single-video-with-reference.html">auto-load-single-video-with-reference.html</a> - this example shows how to auto-embed the player while still obtaining a reference to the MediaPlayer instance. This is useful for calling its public API, which the example illustrates by tracing out the players buffer length. </td></tr>
+    <tr><td style="width:80px"></td><td><a href="getting-started-basic-embed/auto-load-multi-video.html">auto-load-multi-video.html</a> - this example shows how to auto-embed multiple instances of dash.js players in a page. To make it more difficult, one of the available video elements specifies a non-DASH source. </td></tr>
+    <tr><td style="width:80px"></td><td><a href="getting-started-basic-embed/manual-load-single-video.html">manual-load-single-video.html</a> - for the fullest embed control, go back to basics. This example shows how to instantiate and initialize a dash.js player without using any of the Dash.create() methods. Consider this the baseline embed example. </td></tr>
+
+    <tr><td colspan="2">/ad-insertion</td></tr>
+    <tr><td style="width:80px"></td><td><a href="ad-insertion/index.html">index.html</a> - Demonstration of different implementation approaches for advert insertion, specifically inband, inline and X-Link onLoad. Provided by Fraunhofer Fokus.  </td></tr>
+
+    <tr><td colspan="2">/captioning</td></tr>
+    <tr><td style="width:80px"></td><td><a href="captioning/caption_vtt.html">caption_vtt.html</a> - example showing how content with VTT captions can be played back by the dash.js player. First captions appear at the 15s mark. </td></tr>
+
+    <tr><td colspan="2">/chromecast</td></tr>
+    <tr><td style="width:80px"></td><td><a href="chromecast/index.html">index.html</a> - features both receiver and sender examples of chromecast integration. </td></tr>
+
+</table>
+<p/>
+
+<strong>Remote examples </strong> hosted on website and by contributors around the world.
+<table style="width:1000px">
+    <tr><td style="width:80px"></td><td><a href="http://mediapm.edgesuite.net/dash/public/support-player/current/index.html">Akamai debug player</a> - written on top of dash.js, this player is used by Akamai for reference playback and debugging of its customer's streams. It features a flexible dynamic charting solution, real-time filtering of the debug traces and a layout that adjusts for debugging on mobile devices as well as laptops/desktops.</td></tr>
+</table>
+</body>
+</html>

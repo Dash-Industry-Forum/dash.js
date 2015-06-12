@@ -1,21 +1,38 @@
-/*
- * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
- * 
- * Copyright (c) 2013, Digital Primates
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
- * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
 
 MediaPlayer.dependencies.FragmentModel = function () {
     "use strict";
 
-    var context,
+    var context = null,
         executedRequests = [],
         pendingRequests = [],
         loadingRequests = [],
@@ -31,17 +48,16 @@ MediaPlayer.dependencies.FragmentModel = function () {
             self.fragmentLoader.load(request);
         },
 
-        removeExecutedRequest = function(request) {
-            var idx = executedRequests.indexOf(request);
+        removeRequest = function(arr, request) {
+            var idx = arr.indexOf(request);
 
             if (idx !== -1) {
-                executedRequests.splice(idx, 1);
+                arr.splice(idx, 1);
             }
         },
 
-        getRequestForTime = function(arr, time) {
+        getRequestForTime = function(arr, time, threshold) {
             var lastIdx = arr.length - 1,
-                THRESHOLD = 0.001,
                 start = NaN,
                 end = NaN,
                 req = null,
@@ -52,12 +68,55 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 req = arr[i];
                 start = req.startTime;
                 end = start + req.duration;
-                if ((!isNaN(start) && !isNaN(end) && ((time + THRESHOLD) >= start) && (time < end)) || (isNaN(start) && isNaN(time))) {
+                threshold = threshold || (req.duration / 2);
+                if ((!isNaN(start) && !isNaN(end) && ((time + threshold) >= start) && ((time - threshold) < end)) || (isNaN(start) && isNaN(time))) {
                     return req;
                 }
             }
 
             return null;
+        },
+
+        filterRequests = function(arr, filter) {
+            if (!filter) return arr;
+
+            // for time use a specific filtration function
+            if (filter.hasOwnProperty("time")) {
+                return [getRequestForTime.call(this, arr, filter.time, filter.threshold)];
+            }
+
+            return arr.filter(function(request/*, idx, arr*/) {
+                for (var prop in filter) {
+                    if (prop === "state") continue;
+
+                    if (filter.hasOwnProperty(prop) && request[prop] != filter[prop]) return false;
+                }
+
+                return true;
+            });
+        },
+
+        getRequestsForState = function(state) {
+            var requests;
+
+            switch (state) {
+                case MediaPlayer.dependencies.FragmentModel.states.PENDING:
+                    requests = pendingRequests;
+                    break;
+                case MediaPlayer.dependencies.FragmentModel.states.LOADING:
+                    requests = loadingRequests;
+                    break;
+                case MediaPlayer.dependencies.FragmentModel.states.EXECUTED:
+                    requests = executedRequests;
+                    break;
+                case MediaPlayer.dependencies.FragmentModel.states.REJECTED:
+                    requests = rejectedRequests;
+                    break;
+                default:
+                    requests = [];
+            }
+
+            return requests;
         },
 
         addSchedulingInfoMetrics = function(request, state) {
@@ -86,21 +145,21 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 executedRequests.push(request);
             }
 
-            addSchedulingInfoMetrics.call(this, request, error ? MediaPlayer.vo.metrics.SchedulingInfo.FAILED_STATE : MediaPlayer.vo.metrics.SchedulingInfo.EXECUTED_STATE);
+            addSchedulingInfoMetrics.call(this, request, error ? MediaPlayer.dependencies.FragmentModel.states.FAILED : MediaPlayer.dependencies.FragmentModel.states.EXECUTED);
             this.notify(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {request: request, response: response}, error);
         },
 
         onBytesRejected = function(e) {
-            var req = this.getExecutedRequestForQualityAndIndex(e.data.quality, e.data.index);
+            var req = this.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, quality: e.data.quality, index: e.data.index})[0];
             // if request for an unappropriate quality has not been removed yet, do it now
             if (req) {
-                this.removeExecutedRequest(req);
+                removeRequest.call(this, executedRequests, req);
                 // if index is not a number it means that this is a media fragment, so we should
                 // request the fragment for the same time but with an appropriate quality
                 // If this is init fragment do nothing, because it will be requested in loadInitialization method
                 if (!isNaN(e.data.index)) {
                     rejectedRequests.push(req);
-                    addSchedulingInfoMetrics.call(this, req, MediaPlayer.vo.metrics.SchedulingInfo.REJECTED_STATE);
+                    addSchedulingInfoMetrics.call(this, req, MediaPlayer.dependencies.FragmentModel.states.REJECTED);
                 }
             }
         },
@@ -115,7 +174,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
     return {
         system: undefined,
-        debug: undefined,
+        log: undefined,
         metricsModel: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -148,7 +207,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             if (!value || this.isFragmentLoadedOrPending(value)) return false;
 
             pendingRequests.push(value);
-            addSchedulingInfoMetrics.call(this, value, MediaPlayer.vo.metrics.SchedulingInfo.PENDING_STATE);
+            addSchedulingInfoMetrics.call(this, value, MediaPlayer.dependencies.FragmentModel.states.PENDING);
 
             return true;
         },
@@ -176,7 +235,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                         req = arr[i];
 
                         if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
-                            //self.debug.log(request.mediaType + " Fragment already loaded for time: " + request.startTime);
+                            //self.log(request.mediaType + " Fragment already loaded for time: " + request.startTime);
                             isLoaded = true;
                             break;
                         }
@@ -188,20 +247,40 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return (check(pendingRequests) || check(loadingRequests) || check(executedRequests));
         },
 
-        getPendingRequests: function() {
-            return pendingRequests;
-        },
+        /**
+         *
+         * Gets an array of {@link MediaPlayer.vo.FragmentRequest} objects
+         *
+         * @param {object} filter The object with properties by which the method filters the requests to be returned.
+         *  the only mandatory property is state, which must be a value from {@link MediaPlayer.dependencies.FragmentModel.states}
+         *  other properties should match the properties of {@link MediaPlayer.vo.FragmentRequest}. E.g.:
+         *  getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, quality: 0}) - returns
+         *  all the requests from executedRequests array where requests.quality = filter.quality
+         *
+         * @returns {Array}
+         * @memberof FragmentModel#
+         */
+        getRequests: function(filter) {
+            var requests = [],
+                filteredRequests = [],
+                states,
+                ln = 1;
 
-        getLoadingRequests: function() {
-            return loadingRequests;
-        },
+            if (!filter || !filter.state) return requests;
 
-        getExecutedRequests: function() {
-            return executedRequests;
-        },
+            if (filter.state instanceof Array) {
+                ln = filter.state.length;
+                states = filter.state;
+            } else {
+                states = [filter.state];
+            }
 
-        getRejectedRequests: function() {
-            return rejectedRequests;
+            for(var i = 0; i < ln; i += 1) {
+                requests = getRequestsForState.call(this, states[i]);
+                filteredRequests = filteredRequests.concat(filterRequests.call(this, requests, filter));
+            }
+
+            return filteredRequests;
         },
 
         getLoadingTime: function() {
@@ -223,35 +302,12 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return loadingTime;
         },
 
-        getExecutedRequestForTime: function(time) {
-            return getRequestForTime(executedRequests, time);
-        },
-
-        getPendingRequestForTime: function(time) {
-            return getRequestForTime(pendingRequests, time);
-        },
-
-        getLoadingRequestForTime: function(time) {
-            return getRequestForTime(loadingRequests, time);
-        },
-
-        getExecutedRequestForQualityAndIndex: function(quality, index) {
-            var lastIdx = executedRequests.length - 1,
-                req = null,
-                i;
-
-            for (i = lastIdx; i >= 0; i -=1) {
-                req = executedRequests[i];
-                if ((req.quality === quality) && (req.index === index)) {
-                    return req;
-                }
-            }
-
-            return null;
-        },
-
         removeExecutedRequest: function(request) {
-            removeExecutedRequest.call(this, request);
+            removeRequest.call(this, executedRequests, request);
+        },
+
+        removeRejectedRequest: function(request) {
+            removeRequest.call(this, rejectedRequests, request);
         },
 
         removeExecutedRequestsBeforeTime: function(time) {
@@ -265,7 +321,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 req = executedRequests[i];
                 start = req.startTime;
                 if (!isNaN(start) && (start < time)) {
-                    removeExecutedRequest.call(this, req);
+                    removeRequest.call(this, executedRequests, req);
                 }
             }
         },
@@ -289,20 +345,24 @@ MediaPlayer.dependencies.FragmentModel = function () {
             }
 
             canceled.forEach(function(request) {
-                addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.CANCELED_STATE);
+                addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.CANCELED);
             });
 
             return canceled;
         },
 
         abortRequests: function() {
+            var reqs = [];
             this.fragmentLoader.abort();
 
-            for (var i = 0, ln = loadingRequests.length; i < ln; i += 1) {
-                this.removeExecutedRequest(loadingRequests[i]);
+            while (loadingRequests.length > 0) {
+                reqs.push(loadingRequests[0]);
+                removeRequest.call(this, loadingRequests, loadingRequests[0]);
             }
 
             loadingRequests = [];
+            
+            return reqs;
         },
 
         executeRequest: function(request) {
@@ -317,17 +377,28 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 case "complete":
                     // Stream has completed, execute the correspoinding callback
                     executedRequests.push(request);
-                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.EXECUTED_STATE);
+                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.EXECUTED);
                     self.notify(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED, {request: request});
                     break;
                 case "download":
                     loadingRequests.push(request);
-                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.vo.metrics.SchedulingInfo.LOADING_STATE);
+                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.LOADING);
                     loadCurrentFragment.call(self, request);
                     break;
                 default:
-                    this.debug.log("Unknown request action.");
+                    this.log("Unknown request action.");
             }
+        },
+
+        reset: function() {
+            this.abortRequests();
+            this.cancelPendingRequests();
+            context = null;
+            executedRequests = [];
+            pendingRequests = [];
+            loadingRequests = [];
+            rejectedRequests = [];
+            isLoadingPostponed = false;
         }
     };
 };
@@ -340,4 +411,14 @@ MediaPlayer.dependencies.FragmentModel.eventList = {
     ENAME_STREAM_COMPLETED: "streamCompleted",
     ENAME_FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted",
     ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
+};
+
+/* Public Static Constants */
+MediaPlayer.dependencies.FragmentModel.states = {
+    PENDING: "pending",
+    LOADING: "loading",
+    EXECUTED: "executed",
+    REJECTED: "rejected",
+    CANCELED: "canceled",
+    FAILED: "failed"
 };

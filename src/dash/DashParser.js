@@ -1,15 +1,32 @@
-/*
- * The copyright in this software is being made available under the BSD License, included below. This software may be subject to other third party and contributor rights, including patent rights, and no such rights are granted under this license.
- * 
- * Copyright (c) 2013, Digital Primates
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- * •  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- * •  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
- * •  Neither the name of the Digital Primates nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  */
 Dash.dependencies.DashParser = function () {
     "use strict";
@@ -21,7 +38,7 @@ Dash.dependencies.DashParser = function () {
         SECONDS_IN_MIN = 60,
         MINUTES_IN_HOUR = 60,
         MILLISECONDS_IN_SECONDS = 1000,
-        durationRegex = /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/,
+        durationRegex = /^([-])?P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/,
         datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+-])([0-9]{2})([0-9]{2}))?/,
         numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/,
         matchers = [
@@ -45,12 +62,18 @@ Dash.dependencies.DashParser = function () {
                 converter: function (str) {
                     //str = "P10Y10M10DT10H10M10.1S";
                     var match = durationRegex.exec(str);
-                    return (parseFloat(match[2] || 0) * SECONDS_IN_YEAR +
+                    var result =  (parseFloat(match[2] || 0) * SECONDS_IN_YEAR +
                             parseFloat(match[4] || 0) * SECONDS_IN_MONTH +
                             parseFloat(match[6] || 0) * SECONDS_IN_DAY +
                             parseFloat(match[8] || 0) * SECONDS_IN_HOUR +
                             parseFloat(match[10] || 0) * SECONDS_IN_MIN +
                             parseFloat(match[12] || 0));
+
+                    if (match[1] !== undefined) {
+                        result= -result;
+                    }
+
+                    return result;
                 }
             },
             {
@@ -323,7 +346,7 @@ Dash.dependencies.DashParser = function () {
         },
 
         internalParse = function (data, baseUrl) {
-            //this.debug.log("Doing parse.");
+            //this.log("Doing parse.");
 
             var manifest,
                 converter = new X2JS(matchers, '', true),
@@ -333,12 +356,12 @@ Dash.dependencies.DashParser = function () {
                 ironed = null;
 
             try {
-                //this.debug.log("Converting from XML.");
+                //this.log("Converting from XML.");
                 manifest = converter.xml_str2json(data);
                 json = new Date();
 
                 if (!manifest.hasOwnProperty("BaseURL")) {
-                    //this.debug.log("Setting baseURL: " + baseUrl);
+                    //this.log("Setting baseURL: " + baseUrl);
                     manifest.BaseURL = baseUrl;
                 } else {
                     // Setting manifest's BaseURL to the first BaseURL
@@ -355,11 +378,14 @@ Dash.dependencies.DashParser = function () {
                     manifest.Location = manifest.Location_asArray[0];
                 }
 
-                //this.debug.log("Flatten manifest properties.");
+                //this.log("Flatten manifest properties.");
                 iron.run(manifest);
                 ironed = new Date();
 
-                this.debug.log("Parsing complete: ( xml2json: " + (json.getTime() - start.getTime()) + "ms, objectiron: " + (ironed.getTime() - json.getTime()) + "ms, total: " + ((ironed.getTime() - start.getTime()) / 1000) + "s)");
+                this.xlinkController.setMatchers(matchers);
+                this.xlinkController.setIron(iron);
+
+                this.log("Parsing complete: ( xml2json: " + (json.getTime() - start.getTime()) + "ms, objectiron: " + (ironed.getTime() - json.getTime()) + "ms, total: " + ((ironed.getTime() - start.getTime()) / 1000) + "s)");
             } catch (err) {
                 this.errHandler.manifestError("parsing the manifest failed", "parse", data);
                 return null;
@@ -368,8 +394,9 @@ Dash.dependencies.DashParser = function () {
         };
 
     return {
-        debug: undefined,
+        log: undefined,
         errHandler: undefined,
+        xlinkController: undefined,
         parse: internalParse
     };
 };

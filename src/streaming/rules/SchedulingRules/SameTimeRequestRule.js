@@ -1,7 +1,37 @@
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
 MediaPlayer.rules.SameTimeRequestRule = function () {
     "use strict";
 
-    var LOADING_REQUEST_THRESHOLD = 4,
+    var lastMediaRequestIdxs = {},
 
         findClosestToTime = function(fragmentModels, time) {
             var req,
@@ -13,7 +43,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 ln = fragmentModels.length;
 
             for (i; i < ln; i += 1) {
-                pendingReqs = fragmentModels[i].getPendingRequests();
+                pendingReqs = fragmentModels[i].getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
                 sortRequestsByProperty.call(this, pendingReqs, "index");
 
                 for (j = 0, pln = pendingReqs.length; j < pln; j++) {
@@ -40,7 +70,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 i;
 
             for (i = 0; i < ln; i += 1) {
-                req = fragmentModels[i].getPendingRequestForTime(currentTime);
+                req = fragmentModels[i].getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING, time: currentTime})[0];
 
                 if (req && (!r || req.startTime > r.startTime)) {
                     r = req;
@@ -59,9 +89,28 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
             requestsArray.sort(compare);
 
+        },
+
+        getLastMediaRequestIdx = function(streamId, type) {
+            return ((lastMediaRequestIdxs[streamId] && lastMediaRequestIdxs[streamId][type]) ? lastMediaRequestIdxs[streamId][type] : NaN);
+        },
+
+        onStreamCompleted = function(e) {
+            var model = e.data.fragmentModel,
+                req = e.data.request,
+                streamId = model.getContext().streamProcessor.getStreamInfo().id,
+                type = req.mediaType;
+
+            lastMediaRequestIdxs[streamId] = lastMediaRequestIdxs[streamId] || {};
+            lastMediaRequestIdxs[streamId][type] = req.index - 1;
         };
 
     return {
+        playbackController: undefined,
+
+        setup: function() {
+            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
+        },
 
         setFragmentModels: function(fragmentModels, streamid) {
             this.fragmentModels = this.fragmentModels || {};
@@ -93,7 +142,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 return;
             }
 
-            currentTime = fragmentModels[0].getContext().playbackController.getTime();
+            currentTime = this.playbackController.getTime();
             reqForCurrentTime = getForTime(fragmentModels, currentTime);
             req = reqForCurrentTime || findClosestToTime(fragmentModels, currentTime) || current;
 
@@ -106,14 +155,14 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 model = fragmentModels[mIdx];
                 type = model.getContext().streamProcessor.getType();
 
-                if (type !== "video" && type !== "audio") continue;
+                if (type !== "video" && type !== "audio" && type !== "fragmentedText") continue;
 
-                pendingReqs = model.getPendingRequests();
-                loadingLength = model.getLoadingRequests().length;
+                pendingReqs = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
+                loadingLength = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING}).length;
 
                 if (model.getIsPostponed() && !isNaN(req.startTime)) continue;
 
-                if (loadingLength > LOADING_REQUEST_THRESHOLD) {
+                if (loadingLength > MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD) {
                     callback(new MediaPlayer.rules.SwitchRequest([], p));
                     return;
                 }
@@ -125,11 +174,11 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                     continue;
                 }
 
-                sameTimeReq = model.getPendingRequestForTime(time);
+                sameTimeReq = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING, time: time})[0];
 
                 // if a target fragment is the first fragment in the mpd and we have not found a match fragment for the same time,
                 // we need to look for a first fragment by index as well, because there may be a time shift between audio and video,
-                // so getPendingRequestForTime may not detect a corresponding fragment.
+                // so getRequestS may not detect a corresponding fragment.
                 if (!sameTimeReq && req.index === 0) {
                     sameTimeReq = pendingReqs.filter(
                         function(r){
@@ -142,9 +191,10 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                     continue;
                 }
 
-                sameTimeReq = model.getLoadingRequestForTime(time) || model.getExecutedRequestForTime(time);
+                sameTimeReq = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING, time: time})[0] ||
+                    model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, time: time})[0];
 
-                if (!sameTimeReq) {
+                if (!sameTimeReq && (req.index !== getLastMediaRequestIdx.call(this, streamId, req.mediaType))) {
                     shouldWait = true;
                     break;
                 }
@@ -160,6 +210,10 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
             }
 
             callback(new MediaPlayer.rules.SwitchRequest(reqsToExecute, p));
+        },
+
+        reset: function() {
+            lastMediaRequestIdxs = {};
         }
     };
 };
