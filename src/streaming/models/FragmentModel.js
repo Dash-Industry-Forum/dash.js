@@ -230,8 +230,25 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 },
 
                 isDiscarded = function() {
-                    var buffer = this.videoModel.getElement();
-                    return this.sourceBufferExt.getBufferRange(buffer, request.availabilityStartTime) === null;
+                    var buffer = this.videoModel.getElement(),
+                        inBuffer = this.sourceBufferExt.getBufferRange(buffer, request.availabilityStartTime) !== null,
+                        req,
+                        d;
+
+                    // It can take a few moments to get into the buffer
+                    if (!inBuffer) {
+                        d = new Date();
+                        d.setSeconds(d.getSeconds() + 3);
+                        for (var i = 0; i < executedRequests.length; i += 1) {
+                            req = executedRequests[i];
+
+                            if (isEqualMedia(request, req) && req.requestEndDate <= d) {
+                                return false;
+                            }
+                        }
+                    }
+
+                    return !inBuffer;
                 },
 
                 check = function(arr) {
