@@ -8,7 +8,7 @@ var MP4Box = function () {
 	/* List of ArrayBuffers, with a fileStart property, sorted in fileStart order and non overlapping */
 	this.nextBuffers = [];	
 	/* ISOFile object containing the parsed boxes */
-	this.inputIsoFile = null;
+	this.inputIsoFile = new ISOFile();
 	/* Callback called when the moov parsing starts */
 	this.onMoovStart = null;
 	/* Boolean keeping track of the call to onMoovStart, to avoid double calls */
@@ -358,8 +358,8 @@ MP4Box.prototype.appendBuffer = function(ab) {
 	} 
 
 	/* Initialize the ISOFile object if not yet created */
-	if (!this.inputIsoFile) {
-		this.inputIsoFile = new ISOFile(this.inputStream);
+	if (!this.inputIsoFile.stream) {
+		this.inputIsoFile.stream = this.inputStream;
 	}
 
 	/* Parse whatever is in the existing buffers */
@@ -641,6 +641,7 @@ MP4Box.prototype.seek = function(time, useRap) {
 				seek_info.time = trak_seek_info.time;
 			}
 		}
+		Log.i("MP4Box", "Seeking at time "+Log.getDurationString(seek_info.time, 1)+" needs a buffer with a fileStart position of "+seek_info.offset);
 		if (seek_info.offset === Infinity) {
 			/* No sample info, in all tracks, cannot seek */
 			seek_info = { offset: this.inputIsoFile.nextParsePosition, time: 0 };
@@ -650,7 +651,7 @@ MP4Box.prototype.seek = function(time, useRap) {
 				seek_info.offset = this.inputIsoFile.findEndContiguousBuf(index);
 			}
 		}
-		Log.i("MP4Box", "Seeking at time "+Log.getDurationString(seek_info.time, 1)+" needs a buffer with a fileStart position of "+seek_info.offset);
+		Log.i("MP4Box", "Adjusted (post-buffer) seek position of "+seek_info.offset);
 		return seek_info;
 	}
 }

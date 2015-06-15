@@ -663,9 +663,9 @@ BoxParser.sidxBox.prototype.parse = function(stream) {
 		var ref = {};
 		this.references.push(ref);
 		var tmp_32 = stream.readUint32();
-		ref.type = (tmp_32 >> 31) & 0x1;
-		ref.size = tmp_32 & 0x7FFFFFFF;
-		ref.duration = stream.readUint32();
+		ref.reference_type = (tmp_32 >> 31) & 0x1;
+		ref.referenced_size = tmp_32 & 0x7FFFFFFF;
+		ref.subsegment_duration = stream.readUint32();
 		tmp_32 = stream.readUint32();
 		ref.starts_with_SAP = (tmp_32 >> 31) & 0x1;
 		ref.SAP_type = (tmp_32 >> 28) & 0x7;
@@ -708,4 +708,89 @@ BoxParser.psshBox.prototype.parse = function(stream) {
 	} 
 	var size = stream.readUint32();
 	this.data = stream.readUint8Array(size);
+}
+
+BoxParser.elstBox.prototype.parse = function(stream) {
+	this.parseFullHeader(stream);
+	this.entries = [];
+	var entry_count = stream.readUint32();
+	for (var i = 0; i < entry_count; i++) {
+		var entry = {};
+		this.entries.push(entry);
+		if (this.version === 1) {
+			entry.segment_duration = stream.readUint64();
+			entry.media_time = stream.readInt64();
+		} else {
+			entry.segment_duration = stream.readUint32();
+			entry.media_time = stream.readInt32();
+		}
+		entry.media_rate_integer = stream.readInt16();
+		entry.media_rate_fraction = stream.readInt16();
+	}
+}
+
+BoxParser.sbgpBox.prototype.parse = function(stream) {
+	this.parseFullHeader(stream);
+	this.grouping_type = stream.readString(4);
+	if (this.version === 1) {
+		this.grouping_type_parameter = stream.readUint32();
+	}
+	this.entries = [];
+	var entry_count = stream.readUint32();
+	for (var i = 0; i < entry_count; i++) {
+		var entry = {};
+		this.entries.push(entry);
+		entry.sample_count = stream.readInt32();
+		entry.group_description_index = stream.readInt32();
+	}
+}
+
+BoxParser.sgpdBox.prototype.parse = function(stream) {
+	this.parseFullHeader(stream);
+	this.grouping_type = stream.readString(4);
+	if (this.version === 1) {
+		this.default_length = stream.readUint32();
+	}
+	if (this.version >= 2) {
+		this.default_sample_description_index = stream.readUint32();
+	}
+	this.entries = [];
+	var entry_count = stream.readUint32();
+	for (var i = 0; i < entry_count; i++) {
+		var entry = {};
+		this.entries.push(entry);
+		if (this.version === 1) {
+			if (this.default_length === 0) {
+				entry.description_length = stream.readUint32();
+			}
+			entry.data = stream.readUint8Array(this.default_length || entry.description_length);
+		}
+	}
+}
+
+BoxParser.drefBox.prototype.parse = function(stream) {
+	var ret;
+	this.parseFullHeader(stream);
+	this.entries = [];
+	var entry_count = stream.readUint32();
+	for (var i = 0; i < entry_count; i++) {
+		ret = BoxParser.parseOneBox(stream, false);
+		box = ret.box;
+		this.entries.push(box);
+	}
+}
+
+BoxParser["url Box"].prototype.parse = function(stream) {
+	this.parseFullHeader(stream);
+	if (this.flags !== 0x000001) {
+		this.location = stream.readCString();
+	}
+}
+
+BoxParser["urn Box"].prototype.parse = function(stream) {
+	this.parseFullHeader(stream);
+	this.name = stream.readCString();
+	if (this.size - this.name.length - 1 > 0) {
+		this.location = stream.readCString();
+	}
 }

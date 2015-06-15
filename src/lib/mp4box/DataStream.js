@@ -593,7 +593,13 @@ DataStream.prototype.readUCS2String = function(length, endianness) {
   return String.fromCharCode.apply(null, this.readUint16Array(length, endianness));
 };
 
-
+String.fromCharCodeUint8 = function(uint8arr) {
+    var arr = [];
+    for (var i = 0; i < uint8arr.length; i++) {
+      arr[i] = uint8arr[i];
+    }
+    return String.fromCharCode.apply(null, arr);
+}
 /**
   Read a string of desired length and encoding from the DataStream.
 
@@ -604,7 +610,7 @@ DataStream.prototype.readUCS2String = function(length, endianness) {
  */
 DataStream.prototype.readString = function(length, encoding) {
   if (encoding == null || encoding == "ASCII") {
-    return String.fromCharCode.apply(null, this.mapUint8Array(length == null ? this.byteLength-this.position : length));
+    return String.fromCharCodeUint8.apply(null, [this.mapUint8Array(length == null ? this.byteLength-this.position : length)]);
   } else {
     return (new TextDecoder(encoding)).decode(this.mapUint8Array(length));
   }
@@ -625,7 +631,7 @@ DataStream.prototype.readCString = function(length) {
     len = Math.min(length, blen);
   }
   for (var i = 0; i < len && u8[i] !== 0; i++); // find first zero byte
-  var s = String.fromCharCode.apply(null, this.mapUint8Array(i));
+  var s = String.fromCharCodeUint8.apply(null, [this.mapUint8Array(i)]);
   if (length != null) {
     this.position += len-i;
   } else if (i != blen) {

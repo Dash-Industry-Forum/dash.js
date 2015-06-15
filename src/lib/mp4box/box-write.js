@@ -478,10 +478,103 @@ BoxParser.tfdtBox.prototype.write = function(stream) {
 	this.version = 0;
 	this.flags = 0;
 	this.size = 4;
+	if (this.version === 1) {
+		this.size += 4;
+	}
 	this.writeHeader(stream);
-	if (this.version == 1) {
+	if (this.version === 1) {
 		stream.writeUint64(this.baseMediaDecodeTime);
 	} else {
 		stream.writeUint32(this.baseMediaDecodeTime); 
 	}
 }
+
+BoxParser.drefBox.prototype.write = function(stream) {
+	this.version = 0;
+	this.flags = 0;
+	this.size = 4; //
+	this.writeHeader(stream);
+	stream.writeUint32(this.entries.length);
+	for (var i = 0; i < this.entries.length; i++) {
+		this.entries[i].write(stream);
+		this.size += this.entries[i].size;
+	}	
+	/* adjusting the size, now that all sub-boxes are known */
+	Log.d("BoxWriter", "Adjusting box "+this.type+" with new size "+this.size);
+	stream.adjustUint32(this.sizePosition, this.size);
+}
+
+BoxParser["url Box"].prototype.write = function(stream) {
+	this.version = 0;	
+	if (this.location) {
+		this.flags = 0x000001;
+		this.size = this.location.length+1;
+	} else {
+		this.flags = 0;
+		this.size = 0;
+	}
+	this.writeHeader(stream);
+	if (this.location) {
+		stream.writeCString(this.location);
+	}
+}
+
+BoxParser["urn Box"].prototype.write = function(stream) {
+	this.version = 0;	
+	this.flags = 0;
+	this.size = this.name.length+1+(this.location ? this.location.length+1 : 0);
+	this.writeHeader(stream);
+	stream.writeCString(this.name);
+	if (this.location) {
+		stream.writeCString(this.location);
+	}
+}
+
+BoxParser.emsgBox.prototype.write = function(stream) {
+	this.version = 0;	
+	this.flags = 0;
+	this.size = 4*4+this.message_data.length+(this.scheme_id_uri.length+1)+(this.value.length+1);
+	this.writeHeader(stream);
+	stream.writeCString(this.scheme_id_uri);
+	stream.writeCString(this.value);
+	stream.writeUint32(this.timescale);
+	stream.writeUint32(this.presentation_time_delta);
+	stream.writeUint32(this.event_duration);
+	stream.writeUint32(this.id);
+	stream.writeUint8Array(this.message_data);
+}
+
+BoxParser.sidxBox.prototype.write = function(stream) {
+	this.version = 0;	
+	this.flags = 0;
+	this.size = 4*4+2+2+12*this.references.length;
+	this.writeHeader(stream);
+	stream.writeUint32(this.reference_ID);
+	stream.writeUint32(this.timescale);
+	stream.writeUint32(this.earliest_presentation_time);
+	stream.writeUint32(this.first_offset);
+	stream.writeUint16(0);
+	stream.writeUint16(this.references.length);
+	for (var i = 0; i < this.references.length; i++) {
+		var ref = this.references[i];
+		stream.writeUint32(ref.reference_type << 31 | ref.reference_size);
+		stream.writeUint32(ref.subsegment_duration);
+		stream.writeUint32(ref.starts_with_SAP << 31 | ref.SAP_type << 28 | ref.SAP_delta_time);
+	}
+}
+
+BoxParser.elstBox.prototype.write = function(stream) {
+	this.version = 0;	
+	this.flags = 0;
+	this.size = 4+12*this.entries.length;
+	this.writeHeader(stream);
+	stream.writeUint32(this.entries.length);
+	for (var i = 0; i < this.entries.length; i++) {
+		var entry = this.entries[i];
+		stream.writeUint32(entry.segment_duration);
+		stream.writeInt32(entry.media_time);
+		stream.writeInt16(entry.media_rate_integer);
+		stream.writeInt16(entry.media_rate_fraction);
+	}
+}
+

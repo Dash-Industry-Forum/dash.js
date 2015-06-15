@@ -47,9 +47,9 @@ MediaPlayer.utils.IsoFile = function () {
         },
 
         sidxRefProps = {
-            reference_type: "type",
-            referenced_size: "size",
-            subsegment_duration: "duration"
+            reference_type: "reference_type",
+            referenced_size: "referenced_size",
+            subsegment_duration: "subsegment_duration"
         },
 
         emsgProps = {
@@ -157,42 +157,14 @@ MediaPlayer.utils.IsoFile = function () {
             return box;
         },
 
-        findBoxes = function(type, parent, getFirst) {
-            if (!parent || !parent.boxes || (parent.boxes.length === 0)) return [];
-
-            var tmpBoxes,
-                boxes = [];
-
-            for (var i = 0, ln = parent.boxes.length; i < ln; i++) {
-                if (parent.boxes[i].type === type) {
-                    boxes.push(parent.boxes[i]);
-
-                    if (getFirst) return boxes;
-
-                    continue;
-                }
-                tmpBoxes = findBoxes(type, parent.boxes[i], getFirst);
-
-                if (tmpBoxes.length > 0) {
-                    boxes = boxes.concat(tmpBoxes);
-
-                    if (getFirst) return boxes;
-                }
-            }
-
-            return boxes;
-        },
-
         getBox = function(type) {
             if (!type || !parsedIsoFile || !parsedIsoFile.boxes || (parsedIsoFile.boxes.length === 0)) return null;
 
-            var boxData = findBoxes.call(this, type, parsedIsoFile, true)[0];
-
-            return convertToDashIsoBox.call(this, boxData);
+            return convertToDashIsoBox.call(this, parsedIsoFile.getBox(type));
         },
 
         getBoxes = function(type) {
-            var boxData = findBoxes.call(this, type, parsedIsoFile),
+            var boxData = parsedIsoFile.getBoxes(type),
                 boxes = [],
                 box;
 

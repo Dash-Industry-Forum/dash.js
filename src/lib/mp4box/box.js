@@ -9,14 +9,18 @@ var BoxParser = {
 				 "mdat", 
 				 "avcC", "hvcC", "ftyp", "styp", 
 				 "payl", "vttC",
-				 "vmhd", "smhd", "hmhd", "dref", "elst" // full boxes not yet parsed
+				 "vmhd", "smhd", "hmhd", // full boxes not yet parsed
+				 "idat", "meco"
 			   ],
 	fullBoxCodes : [ "mvhd", "tkhd", "mdhd", "hdlr", "smhd", "hmhd", "nhmd", "url ", "urn ", 
 				  "ctts", "cslg", "stco", "co64", "stsc", "stss", "stsz", "stz2", "stts", "stsh", 
 				  "mehd", "trex", "mfhd", "tfhd", "trun", "tfdt",
 				  "esds", "subs",
 				  "txtC",
-				  "sidx", "emsg", "prft", "pssh"
+				  "sidx", "emsg", "prft", "pssh",
+				  "elst", "dref", "url ", "urn ",
+				  "sbgp", "sgpd",
+				  "meta", "xml ", "bxml", "iloc", "pitm", "ipro", "iinf", "infe", "iref" , "mere",
 				  /* missing "stsd": special case full box and container */
 				],
 	containerBoxCodes : [ 
