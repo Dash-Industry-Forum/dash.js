@@ -75,7 +75,7 @@ MediaPlayer.models.VideoModel = function () {
 
             // If nothing is stalled resume playback.
             if (isStalled() === false) {
-                this.setPlaybackRate(previousPlaybackRate);
+                this.setPlaybackRate(previousPlaybackRate || 1);
                 element.dispatchEvent(new CustomEvent("playing"));
             }
         },
@@ -91,13 +91,7 @@ MediaPlayer.models.VideoModel = function () {
         onBufferLevelStateChanged = function(e) {
             var type = e.sender.streamProcessor.getType();
             stallStream.call(this, type, !e.data.hasSufficientBuffer);
-        }
-        /*,
-        handleSetCurrentTimeNotification = function () {
-            if (element.currentTime !== _currentTime) {
-                element.currentTime = _currentTime;
-            }
-        }*/;
+        };
 
     return {
         system : undefined,
