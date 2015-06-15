@@ -86,11 +86,6 @@ MediaPlayer.models.VideoModel = function () {
             } else {
                 removeStalledStream.call(this, type);
             }
-        },
-
-        onBufferLevelStateChanged = function(e) {
-            var type = e.sender.streamProcessor.getType();
-            stallStream.call(this, type, !e.data.hasSufficientBuffer);
         };
 
     return {
