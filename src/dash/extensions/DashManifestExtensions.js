@@ -54,13 +54,12 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             return type == "fragmentedText";
         }
 
-
         if (col) {
-            for (i = 0, len = col.length; i < len; i += 1) {
-                if (col[i].contentType === type) {
-                    result = true;
-                    found = true;
-                }
+            if (col.length > 1) {
+                return (type == "muxed");
+            } else if (col[0] && col[0].contentType === type) {
+                result = true;
+                found = true;
             }
         }
 
@@ -110,6 +109,10 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         "use strict";
 
         return this.getIsTypeOf(adaptation, "text");
+    },
+
+    getIsMuxed: function(adaptation) {
+        return this.getIsTypeOf(adaptation, "muxed");
     },
 
     getIsTextTrack: function(type) {
@@ -457,8 +460,10 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
             adaptationSet.index = i;
             adaptationSet.period = period;
-            
-            if(this.getIsAudio(a)){
+
+            if (this.getIsMuxed(a)) {
+                adaptationSet.type = "muxed";
+            } else if(this.getIsAudio(a)){
                 adaptationSet.type="audio";
             }else if (this.getIsVideo(a)){
                 adaptationSet.type="video";

@@ -55,6 +55,7 @@ MediaPlayer.dependencies.Stream = function () {
                 mimeType = null,
                 manifest = self.manifestModel.getValue(),
                 codec,
+                msg,
                 getCodecOrMimeType = function(mediaInfo) {
                     return mediaInfo.codec;
                 },
@@ -67,6 +68,11 @@ MediaPlayer.dependencies.Stream = function () {
 
                     return mimeType;
                 };
+            } else if (type === "muxed") {
+                msg = "Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines";
+                this.log(msg);
+                this.errHandler.manifestError(msg, "multiplexedrep", this.manifestModel.getValue());
+                return;
             }
 
             if (mediaInfo !== null) {
@@ -84,7 +90,7 @@ MediaPlayer.dependencies.Stream = function () {
                         self.errHandler.capabilityError("encryptedmedia");
                     } else {
                         if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
-                            var msg = type + "Codec (" + codec + ") is not supported.";
+                            msg = type + "Codec (" + codec + ") is not supported.";
                             self.errHandler.manifestError(msg, "codec", manifest);
                             self.log(msg);
                             return;
@@ -120,6 +126,7 @@ MediaPlayer.dependencies.Stream = function () {
             initializeMediaForType.call(self, "audio", mediaSource);
             initializeMediaForType.call(self, "text", mediaSource);
             initializeMediaForType.call(self, "fragmentedText", mediaSource);
+            initializeMediaForType.call(self, "muxed", mediaSource);
 
             createBuffers.call(self);
 
@@ -134,9 +141,8 @@ MediaPlayer.dependencies.Stream = function () {
                 self.liveEdgeFinder.initialize(streamProcessors[0]);
                 self.liveEdgeFinder.subscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, self.playbackController);
                 //self.log("Playback initialized!");
+                checkIfInitializationCompleted.call(this);
             }
-
-            checkIfInitializationCompleted.call(this);
         },
 
         checkIfInitializationCompleted = function() {
