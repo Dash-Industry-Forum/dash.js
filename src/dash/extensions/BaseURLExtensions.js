@@ -198,9 +198,9 @@ Dash.dependencies.BaseURLExtensions = function () {
                         var j, len, ss, se, r, segs = [],
                             count = 0,
                             offset = (sidx.offset || info.range.start) + sidx.size,
-                            tmpCallback = function(segments) {
-                                if (segments) {
-                                    segs = segs.concat(segments);
+                            tmpCallback = function(result) {
+                                if (result) {
+                                    segs = segs.concat(result);
                                     count += 1;
 
                                     if (count >= len) {
