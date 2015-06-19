@@ -30,7 +30,8 @@
  */
 MediaPlayer.utils.DOMStorage = function () {
 
-    var enableLastBitrateCaching = true,
+    var isSupported,
+        enableLastBitrateCaching = true,
         checkInitialBitrate = function() {
             ['video', 'audio'].forEach(function(value) {
                 //first make sure player has not explicitly set a starting bit rate
@@ -73,24 +74,41 @@ MediaPlayer.utils.DOMStorage = function () {
         },
         //type can be local, session
         isSupported: function(type) {
-            if (type === MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) {
-                return window.localStorage || false;
-            } else if (type === MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION) {
-                return window.sessionStorage || false;
-            } else {
-                return false;
-            }
-        }
+            if (isSupported !== undefined) return isSupported;
 
+            isSupported = false;
+
+            var testKey = '1',
+                testValue = "1",
+                storage = window[type];
+
+            if (!storage || (type !== MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL && type !== MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION)) {
+                return isSupported;
+            }
+
+            /* When Safari (OS X or iOS) is in private browsing mode, it appears as though localStorage is available, but trying to call setItem throws an exception.
+            http://stackoverflow.com/questions/14555347/html5-localstorage-error-with-safari-quota-exceeded-err-dom-exception-22-an
+
+            Check if the storage can be used
+            */
+            try {
+                storage.setItem(testKey, testValue);
+                storage.removeItem(testKey);
+                isSupported = true;
+            } catch (error) {
+                this.log("Warning: DOMStorage is supported, but cannot be used: " + error.message);
+            }
+
+            return isSupported;
+        }
     };
 };
-
 
 MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_VIDEO_BITRATE_KEY = "dashjs_vbitrate";
 MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_AUDIO_BITRATE_KEY = "dashjs_abitrate";
 MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
-MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL = "local";
-MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION = "session";
+MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL = "localStorage";
+MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION = "sessionStorage";
 
 MediaPlayer.utils.DOMStorage.prototype = {
     constructor: MediaPlayer.utils.DOMStorage
