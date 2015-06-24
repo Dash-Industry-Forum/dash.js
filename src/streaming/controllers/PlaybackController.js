@@ -241,7 +241,9 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackError = function(event) {
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, {error: event.srcElement.error});
+            var target = event.target || event.srcElement;
+
+            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, {error: target.error});
         },
 
         onWallclockTime = function() {
