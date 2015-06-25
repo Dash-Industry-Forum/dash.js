@@ -180,6 +180,10 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             return this.abrController;
         },
 
+        getBufferController:function() {
+            return this.bufferController;
+        },
+
         getFragmentLoader: function () {
             return this.fragmentLoader;
         },

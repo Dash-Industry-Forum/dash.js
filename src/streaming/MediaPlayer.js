@@ -1014,8 +1014,18 @@ MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @method
          */
-        convertToTimeCode : convertToTimeCode
+        convertToTimeCode : convertToTimeCode,
 
+        /**
+         * Switches audio Adaptation based on language.
+         *
+         * @param language {string} The language to switch to.
+         * @memberof MediaPlayer#
+         * @method
+         */
+        language: function (language) {
+			streamController.getActiveStream().switchLanguage(language);
+		}
     };
 };
 

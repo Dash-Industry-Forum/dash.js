@@ -453,6 +453,10 @@
             return activeStream ? activeStream.getStreamInfo() : null;
         },
 
+        getActiveStream: function() {
+            return activeStream;
+        },
+
         isStreamActive: function(streamInfo) {
             return (activeStream.getId() === streamInfo.id);
         },

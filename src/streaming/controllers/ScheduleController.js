@@ -322,6 +322,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 fragmentModel.cancelPendingRequests();
             }
 
+            currentTrackInfo = currentTrackInfo || this.streamProcessor.getCurrentTrack();
+
             var metrics = this.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = this.metricsExt.getCurrentManifestUpdate(metrics);
 

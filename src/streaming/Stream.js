@@ -40,6 +40,7 @@ MediaPlayer.dependencies.Stream = function () {
         isInitialized = false,
         protectionController,
         ownProtectionController = false,
+        source = null,
 
         eventController = null,
 
@@ -50,7 +51,33 @@ MediaPlayer.dependencies.Stream = function () {
             this.reset();
         },
 
-        initializeMediaForType = function(type, mediaSource) {
+        switchLanguage = function (language) {
+            var self = this,
+                    type = 'audio',
+                    currentTime = self.videoModel.getCurrentTime() - 0.1,
+                    processor = streamProcessors.filter(function (item) { return type === item.getType(); })[0],
+                    bufferController = processor.getBufferController(),
+                    buffer = bufferController.getBuffer(),
+                    manifest = self.manifestModel.getValue(),
+                    mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, type, language),
+                    processorIndex = streamProcessors.indexOf(processor);
+
+            if (0 < buffer.buffered.length) {
+                buffer.remove(buffer.buffered.start(0), buffer.buffered.end(buffer.buffered.length - 1));
+            }
+            processor.reset(true);
+            processor = self.system.getObject("streamProcessor");
+            streamProcessors[processorIndex] = processor;
+            processor.initialize(type, self.fragmentController, source, self, eventController);
+            bufferController = processor.getBufferController();
+            bufferController.setBuffer(buffer)
+            processor.updateMediaInfo(manifest, mediaInfo);
+            self.abrController.updateTopQualityIndex(mediaInfo);
+            self.adapter.updateData(manifest, processor);
+            self.videoModel.setCurrentTime(currentTime);
+        },
+
+        initializeMediaForType = function(type, mediaSource, language) {
             var self = this,
                 mimeType = null,
                 manifest = self.manifestModel.getValue(),
@@ -60,7 +87,7 @@ MediaPlayer.dependencies.Stream = function () {
                     return mediaInfo.codec;
                 },
                 streamProcessor,
-                mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, type);
+                mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, type, language);
 
             if (type === "text") {
                 getCodecOrMimeType = function(mediaInfo) {
@@ -112,7 +139,7 @@ MediaPlayer.dependencies.Stream = function () {
             }
         },
 
-        initializeMedia = function (mediaSource) {
+        initializeMedia = function (mediaSource, language) {
             var self = this,
                 manifest = self.manifestModel.getValue(),
                 events;
@@ -123,7 +150,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             isUpdating = true;
             initializeMediaForType.call(self, "video", mediaSource);
-            initializeMediaForType.call(self, "audio", mediaSource);
+            initializeMediaForType.call(self, "audio", mediaSource, language);
             initializeMediaForType.call(self, "text", mediaSource);
             initializeMediaForType.call(self, "fragmentedText", mediaSource);
             initializeMediaForType.call(self, "muxed", mediaSource);
@@ -309,9 +336,9 @@ MediaPlayer.dependencies.Stream = function () {
          * @param mediaSource {MediaSource}
          * @memberof Stream#
          */
-        activate: function(mediaSource){
+        activate: function(mediaSource, language){
             if (!isStreamActivated) {
-                initializeMedia.call(this, mediaSource);
+                initializeMedia.call(this, mediaSource, language);
             } else {
                 createBuffers.call(this);
             }
@@ -330,6 +357,7 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             streamProcessors = [];
+            source = null;
             isStreamActivated = false;
             isMediaInitialized = false;
             this.resetEventController();
@@ -352,6 +380,7 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             streamProcessors = [];
+            source = null;
             isUpdating = false;
             isInitialized = false;
 
@@ -432,7 +461,8 @@ MediaPlayer.dependencies.Stream = function () {
             return isInitialized;
         },
 
-        updateData: updateData
+        updateData: updateData,
+        switchLanguage: switchLanguage
     };
 };
 
