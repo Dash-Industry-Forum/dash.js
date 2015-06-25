@@ -43,6 +43,7 @@
         STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
         canPlay = false,
+        language = null,
         isStreamSwitchingInProgress = false,
         isUpdating = false,
         hasMediaError = false,
@@ -256,7 +257,7 @@
                     //self.log("MediaSource set up.");
                     setMediaDuration.call(self);
 
-                    activeStream.activate(mediaSource);
+                    activeStream.activate(mediaSource, language);
 
                     if (callback) {
                         callback();
@@ -477,10 +478,11 @@
             })[0];
         },
 
-        initialize: function (autoPl, protCtrl, protData) {
+        initialize: function (autoPl, protCtrl, protData, lang) {
             autoPlay = autoPl;
             protectionController = protCtrl;
             protectionData = protData;
+            language = lang;
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
             this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
