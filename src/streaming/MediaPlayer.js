@@ -1027,8 +1027,8 @@ MediaPlayer = function (context) {
          * @method
          */
         language: function (language) {
-			streamController.getActiveStream().switchLanguage(language);
-		}
+            streamController.getActiveStream().switchLanguage(language);
+        }
     };
 };
 

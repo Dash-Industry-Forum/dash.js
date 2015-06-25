@@ -70,7 +70,7 @@ MediaPlayer.dependencies.Stream = function () {
             streamProcessors[processorIndex] = processor;
             processor.initialize(type, self.fragmentController, source, self, eventController);
             bufferController = processor.getBufferController();
-            bufferController.setBuffer(buffer)
+            bufferController.setBuffer(buffer);
             processor.updateMediaInfo(manifest, mediaInfo);
             self.abrController.updateTopQualityIndex(mediaInfo);
             self.adapter.updateData(manifest, processor);
@@ -393,7 +393,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             if (protectionController) {
                 protectionController.unsubscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
-                if (ownProtectionController) {
+                if ('function' === typeof (protectionController.teardown)) {
                     protectionController.teardown();
                     protectionController = null;
                     ownProtectionController = false;
