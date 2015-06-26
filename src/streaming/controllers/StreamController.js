@@ -454,12 +454,12 @@
             return activeStream ? activeStream.getStreamInfo() : null;
         },
 
-        getActiveStream: function() {
-            return activeStream;
-        },
-
         isStreamActive: function(streamInfo) {
             return (activeStream.getId() === streamInfo.id);
+        },
+
+        switchLanguage: function (lang) {
+            activeStream.switchLanguage(mediaSource, language = lang);
         },
 
         setUTCTimingSources: function(value, value2) {

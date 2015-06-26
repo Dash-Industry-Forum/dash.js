@@ -40,7 +40,6 @@ MediaPlayer.dependencies.Stream = function () {
         isInitialized = false,
         protectionController,
         ownProtectionController = false,
-        source = null,
 
         eventController = null,
 
@@ -51,7 +50,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.reset();
         },
 
-        switchLanguage = function (language) {
+        switchLanguage = function (mediaSource, language) {
             var self = this,
                     type = 'audio',
                     currentTime = self.videoModel.getCurrentTime() - 0.1,
@@ -65,16 +64,18 @@ MediaPlayer.dependencies.Stream = function () {
             if (0 < buffer.buffered.length) {
                 buffer.remove(buffer.buffered.start(0), buffer.buffered.end(buffer.buffered.length - 1));
             }
-            processor.reset(true);
-            processor = self.system.getObject("streamProcessor");
-            streamProcessors[processorIndex] = processor;
-            processor.initialize(type, self.fragmentController, source, self, eventController);
-            bufferController = processor.getBufferController();
-            bufferController.setBuffer(buffer);
-            processor.updateMediaInfo(manifest, mediaInfo);
-            self.abrController.updateTopQualityIndex(mediaInfo);
-            self.adapter.updateData(manifest, processor);
-            self.videoModel.setCurrentTime(currentTime);
+            self.sourceBufferExt.waitForUpdateEnd(buffer, function () {
+                processor.reset(true);
+                processor = self.system.getObject('streamProcessor');
+                streamProcessors[processorIndex] = processor;
+                processor.initialize(type, self.fragmentController, mediaSource, self, eventController);
+                bufferController = processor.getBufferController();
+                bufferController.setBuffer(buffer);
+                processor.updateMediaInfo(manifest, mediaInfo);
+                self.abrController.updateTopQualityIndex(mediaInfo);
+                self.adapter.updateData(manifest, processor);
+                self.videoModel.setCurrentTime(currentTime);
+            });
         },
 
         initializeMediaForType = function(type, mediaSource, language) {
@@ -357,7 +358,6 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             streamProcessors = [];
-            source = null;
             isStreamActivated = false;
             isMediaInitialized = false;
             this.resetEventController();
@@ -380,7 +380,6 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             streamProcessors = [];
-            source = null;
             isUpdating = false;
             isInitialized = false;
 
