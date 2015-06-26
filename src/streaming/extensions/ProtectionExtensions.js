@@ -110,15 +110,17 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
     /**
      * Check equality of initData array buffers.
      *
-     * @param initData1 first initData
-     * @param initData2 second initData
+     * @param initData1 {ArrayBuffer} first initData
+     * @param initData2 {ArrayBuffer} second initData
      * @returns {boolean} true if the initData arrays are equal in size and
      * contents, false otherwise
      */
     initDataEquals: function(initData1, initData2) {
         if (initData1.byteLength === initData2.byteLength) {
-            for (var j = 0; j < initData1.byteLength; j++) {
-                if (initData1[j] !== initData2[j]) {
+            var data1 = new Uint8Array(initData1),
+                data2 = new Uint8Array(initData2);
+            for (var j = 0; j < data1.length; j++) {
+                if (data1[j] !== data2[j]) {
                     return false;
                 }
             }
@@ -188,62 +190,6 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
             }
         }
         return supportedKS;
-    },
-
-    /**
-     * Select a key system by using the priority-ordered key systems supported
-     * by the player and the key systems supported by the content
-     *
-     * @param {Object[]} supportedKS supported key systems
-     * @param {MediaPlayer.dependencies.ProtectionController} protectionController
-     * @param {MediaPlayer.vo.MediaInfo} videoInfo video media information
-     * @param {MediaPlayer.vo.MediaInfo} audioInfo audio media information
-     */
-    autoSelectKeySystem: function(supportedKS, protectionController, videoInfo, audioInfo) {
-
-        // Does the initData contain a key system supported by the player?
-        if (supportedKS.length === 0) {
-            throw new Error("DRM system for this content not supported by the player!");
-        }
-
-        var audioCapabilities = [], videoCapabilities = [];
-        if (videoInfo) {
-            videoCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(videoInfo.codec));
-        }
-        if (audioInfo) {
-            audioCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(audioInfo.codec));
-        }
-        var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(
-                audioCapabilities, videoCapabilities);
-        var requestedKeySystems = [];
-        for (var i = 0; i < supportedKS.length; i++) {
-            requestedKeySystems.push({ ks: supportedKS[i].ks, configs: [ksConfig] });
-        }
-
-        // Since ProtectionExtensions is a singleton, we need to create an IIFE to wrap the
-        // event callback and save the values of protectionModel and protectionController.
-        var self = this;
-        (function(protCtrl) {
-
-            // Callback object for KEY_SYSTEM_ACCESS_COMPLETE event
-            var cbObj = {};
-
-            // Subscribe for event and then perform request
-            cbObj[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
-                protCtrl.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
-                if (!event.error) {
-                    var keySystemAccess = event.data;
-                    self.log("KeySystem Access Granted (" + keySystemAccess.keySystem.systemString + ")!");
-                    protCtrl.selectKeySystem(keySystemAccess);
-                } else {
-                    self.log(event.error);
-                }
-            };
-
-            protCtrl.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, cbObj);
-            protCtrl.requestKeySystemAccess(requestedKeySystems);
-
-        })(protectionController);
     },
 
     /**

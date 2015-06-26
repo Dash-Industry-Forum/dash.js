@@ -39,7 +39,6 @@ MediaPlayer.dependencies.Stream = function () {
         isUpdating = false,
         isInitialized = false,
         protectionController,
-        ownProtectionController = false,
 
         eventController = null,
 
@@ -288,20 +287,10 @@ MediaPlayer.dependencies.Stream = function () {
             this[MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR] = onProtectionError.bind(this);
         },
 
-        initialize: function(strmInfo, protectionCtrl, protectionData) {
+        initialize: function(strmInfo, protectionCtrl) {
             streamInfo = strmInfo;
-            if (this.capabilities.supportsEncryptedMedia()) {
-                if (!protectionCtrl) {
-                    protectionCtrl = this.system.getObject("protectionController");
-                    ownProtectionController = true;
-                }
-                protectionController = protectionCtrl;
-                protectionController.subscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
-                protectionController.setMediaElement(this.videoModel.getElement());
-                if (protectionData) {
-                    protectionController.setProtectionData(protectionData);
-                }
-            }
+            protectionController = protectionCtrl;
+            protectionController.subscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
         },
 
         /**
@@ -362,14 +351,7 @@ MediaPlayer.dependencies.Stream = function () {
             this.liveEdgeFinder.abortSearch();
             this.liveEdgeFinder.unsubscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.playbackController);
 
-            if (protectionController) {
-                protectionController.unsubscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
-                if (ownProtectionController) {
-                    protectionController.teardown();
-                    protectionController = null;
-                    ownProtectionController = false;
-                }
-            }
+            protectionController.unsubscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
 
             isMediaInitialized = false;
             isStreamActivated = false;

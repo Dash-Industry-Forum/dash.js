@@ -47,6 +47,104 @@ MediaPlayer.dependencies.ProtectionController = function () {
             return protData;
         },
 
+        selectKeySystem = function(supportedKS, notifyOnError) {
+
+            var self = this;
+
+            // Build our request object for requestKeySystemAccess
+            var audioCapabilities = [], videoCapabilities = [];
+            if (videoInfo) {
+                videoCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(videoInfo.codec));
+            }
+            if (audioInfo) {
+                audioCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(audioInfo.codec));
+            }
+            var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(
+                    audioCapabilities, videoCapabilities);
+            var requestedKeySystems = [];
+
+            var ksIdx;
+            if (this.keySystem) {
+                // We have a key system
+                for (ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
+                    if (this.keySystem === supportedKS[ksIdx].ks) {
+
+                        requestedKeySystems.push({ks: supportedKS[ksIdx].ks, configs: [ksConfig]});
+
+                        // Ensure that we would be granted key system access using the key
+                        // system and codec information
+                        var ksAccess = {};
+                        ksAccess[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
+                            if (event.error) {
+                                if (notifyOnError) {
+                                    self.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR,
+                                            "DRM: KeySystem Access Denied! -- " + event.error);
+                                }
+                            } else {
+                                self.log("KeySystem Access Granted");
+                                self.createKeySession(supportedKS[ksIdx].initData);
+                            }
+                        };
+                        this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, ksAccess, undefined, true);
+                        this.requestKeySystemAccess(requestedKeySystems);
+                        break;
+                    }
+                }
+            }
+            else if (this.keySystem === undefined) {
+                // First time through, so we need to select a key system
+                this.keySystem = null;
+                pendingNeedKeyData.push(supportedKS);
+
+                // Add all key systems to our request list since we have yet to select a key system
+                for (var i = 0; i < supportedKS.length; i++) {
+                    requestedKeySystems.push({ks: supportedKS[i].ks, configs: [ksConfig]});
+                }
+
+                var ksSelected = {};
+                ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
+                    if (event.error) {
+                        self.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
+                        if (notifyOnError) {
+                            self.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR,
+                                    "DRM: KeySystem Access Denied! -- " + event.error);
+                        }
+                    } else {
+                        var keySystemAccess = event.data;
+                        self.log("KeySystem Access Granted (" + keySystemAccess.keySystem.systemString + ")!  Selecting key system...");
+                        self.selectKeySystem(keySystemAccess);
+                    }
+                };
+                ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = function(event) {
+                    if (!event.error) {
+                        pendingNeedKeyData = [];
+                        self.keySystem = self.protectionModel.keySystem;
+                        self.protectionExt.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, self);
+                        for (var i = 0; i < pendingNeedKeyData.length; i++) {
+                            for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
+                                if (self.keySystem === pendingNeedKeyData[i][ksIdx].ks) {
+                                    self.createKeySession(pendingNeedKeyData[i][ksIdx].initData);
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        if (notifyOnError) {
+                            self.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR,
+                                    "DRM: Error selecting key system! -- " + event.error);
+                        }
+                    }
+                };
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected, undefined, true);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, ksSelected, undefined, true);
+
+                this.requestKeySystemAccess(requestedKeySystems);
+            } else {
+                // We are in the process of selecting a key system, so just save the data
+                pendingNeedKeyData.push(supportedKS);
+            }
+        },
+
         onKeyMessage = function(e) {
             if (e.error) {
                 this.log(e.error);
@@ -79,20 +177,6 @@ MediaPlayer.dependencies.ProtectionController = function () {
             }
         },
 
-        onKeySystemSelected = function() {
-
-            // ProtectionModel now has an associated KeySystem.  Process any pending initData
-            // generated by needkey/encrypted events
-            if (!this.keySystem) {
-                this.keySystem = this.protectionModel.keySystem;
-                this.protectionExt.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
-            }
-            for (var i = 0; i < pendingNeedKeyData.length; i++) {
-                this.createKeySession(pendingNeedKeyData[i]);
-            }
-            pendingNeedKeyData = [];
-        },
-
         onNeedKey = function (event) {
             // Ignore non-cenc initData
             if (event.data.initDataType !== "cenc") {
@@ -107,34 +191,13 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 abInitData = abInitData.buffer;
             }
 
-            if (this.keySystem) {
-                // We have a key system
-                this.createKeySession(abInitData);
+            var supportedKS = this.protectionExt.getSupportedKeySystems(abInitData);
+            if (supportedKS.length === 0) {
+                this.log("Received needkey event with initData, but we don't support any of the key systems!");
+                return;
             }
-            else if (this.keySystem === undefined) {
-                // First time through, so we need to select a key system
-                this.keySystem = null;
-                pendingNeedKeyData.push(abInitData);
-                try {
-                    this.protectionExt.autoSelectKeySystem(this.protectionExt.getSupportedKeySystems(abInitData),
-                            this, videoInfo, audioInfo);
-                } catch (error) {
-                    this.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR,
-                            "DRM: Unable to select a key system from needkey initData. -- " + error.message);
-                }
-            } else {
-                // We are in the process of selecting a key system, so just save the data
-                pendingNeedKeyData.push(abInitData);
-            }
-        },
 
-        onKeySystemAccessComplete = function(event) {
-            if (!event.error) {
-                this.log("KeySystem Access Granted");
-            } else {
-                this.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR,
-                        "DRM: KeySystem Access Denied! -- " + event.error);
-            }
+            selectKeySystem.call(this, supportedKS, true);
         },
 
         onServerCertificateUpdated = function(event) {
@@ -194,8 +257,6 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
         setup : function () {
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE] = onKeyMessage.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = onKeySystemSelected.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = onKeySystemAccessComplete.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY] = onNeedKey.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED] = onServerCertificateUpdated.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED] = onKeyAdded.bind(this);
@@ -208,9 +269,6 @@ MediaPlayer.dependencies.ProtectionController = function () {
             keySystems = this.protectionExt.getKeySystems();
             this.protectionModel = this.system.getObject("protectionModel");
             this.protectionModel.init();
-        },
-
-        init: function (manifest, aInfo, vInfo) {
 
             // Subscribe to events
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
@@ -220,6 +278,10 @@ MediaPlayer.dependencies.ProtectionController = function () {
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
+        },
+
+        init: function (manifest, aInfo, vInfo) {
 
             var adapter,
                 streamInfo;
@@ -235,56 +297,17 @@ MediaPlayer.dependencies.ProtectionController = function () {
             videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, "video") : null);
 
             var mediaInfo = (videoInfo) ? videoInfo : audioInfo; // We could have audio or video only
-            var self = this;
-
-            // If we fail to select a key system using initData in the MPD, we will fall back to
-            // listening for needkey events
-            var useNeedKey = function() {
-                self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, self);
-                self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, self);
-                self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, self);
-            };
 
             // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
             // and video will be the same.  Just use one valid MediaInfo object
             var supportedKS = this.protectionExt.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
             if (supportedKS && supportedKS.length > 0) {
-
-                // Handle KEY_SYSTEM_SELECTED events here instead.
-                var ksSelected = {};
-                ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
-                    if (event.error) {
-                        self.log("DRM: Could not select key system from ContentProtection elements!  Falling back to needkey mechanism...");
-                        useNeedKey();
-                        self.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
-                    }
-                };
-                ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = function(event) {
-                    if (!event.error) {
-                        self.keySystem = self.protectionModel.keySystem;
-                        self.protectionExt.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, self);
-                        for (var ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
-                            if (self.keySystem === supportedKS[ksIdx].ks) {
-                                self.createKeySession(supportedKS[ksIdx].initData);
-                                break;
-                            }
-                        }
-                    } else {
-                        self.log("DRM: Could not select key system from ContentProtection elements!  Falling back to needkey mechanism...");
-                        useNeedKey();
-                    }
-                };
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected, undefined, true);
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, ksSelected, undefined, true);
-                this.protectionExt.autoSelectKeySystem(supportedKS, this, videoInfo, audioInfo);
-            } else { // needkey event will trigger key system selection
-                useNeedKey();
+                selectKeySystem.call(this, supportedKS, false);
             }
         },
 
         teardown: function() {
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
-            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, this);
             if (this.keySystem) {
                 this.protectionExt.unsubscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
             }
@@ -295,7 +318,6 @@ MediaPlayer.dependencies.ProtectionController = function () {
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
-            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
             this.keySystem = undefined;
 
             this.protectionModel.teardown();
@@ -316,6 +338,15 @@ MediaPlayer.dependencies.ProtectionController = function () {
         createKeySession: function(initData) {
             var initDataForKS = MediaPlayer.dependencies.protection.CommonEncryption.getPSSHForKeySystem(this.keySystem, initData);
             if (initDataForKS) {
+
+                // Check for duplicate initData
+                var currentInitData = this.protectionModel.getAllInitData();
+                for (var i = 0; i < currentInitData.length; i++) {
+                    if (this.protectionExt.initDataEquals(initDataForKS, currentInitData[i])) {
+                        this.log("Ignoring initData because we have already seen it!");
+                        return;
+                    }
+                }
                 try {
                     this.protectionModel.createKeySession(initDataForKS, this.sessionType);
                 } catch (error) {
