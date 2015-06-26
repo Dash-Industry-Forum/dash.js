@@ -68,7 +68,7 @@ MediaPlayer.dependencies.Stream = function () {
 
                     return mimeType;
                 };
-            } else if (type === "muxed") {
+            } else if (type === "muxed" && mediaInfo) {
                 msg = "Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines";
                 this.log(msg);
                 this.errHandler.manifestError(msg, "multiplexedrep", this.manifestModel.getValue());
