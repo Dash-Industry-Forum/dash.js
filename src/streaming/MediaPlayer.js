@@ -72,6 +72,7 @@ MediaPlayer = function (context) {
         source,
         protectionController = null,
         protectionData = null,
+        language = null,
         streamController,
         rulesController,
         playbackController,
@@ -116,7 +117,7 @@ MediaPlayer = function (context) {
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
             playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
 
-            streamController.initialize(autoPlay, protectionController, protectionData);
+            streamController.initialize(autoPlay, protectionController, protectionData, language);
             DOMStorage.checkInitialBitrate();
             if (typeof source === "string") {
                 streamController.load(source);
@@ -867,7 +868,7 @@ MediaPlayer = function (context) {
          *
          * @memberof MediaPlayer#
          */
-        attachSource: function (urlOrManifest, protectionCtrl, data) {
+        attachSource: function (urlOrManifest, protectionCtrl, data, lang) {
             if (!initialized) {
                 throw "MediaPlayer not initialized!";
             }
@@ -881,6 +882,7 @@ MediaPlayer = function (context) {
 
             protectionController = protectionCtrl;
             protectionData = data;
+            language = lang;
 
             // TODO : update
 
@@ -901,6 +903,7 @@ MediaPlayer = function (context) {
             this.attachView(null);
             protectionController = null;
             protectionData = null;
+            language = null;
         },
 
         /**
@@ -1014,8 +1017,18 @@ MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @method
          */
-        convertToTimeCode : convertToTimeCode
+        convertToTimeCode : convertToTimeCode,
 
+        /**
+         * Switches audio Adaptation based on language.
+         *
+         * @param language {string} The language to switch to.
+         * @memberof MediaPlayer#
+         * @method
+         */
+        language: function (lang) {
+            streamController.switchLanguage(language = lang);
+        }
     };
 };
 
