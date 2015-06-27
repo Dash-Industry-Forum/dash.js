@@ -29,371 +29,51 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-function intTobitArray(integer,integerSizeInBit)
-{
-    var bitArray = [];
-    for(var i = 0; i<integerSizeInBit ; i++){
-        bitArray.push((integer&Math.pow(2,i))>0);
-    }
-    return bitArray;
-}
-
 Dash.dependencies.FragmentExtensions = function () {
     "use strict";
 
-var TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX =0,
-    TFHD_SAMPLE_DESCRIPTION_INDEX_PRESENT_FLAG_INDEX=1,
-    TFHD_DEFAULT_SAMPLE_DURATION_PRESENT_FLAG_INDEX=3,
-    TFHD_DEFAULT_SAMPLE_SIZE_PRESENT_FLAG_INDEX=4,
-    TFHD_DEFAULT_SAMPLE_FLAGS_PRESENT_FLAG_INDEX=5,
-    TRUN_DATA_OFFSET_PRESENT_FLAG_INDEX=0,
-    TRUN_FIRST_SAMPLE_FLAGS_PRESENT_FLAG_INDEX=2,
-    TRUN_SAMPLE_DURATION_PRESENT_FLAG_INDEX=8,
-    TRUN_SAMPLE_SIZE_PRESENT_FLAG_INDEX=9,
-    TRUN_SAMPLE_FLAGS_PRESENT_FLAG_INDEX=10,
-    TRUN_SAMPLE_COMPOSITION_TIME_OFFSET_PRESENT_FLAG_INDEX=11;
-
-    var parseTFDT = function (ab) {
-            var d = new DataView(ab),
-                pos = 0,
-                base_media_decode_time,
-                version,
-                size,
-                type,
-                i,
-                c;
-
-            while (type !== "tfdt" && pos < d.byteLength) {
-                size = d.getUint32(pos); // subtract 8 for including the size and type
-                pos += 4;
-
-                type = "";
-                for (i = 0; i < 4; i += 1) {
-                    c = d.getInt8(pos);
-                    type += String.fromCharCode(c);
-                    pos += 1;
-                }
-
-                if (type !== "moof" && type !== "traf" && type !== "tfdt") {
-                    pos += size - 8;
-                }
-            }
-
-            if (pos === d.byteLength) {
-                throw "Error finding live offset.";
-            }
-
-            version = d.getUint8(pos);
-
-            if (version === 0) {
-                pos += 4;
-                base_media_decode_time = d.getUint32(pos, false);
-            } else {
-                pos += size - 16;
-                base_media_decode_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
-            }
-
-            return {
-                'version' : version,
-                'base_media_decode_time' : base_media_decode_time
-            };
-        },
-
-        parseSIDX = function (ab) {
-            var d = new DataView(ab),
-                pos = 0,
-                version,
-                timescale,
-                earliest_presentation_time,
-                i,
-                type,
-                size,
-                charCode;
-
-            while (type !== "sidx" && pos < d.byteLength) {
-                size = d.getUint32(pos); // subtract 8 for including the size and type
-                pos += 4;
-
-                type = "";
-                for (i = 0; i < 4; i += 1) {
-                    charCode = d.getInt8(pos);
-                    type += String.fromCharCode(charCode);
-                    pos += 1;
-                }
-
-                if (type !== "moof" && type !== "traf" && type !== "sidx") {
-                    pos += size - 8;
-                } else if (type === "sidx") {
-                    // reset the position to the beginning of the box...
-                    // if we do not reset the position, the evaluation
-                    // of sidxEnd to ab.byteLength will fail.
-                    pos -= 8;
-                }
-            }
-
-            version = d.getUint8(pos + 8);
-            pos += 12;
-
-            // skipped reference_ID(32)
-            timescale = d.getUint32(pos + 4, false);
-            pos += 8;
-
-            if (version === 0) {
-                earliest_presentation_time = d.getUint32(pos, false);
-            } else {
-                earliest_presentation_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
-            }
-
-            return {
-                'earliestPresentationTime' : earliest_presentation_time,
-                'timescale' : timescale
-            };
-        },
-
-        parseTFHD = function (ab) {
-            var d = new DataView(ab),
-                pos = 0,
-                size,
-                type,
-                flags,
-                flagsBits,
-                tfhd,
-                i,
-                c;
-
-            while (type !== "tfhd" && pos < d.byteLength) {
-                size = d.getUint32(pos); // subtract 8 for including the size and type
-                pos += 4;
-
-                type = "";
-                for (i = 0; i < 4; i += 1) {
-                    c = d.getInt8(pos);
-                    type += String.fromCharCode(c);
-                    pos += 1;
-                }
-
-                if (type !== "moof" && type !== "traf" &&type !== "tfhd") {
-                    pos += size - 8;
-                }
-            }
-
-            if (pos === d.byteLength) {
-                throw "Error finding live offset.";
-            }
-
-            tfhd = {
-            baseDataOffset:0,
-            descriptionIndex:0,
-            sampleDuration:0,
-            sampleSize:0,
-            defaultSampleFlags:0,
-            };
-            pos += 1; //version
-            pos += 2; //2 useless flag bytes
-            flags=d.getUint8(pos);
-            pos += 1;
-            flagsBits=intTobitArray(flags,8);
-            pos += 4;//track Id
-            if(flagsBits[TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX]){
-                tfhd.baseDataOffset=utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
-                pos += 8;
-            }
-            if(flagsBits[TFHD_SAMPLE_DESCRIPTION_INDEX_PRESENT_FLAG_INDEX]){
-                tfhd.descriptionIndex=d.getUint32(pos);
-                pos += 4;
-            }
-            if(flagsBits[TFHD_DEFAULT_SAMPLE_DURATION_PRESENT_FLAG_INDEX]){
-                tfhd.sampleDuration=d.getUint32(pos);
-                pos += 4;
-            }
-            if(flagsBits[TFHD_DEFAULT_SAMPLE_SIZE_PRESENT_FLAG_INDEX]){
-                tfhd.sampleSize=d.getUint32(pos);
-                pos += 4;
-            }
-            if(flagsBits[TFHD_DEFAULT_SAMPLE_FLAGS_PRESENT_FLAG_INDEX]){
-                tfhd.defaultSampleFlags=d.getUint32(pos);
-                pos += 4;
-            }
-
-            return tfhd;
-        },
-        getMediaTimescaleFromMoov = function (ab) {
-            var d = new DataView(ab),
-                pos = 0,
-                version,
-                size,
-                type,
-                i,
-                c;
-
-            while (type !== "mdhd" && pos < d.byteLength) {
-                size = d.getUint32(pos); // subtract 8 for including the size and type
-                pos += 4;
-
-                type = "";
-                for (i = 0; i < 4; i += 1) {
-                    c = d.getInt8(pos);
-                    type += String.fromCharCode(c);
-                    pos += 1;
-                }
-
-                if (type !== "moov" && type !== "trak" && type !== "mdia" && type !== "mdhd") {
-                    pos += size - 8;
-                }
-            }
-
-            if (pos === d.byteLength) {
-                throw "Error finding live offset.";
-            }
-            version = d.getUint8(pos);
-            pos += 12;
-            if(version==1){
-                pos += 8;
-            }
-
-            return d.getUint32(pos, false);
-        },
-
-        getSamplesInfo = function (ab) {
-
-            var d = new DataView(ab),
-                pos = 0,
-                size,
-                type,
+    var getSamplesInfo = function (ab) {
+            var isoFile = this.boxParser.parse(ab),
+                tfhdBox = isoFile.getBox("tfhd"),
+                tfdtBox = isoFile.getBox("tfdt"),
+                trunBox = isoFile.getBox("trun"),
+                moofBox = isoFile.getBox("moof"),
                 sampleDuration,
                 sampleCompostionTimeOffset,
                 sampleCount,
                 sampleSize,
                 sampleDts,
                 sampleList,
-                flags,
-                flagsBits,
+                sample,
                 i,
-                c,moofPosition,
-                tfhd,
-                tfdt,
                 dataOffset;
-                
-            tfhd= parseTFHD(ab);
-            tfdt= parseTFDT(ab);
 
+            sampleCount = trunBox.sample_count;
+            sampleDts= tfdtBox.baseMediaDecodeTime;
+            dataOffset = (tfhdBox.base_data_offset || 0) + (trunBox.data_offset || 0);
 
-            while (type !== "trun" && pos < d.byteLength) {
-                size = d.getUint32(pos); // subtract 8 for including the size and type
-                pos += 4;
-
-                type = "";
-                for (i = 0; i < 4; i += 1) {
-                    c = d.getInt8(pos);
-                    type += String.fromCharCode(c);
-                    pos += 1;
-                }
-
-                if (type !== "moof" && type !== "traf" && type !== "trun") {
-                    pos += size - 8;
-                }
-                
-                if(type == "moof"){
-                    moofPosition=pos-8;
-                }
-            }
-
-            if (pos === d.byteLength) {
-                throw "Error finding live offset.";
-            }
-    
-            pos += 1; //version
-            pos += 1; // useless flag byte
-            flags=d.getUint16(pos); //flag
-            pos += 2;
-            flagsBits=intTobitArray(flags,16);
-            sampleCount = d.getUint32(pos);
-            pos += 4;
-            
-            sampleDts= tfdt.base_media_decode_time;
-            
-            if(flagsBits[TRUN_DATA_OFFSET_PRESENT_FLAG_INDEX]){
-                dataOffset=d.getUint32(pos)+tfhd.baseDataOffset;
-                pos += 4;
-            }
-            else{
-                dataOffset=tfhd.baseDataOffset;
-            }
-            if(flagsBits[TRUN_FIRST_SAMPLE_FLAGS_PRESENT_FLAG_INDEX]){
-                pos += 4;
-            }
-
-            
             sampleList=[];
-            for(i=0;i<sampleCount;i++){
-                if(flagsBits[TRUN_SAMPLE_DURATION_PRESENT_FLAG_INDEX]){
-                    sampleDuration=d.getUint32(pos);
-                    pos += 4;
-                }
-                else{
-                    sampleDuration=tfhd.sampleDuration;
-                }
+            for (i = 0; i < sampleCount; i++) {
+                sample = trunBox.samples[i];
+                sampleDuration = (sample.sample_duration !== undefined) ? sample.sample_duration : tfhdBox.default_sample_duration;
+                sampleSize = (sample.sample_size !== undefined) ? sample.sample_size : tfhdBox.default_sample_size;
+                sampleCompostionTimeOffset = (sample.sample_composition_time_offset !== undefined) ? sample.sample_composition_time_offset : 0;
 
-                if(flagsBits[TRUN_SAMPLE_SIZE_PRESENT_FLAG_INDEX]){
-                    sampleSize=d.getUint32(pos);
-                    pos += 4;
-                }
-                else{
-                    sampleSize=tfhd.sampleSize;
-                }
-                if(flagsBits[TRUN_SAMPLE_FLAGS_PRESENT_FLAG_INDEX]){
-                    pos += 4;
-                }
-
-                if(flagsBits[TRUN_SAMPLE_COMPOSITION_TIME_OFFSET_PRESENT_FLAG_INDEX]){
-                    sampleCompostionTimeOffset=d.getUint32(pos);
-                    pos += 4;
-                }
-                else{
-                    sampleCompostionTimeOffset=0;
-                }
                 sampleList.push({'dts' : sampleDts,
-                                 'cts' : (sampleDts+sampleCompostionTimeOffset),
+                                 'cts' : (sampleDts + sampleCompostionTimeOffset),
                                  'duration' :sampleDuration,
-                                 'offset':moofPosition+dataOffset,
+                                 'offset': moofBox.offset + dataOffset,
                                  'size' :sampleSize});
-                dataOffset+=sampleSize;
-                sampleDts+=sampleDuration;
+                dataOffset += sampleSize;
+                sampleDts += sampleDuration;
             }
             return sampleList;
         },
-        
 
-        loadFragment = function (media) {
-            var self = this,
-                request = new XMLHttpRequest(),
-                url = media,
-                loaded = false,
-                errorStr = "Error loading fragment: " + url,
-                error = new MediaPlayer.vo.Error(null, errorStr, null),
-                parsed;
-
-            request.onloadend = function () {
-                if (!loaded) {
-                    errorStr = "Error loading fragment: " + url;
-                    self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: null}, error);
-                }
-            };
-
-            request.onload = function () {
-                loaded = true;
-                parsed = parseTFDT(request.response);
-                self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: parsed});
-            };
-
-            request.onerror = function () {
-                errorStr = "Error loading fragment: " + url;
-                self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {fragment: null}, error);
-            };
-
-            request.responseType = "arraybuffer";
-            request.open("GET", url);
-            request.send(null);
+        getMediaTimescaleFromMoov = function(ab) {
+            var isoFile = this.boxParser.parse(ab),
+                mdhdBox = isoFile.getBox("mdhd");
+            return mdhdBox.timescale;
         };
 
     return {
@@ -401,12 +81,10 @@ var TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX =0,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        boxParser: undefined,
 
-        loadFragment : loadFragment,
-        parseTFDT : parseTFDT,
-        parseSIDX : parseSIDX,
         getSamplesInfo:getSamplesInfo,
-        getMediaTimescaleFromMoov:getMediaTimescaleFromMoov
+        getMediaTimescaleFromMoov: getMediaTimescaleFromMoov
     };
 };
 
