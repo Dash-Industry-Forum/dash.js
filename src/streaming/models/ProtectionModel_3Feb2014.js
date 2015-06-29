@@ -51,8 +51,10 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
                     switch (event.type) {
 
                         case api.needkey:
-                            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY,
-                                new MediaPlayer.vo.protection.NeedKey(event.initData, "cenc"));
+                            if (event.initData) {
+                                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY,
+                                        new MediaPlayer.vo.protection.NeedKey(event.initData, "cenc"));
+                            }
                             break;
                     }
                 }
@@ -150,6 +152,14 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
             }
         },
 
+        getAllInitData: function() {
+            var retVal = [];
+            for (var i = 0; i < sessions.length; i++) {
+                retVal.push(sessions[i].initData);
+            }
+            return retVal;
+        },
+
         requestKeySystemAccess: function(ksConfigurations) {
 
             // Try key systems in order, first one with supported key system configuration
@@ -242,13 +252,6 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
             if (!this.keySystem || !mediaKeys || !keySystemAccess) {
                 throw new Error("Can not create sessions until you have selected a key system");
-            }
-
-            // Check for duplicate initData.
-            for (var i = 0; i < sessions.length; i++) {
-                if (this.protectionExt.initDataEquals(initData, sessions[i].initData)) {
-                    return;
-                }
             }
 
             // Use the first video capability for the contentType.

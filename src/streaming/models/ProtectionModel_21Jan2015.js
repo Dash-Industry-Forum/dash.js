@@ -76,8 +76,10 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                     switch (event.type) {
 
                         case "encrypted":
-                            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY,
-                                new MediaPlayer.vo.protection.NeedKey(event.initData, event.initDataType));
+                            if (event.initData) {
+                                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY,
+                                        new MediaPlayer.vo.protection.NeedKey(event.initData, event.initDataType));
+                            }
                             break;
                     }
                 }
@@ -181,6 +183,14 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
             }
         },
 
+        getAllInitData: function() {
+            var retVal = [];
+            for (var i = 0; i < sessions.length; i++) {
+                retVal.push(sessions[i].initData);
+            }
+            return retVal;
+        },
+
         requestKeySystemAccess: function(ksConfigurations) {
             requestKeySystemAccessInternal.call(this, ksConfigurations, 0);
         },
@@ -231,13 +241,6 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 
             if (!this.keySystem || !mediaKeys) {
                 throw new Error("Can not create sessions until you have selected a key system");
-            }
-
-            // Check for duplicate initData.
-            for (var i = 0; i < sessions.length; i++) {
-                if (this.protectionExt.initDataEquals(initData, sessions[i].initData)) {
-                    return;
-                }
             }
 
             var session = mediaKeys.createSession(sessionType);

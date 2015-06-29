@@ -39,6 +39,7 @@
     var streams = [],
         activeStream,
         protectionController,
+        ownProtectionController = false,
         protectionData,
         STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
@@ -305,6 +306,17 @@
 
             streamsInfo = self.adapter.getStreamsInfo(manifest);
 
+            if (this.capabilities.supportsEncryptedMedia()) {
+                if (!protectionController) {
+                    protectionController = this.system.getObject("protectionController");
+                    ownProtectionController = true;
+                }
+                protectionController.setMediaElement(this.videoModel.getElement());
+                if (protectionData) {
+                    protectionController.setProtectionData(protectionData);
+                }
+            }
+
             try {
                 if (streamsInfo.length === 0) {
                     throw new Error("There are no streams");
@@ -406,6 +418,7 @@
 
     return {
         system: undefined,
+        capabilities: undefined,
         videoModel: undefined,
         manifestUpdater: undefined,
         manifestLoader: undefined,
@@ -532,6 +545,10 @@
             canPlay = false;
             hasMediaError = false;
 
+            if (ownProtectionController) {
+                protectionController.teardown();
+                ownProtectionController = false;
+            }
             protectionController = null;
             protectionData = null;
 
