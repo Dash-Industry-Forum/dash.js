@@ -88,6 +88,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                     }
                 }
             }else{
+                bytes = new Uint8Array(bytes);
                 ccContent=window.UTF8.decode(bytes);
                 try {
                     result = self.getParser().parse(ccContent);

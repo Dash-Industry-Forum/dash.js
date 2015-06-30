@@ -154,7 +154,7 @@ MediaPlayer.utils.VTTParser = function () {
                             startTime = convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, '')),
                             endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
 
-                        if((!Number.isNaN(startTime) && !Number.isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
+                        if((!isNaN(startTime) && !isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
                             if (text !== ""){
                                 lastStartTime = startTime;
                                 //TODO Make VO external so other parsers can use.
