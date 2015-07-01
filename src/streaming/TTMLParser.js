@@ -45,7 +45,7 @@ MediaPlayer.utils.TTMLParser = function () {
         // - Exactly 3 decimal places must be used for the milliseconds component (include leading zeros).
         // R0031 -For time expressions that use the hh:mm:ss:ff format, the following constraints apply:
         // - Exactly 2 digits must be used in each of the hours, minutes, second, and frame components (include leading zeros).
-        timingRegex = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])((\.[0-9][0-9][0-9])|(:[0-9][0-9]))$/,
+        timingRegex = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])((\.[0-9]+)|(:[0-9][0-9]))$/,
         ttml,
 
         parseTimings = function(timingStr) {
@@ -99,8 +99,8 @@ MediaPlayer.utils.TTMLParser = function () {
             }
 
             // R0008 - A document must contain a ttp:profile element where the use attribute of that element is specified as http://www.w3.org/ns/ttml/profile/sdp-us.
-			/* extend the support to other profiles
-			// Profile is not mandatory 
+            /* extend the support to other profiles
+            // Profile is not mandatory
             if (passed && hasProfile) {
                 passed = hasProfile && (ttml.tt.head.profile.use === "http://www.w3.org/ns/ttml/profile/sdp-us");
             }*/
@@ -132,7 +132,8 @@ MediaPlayer.utils.TTMLParser = function () {
                 nsttp,
                 text,
                 i,
-                j;
+                j,
+                spanNode;
 
             ttml = converter.xml_str2json(data);
 
@@ -185,16 +186,24 @@ MediaPlayer.utils.TTMLParser = function () {
                 }
                 else
                 {
-                    if(cue.span_asArray){
-                        text=cue.span_asArray[0].__text;
-                    }else{
-                        text=cue.__text;
+                    if (cue.span_asArray) {
+                        spanNode = cue.span_asArray[0];
+
+                        if ((spanNode.__text instanceof Array) && spanNode.br_asArray) {
+                            // tt:br elements have be used to insert forced line breaks
+                            text = spanNode.__text.join("\n");
+                        } else {
+                            text = spanNode.__text;
+                        }
+                    } else {
+                        text = cue.__text;
                     }
+
                     captionArray.push({
-                        start: startTime,
-                        end: endTime,
-                        data: text,
-                        type: "text"
+                        start:  startTime,
+                        end:    endTime,
+                        data:   text,
+                        type:   "text"
                     });
                 }
             }
