@@ -341,7 +341,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onLiveEdgeSearchCompleted = function(e) {
             if (e.error) return;
-
+            
+            if(!currentTrackInfo)
+                return;
+            
             // step back from a found live edge time to be able to buffer some data
             var self = this,
                 liveEdgeTime = e.data.liveEdge,
