@@ -80,7 +80,14 @@ MediaPlayer.utils.DOMStorage = function () {
 
             var testKey = '1',
                 testValue = "1",
+                storage;
+
+            try {
                 storage = window[type];
+            } catch (error) {
+                this.log("Warning: DOMStorage access denied: " + error.message);
+                return isSupported;
+            }
 
             if (!storage || (type !== MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL && type !== MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION)) {
                 return isSupported;
