@@ -32,6 +32,31 @@ MediaPlayer.utils.DOMStorage = function () {
 
     var isSupported,
         enableLastBitrateCaching = true,
+        enableLastMediaSettingsCaching = true,
+
+        setExpiration = function(expType, ttl) {
+            if (ttl !== undefined && !isNaN(ttl) && typeof(ttl) === "number"){
+                MediaPlayer.utils.DOMStorage[expType] = ttl;
+            }
+        },
+
+        getSavedMediaSettings = function(type) {
+            //Checks local storage to see if there is valid, non-expired media settings
+            if (!this.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) || !enableLastMediaSettingsCaching) return null;
+
+            var key = MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_SETTINGS_KEY"],
+                obj = JSON.parse(localStorage.getItem(key)) || {},
+                isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION || false,
+                settings = obj.settings;
+
+            if (isExpired){
+                localStorage.removeItem(key);
+                settings = null;
+            }
+
+            return settings;
+        },
+
         checkInitialBitrate = function() {
             ['video', 'audio'].forEach(function(value) {
                 //first make sure player has not explicitly set a starting bit rate
@@ -66,12 +91,18 @@ MediaPlayer.utils.DOMStorage = function () {
         log:undefined,
         abrController: undefined,
         checkInitialBitrate:checkInitialBitrate,
+        getSavedMediaSettings: getSavedMediaSettings,
+
         enableLastBitrateCaching: function(enable, ttl) {
             enableLastBitrateCaching = enable;
-            if (ttl !== undefined && !isNaN(ttl) && typeof(ttl) === "number"){
-                MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_BITRATE_EXPIRATION = ttl;
-            }
+            setExpiration.call(this, "LOCAL_STORAGE_BITRATE_EXPIRATION", ttl);
         },
+
+        enableLastMediaSettingsCaching: function(enable, ttl) {
+            enableLastMediaSettingsCaching = enable;
+            setExpiration.call(this, "LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION", ttl);
+        },
+
         //type can be local, session
         isSupported: function(type) {
             if (isSupported !== undefined) return isSupported;
@@ -113,7 +144,10 @@ MediaPlayer.utils.DOMStorage = function () {
 
 MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_VIDEO_BITRATE_KEY = "dashjs_vbitrate";
 MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_AUDIO_BITRATE_KEY = "dashjs_abitrate";
+MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_AUDIO_SETTINGS_KEY = "dashjs_asettings";
+MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_VIDEO_SETTINGS_KEY = "dashjs_vsettings";
 MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
+MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
 MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL = "localStorage";
 MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION = "sessionStorage";
 

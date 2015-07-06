@@ -75,14 +75,22 @@ Dash.dependencies.DashAdapter = function () {
         convertAdaptationToMediaInfo = function(manifest, adaptation) {
             var mediaInfo = new MediaPlayer.vo.MediaInfo(),
                 self = this,
-                a = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
+                a = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index],
+                viewpoint,
+                roles;
 
             mediaInfo.id = adaptation.id;
             mediaInfo.index = adaptation.index;
             mediaInfo.type = adaptation.type;
             mediaInfo.streamInfo = convertPeriodToStreamInfo.call(this, manifest, adaptation.period);
-            mediaInfo.trackCount = this.manifestExt.getRepresentationCount(a);
+            mediaInfo.representationCount = this.manifestExt.getRepresentationCount(a);
             mediaInfo.lang = this.manifestExt.getLanguageForAdaptation(a);
+            viewpoint = this.manifestExt.getViewpointForAdaptation(a);
+            mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;
+            roles = this.manifestExt.getRolesForAdaptation(a).map(function(role){
+                return role.value;
+            });
+            mediaInfo.roles = roles;
             mediaInfo.codec = this.manifestExt.getCodec(a);
             mediaInfo.mimeType = this.manifestExt.getMimeType(a);
             mediaInfo.contentProtection = this.manifestExt.getContentProtectionData(a);
@@ -142,6 +150,32 @@ Dash.dependencies.DashAdapter = function () {
             return convertAdaptationToMediaInfo.call(this, manifest, adaptations[periodId][idx]);
         },
 
+        getAllMediaInfoForType = function(manifest, streamInfo, type) {
+            var periodInfo = getPeriodForStreamInfo(streamInfo),
+                periodId = periodInfo.id,
+                adaptationsForType = this.manifestExt.getAdaptationsForType(manifest, streamInfo.index, type),
+                data,
+                mediaArr = [],
+                media,
+                idx;
+
+            if (!adaptationsForType) return mediaArr;
+
+            adaptations[periodId] = adaptations[periodId] || this.manifestExt.getAdaptationsForPeriod(manifest, periodInfo);
+
+            for (var i = 0, ln = adaptationsForType.length; i < ln; i += 1) {
+                data = adaptationsForType[i];
+                idx = this.manifestExt.getIndexForAdaptation(data, manifest, streamInfo.index);
+                media = convertAdaptationToMediaInfo.call(this, manifest, adaptations[periodId][idx]);
+
+                if (media) {
+                    mediaArr.push(media);
+                }
+            }
+
+            return mediaArr;
+        },
+
         getStreamsInfoFromManifest = function(manifest) {
             var mpd,
                 streams = [],
@@ -170,25 +204,25 @@ Dash.dependencies.DashAdapter = function () {
         },
 
         getInitRequest = function(streamProcessor, quality) {
-            var representation = streamProcessor.trackController.getRepresentationForQuality(quality);
+            var representation = streamProcessor.representationController.getRepresentationForQuality(quality);
 
             return streamProcessor.indexHandler.getInitRequest(representation);
         },
 
         getNextFragmentRequest = function(streamProcessor, trackInfo) {
-            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.trackController);
+            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.representationController);
 
             return streamProcessor.indexHandler.getNextSegmentRequest(representation);
         },
 
         getFragmentRequestForTime = function(streamProcessor, trackInfo, time, options) {
-            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.trackController);
+            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.representationController);
 
             return streamProcessor.indexHandler.getSegmentRequestForTime(representation, time, options);
         },
 
         generateFragmentRequestForTime = function(streamProcessor, trackInfo, time) {
-            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.trackController);
+            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.representationController);
 
             return streamProcessor.indexHandler.generateSegmentRequestForTime(representation, time);
         },
@@ -211,16 +245,16 @@ Dash.dependencies.DashAdapter = function () {
 
             id = mediaInfo.id;
             data = id ? this.manifestExt.getAdaptationForId(id, manifest, periodInfo.index) : this.manifestExt.getAdaptationForIndex(mediaInfo.index, manifest, periodInfo.index);
-            streamProcessor.trackController.updateData(data, adaptation, type);
+            streamProcessor.representationController.updateData(data, adaptation, type);
         },
 
-        getTrackInfoForQuality = function(manifest, representationController, quality) {
+        getRepresentationInfoForQuality = function(manifest, representationController, quality) {
             var representation = representationController.getRepresentationForQuality(quality);
 
             return representation ? convertRepresentationToTrackInfo.call(this, manifest, representation) : null;
         },
 
-        getCurrentTrackInfo = function(manifest, representationController) {
+        getCurrentRepresentationInfo = function(manifest, representationController) {
             var representation = representationController.getCurrentRepresentation();
 
             return representation ? convertRepresentationToTrackInfo.call(this, manifest, representation): null;
@@ -259,7 +293,7 @@ Dash.dependencies.DashAdapter = function () {
             } else if (info instanceof MediaPlayer.vo.MediaInfo) {
                 events = this.manifestExt.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info));
             } else if (info instanceof MediaPlayer.vo.TrackInfo) {
-                events = this.manifestExt.getEventStreamForRepresentation(manifest, getRepresentationForTrackInfo(info, streamProcessor.trackController));
+                events = this.manifestExt.getEventStreamForRepresentation(manifest, getRepresentationForTrackInfo(info, streamProcessor.representationController));
             }
 
             return events;
@@ -297,9 +331,10 @@ Dash.dependencies.DashAdapter = function () {
         getStreamsInfo: getStreamsInfoFromManifest,
         getManifestInfo: getMpdInfo,
         getMediaInfoForType: getMediaInfoForType,
+        getAllMediaInfoForType: getAllMediaInfoForType,
 
-        getCurrentTrackInfo: getCurrentTrackInfo,
-        getTrackInfoForQuality: getTrackInfoForQuality,
+        getCurrentRepresentationInfo: getCurrentRepresentationInfo,
+        getRepresentationInfoForQuality: getRepresentationInfoForQuality,
         updateData: updateData,
 
         getInitRequest: getInitRequest,

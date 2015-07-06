@@ -129,12 +129,12 @@ MediaPlayer.dependencies.PlaybackController = function () {
         onDataUpdateCompleted = function(e) {
             if (e.error) return;
 
-            var track = this.adapter.convertDataToTrack(this.manifestModel.getValue(), e.data.currentRepresentation),
-                info = track.mediaInfo.streamInfo;
+            var representationInfo = this.adapter.convertDataToTrack(this.manifestModel.getValue(), e.data.currentRepresentation),
+                info = representationInfo.mediaInfo.streamInfo;
 
             if (streamInfo.id !== info.id) return;
 
-            streamInfo = track.mediaInfo.streamInfo;
+            streamInfo = representationInfo.mediaInfo.streamInfo;
             updateCurrentTime.call(this);
         },
 
@@ -268,20 +268,22 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (e.data.index === startIdx) {
                 firstAppended[id] = firstAppended[id] || {};
                 firstAppended[id][type] = true;
-                firstAppended.ready = !((stream.hasMedia("audio") && !firstAppended[id].audio) || (stream.hasMedia("video") && !firstAppended[id].video));
+                firstAppended[id].ready = !((stream.hasMedia("audio") && !firstAppended[id].audio) || (stream.hasMedia("video") && !firstAppended[id].video));
             }
 
-            if (!ranges || !ranges.length) return;
+            if (!ranges || !ranges.length || (firstAppended[id] && firstAppended[id].seekCompleted)) return;
 
             bufferedStart = Math.max(ranges.start(0), streamInfo.start);
             commonEarliestTime[id] = (commonEarliestTime[id] === undefined) ? bufferedStart : Math.max(commonEarliestTime[id], bufferedStart);
 
             // do nothing if common earliest time has not changed or if the firts segment has not been appended or if current
             // time exceeds the common earliest time
-            if ((currentEarliestTime === commonEarliestTime[id] && (time === currentEarliestTime)) || !firstAppended.ready || (time > commonEarliestTime[id])) return;
+            if ((currentEarliestTime === commonEarliestTime[id] && (time === currentEarliestTime)) || !firstAppended[id] || !firstAppended[id].ready || (time > commonEarliestTime[id])) return;
 
             // seek to the start of buffered range to avoid stalling caused by a shift between audio and video media time
             this.seek(commonEarliestTime[id]);
+            // prevents seeking the second time for the same Period
+            firstAppended[id].seekCompleted = true;
         },
 
         onBufferLevelStateChanged = function(e) {
