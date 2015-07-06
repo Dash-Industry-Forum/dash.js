@@ -32,12 +32,15 @@ MediaPlayer.utils.TTMLParser = function () {
     "use strict";
 
     /*
-    * This TTML parser follows "TTML Simple Delivery Profile for Closed Captions (US)" spec - http://www.w3.org/TR/ttml10-sdp-us/
+    * This TTML starts from "TTML Simple Delivery Profile for Closed Captions (US)" spec - http://www.w3.org/TR/ttml10-sdp-us/
+    * but allows for more hour digits to be able to support sessions longer than 24 hours (including live).
+    * It also supports a varibable number of digits in the fraction part. This is in accordance with the full TTML spec.
     * */
 
     var SECONDS_IN_HOUR = 60 * 60,
         SECONDS_IN_MIN = 60,
-        // R0028 - A document must not contain a <timeExpression> value that does not conform to the subset of clock-time that
+        // R0028 - The original text says:
+        // A document must not contain a <timeExpression> value that does not conform to the subset of clock-time that
         // matches either of the following patterns: hh:mm:ss.mss or hh:mm:ss:ff, where hh denotes hours (00-23),
         // mm denotes minutes (00-59), ss denotes seconds (00-59), mss denotes milliseconds (000-999), and ff denotes frames (00-frameRate - 1).
         // R0030 - For time expressions that use the hh:mm:ss.mss format, the following constraints apply:
@@ -45,7 +48,8 @@ MediaPlayer.utils.TTMLParser = function () {
         // - Exactly 3 decimal places must be used for the milliseconds component (include leading zeros).
         // R0031 -For time expressions that use the hh:mm:ss:ff format, the following constraints apply:
         // - Exactly 2 digits must be used in each of the hours, minutes, second, and frame components (include leading zeros).
-        timingRegex = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])((\.[0-9]+)|(:[0-9][0-9]))$/,
+        // This is modifed to at least 2 digits for hours, and at least one digit in the fraction part.
+        timingRegex = /^([0-9][0-9]+):([0-5][0-9]):([0-5][0-9])((\.[0-9]+)|(:[0-9][0-9]))$/,
         ttml,
 
         parseTimings = function(timingStr) {
