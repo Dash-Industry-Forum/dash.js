@@ -299,6 +299,16 @@
                     }
                 }
             }
+        },
+        {
+            "name": "BBC R&D Testcard",
+            "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
+            "browsers": ""
+        },
+        {
+            "name": "BBC R&D EBU-TT-D Subtitling Test",
+            "url": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-all.mpd",
+            "browsers": ""
         }
     ]
 }
