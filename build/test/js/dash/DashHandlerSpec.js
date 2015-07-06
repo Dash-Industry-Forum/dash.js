@@ -1,9 +1,7 @@
 describe("DashHandler", function () {
-    var helper = window.Helpers.getSpecHelper(),
-        objHelper = window.Helpers.getObjectsHelper(),
-        timelineConverter = objHelper.getTimelineConverter(),
+    var objHelper = window.Helpers.getObjectsHelper(),
         testType = "video",
-        indexHandler = objHelper.getIndexHandler(),
+        indexHandler = objHelper.getIndexHandler(testType),
         representation = window.Helpers.getVOHelper().getDummyRepresentation(testType);
     it("should generate an init segment for a representation", function () {
         var initRequest = indexHandler.getInitRequest(representation);

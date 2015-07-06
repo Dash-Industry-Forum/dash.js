@@ -67,7 +67,7 @@ MediaPlayer.dependencies.TextController = function () {
 
             type = typeValue;
             self.setMediaSource(source);
-            self.trackController = streamProcessor.trackController;
+            self.representationController = streamProcessor.representationController;
             self.streamProcessor = streamProcessor;
         },
 

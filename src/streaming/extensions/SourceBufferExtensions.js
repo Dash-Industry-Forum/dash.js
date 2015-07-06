@@ -175,6 +175,81 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         return length;
     },
 
+    getRangeDifference: function(currentRanges, buffer) {
+        if (!buffer) return null;
+
+        //TODO we may need to look for a more elegant and robust method
+        // The logic below checks that is the difference between currentRanges and actual SourceBuffer ranges
+
+        var newRanges = this.getAllRanges(buffer),
+            newStart,
+            newEnd,
+            equalStart,
+            equalEnd,
+            currentRange,
+            nextCurrentRange,
+            nextNewRange,
+            hasRange,
+            diff;
+
+        if (!newRanges) return null;
+
+        for (var i = 0, ln = newRanges.length; i < ln; i += 1) {
+            hasRange = currentRanges.length > i;
+            currentRange = hasRange ? {start: currentRanges.start(i), end: currentRanges.end(i)} : null;
+            newStart = newRanges.start(i);
+            newEnd = newRanges.end(i);
+
+            // if there is no range with the same index it means that a new range has been added. This range is
+            // the difference we are looking for
+            // Example
+            // current ranges
+            // 0|---range1---|4  8|--range2--|12
+            // new ranges
+            // 0|---range1---|4| 8|--range2--|12  16|--range3--|20
+
+            if (!currentRange) {
+                diff = {start: newStart, end: newEnd};
+                return diff;
+            }
+
+            equalStart = currentRange.start === newStart;
+            equalEnd = currentRange.end === newEnd;
+
+            // if ranges are equal do nothing here and go the next ranges
+            if (equalStart && equalEnd) continue;
+
+            // start or/and end of the range has been changed
+            if (equalStart) {
+                diff = {start: currentRange.end, end: newEnd};
+            } else if (equalEnd) {
+                diff = {start: newStart, end: currentRange.start};
+            } else {
+                // new range has been added before the current one
+                diff = {start: newStart, end: newEnd};
+                return diff;
+            }
+
+            // if there is next current range but no next new range (it it is not equal the next current range) it means
+            // that the ranges have been merged
+            // Example 1
+            // current ranges
+            // 0|---range1---|4  8|--range2--|12  16|---range3---|
+            // new ranges
+            // 0|-----------range1-----------|12  16|---range3--|
+            nextCurrentRange = currentRanges.length > (i+1) ? {start: currentRanges.start(i+1), end: currentRanges.end(i+1)} : null;
+            nextNewRange = (i+1) < ln ? {start: newRanges.start(i+1), end: newRanges.end(i+1)} : null;
+
+            if (nextCurrentRange && (!nextNewRange || (nextNewRange.start !== nextCurrentRange.start || nextNewRange.end !== nextCurrentRange.end))) {
+                diff.end = nextCurrentRange.start;
+            }
+
+            return diff;
+        }
+
+        return null;
+    },
+
     waitForUpdateEnd: function(buffer, callback) {
         "use strict";
         var intervalId,

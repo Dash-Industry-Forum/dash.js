@@ -6,12 +6,12 @@ describe("AbrController", function () {
         defaultQuality = helper.getDefaultQuality(),
         dummyMediaInfo = window.Helpers.getVOHelper().getDummyMediaInfo("video"),
         streamInfo = {id: "id1"},
-        trackCount = dummyMediaInfo.trackCount;
+        representationCount = dummyMediaInfo.representationCount;
 
     dummyMediaInfo.streamInfo = streamInfo;
 
     it("should update top quality index", function () {
-        var expectedTopQuality = trackCount - 1,
+        var expectedTopQuality = representationCount - 1,
             actualTopQuality;
 
         actualTopQuality = abrCtrl.updateTopQualityIndex(dummyMediaInfo);
@@ -49,7 +49,7 @@ describe("AbrController", function () {
     });
 
     it("should ignore an attempt to set a quality greater than top quality index", function () {
-        var greaterThanTopQualityValue = trackCount,
+        var greaterThanTopQualityValue = representationCount,
             oldQuality = abrCtrl.getQualityFor(testedType, streamInfo),
             newQuality;
         abrCtrl.setPlaybackQuality(testedType, streamInfo, greaterThanTopQualityValue);

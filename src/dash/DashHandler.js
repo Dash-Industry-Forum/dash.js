@@ -162,6 +162,7 @@ Dash.dependencies.DashHandler = function () {
             request.availabilityStartTime = self.timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation.adaptation.period.mpd, isDynamic);
             request.availabilityEndTime = self.timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, period.mpd, isDynamic);
             request.quality = representation.index;
+            request.mediaInfo = self.streamProcessor.getMediaInfo();
 
             return request;
         },
@@ -790,6 +791,7 @@ Dash.dependencies.DashHandler = function () {
             request.wallStartTime = segment.wallStartTime;
             request.quality = representation.index;
             request.index = segment.availabilityIdx;
+            request.mediaInfo = this.streamProcessor.getMediaInfo();
 
             return request;
         },
@@ -832,6 +834,7 @@ Dash.dependencies.DashHandler = function () {
                 request.action = request.ACTION_COMPLETE;
                 request.index = index;
                 request.mediaType = type;
+                request.mediaInfo = self.streamProcessor.getMediaInfo();
                 self.log("Signal complete.");
                 self.log(request);
             } else {
@@ -887,6 +890,7 @@ Dash.dependencies.DashHandler = function () {
                 request.action = request.ACTION_COMPLETE;
                 request.index = idx;
                 request.mediaType = type;
+                request.mediaInfo = self.streamProcessor.getMediaInfo();
                 self.log("Signal complete.");
                 //self.log(request);
             } else {
@@ -965,7 +969,7 @@ Dash.dependencies.DashHandler = function () {
         },
 
         initialize: function(streamProcessor) {
-            this.subscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, streamProcessor.trackController);
+            this.subscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, streamProcessor.representationController);
             type = streamProcessor.getType();
             this.setMediaType(type);
             isDynamic = streamProcessor.isDynamic();
@@ -1000,7 +1004,7 @@ Dash.dependencies.DashHandler = function () {
             requestedTime = undefined;
             index = -1;
             isDynamic = undefined;
-            this.unsubscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.trackController);
+            this.unsubscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.representationController);
         },
 
         getInitRequest: getInit,

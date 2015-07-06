@@ -67,7 +67,7 @@ MediaPlayer.rules.AbandonRequestsRule = function () {
                 mediaInfo = context.getMediaInfo(),
                 mediaType = mediaInfo.type,
                 progressEvent = context.getCurrentValue(),
-                trackInfo = context.getTrackInfo(),
+                representationInfo = context.getTrackInfo(),
                 req = progressEvent.data.request,
                 abrController = context.getStreamProcessor().getABRController(),
                 fragmentInfo,
@@ -102,7 +102,7 @@ MediaPlayer.rules.AbandonRequestsRule = function () {
                     fragmentInfo.estimatedTimeOfDownload = (fragmentInfo.bytesTotal*8*0.001/fragmentInfo.measuredBandwidthInKbps).toFixed(2);
                     //this.log("XXX","id: ",fragmentInfo.id,  "kbps: ", fragmentInfo.measuredBandwidthInKbps, "etd: ",fragmentInfo.estimatedTimeOfDownload, "et: ", fragmentInfo.elapsedTime/1000);
 
-                    if (fragmentInfo.estimatedTimeOfDownload < (fragmentInfo.segmentDuration * ABANDON_MULTIPLIER) || trackInfo.quality === 0) {
+                    if (fragmentInfo.estimatedTimeOfDownload < (fragmentInfo.segmentDuration * ABANDON_MULTIPLIER) || representationInfo.quality === 0) {
                         callback(switchRequest);
                         return;
                     }else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {

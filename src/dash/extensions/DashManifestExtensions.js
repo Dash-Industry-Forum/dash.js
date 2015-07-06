@@ -129,11 +129,19 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return lang;
     },
 
-    getIsMain: function (/*adaptation*/) {
+    getViewpointForAdaptation: function(adaptation) {
+        return adaptation.hasOwnProperty("Viewpoint") ? adaptation.Viewpoint : null;
+    },
+
+    getRolesForAdaptation: function(adaptation) {
+        return adaptation.hasOwnProperty("Role_asArray") ? adaptation.Role_asArray : [];
+    },
+
+    getIsMain: function (adaptation) {
         "use strict";
-        // TODO : Check "Role" node.
-        // TODO : Use this somewhere.
-        return false;
+        return this.getRolesForAdaptation(adaptation).filter(function(role){
+            return role.value === "main";
+        })[0];
     },
 
     processAdaptation: function (adaptation) {
