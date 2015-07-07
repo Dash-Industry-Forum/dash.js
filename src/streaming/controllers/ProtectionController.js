@@ -86,7 +86,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                             }
                         };
                         this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, ksAccess, undefined, true);
-                        this.requestKeySystemAccess(requestedKeySystems);
+                        this.protectionModel.requestKeySystemAccess(requestedKeySystems);
                         break;
                     }
                 }
@@ -104,6 +104,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 var ksSelected = {};
                 ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
                     if (event.error) {
+                        self.keySystem = undefined;
                         self.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
                         if (notifyOnError) {
                             self.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR,
@@ -112,7 +113,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                     } else {
                         var keySystemAccess = event.data;
                         self.log("KeySystem Access Granted (" + keySystemAccess.keySystem.systemString + ")!  Selecting key system...");
-                        self.selectKeySystem(keySystemAccess);
+                        self.protectionModel.selectKeySystem(keySystemAccess);
                     }
                 };
                 ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = function(event) {
@@ -129,6 +130,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                             }
                         }
                     } else {
+                        self.keySystem = undefined;
                         if (notifyOnError) {
                             self.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR,
                                     "DRM: Error selecting key system! -- " + event.error);
@@ -138,7 +140,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected, undefined, true);
                 this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, ksSelected, undefined, true);
 
-                this.requestKeySystemAccess(requestedKeySystems);
+                this.protectionModel.requestKeySystemAccess(requestedKeySystems);
             } else {
                 // We are in the process of selecting a key system, so just save the data
                 pendingNeedKeyData.push(supportedKS);
@@ -325,14 +327,6 @@ MediaPlayer.dependencies.ProtectionController = function () {
         },
 
         requestKeySystemAccess: function(ksConfiguration) {
-            this.protectionModel.requestKeySystemAccess(ksConfiguration);
-        },
-
-        selectKeySystem: function(keySystemAccess) {
-            if (this.keySystem) {
-                throw new Error("DRM: KeySystem already selected!");
-            }
-            this.protectionModel.selectKeySystem(keySystemAccess);
         },
 
         createKeySession: function(initData) {
