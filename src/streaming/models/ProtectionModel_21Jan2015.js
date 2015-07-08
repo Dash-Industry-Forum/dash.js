@@ -188,7 +188,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
             var numSessions = sessions.length,
                 session,
                 self = this;
-            if (numSessions != 0) {
+            if (numSessions !== 0) {
                 // Called when we are done closing a session.  Success or fail
                 var done = function(session) {
                     removeSession(session);
@@ -197,8 +197,6 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                             videoElement.removeEventListener("encrypted", eventHandler);
                             videoElement.setMediaKeys(null).then(function () {
                                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
-                            }).catch(function (error) {
-                                var x = 1;
                             });
                         }
                     }

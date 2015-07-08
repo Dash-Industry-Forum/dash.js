@@ -242,7 +242,7 @@ MediaPlayer = function (context) {
 
                 var teardownComplete = {},
                     self = this;
-                teardownComplete[MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE] = function (event) {
+                teardownComplete[MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
 
                     // Finish rest of shutdown process
                     abrController.reset();
