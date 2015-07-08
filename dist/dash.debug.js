@@ -1232,6 +1232,221 @@ if (undefined === atob) {
     var atob = BASE64.decode;
 }
 
+var ISOBoxer = ISOBoxer || {};
+
+ISOBoxer.Cursor = function(a) {
+    this.offset = "undefined" == typeof a ? 0 : a;
+};
+
+var ISOBox = function() {
+    this._cursor = new ISOBoxer.Cursor();
+};
+
+ISOBox.parse = function(a) {
+    var b = new ISOBox();
+    return b._offset = a._cursor.offset, b._root = a._root ? a._root : a, b._raw = a._raw, 
+    b._parent = a, b._parseBox(), a._cursor.offset = b._raw.byteOffset + b._raw.byteLength, 
+    b;
+}, ISOBox.prototype._readInt = function(a) {
+    var b = null;
+    switch (a) {
+      case 8:
+        b = this._raw.getInt8(this._cursor.offset - this._raw.byteOffset);
+        break;
+
+      case 16:
+        b = this._raw.getInt16(this._cursor.offset - this._raw.byteOffset);
+        break;
+
+      case 32:
+        b = this._raw.getInt32(this._cursor.offset - this._raw.byteOffset);
+    }
+    return this._cursor.offset += a >> 3, b;
+}, ISOBox.prototype._readUint = function(a) {
+    var b = null;
+    switch (a) {
+      case 8:
+        b = this._raw.getUint8(this._cursor.offset - this._raw.byteOffset);
+        break;
+
+      case 16:
+        b = this._raw.getUint16(this._cursor.offset - this._raw.byteOffset);
+        break;
+
+      case 24:
+        var c = this._raw.getUint16(this._cursor.offset - this._raw.byteOffset), d = this._raw.getUint8(this._cursor.offset - this._raw.byteOffset + 2);
+        b = (c << 8) + d;
+        break;
+
+      case 32:
+        b = this._raw.getUint32(this._cursor.offset - this._raw.byteOffset);
+        break;
+
+      case 64:
+        var c = this._raw.getUint32(this._cursor.offset - this._raw.byteOffset), d = this._raw.getUint32(this._cursor.offset - this._raw.byteOffset + 4);
+        b = c * Math.pow(2, 32) + d;
+    }
+    return this._cursor.offset += a >> 3, b;
+}, ISOBox.prototype._readString = function(a) {
+    for (var b = "", c = 0; a > c; c++) {
+        var d = this._readUint(8);
+        b += String.fromCharCode(d);
+    }
+    return b;
+}, ISOBox.prototype._readTerminatedString = function() {
+    for (var a = ""; ;) {
+        var b = this._readUint(8);
+        if (0 == b) break;
+        a += String.fromCharCode(b);
+    }
+    return a;
+}, ISOBox.prototype._readTemplate = function(a) {
+    var b = this._readUint(a / 2), c = this._readUint(a / 2);
+    return b + c / Math.pow(2, a / 2);
+}, ISOBox.prototype._parseBox = function() {
+    if (this._cursor.offset = this._offset, this._offset + 8 > this._raw.buffer.byteLength) return void (this._root._incomplete = !0);
+    switch (this.size = this._readUint(32), this.type = this._readString(4), 1 == this.size && (this.largesize = this._readUint(64)), 
+    "uuid" == this.type && (this.usertype = this._readString(16)), this.size) {
+      case 0:
+        this._raw = new DataView(this._raw.buffer, this._offset, this._raw.byteLength - this._cursor.offset);
+        break;
+
+      case 1:
+        this._offset + this.size > this._raw.buffer.byteLength ? (this._incomplete = !0, 
+        this._root._incomplete = !0) : this._raw = new DataView(this._raw.buffer, this._offset, this.largesize);
+        break;
+
+      default:
+        this._offset + this.size > this._raw.buffer.byteLength ? (this._incomplete = !0, 
+        this._root._incomplete = !0) : this._raw = new DataView(this._raw.buffer, this._offset, this.size);
+    }
+    !this._incomplete && this._boxParsers[this.type] && this._boxParsers[this.type].call(this);
+}, ISOBox.prototype._parseFullBox = function() {
+    this.version = this._readUint(8), this.flags = this._readUint(24);
+}, ISOBox.prototype._boxParsers = {}, [ "moov", "trak", "tref", "mdia", "minf", "stbl", "edts", "dinf", "mvex", "moof", "traf", "mfra", "udta", "meco", "strk" ].forEach(function(a) {
+    ISOBox.prototype._boxParsers[a] = function() {
+        for (this.boxes = []; this._cursor.offset - this._raw.byteOffset < this._raw.byteLength; ) this.boxes.push(ISOBox.parse(this));
+    };
+}), ISOBox.prototype._boxParsers.emsg = function() {
+    this._parseFullBox(), this.scheme_id_uri = this._readTerminatedString(), this.value = this._readTerminatedString(), 
+    this.timescale = this._readUint(32), this.presentation_time_delta = this._readUint(32), 
+    this.event_duration = this._readUint(32), this.id = this._readUint(32), this.message_data = new DataView(this._raw.buffer, this._cursor.offset, this._raw.byteLength - (this._cursor.offset - this._offset));
+}, ISOBox.prototype._boxParsers.free = ISOBox.prototype._boxParsers.skip = function() {
+    this.data = new DataView(this._raw.buffer, this._cursor.offset, this._raw.byteLength - (this._cursor.offset - this._offset));
+}, ISOBox.prototype._boxParsers.ftyp = ISOBox.prototype._boxParsers.styp = function() {
+    for (this.major_brand = this._readString(4), this.minor_versions = this._readUint(32), 
+    this.compatible_brands = []; this._cursor.offset - this._raw.byteOffset < this._raw.byteLength; ) this.compatible_brands.push(this._readString(4));
+}, ISOBox.prototype._boxParsers.mdat = function() {
+    this.data = new DataView(this._raw.buffer, this._cursor.offset, this._raw.byteLength - (this._cursor.offset - this._offset));
+}, ISOBox.prototype._boxParsers.mdhd = function() {
+    this._parseFullBox(), 1 == this.version ? (this.creation_time = this._readUint(64), 
+    this.modification_time = this._readUint(64), this.timescale = this._readUint(32), 
+    this.duration = this._readUint(64)) : (this.creation_time = this._readUint(32), 
+    this.modification_time = this._readUint(32), this.timescale = this._readUint(32), 
+    this.duration = this._readUint(32));
+    var a = this._readUint(16);
+    this.pad = a >> 15, this.language = String.fromCharCode((a >> 10 & 31) + 96, (a >> 5 & 31) + 96, (31 & a) + 96), 
+    this.pre_defined = this._readUint(16);
+}, ISOBox.prototype._boxParsers.mfhd = function() {
+    this._parseFullBox(), this.sequence_number = this._readUint(32);
+}, ISOBox.prototype._boxParsers.mvhd = function() {
+    this._parseFullBox(), 1 == this.version ? (this.creation_time = this._readUint(64), 
+    this.modification_time = this._readUint(64), this.timescale = this._readUint(32), 
+    this.duration = this._readUint(64)) : (this.creation_time = this._readUint(32), 
+    this.modification_time = this._readUint(32), this.timescale = this._readUint(32), 
+    this.duration = this._readUint(32)), this.rate = this._readTemplate(32), this.volume = this._readTemplate(16), 
+    this.reserved1 = this._readUint(16), this.reserved2 = [ this._readUint(32), this._readUint(32) ], 
+    this.matrix = [];
+    for (var a = 0; 9 > a; a++) this.matrix.push(this._readTemplate(32));
+    this.pre_defined = [];
+    for (var a = 0; 6 > a; a++) this.pre_defined.push(this._readUint(32));
+    this.next_track_ID = this._readUint(32);
+}, ISOBox.prototype._boxParsers.sidx = function() {
+    this._parseFullBox(), this.reference_ID = this._readUint(32), this.timescale = this._readUint(32), 
+    0 == this.version ? (this.earliest_presentation_time = this._readUint(32), this.first_offset = this._readUint(32)) : (this.earliest_presentation_time = this._readUint(64), 
+    this.first_offset = this._readUint(64)), this.reserved = this._readUint(16), this.reference_count = this._readUint(16), 
+    this.references = [];
+    for (var a = 0; a < this.reference_count; a++) {
+        var b = {}, c = this._readUint(32);
+        b.reference_type = c >> 31 & 1, b.referenced_size = 2147483647 & c, b.subsegment_duration = this._readUint(32);
+        var d = this._readUint(32);
+        b.starts_with_SAP = d >> 31 & 1, b.SAP_type = d >> 28 & 7, b.SAP_delta_time = 268435455 & d, 
+        this.references.push(b);
+    }
+}, ISOBox.prototype._boxParsers.ssix = function() {
+    this._parseFullBox(), this.subsegment_count = this._readUint(32), this.subsegments = [];
+    for (var a = 0; a < this.subsegment_count; a++) {
+        var b = {};
+        b.ranges_count = this._readUint(32), b.ranges = [];
+        for (var c = 0; c < b.ranges_count; c++) {
+            var d = {};
+            d.level = this._readUint(8), d.range_size = this._readUint(24), b.ranges.push(d);
+        }
+        this.subsegments.push(b);
+    }
+}, ISOBox.prototype._boxParsers.tkhd = function() {
+    this._parseFullBox(), 1 == this.version ? (this.creation_time = this._readUint(64), 
+    this.modification_time = this._readUint(64), this.track_ID = this._readUint(32), 
+    this.reserved1 = this._readUint(32), this.duration = this._readUint(64)) : (this.creation_time = this._readUint(32), 
+    this.modification_time = this._readUint(32), this.track_ID = this._readUint(32), 
+    this.reserved1 = this._readUint(32), this.duration = this._readUint(32)), this.reserved2 = [ this._readUint(32), this._readUint(32) ], 
+    this.layer = this._readUint(16), this.alternate_group = this._readUint(16), this.volume = this._readTemplate(16), 
+    this.reserved3 = this._readUint(16), this.matrix = [];
+    for (var a = 0; 9 > a; a++) this.matrix.push(this._readTemplate(32));
+    this.width = this._readUint(32), this.height = this._readUint(32);
+}, ISOBox.prototype._boxParsers.tfdt = function() {
+    this._parseFullBox(), this.baseMediaDecodeTime = this._readUint(1 == this.version ? 64 : 32);
+}, ISOBox.prototype._boxParsers.tfhd = function() {
+    this._parseFullBox(), this.track_ID = this._readUint(32), 1 & this.flags && (this.base_data_offset = this._readUint(64)), 
+    2 & this.flags && (this.sample_description_offset = this._readUint(32)), 8 & this.flags && (this.default_sample_duration = this._readUint(32)), 
+    16 & this.flags && (this.default_sample_size = this._readUint(32)), 32 & this.flags && (this.default_sample_flags = this._readUint(32));
+}, ISOBox.prototype._boxParsers.trun = function() {
+    this._parseFullBox(), this.sample_count = this._readUint(32), 1 & this.flags && (this.data_offset = this._readInt(32)), 
+    4 & this.flags && (this.first_sample_flags = this._readUint(32)), this.samples = [];
+    for (var a = 0; a < this.sample_count; a++) {
+        var b = {};
+        256 & this.flags && (b.sample_duration = this._readUint(32)), 512 & this.flags && (b.sample_size = this._readUint(32)), 
+        1024 & this.flags && (b.sample_flags = this._readUint(32)), 2048 & this.flags && (b.sample_composition_time_offset = 0 == this.version ? this._readUint(32) : this._readInt(32)), 
+        this.samples.push(b);
+    }
+};
+
+var ISOBoxer = ISOBoxer || {};
+
+ISOBoxer.parseBuffer = function(a) {
+    return new ISOFile(a).parse();
+}, ISOBoxer.Utils = {}, ISOBoxer.Utils.dataViewToString = function(a, b) {
+    if ("undefined" != typeof TextDecoder) return new TextDecoder(b || "utf-8").decode(a);
+    for (var c = "", d = 0; d < a.byteLength; d++) c += String.fromCharCode(a.getUint8(d));
+    return c;
+}, "undefined" != typeof exports && (exports.parseBuffer = ISOBoxer.parseBuffer, 
+exports.Utils = ISOBoxer.Utils);
+
+var ISOFile = function(a) {
+    this._raw = new DataView(a), this._cursor = new ISOBoxer.Cursor(), this.boxes = [];
+};
+
+ISOFile.prototype.fetch = function(a) {
+    var b = this.fetchAll(a, !0);
+    return b.length ? b[0] : null;
+}, ISOFile.prototype.fetchAll = function(a, b) {
+    var c = [];
+    return ISOFile._sweep.call(this, a, c, b), c;
+}, ISOFile.prototype.parse = function() {
+    for (this._cursor.offset = 0, this.boxes = []; this._cursor.offset < this._raw.byteLength; ) {
+        var a = ISOBox.parse(this);
+        if ("undefined" == typeof a.type) break;
+        this.boxes.push(a);
+    }
+    return this;
+}, ISOFile._sweep = function(a, b, c) {
+    this.type && this.type == a && b.push(this);
+    for (var d in this.boxes) {
+        if (b.length && c) return;
+        ISOFile._sweep.call(this.boxes[d], a, b, c);
+    }
+};
+
 MediaPlayer = function(context) {
     "use strict";
     var VERSION = "1.4.0", DEFAULT_TIME_SERVER = "http://time.akamai.com/?iso", DEFAULT_TIME_SOURCE_SCHEME = "urn:mpeg:dash:utc:http-xsdate:2014", numOfParallelRequestAllowed = 0, system, abrController, element, source, protectionController = null, protectionData = null, streamController, rulesController, playbackController, metricsExt, metricsModel, videoModel, DOMStorage, initialized = false, playing = false, autoPlay = true, scheduleWhilePaused = false, bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED, useManifestDateHeaderTimeSource = true, UTCTimingSources = [], liveDelayFragmentCount = 4, usePresentationDelay = false, isReady = function() {
@@ -1640,9 +1855,11 @@ MediaPlayer.di.Context = function() {
             this.system.mapSingleton("DOMStorage", MediaPlayer.utils.DOMStorage);
             this.system.mapClass("customTimeRanges", MediaPlayer.utils.CustomTimeRanges);
             this.system.mapSingleton("virtualBuffer", MediaPlayer.utils.VirtualBuffer);
+            this.system.mapClass("isoFile", MediaPlayer.utils.IsoFile);
             this.system.mapSingleton("textTrackExtensions", MediaPlayer.utils.TextTrackExtensions);
             this.system.mapSingleton("vttParser", MediaPlayer.utils.VTTParser);
             this.system.mapSingleton("ttmlParser", MediaPlayer.utils.TTMLParser);
+            this.system.mapSingleton("boxParser", MediaPlayer.utils.BoxParser);
             this.system.mapSingleton("videoModel", MediaPlayer.models.VideoModel);
             this.system.mapSingleton("manifestModel", MediaPlayer.models.ManifestModel);
             this.system.mapSingleton("metricsModel", MediaPlayer.models.MetricsModel);
@@ -1845,7 +2062,7 @@ Dash.dependencies.DashAdapter = function() {
         var representation = representationController.getCurrentRepresentation();
         return representation ? convertRepresentationToTrackInfo.call(this, manifest, representation) : null;
     }, getEvent = function(eventBox, eventStreams, startTime) {
-        var event = new Dash.vo.Event(), schemeIdUri = eventBox[0], value = eventBox[1], timescale = eventBox[2], presentationTimeDelta = eventBox[3], duration = eventBox[4], id = eventBox[5], messageData = eventBox[6], presentationTime = startTime * timescale + presentationTimeDelta;
+        var event = new Dash.vo.Event(), schemeIdUri = eventBox.scheme_id_uri, value = eventBox.value, timescale = eventBox.timescale, presentationTimeDelta = eventBox.presentation_time_delta, duration = eventBox.event_duration, id = eventBox.id, messageData = eventBox.message_data, presentationTime = startTime * timescale + presentationTimeDelta;
         if (!eventStreams[schemeIdUri]) return null;
         event.eventStream = eventStreams[schemeIdUri];
         event.eventStream.value = value;
@@ -3102,165 +3319,65 @@ Dash.dependencies.RepresentationController.eventList = {
 
 Dash.dependencies.BaseURLExtensions = function() {
     "use strict";
-    var parseSIDX = function(ab, ab_first_byte_offset) {
-        var d = new DataView(ab), sidx = {}, pos = 0, offset, time, sidxEnd, i, ref_type, ref_size, ref_dur, type, size, charCode;
-        while (type !== "sidx" && pos < d.byteLength) {
-            size = d.getUint32(pos);
-            pos += 4;
-            type = "";
-            for (i = 0; i < 4; i += 1) {
-                charCode = d.getInt8(pos);
-                type += String.fromCharCode(charCode);
-                pos += 1;
-            }
-            if (type !== "moof" && type !== "traf" && type !== "sidx") {
-                pos += size - 8;
-            } else if (type === "sidx") {
-                pos -= 8;
-            }
-        }
-        sidxEnd = d.getUint32(pos, false) + pos;
-        if (sidxEnd > ab.byteLength) {
-            throw "sidx terminates after array buffer";
-        }
-        sidx.version = d.getUint8(pos + 8);
-        pos += 12;
-        sidx.timescale = d.getUint32(pos + 4, false);
-        pos += 8;
-        if (sidx.version === 0) {
-            sidx.earliest_presentation_time = d.getUint32(pos, false);
-            sidx.first_offset = d.getUint32(pos + 4, false);
-            pos += 8;
-        } else {
-            sidx.earliest_presentation_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
-            sidx.first_offset = (d.getUint32(pos + 8, false) << 32) + d.getUint32(pos + 12, false);
-            pos += 16;
-        }
-        sidx.first_offset += sidxEnd + (ab_first_byte_offset || 0);
-        sidx.reference_count = d.getUint16(pos + 2, false);
-        pos += 4;
-        sidx.references = [];
-        offset = sidx.first_offset;
-        time = sidx.earliest_presentation_time;
-        for (i = 0; i < sidx.reference_count; i += 1) {
-            ref_size = d.getUint32(pos, false);
-            ref_type = ref_size >>> 31;
-            ref_size = ref_size & 2147483647;
-            ref_dur = d.getUint32(pos + 4, false);
-            pos += 12;
-            sidx.references.push({
-                size: ref_size,
-                type: ref_type,
-                offset: offset,
-                duration: ref_dur,
-                time: time,
-                timescale: sidx.timescale
-            });
-            offset += ref_size;
-            time += ref_dur;
-        }
-        if (pos !== sidxEnd) {
-            throw "Error: final pos " + pos + " differs from SIDX end " + sidxEnd;
-        }
-        return sidx;
-    }, parseSegments = function(data, media, offset) {
-        var parsed, ref, segments, segment, i, len, start, end;
-        parsed = parseSIDX.call(this, data, offset);
-        ref = parsed.references;
-        segments = [];
-        for (i = 0, len = ref.length; i < len; i += 1) {
+    var getSegmentsForSidx = function(sidx, info) {
+        var refs = sidx.references, len = refs.length, timescale = sidx.timescale, time = sidx.earliest_presentation_time, start = info.range.start + sidx.first_offset + sidx.size, segments = [], segment, end, duration, size;
+        for (var i = 0; i < len; i += 1) {
+            duration = refs[i].subsegment_duration;
+            size = refs[i].referenced_size;
             segment = new Dash.vo.Segment();
-            segment.duration = ref[i].duration;
-            segment.media = media;
-            segment.startTime = ref[i].time;
-            segment.timescale = ref[i].timescale;
-            start = ref[i].offset;
-            end = ref[i].offset + ref[i].size - 1;
+            segment.duration = duration;
+            segment.media = info.url;
+            segment.startTime = time;
+            segment.timescale = timescale;
+            end = start + size - 1;
             segment.mediaRange = start + "-" + end;
             segments.push(segment);
+            time += duration;
+            start += size;
         }
-        this.log("Parsed SIDX box: " + segments.length + " segments.");
         return segments;
-    }, findInit = function(data, info, callback) {
-        var ftyp, moov, start, end, d = new DataView(data), pos = 0, type = "", size = 0, i, c, request, loaded = false, irange, self = this;
-        self.log("Searching for initialization.");
-        while (type !== "moov" && pos < d.byteLength) {
-            size = d.getUint32(pos);
-            pos += 4;
-            type = "";
-            for (i = 0; i < 4; i += 1) {
-                c = d.getInt8(pos);
-                type += String.fromCharCode(c);
-                pos += 1;
-            }
-            if (type === "ftyp") {
-                ftyp = pos - 8;
-            }
-            if (type === "moov") {
-                moov = pos - 8;
-            }
-            if (type !== "moov") {
-                pos += size - 8;
-            }
+    }, findInitRange = function(isoFile) {
+        var ftyp = isoFile.getBox("ftyp"), moov = isoFile.getBox("moov"), start, end, initRange = null;
+        this.log("Searching for initialization.");
+        if (moov && moov.isComplete) {
+            start = ftyp ? ftyp.offset : moov.offset;
+            end = moov.offset + moov.size - 1;
+            initRange = start + "-" + end;
+            this.log("Found the initialization.  Range: " + initRange);
         }
-        if (type !== "moov") {
-            self.log("Loading more bytes to find initialization.");
-            info.range.start = 0;
-            info.range.end = info.bytesLoaded + info.bytesToLoad;
-            request = new XMLHttpRequest();
-            request.onloadend = function() {
-                if (!loaded) {
-                    callback.call(self, null, new Error("Error loading initialization."));
-                }
-            };
-            request.onload = function() {
-                loaded = true;
-                info.bytesLoaded = info.range.end;
-                findInit.call(self, request.response, function(segments) {
-                    callback.call(self, segments);
-                });
-            };
-            request.onerror = function() {
-                callback.call(self, null, new Error("Error loading initialization."));
-            };
-            sendRequest.call(self, request, info);
-        } else {
-            start = ftyp === undefined ? moov : ftyp;
-            end = moov + size - 1;
-            irange = start + "-" + end;
-            self.log("Found the initialization.  Range: " + irange);
-            callback.call(self, irange);
-        }
-    }, loadInit = function(representation) {
-        var request = new XMLHttpRequest(), needFailureReport = true, self = this, media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL, info = {
+        return initRange;
+    }, loadInit = function(representation, loadingInfo) {
+        var request = new XMLHttpRequest(), needFailureReport = true, self = this, initRange = null, isoFile = null, media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL, info = loadingInfo || {
             url: media,
-            range: {},
+            range: {
+                start: 0,
+                end: 1500
+            },
             searching: false,
             bytesLoaded: 0,
             bytesToLoad: 1500,
             request: request
         };
         self.log("Start searching for initialization.");
-        info.range.start = 0;
-        info.range.end = info.bytesToLoad;
         request.onload = function() {
-            if (request.status < 200 || request.status > 299) {
-                return;
-            }
+            if (request.status < 200 || request.status > 299) return;
             needFailureReport = false;
             info.bytesLoaded = info.range.end;
-            findInit.call(self, request.response, info, function(range) {
-                representation.range = range;
+            isoFile = self.boxParser.parse(request.response);
+            initRange = findInitRange.call(self, isoFile);
+            if (initRange) {
+                representation.range = initRange;
                 representation.initialization = media;
                 self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {
                     representation: representation
                 });
-            });
+            } else {
+                info.range.end = info.bytesLoaded + info.bytesToLoad;
+                loadInit.call(self, representation, info);
+            }
         };
         request.onloadend = request.onerror = function() {
-            if (!needFailureReport) {
-                return;
-            }
+            if (!needFailureReport) return;
             needFailureReport = false;
             self.errHandler.downloadError("initialization", info.url, request);
             self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {
@@ -3269,125 +3386,80 @@ Dash.dependencies.BaseURLExtensions = function() {
         };
         sendRequest.call(self, request, info);
         self.log("Perform init search: " + info.url);
-    }, findSIDX = function(data, info, representation, callback) {
-        var segments, d = new DataView(data), request = new XMLHttpRequest(), pos = 0, type = "", size = 0, bytesAvailable, sidxBytes, sidxSlice, sidxOut, i, c, needFailureReport = true, parsed, ref, loadMultiSidx = false, self = this;
-        self.log("Searching for SIDX box.");
-        self.log(info.bytesLoaded + " bytes loaded.");
-        while (type !== "sidx" && pos < d.byteLength) {
-            size = d.getUint32(pos);
-            pos += 4;
-            type = "";
-            for (i = 0; i < 4; i += 1) {
-                c = d.getInt8(pos);
-                type += String.fromCharCode(c);
-                pos += 1;
-            }
-            if (type !== "sidx") {
-                pos += size - 8;
-            }
-        }
-        bytesAvailable = d.byteLength - pos;
-        if (type !== "sidx") {
-            callback.call(self);
-        } else if (bytesAvailable < size - 8) {
-            self.log("Found SIDX but we don't have all of it.");
-            info.range.start = 0;
-            info.range.end = info.bytesLoaded + (size - bytesAvailable);
-            request.onload = function() {
-                if (request.status < 200 || request.status > 299) {
-                    return;
-                }
-                needFailureReport = false;
-                info.bytesLoaded = info.range.end;
-                findSIDX.call(self, request.response, info, representation, callback);
-            };
-            request.onloadend = request.onerror = function() {
-                if (!needFailureReport) {
-                    return;
-                }
-                needFailureReport = false;
-                self.errHandler.downloadError("SIDX", info.url, request);
-                callback.call(self);
-            };
-            sendRequest.call(self, request, info);
-        } else {
-            info.range.start = pos - 8;
-            info.range.end = info.range.start + size;
-            self.log("Found the SIDX box.  Start: " + info.range.start + " | End: " + info.range.end);
-            sidxBytes = new ArrayBuffer(info.range.end - info.range.start);
-            sidxOut = new Uint8Array(sidxBytes);
-            sidxSlice = new Uint8Array(data, info.range.start, info.range.end - info.range.start);
-            sidxOut.set(sidxSlice);
-            parsed = this.parseSIDX.call(this, sidxBytes, info.range.start);
-            ref = parsed.references;
-            if (ref !== null && ref !== undefined && ref.length > 0) {
-                loadMultiSidx = ref[0].type === 1;
-            }
-            if (loadMultiSidx) {
-                self.log("Initiate multiple SIDX load.");
-                var j, len, ss, se, r, segs = [], count = 0, tmpCallback = function(segments) {
-                    if (segments) {
-                        segs = segs.concat(segments);
-                        count += 1;
-                        if (count >= len) {
-                            callback.call(self, segs);
-                        }
-                    } else {
-                        callback.call(self);
-                    }
-                };
-                for (j = 0, len = ref.length; j < len; j += 1) {
-                    ss = ref[j].offset;
-                    se = ref[j].offset + ref[j].size - 1;
-                    r = ss + "-" + se;
-                    loadSegments.call(self, representation, null, r, tmpCallback);
-                }
-            } else {
-                self.log("Parsing segments from SIDX.");
-                segments = parseSegments.call(self, sidxBytes, info.url, info.range.start);
-                callback.call(self, segments);
-            }
-        }
-    }, loadSegments = function(representation, type, theRange, callback) {
-        var request = new XMLHttpRequest(), segments, parts, media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL, needFailureReport = true, self = this, info = {
+    }, loadSegments = function(representation, type, theRange, loadingInfo, callback) {
+        var self = this, hasRange = theRange !== null, request = new XMLHttpRequest(), media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL, needFailureReport = true, isoFile = null, sidx = null, info = {
             url: media,
-            range: {},
-            searching: false,
-            bytesLoaded: 0,
+            range: hasRange ? theRange : {
+                start: 0,
+                end: 1500
+            },
+            searching: !hasRange,
+            bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
             bytesToLoad: 1500,
             request: request
         };
-        if (theRange === null) {
-            self.log("No known range for SIDX request.");
-            info.searching = true;
-            info.range.start = 0;
-            info.range.end = info.bytesToLoad;
-        } else {
-            parts = theRange.split("-");
-            info.range.start = parseFloat(parts[0]);
-            info.range.end = parseFloat(parts[1]);
-        }
         request.onload = function() {
-            if (request.status < 200 || request.status > 299) {
-                return;
-            }
+            if (request.status < 200 || request.status > 299) return;
+            var extraBytes = info.bytesToLoad, loadedLength = request.response.byteLength;
             needFailureReport = false;
-            if (info.searching) {
-                info.bytesLoaded = info.range.end;
-                findSIDX.call(self, request.response, info, representation, function(segments) {
-                    if (segments) {
-                        callback.call(self, segments, representation, type);
+            info.bytesLoaded = info.range.end - info.range.start;
+            isoFile = self.boxParser.parse(request.response);
+            sidx = isoFile.getBox("sidx");
+            if (!sidx || !sidx.isComplete) {
+                if (sidx) {
+                    info.range.start = sidx.offset || info.range.start;
+                    info.range.end = info.range.start + (sidx.size || extraBytes);
+                } else if (loadedLength < info.bytesLoaded) {
+                    callback.call(self, null, representation, type);
+                    return;
+                } else {
+                    var lastBox = isoFile.getLastBox();
+                    if (lastBox && lastBox.size) {
+                        info.range.start = lastBox.offset + lastBox.size;
+                        info.range.end = info.range.start + extraBytes;
+                    } else {
+                        info.range.end += extraBytes;
                     }
-                });
+                }
+                loadSegments.call(self, representation, type, info.range, info, callback);
             } else {
-                segments = parseSegments.call(self, request.response, info.url, info.range.start);
-                callback.call(self, segments, representation, type);
+                var ref = sidx.references, loadMultiSidx, segments;
+                if (ref !== null && ref !== undefined && ref.length > 0) {
+                    loadMultiSidx = ref[0].reference_type === 1;
+                }
+                if (loadMultiSidx) {
+                    self.log("Initiate multiple SIDX load.");
+                    info.range.end = info.range.start + sidx.size;
+                    var j, len, ss, se, r, segs = [], count = 0, offset = (sidx.offset || info.range.start) + sidx.size, tmpCallback = function(result) {
+                        if (result) {
+                            segs = segs.concat(result);
+                            count += 1;
+                            if (count >= len) {
+                                callback.call(self, segs, representation, type);
+                            }
+                        } else {
+                            callback.call(self, null, representation, type);
+                        }
+                    };
+                    for (j = 0, len = ref.length; j < len; j += 1) {
+                        ss = offset;
+                        se = offset + ref[j].referenced_size - 1;
+                        offset = offset + ref[j].referenced_size;
+                        r = {
+                            start: ss,
+                            end: se
+                        };
+                        loadSegments.call(self, representation, null, r, info, tmpCallback);
+                    }
+                } else {
+                    self.log("Parsing segments from SIDX.");
+                    segments = getSegmentsForSidx.call(self, sidx, info);
+                    callback.call(self, segments, representation, type);
+                }
             }
         };
         request.onloadend = request.onerror = function() {
-            if (!needFailureReport) {
-                return;
-            }
+            if (!needFailureReport) return;
             needFailureReport = false;
             self.errHandler.downloadError("SIDX", info.url, request);
             callback.call(self, null, representation, type);
@@ -3420,16 +3492,19 @@ Dash.dependencies.BaseURLExtensions = function() {
         log: undefined,
         errHandler: undefined,
         requestModifierExt: undefined,
+        boxParser: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
         loadSegments: function(representation, type, range) {
-            loadSegments.call(this, representation, type, range, onLoaded.bind(this));
+            var parts = range ? range.split("-") : null;
+            range = parts ? {
+                start: parseFloat(parts[0]),
+                end: parseFloat(parts[1])
+            } : null;
+            loadSegments.call(this, representation, type, range, null, onLoaded.bind(this));
         },
-        loadInitialization: loadInit,
-        parseSegments: parseSegments,
-        parseSIDX: parseSIDX,
-        findSIDX: findSIDX
+        loadInitialization: loadInit
     };
 };
 
@@ -3456,11 +3531,11 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             return type == "fragmentedText";
         }
         if (col) {
-            for (i = 0, len = col.length; i < len; i += 1) {
-                if (col[i].contentType === type) {
-                    result = true;
-                    found = true;
-                }
+            if (col.length > 1) {
+                return type == "muxed";
+            } else if (col[0] && col[0].contentType === type) {
+                result = true;
+                found = true;
             }
         }
         if (adaptation.hasOwnProperty("mimeType")) {
@@ -3496,6 +3571,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
     getIsText: function(adaptation) {
         "use strict";
         return this.getIsTypeOf(adaptation, "text");
+    },
+    getIsMuxed: function(adaptation) {
+        return this.getIsTypeOf(adaptation, "muxed");
     },
     getIsTextTrack: function(type) {
         return type === "text/vtt" || type === "application/ttml+xml";
@@ -3731,7 +3809,9 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             }
             adaptationSet.index = i;
             adaptationSet.period = period;
-            if (this.getIsAudio(a)) {
+            if (this.getIsMuxed(a)) {
+                adaptationSet.type = "muxed";
+            } else if (this.getIsAudio(a)) {
                 adaptationSet.type = "audio";
             } else if (this.getIsVideo(a)) {
                 adaptationSet.type = "video";
@@ -4145,262 +4225,40 @@ Dash.dependencies.DashMetricsExtensions.prototype = {
     constructor: Dash.dependencies.DashMetricsExtensions
 };
 
-function intTobitArray(integer, integerSizeInBit) {
-    var bitArray = [];
-    for (var i = 0; i < integerSizeInBit; i++) {
-        bitArray.push((integer & Math.pow(2, i)) > 0);
-    }
-    return bitArray;
-}
-
 Dash.dependencies.FragmentExtensions = function() {
     "use strict";
-    var TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX = 0, TFHD_SAMPLE_DESCRIPTION_INDEX_PRESENT_FLAG_INDEX = 1, TFHD_DEFAULT_SAMPLE_DURATION_PRESENT_FLAG_INDEX = 3, TFHD_DEFAULT_SAMPLE_SIZE_PRESENT_FLAG_INDEX = 4, TFHD_DEFAULT_SAMPLE_FLAGS_PRESENT_FLAG_INDEX = 5, TRUN_DATA_OFFSET_PRESENT_FLAG_INDEX = 0, TRUN_FIRST_SAMPLE_FLAGS_PRESENT_FLAG_INDEX = 2, TRUN_SAMPLE_DURATION_PRESENT_FLAG_INDEX = 8, TRUN_SAMPLE_SIZE_PRESENT_FLAG_INDEX = 9, TRUN_SAMPLE_FLAGS_PRESENT_FLAG_INDEX = 10, TRUN_SAMPLE_COMPOSITION_TIME_OFFSET_PRESENT_FLAG_INDEX = 11;
-    var parseTFDT = function(ab) {
-        var d = new DataView(ab), pos = 0, base_media_decode_time, version, size, type, i, c;
-        while (type !== "tfdt" && pos < d.byteLength) {
-            size = d.getUint32(pos);
-            pos += 4;
-            type = "";
-            for (i = 0; i < 4; i += 1) {
-                c = d.getInt8(pos);
-                type += String.fromCharCode(c);
-                pos += 1;
-            }
-            if (type !== "moof" && type !== "traf" && type !== "tfdt") {
-                pos += size - 8;
-            }
-        }
-        if (pos === d.byteLength) {
-            throw "Error finding live offset.";
-        }
-        version = d.getUint8(pos);
-        if (version === 0) {
-            pos += 4;
-            base_media_decode_time = d.getUint32(pos, false);
-        } else {
-            pos += size - 16;
-            base_media_decode_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
-        }
-        return {
-            version: version,
-            base_media_decode_time: base_media_decode_time
-        };
-    }, parseSIDX = function(ab) {
-        var d = new DataView(ab), pos = 0, version, timescale, earliest_presentation_time, i, type, size, charCode;
-        while (type !== "sidx" && pos < d.byteLength) {
-            size = d.getUint32(pos);
-            pos += 4;
-            type = "";
-            for (i = 0; i < 4; i += 1) {
-                charCode = d.getInt8(pos);
-                type += String.fromCharCode(charCode);
-                pos += 1;
-            }
-            if (type !== "moof" && type !== "traf" && type !== "sidx") {
-                pos += size - 8;
-            } else if (type === "sidx") {
-                pos -= 8;
-            }
-        }
-        version = d.getUint8(pos + 8);
-        pos += 12;
-        timescale = d.getUint32(pos + 4, false);
-        pos += 8;
-        if (version === 0) {
-            earliest_presentation_time = d.getUint32(pos, false);
-        } else {
-            earliest_presentation_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
-        }
-        return {
-            earliestPresentationTime: earliest_presentation_time,
-            timescale: timescale
-        };
-    }, parseTFHD = function(ab) {
-        var d = new DataView(ab), pos = 0, size, type, flags, flagsBits, tfhd, i, c;
-        while (type !== "tfhd" && pos < d.byteLength) {
-            size = d.getUint32(pos);
-            pos += 4;
-            type = "";
-            for (i = 0; i < 4; i += 1) {
-                c = d.getInt8(pos);
-                type += String.fromCharCode(c);
-                pos += 1;
-            }
-            if (type !== "moof" && type !== "traf" && type !== "tfhd") {
-                pos += size - 8;
-            }
-        }
-        if (pos === d.byteLength) {
-            throw "Error finding live offset.";
-        }
-        tfhd = {
-            baseDataOffset: 0,
-            descriptionIndex: 0,
-            sampleDuration: 0,
-            sampleSize: 0,
-            defaultSampleFlags: 0
-        };
-        pos += 1;
-        pos += 2;
-        flags = d.getUint8(pos);
-        pos += 1;
-        flagsBits = intTobitArray(flags, 8);
-        pos += 4;
-        if (flagsBits[TFHD_BASE_DATA_OFFSET_PRESENT_FLAG_INDEX]) {
-            tfhd.baseDataOffset = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
-            pos += 8;
-        }
-        if (flagsBits[TFHD_SAMPLE_DESCRIPTION_INDEX_PRESENT_FLAG_INDEX]) {
-            tfhd.descriptionIndex = d.getUint32(pos);
-            pos += 4;
-        }
-        if (flagsBits[TFHD_DEFAULT_SAMPLE_DURATION_PRESENT_FLAG_INDEX]) {
-            tfhd.sampleDuration = d.getUint32(pos);
-            pos += 4;
-        }
-        if (flagsBits[TFHD_DEFAULT_SAMPLE_SIZE_PRESENT_FLAG_INDEX]) {
-            tfhd.sampleSize = d.getUint32(pos);
-            pos += 4;
-        }
-        if (flagsBits[TFHD_DEFAULT_SAMPLE_FLAGS_PRESENT_FLAG_INDEX]) {
-            tfhd.defaultSampleFlags = d.getUint32(pos);
-            pos += 4;
-        }
-        return tfhd;
-    }, getMediaTimescaleFromMoov = function(ab) {
-        var d = new DataView(ab), pos = 0, version, size, type, i, c;
-        while (type !== "mdhd" && pos < d.byteLength) {
-            size = d.getUint32(pos);
-            pos += 4;
-            type = "";
-            for (i = 0; i < 4; i += 1) {
-                c = d.getInt8(pos);
-                type += String.fromCharCode(c);
-                pos += 1;
-            }
-            if (type !== "moov" && type !== "trak" && type !== "mdia" && type !== "mdhd") {
-                pos += size - 8;
-            }
-        }
-        if (pos === d.byteLength) {
-            throw "Error finding live offset.";
-        }
-        version = d.getUint8(pos);
-        pos += 12;
-        if (version == 1) {
-            pos += 8;
-        }
-        return d.getUint32(pos, false);
-    }, getSamplesInfo = function(ab) {
-        var d = new DataView(ab), pos = 0, size, type, sampleDuration, sampleCompostionTimeOffset, sampleCount, sampleSize, sampleDts, sampleList, flags, flagsBits, i, c, moofPosition, tfhd, tfdt, dataOffset;
-        tfhd = parseTFHD(ab);
-        tfdt = parseTFDT(ab);
-        while (type !== "trun" && pos < d.byteLength) {
-            size = d.getUint32(pos);
-            pos += 4;
-            type = "";
-            for (i = 0; i < 4; i += 1) {
-                c = d.getInt8(pos);
-                type += String.fromCharCode(c);
-                pos += 1;
-            }
-            if (type !== "moof" && type !== "traf" && type !== "trun") {
-                pos += size - 8;
-            }
-            if (type == "moof") {
-                moofPosition = pos - 8;
-            }
-        }
-        if (pos === d.byteLength) {
-            throw "Error finding live offset.";
-        }
-        pos += 1;
-        pos += 1;
-        flags = d.getUint16(pos);
-        pos += 2;
-        flagsBits = intTobitArray(flags, 16);
-        sampleCount = d.getUint32(pos);
-        pos += 4;
-        sampleDts = tfdt.base_media_decode_time;
-        if (flagsBits[TRUN_DATA_OFFSET_PRESENT_FLAG_INDEX]) {
-            dataOffset = d.getUint32(pos) + tfhd.baseDataOffset;
-            pos += 4;
-        } else {
-            dataOffset = tfhd.baseDataOffset;
-        }
-        if (flagsBits[TRUN_FIRST_SAMPLE_FLAGS_PRESENT_FLAG_INDEX]) {
-            pos += 4;
-        }
+    var getSamplesInfo = function(ab) {
+        var isoFile = this.boxParser.parse(ab), tfhdBox = isoFile.getBox("tfhd"), tfdtBox = isoFile.getBox("tfdt"), trunBox = isoFile.getBox("trun"), moofBox = isoFile.getBox("moof"), sampleDuration, sampleCompostionTimeOffset, sampleCount, sampleSize, sampleDts, sampleList, sample, i, dataOffset;
+        sampleCount = trunBox.sample_count;
+        sampleDts = tfdtBox.baseMediaDecodeTime;
+        dataOffset = (tfhdBox.base_data_offset || 0) + (trunBox.data_offset || 0);
         sampleList = [];
         for (i = 0; i < sampleCount; i++) {
-            if (flagsBits[TRUN_SAMPLE_DURATION_PRESENT_FLAG_INDEX]) {
-                sampleDuration = d.getUint32(pos);
-                pos += 4;
-            } else {
-                sampleDuration = tfhd.sampleDuration;
-            }
-            if (flagsBits[TRUN_SAMPLE_SIZE_PRESENT_FLAG_INDEX]) {
-                sampleSize = d.getUint32(pos);
-                pos += 4;
-            } else {
-                sampleSize = tfhd.sampleSize;
-            }
-            if (flagsBits[TRUN_SAMPLE_FLAGS_PRESENT_FLAG_INDEX]) {
-                pos += 4;
-            }
-            if (flagsBits[TRUN_SAMPLE_COMPOSITION_TIME_OFFSET_PRESENT_FLAG_INDEX]) {
-                sampleCompostionTimeOffset = d.getUint32(pos);
-                pos += 4;
-            } else {
-                sampleCompostionTimeOffset = 0;
-            }
+            sample = trunBox.samples[i];
+            sampleDuration = sample.sample_duration !== undefined ? sample.sample_duration : tfhdBox.default_sample_duration;
+            sampleSize = sample.sample_size !== undefined ? sample.sample_size : tfhdBox.default_sample_size;
+            sampleCompostionTimeOffset = sample.sample_composition_time_offset !== undefined ? sample.sample_composition_time_offset : 0;
             sampleList.push({
                 dts: sampleDts,
                 cts: sampleDts + sampleCompostionTimeOffset,
                 duration: sampleDuration,
-                offset: moofPosition + dataOffset,
+                offset: moofBox.offset + dataOffset,
                 size: sampleSize
             });
             dataOffset += sampleSize;
             sampleDts += sampleDuration;
         }
         return sampleList;
-    }, loadFragment = function(media) {
-        var self = this, request = new XMLHttpRequest(), url = media, loaded = false, errorStr = "Error loading fragment: " + url, error = new MediaPlayer.vo.Error(null, errorStr, null), parsed;
-        request.onloadend = function() {
-            if (!loaded) {
-                errorStr = "Error loading fragment: " + url;
-                self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {
-                    fragment: null
-                }, error);
-            }
-        };
-        request.onload = function() {
-            loaded = true;
-            parsed = parseTFDT(request.response);
-            self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {
-                fragment: parsed
-            });
-        };
-        request.onerror = function() {
-            errorStr = "Error loading fragment: " + url;
-            self.notify(Dash.dependencies.FragmentExtensions.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {
-                fragment: null
-            }, error);
-        };
-        request.responseType = "arraybuffer";
-        request.open("GET", url);
-        request.send(null);
+    }, getMediaTimescaleFromMoov = function(ab) {
+        var isoFile = this.boxParser.parse(ab), mdhdBox = isoFile.getBox("mdhd");
+        return mdhdBox.timescale;
     };
     return {
         log: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        loadFragment: loadFragment,
-        parseTFDT: parseTFDT,
-        parseSIDX: parseSIDX,
+        boxParser: undefined,
         getSamplesInfo: getSamplesInfo,
         getMediaTimescaleFromMoov: getMediaTimescaleFromMoov
     };
@@ -5076,12 +4934,12 @@ MediaPlayer.dependencies.Notifier.prototype = {
 
 MediaPlayer.dependencies.Stream = function() {
     "use strict";
-    var streamProcessors = [], isStreamActivated = false, isMediaInitialized = false, streamInfo = null, updateError = {}, isUpdating = false, isInitialized = false, protectionController, ownProtectionController = false, eventController = null, onProtectionError = function(event) {
+    var streamProcessors = [], isStreamActivated = false, isMediaInitialized = false, streamInfo = null, updateError = {}, isUpdating = false, isInitialized = false, protectionController, eventController = null, onProtectionError = function(event) {
         this.errHandler.mediaKeySessionError(event.data);
         this.log(event.data);
         this.reset();
     }, initializeMediaForType = function(type, mediaSource) {
-        var self = this, mimeType = null, manifest = self.manifestModel.getValue(), codec, getCodecOrMimeType = function(mediaInfo) {
+        var self = this, mimeType = null, manifest = self.manifestModel.getValue(), codec, msg, getCodecOrMimeType = function(mediaInfo) {
             return mediaInfo.codec;
         }, streamProcessor, mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, type);
         if (type === "text") {
@@ -5089,6 +4947,11 @@ MediaPlayer.dependencies.Stream = function() {
                 mimeType = mediaInfo.mimeType;
                 return mimeType;
             };
+        } else if (type === "muxed" && mediaInfo) {
+            msg = "Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines";
+            this.log(msg);
+            this.errHandler.manifestError(msg, "multiplexedrep", this.manifestModel.getValue());
+            return;
         }
         if (mediaInfo !== null) {
             var codecOrMime = getCodecOrMimeType.call(self, mediaInfo), contentProtectionData;
@@ -5100,7 +4963,7 @@ MediaPlayer.dependencies.Stream = function() {
                     self.errHandler.capabilityError("encryptedmedia");
                 } else {
                     if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
-                        var msg = type + "Codec (" + codec + ") is not supported.";
+                        msg = type + "Codec (" + codec + ") is not supported.";
                         self.errHandler.manifestError(msg, "codec", manifest);
                         self.log(msg);
                         return;
@@ -5125,6 +4988,7 @@ MediaPlayer.dependencies.Stream = function() {
         initializeMediaForType.call(self, "audio", mediaSource);
         initializeMediaForType.call(self, "text", mediaSource);
         initializeMediaForType.call(self, "fragmentedText", mediaSource);
+        initializeMediaForType.call(self, "muxed", mediaSource);
         createBuffers.call(self);
         isMediaInitialized = true;
         isUpdating = false;
@@ -5135,8 +4999,8 @@ MediaPlayer.dependencies.Stream = function() {
         } else {
             self.liveEdgeFinder.initialize(streamProcessors[0]);
             self.liveEdgeFinder.subscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, self.playbackController);
+            checkIfInitializationCompleted.call(this);
         }
-        checkIfInitializationCompleted.call(this);
     }, checkIfInitializationCompleted = function() {
         var self = this, ln = streamProcessors.length, hasError = !!updateError.audio || !!updateError.video, error = hasError ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.Stream.DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null, i = 0;
         for (i; i < ln; i += 1) {
@@ -5230,20 +5094,10 @@ MediaPlayer.dependencies.Stream = function() {
             this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
             this[MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR] = onProtectionError.bind(this);
         },
-        initialize: function(strmInfo, protectionCtrl, protectionData) {
+        initialize: function(strmInfo, protectionCtrl) {
             streamInfo = strmInfo;
-            if (this.capabilities.supportsEncryptedMedia()) {
-                if (!protectionCtrl) {
-                    protectionCtrl = this.system.getObject("protectionController");
-                    ownProtectionController = true;
-                }
-                protectionController = protectionCtrl;
-                protectionController.subscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
-                protectionController.setMediaElement(this.videoModel.getElement());
-                if (protectionData) {
-                    protectionController.setProtectionData(protectionData);
-                }
-            }
+            protectionController = protectionCtrl;
+            protectionController.subscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
         },
         activate: function(mediaSource) {
             if (!isStreamActivated) {
@@ -5282,14 +5136,7 @@ MediaPlayer.dependencies.Stream = function() {
             this.fragmentController = undefined;
             this.liveEdgeFinder.abortSearch();
             this.liveEdgeFinder.unsubscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.playbackController);
-            if (protectionController) {
-                protectionController.unsubscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
-                if (ownProtectionController) {
-                    protectionController.teardown();
-                    protectionController = null;
-                    ownProtectionController = false;
-                }
-            }
+            protectionController.unsubscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
             isMediaInitialized = false;
             isStreamActivated = false;
             updateError = {};
@@ -5574,7 +5421,7 @@ MediaPlayer.dependencies.StreamProcessor.prototype = {
 
 MediaPlayer.utils.TTMLParser = function() {
     "use strict";
-    var SECONDS_IN_HOUR = 60 * 60, SECONDS_IN_MIN = 60, timingRegex = /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])((\.[0-9][0-9][0-9])|(:[0-9][0-9]))$/, ttml, parseTimings = function(timingStr) {
+    var SECONDS_IN_HOUR = 60 * 60, SECONDS_IN_MIN = 60, timingRegex = /^([0-9][0-9]+):([0-5][0-9]):([0-5][0-9])((\.[0-9]+)|(:[0-9][0-9]))$/, ttml, parseTimings = function(timingStr) {
         var test = timingRegex.test(timingStr), timeParts, parsedTime, frameRate;
         if (!test) {
             return NaN;
@@ -5607,7 +5454,7 @@ MediaPlayer.utils.TTMLParser = function() {
         }
         return r[0];
     }, internalParse = function(data) {
-        var captionArray = [], converter = new X2JS([], "", false), errorMsg, cues, cue, startTime, endTime, nsttp, text, i, j;
+        var captionArray = [], converter = new X2JS([], "", false), errorMsg, cues, cue, startTime, endTime, nsttp, text, i, j, spanNode;
         ttml = converter.xml_str2json(data);
         if (!passStructuralConstraints()) {
             errorMsg = "TTML document has incorrect structure";
@@ -5649,7 +5496,12 @@ MediaPlayer.utils.TTMLParser = function() {
                 }
             } else {
                 if (cue.span_asArray) {
-                    text = cue.span_asArray[0].__text;
+                    spanNode = cue.span_asArray[0];
+                    if (spanNode.__text instanceof Array && spanNode.br_asArray) {
+                        text = spanNode.__text.join("\n");
+                    } else {
+                        text = spanNode.__text;
+                    }
                 } else {
                     text = cue.__text;
                 }
@@ -5696,17 +5548,17 @@ MediaPlayer.dependencies.TextSourceBuffer = function() {
                         type: MediaPlayer.events.TEXT_TRACK_ADDED
                     });
                     fragmentExt = self.system.getObject("fragmentExt");
-                    this.timescale = fragmentExt.getMediaTimescaleFromMoov(bytes.buffer);
+                    this.timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
                 } else {
                     fragmentExt = self.system.getObject("fragmentExt");
-                    samplesInfo = fragmentExt.getSamplesInfo(bytes.buffer);
+                    samplesInfo = fragmentExt.getSamplesInfo(bytes);
                     for (i = 0; i < samplesInfo.length; i++) {
                         if (!this.firstSubtitleStart) {
                             this.firstSubtitleStart = samplesInfo[0].cts - chunk.start * this.timescale;
                         }
                         samplesInfo[i].cts -= this.firstSubtitleStart;
                         this.buffered.add(samplesInfo[i].cts / this.timescale, (samplesInfo[i].cts + samplesInfo[i].duration) / this.timescale);
-                        ccContent = window.UTF8.decode(new Uint8Array(bytes.buffer.slice(samplesInfo[i].offset, samplesInfo[i].offset + samplesInfo[i].size)));
+                        ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset, samplesInfo[i].offset + samplesInfo[i].size)));
                         var parser = this.system.getObject("ttmlParser");
                         try {
                             result = parser.parse(ccContent);
@@ -5715,6 +5567,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function() {
                     }
                 }
             } else {
+                bytes = new Uint8Array(bytes);
                 ccContent = window.UTF8.decode(bytes);
                 try {
                     result = self.getParser().parse(ccContent);
@@ -5997,7 +5850,7 @@ MediaPlayer.utils.VTTParser = function() {
                 if (item.length > 0 && item !== "WEBVTT") {
                     if (item.match(regExToken)) {
                         var attributes = parseItemAttributes(item), cuePoints = attributes.cuePoints, styles = attributes.styles, text = getSublines(data, i + 1), startTime = convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, "")), endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ""));
-                        if (!Number.isNaN(startTime) && !Number.isNaN(endTime) && startTime >= lastStartTime && endTime > startTime) {
+                        if (!isNaN(startTime) && !isNaN(endTime) && startTime >= lastStartTime && endTime > startTime) {
                             if (text !== "") {
                                 lastStartTime = startTime;
                                 captionArray.push({
@@ -6468,40 +6321,19 @@ MediaPlayer.dependencies.BufferController = function() {
         }
         return true;
     }, handleInbandEvents = function(data, request, mediaInbandEvents, trackInbandEvents) {
-        var events = [], i = 0, identifier, size, expTwo = Math.pow(256, 2), expThree = Math.pow(256, 3), fragmentStarttime = Math.max(isNaN(request.startTime) ? 0 : request.startTime, 0), eventStreams = [], event, inbandEvents;
+        var events = [], eventBoxes, fragmentStarttime = Math.max(isNaN(request.startTime) ? 0 : request.startTime, 0), eventStreams = [], event, isoFile, inbandEvents;
         inbandEventFound = false;
         inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
         for (var loop = 0; loop < inbandEvents.length; loop++) {
             eventStreams[inbandEvents[loop].schemeIdUri] = inbandEvents[loop];
         }
-        while (i < data.length) {
-            identifier = String.fromCharCode(data[i + 4], data[i + 5], data[i + 6], data[i + 7]);
-            size = data[i] * expThree + data[i + 1] * expTwo + data[i + 2] * 256 + data[i + 3] * 1;
-            if (identifier == "moov" || identifier == "moof") {
-                break;
-            } else if (identifier == "emsg") {
-                inbandEventFound = true;
-                var eventBox = [ "", "", 0, 0, 0, 0, "" ], arrIndex = 0, j = i + 12;
-                while (j < size + i) {
-                    if (arrIndex === 0 || arrIndex == 1 || arrIndex == 6) {
-                        if (data[j] !== 0) {
-                            eventBox[arrIndex] += String.fromCharCode(data[j]);
-                        } else {
-                            arrIndex += 1;
-                        }
-                        j += 1;
-                    } else {
-                        eventBox[arrIndex] = data[j] * expThree + data[j + 1] * expTwo + data[j + 2] * 256 + data[j + 3] * 1;
-                        j += 4;
-                        arrIndex += 1;
-                    }
-                }
-                event = this.adapter.getEvent(eventBox, eventStreams, fragmentStarttime);
-                if (event) {
-                    events.push(event);
-                }
+        isoFile = this.boxParser.parse(data);
+        eventBoxes = isoFile.getBoxes("emsg");
+        for (var i = 0, ln = eventBoxes.length; i < ln; i += 1) {
+            event = this.adapter.getEvent(eventBoxes[i], eventStreams, fragmentStarttime);
+            if (event) {
+                events.push(event);
             }
-            i += size;
         }
         return events;
     }, deleteInbandEvents = function(data) {
@@ -6715,6 +6547,7 @@ MediaPlayer.dependencies.BufferController = function() {
         adapter: undefined,
         log: undefined,
         abrController: undefined,
+        boxParser: undefined,
         system: undefined,
         notify: undefined,
         subscribe: undefined,
@@ -6990,8 +6823,8 @@ MediaPlayer.dependencies.FragmentController = function() {
             });
         }
     }, onFragmentLoadingCompleted = function(e) {
-        var self = this, request = e.data.request, bytes = self.process(e.data.response), streamId = e.sender.getContext().streamProcessor.getStreamInfo().id, isInit = this.isInitializationRequest(request), eventName = isInit ? MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED : MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED, chunk;
-        if (bytes === null) {
+        var self = this, request = e.data.request, bytes = e.data.response, streamId = e.sender.getContext().streamProcessor.getStreamInfo().id, isInit = this.isInitializationRequest(request), eventName = isInit ? MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED : MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED, chunk;
+        if (!bytes) {
             self.log("No " + request.mediaType + " bytes to push.");
             return;
         }
@@ -7418,6 +7251,90 @@ MediaPlayer.dependencies.ProtectionController = function() {
             protData = keySystemString in protDataSet ? protDataSet[keySystemString] : null;
         }
         return protData;
+    }, selectKeySystem = function(supportedKS, notifyOnError) {
+        var self = this;
+        var audioCapabilities = [], videoCapabilities = [];
+        if (videoInfo) {
+            videoCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(videoInfo.codec));
+        }
+        if (audioInfo) {
+            audioCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(audioInfo.codec));
+        }
+        var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(audioCapabilities, videoCapabilities);
+        var requestedKeySystems = [];
+        var ksIdx;
+        if (this.keySystem) {
+            for (ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
+                if (this.keySystem === supportedKS[ksIdx].ks) {
+                    requestedKeySystems.push({
+                        ks: supportedKS[ksIdx].ks,
+                        configs: [ ksConfig ]
+                    });
+                    var ksAccess = {};
+                    ksAccess[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
+                        if (event.error) {
+                            if (notifyOnError) {
+                                self.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, "DRM: KeySystem Access Denied! -- " + event.error);
+                            }
+                        } else {
+                            self.log("KeySystem Access Granted");
+                            self.createKeySession(supportedKS[ksIdx].initData);
+                        }
+                    };
+                    this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, ksAccess, undefined, true);
+                    this.protectionModel.requestKeySystemAccess(requestedKeySystems);
+                    break;
+                }
+            }
+        } else if (this.keySystem === undefined) {
+            this.keySystem = null;
+            pendingNeedKeyData.push(supportedKS);
+            for (var i = 0; i < supportedKS.length; i++) {
+                requestedKeySystems.push({
+                    ks: supportedKS[i].ks,
+                    configs: [ ksConfig ]
+                });
+            }
+            var ksSelected = {};
+            ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
+                if (event.error) {
+                    self.keySystem = undefined;
+                    self.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
+                    if (notifyOnError) {
+                        self.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, "DRM: KeySystem Access Denied! -- " + event.error);
+                    }
+                } else {
+                    var keySystemAccess = event.data;
+                    self.log("KeySystem Access Granted (" + keySystemAccess.keySystem.systemString + ")!  Selecting key system...");
+                    self.protectionModel.selectKeySystem(keySystemAccess);
+                }
+            };
+            ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = function(event) {
+                if (!event.error) {
+                    pendingNeedKeyData = [];
+                    self.keySystem = self.protectionModel.keySystem;
+                    self.protectionExt.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, self);
+                    for (var i = 0; i < pendingNeedKeyData.length; i++) {
+                        for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
+                            if (self.keySystem === pendingNeedKeyData[i][ksIdx].ks) {
+                                self.createKeySession(pendingNeedKeyData[i][ksIdx].initData);
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    self.keySystem = undefined;
+                    if (notifyOnError) {
+                        self.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, "DRM: Error selecting key system! -- " + event.error);
+                    }
+                }
+            };
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected, undefined, true);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, ksSelected, undefined, true);
+            this.protectionModel.requestKeySystemAccess(requestedKeySystems);
+        } else {
+            pendingNeedKeyData.push(supportedKS);
+        }
     }, onKeyMessage = function(e) {
         if (e.error) {
             this.log(e.error);
@@ -7440,15 +7357,6 @@ MediaPlayer.dependencies.ProtectionController = function() {
                 break;
             }
         }
-    }, onKeySystemSelected = function() {
-        if (!this.keySystem) {
-            this.keySystem = this.protectionModel.keySystem;
-            this.protectionExt.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
-        }
-        for (var i = 0; i < pendingNeedKeyData.length; i++) {
-            this.createKeySession(pendingNeedKeyData[i]);
-        }
-        pendingNeedKeyData = [];
     }, onNeedKey = function(event) {
         if (event.data.initDataType !== "cenc") {
             this.log("DRM:  Only 'cenc' initData is supported!  Ignoring initData of type: " + event.data.initDataType);
@@ -7458,25 +7366,12 @@ MediaPlayer.dependencies.ProtectionController = function() {
         if (ArrayBuffer.isView(abInitData)) {
             abInitData = abInitData.buffer;
         }
-        if (this.keySystem) {
-            this.createKeySession(abInitData);
-        } else if (this.keySystem === undefined) {
-            this.keySystem = null;
-            pendingNeedKeyData.push(abInitData);
-            try {
-                this.protectionExt.autoSelectKeySystem(this.protectionExt.getSupportedKeySystems(abInitData), this, videoInfo, audioInfo);
-            } catch (error) {
-                this.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, "DRM: Unable to select a key system from needkey initData. -- " + error.message);
-            }
-        } else {
-            pendingNeedKeyData.push(abInitData);
+        var supportedKS = this.protectionExt.getSupportedKeySystems(abInitData);
+        if (supportedKS.length === 0) {
+            this.log("Received needkey event with initData, but we don't support any of the key systems!");
+            return;
         }
-    }, onKeySystemAccessComplete = function(event) {
-        if (!event.error) {
-            this.log("KeySystem Access Granted");
-        } else {
-            this.notify(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, "DRM: KeySystem Access Denied! -- " + event.error);
-        }
+        selectKeySystem.call(this, supportedKS, true);
     }, onServerCertificateUpdated = function(event) {
         if (!event.error) {
             this.log("DRM: License server certificate successfully updated.");
@@ -7517,8 +7412,6 @@ MediaPlayer.dependencies.ProtectionController = function() {
         sessionType: "temporary",
         setup: function() {
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE] = onKeyMessage.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = onKeySystemSelected.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = onKeySystemAccessComplete.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY] = onNeedKey.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED] = onServerCertificateUpdated.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED] = onKeyAdded.bind(this);
@@ -7530,8 +7423,6 @@ MediaPlayer.dependencies.ProtectionController = function() {
             keySystems = this.protectionExt.getKeySystems();
             this.protectionModel = this.system.getObject("protectionModel");
             this.protectionModel.init();
-        },
-        init: function(manifest, aInfo, vInfo) {
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
@@ -7539,6 +7430,9 @@ MediaPlayer.dependencies.ProtectionController = function() {
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
+            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, this);
+        },
+        init: function(manifest, aInfo, vInfo) {
             var adapter, streamInfo;
             if (!aInfo && !vInfo) {
                 adapter = this.system.getObject("adapter");
@@ -7547,47 +7441,13 @@ MediaPlayer.dependencies.ProtectionController = function() {
             audioInfo = aInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, "audio") : null);
             videoInfo = vInfo || (streamInfo ? adapter.getMediaInfoForType(manifest, streamInfo, "video") : null);
             var mediaInfo = videoInfo ? videoInfo : audioInfo;
-            var self = this;
-            var useNeedKey = function() {
-                self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, self);
-                self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, self);
-                self.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, self);
-            };
             var supportedKS = this.protectionExt.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
             if (supportedKS && supportedKS.length > 0) {
-                var ksSelected = {};
-                ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
-                    if (event.error) {
-                        self.log("DRM: Could not select key system from ContentProtection elements!  Falling back to needkey mechanism...");
-                        useNeedKey();
-                        self.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
-                    }
-                };
-                ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = function(event) {
-                    if (!event.error) {
-                        self.keySystem = self.protectionModel.keySystem;
-                        self.protectionExt.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, self);
-                        for (var ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
-                            if (self.keySystem === supportedKS[ksIdx].ks) {
-                                self.createKeySession(supportedKS[ksIdx].initData);
-                                break;
-                            }
-                        }
-                    } else {
-                        self.log("DRM: Could not select key system from ContentProtection elements!  Falling back to needkey mechanism...");
-                        useNeedKey();
-                    }
-                };
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected, undefined, true);
-                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, ksSelected, undefined, true);
-                this.protectionExt.autoSelectKeySystem(supportedKS, this, videoInfo, audioInfo);
-            } else {
-                useNeedKey();
+                selectKeySystem.call(this, supportedKS, false);
             }
         },
         teardown: function() {
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
-            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, this);
             if (this.keySystem) {
                 this.protectionExt.unsubscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
             }
@@ -7597,23 +7457,21 @@ MediaPlayer.dependencies.ProtectionController = function() {
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
-            this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
             this.keySystem = undefined;
             this.protectionModel.teardown();
             this.protectionModel = undefined;
         },
-        requestKeySystemAccess: function(ksConfiguration) {
-            this.protectionModel.requestKeySystemAccess(ksConfiguration);
-        },
-        selectKeySystem: function(keySystemAccess) {
-            if (this.keySystem) {
-                throw new Error("DRM: KeySystem already selected!");
-            }
-            this.protectionModel.selectKeySystem(keySystemAccess);
-        },
+        requestKeySystemAccess: function() {},
         createKeySession: function(initData) {
             var initDataForKS = MediaPlayer.dependencies.protection.CommonEncryption.getPSSHForKeySystem(this.keySystem, initData);
             if (initDataForKS) {
+                var currentInitData = this.protectionModel.getAllInitData();
+                for (var i = 0; i < currentInitData.length; i++) {
+                    if (this.protectionExt.initDataEquals(initDataForKS, currentInitData[i])) {
+                        this.log("Ignoring initData because we have already seen it!");
+                        return;
+                    }
+                }
                 try {
                     this.protectionModel.createKeySession(initDataForKS, this.sessionType);
                 } catch (error) {
@@ -7934,7 +7792,7 @@ MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD = 0;
 
 MediaPlayer.dependencies.StreamController = function() {
     "use strict";
-    var streams = [], activeStream, protectionController, protectionData, STREAM_END_THRESHOLD = .2, autoPlay = true, canPlay = false, isStreamSwitchingInProgress = false, isUpdating = false, hasMediaError = false, mediaSource, UTCTimingSources, useManifestDateHeaderTimeSource, attachEvents = function(stream) {
+    var streams = [], activeStream, protectionController, ownProtectionController = false, protectionData, STREAM_END_THRESHOLD = .2, autoPlay = true, canPlay = false, isStreamSwitchingInProgress = false, isUpdating = false, hasMediaError = false, mediaSource, UTCTimingSources, useManifestDateHeaderTimeSource, attachEvents = function(stream) {
         stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
         stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
     }, detachEvents = function(stream) {
@@ -8082,6 +7940,16 @@ MediaPlayer.dependencies.StreamController = function() {
         var self = this, manifest = self.manifestModel.getValue(), metrics = self.metricsModel.getMetricsFor("stream"), manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics), streamInfo, pLen, sLen, pIdx, sIdx, streamsInfo, remainingStreams = [], stream;
         if (!manifest) return;
         streamsInfo = self.adapter.getStreamsInfo(manifest);
+        if (this.capabilities.supportsEncryptedMedia()) {
+            if (!protectionController) {
+                protectionController = this.system.getObject("protectionController");
+                ownProtectionController = true;
+            }
+            protectionController.setMediaElement(this.videoModel.getElement());
+            if (protectionData) {
+                protectionController.setProtectionData(protectionData);
+            }
+        }
         try {
             if (streamsInfo.length === 0) {
                 throw new Error("There are no streams");
@@ -8154,6 +8022,7 @@ MediaPlayer.dependencies.StreamController = function() {
     };
     return {
         system: undefined,
+        capabilities: undefined,
         videoModel: undefined,
         manifestUpdater: undefined,
         manifestLoader: undefined,
@@ -8256,6 +8125,10 @@ MediaPlayer.dependencies.StreamController = function() {
             activeStream = null;
             canPlay = false;
             hasMediaError = false;
+            if (ownProtectionController) {
+                protectionController.teardown();
+                ownProtectionController = false;
+            }
             protectionController = null;
             protectionData = null;
             if (!mediaSource) return;
@@ -8584,8 +8457,9 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
     },
     initDataEquals: function(initData1, initData2) {
         if (initData1.byteLength === initData2.byteLength) {
-            for (var j = 0; j < initData1.byteLength; j++) {
-                if (initData1[j] !== initData2[j]) {
+            var data1 = new Uint8Array(initData1), data2 = new Uint8Array(initData2);
+            for (var j = 0; j < data1.length; j++) {
+                if (data1[j] !== data2[j]) {
                     return false;
                 }
             }
@@ -8625,42 +8499,6 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
             }
         }
         return supportedKS;
-    },
-    autoSelectKeySystem: function(supportedKS, protectionController, videoInfo, audioInfo) {
-        if (supportedKS.length === 0) {
-            throw new Error("DRM system for this content not supported by the player!");
-        }
-        var audioCapabilities = [], videoCapabilities = [];
-        if (videoInfo) {
-            videoCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(videoInfo.codec));
-        }
-        if (audioInfo) {
-            audioCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(audioInfo.codec));
-        }
-        var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(audioCapabilities, videoCapabilities);
-        var requestedKeySystems = [];
-        for (var i = 0; i < supportedKS.length; i++) {
-            requestedKeySystems.push({
-                ks: supportedKS[i].ks,
-                configs: [ ksConfig ]
-            });
-        }
-        var self = this;
-        (function(protCtrl) {
-            var cbObj = {};
-            cbObj[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
-                protCtrl.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, this);
-                if (!event.error) {
-                    var keySystemAccess = event.data;
-                    self.log("KeySystem Access Granted (" + keySystemAccess.keySystem.systemString + ")!");
-                    protCtrl.selectKeySystem(keySystemAccess);
-                } else {
-                    self.log(event.error);
-                }
-            };
-            protCtrl.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, cbObj);
-            protCtrl.requestKeySystemAccess(requestedKeySystems);
-        })(protectionController);
     },
     requestLicense: function(keySystem, protData, message, laURL, requestData) {
         var licenseServerData = null;
@@ -9730,6 +9568,16 @@ MediaPlayer.models.ProtectionModel_01b = function() {
                 this.closeKeySession(sessions[i]);
             }
         },
+        getAllInitData: function() {
+            var i, retVal = [];
+            for (i = 0; i < pendingSessions.length; i++) {
+                retVal.push(pendingSessions[i].initData);
+            }
+            for (i = 0; i < sessions.length; i++) {
+                retVal.push(sessions[i].initData);
+            }
+            return retVal;
+        },
         requestKeySystemAccess: function(ksConfigurations) {
             var ve = videoElement;
             if (!ve) {
@@ -9784,17 +9632,6 @@ MediaPlayer.models.ProtectionModel_01b = function() {
         createKeySession: function(initData) {
             if (!this.keySystem) {
                 throw new Error("Can not create sessions until you have selected a key system");
-            }
-            var i;
-            for (i = 0; i < sessions.length; i++) {
-                if (this.protectionExt.initDataEquals(initData, sessions[i].initData)) {
-                    return;
-                }
-            }
-            for (i = 0; i < pendingSessions.length; i++) {
-                if (this.protectionExt.initDataEquals(initData, pendingSessions[i].initData)) {
-                    return;
-                }
             }
             if (moreSessionsAllowed || sessions.length === 0) {
                 var newSession = {
@@ -9896,7 +9733,9 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function() {
             handleEvent: function(event) {
                 switch (event.type) {
                   case "encrypted":
-                    self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, new MediaPlayer.vo.protection.NeedKey(event.initData, event.initDataType));
+                    if (event.initData) {
+                        self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, new MediaPlayer.vo.protection.NeedKey(event.initData, event.initDataType));
+                    }
                     break;
                 }
             }
@@ -9964,6 +9803,13 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function() {
                 this.closeKeySession(sessions[i]);
             }
         },
+        getAllInitData: function() {
+            var retVal = [];
+            for (var i = 0; i < sessions.length; i++) {
+                retVal.push(sessions[i].initData);
+            }
+            return retVal;
+        },
         requestKeySystemAccess: function(ksConfigurations) {
             requestKeySystemAccessInternal.call(this, ksConfigurations, 0);
         },
@@ -10004,11 +9850,6 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function() {
         createKeySession: function(initData, sessionType) {
             if (!this.keySystem || !mediaKeys) {
                 throw new Error("Can not create sessions until you have selected a key system");
-            }
-            for (var i = 0; i < sessions.length; i++) {
-                if (this.protectionExt.initDataEquals(initData, sessions[i].initData)) {
-                    return;
-                }
             }
             var session = mediaKeys.createSession(sessionType);
             var sessionToken = createSessionToken.call(this, session, initData);
@@ -10089,7 +9930,9 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function() {
             handleEvent: function(event) {
                 switch (event.type) {
                   case api.needkey:
-                    self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, new MediaPlayer.vo.protection.NeedKey(event.initData, "cenc"));
+                    if (event.initData) {
+                        self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, new MediaPlayer.vo.protection.NeedKey(event.initData, "cenc"));
+                    }
                     break;
                 }
             }
@@ -10156,6 +9999,13 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function() {
             for (var i = 0; i < sessions.length; i++) {
                 this.closeKeySession(sessions[i]);
             }
+        },
+        getAllInitData: function() {
+            var retVal = [];
+            for (var i = 0; i < sessions.length; i++) {
+                retVal.push(sessions[i].initData);
+            }
+            return retVal;
         },
         requestKeySystemAccess: function(ksConfigurations) {
             var found = false;
@@ -10224,11 +10074,6 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function() {
         createKeySession: function(initData) {
             if (!this.keySystem || !mediaKeys || !keySystemAccess) {
                 throw new Error("Can not create sessions until you have selected a key system");
-            }
-            for (var i = 0; i < sessions.length; i++) {
-                if (this.protectionExt.initDataEquals(initData, sessions[i].initData)) {
-                    return;
-                }
             }
             var contentType = keySystemAccess.ksConfiguration.videoCapabilities[0].contentType;
             var session = mediaKeys.createSession(contentType, new Uint8Array(initData));
@@ -11767,6 +11612,28 @@ MediaPlayer.rules.SynchronizationRulesCollection.prototype = {
     BEST_GUESS_RULES: "bestGuestRules"
 };
 
+MediaPlayer.utils.BoxParser = function() {
+    "use strict";
+    var parse = function(data) {
+        if (!data) return null;
+        if (data.fileStart === undefined) {
+            data.fileStart = 0;
+        }
+        var parsedFile = ISOBoxer.parseBuffer(data), dashIsoFile = this.system.getObject("isoFile");
+        dashIsoFile.setData(parsedFile);
+        return dashIsoFile;
+    };
+    return {
+        system: undefined,
+        log: undefined,
+        parse: parse
+    };
+};
+
+MediaPlayer.utils.BoxParser.prototype = {
+    constructor: MediaPlayer.utils.BoxParser
+};
+
 MediaPlayer.utils.Capabilities = function() {
     "use strict";
 };
@@ -11865,7 +11732,7 @@ MediaPlayer.utils.CustomTimeRanges.prototype = {
 };
 
 MediaPlayer.utils.DOMStorage = function() {
-    var enableLastBitrateCaching = true, checkInitialBitrate = function() {
+    var isSupported, enableLastBitrateCaching = true, checkInitialBitrate = function() {
         [ "video", "audio" ].forEach(function(value) {
             if (this.abrController.getInitialBitrateFor(value) === undefined) {
                 if (this.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) && enableLastBitrateCaching) {
@@ -11895,13 +11762,20 @@ MediaPlayer.utils.DOMStorage = function() {
             }
         },
         isSupported: function(type) {
-            if (type === MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) {
-                return window.localStorage || false;
-            } else if (type === MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION) {
-                return window.sessionStorage || false;
-            } else {
-                return false;
+            if (isSupported !== undefined) return isSupported;
+            isSupported = false;
+            var testKey = "1", testValue = "1", storage = window[type];
+            if (!storage || type !== MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL && type !== MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION) {
+                return isSupported;
             }
+            try {
+                storage.setItem(testKey, testValue);
+                storage.removeItem(testKey);
+                isSupported = true;
+            } catch (error) {
+                this.log("Warning: DOMStorage is supported, but cannot be used: " + error.message);
+            }
+            return isSupported;
         }
     };
 };
@@ -11912,9 +11786,9 @@ MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_AUDIO_BITRATE_KEY = "dashjs_abitrate"
 
 MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_BITRATE_EXPIRATION = 36e4;
 
-MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL = "local";
+MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL = "localStorage";
 
-MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION = "session";
+MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION = "sessionStorage";
 
 MediaPlayer.utils.DOMStorage.prototype = {
     constructor: MediaPlayer.utils.DOMStorage
@@ -12006,6 +11880,133 @@ MediaPlayer.utils.EventBus = function() {
             return !evt.defaultPrevented;
         }
     };
+};
+
+MediaPlayer.utils.IsoFile = function() {
+    "use strict";
+    var parsedIsoFile, commonProps = {
+        offset: "_offset",
+        size: "size",
+        type: "type"
+    }, sidxProps = {
+        references: "references",
+        timescale: "timescale",
+        earliest_presentation_time: "earliest_presentation_time",
+        first_offset: "first_offset"
+    }, sidxRefProps = {
+        reference_type: "reference_type",
+        referenced_size: "referenced_size",
+        subsegment_duration: "subsegment_duration"
+    }, emsgProps = {
+        id: "id",
+        value: "value",
+        timescale: "timescale",
+        scheme_id_uri: "scheme_id_uri",
+        presentation_time_delta: "presentation_time_delta",
+        event_duration: "event_duration",
+        message_data: "message_data"
+    }, mdhdProps = {
+        timescale: "timescale"
+    }, tfhdProps = {
+        base_data_offset: "base_data_offset",
+        sample_description_index: "sample_description_index",
+        default_sample_duration: "default_sample_duration",
+        default_sample_size: "default_sample_size",
+        default_sample_flags: "default_sample_flags",
+        flags: "flags"
+    }, tfdtProps = {
+        version: "version",
+        baseMediaDecodeTime: "baseMediaDecodeTime",
+        flags: "flags"
+    }, trunProps = {
+        sample_count: "sample_count",
+        first_sample_flags: "first_sample_flags",
+        data_offset: "data_offset",
+        flags: "flags",
+        samples: "samples"
+    }, trunSampleProps = {
+        sample_size: "sample_size",
+        sample_duration: "sample_duration",
+        sample_composition_time_offset: "sample_composition_time_offset"
+    }, copyProps = function(from, to, props) {
+        for (var prop in props) {
+            to[prop] = from[props[prop]];
+        }
+    }, convertToDashIsoBox = function(boxData) {
+        if (!boxData) return null;
+        var box = new MediaPlayer.vo.IsoBox(), i, ln;
+        copyProps(boxData, box, commonProps);
+        if (boxData.hasOwnProperty("_incomplete")) {
+            box.isComplete = !boxData._incomplete;
+        }
+        switch (box.type) {
+          case "sidx":
+            copyProps(boxData, box, sidxProps);
+            if (box.references) {
+                for (i = 0, ln = box.references.length; i < ln; i += 1) {
+                    copyProps(boxData.references[i], box.references[i], sidxRefProps);
+                }
+            }
+            break;
+
+          case "emsg":
+            copyProps(boxData, box, emsgProps);
+            break;
+
+          case "mdhd":
+            copyProps(boxData, box, mdhdProps);
+            break;
+
+          case "tfhd":
+            copyProps(boxData, box, tfhdProps);
+            break;
+
+          case "tfdt":
+            copyProps(boxData, box, tfdtProps);
+            break;
+
+          case "trun":
+            copyProps(boxData, box, trunProps);
+            if (box.samples) {
+                for (i = 0, ln = box.samples.length; i < ln; i += 1) {
+                    copyProps(boxData.samples[i], box.samples[i], trunSampleProps);
+                }
+            }
+            break;
+        }
+        return box;
+    }, getBox = function(type) {
+        if (!type || !parsedIsoFile || !parsedIsoFile.boxes || parsedIsoFile.boxes.length === 0) return null;
+        return convertToDashIsoBox.call(this, parsedIsoFile.fetch(type));
+    }, getBoxes = function(type) {
+        var boxData = parsedIsoFile.fetchAll(type), boxes = [], box;
+        for (var i = 0, ln = boxData.length; i < ln; i += 1) {
+            box = convertToDashIsoBox.call(this, boxData[i]);
+            if (box) {
+                boxes.push(box);
+            }
+        }
+        return boxes;
+    };
+    return {
+        getBox: getBox,
+        getBoxes: getBoxes,
+        setData: function(value) {
+            parsedIsoFile = value;
+        },
+        getLastBox: function() {
+            if (!parsedIsoFile || !parsedIsoFile.boxes || !parsedIsoFile.boxes.length) return null;
+            var type = parsedIsoFile.boxes[parsedIsoFile.boxes.length - 1].type, boxes = getBoxes.call(this, type);
+            return boxes[boxes.length - 1];
+        },
+        getOffset: function() {
+            return parsedIsoFile._cursor.offset;
+        }
+    };
+};
+
+MediaPlayer.utils.IsoFile.prototype = {
+    constructor: MediaPlayer.utils.IsoFile
 };
 
 MediaPlayer.utils.VirtualBuffer = function() {
@@ -12184,6 +12185,18 @@ MediaPlayer.vo.FragmentRequest.prototype = {
     constructor: MediaPlayer.vo.FragmentRequest,
     ACTION_DOWNLOAD: "download",
     ACTION_COMPLETE: "complete"
+};
+
+MediaPlayer.vo.IsoBox = function() {
+    "use strict";
+    this.offset = NaN;
+    this.type = null;
+    this.size = NaN;
+    this.isComplete = true;
+};
+
+MediaPlayer.vo.IsoBox.prototype = {
+    constructor: MediaPlayer.vo.IsoBox
 };
 
 MediaPlayer.vo.ManifestInfo = function() {

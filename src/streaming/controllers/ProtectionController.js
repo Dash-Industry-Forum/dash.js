@@ -326,7 +326,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
             this.protectionModel = undefined;
         },
 
-        requestKeySystemAccess: function(ksConfiguration) {
+        requestKeySystemAccess: function() {
         },
 
         createKeySession: function(initData) {
