@@ -326,9 +326,6 @@ MediaPlayer.dependencies.ProtectionController = function () {
             this.protectionModel = undefined;
         },
 
-        requestKeySystemAccess: function(ksConfiguration) {
-        },
-
         createKeySession: function(initData) {
             var initDataForKS = MediaPlayer.dependencies.protection.CommonEncryption.getPSSHForKeySystem(this.keySystem, initData);
             if (initDataForKS) {
