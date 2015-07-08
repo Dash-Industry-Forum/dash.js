@@ -30,18 +30,15 @@
  */
 MediaPlayer.dependencies.TextSourceBuffer = function () {
 
-    var mediaInfo,
-        mimeType;
-
     return {
         system:undefined,
         videoModel: undefined,
         eventBus:undefined,
         errHandler: undefined,
+        adapter: undefined,
 
         initialize: function (type, bufferController) {
-            mimeType = type;
-            mediaInfo = bufferController.streamProcessor.getMediaInfo();
+            this.bufferController = bufferController;
             this.buffered =  this.system.getObject("customTimeRanges");
             this.initializationSegmentReceived= false;
             this.timescale= 90000;
@@ -53,7 +50,10 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 lang,
                 samplesInfo,
                 i,
-                ccContent;
+                ccContent,
+                mediaInfo = chunk.mediaInfo,
+                mimeType = mediaInfo.mimeType;
+
 
             if(mimeType=="fragmentedText"){
                 var fragmentExt;
@@ -78,7 +78,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                         this.buffered.add(samplesInfo[i].cts/this.timescale,(samplesInfo[i].cts+samplesInfo[i].duration)/this.timescale);
 
                         ccContent=window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset,samplesInfo[i].offset+samplesInfo[i].size)));
-                        var parser = this.system.getObject("ttmlParser");
+                        var parser = self.getParser(mimeType);
                         try{
                             result = parser.parse(ccContent);
                             this.textTrackExtensions.addCaptions(this.firstSubtitleStart/this.timescale,result);
@@ -91,10 +91,10 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 bytes = new Uint8Array(bytes);
                 ccContent=window.UTF8.decode(bytes);
                 try {
-                    result = self.getParser().parse(ccContent);
-                    label = mediaInfo.id;
+                    result = self.getParser(mimeType).parse(ccContent);
                     lang = mediaInfo.lang;
-                    self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, true);
+                    label = lang;
+                    self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, self.getIsDefault(mediaInfo));
                     self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
                 } catch(e) {
                     self.errHandler.closedCaptionsError(e, "parse", ccContent);
@@ -102,16 +102,21 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
             }
         },
 
+        getIsDefault:function(mediaInfo){
+            var infos = this.bufferController.streamProcessor.getMediaInfoArr();
+            return mediaInfo.lang === infos[0].lang; //TODO How to tag default. currently same order as in manifest. Is there a way to mark a text adaptation set as the default one?
+        },
+
         abort:function() {
             this.getTextTrackExtensions().deleteCues(this.videoModel.getElement());
         },
 
-        getParser:function() {
+        getParser:function(mimeType) {
             var parser;
 
             if (mimeType === "text/vtt") {
                 parser = this.system.getObject("vttParser");
-            } else if (mimeType === "application/ttml+xml") {
+            } else if (mimeType === "application/ttml+xml" || "fragmentedText") {
                 parser = this.system.getObject("ttmlParser");
             }
 

@@ -36,6 +36,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         mediaInfo = null,
         type = null,
         eventController = null,
+        mediaInfoArr = [],
 
         createBufferControllerForType = function(type) {
             var self = this,
@@ -204,10 +205,13 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         },
 
         updateMediaInfo: function(manifest, newMediaInfo) {
+
+
             if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
                 mediaInfo = newMediaInfo;
             }
 
+            mediaInfoArr.push(newMediaInfo);
             this.adapter.updateData(manifest, this);
         },
 
@@ -215,8 +219,13 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             return mediaInfo;
         },
 
+<<<<<<< HEAD
         getMediaSource: function() {
             return this.bufferController.getMediaSource();
+=======
+        getMediaInfoArr: function() {
+            return mediaInfoArr;
+>>>>>>> Multi lang support in progress. Commit cherrypicks changes in progress for multiple adaptation support. I will need to carefully picks and hand merge 
         },
 
         getScheduleController:function () {

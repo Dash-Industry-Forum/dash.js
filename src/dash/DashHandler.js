@@ -835,6 +835,7 @@ Dash.dependencies.DashHandler = function () {
                 request.index = index;
                 request.mediaType = type;
                 request.mediaInfo = self.streamProcessor.getMediaInfo();
+
                 self.log("Signal complete.");
                 self.log(request);
             } else {

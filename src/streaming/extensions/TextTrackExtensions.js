@@ -39,15 +39,16 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
         addTextTrack: function(video, captionData,  label, scrlang, isDefaultTrack) {
 
-            //TODO: Ability to define the KIND in the MPD - ie subtitle vs caption....
+            //TODO: Ability to define the KIND in the MPD - ie subtitle vs caption....Use role ? //<Role schemeIdUri="urn:mpeg:dash:role" value="subtitle"/>
             this.track = video.addTextTrack("captions", label, scrlang);
             // track.default is an object property identifier that is a reserved word
             // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
             /*jshint -W024 */
             this.track.default = isDefaultTrack;
-            this.track.mode = "showing";
+            this.track.mode = isDefaultTrack ? "showing" : "hidden";
             this.video=video;
             this.addCaptions(0, captionData);
+
             return this.track;
         },
 
