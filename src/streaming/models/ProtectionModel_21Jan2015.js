@@ -66,6 +66,17 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
             })(idx);
         },
 
+        closeKeySessionInternal = function(sessionToken) {
+            var session = sessionToken.session;
+
+            // Remove event listeners
+            session.removeEventListener("keystatuseschange", sessionToken);
+            session.removeEventListener("message", sessionToken);
+
+            // Send our request to the key session
+            return session.close();
+        },
+
         // This is our main event handler for all desired HTMLMediaElement events
         // related to EME.  These events are translated into our API-independent
         // versions of the same events
@@ -174,12 +185,41 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
         },
 
         teardown: function() {
-            if (videoElement) {
-                videoElement.removeEventListener("encrypted", eventHandler);
-                videoElement.setMediaKeys(null);
-            }
-            for (var i = 0; i < sessions.length; i++) {
-                this.closeKeySession(sessions[i]);
+            var numSessions = sessions.length,
+                session,
+                self = this;
+            if (numSessions != 0) {
+                // Called when we are done closing a session.  Success or fail
+                var done = function(session) {
+                    removeSession(session);
+                    if (sessions.length === 0) {
+                        if (videoElement) {
+                            videoElement.removeEventListener("encrypted", eventHandler);
+                            videoElement.setMediaKeys(null).then(function () {
+                                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
+                            }).catch(function (error) {
+                                var x = 1;
+                            });
+                        }
+                    }
+                };
+                for (var i = 0; i < numSessions; i++) {
+                    session = sessions[i];
+                    (function (s) {
+                        // Override closed promise resolver
+                        session.session.closed.then(function () {
+                            done(s);
+                        });
+                        // Close the session and handle errors, otherwise promise
+                        // resolver above will be called
+                        closeKeySessionInternal(session).catch(function () {
+                            done(s);
+                        });
+
+                    })(session);
+                }
+            } else {
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
             }
         },
 
@@ -313,15 +353,10 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 
         closeKeySession: function(sessionToken) {
 
-            var session = sessionToken.session;
-
-            // Remove event listeners
-            session.removeEventListener("keystatuseschange", sessionToken);
-            session.removeEventListener("message", sessionToken);
-
             // Send our request to the key session
             var self = this;
-            session.close().catch(function(error) {
+            closeKeySessionInternal(sessionToken).catch(function(error) {
+                removeSession(sessionToken);
                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED,
                         null, "Error closing session (" + sessionToken.getSessionID() + ") " + error.name);
             });

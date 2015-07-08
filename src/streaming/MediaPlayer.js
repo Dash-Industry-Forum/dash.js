@@ -233,22 +233,36 @@ MediaPlayer = function (context) {
             }
         },
 
-        doReset = function() {
+        resetAndPlay = function() {
             if (playing && streamController) {
                 playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, streamController);
                 playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
                 playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
                 playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
 
+                var teardownComplete = {},
+                    self = this;
+                teardownComplete[MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE] = function (event) {
+
+                    // Finish rest of shutdown process
+                    abrController.reset();
+                    rulesController.reset();
+                    playbackController.reset();
+                    streamController = null;
+                    playing = false;
+
+                    if (isReady.call(self)) {
+                        doAutoPlay.call(self);
+                    }
+                };
+                streamController.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
                 streamController.reset();
-                abrController.reset();
-                rulesController.reset();
-                playbackController.reset();
-                streamController = null;
-                playing = false;
+            } else {
+                if (isReady.call(this)) {
+                    doAutoPlay.call(this);
+                }
             }
         };
-
 
 
     // Overload dijon getObject function
@@ -843,12 +857,7 @@ MediaPlayer = function (context) {
             }
 
             // TODO : update
-
-            doReset.call(this);
-
-            if (isReady.call(this)) {
-                doAutoPlay.call(this);
-            }
+            resetAndPlay.call(this);
         },
 
         /**
@@ -883,12 +892,7 @@ MediaPlayer = function (context) {
             protectionData = data;
 
             // TODO : update
-
-            doReset.call(this);
-
-            if (isReady.call(this)) {
-                doAutoPlay.call(this);
-            }
+            resetAndPlay.call(this);
         },
 
         /**
@@ -1039,6 +1043,7 @@ MediaPlayer.di = {};
  * The list of events supported by MediaPlayer
  */
 MediaPlayer.events = {
+    RESET_COMPLETE: "resetComplete",
     METRICS_CHANGED: "metricschanged",
     METRIC_CHANGED: "metricchanged",
     METRIC_UPDATED: "metricupdated",

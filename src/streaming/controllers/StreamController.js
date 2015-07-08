@@ -545,17 +545,30 @@
             canPlay = false;
             hasMediaError = false;
 
-            if (ownProtectionController) {
-                protectionController.teardown();
-                ownProtectionController = false;
+            if (mediaSource) {
+                this.mediaSourceExt.detachMediaSource(this.videoModel);
+                mediaSource = null;
             }
-            protectionController = null;
-            protectionData = null;
 
-            if (!mediaSource) return;
+            if (ownProtectionController) {
+                var teardownComplete = {},
+                    self = this;
+                teardownComplete[MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
 
-            this.mediaSourceExt.detachMediaSource(this.videoModel);
-            mediaSource = null;
+                    // Complete teardown process
+                    ownProtectionController = false;
+                    protectionController = null;
+                    protectionData = null;
+
+                    self.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+                };
+                protectionController.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
+                protectionController.teardown();
+            } else {
+                this.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+                protectionController = null;
+                protectionData = null;
+            }
         }
     };
 };
@@ -565,5 +578,6 @@ MediaPlayer.dependencies.StreamController.prototype = {
 };
 
 MediaPlayer.dependencies.StreamController.eventList = {
-    ENAME_STREAMS_COMPOSED: "streamsComposed"
+    ENAME_STREAMS_COMPOSED: "streamsComposed",
+    ENAME_TEARDOWN_COMPLETE: "teardownComplete"
 };

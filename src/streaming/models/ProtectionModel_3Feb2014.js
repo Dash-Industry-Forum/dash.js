@@ -144,11 +144,18 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
         },
 
         teardown: function() {
-            if (videoElement) {
-                videoElement.removeEventListener(api.needkey, eventHandler);
-            }
-            for (var i = 0; i < sessions.length; i++) {
-                this.closeKeySession(sessions[i]);
+            try {
+                for (var i = 0; i < sessions.length; i++) {
+                    this.closeKeySession(sessions[i]);
+                }
+                if (videoElement) {
+                    videoElement.removeEventListener(api.needkey, eventHandler);
+                    videoElement.setMediaKeys(null);
+                }
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
+            } catch (error) {
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE,
+                        null, "Error tearing down key sessions and MediaKeys! -- " + error.message);
             }
         },
 

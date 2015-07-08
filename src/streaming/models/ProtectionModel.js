@@ -167,5 +167,6 @@ MediaPlayer.models.ProtectionModel.eventList = {
     ENAME_KEY_SESSION_CREATED: "keySessionCreated",
     ENAME_KEY_SESSION_REMOVED: "keySessionRemoved",
     ENAME_KEY_SESSION_CLOSED: "keySessionClosed",
-    ENAME_KEY_STATUSES_CHANGED: "keyStatusesChanged"
+    ENAME_KEY_STATUSES_CHANGED: "keyStatusesChanged",
+    ENAME_TEARDOWN_COMPLETE: "teardownComplete"
 };
