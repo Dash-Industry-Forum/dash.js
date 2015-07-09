@@ -62,7 +62,7 @@ MediaPlayer = function (context) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    var VERSION = "1.4.0",
+    var VERSION = "1.5.0",
         DEFAULT_TIME_SERVER = "http://time.akamai.com/?iso",
         DEFAULT_TIME_SOURCE_SCHEME = "urn:mpeg:dash:utc:http-xsdate:2014",
         numOfParallelRequestAllowed = 0,
