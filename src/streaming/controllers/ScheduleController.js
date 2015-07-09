@@ -361,11 +361,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
 
             self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: self.timelineConverter.getClientTimeOffset()});
-            ready = true;
 
-            if (currentTrackInfo) {
-                startOnReady.call(self);
-            }
+            // ready will checked in onStreamUpdated and scheduling started
+            // based on its value
+            ready = true;
         };
 
 
