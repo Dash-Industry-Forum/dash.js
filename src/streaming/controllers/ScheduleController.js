@@ -319,6 +319,12 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onPlaybackSeeking = function(e) {
             if (!initialPlayback) {
+                // clear all buffers + executedRequests when user is seeking
+                // to avoid playback stuck when video element has discarded buffers silently
+                if (this.bufferController.getBuffer().buffered.length > 0) {
+                    this.bufferController.virtualBuffer.reset();
+                    this.bufferController.clearBuffer();
+                }
                 fragmentModel.cancelPendingRequests();
             }
 
