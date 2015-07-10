@@ -30,26 +30,39 @@
  */
 MediaPlayer.utils.TextTrackExtensions = function () {
     "use strict";
-    var Cue;
+    var Cue,
+        textTrackQueue = [];
 
     return {
         setup: function() {
             Cue = window.VTTCue || window.TextTrackCue;
         },
 
-        addTextTrack: function(video, captionData,  label, scrlang, isDefaultTrack) {
+        addTextTrack: function(textTrackInfoVO, totalTextTracks) {
 
-            //TODO: Ability to define the KIND in the MPD - ie subtitle vs caption....Use role ? //<Role schemeIdUri="urn:mpeg:dash:role" value="subtitle"/>
-            this.track = video.addTextTrack("captions", label, scrlang);
-            // track.default is an object property identifier that is a reserved word
-            // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
-            /*jshint -W024 */
-            this.track.default = isDefaultTrack;
-            this.track.mode = isDefaultTrack ? "showing" : "hidden";
-            this.video=video;
-            this.addCaptions(0, captionData);
+            textTrackQueue.push(textTrackInfoVO);
 
-            return this.track;
+            if(textTrackQueue.length === totalTextTracks) {
+
+                if (totalTextTracks > 1) { // sort multi text tracks alphabetically.
+                    textTrackQueue.sort(function(a,b) {
+                        return a.lang > b.lang;
+                    });
+                }
+
+                for(var item in textTrackQueue) {
+                    this.video = textTrackQueue[item].video;
+
+                    //TODO: Ability to define the KIND in the MPD - ie subtitle vs caption....Use role ? //<Role schemeIdUri="urn:mpeg:dash:role" value="subtitle"/>
+                    this.track = this.video.addTextTrack("captions", textTrackQueue[item].label, textTrackQueue[item].lang);
+                    // track.default is an object property identifier that is a reserved word
+                    // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
+                    /*jshint -W024 */
+                    this.track.default = textTrackQueue[item].defaultTrack;
+                    this.track.mode = textTrackQueue[item].defaultTrack ? "showing" : "hidden";
+                    this.addCaptions(0, textTrackQueue[item].captionData);
+                }
+            }
         },
 
         addCaptions: function(timeOffset, captionData) {
@@ -105,32 +118,44 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         },
         deleteCues: function(video) {
             //when multiple tracks are supported - iterate through and delete all cues from all tracks.
-
             var i = 0,
-                firstValidTrack = false;
+                firstValidTrack = false,
+                totalTracks = textTrackQueue.length;
 
+            //Find the first track in the TextTrackList that has valid cues.
+            // The reason for this step is there is no API on video to removeTextTrack once added, just cues inside of track and to mark track as disabled.
+            // Since there may be disable tracks with no cues
             while (!firstValidTrack)
             {
-                if (video.textTracks[i].cues !== null)
+                var t = video.textTracks[i];
+                t.mode = "showing";
+                if (t.cues.length > 0)
                 {
                     firstValidTrack = true;
                     break;
+                } else {
+                    t.mode = "disabled";
                 }
                 i++;
             }
 
-            var track = video.textTracks[i],
-                cues = track.cues,
-                lastIdx = cues.length - 1;
+            for(var j = i; j < i+totalTracks; j++) {
 
-            for (i = lastIdx; i >= 0 ; i--) {
-                track.removeCue(cues[i]);
+                var track = video.textTracks[j],
+                    cues = track.cues,
+                    lastIdx = cues.length - 1;
+
+                for (var r = lastIdx; r >= 0 ; r--) {
+                    track.removeCue(cues[r]);
+                }
+
+                track.mode = "disabled";
+                // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
+                /*jshint -W024 */
+                track.default = false;
             }
 
-            track.mode = "disabled";
-            // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
-            /*jshint -W024 */
-            track.default = false;
+            textTrackQueue = [];
         }
 
     };

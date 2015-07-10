@@ -30,6 +30,7 @@
  */
 MediaPlayer.dependencies.TextSourceBuffer = function () {
 
+
     return {
         system:undefined,
         videoModel: undefined,
@@ -37,8 +38,9 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         errHandler: undefined,
         adapter: undefined,
 
+
         initialize: function (type, bufferController) {
-            this.bufferController = bufferController;
+            this.mediaInfos = bufferController.streamProcessor.getMediaInfoArr();
             this.buffered =  this.system.getObject("customTimeRanges");
             this.initializationSegmentReceived= false;
             this.timescale= 90000;
@@ -46,23 +48,27 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         append: function (bytes, chunk) {
             var self = this,
                 result,
-                label,
-                lang,
                 samplesInfo,
                 i,
                 ccContent,
                 mediaInfo = chunk.mediaInfo,
-                mimeType = mediaInfo.mimeType;
+                mimeType = mediaInfo.mimeType,
+                textTrackInfo = new MediaPlayer.vo.TextTrackInfo();
 
+            textTrackInfo.lang = mediaInfo.lang;
+            textTrackInfo.label = mediaInfo.id;
+            textTrackInfo.video = self.videoModel.getElement();
 
             if(mimeType=="fragmentedText"){
                 var fragmentExt;
                 if(!this.initializationSegmentReceived){
                     this.initializationSegmentReceived=true;
-                    label = mediaInfo.id;
-                    lang = mediaInfo.lang;
+                    //label = mediaInfo.id;
+                    //lang = mediaInfo.lang;
                     this.textTrackExtensions=self.getTextTrackExtensions();
-                    this.textTrackExtensions.addTextTrack(self.videoModel.getElement(), result, label, lang, true);
+                    textTrackInfo.captionData = result;
+                    textTrackInfo.defaultTrack = true;
+                    this.textTrackExtensions.addTextTrack(textTrackInfo, this.mediaInfos.length);
                     self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
                     fragmentExt = self.system.getObject("fragmentExt");
                     this.timescale= fragmentExt.getMediaTimescaleFromMoov(bytes);
@@ -91,10 +97,9 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 bytes = new Uint8Array(bytes);
                 ccContent=window.UTF8.decode(bytes);
                 try {
-                    result = self.getParser(mimeType).parse(ccContent);
-                    lang = mediaInfo.lang;
-                    label = lang;
-                    self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, self.getIsDefault(mediaInfo));
+                    textTrackInfo.captionData = self.getParser(mimeType).parse(ccContent);
+                    textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
+                    self.getTextTrackExtensions().addTextTrack(textTrackInfo, this.mediaInfos.length);
                     self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
                 } catch(e) {
                     self.errHandler.closedCaptionsError(e, "parse", ccContent);
@@ -103,8 +108,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         },
 
         getIsDefault:function(mediaInfo){
-            var infos = this.bufferController.streamProcessor.getMediaInfoArr();
-            return mediaInfo.lang === infos[0].lang; //TODO How to tag default. currently same order as in manifest. Is there a way to mark a text adaptation set as the default one?
+            return mediaInfo.lang === this.mediaInfos[0].lang; //TODO How to tag default. currently same order as in manifest. Is there a way to mark a text adaptation set as the default one?
         },
 
         abort:function() {
