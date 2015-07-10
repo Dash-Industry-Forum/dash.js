@@ -130,7 +130,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
         onFragmentLoadProgress = function(evt) {
 
-            if (MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD === 0) { //check to see if there are parallel request or just one at a time.
+            if (MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD === 0 && autoSwitchBitrate) { //check to see if there are parallel request or just one at a time.
 
                 var self = this,
                     type = evt.data.request.mediaType,
