@@ -80,6 +80,7 @@ MediaPlayer = function (context) {
         videoModel,
         DOMStorage,
         initialized = false,
+        resetting = false,
         playing = false,
         autoPlay = true,
         scheduleWhilePaused = false,
@@ -90,7 +91,7 @@ MediaPlayer = function (context) {
         usePresentationDelay = false,
 
         isReady = function () {
-            return (!!element && !!source);
+            return (!!element && !!source && !resetting);
         },
 
         play = function () {
@@ -233,22 +234,40 @@ MediaPlayer = function (context) {
             }
         },
 
-        doReset = function() {
+        resetAndPlay = function() {
             if (playing && streamController) {
-                playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, streamController);
-                playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
-                playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
-                playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
+                if (!resetting) {
+                    resetting = true;
+                    playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, streamController);
+                    playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
+                    playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
+                    playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
 
-                streamController.reset();
-                abrController.reset();
-                rulesController.reset();
-                playbackController.reset();
-                streamController = null;
-                playing = false;
+                    var teardownComplete = {},
+                            self = this;
+                    teardownComplete[MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
+
+                        // Finish rest of shutdown process
+                        abrController.reset();
+                        rulesController.reset();
+                        playbackController.reset();
+                        streamController = null;
+                        playing = false;
+
+                        resetting = false;
+                        if (isReady.call(self)) {
+                            doAutoPlay.call(self);
+                        }
+                    };
+                    streamController.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
+                    streamController.reset();
+                }
+            } else {
+                if (isReady.call(this)) {
+                    doAutoPlay.call(this);
+                }
             }
         };
-
 
 
     // Overload dijon getObject function
@@ -843,12 +862,7 @@ MediaPlayer = function (context) {
             }
 
             // TODO : update
-
-            doReset.call(this);
-
-            if (isReady.call(this)) {
-                doAutoPlay.call(this);
-            }
+            resetAndPlay.call(this);
         },
 
         /**
@@ -883,12 +897,7 @@ MediaPlayer = function (context) {
             protectionData = data;
 
             // TODO : update
-
-            doReset.call(this);
-
-            if (isReady.call(this)) {
-                doAutoPlay.call(this);
-            }
+            resetAndPlay.call(this);
         },
 
         /**
@@ -1039,6 +1048,7 @@ MediaPlayer.di = {};
  * The list of events supported by MediaPlayer
  */
 MediaPlayer.events = {
+    RESET_COMPLETE: "resetComplete",
     METRICS_CHANGED: "metricschanged",
     METRIC_CHANGED: "metricchanged",
     METRIC_UPDATED: "metricupdated",

@@ -66,15 +66,17 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
         // readyState, so we need this logic to ensure we don't set the keys
         // too early
         setMediaKeys = function() {
-            // IE11 does not allow setting of media keys until
+            var boundDoSetKeys = null;
             var doSetKeys = function() {
+                videoElement.removeEventListener("loadedmetadata", boundDoSetKeys);
                 videoElement[api.setMediaKeys](mediaKeys);
                 this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
             };
             if (videoElement.readyState >= 1) {
                 doSetKeys.call(this);
             } else {
-                videoElement.addEventListener("loadedmetadata", doSetKeys.bind(this));
+                boundDoSetKeys = doSetKeys.bind(this);
+                videoElement.addEventListener("loadedmetadata", boundDoSetKeys);
             }
 
         },
@@ -144,11 +146,18 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
         },
 
         teardown: function() {
-            if (videoElement) {
-                videoElement.removeEventListener(api.needkey, eventHandler);
-            }
-            for (var i = 0; i < sessions.length; i++) {
-                this.closeKeySession(sessions[i]);
+            try {
+                for (var i = 0; i < sessions.length; i++) {
+                    this.closeKeySession(sessions[i]);
+                }
+                if (videoElement) {
+                    videoElement.removeEventListener(api.needkey, eventHandler);
+                    videoElement.setMediaKeys(null);
+                }
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
+            } catch (error) {
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE,
+                        null, "Error tearing down key sessions and MediaKeys! -- " + error.message);
             }
         },
 
