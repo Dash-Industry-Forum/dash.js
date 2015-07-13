@@ -118,7 +118,9 @@
             hasMediaError = true;
 
             this.log("Video Element Error: " + msg);
-            this.log(e.error);
+            if (e.error) {
+                this.log(e.error);
+            }
             this.errHandler.mediaSourceError(msg);
             this.reset();
         },
