@@ -55,7 +55,6 @@ MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule = function () {
                 // Thus, we need to switch an expected live edge and actual live edge for SegmentTimelne streams.
                 var actualLiveEdge = this.timelineConverter.getExpectedLiveEdge();
                 this.timelineConverter.setExpectedLiveEdge(liveEdgeInitialSearchPosition);
-                this.timelineConverter.setTimeSyncCompleted(false);
                 callback(new MediaPlayer.rules.SwitchRequest(actualLiveEdge, p));
             } else {
                 callback(new MediaPlayer.rules.SwitchRequest(liveEdgeInitialSearchPosition, p));

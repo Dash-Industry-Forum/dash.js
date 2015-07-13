@@ -406,13 +406,24 @@
         onManifestUpdated = function(e) {
             if (!e.error) {
                 this.log("Manifest has loaded.");
-                //self.log(self.manifestModel.getValue());
-                // before composing streams, attempt to synchronize with some
-                // time source (if there are any available)
-                var manifestUTCTimingSources = this.manifestExt.getUTCTimingSources(e.data.manifest),
-                    allUTCTimingSources = manifestUTCTimingSources.concat(UTCTimingSources); //manifest utc time source(s) take precedence over default or explicitly added sources.
+                //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
+                //is SegmentTimeline to avoid using time source
+                var manifest = e.data.manifest,
+                    streamInfo = this.adapter.getStreamsInfo(manifest)[0],
+                    mediaInfo  = this.adapter.getMediaInfoForType(manifest, streamInfo, "video"),
+                    adaptation = this.adapter.getDataForMedia(mediaInfo),
+                    useCalculatedLiveEdgeTime = this.manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
 
-                this.timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource);
+                if (useCalculatedLiveEdgeTime) {
+                    this.log("SegmentTimeline detected using calculated Live Edge Time");
+                    useManifestDateHeaderTimeSource = false;
+                }
+
+                var manifestUTCTimingSources = this.manifestExt.getUTCTimingSources(e.data.manifest),
+                    allUTCTimingSources = (!this.manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ) ?  manifestUTCTimingSources :  manifestUTCTimingSources.concat(UTCTimingSources);
+
+                this.timeSyncController.initialize(useCalculatedLiveEdgeTime ? manifestUTCTimingSources : allUTCTimingSources, useManifestDateHeaderTimeSource);
+
             } else {
                 this.reset();
             }
