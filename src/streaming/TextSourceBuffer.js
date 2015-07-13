@@ -52,7 +52,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 i,
                 ccContent,
                 mediaInfo = chunk.mediaInfo,
-                mimeType = mediaInfo.mimeType,
+                mimeType = mediaInfo.type === "fragmentedText" ? mediaInfo.type : mediaInfo.mimeType,
                 textTrackInfo = new MediaPlayer.vo.TextTrackInfo();
 
             textTrackInfo.lang = mediaInfo.lang;
@@ -67,8 +67,8 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                     //lang = mediaInfo.lang;
                     this.textTrackExtensions=self.getTextTrackExtensions();
                     textTrackInfo.captionData = result;
-                    textTrackInfo.defaultTrack = true;
-                    this.textTrackExtensions.addTextTrack(textTrackInfo, this.mediaInfos.length);
+                    textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
+                    this.textTrackExtensions.addTextTrack(textTrackInfo, 1);
                     self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
                     fragmentExt = self.system.getObject("fragmentExt");
                     this.timescale= fragmentExt.getMediaTimescaleFromMoov(bytes);

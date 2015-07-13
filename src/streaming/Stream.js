@@ -93,6 +93,7 @@ MediaPlayer.dependencies.Stream = function () {
                 streamProcessor = self.system.getObject("streamProcessor");
 
 
+
             streamProcessor.initialize(getMimeTypeOrType.call(self, mediaInfo), self.fragmentController, mediaSource, self, eventController);
             self.abrController.updateTopQualityIndex(mediaInfo);
 
