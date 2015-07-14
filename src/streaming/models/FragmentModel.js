@@ -326,6 +326,22 @@ MediaPlayer.dependencies.FragmentModel = function () {
             }
         },
 
+        removeExecutedRequestsAfterTime: function(time) {
+            var lastIdx = executedRequests.length - 1,
+                end = NaN,
+                req = null,
+                i;
+
+            // loop through the executed requests and remove the ones for which startTime is less than the given time
+            for (i = 0; i <= lastIdx; i += 1) {
+                req = executedRequests[i];
+                end = req.startTime + req.duration;
+                if (!isNaN(end) && (end > time)) {
+                    removeRequest.call(this, executedRequests, req);
+                }
+            }
+        },
+
         cancelPendingRequests: function(quality) {
             var self = this,
                 reqs = pendingRequests,

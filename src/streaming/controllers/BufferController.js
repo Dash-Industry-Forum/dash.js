@@ -45,6 +45,7 @@ MediaPlayer.dependencies.BufferController = function () {
         minBufferTime,
         hasSufficientBuffer = null,
         appendedBytesInfo,
+        previousBufferedStart = -1,
 
         isBufferLevelOutrun = false,
         isAppendingInProgress = false,
@@ -121,7 +122,7 @@ MediaPlayer.dependencies.BufferController = function () {
             switchInitData.call(self);
         },
 
-		onMediaLoaded = function (e) {
+        onMediaLoaded = function (e) {
             if (e.data.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
 
             var events,
@@ -145,7 +146,7 @@ MediaPlayer.dependencies.BufferController = function () {
             this.virtualBuffer.append(chunk);
 
             appendNext.call(this);
-		},
+        },
 
         appendToBuffer = function(chunk) {
             isAppendingInProgress = true;
@@ -164,7 +165,9 @@ MediaPlayer.dependencies.BufferController = function () {
                 onMediaRejected.call(self, quality, chunk.index);
                 return;
             }
-            //self.log("Push bytes: " + data.byteLength);
+            self.log("Push " + chunk.mediaType + " chunk: " + chunk.index + " (" +
+                    chunk.start.toFixed(2) + " - " + chunk.end.toFixed(2) + " " +
+                    (chunk.bytes.byteLength / 1024).toFixed(2) + " KB)");
             self.sourceBufferExt.append(buffer, chunk);
         },
 
@@ -213,7 +216,12 @@ MediaPlayer.dependencies.BufferController = function () {
                         self.log("Buffered Range: " + ranges.start(i) + " - " + ranges.end(i));
                     }
                 }
+                if (self.playbackController.isSeeking() ||
+                        (previousBufferedStart >= 0 && previousBufferedStart < ranges.start(0))) {
+                    clearBuffer.call(self);
+                }
             }
+            previousBufferedStart = (ranges && ranges.length > 0) ? ranges.start(0) : -1;
 
             self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED, {quality: appendedBytesInfo.quality, index: appendedBytesInfo.index, bufferedRanges: ranges});
             onAppendToBufferCompleted.call(self, appendedBytesInfo.quality, appendedBytesInfo.index);
@@ -298,7 +306,7 @@ MediaPlayer.dependencies.BufferController = function () {
             return modData.subarray(0,j);
         },
 
-        checkGapBetweenBuffers= function() {
+        checkGapBetweenBuffers = function() {
             var leastLevel = getLeastBufferLevel.call(this),
                 acceptableGap = minBufferTime * 2,
                 actualGap = bufferLevel - leastLevel;
@@ -341,9 +349,13 @@ MediaPlayer.dependencies.BufferController = function () {
         clearBuffer = function() {
             var self = this,
                 currentTime,
-                removeStart,
-                removeEnd,
+                removeStart = -1,
+                removeEnd = -1,
                 range,
+                buffered,
+                i,
+                ln,
+                toler = MediaPlayer.dependencies.SourceBufferExtensions.BUFFER_GAP_TOLERANCE,
                 req;
 
             if (!buffer) return;
@@ -354,13 +366,15 @@ MediaPlayer.dependencies.BufferController = function () {
             removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
 
             range = self.sourceBufferExt.getBufferRange(buffer, currentTime);
+            buffered = buffer.buffered;
+            ln = buffered !== null ? buffered.length : 0;
 
-            if ((range === null) && (buffer.buffered.length > 0)) {
-                removeEnd = buffer.buffered.end(buffer.buffered.length -1 );
+            if ((range === null) && (ln > 0)) {
+                removeEnd = buffered.end(ln - 1);
             }
 
-            removeStart = buffer.buffered.start(0);
-            self.sourceBufferExt.remove(buffer, removeStart, removeEnd, mediaSource);
+            self.log("Clearing buffer before: " + removeEnd);
+            self.sourceBufferExt.remove(buffer, -1, removeEnd, mediaSource);
         },
 
         onRemoved = function(e) {
@@ -424,8 +438,13 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
-        updateBufferState = function() {
+        updateBufferState = function(e) {
             if (!buffer) return;
+
+            if (e.type === MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING) {
+                maxAppendedIndex = -1;
+                previousBufferedStart = -1;
+            }
 
             var self = this,
                 fragmentsToLoad = this.streamProcessor.getScheduleController().getFragmentToLoadCount(),
