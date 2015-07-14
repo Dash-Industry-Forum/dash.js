@@ -74,7 +74,7 @@ MediaPlayer.models.VideoModel = function () {
             }
 
             // If nothing is stalled resume playback.
-            if (isStalled() === false) {
+            if (isStalled() === false && element.playbackRate === 0) {
                 this.setPlaybackRate(previousPlaybackRate || 1);
                 element.dispatchEvent(new CustomEvent("playing"));
             }
