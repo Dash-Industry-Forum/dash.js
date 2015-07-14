@@ -269,11 +269,11 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (!ranges || !ranges.length) return;
 
             bufferedStart = Math.max(ranges.start(0), streamInfo.start);
-            commonEarliestTime[id] = (commonEarliestTime[id] === undefined) ? bufferedStart : Math.max(commonEarliestTime[id], bufferedStart);
+            commonEarliestTime[id] = (commonEarliestTime[id] === undefined || this.isSeeking()) ? bufferedStart : Math.max(commonEarliestTime[id], bufferedStart);
 
             // do nothing if common earliest time has not changed or if the firts segment has not been appended or if current
             // time exceeds the common earliest time
-            if ((currentEarliestTime === commonEarliestTime[id] && (time === currentEarliestTime)) || !firstAppended.ready || (time > commonEarliestTime[id])) return;
+            if ((currentEarliestTime === commonEarliestTime[id] && (time === currentEarliestTime)) || !firstAppended.ready || (time > commonEarliestTime[id]) || this.isSeeking()) return;
 
             // seek to the start of buffered range to avoid stalling caused by a shift between audio and video media time
             this.seek(commonEarliestTime[id]);

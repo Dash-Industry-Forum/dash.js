@@ -419,7 +419,7 @@ Dash.dependencies.DashHandler = function () {
             else {
                 representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
             }
-            
+
             return segments;
         },
 
@@ -435,6 +435,7 @@ Dash.dependencies.DashHandler = function () {
                 currentSegmentList = representation.segments,
                 availabilityLowerLimit = 2 * duration,
                 availabilityUpperLimit = Math.max(2 * minBufferTime, 10 * duration),
+                time,
                 start,
                 end,
                 range;
@@ -455,9 +456,12 @@ Dash.dependencies.DashHandler = function () {
             // if segments exist we should try to find the latest buffered time, which is the presentation time of the
             // segment for the current index
             if (currentSegmentList && currentSegmentList.length > 0) {
+                // FIX: the MpdRelativeTime argument had been  evaluated in wrong way
+                // e.g.) in case of requestedTime == 0
+                time = (requestedTime === undefined || requestedTime === null) ? currentSegmentList[0].presentationStartTime : requestedTime;
                 originSegment = getSegmentByIndex(index, representation);
                 originAvailabilityTime = originSegment ? self.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, originSegment.presentationStartTime) :
-                    (index > 0 ? (index * duration) : self.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime || currentSegmentList[0].presentationStartTime));
+                    (index > 0 ? (index * duration) : self.timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, time));
             } else {
                 // If no segments exist, but index > 0, it means that we switch to the other representation, so
                 // we should proceed from this time.
@@ -833,7 +837,7 @@ Dash.dependencies.DashHandler = function () {
                 request.index = index;
                 request.mediaType = type;
                 self.log("Signal complete.");
-                self.log(request);
+                //self.log(request);
             } else {
                 //self.log("Got a request.");
                 //self.log(request);

@@ -222,22 +222,30 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         }
     },
 
-    remove: function (buffer, start, end, mediaSource) {
-        var self = this;
+    remove: function (buffer, start, end) {
+        var self = this,
+            from = start,
+            to   = end;
+
+        if (start === -1 && end !== -1) {
+            start = buffer.buffered.start(0);
+        } else if (start !== -1 && end === -1) {
+            end = buffer.buffered.end(buffer.buffered.length - 1);
+        }
 
         try {
             // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
             self.waitForUpdateEnd(buffer, function() {
-                if ((start >= 0) && (end > start) && (mediaSource.readyState !== "ended")) {
+                if ((start >= 0) && (end > start)) {
                     buffer.remove(start, end);
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 self.waitForUpdateEnd(buffer, function() {
-                    self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
+                    self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: from, to: to});
                 });
             });
         } catch (err) {
-            self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end}, new MediaPlayer.vo.Error(err.code, err.message, null));
+            self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: from, to: to}, new MediaPlayer.vo.Error(err.code, err.message, null));
         }
     },
 
