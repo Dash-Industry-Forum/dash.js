@@ -155,13 +155,14 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        xlinkController: undefined,
+        system: undefined,
 
         load: function(url) {
             doLoad.call(this, url, RETRY_ATTEMPTS);
         },
         setup: function() {
             onXlinkReady = onXlinkReady.bind(this);
+            this.xlinkController = this.system.getObject("xlinkController");
             this.xlinkController.subscribe(MediaPlayer.dependencies.XlinkController.eventList.ENAME_XLINK_READY,this,onXlinkReady);
         }
     };
