@@ -37,6 +37,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
         pendingRequests = [],
         loadingRequests = [],
         rejectedRequests = [],
+        failedRequests = [],
 
         isLoadingPostponed = false,
 
@@ -112,6 +113,9 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 case MediaPlayer.dependencies.FragmentModel.states.REJECTED:
                     requests = rejectedRequests;
                     break;
+                case MediaPlayer.dependencies.FragmentModel.states.FAILED:
+                    requests = failedRequests;
+                    break;
                 default:
                     requests = [];
             }
@@ -143,6 +147,8 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
             if (response && !error) {
                 executedRequests.push(request);
+            } else {
+                failedRequests.push(request);
             }
 
             addSchedulingInfoMetrics.call(this, request, error ? MediaPlayer.dependencies.FragmentModel.states.FAILED : MediaPlayer.dependencies.FragmentModel.states.EXECUTED);
@@ -270,7 +276,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     return isLoaded;
                 };
 
-            return (check(pendingRequests) || check(loadingRequests) || (check(executedRequests) && !isDiscarded.call(this)));
+            return (check(pendingRequests) || check(loadingRequests) || check(failedRequests) || (check(executedRequests) && !isDiscarded.call(this)));
         },
 
         /**
