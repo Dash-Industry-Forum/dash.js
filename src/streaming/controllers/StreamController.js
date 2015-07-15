@@ -311,6 +311,13 @@
             if (this.capabilities.supportsEncryptedMedia()) {
                 if (!protectionController) {
                     protectionController = this.system.getObject("protectionController");
+                    this.eventBus.dispatchEvent({
+                        type: MediaPlayer.events.PROTECTION_CREATED,
+                        data: {
+                            controller: protectionController,
+                            manifest: manifest
+                        }
+                    });
                     ownProtectionController = true;
                 }
                 protectionController.setMediaElement(this.videoModel.getElement());
@@ -524,6 +531,7 @@
         },
 
         reset: function () {
+
             if (!!activeStream) {
                 detachEvents.call(this, activeStream);
             }
@@ -547,7 +555,11 @@
             this.manifestUpdater.unsubscribe(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
             this.manifestUpdater.reset();
             this.metricsModel.clearAllCurrentMetrics();
+
+            // We need this later to notify users of protection system teardown
+            var manifestUrl = (this.manifestModel.getValue()) ? this.manifestModel.getValue().url : null;
             this.manifestModel.setValue(null);
+
             this.timelineConverter.reset();
             this.liveEdgeFinder.reset();
             this.adapter.reset();
@@ -563,9 +575,10 @@
                 mediaSource = null;
             }
 
+            // Teardown the protection system
             if (ownProtectionController) {
                 var teardownComplete = {},
-                    self = this;
+                        self = this;
                 teardownComplete[MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
 
                     // Complete teardown process
@@ -573,14 +586,22 @@
                     protectionController = null;
                     protectionData = null;
 
+                    if (manifestUrl) {
+                        self.eventBus.dispatchEvent({
+                            type: MediaPlayer.events.PROTECTION_DESTROYED,
+                            data: manifestUrl
+                        });
+                    }
+
                     self.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
                 };
                 protectionController.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
                 protectionController.teardown();
             } else {
-                this.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+                protectionController.setMediaElement(null);
                 protectionController = null;
                 protectionData = null;
+                this.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
             }
         }
     };
@@ -592,5 +613,5 @@ MediaPlayer.dependencies.StreamController.prototype = {
 
 MediaPlayer.dependencies.StreamController.eventList = {
     ENAME_STREAMS_COMPOSED: "streamsComposed",
-    ENAME_TEARDOWN_COMPLETE: "teardownComplete"
+    ENAME_TEARDOWN_COMPLETE: "streamTeardownComplete"
 };

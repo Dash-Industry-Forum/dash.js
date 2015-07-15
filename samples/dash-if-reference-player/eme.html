@@ -134,11 +134,11 @@
 
 
         <div class="row" ng-repeat="d in drmData">
-            <div class="panel panel-info">
+            <div class="panel panel-info" ng-class="{sessionPanelPlaying: d.isPlaying}">
                 <div class="panel-heading panel-top">
-                    <span class="panel-title">{{d.url}}</span>
+                    <span class="panel-title">{{d.manifest.url}}</span>
                     <div class="btn-group">
-                        <button type="button" class="btn btn-default" ng-click="play(d)">Play</button>
+                        <button type="button" class="btn btn-default" ng-disabled="!d.licenseReceived" ng-click="play(d)">Play</button>
                         <button type="button" class="btn btn-default" ng-click="delete(d)">Delete</button>
                     </div>
                 </div>

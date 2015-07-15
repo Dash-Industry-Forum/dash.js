@@ -42,9 +42,8 @@ MediaPlayer.di.Context = function () {
         } else if (MediaPlayer.models.ProtectionModel_01b.detect(videoElement)) {
             this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_01b);
         } else {
-            var debug = this.system.getObject("debug");
-            debug.log("No supported version of EME detected on this user agent!");
-            debug.log("Attempts to play encrypted content will fail!");
+            this.debug.log("No supported version of EME detected on this user agent!");
+            this.debug.log("Attempts to play encrypted content will fail!");
         }
     };
 
@@ -53,8 +52,7 @@ MediaPlayer.di.Context = function () {
         setup : function () {
             this.system.autoMapOutlets = true;
 
-            this.system.mapSingleton('debug', MediaPlayer.utils.Debug);
-            this.system.mapSingleton('eventBus', MediaPlayer.utils.EventBus);
+            this.system.mapClass('eventBusCl', MediaPlayer.utils.EventBus);
             this.system.mapSingleton('capabilities', MediaPlayer.utils.Capabilities);
             this.system.mapSingleton('DOMStorage', MediaPlayer.utils.DOMStorage);
             this.system.mapClass('customTimeRanges', MediaPlayer.utils.CustomTimeRanges);
