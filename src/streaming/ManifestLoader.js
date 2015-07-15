@@ -87,7 +87,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                     url = request.responseURL;
                 }
 
-                manifest = self.parser.parse(request.responseText, baseUrl);
+                manifest = self.parser.parse(request.responseText, baseUrl, self.xlinkController);
 
                 if (manifest) {
                     manifest.url = url;
