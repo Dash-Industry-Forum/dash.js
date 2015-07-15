@@ -152,7 +152,6 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
                 }
                 if (videoElement) {
                     videoElement.removeEventListener(api.needkey, eventHandler);
-                    videoElement.setMediaKeys(null);
                 }
                 this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
             } catch (error) {
@@ -253,7 +252,6 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
             // Replacing the previous element
             if (videoElement) {
                 videoElement.removeEventListener(api.needkey, eventHandler);
-                videoElement[api.setMediaKeys](null);
             }
 
             videoElement = mediaElement;
