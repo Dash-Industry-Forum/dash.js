@@ -53,8 +53,8 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             // this is NOT w3c conform and license servers may reject the request!
             // -> rename it to proper w3c definition!
             if (headers.hasOwnProperty('Content')) {
-                headers['Content-Type'] = headers['Content'];
-                delete headers['Content'];
+                headers['Content-Type'] = headers.Content;
+                delete headers.Content;
             }
             return headers;
         },
