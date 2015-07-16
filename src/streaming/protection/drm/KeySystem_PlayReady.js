@@ -49,6 +49,13 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             for (var i = 0; i < headerNameList.length; i++) {
                 headers[headerNameList[i].childNodes[0].nodeValue] = headerValueList[i].childNodes[0].nodeValue;
             }
+            // some versions of the PlayReady CDM return 'Content' instead of 'Content-Type'.
+            // this is NOT w3c conform and license servers may reject the request!
+            // -> rename it to proper w3c definition!
+            if (headers.hasOwnProperty('Content')) {
+                headers['Content-Type'] = headers.Content;
+                delete headers.Content;
+            }
             return headers;
         },
 
