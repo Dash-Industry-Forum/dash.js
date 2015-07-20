@@ -152,7 +152,6 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
                 }
                 if (videoElement) {
                     videoElement.removeEventListener(api.needkey, eventHandler);
-                    videoElement.setMediaKeys(null);
                 }
                 this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
             } catch (error) {
@@ -247,13 +246,22 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
         },
 
         setMediaElement: function(mediaElement) {
+            if (videoElement === mediaElement)
+                return;
+
+            // Replacing the previous element
             if (videoElement) {
                 videoElement.removeEventListener(api.needkey, eventHandler);
             }
+
             videoElement = mediaElement;
-            videoElement.addEventListener(api.needkey, eventHandler);
-            if (mediaKeys) {
-                setMediaKeys.call(this);
+
+            // Only if we are not detaching from the existing element
+            if (videoElement) {
+                videoElement.addEventListener(api.needkey, eventHandler);
+                if (mediaKeys) {
+                    setMediaKeys.call(this);
+                }
             }
         },
 

@@ -33,6 +33,10 @@ Dash.di.DashContext = function () {
 
     return {
         system : undefined,
+        debug : undefined, // If we define this in Context, it does not appear in the object
+                           // (for dependency injection) so it must be defined here. If we
+                           // ever get rid of the DASH-specific context, we need to move this
+                           // to Context.
         setup : function () {
             Dash.di.DashContext.prototype.setup.call(this);
 

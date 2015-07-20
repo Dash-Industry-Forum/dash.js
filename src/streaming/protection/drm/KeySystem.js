@@ -29,6 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file Defines the interface for Key Systems (DRMs) supported by the
+ * player.
+ */
+
 MediaPlayer.dependencies.protection.KeySystem = {
 
     /**
@@ -86,9 +91,5 @@ MediaPlayer.dependencies.protection.KeySystem = {
      * @returns {Uint8Array} the license request message
      getLicenseRequestFromMessage: function(message) { return message; }
      */
-
-    eventList: {
-        ENAME_LICENSE_REQUEST_COMPLETE: "licenseRequestComplete"
-    }
 };
 

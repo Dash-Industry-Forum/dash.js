@@ -284,8 +284,22 @@ MediaPlayer = function (context) {
 
     // Set up DI.
     system = new dijon.System();
+
     system.mapValue("system", system);
     system.mapOutlet("system");
+
+    // Map the single EventBus instance that will be used throughout the player
+    // to deliver events to the application
+    system.mapValue("eventBus", new MediaPlayer.utils.EventBus());
+    system.mapOutlet("eventBus");
+
+    // Dash.di.Context makes calls to Debug in its setup() function, so we need to
+    // map it here and explicitly inject Debug before we do a global inject into context
+    var debug = new MediaPlayer.utils.Debug();
+    system.mapValue("debug", debug);
+    system.mapOutlet("debug");
+    system.injectInto(debug);
+    debug.setup();
     system.injectInto(context);
 
     return {
@@ -1054,6 +1068,8 @@ MediaPlayer.events = {
     METRIC_UPDATED: "metricupdated",
     METRIC_ADDED: "metricadded",
     MANIFEST_LOADED: "manifestloaded",
+    PROTECTION_CREATED: "protectioncreated",
+    PROTECTION_DESTROYED: "protectiondestroyed",
     STREAM_SWITCH_STARTED: "streamswitchstarted",
     STREAM_SWITCH_COMPLETED: "streamswitchcompleted",
     STREAM_INITIALIZED: "streaminitialized",

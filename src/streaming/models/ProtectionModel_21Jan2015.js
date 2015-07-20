@@ -198,6 +198,8 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                             videoElement.setMediaKeys(null).then(function () {
                                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
                             });
+                        } else {
+                            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
                         }
                     }
                 };
@@ -251,13 +253,23 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
         },
 
         setMediaElement: function(mediaElement) {
+            if (videoElement === mediaElement)
+                return;
+
+            // Replacing the previous element
             if (videoElement) {
                 videoElement.removeEventListener("encrypted", eventHandler);
+                videoElement.setMediaKeys(null);
             }
+
             videoElement = mediaElement;
-            videoElement.addEventListener("encrypted", eventHandler);
-            if (mediaKeys) {
-                videoElement.setMediaKeys(mediaKeys);
+
+            // Only if we are not detaching from the existing element
+            if (videoElement) {
+                videoElement.addEventListener("encrypted", eventHandler);
+                if (mediaKeys) {
+                    videoElement.setMediaKeys(mediaKeys);
+                }
             }
         },
 

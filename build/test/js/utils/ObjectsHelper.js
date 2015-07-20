@@ -41,8 +41,15 @@
             context = new Dash.di.DashContext();
             system.mapValue("system", system);
             system.mapOutlet("system");
+            system.mapValue("eventBus", new MediaPlayer.utils.EventBus());
+            system.mapOutlet("eventBus");
+            var debug = new MediaPlayer.utils.Debug();
+            system.mapValue("debug", debug);
+            system.mapOutlet("debug");
+            system.injectInto(debug);
             system.injectInto(context);
             notifier = system.getObject("notifier");
+
         };
 
     objectsHelper =  {
