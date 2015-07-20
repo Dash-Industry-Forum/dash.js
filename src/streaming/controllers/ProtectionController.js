@@ -28,6 +28,20 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+/**
+ * Provides access to media protection information and functionality.  Each
+ * ProtectionController manages a single {@link MediaPlayer.models.ProtectionModel}
+ * which encapsulates a set of protection information (EME APIs, selected key system,
+ * key sessions).  The APIs of ProtectionController mostly align with the latest EME
+ * APIs.  Key system selection is mostly automated when combined with app-overrideable
+ * functionality provided in {@link MediaPlayer.dependencies.ProtectionExtensions}.
+ *
+ * @class MediaPlayer.dependencies.ProtectionController
+ * @todo ProtectionController does almost all of its tasks automatically after init() is
+ * called.  Applications might want more control over this process and want to go through
+ * each step manually (key system selection, session creation, session maintenance).
+ */
 MediaPlayer.dependencies.ProtectionController = function () {
     "use strict";
 
@@ -180,19 +194,19 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
         onLicenseRequestComplete = function(e) {
             // Determine if this event is for us
-            var i, sessionToken = (e.error) ? e.data : e.data.requestData;
+            var i, sessionToken = (e.error) ? e.data : e.data.sessionToken;
             for (i = 0; i < pendingLicenseRequests.length; i++) {
                 if (pendingLicenseRequests[i] === sessionToken) {
                     pendingLicenseRequests.splice(i, 1);
 
                     // It is for us, now process the event
                     if (!e.error) {
-                        this.log("DRM: License request successful.  Session ID = " + e.data.requestData.getSessionID());
+                        this.log("DRM: License request successful.  Session ID = " + sessionToken.getSessionID());
                         this.eventBus.dispatchEvent({
                             type: MediaPlayer.dependencies.ProtectionController.events.LICENSE_REQUEST_COMPLETE,
                             data: sessionToken
                         });
-                        this.updateKeySession(sessionToken, e.data.message);
+                        this.protectionModel.updateKeySession(sessionToken, e.data.message);
                     } else {
                         this.log("DRM: License request failed! -- " + e.error);
                         this.eventBus.dispatchEvent({
@@ -359,6 +373,21 @@ MediaPlayer.dependencies.ProtectionController = function () {
             this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED, this);
         },
 
+        /**
+         * Initialize this protection system with a given manifest and optional audio
+         * and video stream information.
+         *
+         * @param {Object} manifest the json version of the manifest XML document for the
+         * desired content.  Applications can download their manifest using
+         * {@link MediaPlayer#retrieveManifest}
+         * @param {MediaPlayer.vo.StreamInfo} [aInfo] audio stream information
+         * @param {MediaPlayer.vo.StreamInfo} [vInfo] video stream information
+         * @memberof MediaPlayer.dependencies.ProtectionController
+         * @instance
+         * @todo This API will change when we have better support for allowing applications
+         * to select different adaptation sets for playback.  Right now it is clunky for
+         * applications to create {@link MediaPlayer.vo.StreamInfo} with the right information,
+         */
         init: function (manifest, aInfo, vInfo) {
 
             // TODO: We really need to do much more here... We need to be smarter about knowing
@@ -392,14 +421,50 @@ MediaPlayer.dependencies.ProtectionController = function () {
             }
         },
 
+        /**
+         * ProtectionController Event Listener
+         *
+         * @callback MediaPlayer.dependencies.ProtectionController~eventListener
+         * @param {Object} event The event.  See the documentation for ProtectionController
+         * APIs to see what events are fired by each API call
+         */
+
+        /**
+         * Add a listener for ProtectionController events
+         *
+         * @param type the event ID
+         * @param {MediaPlayer.dependencies.ProtectionController~eventListener} listener
+         * the event listener to add
+         * @see MediaPlayer.dependencies.ProtectionController.events
+         * @memberof MediaPlayer.dependencies.ProtectionController
+         * @instance
+         */
         addEventListener: function(type, listener) {
             this.eventBus.addEventListener(type, listener);
         },
 
+        /**
+         * Remove a listener for ProtectionController events
+         *
+         * @param type the event ID associated with the listener to rmove
+         * @param {MediaPlayer.dependencies.ProtectionController~eventListener} listener
+         * the event listener to remove
+         * @memberof MediaPlayer.dependencies.ProtectionController
+         * @instance
+         */
         removeEventListener: function(type, listener) {
             this.eventBus.removeEventListener(type, listener);
         },
 
+        /**
+         * Destroys all protection data associated with this protection set.  This includes
+         * deleting all key sessions.  In the case of persistent key sessions, the sessions
+         * will simply be unloaded and not deleted.  Additionally, if this protection set is
+         * associated with a HTMLMediaElement, it will be detached from that element.
+         *
+         * @memberof MediaPlayer.dependencies.ProtectionController
+         * @instance
+         */
         teardown: function() {
             this.setMediaElement(null);
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
@@ -421,6 +486,19 @@ MediaPlayer.dependencies.ProtectionController = function () {
             this.protectionModel = undefined;
         },
 
+        /**
+         * Create a new key session associated with the given initialization data from
+         * the MPD or from the PSSH box in the media
+         *
+         * @param {ArrayBuffer} initData the initialization data
+         * @memberof MediaPlayer.dependencies.ProtectionController
+         * @instance
+         * @fires MediaPlayer.dependencies.ProtectionController#KeySessionCreated
+         * @todo In older versions of the EME spec, there was a one-to-one relationship between
+         * initialization data and key sessions.  That is no longer true in the latest APIs.  This
+         * API will need to modified (and a new "generateRequest(keySession, initData)" API created)
+         * to come up to speed with the latest EME standard
+         */
         createKeySession: function(initData) {
             var initDataForKS = MediaPlayer.dependencies.protection.CommonEncryption.getPSSHForKeySystem(this.keySystem, initData);
             if (initDataForKS) {
@@ -451,26 +529,74 @@ MediaPlayer.dependencies.ProtectionController = function () {
             }
         },
 
-        updateKeySession: function(sessionToken, message) {
-            this.protectionModel.updateKeySession(sessionToken, message);
-        },
-
+        /**
+         * Loads a key session with the given session ID from persistent storage.  This
+         * essentially creates a new key session
+         *
+         * @param {string} sessionID
+         * @memberof MediaPlayer.dependencies.ProtectionController
+         * @instance
+         * @fires MediaPlayer.dependencies.ProtectionController#KeySessionCreated
+         */
         loadKeySession: function(sessionID) {
             this.protectionModel.loadKeySession(sessionID);
         },
 
+        /**
+         * Removes the given key session from persistent storage and closes the session
+         * as if {@link MediaPlayer.dependencies.ProtectionController#closeKeySession}
+         * was called
+         *
+         * @param {MediaPlayer.vo.protection.SessionToken} sessionToken the session
+         * token
+         * @memberof MediaPlayer.dependencies.ProtectionController
+         * @instance
+         * @fires MediaPlayer.dependencies.ProtectionController#KeySessionRemoved
+         * @fires MediaPlayer.dependencies.ProtectionController#KeySessionClosed
+         */
         removeKeySession: function(sessionToken) {
             this.protectionModel.removeKeySession(sessionToken);
         },
 
+        /**
+         * Closes the key session and releases all associated decryption keys.  These
+         * keys will no longer be available for decrypting media
+         *
+         * @param {MediaPlayer.vo.protection.SessionToken} sessionToken the session
+         * token
+         * @memberof MediaPlayer.dependencies.ProtectionController
+         * @instance
+         * @fires MediaPlayer.dependencies.ProtectionController#KeySessionClosed
+         */
         closeKeySession: function(sessionToken) {
             this.protectionModel.closeKeySession(sessionToken);
         },
 
+        /**
+         * Sets a server certificate for use by the CDM when signing key messages
+         * intended for a particular license server.  This will fire
+         * an error event if a key system has not yet been selected.
+         *
+         * @param {ArrayBuffer} serverCertificate a CDM-specific license server
+         * certificate
+         * @memberof MediaPlayer.dependencies.ProtectionController
+         * @instance
+         * @fires MediaPlayer.dependencies.ProtectionController#ServerCertificateUpdated
+         */
         setServerCertificate: function(serverCertificate) {
             this.protectionModel.setServerCertificate(serverCertificate);
         },
 
+        /**
+         * Associate this protection system with the given HTMLMediaElement.  This
+         * causes the system to register for needkey/encrypted events from the given
+         * element and provides a destination for setting of MediaKeys
+         *
+         * @param {HTMLMediaElement} element the media element to which the protection
+         * system should be associated
+         * @memberof MediaPlayer.dependencies.ProtectionController
+         * @instance
+         */
         setMediaElement: function(element) {
             if (element) {
                 this.protectionModel.setMediaElement(element);
@@ -481,16 +607,26 @@ MediaPlayer.dependencies.ProtectionController = function () {
             }
         },
 
+        /**
+         * Sets the session type to use when creating key sessions.  Either "temporary" or
+         * "persistent-license".  Default is "temporary".
+         *
+         * @param {String} sessionType the session type
+         * @memberof MediaPlayer.dependencies.ProtectionController
+         * @instance
+         */
         setSessionType: function(sessionType) {
             this.sessionType = sessionType;
         },
 
         /**
-         * Attach KeySystem-specific data to use for License Acquisition with EME
+         * Attach KeySystem-specific data to use for license acquisition with EME
          *
-         * @param data and object containing property names corresponding to key
-         * system name strings and associated values being instances of
-         * MediaPlayer.vo.protection.ProtectionData
+         * @param {Object} data an object containing property names corresponding to
+         * key system name strings (e.g. "org.w3.clearkey") and associated values
+         * being instances of {@link MediaPlayer.vo.protection.ProtectionData}
+         * @memberof MediaPlayer.dependencies.ProtectionController
+         * @instance
          */
         setProtectionData: function(data) {
             protDataSet = data;
@@ -498,15 +634,145 @@ MediaPlayer.dependencies.ProtectionController = function () {
     };
 };
 
+/**
+ * Key system selection event
+ *
+ * @event MediaPlayer.dependencies.ProtectionController#KeySystemSelected
+ * @type {Object}
+ * @property {MediaPlayer.vo.protection.KeySystemAccess} data key system
+ * access object that describes the selected key system and associated
+ * audio/video codecs and CDM capabilities.  May be null if an error occurred
+ * @property {string} error if not null, an error occurred and this object
+ * will contain an informative error string describing the failure
+ */
+
+/**
+ * Key session creation event
+ *
+ * @event MediaPlayer.dependencies.ProtectionController#KeySessionCreated
+ * @type {Object}
+ * @property {MediaPlayer.vo.protection.SessionToken} data the session token
+ * that can be used to access certain properties of the session.  Also
+ * required for other ProtectionController APIs that act on key sessions.
+ * @property {string} error if not null, an error occurred and this object
+ * will contain an informative error string describing the failure
+ */
+
+/**
+ * Key session removed event
+ *
+ * @event MediaPlayer.dependencies.ProtectionController#KeySessionRemoved
+ * @type {Object}
+ * @property {string} data the session ID of the session that was removed
+ * from persistent storage
+ * @property {string} error if not null, an error occurred and this object
+ * will contain an informative error string describing the failure
+ */
+
+/**
+ * Key session closed event
+ *
+ * @event MediaPlayer.dependencies.ProtectionController#KeySessionClosed
+ * @type {Object}
+ * @property {string} data the session ID of the session that was closed
+ * @property {string} error if not null, an error occurred and this object
+ * will contain an informative error string describing the failure
+ */
+
+/**
+ * Server certificate updated event
+ *
+ * @event MediaPlayer.dependencies.ProtectionController#ServerCertificateUpdated
+ * @type {Object}
+ * @property {Object} data unused for this event.  The server certificate update
+ * was is successful if the "error" property of this event is null or undefined
+ * @property {string} error if not null, an error occurred and this object
+ * will contain an informative error string describing the failure
+ */
+
+/**
+ * License request completed event
+ *
+ * @event MediaPlayer.dependencies.ProtectionController#LicenseRequestComplete
+ * @type {Object}
+ * @property {MediaPlayer.vo.protection.SessionToken} sessionToken session token
+ * associated with this license response.  Will never be null, even in error cases.
+ * @property {string} error if not null, an error occurred and this object
+ * will contain an informative error string describing the failure
+ */
+
+/**
+ * Events names for events sent by ProtectionController.  Use these event
+ * names when subscribing or unsubscribing from ProtectionController events
+ *
+ * @enum {String}
+ * @see MediaPlayer.dependencies.ProtectionController#addEventListener
+ */
 MediaPlayer.dependencies.ProtectionController.events = {
+    /**
+     * Event ID for events delivered when a key system selection procedure
+     * has completed
+     *
+     * @constant
+     */
     KEY_SYSTEM_SELECTED: "keySystemSelected",
+    /**
+     * Event ID for events delivered when the protection set receives
+     * a key message from the CDM
+     *
+     * @constant
+     */
     SERVER_CERTIFICATE_UPDATED: "serverCertificateUpdated",
+    /**
+     * Event ID for events delivered when a new key has been added
+     *
+     * @constant
+     * @deprecated The latest versions of the EME specification no longer
+     * use this event. {@MediaPlayer.dependencies.ProtectionController.events.KEY_STATUSES_CHANGED}
+     * is preferred.
+     */
     KEY_ADDED: "keyAdded",
+    /**
+     * Event ID for events delivered when a new key sessions creation
+     * process has completed
+     *
+     * @constant
+     */
     KEY_SESSION_CREATED: "keySessionCreated",
+    /**
+     * Event ID for events delivered when a key session removal
+     * process has completed
+     *
+     * @constant
+     */
     KEY_SESSION_REMOVED: "keySessionRemoved",
+    /**
+     * Event ID for events delivered when a key session close
+     * process has completed
+     *
+     * @constant
+     */
     KEY_SESSION_CLOSED: "keySessionClosed",
+    /**
+     * Event ID for events delivered when the status of one or more
+     * decryption keys has changed
+     *
+     * @constant
+     */
     KEY_STATUSES_CHANGED: "keyStatusesChanged",
+    /**
+     * Event ID for events delivered when the protection system receives
+     * a key message from the CDM
+     *
+     * @constant
+     */
     KEY_MESSAGE: "keyMessage",
+    /**
+     * Event ID for events delivered when a license request procedure
+     * has completed
+     *
+     * @constant
+     */
     LICENSE_REQUEST_COMPLETE: "licenseRequestComplete"
 };
 

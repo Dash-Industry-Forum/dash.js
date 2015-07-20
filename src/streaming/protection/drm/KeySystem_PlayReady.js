@@ -29,6 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * Microsoft PlayReady DRM
+ *
+ * @class
+ * @implements MediaPlayer.dependencies.protection.KeySystem
+ */
 MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
     "use strict";
 

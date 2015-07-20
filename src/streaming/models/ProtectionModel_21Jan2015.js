@@ -30,8 +30,12 @@
  */
 
 /**
- * Implemented in:
- *   Chrome 40 with chrome://flags -- Enable Encrypted Media Extensions
+ * Most recent EME implementation
+ *
+ * Implemented by Google Chrome v36+ (Windows, OSX, Linux)
+ *
+ * @implements MediaPlayer.models.ProtectionModel
+ * @class
  */
 MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 
@@ -113,8 +117,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
         createSessionToken = function(session, initData) {
 
             var self = this;
-            var token = {
-                prototype: (new MediaPlayer.models.SessionToken()).prototype,
+            var token = { // Implements MediaPlayer.vo.protection.SessionToken
                 session: session,
                 initData: initData,
 
@@ -375,10 +378,10 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 };
 
 /**
- * Detects presence of EME v3Feb2014 APIs
+ * Detects presence of EME v21Jan2015 APIs
  *
  * @param videoElement {HTMLMediaElement} the media element that will be
- * used for detecting APIs
+ * used for detecting API support
  * @returns {Boolean} true if support was detected, false otherwise
  */
 MediaPlayer.models.ProtectionModel_21Jan2015.detect = function(videoElement) {

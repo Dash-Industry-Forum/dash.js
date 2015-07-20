@@ -29,6 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * Implementation of the EME APIs as of the 3 Feb 2014 state of the specification.
+ *
+ * Implemented by Internet Explorer 11 (Windows 8.1)
+ *
+ * @implements MediaPlayer.models.ProtectionModel
+ * @class
+ */
 MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
     var videoElement = null,
@@ -85,8 +93,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
         // MediaKeySession and session-specific event handler
         createSessionToken = function(keySession, initData) {
             var self = this;
-            return {
-                prototype: (new MediaPlayer.models.SessionToken()).prototype,
+            return { // Implements MediaPlayer.vo.protection.SessionToken
                 session: keySession,
                 initData: initData,
 
@@ -121,6 +128,10 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
                 getSessionID: function() {
                     return this.session.sessionId;
+                },
+
+                getExpirationTime: function() {
+                    return NaN;
                 }
             };
         };
@@ -384,8 +395,8 @@ MediaPlayer.models.ProtectionModel_3Feb2014.APIs = [
  *
  * @param videoElement {HTMLMediaElement} the media element that will be
  * used for detecting APIs
- * @returns an API object that is used when initializing the ProtectionModel
- * instance
+ * @returns {Object} an API object that is used when initializing the
+ * ProtectionModel instance or null if this EME version is not supported
  */
 MediaPlayer.models.ProtectionModel_3Feb2014.detect = function(videoElement) {
     var apis = MediaPlayer.models.ProtectionModel_3Feb2014.APIs;

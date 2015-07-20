@@ -29,6 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * Google Widevine DRM
+ *
+ * @class
+ * @implements MediaPlayer.dependencies.protection.KeySystem
+ */
 MediaPlayer.dependencies.protection.KeySystem_Widevine = function() {
     "use strict";
 

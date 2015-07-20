@@ -38,7 +38,7 @@
  * @param [defaultURL] license acquisition URL provided by the CDM
  * @param [messageType] the message type.  One of "license-request",
  * "license-renewal", "license-release", "individualization-request"
- * @constructor
+ * @class
  */
 MediaPlayer.vo.protection.KeyMessage = function(sessionToken, message, defaultURL, messageType) {
     "use strict";

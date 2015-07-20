@@ -29,53 +29,29 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * Microsoft PlayReady Test License Server
+ *
+ * For testing content that uses the PlayReady test server at
+ *
+ * @implements MediaPlayer.dependencies.protection.servers.LicenseServer
+ * @class
+ */
 MediaPlayer.dependencies.protection.servers.PlayReady = function() {
     "use strict";
 
     return {
 
-        /**
-         * Returns a new or updated license server URL based on information
-         * found in the CDM message
-         *
-         * @param url the initially established URL (from ProtectionData or initData)
-         * @param message the CDM message
-         * @returns {string} the URL to use in license requests
-         */
         getServerURLFromMessage: function(url /*, message*/) { return url; },
 
-        /**
-         * Returns the HTTP method to be used (i.e. "GET", "POST", etc.) in
-         * XMLHttpRequest.open().
-         *
-         * @returns {string} the HTTP method
-         */
         getHTTPMethod: function() { return 'POST'; },
 
-        /**
-         * Returns the response type to set for XMLHttpRequest.responseType
-         *
-         * @returns {string} the response type
-         */
         getResponseType: function(/*keySystemStr*/) { return 'arraybuffer'; },
 
-        /**
-         * Parses the license server response to retrieve the message intended for
-         * the CDM.
-         *
-         * @param serverResponse the response as returned in XMLHttpRequest.response
-         * @returns {Uint8Array} message that will be sent to the CDM
-         */
         getLicenseMessage: function(serverResponse/*, keySystemStr*/) {
             return new Uint8Array(serverResponse);
         },
 
-        /**
-         * Parses the license server response during error conditions and returns a
-         * string to display for debugging purposes
-         *
-         * @param serverResponse the server response
-         */
         getErrorResponse: function(serverResponse/*, keySystemStr*/) {
             return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
         }

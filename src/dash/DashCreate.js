@@ -69,8 +69,8 @@ Dash.createAll = function(className, scope, context)
 
 /**
  * Returns the mime-type identifier for any source content to be accepted as a dash manifest by the Dash.create() method.
- * @type {dashManifestMimeType: string}
  */
 Dash.supportedManifestMimeTypes = {
+    /** @type string */
     mimeType: "application/dash+xml"
 };
