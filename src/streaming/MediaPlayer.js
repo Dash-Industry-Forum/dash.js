@@ -356,11 +356,11 @@ MediaPlayer = function (context) {
         },
 
         /**
-         * @returns {Object} the current dijon instance for DI.
+         * @returns {Object} An instance of system object based on the string name in Context.js or DashContext.js
          * @memberof MediaPlayer#
          */
-        getSystem: function () {
-            return system;
+        getObjectByContextName: function (name) {
+            return system.getObject(name);
         },
 
         /**
