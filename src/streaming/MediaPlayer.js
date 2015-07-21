@@ -356,6 +356,14 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * @returns {Object} the current dijon instance for DI.
+         * @memberof MediaPlayer#
+         */
+        getSystem: function () {
+            return system;
+        },
+
+        /**
          * @memberof MediaPlayer#
          */
         startup: function () {
