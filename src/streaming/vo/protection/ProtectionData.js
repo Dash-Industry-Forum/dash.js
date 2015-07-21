@@ -30,21 +30,53 @@
  */
 
 /**
- * Data used to customize KeySystems and override default or CDM-provided
- * values
+ * Data provided for a particular piece of content to customize license server URLs,
+ * license server HTTP request headers, clearkeys, or other content-specific data
  *
  * @param {string} laURL a license acquisition URL to use with this key system
  * @param {Object} httpRequestHeaders headers to add to the http request
  * @param {Object} clearkeys defines a set of clear keys that are available to
  * the key system.  Object properties are base64-encoded keyIDs (with no padding).
  * Corresponding property values are keys, base64-encoded (no padding).
- * @constructor
+ * @class
  */
 MediaPlayer.vo.protection.ProtectionData = function(laURL, httpRequestHeaders, clearkeys) {
     this.laURL = laURL;
     this.httpRequestHeaders = httpRequestHeaders;
     this.clearkeys = clearkeys;
 };
+
+/**
+ * License server URL
+ *
+ * @instance
+ * @type string
+ * @name MediaPlayer.vo.protection.ProtectionData.laURL
+ * @readonly
+ * @memberof MediaPlayer.vo.protection.ProtectionData
+ */
+
+/**
+ * HTTP Request Headers for use in license requests.  Each property name
+ * in the object is a header name with its corresponding header value being
+ * the property value
+ *
+ * @instance
+ * @type Object
+ * @name MediaPlayer.vo.protection.ProtectionData.httpRequestsHeaders
+ * @readonly
+ * @memberof MediaPlayer.vo.protection.ProtectionData
+ */
+
+/**
+ * ClearKey key-pairs that can be used to decrypt the content
+ *
+ * @instance
+ * @type Object
+ * @name MediaPlayer.vo.protection.ProtectionData.clearkeys
+ * @readonly
+ * @memberof MediaPlayer.vo.protection.ProtectionData
+ */
 
 MediaPlayer.vo.protection.ProtectionData.prototype = {
     constructor: MediaPlayer.vo.protection.ProtectionData

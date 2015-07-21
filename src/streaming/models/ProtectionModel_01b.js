@@ -29,6 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * Initial implementation of EME
+ *
+ * Implemented by Google Chrome prior to v36
+ *
+ * @implements MediaPlayer.models.ProtectionModel
+ * @class
+ */
 MediaPlayer.models.ProtectionModel_01b = function () {
 
     var videoElement = null,
@@ -334,13 +342,16 @@ MediaPlayer.models.ProtectionModel_01b = function () {
             // Determine if creating a new session is allowed
             if (moreSessionsAllowed || sessions.length === 0) {
 
-                var newSession = {
-                    prototype: (new MediaPlayer.models.SessionToken()).prototype,
+                var newSession = { // Implements MediaPlayer.vo.protection.SessionToken
                     sessionID: null,
                     initData: initData,
 
                     getSessionID: function() {
                         return this.sessionID;
+                    },
+
+                    getExpirationTime: function() {
+                        return NaN;
                     }
                 };
                 pendingSessions.push(newSession);
@@ -424,7 +435,7 @@ MediaPlayer.models.ProtectionModel_01b.APIs = [
  * @param videoElement {HTMLMediaElement} the media element that will be
  * used for detecting APIs
  * @returns an API object that is used when initializing the ProtectionModel
- * instance
+ * instance, or null if this EME version is not supported
  */
 MediaPlayer.models.ProtectionModel_01b.detect = function(videoElement) {
     var apis = MediaPlayer.models.ProtectionModel_01b.APIs;

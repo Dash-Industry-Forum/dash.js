@@ -732,12 +732,21 @@ MediaPlayer = function (context) {
         },
 
         /**
-         * Allows application to retrieve a manifest
+         * A Callback function provided when retrieving manifests
+         *
+         * @callback MediaPlayer~retrieveManifestCallback
+         * @param {Object} manifest JSON version of the manifest XML data or null if an
+         * error was encountered
+         * @param {String} error An error string or null if the operation was successful
+         */
+
+        /**
+         * Allows application to retrieve a manifest.  Manifest loading is asynchronous and
+         * requires the app-provided callback function
          *
          * @param {string} url the manifest url
-         * @param {function} callback function that accepts two parameters.  The first is
-         * a successfully parsed manifest or null, the second is a string that contains error
-         * information in the case that the first parameter is null
+         * @param {MediaPlayer~retrieveManifestCallback} callback manifest retrieval callback
+         * @memberof MediaPlayer#
          */
         retrieveManifest: function(url, callback) {
             (function(manifestUrl) {
@@ -1046,16 +1055,64 @@ MediaPlayer.prototype = {
     constructor: MediaPlayer
 };
 
-
+/**
+ * Namespace for {@MediaPlayer} dependencies
+ * @namespace
+ */
 MediaPlayer.dependencies = {};
+
+/**
+ * Namespace for {@MediaPlayer} protection-related objects
+ * @namespace
+ */
 MediaPlayer.dependencies.protection = {};
+
+/**
+ * Namespace for {@MediaPlayer} license server implementations
+ * @namespace
+ */
 MediaPlayer.dependencies.protection.servers = {};
+
+/**
+ * Namespace for {@MediaPlayer} utility classes
+ * @namespace
+ */
 MediaPlayer.utils = {};
+
+/**
+ * Namespace for {@MediaPlayer} model classes
+ * @namespace
+ */
 MediaPlayer.models = {};
+
+/**
+ * Namespace for {@MediaPlayer} data objects
+ * @namespace
+ */
 MediaPlayer.vo = {};
+
+/**
+ * Namespace for {@MediaPlayer} metrics-related data objects
+ * @@namespace
+ */
 MediaPlayer.vo.metrics = {};
+
+/**
+ * Namespace for {@MediaPlayer} protection-related data objects
+ * @namespace
+ */
 MediaPlayer.vo.protection = {};
+
+/**
+ * Namespace for {@MediaPlayer} rules classes
+ * @namespace
+ */
 MediaPlayer.rules = {};
+
+/**
+ * Namespace for {@MediaPlayer} dependency-injection helper classes
+ * @namespace
+ */
 MediaPlayer.di = {};
 
 /**

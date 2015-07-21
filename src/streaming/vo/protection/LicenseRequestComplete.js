@@ -32,14 +32,15 @@
 /**
  * Event indicating the receipt of a response from a license server
  *
- * @param message {Uint8Array} license response message
- * @param requestData a request-specific data object
+ * @param {Uint8Array} message license response message
+ * @param {MediaPlayer.vo.protection.SessionToken} sessionToken the session to
+ * which this license request is associated
  * @constructor
  */
-MediaPlayer.vo.protection.LicenseRequestComplete = function(message, requestData) {
+MediaPlayer.vo.protection.LicenseRequestComplete = function(message, sessionToken) {
     "use strict";
     this.message = message;
-    this.requestData = requestData;
+    this.sessionToken = sessionToken;
 };
 
 MediaPlayer.vo.protection.LicenseRequestComplete.prototype = {

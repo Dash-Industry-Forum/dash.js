@@ -36,7 +36,7 @@
  * @param keyPairs {MediaPlayer.vo.protection.KeyPair[]} array of key pairs
  * @param type the type of keys in this set.  One of either 'persistent'
  * or 'temporary'.  Can also be null or undefined.
- * @constructor
+ * @class
  */
 MediaPlayer.vo.protection.ClearKeyKeySet = function(keyPairs, type) {
     if (type && type !== "persistent" && type !== "temporary")

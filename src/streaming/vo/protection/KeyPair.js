@@ -34,7 +34,7 @@
  *
  * @param keyID {String} 128-bit key ID, base64 encoded, with no padding
  * @param key {String} 128-bit encryption key, base64 encoded, with no padding
- * @constructor
+ * @class
  */
 MediaPlayer.vo.protection.KeyPair = function(keyID, key) {
     "use strict";

@@ -29,6 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * CastLabs DRMToday License Server implementation
+ *
+ * @implements MediaPlayer.dependencies.protection.servers.LicenseServer
+ * @class
+ */
 MediaPlayer.dependencies.protection.servers.DRMToday = function() {
     "use strict";
 
@@ -55,59 +61,21 @@ MediaPlayer.dependencies.protection.servers.DRMToday = function() {
 
     return {
 
-        /**
-         * Returns a new or updated license server URL based on information
-         * found in the CDM message
-         *
-         * @param url the initially established URL (from ProtectionData or initData)
-         * @param message the CDM message
-         * @returns {string} the URL to use in license requests
-         */
         getServerURLFromMessage: function(url /*, message*/) { return url; },
 
-        /**
-         * Returns the HTTP method to be used (i.e. "GET", "POST", etc.) in
-         * XMLHttpRequest.open().
-         *
-         * @returns {string} the HTTP method
-         */
         getHTTPMethod: function() { return 'POST'; },
 
-        /**
-         * Returns the response type to set for XMLHttpRequest.responseType
-         * for a particular key system
-         *
-         * @param keySystemStr {String} the key system
-         * @returns {string} the response type
-         */
         getResponseType: function(keySystemStr) {
             return keySystems[keySystemStr].responseType;
         },
 
-        /**
-         * Parses the license server response to retrieve the message intended for
-         * the CDM.
-         *
-         * @param serverResponse the response as returned in XMLHttpRequest.response
-         * @param keySystemStr {String} the key system string
-         * @returns {Uint8Array} message that will be sent to the CDM
-         */
         getLicenseMessage: function(serverResponse, keySystemStr) {
             return keySystems[keySystemStr].getLicenseMessage(serverResponse);
         },
 
-        /**
-         * Parses the license server response during error conditions and returns a
-         * string to display for debugging purposes
-         *
-         * @param serverResponse the server response
-         * @param keySystemStr {String} the key system string
-         * @returns {String} An error message to report
-         */
         getErrorResponse: function(serverResponse, keySystemStr) {
             return keySystems[keySystemStr].getErrorResponse(serverResponse);
         }
-
     };
 };
 

@@ -34,7 +34,8 @@
  *
  * @param sessionToken the key session to which this error is associated
  * @param errorString an informational error message
- * @constructor
+ * @class
+ * @deprecated Newest versions of EME APIs will not use this error object
  */
 MediaPlayer.vo.protection.KeyError = function(sessionToken, errorString) {
     "use strict";

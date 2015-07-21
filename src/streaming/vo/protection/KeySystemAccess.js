@@ -38,7 +38,7 @@
  * @param {MediaPlayer.vo.protection.KeySystemConfiguration} ksConfiguration the
  * subset of configurations passed to the key system access request that are supported
  * by this user agent
- * @constructor
+ * @class
  */
 MediaPlayer.vo.protection.KeySystemAccess = function(keySystem, ksConfiguration) {
     this.keySystem = keySystem;

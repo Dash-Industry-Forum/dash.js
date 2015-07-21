@@ -30,12 +30,20 @@
  */
 
 /**
+ * Represents a set of configurations that describe the capabilities desired for
+ * support by a given CDM
  *
- * @param {MediaPlayer.vo.protection.MediaCapability[]} audioCapabilities
- * @param {MediaPlayer.vo.protection.MediaCapability[]} videoCapabilities
- * @param {string} [distinctiveIdentifier]
- * @param {string} [persistentState]
- * @constructor
+ * @param {MediaPlayer.vo.protection.MediaCapability[]} audioCapabilities array of
+ * desired audio capabilities.  Higher preference capabilities should be placed earlier
+ * in the array.
+ * @param {MediaPlayer.vo.protection.MediaCapability[]} videoCapabilities array of
+ * desired video capabilities.  Higher preference capabilities should be placed earlier
+ * in the array.
+ * @param {string} [distinctiveIdentifier] desired use of distinctive identifiers.
+ * One of "required", "optional", or "not-allowed"
+ * @param {string} [persistentState] desired support for persistent storage of
+ * key systems.  One of "required", "optional", or "not-allowed"
+ * @class
  */
 MediaPlayer.vo.protection.KeySystemConfiguration = function(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState) {
     this.initDataTypes = [ "cenc" ];

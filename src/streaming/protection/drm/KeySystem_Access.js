@@ -29,6 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * Adobe Access DRM
+ *
+ * @class
+ * @implements MediaPlayer.dependencies.protection.KeySystem
+ */
 MediaPlayer.dependencies.protection.KeySystem_Access = function() {
     "use strict";
 };

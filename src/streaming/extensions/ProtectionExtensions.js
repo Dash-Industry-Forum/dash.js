@@ -28,6 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+/**
+ * Media protection functionality that can be modified/overridden by applications
+ *
+ * @class MediaPlayer.dependencies.ProtectionExtensions
+ */
 MediaPlayer.dependencies.ProtectionExtensions = function () {
     "use strict";
 
@@ -102,6 +108,8 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      * according to the particular spec version.
      *
      * @param keySystem the key
+     * @returns {boolean} true if this is the ClearKey key system, false
+     * otherwise
      */
     isClearKey: function(keySystem) {
         return (keySystem === this.clearkeyKeySystem);
@@ -137,10 +145,14 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      *
      * @param {Object[]} cps array of content protection elements parsed
      * from the manifest
-     * @returns {Object[]} array of objects with ks (KeySystem) and
-     * initData {ArrayBuffer) properties.  Empty array is returned if no
-         * supported key systems were found
-         */
+     * @returns {Object[]} array of objects indicating which supported key
+     * systems were found.  Empty array is returned if no
+     * supported key systems were found
+     * @returns {MediaPlayer.dependencies.protection.KeySystem} Object.ks the key
+     * system identified by the ContentProtection element
+     * @returns {ArrayBuffer} Object.initData the initialization data parsed
+     * from the ContentProtection element
+     */
     getSupportedKeySystemsFromContentProtection: function(cps) {
         var cp, ks, ksIdx, cpIdx, supportedKS = [];
 
@@ -168,15 +180,20 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
 
     /**
      * Returns key systems supported by this player for the given PSSH
-     * initializationData.  Key systems are returned in priority
-     * order (highest priority first)
+     * initializationData. Only key systems supported by this player
+     * will be returned.  Key systems are returned in priority order
+     * (highest priority first)
      *
      * @param {ArrayBuffer} initData Concatenated PSSH data for all DRMs
      * supported by the content
-     * @returns {Object[]} array of objects with ks (KeySystem) and
-     * initData {ArrayBuffer) properties.  Empty array is returned if no
-         * supported key systems were found
-         */
+     * @returns {Object[]} array of objects indicating which supported key
+     * systems were found.  Empty array is returned if no
+     * supported key systems were found
+     * @returns {MediaPlayer.dependencies.protection.KeySystem} Object.ks the key
+     * system
+     * @returns {ArrayBuffer} Object.initData the initialization data
+     * associated with the key system
+     */
     getSupportedKeySystems: function(initData) {
         var ksIdx, supportedKS = [],
                 pssh = MediaPlayer.dependencies.protection.CommonEncryption.parsePSSHList(initData);
@@ -204,16 +221,16 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      *     <li>CastLabs DRMToday</li>
      * </ul>
      *
-     * @param keySystem {MediaPlayer.dependencies.protection.KeySystem} the key system
+     * @param {MediaPlayer.dependencies.protection.KeySystem} keySystem the key system
      * associated with this license request
-     * @param protData {MediaPlayer.vo.protection.ProtectionData} protection data to use for the
+     * @param {MediaPlayer.vo.protection.ProtectionData} protData protection data to use for the
      * request
-     * @param message {ArrayBuffer} the key message from the CDM
-     * @param laURL {String} License requests will be sent to this URL (DEPRECATED!)
-     * @param requestData object that will be returned in the ENAME_LICENSE_REQUEST_COMPLETE event.
-     * In error cases, this object will be sent as the event data (in addition to the error object).
+     * @param {ArrayBuffer} message the key message from the CDM
+     * @param {String} laURL License requests will be sent to this URL (DEPRECATED!)
+     * @param {MediaPlayer.vo.protection.SessionToken} sessionToken the session token
+     * associated with this request
      */
-    requestLicense: function(keySystem, protData, message, laURL, requestData) {
+    requestLicense: function(keySystem, protData, message, laURL, sessionToken) {
 
         var licenseServerData = null;
         if (protData && protData.hasOwnProperty("drmtoday")) {
@@ -226,23 +243,23 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
             licenseServerData = this.system.getObject("serverClearKey");
         } else {
             this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                    requestData, 'DRM: Unknown key system! -- ' + keySystem.keySystemStr);
+                    sessionToken, 'DRM: Unknown key system! -- ' + keySystem.keySystemStr);
             return;
         }
 
         // Special handling for ClearKey with keys located in protection data
         if (keySystem.systemString === "org.w3.clearkey") {
             try {
-                var clearkeys = licenseServerData.getClearKeysFromProtectionData(protData, message);
+                var clearkeys = MediaPlayer.dependencies.protection.KeySystem_ClearKey.getClearKeysFromProtectionData(protData, message);
                 if (clearkeys) {
-                    var event = new MediaPlayer.vo.protection.LicenseRequestComplete(clearkeys, requestData);
+                    var event = new MediaPlayer.vo.protection.LicenseRequestComplete(clearkeys, sessionToken);
                     this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                             event);
                     return;
                 }
             } catch (error) {
                 this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                        requestData, error.message);
+                        sessionToken, error.message);
                 return;
             }
         }
@@ -258,7 +275,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
         // Ensure valid license server URL
         if (!url) {
             this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                    requestData, 'DRM: No license server URL specified!');
+                    sessionToken, 'DRM: No license server URL specified!');
             return;
         }
 
@@ -266,23 +283,23 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
         xhr.responseType = licenseServerData.getResponseType(keySystem.systemString);
         xhr.onload = function() {
             if (this.status == 200) {
-                var event = new MediaPlayer.vo.protection.LicenseRequestComplete(licenseServerData.getLicenseMessage(this.response, keySystem.systemString), requestData);
+                var event = new MediaPlayer.vo.protection.LicenseRequestComplete(licenseServerData.getLicenseMessage(this.response, keySystem.systemString), sessionToken);
                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         event);
             } else {
                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                        requestData, 'DRM: ' + keySystem.systemString + ' update, XHR status is "' + this.statusText + '" (' + this.status +
+                        sessionToken, 'DRM: ' + keySystem.systemString + ' update, XHR status is "' + this.statusText + '" (' + this.status +
                                 '), expected to be 200. readyState is ' + this.readyState +
                                 ".  Response is " + ((this.response) ? licenseServerData.getErrorResponse(this.response, keySystem.systemString) : "NONE"));
             }
         };
         xhr.onabort = function () {
             self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                    requestData, 'DRM: ' + keySystem.systemString + ' update, XHR aborted. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState);
+                    sessionToken, 'DRM: ' + keySystem.systemString + ' update, XHR aborted. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState);
         };
         xhr.onerror = function () {
             self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                    requestData, 'DRM: ' + keySystem.systemString + ' update, XHR error. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState);
+                    sessionToken, 'DRM: ' + keySystem.systemString + ' update, XHR error. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState);
         };
 
         // Set optional XMLHttpRequest headers from protection data and message
