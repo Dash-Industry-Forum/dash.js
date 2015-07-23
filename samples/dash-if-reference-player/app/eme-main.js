@@ -160,10 +160,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SYSTEM_SELECTED, function(e) {
             if (!e.error) {
                 data.ksconfig = e.data.ksConfiguration;
-                $scope.safeApply();
             } else {
                 data.error = e.error;
             }
+            $scope.safeApply();
         });
         protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SESSION_CREATED, function(e) {
             if (!e.error) {
@@ -178,10 +178,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                         removed: false
                     });
                 }
-                $scope.safeApply();
             } else {
                 data.error = e.error;
             }
+            $scope.safeApply();
         });
         protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SESSION_REMOVED, function(e) {
             if (!e.error) {
@@ -190,10 +190,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                     session.removed = true;
                     session.sessionToken = null;
                 }
-                $scope.safeApply();
             } else {
                 data.error = e.error;
             }
+            $scope.safeApply();
         });
         protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SESSION_CLOSED, function(e) {
             if (!e.error) {
@@ -203,10 +203,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                         break;
                     }
                 }
-                $scope.safeApply();
             } else {
                 data.error = e.error;
             }
+            $scope.safeApply();
         });
         protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_STATUSES_CHANGED, function(e) {
             var session = findSession(e.data.getSessionID());
