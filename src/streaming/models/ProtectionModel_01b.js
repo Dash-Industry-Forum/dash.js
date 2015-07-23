@@ -236,6 +236,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
             for (var i = 0; i < sessions.length; i++) {
                 this.closeKeySession(sessions[i]);
             }
+            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
         },
 
         getAllInitData: function() {
