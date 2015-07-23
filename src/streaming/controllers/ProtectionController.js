@@ -75,7 +75,8 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 audioCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(audioInfo.codec));
             }
             var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(
-                    audioCapabilities, videoCapabilities);
+                    audioCapabilities, videoCapabilities, "optional",
+                    (self.sessionType === "temporary") ? "optional" : "required");
             var requestedKeySystems = [];
 
             var ksIdx;
