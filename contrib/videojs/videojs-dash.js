@@ -1,4 +1,4 @@
-/*! videojs-contrib-dash - v1.0.2 - 2015-07-23
+/*! videojs-contrib-dash - v1.1.0 - 2015-07-24
  * Copyright (c) 2015 Brightcove  */
 (function(window, videojs) {
   'use strict';
@@ -66,7 +66,9 @@
 
     // Must be before anything is initialized since we are overridding a global object
     // injection
-    Html5DashJS.useVideoJSDebug(videojs);
+    if (Html5DashJS.useVideoJSDebug) {
+      Html5DashJS.useVideoJSDebug(videojs);
+    }
 
     // Save the context after the first initialization for subsequent instances
     Html5DashJS.context_ = Html5DashJS.context_ || new Dash.di.DashContext();
@@ -116,119 +118,6 @@
 
       this.tech_.triggerReady();
     }));
-  };
-
-  /*
-   * Change MediaPlayer.utils.Debug to log using videojs debugger in order to
-   * keep the console.log clean
-   */
-  Html5DashJS.useVideoJSDebug = function (videojs) {
-    if (Html5DashJS.originalDebug) {
-      return;
-    }
-
-    if (videojs && videojs.log && videojs.log.debug) {
-      Html5DashJS.originalDebug = MediaPlayer.utils.Debug;
-
-      // Replace the global Debug function in Dash.js
-      MediaPlayer.utils.Debug = function () {
-        var logToBrowserConsole = true,
-            showLogTimestamp = false,
-            showCalleeName = false,
-            startTime = new Date().getTime(),
-            eventBus;
-
-        return {
-            system: undefined,
-            eventBus: undefined,
-
-            setup: function() {
-                this.system.mapValue('log', this.log);
-                eventBus = this.eventBus;
-            },
-            /**
-             * Prepends a timestamp in milliseconds to each log message.
-             * @param {boolean} value Set to true if you want to see a timestamp in each log message
-             * @default false
-             * @memberof MediaPlayer.utils.Debug#
-             */
-            setLogTimestampVisible: function(value) {
-                showLogTimestamp = value;
-            },
-            /**
-             * Prepends the callee object name, and media type if available, to each log message.
-             * @param {boolean} value Set to true if you want to see a object name and media type in
-             * each log message.
-             * @default false
-             * @memberof MediaPlayer.utils.Debug#
-             */
-            showCalleeName: function(value) {
-                showCalleeName = value;
-            },
-            /**
-             * Toggles logging to the browser's javascript console.  If you set to false you will
-             * still receive a log event with the same message.
-             * @param {boolean} value Set to false if you want to turn off logging to the browser's
-             * console.
-             * @default true
-             * @memberof MediaPlayer.utils.Debug#
-             */
-            setLogToBrowserConsole: function(value) {
-                logToBrowserConsole = value;
-            },
-            /**
-             * Use this method to get the state of logToBrowserConsole.
-             * @returns {boolean} The current value of logToBrowserConsole
-             * @memberof MediaPlayer.utils.Debug#
-             */
-            getLogToBrowserConsole: function() {
-                return logToBrowserConsole;
-            },
-            /**
-             * This method will allow you send log messages to either the browser's console and/or
-             * dispatch an event to capture at the media player level.
-             * @param arguments The message you want to log. The Arguments object is supported for
-             * this method so you can send in comma separated logging items.
-             * @memberof MediaPlayer.utils.Debug#
-             */
-            log: function () {
-
-                var message = '',
-                    logTime = null;
-
-                if (showLogTimestamp) {
-                    logTime = new Date().getTime();
-                    message += '[' + (logTime - startTime) + ']';
-                }
-
-                if (showCalleeName && this.getName) {
-                    message += '[' + this.getName() + ']';
-                }
-
-                if (this.getMediaType && this.getMediaType()) {
-                    message += '[' + this.getMediaType() + ']';
-                }
-
-                if (message.length > 0) {
-                    message += ' ';
-                }
-
-                Array.apply(null, arguments).forEach(function(item) {
-                    message += item + ' ';
-                });
-
-                if (logToBrowserConsole) {
-                    videojs.log.debug(message);
-                }
-
-                eventBus.dispatchEvent({
-                    type: 'log',
-                    message: message
-                });
-            }
-        };
-      };
-    }
   };
 
   /*
