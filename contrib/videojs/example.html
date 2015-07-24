@@ -3,13 +3,15 @@
 <head>
 
   <!-- Loading Video.js CDN-hosted Scripts from videojs.com -->
-  <link href="http://vjs.zencdn.net/4.6/video-js.css" rel="stylesheet">
-  <script src="http://vjs.zencdn.net/4.6/video.js"></script>
-  <script src="../../dist/dash.debug.js"></script>
+  <link href="http://vjs.zencdn.net/4.12/video-js.css" rel="stylesheet">
+  <script src="http://vjs.zencdn.net/4.12/video.js"></script>
+  <script src="../../dist/dash.all.js"></script>
 
+  <!-- Load the videojs-contrib-dash stylesheet anywhere -->
+  <link href="videojs-dash.css" rel="stylesheet">
 
-  <!-- Load videojs-tech-dashjs after both other projects -->
-  <script src="videojs-tech-dashjs.js"></script>
+  <!-- Load the videojs-contrib-dash script *after* both other projects -->
+  <script src="videojs-dash.js"></script>
 
 </head>
 <body>
@@ -18,27 +20,13 @@
 
 <!-- Standard video.js embed with a DASH source -->
 <video id="vid1" class="video-js vjs-default-skin" controls preload="auto" width="640" height="264">
-  <source src="http://54.201.151.65/livesim/tfdt_32/testpic_2s/Manifest.mpd" type='application/dash+xml'>
+  <source src="http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd" type='application/dash+xml'>
 </video>
 
 <script>
-  // Initalize the video.js player after videojs-tech-dashjs has loaded
-  var myPlayer = videojs('vid1', {context:new Dash.di.DashContext()});
+  // Initalize the video.js player after videojs-contrib-dash has loaded
+  var myPlayer = videojs('vid1');
 </script>
-
-<!-- EXAMPLE-SPECIFIC CODE -->
-<style>
-  #dash-not-supported { width: 618px; border: 1px solid #c00; padding: 10px; margin: 10px 0; background-color: rgba(200,0,0,0.5); }
-</style>
-<script>
-  if (!videojs.Dashjs.isSupported()) {
-    var notSupportedDiv = document.createElement('div');
-    notSupportedDiv.id = 'dash-not-supported';
-    notSupportedDiv.innerHTML = 'DASH (through Media Source Extensions) is not supported in your browser, you are currently viewing a fallback MP4 playing through Flash or HTML5 video. Try using the latest version of <a href="http://windows.microsoft.com/en-us/internet-explorer/download-ie">IE</a> or <a href="https://www.google.com/intl/en/chrome/browser/">Chrome</a>.';
-    document.body.insertBefore(notSupportedDiv, document.body.firstChild);
-  }
-</script>
-<!-- END EXAMPLE-SPECIFIC CODE -->
 
 </body>
 </html>
