@@ -39,18 +39,23 @@
  * @param {MediaPlayer.vo.protection.MediaCapability[]} videoCapabilities array of
  * desired video capabilities.  Higher preference capabilities should be placed earlier
  * in the array.
- * @param {string} [distinctiveIdentifier] desired use of distinctive identifiers.
+ * @param {string} [distinctiveIdentifier="optional"] desired use of distinctive identifiers.
  * One of "required", "optional", or "not-allowed"
- * @param {string} [persistentState] desired support for persistent storage of
+ * @param {string} [persistentState="optional"] desired support for persistent storage of
  * key systems.  One of "required", "optional", or "not-allowed"
+ * @param {string[]} [sessionTypes=["temporary"]] List of session types that must
+ * be supported by the key system
  * @class
  */
-MediaPlayer.vo.protection.KeySystemConfiguration = function(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState) {
+MediaPlayer.vo.protection.KeySystemConfiguration = function(audioCapabilities, videoCapabilities,
+                                                            distinctiveIdentifier, persistentState,
+                                                            sessionTypes) {
     this.initDataTypes = [ "cenc" ];
     this.audioCapabilities = audioCapabilities;
     this.videoCapabilities = videoCapabilities;
     this.distinctiveIdentifier = distinctiveIdentifier;
     this.persistentState = persistentState;
+    this.sessionTypes = sessionTypes;
 };
 
 MediaPlayer.vo.protection.KeySystemConfiguration.prototype = {

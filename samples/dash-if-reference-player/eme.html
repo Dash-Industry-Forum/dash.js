@@ -175,14 +175,15 @@
                     <div class="panel-heading panel-top">
                         <span class="panel-title">SessionID: {{s.sessionToken.getSessionID()}}</span>
                         <div class="btn-group">
-                            <button type="button" ng-disabled="!s.removed" class="btn btn-default" ng-click="d.protCtrl.loadKeySession(s.sessionID)">Load</button>
-                            <button type="button" ng-disabled="s.removed" class="btn btn-default" ng-click="d.protCtrl.removeKeySession(s.sessionToken)">Remove</button>
+                            <button type="button" ng-disabled="isLoaded(s)" class="btn btn-default" ng-click="d.protCtrl.loadKeySession(s.sessionID)">Load</button>
+                            <button type="button" ng-disabled="!isLoaded(s)" class="btn btn-default" ng-click="d.protCtrl.removeKeySession(s.sessionToken)">Remove</button>
                             <button type="button" class="btn btn-default" ng-click="d.protCtrl.closeKeySession(s.sessionToken)">Close</button>
                         </div>
                     </div>
                     <div class="keymessage" ng-show="s.lastMessage">{{s.lastMessage}}</div>
+                    <div class="keymessage"><b>Session Persistence: </b><span>{{getLoadedMessage(s)}}</span></div>
                     <h5 ng-show="s.getExpirationTime()">Expiration: {{s.getExpirationTime()}}</h5>
-                    <table ng-show="s.keystatus && s.keystatus.length > 0" class="table table-bordered table-hover">
+                    <table ng-show="isLoaded(s) && s.keystatus && s.keystatus.length > 0" class="table table-bordered table-hover">
                         <tr>
                             <th>Key ID</th>
                             <th class="centered">Key Status</th>

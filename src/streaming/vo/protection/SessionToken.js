@@ -80,5 +80,14 @@ MediaPlayer.vo.protection.SessionToken = function () { };
  * in this session and their associated status
  */
 
+/**
+ * Returns the session type.  Session types are defined
+ * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeySessionType|here}
+ *
+ * @function
+ * @name MediaPlayer.vo.protection.SessionToken#getSessionType
+ * @returns {String} The session type
+ */
+
 
 

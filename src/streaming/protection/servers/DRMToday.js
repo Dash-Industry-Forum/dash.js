@@ -61,19 +61,19 @@ MediaPlayer.dependencies.protection.servers.DRMToday = function() {
 
     return {
 
-        getServerURLFromMessage: function(url /*, message*/) { return url; },
+        getServerURLFromMessage: function(url /*, message, messageType*/) { return url; },
 
-        getHTTPMethod: function() { return 'POST'; },
+        getHTTPMethod: function(/*messageType*/) { return 'POST'; },
 
-        getResponseType: function(keySystemStr) {
+        getResponseType: function(keySystemStr/*, messageType*/) {
             return keySystems[keySystemStr].responseType;
         },
 
-        getLicenseMessage: function(serverResponse, keySystemStr) {
+        getLicenseMessage: function(serverResponse, keySystemStr/*, messageType*/) {
             return keySystems[keySystemStr].getLicenseMessage(serverResponse);
         },
 
-        getErrorResponse: function(serverResponse, keySystemStr) {
+        getErrorResponse: function(serverResponse, keySystemStr/*, messageType*/) {
             return keySystems[keySystemStr].getErrorResponse(serverResponse);
         }
     };

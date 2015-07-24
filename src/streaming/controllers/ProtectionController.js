@@ -76,7 +76,8 @@ MediaPlayer.dependencies.ProtectionController = function () {
             }
             var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(
                     audioCapabilities, videoCapabilities, "optional",
-                    (self.sessionType === "temporary") ? "optional" : "required");
+                    (self.sessionType === "temporary") ? "optional" : "required",
+                    [self.sessionType]);
             var requestedKeySystems = [];
 
             var ksIdx;
@@ -181,15 +182,15 @@ MediaPlayer.dependencies.ProtectionController = function () {
             if (e.error) {
                 this.log(e.error);
             } else {
-                var keyMessageEvent = e.data;
+                var keyMessage = e.data;
                 this.eventBus.dispatchEvent({
                     type: MediaPlayer.dependencies.ProtectionController.events.KEY_MESSAGE,
                     data: e.data
                 });
-                pendingLicenseRequests.push(keyMessageEvent.sessionToken);
-                this.protectionExt.requestLicense(this.keySystem, getProtData(this.keySystem),
-                    keyMessageEvent.message, keyMessageEvent.defaultURL,
-                    keyMessageEvent.sessionToken);
+                pendingLicenseRequests.push(keyMessage.sessionToken);
+                this.protectionExt.sendLicenseServerRequest(this.keySystem, getProtData(this.keySystem),
+                    keyMessage.message, keyMessage.defaultURL,
+                    keyMessage.sessionToken, keyMessage.messageType);
             }
         },
 
@@ -202,17 +203,23 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
                     // It is for us, now process the event
                     if (!e.error) {
-                        this.log("DRM: License request successful.  Session ID = " + sessionToken.getSessionID());
+                        this.log("DRM: License server request successful (type = " + e.data.messageType + ").  Session ID = " + sessionToken.getSessionID());
                         this.eventBus.dispatchEvent({
                             type: MediaPlayer.dependencies.ProtectionController.events.LICENSE_REQUEST_COMPLETE,
-                            data: sessionToken
+                            data: {
+                                sessionToken: sessionToken,
+                                messageType: e.data.messageType
+                            }
                         });
                         this.protectionModel.updateKeySession(sessionToken, e.data.message);
                     } else {
-                        this.log("DRM: License request failed! -- " + e.error);
+                        this.log("DRM: License server request failed (type = " + e.data.messageType + ")! -- " + e.error);
                         this.eventBus.dispatchEvent({
                             type: MediaPlayer.dependencies.ProtectionController.events.LICENSE_REQUEST_COMPLETE,
-                            data: null,
+                            data: {
+                                sessionToken: sessionToken,
+                                messageType: e.data.messageType
+                            },
                             error: "DRM: License request failed! -- " + e.error
                         });
                     }
@@ -696,8 +703,13 @@ MediaPlayer.dependencies.ProtectionController = function () {
  *
  * @event MediaPlayer.dependencies.ProtectionController#LicenseRequestComplete
  * @type {Object}
- * @property {MediaPlayer.vo.protection.SessionToken} sessionToken session token
+ * @property {Object} data The event data.  This data will be provided regardless
+ * of the success/failure status of the event
+ * @property {MediaPlayer.vo.protection.SessionToken} data.sessionToken session token
  * associated with this license response.  Will never be null, even in error cases.
+ * @property {String} data.messageType the message type associated with this request.
+ * Supported message types can be found
+ * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @property {string} error if not null, an error occurred and this object
  * will contain an informative error string describing the failure
  */
