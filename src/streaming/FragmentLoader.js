@@ -31,8 +31,8 @@
 MediaPlayer.dependencies.FragmentLoader = function () {
     "use strict";
 
-    var RETRY_ATTEMPTS = 3,
-        RETRY_INTERVAL = 500,
+    var RETRY_ATTEMPTS = MediaPlayer.dependencies.FragmentLoader.RETRY_ATTEMPTS,
+        RETRY_INTERVAL = MediaPlayer.dependencies.FragmentLoader.RETRY_INTERVAL,
         xhrs = [],
 
         doLoad = function (request, remainingAttempts) {
@@ -231,6 +231,9 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         }
     };
 };
+
+MediaPlayer.dependencies.FragmentLoader.RETRY_ATTEMPTS = 3;
+MediaPlayer.dependencies.FragmentLoader.RETRY_INTERVAL = 500;
 
 MediaPlayer.dependencies.FragmentLoader.prototype = {
     constructor: MediaPlayer.dependencies.FragmentLoader
