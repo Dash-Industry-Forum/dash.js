@@ -86,6 +86,12 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
 
             time = hasSeekTarget ? st : ((useRejected ? (rejected.startTime) : currentTime));
 
+            // limit proceeding index handler to max buffer -> limit pending requests queue
+            if (!hasSeekTarget && !rejected && (time > playbackTime + MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY)) {
+                callback(new MediaPlayer.rules.SwitchRequest(null, p));
+                return;
+            }
+
             if (rejected) {
                 sc.getFragmentModel().removeRejectedRequest(rejected);
             }

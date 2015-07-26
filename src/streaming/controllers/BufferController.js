@@ -161,6 +161,11 @@ MediaPlayer.dependencies.BufferController = function () {
             // quality can be appended providing init fragment for a new required quality has not been
             // appended yet.
             if ((quality !== requiredQuality && isInit) || (quality !== currentQuality && !isInit)) {
+                self.log('reject request - required quality = ' + requiredQuality +
+                                        ' current quality = ' + currentQuality +
+                                        ' chunk media type = ' + chunk.mediaType +
+                                        ' chunk quality = ' + quality +
+                                        ' chunk index = ' + chunk.index);
                 onMediaRejected.call(self, quality, chunk.index);
                 return;
             }
