@@ -147,6 +147,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         removeAllListeners = function() {
             if (!videoModel) return;
 
+            videoModel.unlisten("canplay", onCanPlay);
             videoModel.unlisten("play", onPlaybackStart);
             videoModel.unlisten("playing", onPlaybackPlaying);
             videoModel.unlisten("pause", onPlaybackPaused);
