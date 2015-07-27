@@ -324,7 +324,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
                 // decrease to lowest quality in order to achieve faster starting of playback after seeking
                 if (MediaPlayer.dependencies.ScheduleController.DECREASE_QUALITY_ON_SEEK_TIMEOUT > -1) {
-                    this.abrController.setLowestQualityForTimeout(type, MediaPlayer.dependencies.ScheduleController.DECREASE_QUALITY_ON_SEEK_TIMEOUT)
+                    this.abrController.setLowestQualityForTimeout(type, MediaPlayer.dependencies.ScheduleController.DECREASE_QUALITY_ON_SEEK_TIMEOUT);
                 }
             }
 
