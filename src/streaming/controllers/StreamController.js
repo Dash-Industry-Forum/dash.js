@@ -89,7 +89,7 @@
         },
 
         onError = function (e) {
-            var code = e.data.error.code,
+            var code = e.data.error ? e.data.error.code : 0,
                 msg = "";
 
             if (code === -1) {
@@ -112,6 +112,9 @@
                     break;
                 case 5:
                     msg = "MEDIA_ERR_ENCRYPTED";
+                    break;
+                default:
+                    msg = "UNKNOWN";
                     break;
             }
 
