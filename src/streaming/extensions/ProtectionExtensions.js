@@ -278,10 +278,21 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
 
         // All remaining key system scenarios require a request to a remote license server
         var xhr = new XMLHttpRequest(),
-            url = (protData && protData.laURL && protData.laURL !== "") ? protData.laURL : laURL,
             self = this;
 
-        // Possibly update the URL based on the message
+        // Determine license server URL
+        var url = null;
+        if (protData && protData.serverURL) {
+            var serverURL = protData.serverURL;
+            if (typeof serverURL === "string" && serverURL !== "") {
+                url = serverURL;
+            } else if (typeof serverURL === "object" && serverURL.hasOwnProperty(messageType)) {
+                url = serverURL[messageType];
+            }
+        } else {
+            url = laURL;
+        }
+        // Possibly update or override the URL based on the message
         url = licenseServerData.getServerURLFromMessage(url, message, messageType);
 
         // Ensure valid license server URL

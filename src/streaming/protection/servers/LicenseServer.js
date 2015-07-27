@@ -53,7 +53,7 @@ MediaPlayer.dependencies.protection.servers.LicenseServer = function() {};
  *
  * @function
  * @name MediaPlayer.dependencies.protection.servers.LicenseServer#getServerURLFromMessage
- * @param {string} url the initially established URL (from ProtectionData or initData)
+ * @param {?string} url the initially established URL (from ProtectionData or initData)
  * @param {ArrayBuffer} message the CDM message which may be needed to generate the license
  * requests URL
  * @param {String} messageType the message type associated with this request.  Supported
