@@ -601,8 +601,10 @@
                 protectionController.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
                 protectionController.teardown();
             } else {
-                protectionController.setMediaElement(null);
-                protectionController = null;
+                if (protectionController) {
+                    protectionController.setMediaElement(null);
+                    protectionController = null;
+                }
                 protectionData = null;
                 this.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
             }
