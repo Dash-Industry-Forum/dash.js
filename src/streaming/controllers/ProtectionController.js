@@ -242,7 +242,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 return;
             }
 
-            selectKeySystem.call(this, supportedKS, true);
+            selectKeySystem.call(this, supportedKS, false);
         },
 
         onServerCertificateUpdated = function(event) {
@@ -415,7 +415,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 // and video will be the same.  Just use one valid MediaInfo object
                 var supportedKS = this.protectionExt.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
                 if (supportedKS && supportedKS.length > 0) {
-                    selectKeySystem.call(this, supportedKS, false);
+                    selectKeySystem.call(this, supportedKS, true);
                 }
 
                 initialized = true;
