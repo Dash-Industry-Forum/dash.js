@@ -575,8 +575,11 @@
                 mediaSource = null;
             }
 
-            // Teardown the protection system
-            if (ownProtectionController) {
+            // Teardown the protection system, if necessary
+            if (!protectionController) {
+                this.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+            }
+            else if (ownProtectionController) {
                 var teardownComplete = {},
                         self = this;
                 teardownComplete[MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
