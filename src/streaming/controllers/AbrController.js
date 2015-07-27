@@ -39,7 +39,7 @@ MediaPlayer.dependencies.AbrController = function () {
         averageThroughputDict = {},
         streamProcessorDict={},
         abandonmentStateDict = {},
-        abandonmentTimeout,
+        abandonmentTimeoutDict = {},
 
         getInternalQuality = function (type, id) {
             var quality;
@@ -129,6 +129,17 @@ MediaPlayer.dependencies.AbrController = function () {
             return Math.min (idx , maxIdx);
         },
 
+        timeoutResetAbandonmentStateFor = function(type, timeout){
+            var self = this;
+            if (abandonmentTimeoutDict[type]) {
+                clearTimeout(abandonmentTimeoutDict[type]);
+                abandonmentTimeoutDict[type] = null;
+            }
+            abandonmentTimeoutDict[type] = setTimeout(function () {
+                self.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ALLOW_LOAD);
+            }, timeout);
+        },
+
         onFragmentLoadProgress = function(evt) {
 
             if (MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD === 0 && autoSwitchBitrate) { //check to see if there are parallel request or just one at a time.
@@ -139,13 +150,6 @@ MediaPlayer.dependencies.AbrController = function () {
                     schduleController = streamProcessorDict[type].getScheduleController(),
                     fragmentModel = schduleController.getFragmentModel(),
                     callback = function (switchRequest) {
-
-                        function setupTimeout(type){
-                            abandonmentTimeout = setTimeout(function () {
-                                self.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ALLOW_LOAD);
-                            }, MediaPlayer.dependencies.AbrController.ABANDON_TIMEOUT);
-                        }
-
                         if (switchRequest.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) {
 
                             var requests = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING}),
@@ -158,7 +162,7 @@ MediaPlayer.dependencies.AbrController = function () {
                                 self.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ABANDON_LOAD);
                                 self.setPlaybackQuality(type, self.streamController.getActiveStreamInfo() , newQuality);
                                 schduleController.replaceCanceledRequests(requests);
-                                setupTimeout(type);
+                                timeoutResetAbandonmentStateFor.call(self, type, MediaPlayer.dependencies.AbrController.ABANDON_TIMEOUT);
                             }
                         }
                     };
@@ -258,6 +262,16 @@ MediaPlayer.dependencies.AbrController = function () {
                 setInternalQuality(type, streamInfo.id, newPlaybackQuality);
                 this.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality});
             }
+        },
+
+        setLowestQualityForTimeout: function(type, timeout) {
+            var self = this;
+            // decrease to lowest quality
+            self.setPlaybackQuality(type, streamProcessorDict[type].getStreamInfo(), 0);
+            // lock just decreased quality (for ThroughputRule for example)
+            self.setAbandonmentStateFor(type, MediaPlayer.dependencies.AbrController.ABANDON_LOAD);
+            // unlock after x seconds to allow ABR controller to increase quality level again
+            timeoutResetAbandonmentStateFor.call(self, type, timeout);
         },
 
         setAbandonmentStateFor: function (type, state) {
@@ -390,8 +404,13 @@ MediaPlayer.dependencies.AbrController = function () {
             streamProcessorDict = {};
             abandonmentStateDict = {};
             averageThroughputDict = {};
-            clearTimeout(abandonmentTimeout);
-            abandonmentTimeout = null;
+            for (var type in abandonmentTimeoutDict) {
+                if (abandonmentTimeoutDict.hasOwnProperty(type)) {
+                    clearTimeout(abandonmentTimeoutDict[type]);
+                    abandonmentTimeoutDict[type] = null;
+                }
+            }
+            abandonmentTimeoutDict = {};
         }
     };
 };

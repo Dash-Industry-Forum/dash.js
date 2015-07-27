@@ -45,6 +45,7 @@ MediaPlayer.dependencies.BufferController = function () {
         minBufferTime,
         hasSufficientBuffer = null,
         appendedBytesInfo,
+        wallclockTicked = 0,
 
         isBufferLevelOutrun = false,
         isAppendingInProgress = false,
@@ -341,6 +342,21 @@ MediaPlayer.dependencies.BufferController = function () {
                 totalBufferedTime = self.sourceBufferExt.getTotalBufferedTime(buffer);
 
             return (totalBufferedTime < criticalBufferLevel);
+        },
+
+        /* prune buffer on our own in background to avoid browsers pruning buffer silently */
+        pruneBuffer = function() {
+            var bufferToPrune = 0,
+                currentTime = this.playbackController.getTime(),
+                currentRange = this.sourceBufferExt.getBufferRange(buffer, currentTime);
+
+            // we want to get rid off buffer that is more than x seconds behind current time
+            if (currentRange !== null) {
+                bufferToPrune = currentTime - currentRange.start - MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP;
+                if (bufferToPrune > 0) {
+                    this.sourceBufferExt.remove(buffer, 0, Math.round(currentRange.start + bufferToPrune), mediaSource);
+                }
+            }
         },
 
         getClearRange = function() {
@@ -640,6 +656,11 @@ MediaPlayer.dependencies.BufferController = function () {
 
         onWallclockTimeUpdated = function(/*e*/) {
             appendNext.call(this);
+            // constantly prune buffer every x seconds
+            wallclockTicked += 1;
+            if ((wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0) {
+                pruneBuffer.call(this);
+            }
         },
 
         onPlaybackRateChanged = function(/*e*/) {
@@ -800,6 +821,8 @@ MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD =
 MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD = 20;
 MediaPlayer.dependencies.BufferController.BUFFER_LOADED = "bufferLoaded";
 MediaPlayer.dependencies.BufferController.BUFFER_EMPTY = "bufferStalled";
+MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP = 30;
+MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL = 30;
 
 
 
