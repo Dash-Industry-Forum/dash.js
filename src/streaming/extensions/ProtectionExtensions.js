@@ -282,12 +282,16 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
 
         // Determine license server URL
         var url = null;
-        if (protData && protData.serverURL) {
-            var serverURL = protData.serverURL;
-            if (typeof serverURL === "string" && serverURL !== "") {
-                url = serverURL;
-            } else if (typeof serverURL === "object" && serverURL.hasOwnProperty(messageType)) {
-                url = serverURL[messageType];
+        if (protData) {
+            if (protData.serverURL) {
+                var serverURL = protData.serverURL;
+                if (typeof serverURL === "string" && serverURL !== "") {
+                    url = serverURL;
+                } else if (typeof serverURL === "object" && serverURL.hasOwnProperty(messageType)) {
+                    url = serverURL[messageType];
+                }
+            } else if (protData.laURL && protData.laURL !== "") { // TODO: Deprecated!
+                url = protData.laURL;
             }
         } else {
             url = laURL;
