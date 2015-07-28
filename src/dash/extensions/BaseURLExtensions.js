@@ -240,11 +240,23 @@ Dash.dependencies.BaseURLExtensions = function () {
         },
 
         sendRequest = function(request, info) {
-            request.open("GET", this.requestModifierExt.modifyRequestURL(info.url));
+            var xhrdata = {};
+            xhrdata.headers = { "Range": "bytes=" + info.range.start + "-" + info.range.end};
+            xhrdata.url = info.url;
+            xhrdata.body = null;
+            xhrdata.method = "GET";
+
+            if ("function" === typeof(this.requestModifierExt.prepareRequest)){
+                xhrdata = this.requestModifierExt.prepareRequest(info, xhrdata);
+            }
+
+            request.open(xhrdata.method, this.requestModifierExt.modifyRequestURL(xhrdata.url));
             request.responseType = "arraybuffer";
-            request.setRequestHeader("Range", "bytes=" + info.range.start + "-" + info.range.end);
+            for (var header in xhrdata.headers){
+                request.setRequestHeader(header, xhrdata.headers[header]);
+            }
             request = this.requestModifierExt.modifyRequestHeader(request);
-            request.send(null);
+            request.send(xhrdata.body);
         },
 
         onLoaded = function(segments, representation, type) {

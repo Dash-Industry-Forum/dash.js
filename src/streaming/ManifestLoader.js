@@ -136,8 +136,26 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 request.onload = onload;
                 request.onloadend = report;
                 request.onerror = report;
-                request.open("GET", self.requestModifierExt.modifyRequestURL(url), true);
-                request.send();
+
+                var info = { url: url };
+                var xhrdata = {};
+                xhrdata.headers = { };
+                xhrdata.url = info.url;
+                xhrdata.body = null;
+                xhrdata.method = "GET";
+
+                if ("function" === typeof(self.requestModifierExt.prepareRequest)){
+                    xhrdata = self.requestModifierExt.prepareRequest(info, xhrdata);
+                }
+
+                request.open(xhrdata.method, self.requestModifierExt.modifyRequestURL(xhrdata.url), true);
+
+                for (var header in xhrdata.headers){
+                    request.setRequestHeader(header, xhrdata.headers[header]);
+                }
+                request = self.requestModifierExt.modifyRequestHeader(request);
+
+                request.send(xhrdata.body);
             } catch(e) {
                 request.onerror();
             }

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
@@ -95,17 +95,30 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                   [0]);
                 lastTraceTime = request.requestStartDate;
 
-                req.open("GET", self.requestModifierExt.modifyRequestURL(request.url), true);
+                var xhrdata = {};
+                xhrdata.headers = {};
+                if (request.range){
+                    xhrdata.headers.Range = "bytes=" + request.range;
+                }
+                xhrdata.url = request.url;
+                xhrdata.body = null;
+                xhrdata.method = "GET";
+
+                if ("function" == typeof(self.requestModifierExt.prepareRequest)) {
+                    xhrdata = self.requestModifierExt.prepareRequest(request, xhrdata);
+                }
+                req.open(xhrdata.method, self.requestModifierExt.modifyRequestURL(xhrdata.url), true);
                 req.responseType = "arraybuffer";
+
+                for (var header in xhrdata.headers){
+                    req.setRequestHeader(header, xhrdata.headers[header]);
+                }
                 req = self.requestModifierExt.modifyRequestHeader(req);
 /*
                 req.setRequestHeader("Cache-Control", "no-cache");
                 req.setRequestHeader("Pragma", "no-cache");
                 req.setRequestHeader("If-Modified-Since", "Sat, 1 Jan 2000 00:00:00 GMT");
 */
-                if (request.range) {
-                    req.setRequestHeader("Range", "bytes=" + request.range);
-                }
 
                 req.onprogress = function (event) {
                     var currentTime = new Date();
