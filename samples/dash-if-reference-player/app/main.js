@@ -478,6 +478,13 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         $scope.streamInfo = e.data.toStreamInfo;
     }
 
+    function streamInitialized(e) {
+        var availableTracks = {};
+        availableTracks.audio = player.getTracksFor("audio");
+        availableTracks.video = player.getTracksFor("video");
+        $scope.availableTracks = availableTracks;
+    }
+
     ////////////////////////////////////////
     //
     // Error Handling
@@ -543,6 +550,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     player.addEventListener(MediaPlayer.events.METRIC_CHANGED, metricChanged.bind(this));
     player.addEventListener(MediaPlayer.events.METRIC_UPDATED, metricUpdated.bind(this));
     player.addEventListener(MediaPlayer.events.STREAM_SWITCH_COMPLETED, streamSwitch.bind(this));
+    player.addEventListener(MediaPlayer.events.STREAM_INITIALIZED, streamInitialized.bind(this));
 
     player.attachView(video);
     player.setAutoPlay(true);
@@ -623,13 +631,39 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     }
 
     $scope.doLoad = function () {
-        var protData = null;
+        var protData = null,
+            initialSettings;
         if ($scope.selectedItem.hasOwnProperty("protData")) {
             protData = $scope.selectedItem.protData;
         }
         player.attachSource($scope.selectedItem.url, null, protData);
         player.setAutoSwitchQuality($scope.abrEnabled);
+        if ($scope.initialSettings.audio) {
+            player.setInitialMediaSettingsFor("audio", {lang: $scope.initialSettings.audio});
+        }
+        if ($scope.initialSettings.video) {
+            player.setInitialMediaSettingsFor("video", {role: $scope.initialSettings.video});
+        }
+
         $scope.manifestUpdateInfo = null;
+    }
+
+    $scope.switchTrack = function(track, type) {
+        if (!track || (track === player.getCurrentTrackFor(type))) return;
+
+        player.setCurrentTrack(track);
+    }
+
+    $scope.changeTrackSwitchMode = function(mode, type) {
+        player.setTrackSwitchModeFor(type, mode);
+    }
+
+    $scope.initialSettings = {audio: null, video: null};
+    $scope.mediaSettingsCacheEnabled = true;
+
+    $scope.setMediaSettingsCacheEnabled = function(enabled) {
+        $scope.mediaSettingsCacheEnabled = enabled;
+        player.enableLastMediaSettingsCaching(enabled);
     }
 
     $scope.hasLogo = function (item) {
