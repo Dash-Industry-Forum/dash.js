@@ -244,6 +244,12 @@ MediaPlayer = function (context) {
             return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
         },
 
+        getTracksForTypeFromManifest = function(type, manifest, streamInfo) {
+            streamInfo = streamInfo || this.adapter.getStreamsInfo(manifest)[0];
+
+            return streamInfo ? this.adapter.getAllMediaInfoForType(manifest, streamInfo, type) : [];
+        },
+
         resetAndPlay = function() {
             if (playing && streamController) {
                 if (!resetting) {
@@ -278,6 +284,8 @@ MediaPlayer = function (context) {
                     doAutoPlay.call(this);
                 }
             }
+
+            this.adapter.reset();
         };
 
 
@@ -628,11 +636,16 @@ MediaPlayer = function (context) {
         /**
          * This method returns the list of all available tracks for a given media type
          * @param type
+         * @param manifest
          * @returns {Array} list of {@link MediaPlayer.vo.MediaInfo}
          * @memberof MediaPlayer#
          */
-        getTracksFor: function(type) {
+        getTracksFor: function(type, manifest) {
             var streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
+
+            if (manifest) {
+                return getTracksForTypeFromManifest.call(this, type, manifest, streamInfo);
+            }
 
             if (!streamInfo) return [];
 
