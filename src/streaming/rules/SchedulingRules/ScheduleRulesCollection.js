@@ -57,7 +57,7 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
 
         setup: function () {
             fragmentsToScheduleRules.push(this.bufferLevelRule);
-            fragmentsToScheduleRules.push(this.pendingRequestsRule);
+            //fragmentsToScheduleRules.push(this.pendingRequestsRule);
             nextFragmentRules.push(this.playbackTimeRule);
             fragmentsToExecuteRules.push(this.sameTimeRequestRule);
         }

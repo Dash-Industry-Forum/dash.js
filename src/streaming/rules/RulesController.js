@@ -155,6 +155,7 @@ MediaPlayer.rules.RulesController = function () {
                     if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
                         confidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
                         value = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
+
                     }
 
                     if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
@@ -171,6 +172,8 @@ MediaPlayer.rules.RulesController = function () {
                         confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
                         confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
                     }
+
+
 
                     callback({value: (value !== undefined) ? value : current, confidence: confidence});
 

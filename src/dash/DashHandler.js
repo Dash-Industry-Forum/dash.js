@@ -1019,6 +1019,10 @@ Dash.dependencies.DashHandler = function () {
             this.unsubscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.representationController);
         },
 
+        getCurrentIndex : function(){
+          return index;
+        },
+
         getInitRequest: getInit,
         getSegmentRequestForTime: getForTime,
         getNextSegmentRequest: getNext,

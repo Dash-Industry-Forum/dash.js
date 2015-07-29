@@ -148,7 +148,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
                         if (switchRequest.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) {
 
-                            var requests = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING}),
+                            var requests = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING, }),
                                 newQuality = switchRequest.value,
                                 currentQuality = self.getQualityFor(type, self.streamController.getActiveStreamInfo());
 
@@ -220,9 +220,9 @@ MediaPlayer.dependencies.AbrController = function () {
                         quality = topQualityIdx;
                     }
 
-                    oldQuality = getInternalQuality(type, streamId);
-
-                    if (quality === oldQuality || (abandonmentStateDict[type].state === MediaPlayer.dependencies.AbrController.ABANDON_LOAD &&  quality > oldQuality)) return;
+                    //oldQuality = getInternalQuality(type, streamId);
+                    //
+                    //if (quality === oldQuality || (abandonmentStateDict[type].state === MediaPlayer.dependencies.AbrController.ABANDON_LOAD &&  quality > oldQuality)) return;
 
                     setInternalQuality(type, streamId, quality);
                     //self.log("New quality of " + quality);

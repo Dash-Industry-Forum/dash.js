@@ -31,7 +31,7 @@
 MediaPlayer.dependencies.BufferController = function () {
     "use strict";
     var STALL_THRESHOLD = 0.5,
-        requiredQuality = 0,
+        requiredQuality = -1,
         currentQuality = -1,
         isBufferingCompleted = false,
         bufferLevel = 0,
@@ -46,8 +46,7 @@ MediaPlayer.dependencies.BufferController = function () {
         hasSufficientBuffer = null,
         appendedBytesInfo,
         wallclockTicked = 0,
-
-        isBufferLevelOutrun = false,
+        appendingMediaChunk = false, // false or chunk
         isAppendingInProgress = false,
         isPruningInProgress = false,
         inbandEventFound = false,
@@ -80,30 +79,15 @@ MediaPlayer.dependencies.BufferController = function () {
             return thisStreamId === activeStreamId;
         },
 
-        waitingForInit = function() {
-            var loadingReqs = this.streamProcessor.getFragmentModel().getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING}),
-                streamId = getStreamId.call(this),
-                mediaData = this.virtualBuffer.getChunks({streamId: streamId, mediaType: type, segmentType: MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE, quality: currentQuality});
-
-            if ((currentQuality > requiredQuality) && (hasDataForQuality(mediaData, currentQuality) || hasDataForQuality(loadingReqs, currentQuality))) {
-                return false;
-            }
-
-            return (currentQuality !== requiredQuality);
-        },
-
-        hasDataForQuality = function(arr, quality){
-            var i = 0,
-                ln = arr.length;
-
-            for (i; i < ln; i +=1) {
-                if (arr[i].quality === quality) return true;
-            }
-
-            return false;
-        },
+        //******************************************************************************************
+        //  Start
+        //******************************************************************************************
 
         onInitializationLoaded = function(e) {
+            // We received a new init chunk.
+            // We just want to cache it in the virtual buffer here.
+            // Then pass control to appendNext() to handle any other logic.
+
             var self = this,
                 chunk;
 
@@ -116,11 +100,9 @@ MediaPlayer.dependencies.BufferController = function () {
             // cache the initialization data to use it next time the quality has changed
             this.virtualBuffer.append(chunk);
 
-            // if this is the initialization data for current quality we need to push it to the buffer
+            //appendNext.call(this);
+            switchInitData.call(this, getStreamId.call(this),  requiredQuality);
 
-            if (chunk.quality !== requiredQuality || !waitingForInit.call(self)) return;
-
-            switchInitData.call(self);
         },
 
 		onMediaLoaded = function (e) {
@@ -147,32 +129,78 @@ MediaPlayer.dependencies.BufferController = function () {
             this.virtualBuffer.append(chunk);
 
             appendNext.call(this);
+
+
 		},
+
+        appendNext = function() {
+            // If we have an appendingMediaChunk in progress, process it.
+            // Otherwise, try to get a media chunk from the virtual buffer.
+            // If we have no media chunk available, do nothing - return.
+            // If the media chunk we have matches currentQuality, append the media chunk to the source buffer.
+            // Otherwise, leave the media chunk in appendingMediaChunk and check the init chunk corresponding to the media chunk.
+            // If we have the corresponding init chunk, append the init chunk to the source buffer; appendingMediaChunk will be processed shortly through onAppended().
+            // Otherwise, fire the ENAME_INIT_REQUESTED event.
+
+            var self = this,
+                streamId = getStreamId.call(self),
+                chunk;
+
+            //if (isAppendingInProgress || !buffer) {
+            //    return;
+            //}
+            //if (currentQuality === -1) {
+            //    switchInitData.call(this, streamId,  requiredQuality);
+            //    return;
+            //}
+
+            if (appendingMediaChunk) {
+                chunk = appendingMediaChunk;
+            } else {
+                // we're not in the process of appending a media chunk yet
+
+                // copied some ideas from appendNextMedia()
+
+                //if (!buffer || isAppendingInProgress || !hasEnoughSpaceToAppend.call(this)) return;
+
+                chunk = this.virtualBuffer.extract({streamId: streamId, mediaType: type, segmentType: MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE, limit: 1})[0];
+                if (!chunk) {
+                    // this.log("XXXX about to return appendNext... without appending since no media chunk")
+                    return;
+                }
+
+                appendingMediaChunk = chunk;
+            }
+
+            if (chunk.quality === currentQuality) {
+                appendingMediaChunk = false;
+                appendToBuffer.call(this, chunk);
+            }
+            else {
+                // we need to change currentQuality by init data
+                switchInitData.call(this, streamId, appendingMediaChunk.quality)
+            }
+        },
+
+        switchInitData = function(streamId, quality) {
+
+            var self = this,
+                filter = {streamId: streamId, mediaType: type, segmentType: MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE,
+                    quality: quality},
+                chunk = self.virtualBuffer.getChunks(filter)[0];
+
+            if (chunk) {
+                appendToBuffer.call(self, chunk);
+            } else {
+                // if we have not loaded the init fragment for the current quality, do it
+                self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_INIT_REQUESTED, {requiredQuality: quality});
+            }
+        },
 
         appendToBuffer = function(chunk) {
             isAppendingInProgress = true;
             appendedBytesInfo = chunk;
-
-            var self = this,
-                quality = chunk.quality,
-                isInit = isNaN(chunk.index);
-
-            // The fragment should be rejected if this an init fragment and its quality does not match
-            // the required quality or if this a media fragment and its quality does not match the
-            // quality of the last appended init fragment. This means that media fragment of the old
-            // quality can be appended providing init fragment for a new required quality has not been
-            // appended yet.
-            if ((quality !== requiredQuality && isInit) || (quality !== currentQuality && !isInit)) {
-                self.log('reject request - required quality = ' + requiredQuality +
-                                        ' current quality = ' + currentQuality +
-                                        ' chunk media type = ' + chunk.mediaType +
-                                        ' chunk quality = ' + quality +
-                                        ' chunk index = ' + chunk.index);
-                onMediaRejected.call(self, quality, chunk.index, chunk.start);
-                return;
-            }
-            //self.log("Push bytes: " + data.byteLength);
-            self.sourceBufferExt.append(buffer, chunk);
+            this.sourceBufferExt.append(buffer, chunk);
         },
 
         onAppended = function(e) {
@@ -200,7 +228,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 return;
             }
 
-            updateBufferLevel.call(self);
 
             if (!hasEnoughSpaceToAppend.call(self)) {
                 self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel});
@@ -222,21 +249,41 @@ MediaPlayer.dependencies.BufferController = function () {
                 }
             }
 
+            updateBufferLevel.call(self);
+            //addBufferMetrics.call(this);
+
             self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED, {quality: appendedBytesInfo.quality, index: appendedBytesInfo.index, bufferedRanges: ranges});
             onAppendToBufferCompleted.call(self, appendedBytesInfo.quality, appendedBytesInfo.index);
         },
 
+        onAppendToBufferCompleted = function(quality, index) {
+            isAppendingInProgress = false;
+
+            if (!isNaN(index)) {
+                maxAppendedIndex = Math.max(index , maxAppendedIndex);
+                checkIfBufferingCompleted.call(this);
+            } else {
+                currentQuality = quality;
+               //appendNext.call(this);
+            }
+
+        },
+
+
+
+        //******************************************************************************************
+        //  Start
+        //******************************************************************************************
+
+
         updateBufferLevel = function() {
             var self = this,
                 currentTime = self.playbackController.getTime(),
-                fragmentsToLoad = this.streamProcessor.getScheduleController().getFragmentToLoadCount(),
-                fragmentDuration = this.streamProcessor.getCurrentRepresentationInfo().fragmentDuration;
 
             bufferLevel = self.sourceBufferExt.getBufferLength(buffer, currentTime);
-            bufferTarget = fragmentsToLoad > 0 ? (fragmentsToLoad * fragmentDuration) + bufferLevel : bufferTarget;
-            addBufferMetrics.call(this);
+
             self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, {bufferLevel: bufferLevel});
-            checkGapBetweenBuffers.call(self);
+            //checkGapBetweenBuffers.call(self);
             checkIfSufficientBuffer.call(self);
 
             return true;
@@ -303,39 +350,6 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             return modData.subarray(0,j);
-        },
-
-        checkGapBetweenBuffers= function() {
-            var leastLevel = getLeastBufferLevel.call(this),
-                acceptableGap = minBufferTime * 2,
-                actualGap = bufferLevel - leastLevel;
-
-            // if the gap betweeen buffers is too big we should create a promise that prevents appending data to the current
-            // buffer and requesting new fragments until the gap will be reduced to the suitable size.
-            if (actualGap >= acceptableGap && !isBufferLevelOutrun) {
-                isBufferLevelOutrun = true;
-                this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN);
-            } else if ((actualGap < (acceptableGap / 2) && isBufferLevelOutrun)) {
-                this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED);
-                isBufferLevelOutrun = false;
-                appendNext.call(this);
-            }
-        },
-
-        getLeastBufferLevel = function() {
-            var videoMetrics = this.metricsModel.getReadOnlyMetricsFor("video"),
-                videoBufferLevel = this.metricsExt.getCurrentBufferLevel(videoMetrics),
-                audioMetrics = this.metricsModel.getReadOnlyMetricsFor("audio"),
-                audioBufferLevel = this.metricsExt.getCurrentBufferLevel(audioMetrics),
-                leastLevel = null;
-
-            if (videoBufferLevel === null || audioBufferLevel === null) {
-                leastLevel = (audioBufferLevel !== null) ? audioBufferLevel.level : ((videoBufferLevel !== null) ? videoBufferLevel.level : null);
-            } else {
-                leastLevel = Math.min(audioBufferLevel.level, videoBufferLevel.level);
-            }
-
-            return leastLevel;
         },
 
         hasEnoughSpaceToAppend = function() {
@@ -470,13 +484,8 @@ MediaPlayer.dependencies.BufferController = function () {
             appendNext.call(self);
         },
 
-        appendNext = function() {
-            if (waitingForInit.call(this)) {
-                switchInitData.call(this);
-            } else {
-                appendNextMedia.call(this);
-            }
-        },
+
+
 
         addBufferMetrics = function() {
             if (!isActive.call(this)) return;
@@ -499,27 +508,6 @@ MediaPlayer.dependencies.BufferController = function () {
             return this.streamProcessor.getStreamInfo().id;
         },
 
-        onAppendToBufferCompleted = function(quality, index) {
-            isAppendingInProgress = false;
-
-            if (!isNaN(index)) {
-                onMediaAppended.call(this, index);
-            } else {
-                onInitAppended.call(this, quality);
-            }
-
-            appendNext.call(this);
-        },
-
-        onMediaRejected = function(quality, index, startTime) {
-            isAppendingInProgress = false;
-            this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_REJECTED, {quality: quality, index: index, start: startTime});
-            appendNext.call(this);
-        },
-
-        onInitAppended = function(quality) {
-            currentQuality = quality;
-        },
 
         onMediaAppended = function(index) {
             this.virtualBuffer.storeAppendedChunk(appendedBytesInfo, buffer);
@@ -560,19 +548,6 @@ MediaPlayer.dependencies.BufferController = function () {
             }
         },
 
-        appendNextMedia = function() {
-            var streamId = getStreamId.call(this),
-                chunk;
-
-            if (!buffer || isPruningInProgress || isBufferLevelOutrun || isAppendingInProgress || waitingForInit.call(this) || !hasEnoughSpaceToAppend.call(this)) return;
-
-            chunk = this.virtualBuffer.extract({streamId: streamId, mediaType: type, segmentType: MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE, limit: 1})[0];
-
-            if (!chunk) return;
-
-            appendToBuffer.call(this, chunk);
-        },
-
         onDataUpdateCompleted = function(e) {
             if (e.error) return;
 
@@ -608,12 +583,11 @@ MediaPlayer.dependencies.BufferController = function () {
             // from the cached array instead of sending a new request
             if (requiredQuality === newQuality) return;
 
+
             updateBufferTimestampOffset.call(self, self.streamProcessor.getRepresentationInfoForQuality(newQuality).MSETimeOffset);
 
-            requiredQuality = newQuality;
-            if (!waitingForInit.call(self)) return;
 
-            switchInitData.call(self);
+            requiredQuality = newQuality;
         },
 
         onChunkAppended = function(/*e*/) {
@@ -661,12 +635,13 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         onWallclockTimeUpdated = function(/*e*/) {
-            appendNext.call(this);
+
             // constantly prune buffer every x seconds
             wallclockTicked += 1;
             if ((wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
                 pruneBuffer.call(this);
             }
+
         },
 
         onPlaybackRateChanged = function(/*e*/) {
@@ -801,7 +776,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             this.virtualBuffer.unsubscribe(MediaPlayer.utils.VirtualBuffer.eventList.CHUNK_APPENDED, self, onChunkAppended);
 
-            isBufferLevelOutrun = false;
+            //isBufferLevelOutrun = false;
             isAppendingInProgress = false;
             isPruningInProgress = false;
 

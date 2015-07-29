@@ -31,7 +31,7 @@
 MediaPlayer.rules.PendingRequestsRule = function () {
     "use strict";
 
-    var LIMIT = 3,
+    var LIMIT = 1,
         scheduleController = {};
 
     return {
@@ -55,10 +55,10 @@ MediaPlayer.rules.PendingRequestsRule = function () {
                 ln = requests.length,
                 count = Math.max(current - ln, 0);
 
-            if (rLn > 0) {
-                callback(new MediaPlayer.rules.SwitchRequest(rLn, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
-                return;
-            }
+            //if (rLn > 0) {
+            //    callback(new MediaPlayer.rules.SwitchRequest(rLn, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
+            //    return;
+            //}
 
             if (ln > LIMIT) {
                 callback(new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));

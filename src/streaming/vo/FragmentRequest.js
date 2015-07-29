@@ -49,6 +49,7 @@ MediaPlayer.vo.FragmentRequest = function () {
     this.wallStartTime = null;
     this.bytesLoaded = NaN;
     this.bytesTotal = NaN;
+    this.timeToLoadDelay = NaN;
 };
 
 MediaPlayer.vo.FragmentRequest.prototype = {

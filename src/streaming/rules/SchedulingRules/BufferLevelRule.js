@@ -122,8 +122,12 @@ MediaPlayer.rules.BufferLevelRule = function () {
         metricsModel: undefined,
         abrController: undefined,
         playbackController: undefined,
+<<<<<<< HEAD
         mediaController: undefined,
         virtualBuffer: undefined,
+=======
+        log:undefined,
+>>>>>>> working commit check point.  VOD works live does not.  Buffer level is still growing to fast in some cases.
 
         setup: function() {
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
@@ -143,35 +147,37 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 mediaInfo = context.getMediaInfo(),
                 mediaType = mediaInfo.type;
 
-            if (isBufferLevelOutranT(streamId, mediaType)) {
-                callback(new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
-                return;
-            }
+            //if (isBufferLevelOutranT(streamId, mediaType)) {
+            //    callback(new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
+            //    return;
+            //}
 
             var metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
                 switchMode = this.mediaController.getSwitchMode(),
                 bufferLevel = this.metricsExt.getCurrentBufferLevel(metrics) ? this.metricsExt.getCurrentBufferLevel(metrics).level : 0,
-                currentTime = this.playbackController.getTime(),
-                appendedChunks = this.virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: {start: currentTime, end: (currentTime + bufferLevel)}}),
-                appendedLevel = (appendedChunks && appendedChunks.length > 0) ? (appendedChunks[appendedChunks.length-1].bufferedRange.end - currentTime) : null,
-                actualBufferLevel = switchMode === MediaPlayer.dependencies.MediaController.trackSwitchModes.NEVER_REPLACE ? bufferLevel : (appendedLevel || 0),
-                scheduleCtrl = scheduleController[streamId][mediaType],
-                representationInfo = scheduleCtrl.streamProcessor.getCurrentRepresentationInfo(),
-                isDynamic = scheduleCtrl.streamProcessor.isDynamic(),
-                rate = this.metricsExt.getCurrentPlaybackRate(metrics),
-                duration = streamInfo.manifestInfo.duration,
-                bufferedDuration = actualBufferLevel / Math.max(rate, 1),
-                fragmentDuration = representationInfo.fragmentDuration,
-                timeToEnd = isDynamic ? Number.POSITIVE_INFINITY : duration - currentTime,
-                requiredBufferLength = Math.min(getRequiredBufferLength.call(this, isDynamic, duration, scheduleCtrl), timeToEnd),
-                remainingDuration = Math.max(requiredBufferLength - bufferedDuration, 0),
+
+                //scheduleCtrl = scheduleController[streamId][mediaType],
+                //track = scheduleCtrl.streamProcessor.getCurrentTrack(),
+                //isDynamic = scheduleCtrl.streamProcessor.isDynamic(),
+                //rate = this.metricsExt.getCurrentPlaybackRate(metrics),
+                //duration = streamInfo.manifestInfo.duration,
+                //bufferedDuration = bufferLevel / Math.max(rate, 1),
+                //fragmentDuration = track.fragmentDuration,
+                //currentTime = this.playbackController.getTime(),
+                //timeToEnd = isDynamic ? Number.POSITIVE_INFINITY : duration - currentTime,
+                //requiredBufferLength = Math.min(getRequiredBufferLength.call(this, isDynamic, duration, scheduleCtrl), timeToEnd),
+                //remainingDuration = Math.max(requiredBufferLength - bufferedDuration, 0),
+
                 fragmentCount;
 
-            fragmentCount = Math.ceil(remainingDuration/fragmentDuration);
+            //fragmentCount = Math.ceil(remainingDuration/fragmentDuration);
+            //
+            //if (bufferedDuration >= timeToEnd  && !isCompletedT(streamId,mediaType)) {
+            //    fragmentCount = fragmentCount || 1;
+            //}
 
-            if (bufferedDuration >= timeToEnd  && !isCompletedT(streamId,mediaType)) {
-                fragmentCount = fragmentCount || 1;
-            }
+            this.log("XXX bufferLevel: ", bufferLevel);
+            fragmentCount = bufferLevel > 3 ? 0 : 1;
 
             callback(new MediaPlayer.rules.SwitchRequest(fragmentCount, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
         },
