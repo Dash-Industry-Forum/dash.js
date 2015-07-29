@@ -34,6 +34,7 @@ MediaPlayer.dependencies.SourceBufferExtensions = function () {
     this.notify = undefined;
     this.subscribe = undefined;
     this.unsubscribe = undefined;
+    this.manifestExt = undefined;
 };
 
 MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
@@ -210,7 +211,12 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
 
         try {
             self.waitForUpdateEnd(buffer, function() {
-                buffer[appendMethod](bytes);
+                if (self.manifestExt.getIsTextTrack(chunk.mediaType)) {
+                    // chunk.start is used in calculations by TextSourceBuffer
+                    buffer[appendMethod](bytes, chunk);
+                } else {
+                    buffer[appendMethod](bytes);
+                }
 
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 self.waitForUpdateEnd(buffer, function() {
