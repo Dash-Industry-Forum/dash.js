@@ -135,6 +135,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     var converter = new MetricsTreeConverter();
     $scope.videoMetrics = null;
     $scope.audioMetrics = null;
+    $scope.streamMetrics = null;
 
     $scope.getVideoTreeMetrics = function () {
         var metrics = player.getMetricsFor("video");
@@ -144,6 +145,11 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     $scope.getAudioTreeMetrics = function () {
         var metrics = player.getMetricsFor("audio");
         $scope.audioMetrics = converter.toTreeViewDataSource(metrics);
+    }
+
+    $scope.getStreamTreeMetrics = function () {
+        var metrics = player.getMetricsFor("stream");
+        $scope.streamMetrics = converter.toTreeViewDataSource(metrics);
     }
 
     // from: https://gist.github.com/siongui/4969449

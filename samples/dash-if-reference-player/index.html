@@ -460,6 +460,7 @@
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="metricsDropdown">
                                     <li><a href="#video-metrics" tabindex="-1" data-toggle="tab">Video</a></li>
                                     <li><a href="#audio-metrics" tabindex="-1" data-toggle="tab">Audio</a></li>
+                                    <li><a href="#stream-metrics" tabindex="-1" data-toggle="tab">Stream</a></li>
                                 </ul>
                             </li>
                             <li><a href="#notes" data-toggle="tab">Release Notes</a></li>
@@ -491,6 +492,21 @@
                                     class="tree"
                                     data-angular-treeview="true"
                                     data-tree-model="audioMetrics"
+                                    data-node-label="text"
+                                    data-node-children="items">
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="stream-metrics">
+                                <button
+                                    type="button"
+                                    class="btn btn-default"
+                                    ng-click="getStreamTreeMetrics()">
+                                    Stream - Update
+                                </button>
+                                <div
+                                    class="tree"
+                                    data-angular-treeview="true"
+                                    data-tree-model="streamMetrics"
                                     data-node-label="text"
                                     data-node-children="items">
                                 </div>
