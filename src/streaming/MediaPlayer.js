@@ -117,6 +117,9 @@ MediaPlayer = function (context) {
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
             playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
 
+            system.mapValue("liveDelayFragmentCount", liveDelayFragmentCount);
+            system.mapOutlet("liveDelayFragmentCount", "trackController");
+
             streamController.initialize(autoPlay, protectionController, protectionData);
             DOMStorage.checkInitialBitrate();
             if (typeof source === "string") {

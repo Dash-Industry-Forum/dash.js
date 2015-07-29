@@ -109,7 +109,7 @@ Dash.dependencies.RepresentationController = function () {
 
             return true;
         },
-    
+
         updateRepresentations = function(adaptation) {
             var self = this,
                 reps,
@@ -133,7 +133,7 @@ Dash.dependencies.RepresentationController = function () {
 
         postponeUpdate = function(availabilityDelay) {
             var self = this,
-                delay = (availabilityDelay + (currentRepresentation.segmentDuration * 3)) * 1000,
+                delay = (availabilityDelay + (currentRepresentation.segmentDuration * this.liveDelayFragmentCount)) * 1000,
                 update = function() {
                     if (this.isUpdating()) return;
 
@@ -257,6 +257,7 @@ Dash.dependencies.RepresentationController = function () {
         subscribe: undefined,
         unsubscribe: undefined,
         DOMStorage:undefined,
+        liveDelayFragmentCount:undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
