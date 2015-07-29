@@ -129,6 +129,16 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         player.setAutoSwitchQuality($scope.abrEnabled);
     };
 
+    $scope.getLoadedMessage = function(session) {
+        if (session.sessionToken.getSessionType() === "temporary")
+            return "Temporary (Not Persistent)";
+        return (session.isLoaded) ? "Loaded" : "Not Loaded";
+    };
+
+    $scope.isLoaded = function(session) {
+        return session.isLoaded || session.sessionToken.getSessionType() === "temporary";
+    };
+
     $scope.arrayToCommaSeparated = function(ar) {
         var retVal = "";
         if (ar) {
@@ -167,15 +177,16 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         });
         protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SESSION_CREATED, function(e) {
             if (!e.error) {
-                var removedSession = findSession(e.data.getSessionID());
-                if (removedSession) {
-                    removedSession.removed = false;
-                    removedSession.sessionToken = e.data;
+                var persistedSession = findSession(e.data.getSessionID());
+                if (persistedSession) {
+                    persistedSession.isLoaded = true;
+                    persistedSession.sessionToken = e.data;
                 } else {
+                    var sessionToken = e.data;
                     data.sessions.push({
-                        sessionToken: e.data,
+                        sessionToken: sessionToken,
                         sessionID: e.data.getSessionID(),
-                        removed: false
+                        isLoaded: true
                     });
                 }
             } else {
@@ -187,7 +198,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             if (!e.error) {
                 var session = findSession(e.data);
                 if (session) {
-                    session.removed = true;
+                    session.isLoaded = false;
                     session.sessionToken = null;
                 }
             } else {
@@ -256,13 +267,13 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         });
         protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.LICENSE_REQUEST_COMPLETE, function(e) {
             if (!e.error) {
-                var session = findSession(e.data.getSessionID());
+                var session = findSession(e.data.sessionToken.getSessionID());
                 if (session) {
-                    session.lastMessage = "Successful response received from license server!";
+                    session.lastMessage = "Successful response received from license server for message type '" + e.data.messageType + "'!";
                     data.licenseReceived = true;
                 }
             } else {
-                data.error = "License request failed! " + e.error;
+                data.error = "License request failed for message type '" + e.data.messageType + "'! " + e.error;
             }
             $scope.safeApply();
         });
@@ -310,8 +321,8 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
                 addDRMData(manifest, protCtrl);
 
-                protCtrl.init(manifest);
                 protCtrl.setSessionType(sessiontype);
+                protCtrl.init(manifest);
             }
 
         } else {

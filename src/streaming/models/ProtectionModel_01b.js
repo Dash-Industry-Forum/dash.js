@@ -353,6 +353,10 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
                     getExpirationTime: function() {
                         return NaN;
+                    },
+
+                    getSessionType: function() {
+                        return "temporary";
                     }
                 };
                 pendingSessions.push(newSession);

@@ -210,8 +210,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
     },
 
     /**
-     * Performs license requests for the given DRM (key system).  Sends ENAME_LICENSE_REQUEST_COMPLETE
-     * event.
+     * Send a license message to the server for the given DRM (key system).
      *
      * dash.js base implementation supports the following license servers:
      * <ul>
@@ -229,8 +228,21 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      * @param {String} laURL License requests will be sent to this URL (DEPRECATED!)
      * @param {MediaPlayer.vo.protection.SessionToken} sessionToken the session token
      * associated with this request
+     * @param {String} [messageType="license-request"] the message type associated with this
+     * request.  Supported message types can be found
+     * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
      */
-    requestLicense: function(keySystem, protData, message, laURL, sessionToken) {
+    sendLicenseServerRequest: function(keySystem, protData, message, laURL, sessionToken, messageType) {
+
+        if (!messageType) messageType = "license-request";
+
+        // Our default server implementations do not do anything with "license-release" or
+        // "individualization-request" messages, so we just send a success event
+        if (messageType === "license-release" || messageType == "individualization-request") {
+            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
+                new MediaPlayer.vo.protection.LicenseRequestComplete(null, sessionToken, messageType));
+            return;
+        }
 
         var licenseServerData = null;
         if (protData && protData.hasOwnProperty("drmtoday")) {
@@ -252,7 +264,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
             try {
                 var clearkeys = MediaPlayer.dependencies.protection.KeySystem_ClearKey.getClearKeysFromProtectionData(protData, message);
                 if (clearkeys) {
-                    var event = new MediaPlayer.vo.protection.LicenseRequestComplete(clearkeys, sessionToken);
+                    var event = new MediaPlayer.vo.protection.LicenseRequestComplete(clearkeys, sessionToken, messageType);
                     this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                             event);
                     return;
@@ -266,11 +278,26 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
 
         // All remaining key system scenarios require a request to a remote license server
         var xhr = new XMLHttpRequest(),
-            url = (protData && protData.laURL && protData.laURL !== "") ? protData.laURL : laURL,
             self = this;
 
-        // Possibly update the URL based on the message
-        url = licenseServerData.getServerURLFromMessage(url, message);
+        // Determine license server URL
+        var url = null;
+        if (protData) {
+            if (protData.serverURL) {
+                var serverURL = protData.serverURL;
+                if (typeof serverURL === "string" && serverURL !== "") {
+                    url = serverURL;
+                } else if (typeof serverURL === "object" && serverURL.hasOwnProperty(messageType)) {
+                    url = serverURL[messageType];
+                }
+            } else if (protData.laURL && protData.laURL !== "") { // TODO: Deprecated!
+                url = protData.laURL;
+            }
+        } else {
+            url = laURL;
+        }
+        // Possibly update or override the URL based on the message
+        url = licenseServerData.getServerURLFromMessage(url, message, messageType);
 
         // Ensure valid license server URL
         if (!url) {
@@ -279,18 +306,18 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
             return;
         }
 
-        xhr.open(licenseServerData.getHTTPMethod(), url, true);
-        xhr.responseType = licenseServerData.getResponseType(keySystem.systemString);
+        xhr.open(licenseServerData.getHTTPMethod(messageType), url, true);
+        xhr.responseType = licenseServerData.getResponseType(keySystem.systemString, messageType);
         xhr.onload = function() {
             if (this.status == 200) {
-                var event = new MediaPlayer.vo.protection.LicenseRequestComplete(licenseServerData.getLicenseMessage(this.response, keySystem.systemString), sessionToken);
+                var event = new MediaPlayer.vo.protection.LicenseRequestComplete(licenseServerData.getLicenseMessage(this.response, keySystem.systemString, messageType), sessionToken, messageType);
                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         event);
             } else {
                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
                         sessionToken, 'DRM: ' + keySystem.systemString + ' update, XHR status is "' + this.statusText + '" (' + this.status +
                                 '), expected to be 200. readyState is ' + this.readyState +
-                                ".  Response is " + ((this.response) ? licenseServerData.getErrorResponse(this.response, keySystem.systemString) : "NONE"));
+                                ".  Response is " + ((this.response) ? licenseServerData.getErrorResponse(this.response, keySystem.systemString, messageType) : "NONE"));
             }
         };
         xhr.onabort = function () {

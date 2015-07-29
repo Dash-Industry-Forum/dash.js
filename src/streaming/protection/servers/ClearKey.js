@@ -43,7 +43,7 @@ MediaPlayer.dependencies.protection.servers.ClearKey = function() {
 
     return {
 
-        getServerURLFromMessage: function(url, message) {
+        getServerURLFromMessage: function(url, message/*, messageType*/) {
             // Build ClearKey server query string
             var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
             url += "/?";
@@ -54,11 +54,11 @@ MediaPlayer.dependencies.protection.servers.ClearKey = function() {
             return url;
         },
 
-        getHTTPMethod: function() { return 'GET'; },
+        getHTTPMethod: function(/*messageType*/) { return 'GET'; },
 
         getResponseType: function(/*keySystemStr*/) { return 'json'; },
 
-        getLicenseMessage: function(serverResponse/*, keySystemStr*/) {
+        getLicenseMessage: function(serverResponse/*, keySystemStr, messageType*/) {
             if (!serverResponse.hasOwnProperty("keys")) {
                 return null;
             }
@@ -72,7 +72,7 @@ MediaPlayer.dependencies.protection.servers.ClearKey = function() {
             return new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs);
         },
 
-        getErrorResponse: function(serverResponse/*, keySystemStr*/) {
+        getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
             return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
         }
     };

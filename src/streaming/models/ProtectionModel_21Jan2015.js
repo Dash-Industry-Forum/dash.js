@@ -114,7 +114,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 
         // Function to create our session token objects which manage the EME
         // MediaKeySession and session-specific event handler
-        createSessionToken = function(session, initData) {
+        createSessionToken = function(session, initData, sessionType) {
 
             var self = this;
             var token = { // Implements MediaPlayer.vo.protection.SessionToken
@@ -149,6 +149,10 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 
                 getKeyStatuses: function() {
                     return this.session.keyStatuses;
+                },
+
+                getSessionType: function() {
+                    return sessionType;
                 }
             };
 
@@ -297,7 +301,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
             }
 
             var session = mediaKeys.createSession(sessionType);
-            var sessionToken = createSessionToken.call(this, session, initData);
+            var sessionToken = createSessionToken.call(this, session, initData, sessionType);
 
             // Generate initial key request
             var self = this;
@@ -358,7 +362,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
             session.remove().then(function () {
                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED,
                         sessionToken.getSessionID());
-            }).catch(function (error) {
+            }, function (error) {
                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED,
                         null, "Error removing session (" + sessionToken.getSessionID() + "). " + error.name);
             });

@@ -42,17 +42,17 @@ MediaPlayer.dependencies.protection.servers.PlayReady = function() {
 
     return {
 
-        getServerURLFromMessage: function(url /*, message*/) { return url; },
+        getServerURLFromMessage: function(url /*, message, messageType*/) { return url; },
 
-        getHTTPMethod: function() { return 'POST'; },
+        getHTTPMethod: function(/*messageType*/) { return 'POST'; },
 
-        getResponseType: function(/*keySystemStr*/) { return 'arraybuffer'; },
+        getResponseType: function(/*keySystemStr, messageType*/) { return 'arraybuffer'; },
 
-        getLicenseMessage: function(serverResponse/*, keySystemStr*/) {
+        getLicenseMessage: function(serverResponse/*, keySystemStr, messageType*/) {
             return new Uint8Array(serverResponse);
         },
 
-        getErrorResponse: function(serverResponse/*, keySystemStr*/) {
+        getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
             return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
         }
     };

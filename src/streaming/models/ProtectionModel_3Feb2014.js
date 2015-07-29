@@ -132,6 +132,10 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
                 getExpirationTime: function() {
                     return NaN;
+                },
+
+                getSessionType: function() {
+                    return "temporary";
                 }
             };
         };
