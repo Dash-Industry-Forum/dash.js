@@ -370,11 +370,19 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         executeRequest: function(request) {
             var self = this,
-                idx = pendingRequests.indexOf(request);
+                now = new Date().getTime();
 
-            if (!request || idx === -1) return;
+            if (!request) return;
 
-            pendingRequests.splice(idx, 1);
+            if (now < request.timeToLoadDelay ) {
+                //TODO need to call clearTimeout and make var top level so we can clear it when someone seeks and req is pending...
+                var timeout = setTimeout(function(){
+                    self.executeRequest(request)
+                }, (request.timeToLoadDelay - now) );
+                return;
+            }
+
+
 
             switch (request.action) {
                 case "complete":

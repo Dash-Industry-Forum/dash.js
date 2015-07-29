@@ -118,9 +118,9 @@ MediaPlayer.rules.ThroughputRule = function () {
 
             if (abrController.getAbandonmentStateFor(mediaType) !== MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
 
-                if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
-                    (bufferLevelVO.level >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD*2) || isDynamic)) {
-                    var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
+                if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED || isDynamic) {
+                    var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput/1000);
+                    streamProcessor.getScheduleController().setTimeToLoadDelay(0);
                     switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
                 }
 

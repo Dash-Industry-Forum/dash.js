@@ -52,6 +52,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
         virtualBuffer: undefined,
         playbackController: undefined,
         textSourceBuffer:undefined,
+        log:undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
@@ -71,8 +72,8 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 // EPSILON is used to avoid javascript floating point issue, e.g. if request.startTime = 19.2,
                 // request.duration = 3.83, than request.startTime + request.startTime = 19.2 + 1.92 = 21.119999999999997
                 EPSILON = 0.1,
-                streamProcessor = scheduleController[streamId][mediaType].streamProcessor,
-                representationInfo = streamProcessor.getCurrentRepresentationInfo(),
+                streamProcessor = scheduleController[streamId][mediaType].streamProcessor,//TODO remove access SC from SP.
+                track = streamProcessor.getCurrentTrack(),
                 st = seekTarget ? seekTarget[mediaType] : null,
                 hasSeekTarget = (st !== undefined) && (st !== null),
                 p = hasSeekTarget ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
@@ -121,6 +122,8 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
 
             request = this.adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: keepIdx});
 
+
+
             if (useRejected && request && request.index !== rejected.index) {
                 request = this.adapter.getFragmentRequestForTime(streamProcessor, representationInfo, rejected.startTime + (rejected.duration / 2) + EPSILON, {keepIdx: keepIdx, timeThreshold: 0});
             }
@@ -138,6 +141,9 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             if (request && !useRejected) {
                 streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
             }
+
+            request.timeToLoadDelay = new Date().getTime() + streamProcessor.getScheduleController().getTimeToLoadDelay();
+            //this.log("XXX building request", time, request.timeToLoadDelay)
 
             callback(new MediaPlayer.rules.SwitchRequest(request, p));
         },
