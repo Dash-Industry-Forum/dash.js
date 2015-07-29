@@ -110,6 +110,7 @@ MediaPlayer.dependencies.XlinkLoader = function () {
                 } else {
                     console.log("Failed loading Xlink content: " + url + " no retry attempts left");
                     self.errHandler.downloadError("xlink", url, request);
+                    element.resolved = true;
                     element.resolvedContent = null;
                     self.notify(MediaPlayer.dependencies.XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
                         element: element,
