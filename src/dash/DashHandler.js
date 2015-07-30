@@ -856,7 +856,7 @@ Dash.dependencies.DashHandler = function () {
                 request = getRequestForSegment.call(self, segment);
             }
 
-            if (keepIdx) {
+            if (keepIdx && idx >= 0) {
                 index = idx;
             }
 

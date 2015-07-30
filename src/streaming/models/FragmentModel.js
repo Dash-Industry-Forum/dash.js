@@ -34,11 +34,8 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
     var context = null,
         executedRequests = [],
-        pendingRequests = [],
         loadingRequests = [],
-        rejectedRequests = [],
-
-        isLoadingPostponed = false,
+        delayLoadingTimeout,
 
         loadCurrentFragment = function(request) {
             var self = this;
@@ -100,18 +97,18 @@ MediaPlayer.dependencies.FragmentModel = function () {
             var requests;
 
             switch (state) {
-                case MediaPlayer.dependencies.FragmentModel.states.PENDING:
-                    requests = pendingRequests;
-                    break;
+                //case MediaPlayer.dependencies.FragmentModel.states.PENDING:
+                //    requests = pendingRequests;
+                //    break;
                 case MediaPlayer.dependencies.FragmentModel.states.LOADING:
                     requests = loadingRequests;
                     break;
                 case MediaPlayer.dependencies.FragmentModel.states.EXECUTED:
                     requests = executedRequests;
                     break;
-                case MediaPlayer.dependencies.FragmentModel.states.REJECTED:
-                    requests = rejectedRequests;
-                    break;
+                //case MediaPlayer.dependencies.FragmentModel.states.REJECTED:
+                //    requests = rejectedRequests;
+                //    break;
                 default:
                     requests = [];
             }
@@ -150,28 +147,13 @@ MediaPlayer.dependencies.FragmentModel = function () {
             this.notify(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {request: request, response: response}, error);
         },
 
-        onBytesRejected = function(e) {
-            var req = this.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, quality: e.data.quality, time: e.data.start})[0];
-            // if request for an unappropriate quality has not been removed yet, do it now
-            if (req) {
-                removeRequest.call(this, executedRequests, req);
-                // if index is not a number it means that this is a media fragment, so we should
-                // request the fragment for the same time but with an appropriate quality
-                // If this is init fragment do nothing, because it will be requested in loadInitialization method
-                if (!isNaN(e.data.index)) {
-                    rejectedRequests.push(req);
-                    addSchedulingInfoMetrics.call(this, req, MediaPlayer.dependencies.FragmentModel.states.REJECTED);
-                }
+        onPlaybackSeeking = function(e){
+            if (delayLoadingTimeout !== undefined){
+                clearTimeout(delayLoadingTimeout);
+
             }
-        },
-
-        onBufferLevelOutrun = function(/*e*/) {
-            isLoadingPostponed = true;
-        },
-
-        onBufferLevelBalanced = function(/*e*/) {
-            isLoadingPostponed = false;
         };
+
 
     return {
         system: undefined,
@@ -183,10 +165,11 @@ MediaPlayer.dependencies.FragmentModel = function () {
         manifestExt:undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_REJECTED] = onBytesRejected;
+            //this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
+            //this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
+            //this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_REJECTED] = onBytesRejected;
             this[MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED] = onLoadingCompleted;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
         },
 
         setLoader: function(value) {
@@ -201,21 +184,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return context;
         },
 
-        getIsPostponed: function() {
-            return isLoadingPostponed;
-        },
-
-        addRequest: function(value) {
-
-            if (!this.manifestExt.getIsTextTrack(value.mediaType) && (!value || this.isFragmentLoadedOrPending(value))) return false;
-
-            pendingRequests.push(value);
-            addSchedulingInfoMetrics.call(this, value, MediaPlayer.dependencies.FragmentModel.states.PENDING);
-
-            return true;
-        },
-
-        isFragmentLoadedOrPending: function(request) {
+        isFragmentLoaded: function(request) {
             var isEqualComplete = function(req1, req2) {
                     return ((req1.action === "complete") && (req1.action === req2.action));
                 },
@@ -247,7 +216,8 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     return isLoaded;
                 };
 
-            return (check(pendingRequests) || check(loadingRequests) || check(executedRequests));
+            //check(pendingRequests) ||
+            return (check(loadingRequests) || check(executedRequests));
         },
 
         /**
@@ -286,32 +256,32 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return filteredRequests;
         },
 
-        getLoadingTime: function() {
-            var loadingTime = 0,
-                req,
-                i;
+        //getLoadingTime: function() {
+        //    var loadingTime = 0,
+        //        req,
+        //        i;
+        //
+        //    // get the latest loaded request and calculate its loading time. In case requestEndDate/firstByteDate properties
+        //    // have not been set (e.g. for a request with action='complete') we should get the previous request.
+        //    for (i = executedRequests.length - 1; i >= 0; i -= 1) {
+        //        req = executedRequests[i];
+        //
+        //        if ((req.requestEndDate instanceof Date) && (req.firstByteDate instanceof Date)) {
+        //            loadingTime = req.requestEndDate.getTime() - req.firstByteDate.getTime();
+        //            break;
+        //        }
+        //    }
+        //
+        //    return loadingTime;
+        //},
+        //
+        //removeExecutedRequest: function(request) {
+        //    removeRequest.call(this, executedRequests, request);
+        //},
 
-            // get the latest loaded request and calculate its loading time. In case requestEndDate/firstByteDate properties
-            // have not been set (e.g. for a request with action='complete') we should get the previous request.
-            for (i = executedRequests.length - 1; i >= 0; i -= 1) {
-                req = executedRequests[i];
-
-                if ((req.requestEndDate instanceof Date) && (req.firstByteDate instanceof Date)) {
-                    loadingTime = req.requestEndDate.getTime() - req.firstByteDate.getTime();
-                    break;
-                }
-            }
-
-            return loadingTime;
-        },
-
-        removeExecutedRequest: function(request) {
-            removeRequest.call(this, executedRequests, request);
-        },
-
-        removeRejectedRequest: function(request) {
-            removeRequest.call(this, rejectedRequests, request);
-        },
+        //removeRejectedRequest: function(request) {
+        //    removeRequest.call(this, rejectedRequests, request);
+        //},
 
         removeExecutedRequestsBeforeTime: function(time) {
             var lastIdx = executedRequests.length - 1,
@@ -329,30 +299,30 @@ MediaPlayer.dependencies.FragmentModel = function () {
             }
         },
 
-        cancelPendingRequests: function(quality) {
-            var self = this,
-                reqs = pendingRequests,
-                canceled = reqs;
-
-            pendingRequests = [];
-
-            if (quality !== undefined) {
-                pendingRequests = reqs.filter(function(request) {
-                    if (request.quality === quality) {
-                        return false;
-                    }
-
-                    canceled.splice(canceled.indexOf(request), 1);
-                    return true;
-                });
-            }
-
-            canceled.forEach(function(request) {
-                addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.CANCELED);
-            });
-
-            return canceled;
-        },
+        //cancelPendingRequests: function(quality) {
+        //    var self = this,
+        //        reqs = pendingRequests,
+        //        canceled = reqs;
+        //
+        //    pendingRequests = [];
+        //
+        //    if (quality !== undefined) {
+        //        pendingRequests = reqs.filter(function(request) {
+        //            if (request.quality === quality) {
+        //                return false;
+        //            }
+        //
+        //            canceled.splice(canceled.indexOf(request), 1);
+        //            return true;
+        //        });
+        //    }
+        //
+        //    canceled.forEach(function(request) {
+        //        addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.CANCELED);
+        //    });
+        //
+        //    return canceled;
+        //},
 
         abortRequests: function() {
             var reqs = [];
@@ -374,15 +344,12 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
             if (!request) return;
 
-            if (now < request.timeToLoadDelay ) {
-                //TODO need to call clearTimeout and make var top level so we can clear it when someone seeks and req is pending...
-                var timeout = setTimeout(function(){
+            if (now < request.delayLoadingTime ) {
+                delayLoadingTimeout = setTimeout(function(){
                     self.executeRequest(request)
-                }, (request.timeToLoadDelay - now) );
+                }, (request.delayLoadingTime - now) );
                 return;
             }
-
-
 
             switch (request.action) {
                 case "complete":
@@ -403,13 +370,13 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         reset: function() {
             this.abortRequests();
-            this.cancelPendingRequests();
+            //this.cancelPendingRequests();
             context = null;
             executedRequests = [];
-            pendingRequests = [];
+            //pendingRequests = [];
             loadingRequests = [];
-            rejectedRequests = [];
-            isLoadingPostponed = false;
+            //rejectedRequests = [];
+            //isLoadingPostponed = false;
         }
     };
 };

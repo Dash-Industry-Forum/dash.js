@@ -43,7 +43,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         playListMetrics = null,
         playListTraceMetrics = null,
         playListTraceMetricsClosed = true,
-        isFragmentLoadingDict = {},
+        isFragmentLoading = false,
         timeToloadDelay = 0,
         validateTimeout,
 
@@ -73,8 +73,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             this.log("start");
 
-            //this.log("begin validation");
-            //validate.call(this);
+            //if starting from a pause we want to call validate to kick off the cycle that was stooped by pausing stream.
+            if (this.playbackController.getPlayedRanges().length > 0) {
+                validate.call(this);
+            }
         },
 
         startOnReady = function() {
@@ -93,9 +95,9 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             this.log("stop");
             // cancel the requests that have already been created, but not loaded yet.
-            if (cancelPending) {
-                fragmentModel.cancelPendingRequests();
-            }
+            //if (cancelPending) {
+            //    fragmentModel.cancelPendingRequests();
+            //}
 
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
         },
@@ -156,8 +158,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             //this.abrController.getPlaybackQuality(this.streamProcessor);
 
-            //if (isStopped || (this.playbackController.isPaused() && (this.playbackController.getPlayedRanges().length > 0) &&
-            //    (!this.scheduleWhilePaused || isDynamic))) return;
+            if (isStopped || (this.playbackController.isPaused() && (this.playbackController.getPlayedRanges().length > 0) && !this.scheduleWhilePaused)) return
+
 
             //lastValidationTime = now;
             this.log("XXX start process from validate")
@@ -178,43 +180,17 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
 
         onGetRequiredFragmentCount = function(result) {
-            var self = this,
-                idx = self.indexHandler.getCurrentIndex() === -1 ? NaN : self.indexHandler.getCurrentIndex();
-
-
+            var self = this;
             fragmentsToLoad = result .value;
-            if (fragmentsToLoad > 0 ) {
-                this.abrController.getPlaybackQuality(this.streamProcessor);
+            if (fragmentsToLoad > 0 && !self.bufferController.getIsAppendingInProgress() && !isFragmentLoading) {
+                isFragmentLoading = true;
+                this.abrController.getPlaybackQuality(this.streamProcessor,  getNextFragment.bind(self, onGetNextFragment.bind(self)) );
             } else {
+
                 validateTimeout = setTimeout(function(){
-                    self.log("XXX looping back to validate")
+                    //self.log("XXX looping back to validate")
                     validate.call(self);
                 }, 1000)
-            }
-        },
-
-        onQualityChanged = function(e) {
-            //TODO HACKISH NEED A BETTER WAY TO CHAIN.. CALLBACK FOR RETURN  - ONLY FIRE EVENT IF IT ACTUALLY DOES CHANGE....
-            if (type !== e.data.mediaType || this.streamProcessor.getStreamInfo().id !== e.data.streamInfo.id) return;
-
-            getNextFragment.call(this, onGetNextFragment.bind(this));
-
-            //var self = this,
-            //    canceledReqs;
-            //
-            //canceledReqs = fragmentModel.cancelPendingRequests(e.data.oldQuality);
-            //currentTrackInfo = self.streamProcessor.getTrackForQuality(e.data.newQuality);
-            //
-            //if (currentTrackInfo === null || currentTrackInfo === undefined) {
-            //    throw "Unexpected error!";
-            //}
-            //
-            //replaceCanceledRequests.call(self, canceledReqs);
-
-
-            if (e.data.oldQuality !== e.data.newQuality)
-            {
-                clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
             }
         },
 
@@ -228,21 +204,21 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onGetNextFragment = function(result) {
-            var request = result.value;
-
-            //if ((request !== null) && !(request instanceof MediaPlayer.vo.FragmentRequest)) {
-            //    request = this.adapter.getFragmentRequestForTime(this.streamProcessor, currentTrackInfo, request.startTime);
-            //}
-
-            if (request) {
-                this.log("XXX - About to load fragment index: ", result.value.index)
-                fragmentModel.executeRequest(request)
-                //fragmentsToLoad--;
-                //self.log("Loading fragment: " + request.mediaType + ":" + request.startTime);
-                //this.fragmentController.prepareFragmentForLoading(fragmentModel, request);
+            if (result.value) {
+                fragmentModel.executeRequest(result.value);
             }
         },
 
+        onQualityChanged = function(e) {
+            if (type !== e.data.mediaType || this.streamProcessor.getStreamInfo().id !== e.data.streamInfo.id) return;
+
+            currentTrackInfo = this.streamProcessor.getTrackForQuality(e.data.newQuality);
+            if (currentTrackInfo === null || currentTrackInfo === undefined) {
+                throw "Unexpected error! - currentTrackInfo is null or undefined";
+            }
+
+            clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
+        },
 
         onDataUpdateCompleted = function(e) {
             if (e.error) return;
@@ -280,7 +256,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onFragmentLoadingCompleted = function (e) {
-            this.log("XXX - Loading complete for index: ", e.data.request.index);
+            //this.log("XXX - Loading complete for index: ", e.data.request.index);
+            if (!isNaN(e.data.request.index))
+                isFragmentLoading = false
+
             if (!e.error) return;
             doStop.call(this);
         },
@@ -288,11 +267,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
         onBytesAppended = function(e) {
             this.log("XXX - Appended bytes complete for index:" , e.data.index);
 
-            validate.call(this);
+
             addPlaylistTraceMetrics.call(this);
-            //if (!isNaN(e.data.index)){
-            //
-            //}
+            validate.call(this);
+
         },
 
         onDataUpdateStarted = function(/*e*/) {
@@ -361,8 +339,9 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onPlaybackSeeking = function(e) {
+
             if (!initialPlayback) {
-                fragmentModel.cancelPendingRequests();
+                isFragmentLoading = false;
             }
 
             var metrics = this.metricsModel.getMetricsFor("stream"),
@@ -469,17 +448,17 @@ MediaPlayer.dependencies.ScheduleController = function () {
             fragmentModel = this.fragmentController.getModel(this);
             MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD = self.numOfParallelRequestAllowed;
 
-            if (self.scheduleRulesCollection.bufferLevelRule) {
-                self.scheduleRulesCollection.bufferLevelRule.setScheduleController(self);
-            }
+            //if (self.scheduleRulesCollection.bufferLevelRule) {
+            //    self.scheduleRulesCollection.bufferLevelRule.setScheduleController(self);
+            //}
+            //
+            //if (self.scheduleRulesCollection.pendingRequestsRule) {
+            //    self.scheduleRulesCollection.pendingRequestsRule.setScheduleController(self);
+            //}
 
-            if (self.scheduleRulesCollection.pendingRequestsRule) {
-                self.scheduleRulesCollection.pendingRequestsRule.setScheduleController(self);
-            }
-
-            if (self.scheduleRulesCollection.playbackTimeRule) {
-                self.scheduleRulesCollection.playbackTimeRule.setScheduleController(self);
-            }
+            //if (self.scheduleRulesCollection.playbackTimeRule) {
+            //    self.scheduleRulesCollection.playbackTimeRule.setScheduleController(self);
+            //}
         },
 
         getFragmentModel: function() {
