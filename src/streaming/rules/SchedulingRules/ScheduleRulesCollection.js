@@ -59,7 +59,7 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
             fragmentsToScheduleRules.push(this.bufferLevelRule);
             //fragmentsToScheduleRules.push(this.pendingRequestsRule);
             nextFragmentRules.push(this.playbackTimeRule);
-            fragmentsToExecuteRules.push(this.sameTimeRequestRule);
+            //fragmentsToExecuteRules.push(this.sameTimeRequestRule);
         }
     };
 };
