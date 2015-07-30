@@ -258,18 +258,13 @@ MediaPlayer.dependencies.BufferController = function () {
                 checkIfBufferingCompleted.call(this);
             } else {
                 currentQuality = appendedBytesInfo.quality;
-                appendNext.call(this);
+                if(!this.streamProcessor.isDynamic()) {
+                    appendNext.call(this);
+                }
             }
 
             self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED, {quality: appendedBytesInfo.quality, index: appendedBytesInfo.index, bufferedRanges: ranges});
         },
-
-        onPlaybackSeeking = function() {
-            isAppendingInProgress = false;
-            onPlaybackProgression.call(this);
-        },
-
-
 
         onQualityChanged = function(e) {
             if (type !== e.data.mediaType || this.streamProcessor.getStreamInfo().id !== e.data.streamInfo.id) return;
@@ -277,14 +272,19 @@ MediaPlayer.dependencies.BufferController = function () {
             var self = this,
                 newQuality = e.data.newQuality;
 
-            // if the quality has changed we should append the initialization data again. We get it
-            // from the cached array instead of sending a new request
             if (requiredQuality === newQuality) return;
 
             updateBufferTimestampOffset.call(self, self.streamProcessor.getRepresentationInfoForQuality(newQuality).MSETimeOffset);
             requiredQuality = newQuality;
         },
 
+        //**********************************************************************
+        // START Buffer Level, State & Sufficiency Handling.
+        //**********************************************************************
+        onPlaybackSeeking = function() {
+            isAppendingInProgress = false;
+            onPlaybackProgression.call(this);
+        },
 
         onPlaybackProgression = function() {
             updateBufferLevel.call(this);
@@ -321,9 +321,8 @@ MediaPlayer.dependencies.BufferController = function () {
             //    level += virtualLevel;
             //}
 
-            this.metricsModel.addBufferLevel(type, new Date(), bufferLevel);
+            this.metricsModel.addBufferLevel(type, new Date(), level);
         },
-
 
         checkIfBufferingCompleted = function() {
             var isLastIdxAppended = maxAppendedIndex === (lastIndex - 1);
@@ -364,9 +363,10 @@ MediaPlayer.dependencies.BufferController = function () {
             this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, {hasSufficientBuffer: state});
             this.log(hasSufficientBuffer ? ("Got enough buffer to start.") : ("Waiting for more buffer before starting playback."));
         },
-    //******************************************************************************************
-    //  END
-    //******************************************************************************************
+
+        //**********************************************************************
+        // END Buffer Level, State & Sufficiency Handling.
+        //**********************************************************************
 
         handleInbandEvents = function(data,request,mediaInbandEvents,trackInbandEvents) {
             var events = [],
