@@ -204,9 +204,18 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onGetNextFragment = function(result) {
+            var self = this;
+
             if (result.value) {
                 fragmentModel.executeRequest(result.value);
             }
+            //else {
+            //    isFragmentLoading = false;
+            //    validateTimeout = setTimeout(function(){
+            //        //self.log("XXX looping back to validate")
+            //        validate.call(self);
+            //    }, 1000)
+            //}
         },
 
         onQualityChanged = function(e) {
