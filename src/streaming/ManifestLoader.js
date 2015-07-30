@@ -56,41 +56,43 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 manifest,
                 onload,
                 report,
+                progress,
+                firstProgressCall,
                 self = this;
 
-
             onload = function () {
-                if (request.status < 200 || request.status > 299)
-                {
-                  return;
+                var actualUrl = null;
+
+                if (request.status < 200 || request.status > 299) {
+                    return;
                 }
+
                 needFailureReport = false;
                 loadedTime = new Date();
 
+                // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
+                if (request.responseURL && request.responseURL !== url) {
+                    baseUrl = parseBaseUrl(request.responseURL);
+                    actualUrl = request.responseURL;
+                }
+
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
-                                                 "MPD",
+                                                 MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE,
                                                  url,
-                                                 null,
+                                                 actualUrl,
                                                  null,
                                                  requestTime,
+                                                 request.firstByteDate || null,
                                                  loadedTime,
-                                                 null,
                                                  request.status,
                                                  null,
-                                                 null,
                                                  request.getAllResponseHeaders());
-
-                // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
-                if (request.responseURL) {
-                    baseUrl = parseBaseUrl(request.responseURL);
-                    url = request.responseURL;
-                }
 
                 manifest = self.parser.parse(request.responseText, baseUrl, self.xlinkController);
 
                 if (manifest) {
-                    manifest.url = url;
+                    manifest.url = actualUrl || url;
                     manifest.loadedTime = loadedTime;
                     self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, loadedTime, manifest.availabilityStartTime);
                     self.xlinkController.resolveManifestOnLoad(manifest);
@@ -108,14 +110,14 @@ MediaPlayer.dependencies.ManifestLoader = function () {
 
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
-                                                 "MPD",
+                                                 MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE,
                                                  url,
-                                                 null,
+                                                 request.responseURL || null,
                                                  null,
                                                  requestTime,
+                                                 request.firstByteDate || null,
                                                  new Date(),
                                                  request.status,
-                                                 null,
                                                  null,
                                                  request.getAllResponseHeaders());
                 if (remainingAttempts > 0) {
@@ -131,11 +133,21 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 }
             };
 
+            progress = function (event) {
+                if (firstProgressCall) {
+                    firstProgressCall = false;
+                    if (!event.lengthComputable || (event.lengthComputable && event.total != event.loaded)) {
+                        request.firstByteDate = new Date();
+                    }
+                }
+            };
+
             try {
                 //this.log("Start loading manifest: " + url);
                 request.onload = onload;
                 request.onloadend = report;
                 request.onerror = report;
+                request.onprogress = progress;
                 request.open("GET", self.requestModifierExt.modifyRequestURL(url), true);
                 request.send();
             } catch(e) {

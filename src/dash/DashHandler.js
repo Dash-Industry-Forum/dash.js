@@ -155,7 +155,7 @@ Dash.dependencies.DashHandler = function () {
             period = representation.adaptation.period;
 
             request.mediaType = mediaType;
-            request.type = "Initialization Segment";
+            request.type = MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE;
             request.url = getRequestUrl(representation.initialization, representation);
             request.range = representation.range;
             presentationStartTime = period.start;
@@ -419,7 +419,7 @@ Dash.dependencies.DashHandler = function () {
             else {
                 representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
             }
-            
+
             return segments;
         },
 
@@ -779,7 +779,7 @@ Dash.dependencies.DashHandler = function () {
             url = unescapeDollarsInTemplate(url);
 
             request.mediaType = type;
-            request.type = "Media Segment";
+            request.type = MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE;
             request.url = url;
             request.range = segment.mediaRange;
             request.startTime = segment.presentationStartTime;

@@ -229,6 +229,8 @@ MetricsTreeConverter = function () {
 
                 treeMetrics.push(treeMetric);
             }
+
+            return treeMetrics;
         },
 
         httpRequestToTreeMetric = function (httpRequest) {
