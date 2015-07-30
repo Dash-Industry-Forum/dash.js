@@ -38,13 +38,20 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         errHandler: undefined,
         adapter: undefined,
 
-
         initialize: function (type, bufferController) {
             this.mediaInfos = bufferController.streamProcessor.getMediaInfoArr();
             this.buffered =  this.system.getObject("customTimeRanges");
+            this.textTrackExtensions = this.system.getObject("textTrackExtensions");
             this.initializationSegmentReceived= false;
             this.timescale= 90000;
+            this.initLoad = false
         },
+
+        onTextTrackChange : function(evt){
+            // notify event to change adaptations and when changed set this.initializationSegmentReceived to true so init segment gets inserted
+            console.log(evt.target.currentTarget)
+        },
+
         append: function (bytes, chunk) {
             var self = this,
                 result,
@@ -52,38 +59,48 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 i,
                 ccContent,
                 mediaInfo = chunk.mediaInfo,
-                mimeType = mediaInfo.type === "fragmentedText" ? mediaInfo.type : mediaInfo.mimeType,
-                textTrackInfo = new MediaPlayer.vo.TextTrackInfo();
+                mimeType = mediaInfo.type === "fragmentedText" ? mediaInfo.type : mediaInfo.mimeType;
 
-            textTrackInfo.lang = mediaInfo.lang;
-            textTrackInfo.label = mediaInfo.id;
-            textTrackInfo.video = self.videoModel.getElement();
+            function createTextTrackFromMediaInfo(captionData, mediaInfo){
+                var textTrackInfo = new MediaPlayer.vo.TextTrackInfo();
+                textTrackInfo.captionData = captionData;
+                textTrackInfo.lang = mediaInfo.lang;
+                textTrackInfo.label = mediaInfo.id;
+                textTrackInfo.video = self.videoModel.getElement();
+                textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
+                self.textTrackExtensions.addTextTrack(textTrackInfo, self.mediaInfos.length);
+                self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
+            }
 
             if(mimeType=="fragmentedText"){
                 var fragmentExt;
                 if(!this.initializationSegmentReceived){
                     this.initializationSegmentReceived=true;
-                    //label = mediaInfo.id;
-                    //lang = mediaInfo.lang;
-                    this.textTrackExtensions=self.getTextTrackExtensions();
-                    textTrackInfo.captionData = result;
-                    textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
-                    this.textTrackExtensions.addTextTrack(textTrackInfo, 1);
-                    self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
-                    fragmentExt = self.system.getObject("fragmentExt");
-                    this.timescale= fragmentExt.getMediaTimescaleFromMoov(bytes);
-                }else{
-                    fragmentExt = self.system.getObject("fragmentExt");
 
-                    samplesInfo=fragmentExt.getSamplesInfo(bytes);
-                    for(i= 0 ; i<samplesInfo.length ;i++) {
-                        if(!this.firstSubtitleStart){
-                            this.firstSubtitleStart=samplesInfo[0].cts-chunk.start*this.timescale;
+                    if (!this.initLoad) {
+                        this.initLoad = true;
+                        for (i = 0; i < this.mediaInfos.length; i++){
+                            createTextTrackFromMediaInfo(null, this.mediaInfos[i]);
                         }
-                        samplesInfo[i].cts-=this.firstSubtitleStart;
-                        this.buffered.add(samplesInfo[i].cts/this.timescale,(samplesInfo[i].cts+samplesInfo[i].duration)/this.timescale);
 
-                        ccContent=window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset,samplesInfo[i].offset+samplesInfo[i].size)));
+                        self.videoModel.getElement().textTracks.addEventListener('change', self.onTextTrackChange);
+                    }
+
+                    //Need a way to alert that is init bytes for text track to get timescale.  Not sure how this should work just yet. Needs to move into else statement.
+                    fragmentExt = self.system.getObject("fragmentExt");
+                    this.timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
+
+                }else{
+
+                    fragmentExt = self.system.getObject("fragmentExt");
+                    samplesInfo = fragmentExt.getSamplesInfo(bytes);
+                    for(i= 0 ; i < samplesInfo.length ; i++) {
+                        if(!this.firstSubtitleStart){
+                            this.firstSubtitleStart = samplesInfo[0].cts-chunk.start*this.timescale;
+                        }
+                        samplesInfo[i].cts -= this.firstSubtitleStart;
+                        this.buffered.add(samplesInfo[i].cts/this.timescale,(samplesInfo[i].cts+samplesInfo[i].duration)/this.timescale);
+                        ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset,samplesInfo[i].offset+samplesInfo[i].size)));
                         var parser = self.getParser(mimeType);
                         try{
                             result = parser.parse(ccContent);
@@ -97,10 +114,8 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 bytes = new Uint8Array(bytes);
                 ccContent=window.UTF8.decode(bytes);
                 try {
-                    textTrackInfo.captionData = self.getParser(mimeType).parse(ccContent);
-                    textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
-                    self.getTextTrackExtensions().addTextTrack(textTrackInfo, this.mediaInfos.length);
-                    self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
+                    result = self.getParser(mimeType).parse(ccContent);
+                    createTextTrackFromMediaInfo(result, mediaInfo);
                 } catch(e) {
                     self.errHandler.closedCaptionsError(e, "parse", ccContent);
                 }
@@ -112,7 +127,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         },
 
         abort:function() {
-            this.getTextTrackExtensions().deleteCues(this.videoModel.getElement());
+            this.textTrackExtensions.deleteCues(this.videoModel.getElement());
         },
 
         getParser:function(mimeType) {
@@ -125,10 +140,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
             }
 
             return parser;
-        },
-
-        getTextTrackExtensions:function() {
-            return this.system.getObject("textTrackExtensions");
         },
 
         addEventListener: function (type, listener, useCapture) {

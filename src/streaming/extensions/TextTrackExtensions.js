@@ -128,7 +128,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             while (!firstValidTrack)
             {
                 var t = video.textTracks[i];
-                t.mode = "showing";
+                t.mode = "showing";// If track mode = disabled track.cue has no length so put mode to showing to get cues.length.
                 if (t.cues.length > 0)
                 {
                     firstValidTrack = true;
