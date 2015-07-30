@@ -1,4 +1,4 @@
-﻿/**
+/**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
@@ -107,9 +107,12 @@ MediaPlayer.rules.ThroughputRule = function () {
             }
 
             downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
-            lastRequestThroughput = Math.round((lastRequest.trace[lastRequest.trace.length - 1].b * 8 ) / downloadTime);
 
-            storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
+            if (lastRequest.trace.length) {
+                lastRequestThroughput = Math.round((lastRequest.trace[lastRequest.trace.length - 1].b * 8 ) / downloadTime);
+                storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
+            }
+
             averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic));
 
             if (abrController.getAbandonmentStateFor(mediaType) !== MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
