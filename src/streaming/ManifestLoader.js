@@ -117,6 +117,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  requestTime,
                                                  request.firstByteDate || null,
                                                  new Date(),
+                                                 null,
                                                  request.status,
                                                  null,
                                                  request.getAllResponseHeaders());
