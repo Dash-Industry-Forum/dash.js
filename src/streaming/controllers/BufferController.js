@@ -321,7 +321,7 @@ MediaPlayer.dependencies.BufferController = function () {
             //    level += virtualLevel;
             //}
 
-            this.metricsModel.addBufferLevel(type, new Date(), level);
+            this.metricsModel.addBufferLevel(type, new Date(), bufferLevel);
         },
 
         checkIfBufferingCompleted = function() {
