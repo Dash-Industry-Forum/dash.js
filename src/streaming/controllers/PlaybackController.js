@@ -260,7 +260,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
                 type = sp.getType(),
                 stream = this.system.getObject("streamController").getStreamById(streamInfo.id),
                 streamStart = getStreamStartTime.call(this, streamInfo),
-                startRequest = this.adapter.getFragmentRequestForTime(sp, sp.getCurrentTrack(), streamStart, {ignoreIsFinished: true}),
+                startRequest = this.adapter.getFragmentRequestForTime(sp, sp.getCurrentRepresentationInfo(), streamStart, {ignoreIsFinished: true}),
                 startIdx = startRequest ? startRequest.index : null,
                 currentEarliestTime = commonEarliestTime[id];
 
