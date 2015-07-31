@@ -88,7 +88,8 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      *
      * @param {string} systemString the system string
      * @returns {MediaPlayer.dependencies.protection.KeySystem} the key system
-     * or null if no key system is associated with the given key system string
+     * or null if no supported key system is associated with the given key
+     * system string
      */
     getKeySystemBySystemString: function(systemString) {
         for (var i = 0; i < this.keySystems.length; i++) {
@@ -210,38 +211,26 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
     },
 
     /**
-     * Send a license message to the server for the given DRM (key system).
-     *
-     * dash.js base implementation supports the following license servers:
-     * <ul>
-     *     <li>Microsoft PlayReady</li>
-     *     <li>Google Widevine DRM Proxy Server</li>
-     *     <li>CableLabs ClearKey</li>
-     *     <li>CastLabs DRMToday</li>
-     * </ul>
+     * Returns the license server implementation data that should be used for this request.
      *
      * @param {MediaPlayer.dependencies.protection.KeySystem} keySystem the key system
      * associated with this license request
      * @param {MediaPlayer.vo.protection.ProtectionData} protData protection data to use for the
      * request
-     * @param {ArrayBuffer} message the key message from the CDM
-     * @param {String} laURL License requests will be sent to this URL (DEPRECATED!)
-     * @param {MediaPlayer.vo.protection.SessionToken} sessionToken the session token
-     * associated with this request
      * @param {String} [messageType="license-request"] the message type associated with this
      * request.  Supported message types can be found
      * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
+     * @return {MediaPlayer.dependencies.protection.servers.LicenseServer} the license server
+     * implementation that should be used for this request or null if the player should not
+     * pass messages of the given type to a license server
+     *
      */
-    sendLicenseServerRequest: function(keySystem, protData, message, laURL, sessionToken, messageType) {
-
-        if (!messageType) messageType = "license-request";
+    getLicenseServer: function(keySystem, protData, messageType) {
 
         // Our default server implementations do not do anything with "license-release" or
         // "individualization-request" messages, so we just send a success event
         if (messageType === "license-release" || messageType == "individualization-request") {
-            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                new MediaPlayer.vo.protection.LicenseRequestComplete(null, sessionToken, messageType));
-            return;
+            return null;
         }
 
         var licenseServerData = null;
@@ -253,105 +242,27 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
             licenseServerData = this.system.getObject("serverPlayReady");
         } else if (keySystem.systemString === "org.w3.clearkey") {
             licenseServerData = this.system.getObject("serverClearKey");
-        } else {
-            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                    sessionToken, 'DRM: Unknown key system! -- ' + keySystem.keySystemStr);
-            return;
         }
 
-        // Special handling for ClearKey with keys located in protection data
-        if (keySystem.systemString === "org.w3.clearkey") {
-            try {
-                var clearkeys = MediaPlayer.dependencies.protection.KeySystem_ClearKey.getClearKeysFromProtectionData(protData, message);
-                if (clearkeys) {
-                    var event = new MediaPlayer.vo.protection.LicenseRequestComplete(clearkeys, sessionToken, messageType);
-                    this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                            event);
-                    return;
-                }
-            } catch (error) {
-                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                        sessionToken, error.message);
-                return;
-            }
+        return licenseServerData;
+    },
+
+    /**
+     * Allows application-specific retrieval of ClearKey keys.
+     *
+     * @param {MediaPlayer.vo.protection.ProtectionData} protData protection data to use for the
+     * request
+     * @param {ArrayBuffer} message the key message from the CDM
+     * @return {MediaPlayer.vo.protection.ClearKeyKeySet} the clear keys associated with
+     * the request or null if no keys can be returned by this function
+     */
+    processClearKeyLicenseRequest: function(protData, message) {
+        try {
+            return MediaPlayer.dependencies.protection.KeySystem_ClearKey.getClearKeysFromProtectionData(protData, message);
+        } catch (error) {
+            this.log("Failed to retrieve clearkeys from ProtectionData");
+            return null;
         }
-
-        // All remaining key system scenarios require a request to a remote license server
-        var xhr = new XMLHttpRequest(),
-            self = this;
-
-        // Determine license server URL
-        var url = null;
-        if (protData) {
-            if (protData.serverURL) {
-                var serverURL = protData.serverURL;
-                if (typeof serverURL === "string" && serverURL !== "") {
-                    url = serverURL;
-                } else if (typeof serverURL === "object" && serverURL.hasOwnProperty(messageType)) {
-                    url = serverURL[messageType];
-                }
-            } else if (protData.laURL && protData.laURL !== "") { // TODO: Deprecated!
-                url = protData.laURL;
-            }
-        } else {
-            url = laURL;
-        }
-        // Possibly update or override the URL based on the message
-        url = licenseServerData.getServerURLFromMessage(url, message, messageType);
-
-        // Ensure valid license server URL
-        if (!url) {
-            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                    sessionToken, 'DRM: No license server URL specified!');
-            return;
-        }
-
-        xhr.open(licenseServerData.getHTTPMethod(messageType), url, true);
-        xhr.responseType = licenseServerData.getResponseType(keySystem.systemString, messageType);
-        xhr.onload = function() {
-            if (this.status == 200) {
-                var event = new MediaPlayer.vo.protection.LicenseRequestComplete(licenseServerData.getLicenseMessage(this.response, keySystem.systemString, messageType), sessionToken, messageType);
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                        event);
-            } else {
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                        sessionToken, 'DRM: ' + keySystem.systemString + ' update, XHR status is "' + this.statusText + '" (' + this.status +
-                                '), expected to be 200. readyState is ' + this.readyState +
-                                ".  Response is " + ((this.response) ? licenseServerData.getErrorResponse(this.response, keySystem.systemString, messageType) : "NONE"));
-            }
-        };
-        xhr.onabort = function () {
-            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                    sessionToken, 'DRM: ' + keySystem.systemString + ' update, XHR aborted. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState);
-        };
-        xhr.onerror = function () {
-            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE,
-                    sessionToken, 'DRM: ' + keySystem.systemString + ' update, XHR error. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState);
-        };
-
-        // Set optional XMLHttpRequest headers from protection data and message
-        var updateHeaders = function(headers) {
-            var key;
-            if (headers) {
-                for (key in headers) {
-                    if ('authorization' === key.toLowerCase()) {
-                        xhr.withCredentials = true;
-                    }
-                    xhr.setRequestHeader(key, headers[key]);
-                }
-            }
-        };
-        if (protData) {
-            updateHeaders(protData.httpRequestHeaders);
-        }
-        updateHeaders(keySystem.getRequestHeadersFromMessage(message));
-
-        // Set withCredentials property from protData
-        if (protData && protData.withCredentials) {
-            xhr.withCredentials = true;
-        }
-
-        xhr.send(keySystem.getLicenseRequestFromMessage(message));
     }
 };
 
