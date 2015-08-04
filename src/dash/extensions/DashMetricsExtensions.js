@@ -188,6 +188,10 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return currentBufferLevel;
         },
 
+        getRequestsQueue = function (metrics) {
+            return metrics.RequestsQueue;
+        },
+
         getCurrentPlaybackRate = function (metrics) {
             if (metrics === null) {
                 return null;
@@ -409,7 +413,8 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getCurrentDVRInfo : getCurrentDVRInfo,
         getCurrentManifestUpdate: getCurrentManifestUpdate,
         getLatestFragmentRequestHeaderValueByID:getLatestFragmentRequestHeaderValueByID,
-        getLatestMPDRequestHeaderValueByID:getLatestMPDRequestHeaderValueByID
+        getLatestMPDRequestHeaderValueByID:getLatestMPDRequestHeaderValueByID,
+        getRequestsQueue: getRequestsQueue
     };
 };
 
