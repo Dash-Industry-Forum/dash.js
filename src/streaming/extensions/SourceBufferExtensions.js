@@ -205,13 +205,14 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
     append: function (buffer, chunk) {
         var self = this,
             bytes = chunk.bytes,
-            appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null);
+            appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null),
+            acceptsChunk = buffer.hasOwnProperty("getTextTrackExtensions");
 
         if (!appendMethod) return;
 
         try {
             self.waitForUpdateEnd(buffer, function() {
-                if (self.manifestExt.getIsTextTrack(chunk.mediaType)) {
+                if (acceptsChunk) {
                     // chunk.start is used in calculations by TextSourceBuffer
                     buffer[appendMethod](bytes, chunk);
                 } else {
