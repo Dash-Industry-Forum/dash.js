@@ -306,7 +306,6 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 } else {
                     buffer[appendMethod](bytes);
                 }
-
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 self.waitForUpdateEnd(buffer, function() {
                     self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
