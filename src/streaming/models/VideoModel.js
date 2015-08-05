@@ -43,23 +43,18 @@ MediaPlayer.models.VideoModel = function () {
         },
 
         addStalledStream = function (type) {
-            if (type === null || element.seeking) {
-                return;
-            }
-
-            // Halt playback until nothing is stalled.
-            if (!isStalled()) {
-                previousPlaybackRate = this.getPlaybackRate();
-                this.setPlaybackRate(0);
-                element.dispatchEvent(new CustomEvent("waiting"));
-            }
-
-            if (stalledStreams[type] === true) {
+            if (type === null || element.seeking || stalledStreams.indexOf(type) !== -1) {
                 return;
             }
 
             stalledStreams.push(type);
-            stalledStreams[type] = true;
+
+            // Halt playback until nothing is stalled.
+            if (stalledStreams.length === 1) {
+                previousPlaybackRate = this.getPlaybackRate();
+                this.setPlaybackRate(0);
+                element.dispatchEvent(new CustomEvent("waiting"));
+            }
         },
 
         removeStalledStream = function (type) {
@@ -67,7 +62,6 @@ MediaPlayer.models.VideoModel = function () {
                 return;
             }
 
-            stalledStreams[type] = false;
             var index = stalledStreams.indexOf(type);
             if (index !== -1) {
                 stalledStreams.splice(index, 1);
@@ -81,6 +75,10 @@ MediaPlayer.models.VideoModel = function () {
         },
 
         stallStream = function (type, isStalled) {
+            if (type === null) {
+                return;
+            }
+
             if (isStalled) {
                 addStalledStream.call(this, type);
             } else {
