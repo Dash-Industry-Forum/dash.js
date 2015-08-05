@@ -29,7 +29,25 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 MediaPlayer.dependencies.TextSourceBuffer = function () {
+    var currentTrackIdx = -1,
 
+        onTextTrackChange = function(evt) {
+            for (var i = 0; i < evt.srcElement.length; i++ ) {
+                var t = evt.srcElement[i],
+                    el = this.videoModel.getElement();
+
+                if (t.mode === "showing" && el.currentTime > 0 && currentTrackIdx !== i) {
+                    currentTrackIdx = i;
+                    this.textTrackExtensions.setCurrentTrackIdx(i);
+                    this.textTrackExtensions.deleteTrackCues(this.textTrackExtensions.getCurrentTextTrack());
+                    this.fragmentModel.cancelPendingRequests();
+                    this.fragmentModel.abortRequests();
+                    this.buffered.clear();
+                    this.mediaController.setTrack(this.allTracks[i]);
+                    break;
+                }
+             }
+        };
 
     return {
         system:undefined,
@@ -37,19 +55,24 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         eventBus:undefined,
         errHandler: undefined,
         adapter: undefined,
+        manifestExt:undefined,
+        mediaController:undefined,
+        streamController:undefined,
 
         initialize: function (type, bufferController) {
-            this.mediaInfos = bufferController.streamProcessor.getMediaInfoArr();
-            this.buffered =  this.system.getObject("customTimeRanges");
+            this.sp = bufferController.streamProcessor;
+            this.mediaInfos = this.sp.getMediaInfoArr();
             this.textTrackExtensions = this.system.getObject("textTrackExtensions");
-            this.initializationSegmentReceived= false;
-            this.timescale= 90000;
-            this.initLoad = false
-        },
+            this.isFragmented = !this.manifestExt.getIsTextTrack(type);
+            if (this.isFragmented){
+                // do not call following if not fragmented text....
+                this.fragmentModel = this.sp.getFragmentModel();
+                this.buffered =  this.system.getObject("customTimeRanges");
+                this.initializationSegmentReceived= false;
+                this.timescale= 90000;
+                this.allTracks = this.mediaController.getTracksFor("fragmentedText", this.streamController.getActiveStreamInfo());
+            }
 
-        onTextTrackChange : function(evt){
-            // notify event to change adaptations and when changed set this.initializationSegmentReceived to true so init segment gets inserted
-            console.log(evt.target.currentTarget)
         },
 
         append: function (bytes, chunk) {
@@ -61,38 +84,30 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 mediaInfo = chunk.mediaInfo,
                 mimeType = mediaInfo.type === "fragmentedText" ? mediaInfo.type : mediaInfo.mimeType;
 
-            function createTextTrackFromMediaInfo(captionData, mediaInfo){
+            function createTextTrackFromMediaInfo(captionData, mediaInfo) {
                 var textTrackInfo = new MediaPlayer.vo.TextTrackInfo();
                 textTrackInfo.captionData = captionData;
                 textTrackInfo.lang = mediaInfo.lang;
                 textTrackInfo.label = mediaInfo.id;
                 textTrackInfo.video = self.videoModel.getElement();
                 textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
+                textTrackInfo.isFragmented = self.isFragmented;
+                textTrackInfo.role = (mediaInfo.roles.length > 0) ? mediaInfo.roles[0] : null;
                 self.textTrackExtensions.addTextTrack(textTrackInfo, self.mediaInfos.length);
                 self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
             }
 
             if(mimeType=="fragmentedText"){
-                var fragmentExt;
+                var fragmentExt = self.system.getObject("fragmentExt");
                 if(!this.initializationSegmentReceived){
                     this.initializationSegmentReceived=true;
-
-                    if (!this.initLoad) {
-                        this.initLoad = true;
-                        for (i = 0; i < this.mediaInfos.length; i++){
-                            createTextTrackFromMediaInfo(null, this.mediaInfos[i]);
-                        }
-
-                        self.videoModel.getElement().textTracks.addEventListener('change', self.onTextTrackChange);
+                    for (i = 0; i < this.mediaInfos.length; i++){
+                        createTextTrackFromMediaInfo(null, this.mediaInfos[i]);
                     }
-
-                    //Need a way to alert that is init bytes for text track to get timescale.  Not sure how this should work just yet. Needs to move into else statement.
-                    fragmentExt = self.system.getObject("fragmentExt");
+                    self.videoModel.getElement().textTracks.addEventListener('change', onTextTrackChange.bind(self));
                     this.timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
 
-                }else{
-
-                    fragmentExt = self.system.getObject("fragmentExt");
+                }else {
                     samplesInfo = fragmentExt.getSamplesInfo(bytes);
                     for(i= 0 ; i < samplesInfo.length ; i++) {
                         if(!this.firstSubtitleStart){
@@ -123,11 +138,11 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         },
 
         getIsDefault:function(mediaInfo){
-            return mediaInfo.lang === this.mediaInfos[0].lang; //TODO How to tag default. currently same order as in manifest. Is there a way to mark a text adaptation set as the default one?
+            return mediaInfo.index === this.mediaInfos[0].index; //TODO How to tag default. currently same order as in manifest. Is there a way to mark a text adaptation set as the default one?
         },
 
         abort:function() {
-            this.textTrackExtensions.deleteCues(this.videoModel.getElement());
+            this.textTrackExtensions.deleteAllTextTracks();
         },
 
         getParser:function(mimeType) {

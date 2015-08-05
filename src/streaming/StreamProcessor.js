@@ -141,7 +141,9 @@ MediaPlayer.dependencies.StreamProcessor = function () {
                 baseUrlExt.subscribe(Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
                 baseUrlExt.subscribe(Dash.dependencies.BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, indexHandler);
 
-                mediaController.subscribe(MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED, bufferController);
+                if (type === "video" || type === "audio") {
+                    mediaController.subscribe(MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED, bufferController);
+                }
             } else {
                 bufferController.subscribe(MediaPlayer.dependencies.TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
             }
@@ -205,27 +207,25 @@ MediaPlayer.dependencies.StreamProcessor = function () {
         },
 
         updateMediaInfo: function(manifest, newMediaInfo) {
-
-
             if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
                 mediaInfo = newMediaInfo;
             }
-
-            mediaInfoArr.push(newMediaInfo);
+            if (mediaInfoArr.indexOf(newMediaInfo) === -1){
+                mediaInfoArr.push(newMediaInfo);
+            }
             this.adapter.updateData(manifest, this);
+        },
+
+        getMediaInfoArr: function() {
+            return mediaInfoArr;
         },
 
         getMediaInfo: function() {
             return mediaInfo;
         },
 
-<<<<<<< HEAD
         getMediaSource: function() {
             return this.bufferController.getMediaSource();
-=======
-        getMediaInfoArr: function() {
-            return mediaInfoArr;
->>>>>>> Multi lang support in progress. Commit cherrypicks changes in progress for multiple adaptation support. I will need to carefully picks and hand merge 
         },
 
         getScheduleController:function () {
@@ -356,7 +356,9 @@ MediaPlayer.dependencies.StreamProcessor = function () {
 
             fragmentModel.reset();
 
-            mediaController.unsubscribe(MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED, bufferController);
+            if (type === "video" || type === "audio") {
+                mediaController.unsubscribe(MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED, bufferController);
+            }
 
             indexHandler.reset();
             this.bufferController.reset(errored);

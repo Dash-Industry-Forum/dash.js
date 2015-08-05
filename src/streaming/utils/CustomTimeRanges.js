@@ -34,8 +34,7 @@ MediaPlayer.utils.CustomTimeRanges = function () {
         
         customTimeRangeArray:[],
         length :0,
-        
-        
+
         add: function(start,end){
             var i=0;
             
@@ -50,6 +49,12 @@ MediaPlayer.utils.CustomTimeRanges = function () {
             }
             this.length=this.customTimeRangeArray.length;
         },
+
+        clear: function(){
+            this.customTimeRangeArray = [];
+            this.length = 0;
+        },
+
         remove: function(start,end){
             for(var i=0;i<this.customTimeRangeArray.length;i++){
                 if(start<=this.customTimeRangeArray[i].start && end>=this.customTimeRangeArray[i].end) {
@@ -89,6 +94,7 @@ MediaPlayer.utils.CustomTimeRanges = function () {
 
             this.length = this.customTimeRangeArray.length;
         },
+
         mergeRanges : function(rangeIndex1,rangeIndex2) {
             var range1=this.customTimeRangeArray[rangeIndex1];
             var range2=this.customTimeRangeArray[rangeIndex2];

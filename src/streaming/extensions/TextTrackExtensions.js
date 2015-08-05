@@ -31,9 +31,13 @@
 MediaPlayer.utils.TextTrackExtensions = function () {
     "use strict";
     var Cue,
-        textTrackQueue = [];
+        textTrackQueue = [],
+        trackElementArr = [],
+        currentTrackIdx = 0;
 
     return {
+        mediaController:undefined,
+
         setup: function() {
             Cue = window.VTTCue || window.TextTrackCue;
         },
@@ -41,31 +45,51 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         addTextTrack: function(textTrackInfoVO, totalTextTracks) {
 
             textTrackQueue.push(textTrackInfoVO);
+            if (this.video === undefined) {
+                this.video = textTrackInfoVO.video;
+            }
 
             if(textTrackQueue.length === totalTextTracks) {
 
-                if (totalTextTracks > 1) { // sort multi text tracks alphabetically.
+                if (totalTextTracks > 1) { // sort multi text tracks alphabetically. Not sure how we to sort tracks and flag a track as default.  Currently sort alph, and default track is first media item in MPD.
                     textTrackQueue.sort(function(a,b) {
                         return a.lang > b.lang;
                     });
                 }
 
-                for(var item in textTrackQueue) {
-                    this.video = textTrackQueue[item].video;
+                var defaultIndex = 0
+                for(var i = 0 ; i < textTrackQueue.length; i++) {
+                    var track = document.createElement('track'),//this.getCurrentTextTrack(),
+                        captionType = textTrackQueue[i].role ? textTrackQueue[i].role : "captions";
 
-                    //TODO: Ability to define the KIND in the MPD - ie subtitle vs caption....Use role ? //<Role schemeIdUri="urn:mpeg:dash:role" value="subtitle"/>
-                    this.track = this.video.addTextTrack("captions", textTrackQueue[item].label, textTrackQueue[item].lang);
+                    currentTrackIdx = i;
+                    trackElementArr.push(track);
+
+                    track.kind = captionType === "subtitle" ? "subtitles" : captionType;
+                    track.label = textTrackQueue[i].lang;
+                    track.srclang = textTrackQueue[i].lang;
+
                     // track.default is an object property identifier that is a reserved word
                     // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
                     /*jshint -W024 */
-                    this.track.default = textTrackQueue[item].defaultTrack;
-                    this.track.mode = textTrackQueue[item].defaultTrack ? "showing" : "hidden";
-                    this.addCaptions(0, textTrackQueue[item].captionData);
+                    track.default = textTrackQueue[i].defaultTrack;
+                    if (textTrackQueue[i].defaultTrack) {
+                        defaultIndex = i;
+                    }
+
+                    this.video.appendChild(track);
+                    this.addCaptions(0, textTrackQueue[i].captionData);
                 }
+
+                currentTrackIdx = defaultIndex;
             }
         },
 
         addCaptions: function(timeOffset, captionData) {
+
+            var track = this.getCurrentTextTrack();
+            track.mode = "showing";//make sure tracks are showing to be able to add the cue...
+
             for(var item in captionData) {
                 var cue;
                 var currentItem = captionData[item];
@@ -113,49 +137,50 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         }
                     }
                 }
-                this.track.addCue(cue);
+
+                track.addCue(cue);
+            }
+
+            if (!textTrackQueue[currentTrackIdx].isFragmented){
+                track.mode = textTrackQueue[currentTrackIdx].defaultTrack ? "showing" : "hidden"
             }
         },
-        deleteCues: function(video) {
-            //when multiple tracks are supported - iterate through and delete all cues from all tracks.
-            var i = 0,
-                firstValidTrack = false,
-                totalTracks = textTrackQueue.length;
 
-            //Find the first track in the TextTrackList that has valid cues.
-            // The reason for this step is there is no API on video to removeTextTrack once added, just cues inside of track and to mark track as disabled.
-            // Since there may be disable tracks with no cues
-            while (!firstValidTrack)
-            {
-                var t = video.textTracks[i];
-                t.mode = "showing";// If track mode = disabled track.cue has no length so put mode to showing to get cues.length.
-                if (t.cues.length > 0)
-                {
-                    firstValidTrack = true;
-                    break;
-                } else {
-                    t.mode = "disabled";
-                }
-                i++;
-            }
+        getCurrentTextTrack: function(){
+            return this.video.textTracks[currentTrackIdx];
+        },
 
-            for(var j = i; j < i+totalTracks; j++) {
+        getTextTrack: function(idx) {
+            return this.video.textTracks[idx];
+        },
 
-                var track = video.textTracks[j],
-                    cues = track.cues,
+        deleteTrackCues: function(track) {
+            if (track.cues){
+                var cues = track.cues,
                     lastIdx = cues.length - 1;
 
                 for (var r = lastIdx; r >= 0 ; r--) {
                     track.removeCue(cues[r]);
                 }
-
-                track.mode = "disabled";
-                // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
-                /*jshint -W024 */
-                track.default = false;
             }
+        },
 
+        deleteAllTextTracks:  function() {
+            var ln = trackElementArr.length;
+            for(var i = 0; i < ln; i++){
+                this.video.removeChild(trackElementArr[i]);
+            }
+            trackElementArr = [];
             textTrackQueue = [];
+        },
+
+        deleteTextTrack: function(idx) {
+            this.video.removeChild(trackElementArr[idx])
+            trackElementArr.splice(idx, 1);
+        },
+
+        setCurrentTrackIdx : function(value){
+            currentTrackIdx = value;
         }
 
     };

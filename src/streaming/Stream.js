@@ -53,9 +53,7 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         getMimeTypeOrType = function(mediaInfo) {
-            var isText = mediaInfo.type === "text";
-
-            return isText ? mediaInfo.mimeType : mediaInfo.type;
+            return mediaInfo.type === "text"? mediaInfo.mimeType : mediaInfo.type;
         },
 
         isMediaSupported = function(mediaInfo, mediaSource, manifest) {
@@ -88,9 +86,31 @@ MediaPlayer.dependencies.Stream = function () {
             return true;
         },
 
+        onCurrentTrackChanged = function(e) {
+            var processor = getProcessorForMediaInfo.call(this, e.data.oldMediaInfo);
+            if (!processor) return;
+
+            var currentTime = this.playbackController.getTime(),
+                buffer = processor.getBuffer(),
+                mediaInfo = e.data.newMediaInfo,
+                manifest = this.manifestModel.getValue(),
+                idx = streamProcessors.indexOf(processor),
+                mediaSource = processor.getMediaSource();
+
+            if (mediaInfo.type !== "fragmentedText"){
+                processor.reset(true);
+                createStreamProcessor.call(this, mediaInfo, manifest, mediaSource, {buffer: buffer, replaceIdx: idx, currentTime: currentTime});
+                this.playbackController.seek(this.playbackController.getTime());
+            }else {
+                processor.setIndexHandlerTime(currentTime);
+                processor.updateMediaInfo(manifest, mediaInfo);
+            }
+        },
+
         createStreamProcessor = function(mediaInfo, manifest, mediaSource, optionalSettings) {
             var self = this,
-                streamProcessor = self.system.getObject("streamProcessor");
+                streamProcessor = self.system.getObject("streamProcessor"),
+                allMediaForType = this.adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);
 
             streamProcessor.initialize(getMimeTypeOrType.call(self, mediaInfo), self.fragmentController, mediaSource, self, eventController);
             self.abrController.updateTopQualityIndex(mediaInfo);
@@ -101,7 +121,21 @@ MediaPlayer.dependencies.Stream = function () {
                 streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
             }
 
-            streamProcessor.updateMediaInfo(manifest, mediaInfo);
+            if((mediaInfo.type === "text" || mediaInfo.type === "fragmentedText")) {
+                var idx
+                for(var i = 0; i < allMediaForType.length; i++){
+                    if(allMediaForType[i].index === mediaInfo.index) {
+                        idx = i
+                    }
+                    streamProcessor.updateMediaInfo(manifest, allMediaForType[i]);//creates text tracks for all adaptations in one stream processor
+                }
+                if(mediaInfo.type === "fragmentedText"){
+                    streamProcessor.updateMediaInfo(manifest, allMediaForType[idx]);//sets the initial media info
+                }
+            }else {
+                streamProcessor.updateMediaInfo(manifest, allMediaForType[0]);
+            }
+
             return streamProcessor;
         },
 
@@ -219,7 +253,7 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         onBufferingCompleted = function(/*e*/) {
-            var processors = getAudioVideoProcessors(),
+            var processors = getProcessors(),
                 ln = processors.length,
                 i = 0;
 
@@ -239,34 +273,17 @@ MediaPlayer.dependencies.Stream = function () {
             checkIfInitializationCompleted.call(this);
         },
 
-        onCurrentTrackChanged = function(e) {
-            var processor = getProcessorForMediaInfo.call(this, e.data.oldMediaInfo);
-
-            if (!processor) return;
-
-            var currentTime = this.playbackController.getTime(),
-                buffer = processor.getBuffer(),
-                mediaInfo = e.data.newMediaInfo,
-                manifest = this.manifestModel.getValue(),
-                idx = streamProcessors.indexOf(processor),
-                mediaSource = processor.getMediaSource();
-
-            processor.reset(true);
-            createStreamProcessor.call(this, mediaInfo, manifest, mediaSource, {buffer: buffer, replaceIdx: idx, currentTime: currentTime});
-            this.playbackController.seek(this.playbackController.getTime());
-        },
-
         getProcessorForMediaInfo = function(mediaInfo) {
             if (!mediaInfo) return false;
 
-            var processors = getAudioVideoProcessors.call(this);
+            var processors = getProcessors.call(this);
 
             return processors.filter(function(processor){
-                return (processor.getMediaInfo().id === mediaInfo.id);
+                return (processor.getType() === mediaInfo.type);
             })[0];
         },
 
-        getAudioVideoProcessors = function() {
+        getProcessors = function() {
             var arr = [],
                 i = 0,
                 ln = streamProcessors.length,
@@ -277,7 +294,7 @@ MediaPlayer.dependencies.Stream = function () {
                 controller = streamProcessors[i];
                 type = controller.getType();
 
-                if (type === "audio" || type === "video") {
+                if (type === "audio" || type === "video" || type === "fragmentedText") {
                     arr.push(controller);
                 }
             }
