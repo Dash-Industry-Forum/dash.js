@@ -46,10 +46,20 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         var self = this,
             codec = mediaInfo.codec,
             buffer = null;
+
         try {
+            // Safari claims to support anything starting 'application/mp4'.
+            // it definitely doesn't understand 'application/mp4;codecs="stpp"'
+            // - currently no browser does, so check for it and use our own
+            // implementation.
+            if (codec.match(/application\/mp4;\s*codecs="stpp"/i)) {
+                throw new Error("not really supported");
+            }
+
             buffer = mediaSource.addSourceBuffer(codec);
-        } catch(ex) {
-            if ((mediaInfo.isText)||(codec.indexOf('codecs="stpp"')!=-1)) {
+
+        } catch (ex) {
+            if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp"') !== -1)) {
                 buffer = self.system.getObject("textSourceBuffer");
             } else {
                 throw ex;
