@@ -67,7 +67,7 @@ MediaPlayer.rules.ThroughputRule = function () {
                 arr.shift();
             }
 
-            return averageThroughput * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY;
+            return (averageThroughput * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY) / 1000;
         };
 
 
