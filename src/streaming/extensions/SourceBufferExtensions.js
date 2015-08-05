@@ -206,7 +206,10 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         var self = this,
             bytes = chunk.bytes,
             appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null),
-            acceptsChunk = buffer.hasOwnProperty("getTextTrackExtensions");
+            // our user-defined sourcebuffer-like object has Object as its
+            // prototype whereas built-in SourceBuffers will have something
+            // more sensible. do not pass chunk to built-in append.
+            acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === "Object";
 
         if (!appendMethod) return;
 
