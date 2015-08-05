@@ -323,15 +323,25 @@ MediaPlayer.models.ProtectionModel_01b = function () {
         },
 
         setMediaElement: function(mediaElement) {
+            if (videoElement === mediaElement) {
+                return;
+            }
+
+            // Replacing the previous element
             if (videoElement) {
                 removeEventListeners();
             }
+
             videoElement = mediaElement;
-            videoElement.addEventListener(api.keyerror, eventHandler);
-            videoElement.addEventListener(api.needkey, eventHandler);
-            videoElement.addEventListener(api.keymessage, eventHandler);
-            videoElement.addEventListener(api.keyadded, eventHandler);
-            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
+
+            // Only if we are not detaching from the existing element
+            if (videoElement) {
+                videoElement.addEventListener(api.keyerror, eventHandler);
+                videoElement.addEventListener(api.needkey, eventHandler);
+                videoElement.addEventListener(api.keymessage, eventHandler);
+                videoElement.addEventListener(api.keyadded, eventHandler);
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
+            }
         },
 
         createKeySession: function(initData /*, keySystemType */) {
