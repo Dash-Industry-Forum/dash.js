@@ -29,21 +29,25 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 MediaPlayer.dependencies.TextSourceBuffer = function () {
-    var currentTrackIdx = -1,
+    var currentTrackIdx = 0,
+        areCaptionsDisabled = false;
 
         onTextTrackChange = function(evt) {
             for (var i = 0; i < evt.srcElement.length; i++ ) {
                 var t = evt.srcElement[i],
                     el = this.videoModel.getElement();
 
-                if (t.mode === "showing" && el.currentTime > 0 && currentTrackIdx !== i) {
-                    currentTrackIdx = i;
-                    this.textTrackExtensions.setCurrentTrackIdx(i);
-                    this.textTrackExtensions.deleteTrackCues(this.textTrackExtensions.getCurrentTextTrack());
-                    this.fragmentModel.cancelPendingRequests();
-                    this.fragmentModel.abortRequests();
-                    this.buffered.clear();
-                    this.mediaController.setTrack(this.allTracks[i]);
+                areCaptionsDisabled = t.mode !== "showing"
+                if (t.mode === "showing" && el.currentTime > 0) {
+                    if (currentTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again.
+                        currentTrackIdx = i;
+                        this.textTrackExtensions.setCurrentTrackIdx(i);
+                        this.textTrackExtensions.deleteTrackCues(this.textTrackExtensions.getCurrentTextTrack());
+                        this.fragmentModel.cancelPendingRequests();
+                        this.fragmentModel.abortRequests();
+                        this.buffered.clear();
+                        this.mediaController.setTrack(this.allTracks[i]);
+                    }
                     break;
                 }
              }
@@ -72,7 +76,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 this.timescale= 90000;
                 this.allTracks = this.mediaController.getTracksFor("fragmentedText", this.streamController.getActiveStreamInfo());
             }
-
         },
 
         append: function (bytes, chunk) {
@@ -97,6 +100,8 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
             }
 
+
+
             if(mimeType=="fragmentedText"){
                 var fragmentExt = self.system.getObject("fragmentExt");
                 if(!this.initializationSegmentReceived){
@@ -106,7 +111,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                     }
                     self.videoModel.getElement().textTracks.addEventListener('change', onTextTrackChange.bind(self));
                     this.timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
-
                 }else {
                     samplesInfo = fragmentExt.getSamplesInfo(bytes);
                     for(i= 0 ; i < samplesInfo.length ; i++) {
@@ -115,6 +119,9 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                         }
                         samplesInfo[i].cts -= this.firstSubtitleStart;
                         this.buffered.add(samplesInfo[i].cts/this.timescale,(samplesInfo[i].cts+samplesInfo[i].duration)/this.timescale);
+
+                        if (areCaptionsDisabled) return; //TODO: If do not block here captions will render even though all tracks are hidden. If I block above this line we get errors in Virtual Buffer. Figure out why.
+
                         ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset,samplesInfo[i].offset+samplesInfo[i].size)));
                         var parser = self.getParser(mimeType);
                         try{
@@ -142,18 +149,17 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         },
 
         abort:function() {
+            this.videoModel.getElement().textTracks.removeEventListener('change', onTextTrackChange);
             this.textTrackExtensions.deleteAllTextTracks();
         },
 
         getParser:function(mimeType) {
             var parser;
-
             if (mimeType === "text/vtt") {
                 parser = this.system.getObject("vttParser");
             } else if (mimeType === "application/ttml+xml" || "fragmentedText") {
                 parser = this.system.getObject("ttmlParser");
             }
-
             return parser;
         },
 
