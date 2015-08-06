@@ -111,7 +111,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
             var initialSeekTime = getStreamStartTime.call(this, streamInfo);
             this.log("Starting playback at offset: " + initialSeekTime);
-            this.seek(initialSeekTime);
+            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime: initialSeekTime});
         },
 
         updateCurrentTime = function() {
