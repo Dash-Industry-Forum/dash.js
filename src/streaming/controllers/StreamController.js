@@ -420,7 +420,10 @@
                 //is SegmentTimeline to avoid using time source
                 var manifest = e.data.manifest,
                     streamInfo = this.adapter.getStreamsInfo(manifest)[0],
-                    mediaInfo  = this.adapter.getMediaInfoForType(manifest, streamInfo, "video"),
+                    mediaInfo = (
+                        this.adapter.getMediaInfoForType(manifest, streamInfo, "video") ||
+                        this.adapter.getMediaInfoForType(manifest, streamInfo, "audio")
+                    ),
                     adaptation = this.adapter.getDataForMedia(mediaInfo),
                     useCalculatedLiveEdgeTime = this.manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
 
