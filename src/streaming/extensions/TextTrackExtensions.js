@@ -57,7 +57,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     });
                 }
 
-                var defaultIndex = 0
+                var defaultIndex = 0;
                 for(var i = 0 ; i < textTrackQueue.length; i++) {
                     var track = document.createElement('track'),//this.getCurrentTextTrack(),
                         captionType = textTrackQueue[i].role ? textTrackQueue[i].role : "captions";
@@ -142,7 +142,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             }
 
             if (!textTrackQueue[currentTrackIdx].isFragmented){
-                track.mode = textTrackQueue[currentTrackIdx].defaultTrack ? "showing" : "hidden"
+                track.mode = textTrackQueue[currentTrackIdx].defaultTrack ? "showing" : "hidden";
             }
         },
 
@@ -175,7 +175,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         },
 
         deleteTextTrack: function(idx) {
-            this.video.removeChild(trackElementArr[idx])
+            this.video.removeChild(trackElementArr[idx]);
             trackElementArr.splice(idx, 1);
         },
 

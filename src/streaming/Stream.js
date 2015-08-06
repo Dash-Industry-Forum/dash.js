@@ -122,10 +122,10 @@ MediaPlayer.dependencies.Stream = function () {
             }
 
             if((mediaInfo.type === "text" || mediaInfo.type === "fragmentedText")) {
-                var idx
+                var idx;
                 for(var i = 0; i < allMediaForType.length; i++){
                     if(allMediaForType[i].index === mediaInfo.index) {
-                        idx = i
+                        idx = i;
                     }
                     streamProcessor.updateMediaInfo(manifest, allMediaForType[i]);//creates text tracks for all adaptations in one stream processor
                 }

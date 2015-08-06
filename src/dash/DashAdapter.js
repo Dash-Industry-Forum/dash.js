@@ -346,7 +346,6 @@ Dash.dependencies.DashAdapter = function () {
 
         getEventsFor: getEventsFor,
         getEvent: getEvent,
-        getAllMediaInfoForType:getAllMediaInfoForType,
 
         reset: function(){
             periods = [];
