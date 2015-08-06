@@ -244,8 +244,8 @@ Dash.dependencies.RepresentationController = function () {
         },
 
         setLocalStorage = function(type, bitrate) {
-            if (this.DOMStorage.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
-                localStorage.setItem(MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_BITRATE_KEY"], JSON.stringify({bitrate:bitrate/1000, timestamp:new Date().getTime()}));
+            if (type === "video" || type === "audio") {
+                this.DOMStorage.storeBitrate(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL, type, bitrate/1000);
             }
         };
 

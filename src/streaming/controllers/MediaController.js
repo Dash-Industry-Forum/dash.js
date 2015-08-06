@@ -36,8 +36,8 @@ MediaPlayer.dependencies.MediaController = function () {
          switchMode,
 
          storeLastSettings = function(type, value) {
-             if (this.DOMStorage.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
-                 localStorage.setItem(MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_SETTINGS_KEY"], JSON.stringify({settings: value, timestamp:new Date().getTime()}));
+             if (type === "video" || type === "audio") {
+                 this.DOMStorage.storeLastSettings(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL, type, value);
              }
          },
 

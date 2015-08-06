@@ -419,40 +419,43 @@
         onManifestUpdated = function(e) {
             var self = this;
             if (!e.error) {
-                //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
-                //is SegmentTimeline to avoid using time source
-                var manifest = e.data.manifest,
-                    streamInfo = self.adapter.getStreamsInfo(manifest)[0],
-                    mediaInfo = (
-                        self.adapter.getMediaInfoForType(manifest, streamInfo, "video") ||
-                        self.adapter.getMediaInfoForType(manifest, streamInfo, "audio")
-                    ),
-                    adaptation,
-                    useCalculatedLiveEdgeTime;
+                if (e.data.manifest.type === "dynamic") {
+                    //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
+                    //is SegmentTimeline to avoid using time source
+                    var manifest = e.data.manifest,
+                        streamInfo = self.adapter.getStreamsInfo(manifest)[0],
+                        mediaInfo = (
+                            self.adapter.getMediaInfoForType(manifest, streamInfo, "video") ||
+                            self.adapter.getMediaInfoForType(manifest, streamInfo, "audio")
+                        ),
+                        adaptation,
+                        useCalculatedLiveEdgeTime;
 
-                if (mediaInfo) {
-                    adaptation = self .adapter.getDataForMedia(mediaInfo);
-                    useCalculatedLiveEdgeTime = self.manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
+                    if (mediaInfo) {
+                        adaptation = self .adapter.getDataForMedia(mediaInfo);
+                        useCalculatedLiveEdgeTime = self.manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
 
-                    if (useCalculatedLiveEdgeTime) {
-                        self .log("SegmentTimeline detected using calculated Live Edge Time");
-                        useManifestDateHeaderTimeSource = false;
-                    }
-                }
-
-                var manifestUTCTimingSources = self.manifestExt.getUTCTimingSources(e.data.manifest),
-                    allUTCTimingSources = (!self.manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ) ?  manifestUTCTimingSources :  manifestUTCTimingSources.concat(UTCTimingSources),
-                    isHTTPS = self.uriQueryFragModel.isManifestHTTPS();
-                    //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
-                    allUTCTimingSources.forEach(function(item){
-                        if (item.value.replace(/.*?:\/\//g, "") === MediaPlayer.UTCTimingSources.default.value.replace(/.*?:\/\//g, "")){
-                            item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? "https://" : "http://");
-                            self.log("Matching default timing source protocol to manifest protocol: " , item.value);
+                        if (useCalculatedLiveEdgeTime) {
+                            self .log("SegmentTimeline detected using calculated Live Edge Time");
+                            useManifestDateHeaderTimeSource = false;
                         }
-                    });
+                    }
 
-                self.timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource);
+                    var manifestUTCTimingSources = self.manifestExt.getUTCTimingSources(e.data.manifest),
+                        allUTCTimingSources = (!self.manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ) ?  manifestUTCTimingSources :  manifestUTCTimingSources.concat(UTCTimingSources),
+                        isHTTPS = self.uriQueryFragModel.isManifestHTTPS();
+                        //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
+                        allUTCTimingSources.forEach(function(item){
+                            if (item.value.replace(/.*?:\/\//g, "") === MediaPlayer.UTCTimingSources.default.value.replace(/.*?:\/\//g, "")){
+                                item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? "https://" : "http://");
+                                self.log("Matching default timing source protocol to manifest protocol: " , item.value);
+                            }
+                        });
 
+                    self.timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource);
+                } else {
+                    composeStreams.call(this);
+                }
             } else {
                 self.reset();
             }

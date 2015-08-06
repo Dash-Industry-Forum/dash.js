@@ -64,7 +64,7 @@ MediaPlayer.utils.DOMStorage = function () {
                     //Checks local storage to see if there is valid, non-expired bit rate
                     //hinting from the last play session to use as a starting bit rate. if not,
                     // it uses the default video and audio value in MediaPlayer.dependencies.AbrController
-                    if (this.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) && enableLastBitrateCaching) {
+                    if (enableLastBitrateCaching && this.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL)) {
                         var key = MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+value.toUpperCase()+"_BITRATE_KEY"],
                             obj = JSON.parse(localStorage.getItem(key)) || {},
                             isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_BITRATE_EXPIRATION || false,
@@ -84,6 +84,12 @@ MediaPlayer.utils.DOMStorage = function () {
                 }
 
             }, this);
+        },
+
+        getTimestamp = function() {
+            // round to the nearest 10 minutes to avoid
+            // fingerprinting user
+            return Math.round(new Date().getTime() / 600000)*600000;
         };
 
     return {
@@ -102,7 +108,20 @@ MediaPlayer.utils.DOMStorage = function () {
             enableLastMediaSettingsCaching = enable;
             setExpiration.call(this, "LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION", ttl);
         },
-
+        storeBitrate: function(storage, type, bitrate) {
+            var store = window[storage];
+            if (store && enableLastBitrateCaching) {
+                var key = MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_BITRATE_KEY"];
+                store.setItem(key, JSON.stringify({bitrate:bitrate, timestamp:getTimestamp()}));
+            }
+        },
+        storeLastSettings: function(storage, type, value) {
+            var store = window[storage];
+            if (store && enableLastMediaSettingsCaching) {
+                var key = MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_SETTINGS_KEY"];
+                store.setItem(key, JSON.stringify({settings: value, timestamp:getTimestamp()}));
+            }
+        },
         //type can be local, session
         isSupported: function(type) {
             if (isSupported !== undefined) return isSupported;
