@@ -705,8 +705,7 @@ Dash.dependencies.DashHandler = function () {
                     fd = frag.duration;
                     epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd/2 : timeThreshold;
 
-                    if ((time + epsilon) >= ft &&
-                        (time - epsilon) < (ft + fd)) {
+                    if ((time + epsilon) >= ft && (time - epsilon) < (ft)) {
                         idx = frag.availabilityIdx;
                         break;
                     }
@@ -825,17 +824,18 @@ Dash.dependencies.DashHandler = function () {
 
             self.log("Getting the request for time: " + time);
 
-            index = getIndexForSegments.call(self, time, representation, timeThreshold);
             getSegments.call(self, representation);
+            index = getIndexForSegments.call(self, time, representation, timeThreshold);
 
-            if (index < 0) {
-                index = getIndexForSegments.call(self, time, representation, timeThreshold);
-            }
+            //if (index < 0) {
+            //    index = getIndexForSegments.call(self, time, representation, timeThreshold);
+            //}
 
             //self.log("Got segments.");
             //self.log(segments);
             //self.log("Got a list of segments, so dig deeper.");
-            self.log("Index for time " + time + " is " + index);
+            //if (type === "video")
+            //    self.log("XXX time Index for time " + time + " is " + index);
 
             finished = !ignoreIsFinished ? isMediaFinished.call(self, representation) : false;
 

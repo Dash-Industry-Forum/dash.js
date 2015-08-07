@@ -128,7 +128,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             this.virtualBuffer.append(chunk);
 
-            this.log("XXXX about to call appendNext...")
+            //this.log("XXXX about to call appendNext...")
             appendNext.call(this);
 
 
@@ -173,13 +173,13 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             if (chunk.quality === currentQuality) {
-                this.log("XXXX about to append media chunk from appendNext", chunk.index)
+                //this.log("XXXX about to append media chunk from appendNext", chunk.index)
                 appendingMediaChunk = false;
                 appendToBuffer.call(this, chunk);
             }
             else {
                 // we need to change currentQuality by init data
-                this.log("XXXX about to switch init from appendNext", appendingMediaChunk.quality)
+               // this.log("XXXX about to switch init from appendNext", appendingMediaChunk.quality)
                 switchInitData.call(this, streamId, appendingMediaChunk.quality);
             }
         },
@@ -207,6 +207,8 @@ MediaPlayer.dependencies.BufferController = function () {
 
         onAppended = function(e) {
             if (buffer !== e.data.buffer) return;
+
+            onPlaybackProgression.call(this);
 
             if (this.isBufferingCompleted() && this.streamProcessor.getStreamInfo().isLast) {
                 this.mediaSourceExt.signalEndOfStream(mediaSource);

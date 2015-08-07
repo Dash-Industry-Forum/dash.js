@@ -176,7 +176,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
             //    fragmentCount = fragmentCount || 1;
             //}
 
-            this.log("XXX bufferLevel: ", bufferLevel);
+            //this.log("XXX bufferLevel: ", bufferLevel);
             fragmentCount = bufferLevel > 12 ? 0 : 1;
 
             callback(new MediaPlayer.rules.SwitchRequest(fragmentCount, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
