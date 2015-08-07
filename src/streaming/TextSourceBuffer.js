@@ -31,13 +31,14 @@
 MediaPlayer.dependencies.TextSourceBuffer = function () {
     var currentTrackIdx = 0,
         allTracksAreDisabled = false,
+        parser = null,
 
         onTextTrackChange = function(evt) {
             for (var i = 0; i < evt.srcElement.length; i++ ) {
                 var t = evt.srcElement[i],
                     el = this.videoModel.getElement();
 
-                allTracksAreDisabled = t.mode !== "showing"
+                allTracksAreDisabled = t.mode !== "showing";
                 if (t.mode === "showing" && el.currentTime > 0) { //TODO find a better way to block function when event is triggered at startup when listener is added.  Tried to delay adding listener.
                     if (currentTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again.
                         currentTrackIdx = i;
@@ -85,7 +86,8 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 i,
                 ccContent,
                 mediaInfo = chunk.mediaInfo,
-                mimeType = mediaInfo.type === "fragmentedText" ? mediaInfo.type : mediaInfo.mimeType;
+                mediaType = mediaInfo.type,
+                mimeType = mediaInfo.mimeType;
 
             function createTextTrackFromMediaInfo(captionData, mediaInfo) {
                 var textTrackInfo = new MediaPlayer.vo.TextTrackInfo();
@@ -100,7 +102,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
             }
 
-            if(mimeType=="fragmentedText"){
+            if(mediaType === "fragmentedText"){
                 var fragmentExt = self.system.getObject("fragmentExt");
                 if(!this.initializationSegmentReceived){
                     this.initializationSegmentReceived=true;
@@ -125,7 +127,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                         if (allTracksAreDisabled) return;
 
                         ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset,samplesInfo[i].offset+samplesInfo[i].size)));
-                        var parser = self.getParser(mimeType);
+                        parser = parser !== null ? parser : self.getParser(mimeType); //store locally for fragmented text so we do not fetch from dijon over and over again.
                         try{
                             result = parser.parse(ccContent);
                             this.textTrackExtensions.addCaptions(this.firstSubtitleStart/this.timescale,result);
@@ -153,13 +155,16 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         abort:function() {
             this.videoModel.getElement().textTracks.removeEventListener('change', onTextTrackChange);
             this.textTrackExtensions.deleteAllTextTracks();
+            allTracksAreDisabled = false;
+            currentTrackIdx = 0;
+            parser = null;
         },
 
         getParser:function(mimeType) {
             var parser;
             if (mimeType === "text/vtt") {
                 parser = this.system.getObject("vttParser");
-            } else if (mimeType === "application/ttml+xml" || "fragmentedText") {
+            } else if (mimeType === "application/ttml+xml" || mimeType === "application/mp4") {
                 parser = this.system.getObject("ttmlParser");
             }
             return parser;
