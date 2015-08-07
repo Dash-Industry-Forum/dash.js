@@ -41,7 +41,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
 
         initialize: function (type, bufferController) {
             mimeType = type;
-            mediaInfo = bufferController.streamProcessor.getCurrentTrack().mediaInfo;
+            mediaInfo = bufferController.streamProcessor.getMediaInfo();
             this.buffered =  this.system.getObject("customTimeRanges");
             this.initializationSegmentReceived= false;
             this.timescale= 90000;

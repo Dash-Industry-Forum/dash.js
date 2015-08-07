@@ -66,7 +66,7 @@ MediaPlayer.dependencies.FragmentController = function () {
             var chunk = new MediaPlayer.vo.DataChunk();
 
             chunk.streamId = streamId;
-            chunk.mediaType = request.mediaType;
+            chunk.mediaInfo = request.mediaInfo;
             chunk.segmentType = request.type;
             chunk.start = request.startTime;
             chunk.duration = request.duration;

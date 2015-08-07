@@ -129,6 +129,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('fragmentLoader', MediaPlayer.dependencies.FragmentLoader);
             this.system.mapClass('fragmentModel', MediaPlayer.dependencies.FragmentModel);
             this.system.mapSingleton('streamController', MediaPlayer.dependencies.StreamController);
+            this.system.mapSingleton('mediaController', MediaPlayer.dependencies.MediaController);
             this.system.mapClass('stream', MediaPlayer.dependencies.Stream);
             this.system.mapClass('scheduleController', MediaPlayer.dependencies.ScheduleController);
             this.system.mapSingleton('timeSyncController', MediaPlayer.dependencies.TimeSyncController);

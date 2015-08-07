@@ -33,6 +33,7 @@ MediaPlayer.vo.FragmentRequest = function () {
     this.action = "download";
     this.startTime = NaN;
     this.mediaType = null;
+    this.mediaInfo = null;
     this.type = null;
     this.duration = NaN;
     this.timescale = NaN;

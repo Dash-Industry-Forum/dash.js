@@ -68,6 +68,7 @@ MediaPlayer = function (context) {
         numOfParallelRequestAllowed = 0,
         system,
         abrController,
+        mediaController,
         element,
         source,
         protectionController = null,
@@ -118,7 +119,7 @@ MediaPlayer = function (context) {
             playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
 
             system.mapValue("liveDelayFragmentCount", liveDelayFragmentCount);
-            system.mapOutlet("liveDelayFragmentCount", "trackController");
+            system.mapOutlet("liveDelayFragmentCount", "representationController");
 
             streamController.initialize(autoPlay, protectionController, protectionData);
             DOMStorage.checkInitialBitrate();
@@ -237,6 +238,12 @@ MediaPlayer = function (context) {
             }
         },
 
+        getActiveStream = function() {
+            var streamInfo = streamController.getActiveStreamInfo();
+
+            return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
+        },
+
         resetAndPlay = function() {
             if (playing && streamController) {
                 if (!resetting) {
@@ -254,6 +261,7 @@ MediaPlayer = function (context) {
                         abrController.reset();
                         rulesController.reset();
                         playbackController.reset();
+                        mediaController.reset();
                         streamController = null;
                         playing = false;
 
@@ -270,6 +278,8 @@ MediaPlayer = function (context) {
                     doAutoPlay.call(this);
                 }
             }
+
+            this.adapter.reset();
         };
 
 
@@ -322,6 +332,7 @@ MediaPlayer = function (context) {
             metricsModel = system.getObject("metricsModel");
             DOMStorage = system.getObject("DOMStorage");
             playbackController = system.getObject("playbackController");
+            mediaController = system.getObject("mediaController");
             this.restoreDefaultUTCTimingSources();
         },
 
@@ -436,6 +447,23 @@ MediaPlayer = function (context) {
          */
         enableLastBitrateCaching: function (enable, ttl) {
             DOMStorage.enableLastBitrateCaching(enable, ttl);
+        },
+
+        /**
+         * Set to false if you would like to disable the last known lang for audio (or camera angle for video) from being stored during playback and used
+         * to set the initial settings for subsequent playback within the expiration window.
+         *
+         * The default expiration is one hour, defined in milliseconds. If expired, the default settings will be used
+         * for that session and a new settings will be stored during that session.
+         *
+         * @param enable - Boolean - Will toggle if feature is enabled. True to enable, False to disable.
+         * @param ttl Number - (Optional) A value defined in milliseconds representing how long to cache the settings for. Time to live.
+         * @default enable = True, ttl = 360000 (1 hour)
+         * @memberof MediaPlayer#
+         *
+         */
+        enableLastMediaSettingsCaching: function (enable, ttl) {
+            DOMStorage.enableLastMediaSettingsCaching(enable, ttl);
         },
 
         /**
@@ -576,10 +604,9 @@ MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          */
         getBitrateInfoListFor: function(type) {
-            var streamInfo = streamController.getActiveStreamInfo(),
-                stream = streamController.getStreamById(streamInfo.id);
+            var stream = getActiveStream.call(this);
 
-            return stream.getBitrateListFor(type);
+            return stream ? stream.getBitrateListFor(type) : [];
         },
 
         /**
@@ -598,6 +625,123 @@ MediaPlayer = function (context) {
          */
         getInitialBitrateFor: function(type) {
             return abrController.getInitialBitrateFor(type);
+        },
+
+        /**
+         * This method returns the list of all available streams from a given manifest
+         * @param manifest
+         * @returns {Array} list of {@link MediaPlayer.vo.StreamInfo}
+         * @memberof MediaPlayer#
+         */
+        getStreamsFromManifest: function(manifest) {
+            return this.adapter.getStreamsInfo(manifest);
+        },
+
+        /**
+         * This method returns the list of all available tracks for a given media type
+         * @param type
+         * @returns {Array} list of {@link MediaPlayer.vo.MediaInfo}
+         * @memberof MediaPlayer#
+         */
+        getTracksFor: function(type) {
+            var streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
+
+            if (!streamInfo) return [];
+
+            return mediaController.getTracksFor(type, streamInfo);
+        },
+
+        /**
+         * This method returns the list of all available tracks for a given media type and streamInfo from a given manifest
+         * @param type
+         * @param manifest
+         * @param streamInfo
+         * @returns {Array} list of {@link MediaPlayer.vo.MediaInfo}
+         * @memberof MediaPlayer#
+         */
+        getTracksForTypeFromManifest: function(type, manifest, streamInfo) {
+            streamInfo = streamInfo || this.adapter.getStreamsInfo(manifest)[0];
+
+            return streamInfo ? this.adapter.getAllMediaInfoForType(manifest, streamInfo, type) : [];
+        },
+
+        /**
+         * @param type
+         * @returns {Object} {@link MediaPlayer.vo.MediaInfo}
+         * @memberof MediaPlayer#
+         */
+        getCurrentTrackFor: function(type) {
+            var streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
+
+            if (!streamInfo) return null;
+
+            return mediaController.getCurrentTrackFor(type, streamInfo);
+        },
+
+        /**
+         * This method allows to set media settings that will be used to pick the initial track. Format of the settings
+         * is following:
+         * {lang: langValue,
+         *  viewpoint: viewpointValue,
+         *  role: roleValue}
+         *
+         *
+         * @param type
+         * @param value {Object}
+         * @memberof MediaPlayer#
+         */
+        setInitialMediaSettingsFor: function(type, value) {
+            mediaController.setInitialSettings(type, value);
+        },
+
+        /**
+         * This method returns media settings that is used to pick the initial track. Format of the settings
+         * is following:
+         * {lang: langValue,
+         *  viewpoint: viewpointValue,
+         *  role: roleValue}
+         * @param type
+         * @returns {Object}
+         * @memberof MediaPlayer#
+         */
+        getInitialMediaSettingsFor: function(type) {
+            return mediaController.getInitialSettings(type);
+        },
+
+        /**
+         * @param track instance of {@link MediaPlayer.vo.MediaInfo}
+         * @memberof MediaPlayer#
+         */
+        setCurrentTrack: function(track) {
+            mediaController.setTrack(track);
+        },
+
+        /**
+         * This method returns the current track switch mode.
+         *
+         * @param type
+         * @returns mode
+         * @memberof MediaPlayer#
+         */
+        getTrackSwitchModeFor: function(type) {
+            return mediaController.getSwitchMode(type);
+        },
+
+        /**
+         * This method sets the current track switch mode. Available options are:
+         *
+         * MediaPlayer.dependencies.MediaController.trackSwitchModes.NEVER_REPLACE
+         * (used to forbid clearing the buffered data (prior to current playback position) after track switch. Default for video)
+         *
+         * MediaPlayer.dependencies.MediaController.trackSwitchModes.ALWAYS_REPLACE
+         * (used to clear the buffered data (prior to current playback position) after track switch. Default for audio)
+         *
+         * @param type
+         * @param mode
+         * @memberof MediaPlayer#
+         */
+        setTrackSwitchModeFor: function(type, mode) {
+            mediaController.setSwitchMode(type, mode);
         },
 
         /**

@@ -42,7 +42,8 @@ Dash.dependencies.RepresentationController = function () {
                 bitrate = null,
                 streamInfo = self.streamProcessor.getStreamInfo(),
                 quality,
-                maxQuality = self.abrController.getTopQualityIndexFor(type, streamInfo.id);
+                maxQuality = self.abrController.getTopQualityIndexFor(type, streamInfo.id),
+                averageThroughput;
 
             updating = true;
             self.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
@@ -50,7 +51,8 @@ Dash.dependencies.RepresentationController = function () {
             availableRepresentations = updateRepresentations.call(self, adaptation);
 
             if (data === null) {
-                bitrate = self.abrController.getInitialBitrateFor(type, streamInfo);
+                averageThroughput = self.abrController.getAverageThroughput(type);
+                bitrate = averageThroughput || self.abrController.getInitialBitrateFor(type, streamInfo);
                 quality = self.abrController.getQualityForBitrate(self.streamProcessor.getMediaInfo(), bitrate);
             } else {
                 quality = self.abrController.getQualityFor(type, streamInfo);
@@ -79,7 +81,7 @@ Dash.dependencies.RepresentationController = function () {
                 currentRepresentation = this.getCurrentRepresentation(),
                 currentVideoTime = this.streamProcessor.playbackController.getTime();
 
-            this.metricsModel.addTrackSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
+            this.metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
         },
 
         addDVRMetric = function() {
@@ -180,7 +182,7 @@ Dash.dependencies.RepresentationController = function () {
                 }
 
                 if (!alreadyAdded) {
-                    self.metricsModel.addManifestUpdateTrackInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
+                    self.metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
                             self.streamProcessor.getType(),r.presentationTimeOffset, r.startNumber, r.segmentInfoType);
                 }
             }

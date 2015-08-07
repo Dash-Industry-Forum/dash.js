@@ -57,8 +57,8 @@
             return createObject("abrController");
         },
 
-        getTrackController: function(type) {
-            var ctrl = createObject("trackController");
+        getRepresentationController: function(type) {
+            var ctrl = createObject("representationController");
             ctrl.streamProcessor = getDummyStreamProcessor(type);
 
             return ctrl;
@@ -74,8 +74,11 @@
             return createObject("timelineConverter");
         },
 
-        getIndexHandler: function() {
-            return createObject("indexHandler");
+        getIndexHandler: function(type) {
+            var handler = createObject("indexHandler");
+            handler.streamProcessor = getDummyStreamProcessor(type);
+
+            return handler;
         },
 
         getFragmentController: function() {

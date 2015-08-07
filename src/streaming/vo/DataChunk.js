@@ -35,7 +35,7 @@
 MediaPlayer.vo.DataChunk = function () {
     "use strict";
     this.streamId = null;
-    this.mediaType = null;
+    this.mediaInfo = null;
     this.segmentType = null;
     this.quality = NaN;
     this.index = NaN;
