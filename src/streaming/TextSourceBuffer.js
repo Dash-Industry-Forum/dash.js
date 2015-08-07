@@ -30,15 +30,15 @@
  */
 MediaPlayer.dependencies.TextSourceBuffer = function () {
     var currentTrackIdx = 0,
-        areCaptionsDisabled = false;
+        allTracksAreDisabled = false,
 
         onTextTrackChange = function(evt) {
             for (var i = 0; i < evt.srcElement.length; i++ ) {
                 var t = evt.srcElement[i],
                     el = this.videoModel.getElement();
 
-                areCaptionsDisabled = t.mode !== "showing"
-                if (t.mode === "showing" && el.currentTime > 0) {
+                allTracksAreDisabled = t.mode !== "showing"
+                if (t.mode === "showing" && el.currentTime > 0) { //TODO find a better way to block function when event is triggered at startup when listener is added.  Tried to delay adding listener.
                     if (currentTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again.
                         currentTrackIdx = i;
                         this.textTrackExtensions.setCurrentTrackIdx(i);
@@ -100,8 +100,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
             }
 
-
-
             if(mimeType=="fragmentedText"){
                 var fragmentExt = self.system.getObject("fragmentExt");
                 if(!this.initializationSegmentReceived){
@@ -120,7 +118,11 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                         samplesInfo[i].cts -= this.firstSubtitleStart;
                         this.buffered.add(samplesInfo[i].cts/this.timescale,(samplesInfo[i].cts+samplesInfo[i].duration)/this.timescale);
 
-                        if (areCaptionsDisabled) return; //TODO: If do not block here captions will render even though all tracks are hidden. If I block above this line we get errors in Virtual Buffer. Figure out why.
+                        //TODO: If do not block here captions will render even though all tracks are hidden.
+                        // If I block above this line we get errors in Virtual Buffer. Ideally I need to figure
+                        // out how to stop text fragments fom loading when they are not being rendered. But so
+                        // far all attempts to do this result in all media stopping.
+                        if (allTracksAreDisabled) return;
 
                         ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset,samplesInfo[i].offset+samplesInfo[i].size)));
                         var parser = self.getParser(mimeType);
