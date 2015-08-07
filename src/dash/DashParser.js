@@ -41,6 +41,7 @@ Dash.dependencies.DashParser = function () {
         durationRegex = /^([-])?P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/,
         datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+-])([0-9]{2})([0-9]{2}))?/,
         numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/,
+        httpOrHttpsRegex = /^https?:\/\//i,
         matchers = [
             {
                 type: "duration",
@@ -286,7 +287,7 @@ Dash.dependencies.DashParser = function () {
                         var mergedValue;
 
                         // child is absolute, don't merge
-                        if (childValue.indexOf("http://") === 0) {
+                        if (httpOrHttpsRegex.test(childValue)) {
                             mergedValue = childValue;
                         } else {
                             mergedValue = parentValue + childValue;
