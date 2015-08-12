@@ -28,31 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.FragmentRequest = function () {
+MediaPlayer.vo.TextTrackInfo = function () {
     "use strict";
-    this.action = "download";
-    this.startTime = NaN;
-    this.mediaType = null;
-    this.mediaInfo = null;
-    this.type = null;
-    this.duration = NaN;
-    this.timescale = NaN;
-    this.range = null;
-    this.url = null;
-    this.requestStartDate = null;
-    this.firstByteDate = null;
-    this.requestEndDate = null;
-    this.quality = NaN;
-    this.index = NaN;
-    this.availabilityStartTime = null;
-    this.availabilityEndTime = null;
-    this.wallStartTime = null;
-    this.bytesLoaded = NaN;
-    this.bytesTotal = NaN;
+    this.video = null;
+    this.captionData= null;
+    this.label = null;
+    this.lang = null;
+    this.defaultTrack = false;
+    this.role = null;
+    this.isFragmented = false;
 };
 
-MediaPlayer.vo.FragmentRequest.prototype = {
-    constructor: MediaPlayer.vo.FragmentRequest,
-    ACTION_DOWNLOAD: "download",
-    ACTION_COMPLETE: "complete"
+MediaPlayer.vo.TextTrackInfo.prototype = {
+    constructor: MediaPlayer.vo.TextTrackInfo
 };

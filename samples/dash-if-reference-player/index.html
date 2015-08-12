@@ -79,6 +79,7 @@
     <script src="../../src/streaming/FragmentLoader.js"></script>
     <script src="../../src/streaming/models/FragmentModel.js"></script>
     <script src="../../src/streaming/controllers/StreamController.js"></script>
+    <script src="../../src/streaming/controllers/MediaController.js"></script>
     <script src="../../src/streaming/StreamProcessor.js"></script>
     <script src="../../src/streaming/controllers/ScheduleController.js"></script>
     <script src="../../src/streaming/TimeSyncController.js"></script>
@@ -289,6 +290,26 @@
                             </button>
                         </div>
                     </div>
+
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">Cache media settings</span>
+                        <div class="btn-group">
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-class="{active:mediaSettingsCacheEnabled == false}"
+                                ng-click="setMediaSettingsCacheEnabled(false)">
+                                <span>Off</span>
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-default active"
+                                ng-class="{active:mediaSettingsCacheEnabled == true}"
+                                ng-click="setMediaSettingsCacheEnabled(true)">
+                                <span>On</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="panel">
                     <div class="panel-heading panel-top">
@@ -320,6 +341,24 @@
                         <p class="text-success" title="[low] < [average] < [high]">{{videoRatio}}</p>
                         <p class="text-primary">Dropped Frames: <span class="text-success">{{videoDroppedFrames}}</span></p>
                     </div>
+                    <ul class="nav nav-tabs">
+                        <li class="dropdown">
+                            <a href="#" id="videoTracksDropdown" class="dropdown-toggle" data-toggle="dropdown">Tracks <b class="caret"></b></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li ng-repeat="track in availableTracks.video" ng-click="switchTrack(track, 'video')">
+                                    <a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" id="videoTrackSwitchModeDropdown" class="dropdown-toggle" data-toggle="dropdown">Track switch mode<b class="caret"></b></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li ng-click="changeTrackSwitchMode('ALWAYS_REPLACE', 'video')"><a>always replace</a></li>
+                                <li ng-click="changeTrackSwitchMode('NEVER_REPLACE', 'video')"><a>never replace</a></li>
+                            </ul>
+                        </li>
+                        <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">
+                    </ul>
                 </div>
                 <div class="panel">
                     <div class="panel-heading panel-top">
@@ -350,6 +389,24 @@
                         <p class="text-primary">Ratio: <span class="text-success">last {{audioRatioCount}} segments</span></p>
                         <p class="text-success" title="[low] < [average] < [high]">{{audioRatio}}</p>
                     </div>
+                    <ul class="nav nav-tabs">
+                        <li class="dropdown">
+                            <a href="#" id="audioTracksDropdown" class="dropdown-toggle" data-toggle="dropdown">Tracks <b class="caret"></b></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li ng-repeat="track in availableTracks.audio" ng-click="switchTrack(track, 'audio')">
+                                    <a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" id="audioTrackSwitchModeDropdown" class="dropdown-toggle" data-toggle="dropdown">Track switch mode<b class="caret"></b></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li ng-click="changeTrackSwitchMode('ALWAYS_REPLACE', 'audio')"><a>always replace</a></li>
+                                <li ng-click="changeTrackSwitchMode('NEVER_REPLACE', 'audio')"><a>never replace</a></li>
+                            </ul>
+                        </li>
+                        <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'" ng-model="initialSettings.audio">
+                    </ul>
                 </div>
             </div>
         </div>

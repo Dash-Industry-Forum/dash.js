@@ -7,15 +7,15 @@ describe("RepresentationController", function () {
         adaptation = voHelper.getDummyRepresentation(testType).adaptation,
         mpd = mpdHelper.getMpd("static"),
         data = mpd.Period_asArray[0].AdaptationSet_asArray[0],
-        trackCtrl = objHelper.getTrackController(),
-        indexHandler = objHelper.getIndexHandler(),
+        representationCtrl = objHelper.getRepresentationController(),
+        indexHandler = objHelper.getIndexHandler(testType),
         onDataUpdateStartedEventName = Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED;
 
-    trackCtrl.manifestModel.setValue(mpd);
-    trackCtrl.indexHandler = indexHandler;
+    representationCtrl.manifestModel.setValue(mpd);
+    representationCtrl.indexHandler = indexHandler;
 
     it("should not contain data before it is set", function () {
-        expect(trackCtrl.getData()).toEqual(null);
+        expect(representationCtrl.getData()).toEqual(null);
     });
 
     describe("when data update started", function () {
@@ -30,12 +30,12 @@ describe("RepresentationController", function () {
                 spy(onDataUpdateStartedEventName);
             };
 
-            trackCtrl.subscribe(onDataUpdateStartedEventName, observer);
-            trackCtrl.updateData(data, adaptation, testType);
+            representationCtrl.subscribe(onDataUpdateStartedEventName, observer);
+            representationCtrl.updateData(data, adaptation, testType);
         });
 
         afterEach(function () {
-            trackCtrl.unsubscribe(onDataUpdateStartedEventName, observer);
+            representationCtrl.unsubscribe(onDataUpdateStartedEventName, observer);
         });
 
         it("should fire dataUpdateStarted event when new data is set", function () {
@@ -45,27 +45,27 @@ describe("RepresentationController", function () {
 
     describe("when data update completed", function () {
         beforeEach(function (done) {
-            trackCtrl.updateData(data, adaptation, testType);
+            representationCtrl.updateData(data, adaptation, testType);
             setTimeout(function(){
                 done();
             }, helper.getExecutionDelay());
         });
 
         it("should return the data that was set", function () {
-            expect(trackCtrl.getData()).toEqual(data);
+            expect(representationCtrl.getData()).toEqual(data);
         });
 
         it("should return correct data index", function () {
             var expectedValue = 0;
 
-            expect(trackCtrl.getDataIndex()).toEqual(expectedValue);
+            expect(representationCtrl.getDataIndex()).toEqual(expectedValue);
         });
 
         it("should return correct representation for quality", function () {
             var quality = 0,
                 expectedValue = 0;
 
-            expect(trackCtrl.getRepresentationForQuality(quality).index).toEqual(expectedValue);
+            expect(representationCtrl.getRepresentationForQuality(quality).index).toEqual(expectedValue);
         });
     });
 });

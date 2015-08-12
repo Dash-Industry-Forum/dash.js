@@ -42,11 +42,11 @@ MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule = function () {
         // should be the live edge. if that is incorrect for whatever reason,
         // playback will fail to start and some other action should be taken.
         execute: function (context, callback) {
-            var trackInfo = context.getTrackInfo(),
-                liveEdgeInitialSearchPosition = trackInfo.DVRWindow.end,
+            var representationInfo = context.getTrackInfo(),
+                liveEdgeInitialSearchPosition = representationInfo.DVRWindow.end,
                 p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
 
-            if (trackInfo.useCalculatedLiveEdgeTime) {
+            if (representationInfo.useCalculatedLiveEdgeTime) {
                 //By default an expected live edge is the end of the last segment.
                 // A calculated live edge ('end' property of a range returned by TimelineConverter.calcSegmentAvailabilityRange)
                 // is used as an initial point for finding the actual live edge.

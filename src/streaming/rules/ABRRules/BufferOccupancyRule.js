@@ -41,9 +41,9 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
             var self = this,
                 now = new Date().getTime()/1000,
                 mediaInfo = context.getMediaInfo(),
-                trackInfo = context.getTrackInfo(),
+                representationInfo = context.getTrackInfo(),
                 mediaType = mediaInfo.type,
-                waitToSwitchTime = !isNaN(trackInfo.fragmentDuration) ? trackInfo.fragmentDuration / 2 : 2,
+                waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2,
                 current = context.getCurrentValue(),
                 streamProcessor = context.getStreamProcessor(),
                 abrController = streamProcessor.getABRController(),
@@ -51,7 +51,7 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
                 lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
                 lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
                 isBufferRich = false,
-                maxIndex = mediaInfo.trackCount - 1,
+                maxIndex = mediaInfo.representationCount - 1,
                 switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
             if (now - lastSwitchTime < waitToSwitchTime ||
@@ -65,7 +65,7 @@ MediaPlayer.rules.BufferOccupancyRule = function () {
                 // If there is enough buffer why not try to stay at high level.
                 if (lastBufferLevelVO.level > lastBufferStateVO.target) {
                     isBufferRich = (lastBufferLevelVO.level - lastBufferStateVO.target) > MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD;
-                    if (isBufferRich && mediaInfo.trackCount > 1) {
+                    if (isBufferRich && mediaInfo.representationCount > 1) {
                         switchRequest = new MediaPlayer.rules.SwitchRequest(maxIndex, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
                     }
                 }

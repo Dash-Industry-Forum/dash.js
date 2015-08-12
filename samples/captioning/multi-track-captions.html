@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>WebVTT Dash Demo</title>
+    <meta name="description" content="" />
+
+    <script src="../../dist/dash.debug.js"></script>
+
+
+    <script>
+        var EXTERNAL_CAPTION_URL = "http://dash.edgesuite.net/dash264/TestCases/4b/qualcomm/1/ED_OnDemand_5SecSeg_Subtitles.mpd", // need to manually seek to get stream to start... issue with MPD but only sample with multi adaptations for external sidecar caption text xml
+            FRAGMENTED_CAPTION_URL = "http://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
+            videoElement;
+
+        function startVideo() {
+            var url = FRAGMENTED_CAPTION_URL,
+                context,
+                player;
+
+            videoElement = document.querySelector(".dash-video-player video");
+            context = new Dash.di.DashContext();
+            player = new MediaPlayer(context);
+            player.startup();
+            player.attachView(videoElement);
+            player.setAutoPlay(true);
+            player.attachSource(url);
+            player.addEventListener(MediaPlayer.events.TEXT_TRACK_ADDED, onTrackAdded);
+        }
+
+        function onTrackAdded(e){
+            var selectMenu = document.getElementById("caption-menu");
+                tracks = videoElement.textTracks,
+                ln = tracks.length;
+
+            for(var i=0; i<ln; i++){
+                var track = tracks[i],
+                    option = document.createElement("option");
+
+                option.text = track.language;
+                option.value = i;
+                selectMenu.add(option);
+            }
+            selectMenu.selectedIndex = 1;
+            selectMenu.addEventListener("change", onCaptionMenuChange);
+        }
+
+        function onCaptionMenuChange(e){
+            var tracks = videoElement.textTracks,
+                ln = tracks.length;
+                idx = e.currentTarget.selectedIndex - 1
+
+            for(var i=0; i<ln; i++){
+                var track = tracks[i]
+                track.mode = idx === i ? "showing" : "hidden";
+            }
+        }
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+
+    <body onload="startVideo()">
+        <div class="dash-video-player">
+            <video controls="true"></video>
+        </div>
+        <div>
+            <select id="caption-menu">
+                <option value="-1">Turn Captions OFF</option>
+            </select>
+        </div>
+    </body>
+</html>

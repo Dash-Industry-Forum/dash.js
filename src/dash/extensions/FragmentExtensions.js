@@ -73,7 +73,7 @@ Dash.dependencies.FragmentExtensions = function () {
         getMediaTimescaleFromMoov = function(ab) {
             var isoFile = this.boxParser.parse(ab),
                 mdhdBox = isoFile.getBox("mdhd");
-            return mdhdBox.timescale;
+            return mdhdBox ? mdhdBox.timescale : NaN;
         };
 
     return {

@@ -30,20 +30,20 @@
  */
 MediaPlayer.rules.RulesContext = function (streamProcessor, currentValue) {
     "use strict";
-    var trackInfo = streamProcessor.getCurrentTrack(),
+    var representationInfo = streamProcessor.getCurrentRepresentationInfo(),
         sp = streamProcessor;
 
     return {
         getStreamInfo: function() {
-            return trackInfo.mediaInfo.streamInfo;
+            return representationInfo.mediaInfo.streamInfo;
         },
 
         getMediaInfo: function() {
-            return trackInfo.mediaInfo;
+            return representationInfo.mediaInfo;
         },
 
         getTrackInfo: function() {
-            return trackInfo;
+            return representationInfo;
         },
 
         getCurrentValue: function() {
@@ -51,7 +51,7 @@ MediaPlayer.rules.RulesContext = function (streamProcessor, currentValue) {
         },
 
         getManifestInfo: function() {
-            return trackInfo.mediaInfo.streamInfo.manifestInfo;
+            return representationInfo.mediaInfo.streamInfo.manifestInfo;
         },
 
         getStreamProcessor: function() {

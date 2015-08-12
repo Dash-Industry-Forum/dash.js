@@ -35,7 +35,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
         liveEdgeInitialSearchPosition = NaN,
         liveEdgeSearchRange = null,
         liveEdgeSearchStep = NaN,
-        trackInfo = null,
+        representationInfo = null,
         useBinarySearch = false,
         fragmentDuration = NaN,
         p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
@@ -50,7 +50,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
                 // request can be null because it is out of the generated list of request. In this case we need to
                 // update the list and the DVRWindow
                 // try to get request object again
-                req = self.adapter.generateFragmentRequestForTime(streamProcessor, trackInfo, searchTime);
+                req = self.adapter.generateFragmentRequestForTime(streamProcessor, representationInfo, searchTime);
                 findLiveEdge.call(self, searchTime, onSuccess, onError, req);
             } else {
                 var handler = function(e) {
@@ -87,7 +87,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
                 callback(new MediaPlayer.rules.SwitchRequest(null, p));
             } else {
                 // continue searching for a first available fragment
-                req = this.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, searchTime, {ignoreIsFinished: true});
+                req = this.adapter.getFragmentRequestForTime(streamProcessor, representationInfo, searchTime, {ignoreIsFinished: true});
                 findLiveEdge.call(this, searchTime, onSearchForFragmentSucceeded, onSearchForFragmentFailed, req);
             }
         },
@@ -101,7 +101,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
             if (!useBinarySearch) {
                 // if the fragment duration is unknown we cannot use binary search because we will not be able to
                 // decide when to stop the search, so let the start time of the current fragment be a liveEdge
-                if (!trackInfo.fragmentDuration) {
+                if (!representationInfo.fragmentDuration) {
                     callback(new MediaPlayer.rules.SwitchRequest(startTime, p));
                     return;
                 }
@@ -112,7 +112,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
                 // otherwise start binary search to find live edge
                 if (lastSearchTime === liveEdgeInitialSearchPosition) {
                     searchTime = lastSearchTime + fragmentDuration;
-                    req = self.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, searchTime, {ignoreIsFinished: true});
+                    req = self.adapter.getFragmentRequestForTime(streamProcessor, representationInfo, searchTime, {ignoreIsFinished: true});
                     findLiveEdge.call(self, searchTime, function() {
                         binarySearch.call(self, true, searchTime);
                     }, function(){
@@ -146,7 +146,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
             } else {
                 // update the search time and continue searching
                 searchTime = ((liveEdgeSearchRange.start + liveEdgeSearchRange.end) / 2);
-                req = this.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, searchTime, {ignoreIsFinished: true});
+                req = this.adapter.getFragmentRequestForTime(streamProcessor, representationInfo, searchTime, {ignoreIsFinished: true});
                 findLiveEdge.call(this, searchTime, onSearchForFragmentSucceeded, onSearchForFragmentFailed, req);
             }
         };
@@ -164,14 +164,14 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
             callback = callbackFunc;
             streamProcessor = context.getStreamProcessor();
             fragmentLoader = streamProcessor.getFragmentLoader();
-            trackInfo = context.getTrackInfo();
-            fragmentDuration = trackInfo.fragmentDuration;
-            DVRWindow = trackInfo.DVRWindow; // all fragments are supposed to be available in this interval
+            representationInfo = context.getTrackInfo();
+            fragmentDuration = representationInfo.fragmentDuration;
+            DVRWindow = representationInfo.DVRWindow; // all fragments are supposed to be available in this interval
 
             // start position of the search, it is supposed to be a live edge - the last available fragment for the current mpd
             liveEdgeInitialSearchPosition = DVRWindow.end;
 
-            if (trackInfo.useCalculatedLiveEdgeTime) {
+            if (representationInfo.useCalculatedLiveEdgeTime) {
                 //By default an expected live edge is the end of the last segment.
                 // A calculated live edge ('end' property of a range returned by TimelineConverter.calcSegmentAvailabilityRange)
                 // is used as an initial point for finding the actual live edge.
@@ -189,7 +189,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
             // we have to use half of the availability interval (window) as a search step to ensure that we find a fragment in the window
             liveEdgeSearchStep = Math.floor((DVRWindow.end - DVRWindow.start) / 2);
             // start search from finding a request for the initial search time
-            request = self.adapter.getFragmentRequestForTime(streamProcessor, trackInfo, liveEdgeInitialSearchPosition, {ignoreIsFinished: true});
+            request = self.adapter.getFragmentRequestForTime(streamProcessor, representationInfo, liveEdgeInitialSearchPosition, {ignoreIsFinished: true});
             findLiveEdge.call(self, liveEdgeInitialSearchPosition, onSearchForFragmentSucceeded, onSearchForFragmentFailed, request);
         },
 
@@ -197,7 +197,7 @@ MediaPlayer.rules.LiveEdgeBinarySearchRule = function () {
             liveEdgeInitialSearchPosition = NaN;
             liveEdgeSearchRange = null;
             liveEdgeSearchStep = NaN;
-            trackInfo = null;
+            representationInfo = null;
             useBinarySearch = false;
             fragmentDuration = NaN;
             streamProcessor = null;
