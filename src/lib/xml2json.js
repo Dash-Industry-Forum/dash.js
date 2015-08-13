@@ -88,6 +88,8 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 		if(node.nodeType == DOMNodeTypes.ELEMENT_NODE) {
 			var result = new Object;
 			result.__cnt=0;
+
+            var children = [];
 			
 			var nodeChildren = node.childNodes;
 			
@@ -98,7 +100,13 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 				
 				result.__cnt++;
 				if(result[childName] == null) {
-					result[childName] = parseDOMChildren(child);
+                    var c = parseDOMChildren(child);
+                    if (childName != "#text") {
+                        var o = {};
+                        o[childName] = c;
+                        children.push(o);
+                    }
+					result[childName] = c;
 					result[childName+"_asArray"] = new Array(1);
 					result[childName+"_asArray"][0] = result[childName];
 				}
@@ -114,9 +122,18 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 					}
 					var aridx = 0;
 					while(result[childName][aridx]!=null) aridx++;
-					(result[childName])[aridx] = parseDOMChildren(child);
+
+                    var c = parseDOMChildren(child);
+                    if (childName != "#text") {
+                        var o = {};
+                        o[childName] = c;
+                        children.push( o );
+                    }
+					(result[childName])[aridx] = c;
 				}			
 			}
+
+            result.__children = children;
 			
 			// Attributes
 			for(var aidx=0; aidx <node.attributes.length; aidx++) {
