@@ -29,7 +29,7 @@
         }
 
         function onTrackAdded(e){
-            var selectMenu = document.getElementById("caption-menu");
+            var selectMenu = document.getElementById("caption-menu"),
                 tracks = videoElement.textTracks,
                 ln = tracks.length;
 
@@ -51,7 +51,7 @@
                 idx = e.currentTarget.selectedIndex - 1;
 
             for(var i=0; i<ln; i++){
-                var track = tracks[i]
+                var track = tracks[i];
                 track.mode = idx === i ? "showing" : "hidden";
             }
         }
