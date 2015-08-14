@@ -57,8 +57,20 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
      * @return {ArrayBuffer} data portion of the PSSH
      */
     getPSSHData: function(pssh) {
-        // Data begins 32 bytes into the box
-        return pssh.slice(32);
+        var offset = 8, // Box size and type fields
+            view = new DataView(pssh);
+
+        // Read version
+        var version = view.getUint8(offset);
+
+        offset += 20; // Version (1), flags (3), system ID (16)
+
+        if (version > 0) {
+            offset += 4 + (16 * view.getUint32(offset)); // Key ID count (4) and All key IDs (16*count)
+        }
+
+        offset += 4; // Data size
+        return pssh.slice(offset);
     },
 
     /**

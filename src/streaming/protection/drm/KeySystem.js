@@ -107,3 +107,13 @@ MediaPlayer.dependencies.protection.KeySystem = function() {};
  * @returns {Uint8Array} the license request message
  */
 
+/**
+ * Returns a license server URL as parsed from key system initialization data (PSSH).
+ *
+ * @function
+ * @name MediaPlayer.dependencies.protection.KeySystem#getLicenseServerURLFromInitData
+ * @param initData {ArrayBuffer} the initialization data.  This is just the "Data" field
+ * from the PSSH box definition
+ * @returns {?string} The license server URL
+ */
+

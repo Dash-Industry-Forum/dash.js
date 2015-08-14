@@ -86,6 +86,50 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             return licenseRequest;
         },
 
+        getLicenseServerURL = function(initData) {
+            if (initData) {
+                var data = new DataView(initData),
+                        numRecords = data.getUint16(4, true),
+                        offset = 6,
+                        parser = new DOMParser();
+
+                for (var i = 0; i < numRecords; i++) {
+                    // Parse the PlayReady Record header
+                    var recordType = data.getUint16(offset, true);
+                    offset += 2;
+                    var recordLength = data.getUint16(offset, true);
+                    offset += 2;
+                    if (recordType !== 0x0001) {
+                        offset += recordLength;
+                        continue;
+                    }
+
+                    var recordData = initData.slice(offset, offset+recordLength),
+                            record = String.fromCharCode.apply(null, new Uint16Array(recordData)),
+                            xmlDoc = parser.parseFromString(record, "application/xml");
+
+                    // First try <LA_URL>
+                    if (xmlDoc.getElementsByTagName("LA_URL")[0]) {
+                        var laurl = xmlDoc.getElementsByTagName("LA_URL")[0].childNodes[0].nodeValue;
+                        if (laurl) {
+                            return laurl;
+                        }
+                    }
+
+                    // Optionally, try <LUI_URL>
+                    if (xmlDoc.getElementsByTagName("LUI_URL")[0]) {
+                        var luiurl = xmlDoc.getElementsByTagName("LUI_URL")[0].childNodes[0].nodeValue;
+                        if (luiurl) {
+                            return luiurl;
+                        }
+                    }
+                }
+            }
+
+            return null;
+
+        },
+
         parseInitDataFromContentProtection = function(cpData) {
             // * desc@ getInitData
             // *   generate PSSH data from PROHeader defined in MPD file
@@ -157,6 +201,8 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
         getRequestHeadersFromMessage: getRequestHeaders,
 
         getLicenseRequestFromMessage: getLicenseRequest,
+
+        getLicenseServerURLFromInitData: getLicenseServerURL,
 
         /**
          * It seems that some PlayReady implementations return their XML-based CDM

@@ -46,7 +46,9 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
 
         getRequestHeadersFromMessage: function(/*message*/) { return null; },
 
-        getLicenseRequestFromMessage: function(message) { return new Uint8Array(message); }
+        getLicenseRequestFromMessage: function(message) { return new Uint8Array(message); },
+
+        getLicenseServerURLFromInitData: function(/*initData*/) { return null; }
     };
 };
 
