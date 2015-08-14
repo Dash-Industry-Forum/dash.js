@@ -15,6 +15,10 @@
  limitations under the License.
  */
 
+/*
+ Modified to keep track of children nodes in order in attribute __children.
+*/
+
 function X2JS(matchers, attrPrefix, ignoreRoot) {
     if (attrPrefix === null || attrPrefix === undefined) {
         attrPrefix = "_";
@@ -101,7 +105,7 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 				result.__cnt++;
 				if(result[childName] == null) {
                     var c = parseDOMChildren(child);
-                    if (childName != "#text") {
+                    if (childName != "#text" || /[^\s]/.test(c)) {
                         var o = {};
                         o[childName] = c;
                         children.push(o);
@@ -124,7 +128,7 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 					while(result[childName][aridx]!=null) aridx++;
 
                     var c = parseDOMChildren(child);
-                    if (childName != "#text") {
+					if (childName != "#text" || /[^\s]/.test(c)) { // Don't add white-space text nodes
                         var o = {};
                         o[childName] = c;
                         children.push( o );
