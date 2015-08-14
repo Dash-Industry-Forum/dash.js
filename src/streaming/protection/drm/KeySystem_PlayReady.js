@@ -40,14 +40,16 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
 
     var keySystemStr = "com.microsoft.playready",
         keySystemUUID = "9a04f079-9840-4286-ab92-e65be0885f95",
+        messageFormat = "utf16",
 
         getRequestHeaders = function(message) {
             var msg,
                 xmlDoc,
                 headers = {},
-                parser = new DOMParser();
+                parser = new DOMParser(),
+                dataview = (messageFormat === "utf16") ? new Uint16Array(message.buffer) : new Uint8Array(message.buffer);
 
-            msg = String.fromCharCode.apply(null, new Uint16Array(message.buffer));
+            msg = String.fromCharCode.apply(null, dataview);
             xmlDoc = parser.parseFromString(msg, "application/xml");
 
             var headerNameList = xmlDoc.getElementsByTagName("name");
@@ -69,9 +71,10 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             var msg,
                 xmlDoc,
                 parser = new DOMParser(),
-                licenseRequest = null;
+                licenseRequest = null,
+                dataview = (messageFormat === "utf16") ? new Uint16Array(message.buffer) : new Uint8Array(message.buffer);
 
-            msg = String.fromCharCode.apply(null, new Uint16Array(message.buffer));
+            msg = String.fromCharCode.apply(null, dataview);
             xmlDoc = parser.parseFromString(msg, "application/xml");
 
             if (xmlDoc.getElementsByTagName("Challenge")[0]) {
@@ -153,7 +156,22 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
 
         getRequestHeadersFromMessage: getRequestHeaders,
 
-        getLicenseRequestFromMessage: getLicenseRequest
+        getLicenseRequestFromMessage: getLicenseRequest,
+
+        /**
+         * It seems that some PlayReady implementations return their XML-based CDM
+         * messages using UTF16, while others return them as UTF8.  Use this function
+         * to modify the message format to expect when parsing CDM messages.
+         *
+         * @param {string} format the expected message format.  Either "utf8" or "utf16".
+         * @throws {Error} Specified message format is not one of "utf8" or "utf16"
+         */
+        setPlayReadyMessageFormat: function(format) {
+            if (format !== "utf8" && format !== "utf16") {
+                throw new Error("Illegal PlayReady message format! -- " + format);
+            }
+            messageFormat = format;
+        }
     };
 };
 
