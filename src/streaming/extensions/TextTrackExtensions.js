@@ -115,6 +115,41 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         }
                     };
                 }
+                else if (currentItem.type=="html") {
+                    cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
+                    cue.cueHTMLElement = currentItem.cueHTMLElement;
+                    cue.cueRegion = currentItem.cueRegion;
+                    cue.regions = currentItem.regions;
+                    cue.regionID = currentItem.regionID;
+                    cue.cueID=currentItem.cueID;
+                    cue.videoWidth = currentItem.videoWidth;
+                    cue.videoHeight = currentItem.videoHeight;
+                    cue.cellResolution = currentItem.cellResolution;
+                    cue.fontSize = currentItem.fontSize;
+                    cue.lineHeight = currentItem.lineHeight;
+                    cue.linePadding = currentItem.linePadding;
+                    
+                    cue.onenter =  function () {
+                        var text = this.cueHTMLElement.innerHTML;
+                        console.log("Showing text: " + text + ", id: " + this.cueID);
+                        console.log(this.cueRegion);
+                        var div = document.createElement("div");
+                        div.appendChild(this.cueHTMLElement);
+                        div.id = "subtitle_" + this.cueID;
+                        div.style.cssText = "position: absolute; z-index: 2147483647; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + this.cueRegion;
+                        video.parentNode.appendChild(div);
+                    };
+
+                    cue.onexit =  function () {
+                        console.log("Hiding text: " + this.text + ", id: " + this.cueID);
+                        var divs = video.parentNode.childNodes;
+                        for (var i = 0; i < divs.length; ++i) {
+                            if (divs[i].id == "subtitle_" + this.cueID) {
+                                video.parentNode.removeChild(divs[i]);
+                            }
+                        }
+                    };
+                }
                 else{
                     cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, currentItem.data);
                     if(currentItem.styles){
