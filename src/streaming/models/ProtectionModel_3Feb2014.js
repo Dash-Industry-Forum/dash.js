@@ -60,8 +60,9 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
                         case api.needkey:
                             if (event.initData) {
+                                var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
                                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY,
-                                        new MediaPlayer.vo.protection.NeedKey(event.initData, "cenc"));
+                                        new MediaPlayer.vo.protection.NeedKey(initData, "cenc"));
                             }
                             break;
                     }
@@ -110,8 +111,9 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
                             break;
 
                         case api.message:
+                            var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
                             self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE,
-                                    new MediaPlayer.vo.protection.KeyMessage(this, event.message, event.destinationURL));
+                                    new MediaPlayer.vo.protection.KeyMessage(this, message, event.destinationURL));
                             break;
 
                         case api.ready:
@@ -310,7 +312,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
             if (!this.protectionExt.isClearKey(this.keySystem)) {
                 // Send our request to the key session
-                session.update(message);
+                session.update(new Uint8Array(message));
             } else {
                 // For clearkey, message is a MediaPlayer.vo.protection.ClearKeyKeySet
                 session.update(new Uint8Array(message.toJWK()));

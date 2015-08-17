@@ -49,7 +49,7 @@ MediaPlayer.dependencies.protection.servers.PlayReady = function() {
         getResponseType: function(/*keySystemStr, messageType*/) { return 'arraybuffer'; },
 
         getLicenseMessage: function(serverResponse/*, keySystemStr, messageType*/) {
-            return new Uint8Array(serverResponse);
+            return serverResponse;
         },
 
         getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {

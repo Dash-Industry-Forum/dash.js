@@ -47,7 +47,7 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
                 xmlDoc,
                 headers = {},
                 parser = new DOMParser(),
-                dataview = (messageFormat === "utf16") ? new Uint16Array(message.buffer) : new Uint8Array(message.buffer);
+                dataview = (messageFormat === "utf16") ? new Uint16Array(message) : new Uint8Array(message);
 
             msg = String.fromCharCode.apply(null, dataview);
             xmlDoc = parser.parseFromString(msg, "application/xml");
@@ -72,7 +72,7 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
                 xmlDoc,
                 parser = new DOMParser(),
                 licenseRequest = null,
-                dataview = (messageFormat === "utf16") ? new Uint16Array(message.buffer) : new Uint8Array(message.buffer);
+                dataview = (messageFormat === "utf16") ? new Uint16Array(message) : new Uint8Array(message);
 
             msg = String.fromCharCode.apply(null, dataview);
             xmlDoc = parser.parseFromString(msg, "application/xml");
