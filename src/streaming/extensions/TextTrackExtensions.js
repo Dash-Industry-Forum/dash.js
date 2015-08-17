@@ -34,7 +34,11 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         textTrackQueue = [],
         trackElementArr = [],
         currentTrackIdx = 0,
-        trackKindMap = {subtitle:"subtitles", caption:"captions"};
+        trackKindMap = {subtitle:"subtitles", caption:"captions"},
+        actualVideoWidth = 0,
+        actualVideoHeight = 0,
+        videoSizeCheckInterval = 0,
+        currentTrack;
 
     return {
         mediaController:undefined,
@@ -77,8 +81,38 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                 }
 
                 currentTrackIdx = defaultIndex;
-            }
+            }           
         },
+
+        checkVideoSize: function() {
+            if (currentTrack) {
+                console.log("checkVideoSize()");
+                var newVideoWidth = video.clientWidth;
+                var newVideoHeight = video.clientHeight;
+
+                if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
+                    console.log("videoSize changed to " + newVideoWidth + "x" + newVideoHeight);
+                    actualVideoWidth = newVideoWidth;
+                    actualVideoHeight = newVideoHeight;
+
+                    // Video view has changed size, so resize all active cues
+                    for (var i = 0; i < track.activeCues.length; ++i) {
+                        var cue = currentTrack.activeCues[i];
+                        if (cue.HTMLElement) {
+                            cue.scaleCue(cue);
+                        }
+                    }
+                }
+             }
+         },
+
+         scaleCue: function(activeCue) {
+             console.log("Scaling cue");
+             var videoWidth = actualVideoWidth;
+             var videoHeight = actualVideoHeight;
+             
+         },
+         
 
         addCaptions: function(timeOffset, captionData) {
 
@@ -128,8 +162,13 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     cue.fontSize = currentItem.fontSize;
                     cue.lineHeight = currentItem.lineHeight;
                     cue.linePadding = currentItem.linePadding;
+                    cue.scaleCue = this.scaleCue;
                     
                     cue.onenter =  function () {
+                        currentTrack = track;
+                        if (!videoSizeCheckInterval) {
+                            videoSizeCheckInterval = setInterval(this.checkVideoSize, 500);
+                        }
                         var text = this.cueHTMLElement.innerHTML;
                         console.log("Showing text: " + text + ", id: " + this.cueID);
                         console.log(this.cueRegion);
@@ -138,6 +177,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         div.id = "subtitle_" + this.cueID;
                         div.style.cssText = "position: absolute; z-index: 2147483647; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + this.cueRegion;
                         video.parentNode.appendChild(div);
+                        this.scaleCue(this);
                     };
 
                     cue.onexit =  function () {
