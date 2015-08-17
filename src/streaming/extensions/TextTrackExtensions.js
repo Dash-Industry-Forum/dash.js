@@ -166,18 +166,20 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     
                     cue.onenter =  function () {
                         currentTrack = track;
-                        if (!videoSizeCheckInterval) {
-                            videoSizeCheckInterval = setInterval(this.checkVideoSize, 500);
+                        //if (!videoSizeCheckInterval) {
+                        //    videoSizeCheckInterval = setInterval(this.checkVideoSize, 500);
+                        //}
+                        if (track.mode == "showing") {
+                            var text = this.cueHTMLElement.innerHTML;
+                            console.log("Showing text: " + text + ", id: " + this.cueID);
+                            console.log(this.cueRegion);
+                            var div = document.createElement("div");
+                            div.appendChild(this.cueHTMLElement);
+                            div.id = "subtitle_" + this.cueID;
+                            div.style.cssText = "position: absolute; z-index: 2147483647; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + this.cueRegion;
+                            video.parentNode.appendChild(div);
+                            this.scaleCue(this);
                         }
-                        var text = this.cueHTMLElement.innerHTML;
-                        console.log("Showing text: " + text + ", id: " + this.cueID);
-                        console.log(this.cueRegion);
-                        var div = document.createElement("div");
-                        div.appendChild(this.cueHTMLElement);
-                        div.id = "subtitle_" + this.cueID;
-                        div.style.cssText = "position: absolute; z-index: 2147483647; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + this.cueRegion;
-                        video.parentNode.appendChild(div);
-                        this.scaleCue(this);
                     };
 
                     cue.onexit =  function () {
