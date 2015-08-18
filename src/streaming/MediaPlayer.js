@@ -245,6 +245,7 @@ MediaPlayer = function (context) {
         },
 
         resetAndPlay = function() {
+            this.adapter.reset();
             if (playing && streamController) {
                 if (!resetting) {
                     resetting = true;
@@ -278,8 +279,6 @@ MediaPlayer = function (context) {
                     doAutoPlay.call(this);
                 }
             }
-
-            this.adapter.reset();
         };
 
 
