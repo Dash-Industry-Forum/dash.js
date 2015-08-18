@@ -457,7 +457,9 @@ MediaPlayer.utils.TTMLParser = function() {
                 // Clean the properties' names.
                 newKey = camelCaseToDash(newKey);
                 cueRegion[newKey] = cueRegion[key];
+                if(newKey !== key) {
                 delete cueRegion[key];
+                }
             }
             // Extent property corresponds to width and height
             if ('extent' in cueRegion) {
@@ -1006,7 +1008,7 @@ MediaPlayer.utils.TTMLParser = function() {
 
                         // We link the p style to the finale cueParagraph element.
                         if (cueStyleProperties) {
-                            cueParagraph.style.cssText = cueStyleProperties.join(" ");
+                            cueParagraph.style.cssText = cueStyleProperties.join(" ") + "display:flex;";
                         }
                         // We define the CSS style for the cue region.
                         if (cueRegionProperties) {
