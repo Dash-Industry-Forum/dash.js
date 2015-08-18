@@ -37,8 +37,9 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         trackKindMap = {subtitle:"subtitles", caption:"captions"},
         actualVideoWidth = 0,
         actualVideoHeight = 0,
-        videoSizeCheckInterval = 0,
-        currentTrack;
+        captionContainer = document.getElementById('caption-container'),
+        videoSizeCheckInterval = null,
+        currentTrack = null;
 
     return {
         mediaController:undefined,
@@ -94,6 +95,8 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     console.log("videoSize changed to " + newVideoWidth + "x" + newVideoHeight);
                     actualVideoWidth = newVideoWidth;
                     actualVideoHeight = newVideoHeight;
+                    captionContainer.style.width = actualVideoWidth;
+                    captionContainer.style.height = actualVideoHeight;
 
                     // Video view has changed size, so resize all active cues
                     for (var i = 0; i < track.activeCues.length; ++i) {
@@ -122,7 +125,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             for(var item in captionData) {
                 var cue;
                 var currentItem = captionData[item];
-                var video=this.video;
+                var video = this.video;
 
                 //image subtitle extracted from TTML
                 if(currentItem.type=="image"){
@@ -136,15 +139,15 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         img.id = 'ttmlImage_'+this.id;
                         img.src = this.image;
                         img.className = 'cue-image';
-                        video.parentNode.appendChild(img);
+                        captionContainer.appendChild(img);
                     };
 
                     cue.onexit =  function () {
-                        var imgs = video.parentNode.childNodes;
+                        var imgs = captionContainer.childNodes;
                         var i;
                         for(i=0;i<imgs.length;i++){
                             if(imgs[i].id=='ttmlImage_'+this.id){
-                                video.parentNode.removeChild(imgs[i]);
+                                captionContainer.removeChild(imgs[i]);
                             }
                         }
                     };
@@ -177,17 +180,17 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                             div.appendChild(this.cueHTMLElement);
                             div.id = "subtitle_" + this.cueID;
                             div.style.cssText = "position: absolute; z-index: 2147483647; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + this.cueRegion;
-                            video.parentNode.appendChild(div);
+                            captionContainer.appendChild(div);
                             this.scaleCue(this);
                         }
                     };
 
                     cue.onexit =  function () {
                         console.log("Hiding text: " + this.text + ", id: " + this.cueID);
-                        var divs = video.parentNode.childNodes;
+                        var divs = captionContainer.childNodes;
                         for (var i = 0; i < divs.length; ++i) {
                             if (divs[i].id == "subtitle_" + this.cueID) {
-                                video.parentNode.removeChild(divs[i]);
+                                captionContainer.removeChild(divs[i]);
                             }
                         }
                     };
