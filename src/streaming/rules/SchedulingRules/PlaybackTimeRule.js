@@ -51,6 +51,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
         sourceBufferExt: undefined,
         virtualBuffer: undefined,
         playbackController: undefined,
+        textSourceBuffer:undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
@@ -93,7 +94,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 sc.getFragmentModel().removeRejectedRequest(rejected);
             }
 
-            if (isNaN(time)) {
+            if (isNaN(time) || (mediaType === "fragmentedText" && this.textSourceBuffer.getAllTracksAreDisabled())) {
                 callback(new MediaPlayer.rules.SwitchRequest(null, p));
                 return;
             }

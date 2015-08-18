@@ -33,7 +33,8 @@ MediaPlayer.utils.TextTrackExtensions = function () {
     var Cue,
         textTrackQueue = [],
         trackElementArr = [],
-        currentTrackIdx = 0;
+        currentTrackIdx = 0,
+        trackKindMap = {subtitle:"subtitles", caption:"captions"};
 
     return {
         mediaController:undefined,
@@ -59,13 +60,13 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
                 var defaultIndex = 0;
                 for(var i = 0 ; i < textTrackQueue.length; i++) {
-                    var track = document.createElement('track'),//this.getCurrentTextTrack(),
-                        captionType = textTrackQueue[i].role ? textTrackQueue[i].role : "captions";
+                    var track = document.createElement('track'),
+                        captionType = trackKindMap[textTrackQueue[i].role];
 
                     currentTrackIdx = i;
                     trackElementArr.push(track);
 
-                    track.kind = captionType === "subtitle" ? "subtitles" : captionType;
+                    track.kind = captionType !== undefined ? captionType : trackKindMap.caption;
                     track.label = textTrackQueue[i].lang;
                     track.srclang = textTrackQueue[i].lang;
 

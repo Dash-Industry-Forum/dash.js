@@ -102,6 +102,8 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
             }
 
+            if (allTracksAreDisabled) return;
+
             if(mediaType === "fragmentedText"){
                 var fragmentExt = self.system.getObject("fragmentExt");
                 if(!this.initializationSegmentReceived){
@@ -124,7 +126,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                         // If I block above this line we get errors in Virtual Buffer. Ideally I need to figure
                         // out how to stop text fragments fom loading when they are not being rendered. But so
                         // far all attempts to do this result in all media stopping.
-                        if (allTracksAreDisabled) return;
+
 
                         ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset,samplesInfo[i].offset+samplesInfo[i].size)));
                         parser = parser !== null ? parser : self.getParser(mimeType); //store locally for fragmented text so we do not fetch from dijon over and over again.
@@ -168,6 +170,10 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 parser = this.system.getObject("ttmlParser");
             }
             return parser;
+        },
+
+        getAllTracksAreDisabled : function (){
+            return allTracksAreDisabled;
         },
 
         addEventListener: function (type, listener, useCapture) {
