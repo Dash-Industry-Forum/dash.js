@@ -1018,13 +1018,18 @@ MediaPlayer.utils.TTMLParser = function() {
                         // We then place the cue wrapper inside the paragraph element.
                         cueParagraph.appendChild(cueDirUniWrapper);
 
+                        // Final cue.
+                        var finalCue = document.createElement("div");
+                        finalCue.appendChild(cueParagraph);
+                        finalCue.id = "subtitle_" + cueID;
+                        finalCue.style.cssText = "position: absolute; z-index: 2147483647; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + cueRegionProperties;
+
                         // We add all the cue information in captionArray.
                         captionArray.push({
                             start         : spanStartTime || pStartTime,
                             end           : spanEndTime || pEndTime,
                             type          : "html",
-                            cueHTMLElement: cueParagraph,
-                            cueRegion     : cueRegionProperties,
+                            cueHTMLElement: finalCue,
                             regions       : regions,
                             regionID      : regionID,
                             cueID         : cueID,
