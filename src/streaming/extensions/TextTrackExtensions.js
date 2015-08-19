@@ -301,11 +301,23 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         },
         
         setCueStyle: function() {
-            console.warn("setCueStyle");
+            var stylesheet = document.styleSheets[0];
+            if(!this.video.id) {
+                stylesheet.addRule('video::cue','background: transparent');
+                stylesheet.insertRule('video::cue { background: transparent }', stylesheet.rules.length - 1);
+            } else if(this.video.id) {
+                stylesheet.addRule("#" + this.video.id + '::cue','background: transparent');
+                stylesheet.insertRule("#" + this.video.id + '::cue { background: transparent }', stylesheet.rules.length - 1);
+            } else if(this.video.classList.length !== 0) {
+                stylesheet.addRule("." + this.video.className + '::cue','background: transparent');
+                stylesheet.insertRule("." + this.video.className + '::cue { background: transparent }', stylesheet.rules.length - 1);
+            }
         },
         
         removeCueStyle: function() {
-            console.warn("removeCueStyle");
+            var stylesheet = document.styleSheets[0];
+            stylesheet.removeRule(stylesheet.rules.length - 1);
+            stylesheet.deleteRule(stylesheet.rules.length - 1);
         }
 
     };
