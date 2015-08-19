@@ -1024,6 +1024,10 @@ MediaPlayer.utils.TTMLParser = function() {
                         finalCue.id = "subtitle_" + cueID;
                         finalCue.style.cssText = "position: absolute; z-index: 2147483647; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + cueRegionProperties;
 
+                        if(Object.keys(fontSize).length === 0) {
+                            fontSize.defaultFontSize = '100';
+                        }
+
                         // We add all the cue information in captionArray.
                         captionArray.push({
                             start         : spanStartTime || pStartTime,

@@ -101,21 +101,66 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     // Video view has changed size, so resize all active cues
                     for (var i = 0; i < track.activeCues.length; ++i) {
                         var cue = currentTrack.activeCues[i];
-                        if (cue.HTMLElement) {
                             cue.scaleCue(cue);
+                    }
+                }
+            }
+        },
+
+        scaleCue: function(activeCue) {
+            console.log("Scaling cue");
+            var videoWidth = actualVideoWidth;
+            var videoHeight = actualVideoHeight;
+
+            var cellUnit = [videoWidth / activeCue.cellResolution[0], videoHeight / activeCue.cellResolution[1]];
+
+            if (activeCue.linePadding) {
+                for (var key in activeCue.linePadding) {
+                    if (activeCue.linePadding.hasOwnProperty(key)) {
+                        var valueLinePadding = activeCue.linePadding[key];
+                        var replaceValue = (valueLinePadding * cellUnit[0]).toString();
+                        // Compute the CellResolution unit in order to process properties using sizing (fontSize, linePadding, etc).
+                        var elementsSpan = document.getElementsByClassName('spanPadding');
+                        for (var i = 0; i < elementsSpan.length; i++) {
+                            elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-left\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                            elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-right\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
                         }
                     }
                 }
-             }
-         },
+            }
 
-         scaleCue: function(activeCue) {
-             console.log("Scaling cue");
-             var videoWidth = actualVideoWidth;
-             var videoHeight = actualVideoHeight;
-             
-         },
-         
+            if(activeCue.fontSize) {
+                for (var key in activeCue.fontSize) {
+                    if (activeCue.fontSize.hasOwnProperty(key)) {
+                        var valueFontSize = activeCue.fontSize[key] / 100;
+                        var replaceValue  = (valueFontSize * cellUnit[1]).toString();
+
+                        if (key !== 'defaultFontSize') {
+                            var elements = document.getElementsByClassName(key);
+                        } else {
+                            var elements = document.getElementsByClassName('paragraph');
+                        }
+
+                        for (var i = 0; i < elements.length; i++) {
+                            elements[i].style.cssText = elements[i].style.cssText.replace(/(font-size\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        }
+                    }
+                }
+            }
+
+            if (activeCue.lineHeight) {
+                for (var key in activeCue.lineHeight) {
+                    if (activeCue.lineHeight.hasOwnProperty(key)) {
+                        var valueLineHeight = activeCue.lineHeight[key] / 100;
+                        var replaceValue = (valueLineHeight * cellUnit[1]).toString();
+                        var elements = document.getElementsByClassName(key);
+                        for (var i = 0; i < elements.length; i++) {
+                            elements[i].style.cssText = elements[i].style.cssText.replace(/(line-height\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        }
+                    }
+                }
+            }
+        },
 
         addCaptions: function(timeOffset, captionData) {
 
