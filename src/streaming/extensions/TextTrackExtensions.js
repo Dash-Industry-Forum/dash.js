@@ -198,6 +198,10 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     };
                 }
                 else if (currentItem.type=="html") {
+                    if (track.renderingType != "html") {
+                        track.renderingType = "html";
+                        this.setCueStyle(); 
+                    }
                     cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
                     cue.cueHTMLElement = currentItem.cueHTMLElement;
                     cue.regions = currentItem.regions;
@@ -294,6 +298,14 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
         setCurrentTrackIdx : function(value){
             currentTrackIdx = value;
+        },
+        
+        setCueStyle: function() {
+            console.warn("setCueStyle");
+        },
+        
+        removeCueStyle: function() {
+            console.warn("removeCueStyle");
         }
 
     };
