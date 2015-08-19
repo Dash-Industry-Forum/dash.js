@@ -718,6 +718,8 @@ MediaPlayer = function (context) {
          * is following:
          * {lang: langValue,
          *  viewpoint: viewpointValue,
+         *  audioChannelConfiguration: audioChannelConfigurationValue,
+         *  accessibility: accessibilityValue,
          *  role: roleValue}
          *
          *
@@ -734,6 +736,8 @@ MediaPlayer = function (context) {
          * is following:
          * {lang: langValue,
          *  viewpoint: viewpointValue,
+         *  audioChannelConfiguration: audioChannelConfigurationValue,
+         *  accessibility: accessibilityValue,
          *  role: roleValue}
          * @param type
          * @returns {Object}

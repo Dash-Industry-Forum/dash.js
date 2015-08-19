@@ -137,6 +137,14 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return adaptation.hasOwnProperty("Role_asArray") ? adaptation.Role_asArray : [];
     },
 
+    getAccessibilityForAdaptation: function(adaptation) {
+        return adaptation.hasOwnProperty("Accessibility_asArray") ? adaptation.Accessibility_asArray : [];
+    },
+
+    getAudioChannelConfigurationForAdaptation: function(adaptation) {
+        return adaptation.hasOwnProperty("AudioChannelConfiguration_asArray") ? adaptation.AudioChannelConfiguration_asArray : [];
+    },
+
     getIsMain: function (adaptation) {
         "use strict";
         return this.getRolesForAdaptation(adaptation).filter(function(role){
