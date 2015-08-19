@@ -92,8 +92,9 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
 
                         case "encrypted":
                             if (event.initData) {
+                                var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
                                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY,
-                                        new MediaPlayer.vo.protection.NeedKey(event.initData, event.initDataType));
+                                        new MediaPlayer.vo.protection.NeedKey(initData, event.initDataType));
                             }
                             break;
                     }
@@ -133,8 +134,9 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                             break;
 
                         case "message":
+                            var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
                             self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE,
-                                    new MediaPlayer.vo.protection.KeyMessage(this, event.message, undefined, event.messageType));
+                                    new MediaPlayer.vo.protection.KeyMessage(this, message, undefined, event.messageType));
                             break;
                     }
                 },

@@ -133,7 +133,7 @@ MediaPlayer.dependencies.Stream = function () {
                     streamProcessor.updateMediaInfo(manifest, allMediaForType[idx]);//sets the initial media info
                 }
             }else {
-                streamProcessor.updateMediaInfo(manifest, allMediaForType[0]);
+                streamProcessor.updateMediaInfo(manifest, mediaInfo);
             }
 
             return streamProcessor;

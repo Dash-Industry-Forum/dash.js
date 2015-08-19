@@ -42,7 +42,7 @@ MediaPlayer.dependencies.protection.servers.DRMToday = function() {
         "com.widevine.alpha": {
             responseType: "json",
             getLicenseMessage: function(response) {
-                return new Uint8Array(BASE64.decodeArray(response.license));
+                return BASE64.decodeArray(response.license);
             },
             getErrorResponse: function(response) {
                 return response;
@@ -51,7 +51,7 @@ MediaPlayer.dependencies.protection.servers.DRMToday = function() {
         "com.microsoft.playready": {
             responseType: "arraybuffer",
             getLicenseMessage: function(response) {
-                return new Uint8Array(response);
+                return response;
             },
             getErrorResponse: function(response) {
                 return String.fromCharCode.apply(null, new Uint8Array(response));

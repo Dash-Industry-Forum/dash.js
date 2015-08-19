@@ -90,7 +90,7 @@ MediaPlayer.dependencies.protection.KeySystem = function() {};
  * @function
  * @name MediaPlayer.dependencies.protection.KeySystem#getRequestHeadersFromMessage
  * @param {ArrayBuffer} message the CDM message
- * @returns {Object} headers object with header names as the object property
+ * @returns {?Object} headers object with header names as the object property
  * names and header values as the corresponding object property values.  Return
  * null if no such headers were found or if the mechanism is not supported by
  * this key system
@@ -104,6 +104,17 @@ MediaPlayer.dependencies.protection.KeySystem = function() {};
  * @function
  * @name MediaPlayer.dependencies.protection.KeySystem#getLicenseRequestFromMessage
  * @param message {ArrayBuffer} the CDM message
- * @returns {Uint8Array} the license request message
+ * @returns {Uint8Array} the license request message as will be passed to
+ * XMLHttpRequest.send()
+ */
+
+/**
+ * Returns a license server URL as parsed from key system initialization data (PSSH).
+ *
+ * @function
+ * @name MediaPlayer.dependencies.protection.KeySystem#getLicenseServerURLFromInitData
+ * @param initData {ArrayBuffer} the initialization data.  This is just the "Data" field
+ * from the PSSH box definition
+ * @returns {?string} The license server URL or null if URL is not available in initData
  */
 

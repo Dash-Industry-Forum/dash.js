@@ -40,14 +40,16 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
 
     var keySystemStr = "com.microsoft.playready",
         keySystemUUID = "9a04f079-9840-4286-ab92-e65be0885f95",
+        messageFormat = "utf16",
 
         getRequestHeaders = function(message) {
             var msg,
                 xmlDoc,
                 headers = {},
-                parser = new DOMParser();
+                parser = new DOMParser(),
+                dataview = (messageFormat === "utf16") ? new Uint16Array(message) : new Uint8Array(message);
 
-            msg = String.fromCharCode.apply(null, new Uint16Array(message.buffer));
+            msg = String.fromCharCode.apply(null, dataview);
             xmlDoc = parser.parseFromString(msg, "application/xml");
 
             var headerNameList = xmlDoc.getElementsByTagName("name");
@@ -69,9 +71,10 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             var msg,
                 xmlDoc,
                 parser = new DOMParser(),
-                licenseRequest = null;
+                licenseRequest = null,
+                dataview = (messageFormat === "utf16") ? new Uint16Array(message) : new Uint8Array(message);
 
-            msg = String.fromCharCode.apply(null, new Uint16Array(message.buffer));
+            msg = String.fromCharCode.apply(null, dataview);
             xmlDoc = parser.parseFromString(msg, "application/xml");
 
             if (xmlDoc.getElementsByTagName("Challenge")[0]) {
@@ -81,6 +84,50 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
                 }
             }
             return licenseRequest;
+        },
+
+        getLicenseServerURL = function(initData) {
+            if (initData) {
+                var data = new DataView(initData),
+                        numRecords = data.getUint16(4, true),
+                        offset = 6,
+                        parser = new DOMParser();
+
+                for (var i = 0; i < numRecords; i++) {
+                    // Parse the PlayReady Record header
+                    var recordType = data.getUint16(offset, true);
+                    offset += 2;
+                    var recordLength = data.getUint16(offset, true);
+                    offset += 2;
+                    if (recordType !== 0x0001) {
+                        offset += recordLength;
+                        continue;
+                    }
+
+                    var recordData = initData.slice(offset, offset+recordLength),
+                            record = String.fromCharCode.apply(null, new Uint16Array(recordData)),
+                            xmlDoc = parser.parseFromString(record, "application/xml");
+
+                    // First try <LA_URL>
+                    if (xmlDoc.getElementsByTagName("LA_URL")[0]) {
+                        var laurl = xmlDoc.getElementsByTagName("LA_URL")[0].childNodes[0].nodeValue;
+                        if (laurl) {
+                            return laurl;
+                        }
+                    }
+
+                    // Optionally, try <LUI_URL>
+                    if (xmlDoc.getElementsByTagName("LUI_URL")[0]) {
+                        var luiurl = xmlDoc.getElementsByTagName("LUI_URL")[0].childNodes[0].nodeValue;
+                        if (luiurl) {
+                            return luiurl;
+                        }
+                    }
+                }
+            }
+
+            return null;
+
         },
 
         parseInitDataFromContentProtection = function(cpData) {
@@ -153,7 +200,24 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
 
         getRequestHeadersFromMessage: getRequestHeaders,
 
-        getLicenseRequestFromMessage: getLicenseRequest
+        getLicenseRequestFromMessage: getLicenseRequest,
+
+        getLicenseServerURLFromInitData: getLicenseServerURL,
+
+        /**
+         * It seems that some PlayReady implementations return their XML-based CDM
+         * messages using UTF16, while others return them as UTF8.  Use this function
+         * to modify the message format to expect when parsing CDM messages.
+         *
+         * @param {string} format the expected message format.  Either "utf8" or "utf16".
+         * @throws {Error} Specified message format is not one of "utf8" or "utf16"
+         */
+        setPlayReadyMessageFormat: function(format) {
+            if (format !== "utf8" && format !== "utf16") {
+                throw new Error("Illegal PlayReady message format! -- " + format);
+            }
+            messageFormat = format;
+        }
     };
 };
 

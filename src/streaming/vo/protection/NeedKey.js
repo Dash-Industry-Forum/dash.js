@@ -31,8 +31,8 @@
 /**
  * EME-independent NeedKey
  *
- * @param initData the initialization data
- * @param [initDataType] initialization data type
+ * @param {ArrayBuffer} initData the initialization data
+ * @param {String} [initDataType] initialization data type
  * @constructor
  */
 MediaPlayer.vo.protection.NeedKey = function(initData, initDataType) {

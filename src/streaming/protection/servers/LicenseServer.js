@@ -96,7 +96,7 @@ MediaPlayer.dependencies.protection.servers.LicenseServer = function() {};
  * associated with a license request.
  * @param {String} messageType the message type associated with this request.  Supported
  * message types can be found {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
- * @returns {Object} message that will be sent to the CDM or null if no CDM message
+ * @returns {ArrayBuffer} message that will be sent to the CDM or null if no CDM message
  * was present in the response.
  */
 

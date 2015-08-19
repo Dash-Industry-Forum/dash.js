@@ -242,7 +242,10 @@ MediaPlayer.dependencies.ProtectionController = function () {
                     url = protData.laURL;
                 }
             } else {
-                url = e.data.laURL;
+                url = this.keySystem.getLicenseServerURLFromInitData(MediaPlayer.dependencies.protection.CommonEncryption.getPSSHData(sessionToken.initData));
+                if (!url) {
+                    url = e.data.laURL;
+                }
             }
             // Possibly update or override the URL based on the message
             url = licenseServerData.getServerURLFromMessage(url, message, messageType);

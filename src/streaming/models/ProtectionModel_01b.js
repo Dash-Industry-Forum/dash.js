@@ -74,8 +74,9 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                     switch (event.type) {
 
                         case api.needkey:
+                            var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
                             self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY,
-                                new MediaPlayer.vo.protection.NeedKey(event.initData, "cenc"));
+                                new MediaPlayer.vo.protection.NeedKey(initData, "cenc"));
                             break;
 
                         case api.keyerror:
@@ -159,14 +160,15 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                             }
 
                             if (sessionToken) {
+                                var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
 
                                 // For ClearKey, the spec mandates that you pass this message to the
                                 // addKey method, so we always save it to the token since there is no
                                 // way to tell which key system is in use
-                                sessionToken.keyMessage = event.message;
+                                sessionToken.keyMessage = message;
 
                                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE,
-                                    new MediaPlayer.vo.protection.KeyMessage(sessionToken, event.message, event.defaultURL));
+                                    new MediaPlayer.vo.protection.KeyMessage(sessionToken, message, event.defaultURL));
                             } else {
                                 self.log("No session token found for key message");
                             }
@@ -387,7 +389,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
             if (!this.protectionExt.isClearKey(this.keySystem)) {
                 // Send our request to the CDM
                 videoElement[api.addKey](this.keySystem.systemString,
-                        message, sessionToken.initData, sessionID);
+                        new Uint8Array(message), sessionToken.initData, sessionID);
             } else {
                 // For clearkey, message is a MediaPlayer.vo.protection.ClearKeyKeySet
                 for (var i = 0; i < message.keyPairs.length; i++) {
