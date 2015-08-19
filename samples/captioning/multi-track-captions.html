@@ -47,8 +47,8 @@
 
         function onCaptionMenuChange(e){
             var tracks = videoElement.textTracks,
-                ln = tracks.length;
-                idx = e.currentTarget.selectedIndex - 1
+                ln = tracks.length,
+                idx = e.currentTarget.selectedIndex - 1;
 
             for(var i=0; i<ln; i++){
                 var track = tracks[i]

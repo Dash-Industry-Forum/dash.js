@@ -33,7 +33,8 @@ MediaPlayer.utils.TextTrackExtensions = function () {
     var Cue,
         textTrackQueue = [],
         trackElementArr = [],
-        currentTrackIdx = 0;
+        currentTrackIdx = 0,
+        trackKindMap = {subtitle:"subtitles", caption:"captions"};
 
     return {
         mediaController:undefined,
@@ -51,21 +52,15 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
             if(textTrackQueue.length === totalTextTracks) {
 
-                if (totalTextTracks > 1) { // sort multi text tracks alphabetically. Not sure how we to sort tracks and flag a track as default.  Currently sort alph, and default track is first media item in MPD.
-                    textTrackQueue.sort(function(a,b) {
-                        return a.lang > b.lang;
-                    });
-                }
-
                 var defaultIndex = 0;
                 for(var i = 0 ; i < textTrackQueue.length; i++) {
-                    var track = document.createElement('track'),//this.getCurrentTextTrack(),
-                        captionType = textTrackQueue[i].role ? textTrackQueue[i].role : "captions";
+                    var track = document.createElement('track'),
+                        captionType = trackKindMap[textTrackQueue[i].role];
 
                     currentTrackIdx = i;
                     trackElementArr.push(track);
 
-                    track.kind = captionType === "subtitle" ? "subtitles" : captionType;
+                    track.kind = captionType !== undefined ? captionType : trackKindMap.caption;
                     track.label = textTrackQueue[i].lang;
                     track.srclang = textTrackQueue[i].lang;
 
