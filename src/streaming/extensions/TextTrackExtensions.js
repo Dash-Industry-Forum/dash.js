@@ -234,7 +234,6 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     cue.onenter =  function () {
                         currentTrack = track;
                         if (track.mode == "showing") {
-                            var text = this.cueHTMLElement.innerHTML;
                             captionContainer.appendChild(this.cueHTMLElement);
                             this.scaleCue(this);
                         }
