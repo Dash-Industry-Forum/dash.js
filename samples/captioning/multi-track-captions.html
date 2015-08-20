@@ -16,12 +16,15 @@
         function startVideo() {
             var url = FRAGMENTED_CAPTION_URL,
                 context,
-                player;
+                player,
+                TTMLRenderingDiv;
 
             videoElement = document.querySelector(".dash-video-player video");
+            TTMLRenderingDiv = document.querySelector("#ttml-rendering-div");
             context = new Dash.di.DashContext();
             player = new MediaPlayer(context);
             player.startup();
+            player.attachTTMLRenderingDiv(TTMLRenderingDiv);
             player.attachView(videoElement);
             player.setAutoPlay(true);
             player.attachSource(url);
@@ -67,6 +70,7 @@
     <body onload="startVideo()">
         <div class="dash-video-player">
             <video controls="true"></video>
+            <div id="ttml-rendering-div"></div>
         </div>
         <div>
             <select id="caption-menu">

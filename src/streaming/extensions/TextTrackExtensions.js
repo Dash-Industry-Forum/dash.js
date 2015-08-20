@@ -37,12 +37,13 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         trackKindMap = {subtitle:"subtitles", caption:"captions"},
         actualVideoWidth = 0,
         actualVideoHeight = 0,
-        captionContainer = document.getElementById('caption-container'),
+        captionContainer = null,
         videoSizeCheckInterval = null,
         currentTrack = null;
 
     return {
         mediaController:undefined,
+        videoModel:undefined,
 
         setup: function() {
             Cue = window.VTTCue || window.TextTrackCue;
@@ -54,6 +55,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             if (this.video === undefined) {
                 this.video = textTrackInfoVO.video;
             }
+            captionContainer = this.videoModel.getTTMLRenderingDiv();
 
             if(textTrackQueue.length === totalTextTracks) {
 

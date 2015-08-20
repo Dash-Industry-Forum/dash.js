@@ -32,6 +32,7 @@ MediaPlayer.models.VideoModel = function () {
     "use strict";
 
     var element,
+        TTMLRenderingDiv,
         stalledStreams = [],
         //_currentTime = 0,
 
@@ -150,6 +151,14 @@ MediaPlayer.models.VideoModel = function () {
 
         setElement: function (value) {
             element = value;
+        },
+        
+        getTTMLRenderingDiv: function () {
+            return TTMLRenderingDiv;
+        },
+        
+        setTTMLRenderingDiv: function (div) {
+            TTMLRenderingDiv = div;
         },
 
         setSource: function (source) {
