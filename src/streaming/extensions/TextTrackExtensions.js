@@ -82,24 +82,23 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                 }
 
                 currentTrackIdx = defaultIndex;
-            }           
+            }
         },
 
         checkVideoSize: function() {
-            if (currentTrack) {
-                console.log("checkVideoSize()");
-                var newVideoWidth = video.clientWidth;
-                var newVideoHeight = video.clientHeight;
+            if (currentTrack && currentTrack.renderingType === "html") {
+                var newVideoWidth = this.video.clientWidth;
+                var newVideoHeight = this.video.clientHeight;
 
                 if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
                     console.log("videoSize changed to " + newVideoWidth + "x" + newVideoHeight);
                     actualVideoWidth = newVideoWidth;
                     actualVideoHeight = newVideoHeight;
-                    captionContainer.style.width = actualVideoWidth;
-                    captionContainer.style.height = actualVideoHeight;
+                    captionContainer.style.width = actualVideoWidth + "px";
+                    captionContainer.style.height = actualVideoHeight + "px";
 
                     // Video view has changed size, so resize all active cues
-                    for (var i = 0; i < track.activeCues.length; ++i) {
+                    for (var i = 0; i < currentTrack.activeCues.length; ++i) {
                         var cue = currentTrack.activeCues[i];
                             cue.scaleCue(cue);
                     }
@@ -111,14 +110,17 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             console.log("Scaling cue");
             var videoWidth = actualVideoWidth;
             var videoHeight = actualVideoHeight;
+            var key,
+                replaceValue,
+                elements;
 
             var cellUnit = [videoWidth / activeCue.cellResolution[0], videoHeight / activeCue.cellResolution[1]];
 
             if (activeCue.linePadding) {
-                for (var key in activeCue.linePadding) {
+                for (key in activeCue.linePadding) {
                     if (activeCue.linePadding.hasOwnProperty(key)) {
                         var valueLinePadding = activeCue.linePadding[key];
-                        var replaceValue = (valueLinePadding * cellUnit[0]).toString();
+                        replaceValue = (valueLinePadding * cellUnit[0]).toString();
                         // Compute the CellResolution unit in order to process properties using sizing (fontSize, linePadding, etc).
                         var elementsSpan = document.getElementsByClassName('spanPadding');
                         for (var i = 0; i < elementsSpan.length; i++) {
@@ -130,18 +132,18 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             }
 
             if(activeCue.fontSize) {
-                for (var key in activeCue.fontSize) {
+                for (key in activeCue.fontSize) {
                     if (activeCue.fontSize.hasOwnProperty(key)) {
                         var valueFontSize = activeCue.fontSize[key] / 100;
-                        var replaceValue  = (valueFontSize * cellUnit[1]).toString();
+                        replaceValue  = (valueFontSize * cellUnit[1]).toString();
 
                         if (key !== 'defaultFontSize') {
-                            var elements = document.getElementsByClassName(key);
+                            elements = document.getElementsByClassName(key);
                         } else {
-                            var elements = document.getElementsByClassName('paragraph');
+                            elements = document.getElementsByClassName('paragraph');
                         }
 
-                        for (var i = 0; i < elements.length; i++) {
+                        for (i = 0; i < elements.length; i++) {
                             elements[i].style.cssText = elements[i].style.cssText.replace(/(font-size\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
                         }
                     }
@@ -149,12 +151,12 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             }
 
             if (activeCue.lineHeight) {
-                for (var key in activeCue.lineHeight) {
+                for (key in activeCue.lineHeight) {
                     if (activeCue.lineHeight.hasOwnProperty(key)) {
                         var valueLineHeight = activeCue.lineHeight[key] / 100;
-                        var replaceValue = (valueLineHeight * cellUnit[1]).toString();
-                        var elements = document.getElementsByClassName(key);
-                        for (var i = 0; i < elements.length; i++) {
+                        replaceValue = (valueLineHeight * cellUnit[1]).toString();
+                        elements = document.getElementsByClassName(key);
+                        for (i = 0; i < elements.length; i++) {
                             elements[i].style.cssText = elements[i].style.cssText.replace(/(line-height\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
                         }
                     }
@@ -163,14 +165,18 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         },
 
         addCaptions: function(timeOffset, captionData) {
-
             var track = this.getCurrentTextTrack();
+            currentTrack = track;
             track.mode = "showing";//make sure tracks are showing to be able to add the cue...
+
+            if (!videoSizeCheckInterval) {
+                videoSizeCheckInterval = 500;
+                setInterval(this.checkVideoSize.bind(this), videoSizeCheckInterval);
+            }
 
             for(var item in captionData) {
                 var cue;
                 var currentItem = captionData[item];
-                var video = this.video;
 
                 //image subtitle extracted from TTML
                 if(currentItem.type=="image"){
@@ -200,7 +206,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                 else if (currentItem.type=="html") {
                     if (track.renderingType != "html") {
                         track.renderingType = "html";
-                        this.setCueStyle(); 
+                        this.setCueStyle();
                     }
                     cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
                     cue.cueHTMLElement = currentItem.cueHTMLElement;
@@ -214,12 +220,11 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     cue.lineHeight = currentItem.lineHeight;
                     cue.linePadding = currentItem.linePadding;
                     cue.scaleCue = this.scaleCue;
-                    
+                    captionContainer.style.width = this.video.clientWidth + "px";
+                    captionContainer.style.height = this.video.clientHeight + "px";
+
                     cue.onenter =  function () {
                         currentTrack = track;
-                        //if (!videoSizeCheckInterval) {
-                        //    videoSizeCheckInterval = setInterval(this.checkVideoSize, 500);
-                        //}
                         if (track.mode == "showing") {
                             var text = this.cueHTMLElement.innerHTML;
                             console.log("Showing text: " + text + ", id: " + this.cueID);
