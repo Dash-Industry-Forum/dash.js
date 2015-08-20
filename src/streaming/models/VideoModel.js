@@ -159,6 +159,14 @@ MediaPlayer.models.VideoModel = function () {
         
         setTTMLRenderingDiv: function (div) {
             TTMLRenderingDiv = div;
+            // The styling will allow the captions to match the video window size and position.
+            TTMLRenderingDiv.style.position = 'absolute';
+            TTMLRenderingDiv.style.display = 'flex';
+            TTMLRenderingDiv.style.overflow = 'hidden';
+            TTMLRenderingDiv.style.zIndex = 2147483647;
+            TTMLRenderingDiv.style.pointerEvents = 'none';
+            TTMLRenderingDiv.style.top = 0;
+            TTMLRenderingDiv.style.left = 0;
         },
 
         setSource: function (source) {

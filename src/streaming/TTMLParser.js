@@ -821,20 +821,19 @@ MediaPlayer.utils.TTMLParser = function() {
          * Parse the raw data and process it to return the HTML element representing the cue.
          * Return the region to be processed and controlled (hide/show) by the caption controller.
          * @param data: raw data received from the TextSourceBuffer
-         * @returns {Array} - captionArray containing all the cue information
-         *          - start time
-         *          - end time
-         *          - cue data (HTML element)
-         *          - cue region
-         *          - type 'text'
-         */
+         **/
 
         internalParse = function(data) {
             var self = this,
+                type,
                 converter = new X2JS([], "", false);
 
             // Parse the TTML in a JSON object.
             ttml = converter.xml_str2json(data);
+
+            if (self.videoModel.getTTMLRenderingDiv()) {
+                type = 'html';
+            }
 
             // Get the namespace if there is one defined in the JSON object.
             var ttNS = getNamespacePrefix(ttml, "http://www.w3.org/ns/ttml");
@@ -879,7 +878,7 @@ MediaPlayer.utils.TTMLParser = function() {
             }
             var captionArray = [];
             // Extract the div
-            var divs = ttml.tt.body_asArray;
+            var divs = ttml.tt.body_asArray[0].__children;
 
             divs.forEach(function(div) {
                 var cues = div.div.p_asArray;
@@ -932,7 +931,7 @@ MediaPlayer.utils.TTMLParser = function() {
                                 });
                             }
                         }
-                    } else {
+                    } else if (type === 'html') {
                         lineHeight  = {};
                         linePadding = {};
                         fontSize    = {};
@@ -1051,6 +1050,43 @@ MediaPlayer.utils.TTMLParser = function() {
                             lineHeight    : lineHeight,
                             linePadding   : linePadding
                         });
+
+                    } else {
+                        var text = "";
+                        var textElements = cue.__children;
+                        if (textElements.length) {
+                            textElements.forEach(function (el) {
+                                if (el.hasOwnProperty('span')) {
+                                    var spanElements = el.span.__children;
+                                    spanElements.forEach(function (spanEl) {
+                                        // If metadata is present, do not process.
+                                        if (spanElements.hasOwnProperty('metadata')) {
+                                            return;
+                                        }
+                                        // If the element is a string
+                                        if (spanEl.hasOwnProperty('#text')) {
+                                            text += spanEl['#text'];
+                                            // If the element is a 'br' tag
+                                        } else if ('br' in spanEl) {
+                                            // Create a br element.
+                                            text += "\n";
+                                        }
+                                    });
+                                } else if (el.hasOwnProperty('br')) {
+                                    text += "\n";
+                                } else {
+                                    text += el.__text;
+                                }
+                            });
+                        }
+
+                        captionArray.push({
+                            start         : spanStartTime || pStartTime,
+                            end           : spanEndTime || pEndTime,
+                            data:   text,
+                            type:   "text"
+                        });
+
                     }
                 });
             });
