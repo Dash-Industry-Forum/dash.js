@@ -45,6 +45,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                         this.textTrackExtensions.deleteTrackCues(previousTextTrack);
                         if (previousTextTrack.renderingType === "html") {
                             this.textTrackExtensions.removeCueStyle();
+                            this.textTrackExtensions.clearCues();
                         }
                         currentTrackIdx = i;
                         this.textTrackExtensions.setCurrentTrackIdx(i);
@@ -56,7 +57,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                     }
                     break;
                 }
-             }
+            }
         };
 
     return {

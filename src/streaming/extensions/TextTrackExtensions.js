@@ -143,8 +143,8 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                             elements = document.getElementsByClassName('paragraph');
                         }
 
-                        for (i = 0; i < elements.length; i++) {
-                            elements[i].style.cssText = elements[i].style.cssText.replace(/(font-size\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        for (var j = 0; j < elements.length; j++) {
+                            elements[j].style.cssText = elements[j].style.cssText.replace(/(font-size\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
                         }
                     }
                 }
@@ -156,8 +156,8 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         var valueLineHeight = activeCue.lineHeight[key] / 100;
                         replaceValue = (valueLineHeight * cellUnit[1]).toString();
                         elements = document.getElementsByClassName(key);
-                        for (i = 0; i < elements.length; i++) {
-                            elements[i].style.cssText = elements[i].style.cssText.replace(/(line-height\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        for (var k = 0; k < elements.length; k++) {
+                            elements[k].style.cssText = elements[k].style.cssText.replace(/(line-height\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
                         }
                     }
                 }
@@ -204,10 +204,18 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     };
                 }
                 else if (currentItem.type=="html") {
-                    if (track.renderingType != "html") {
+                    if (track.renderingType !== "html") {
                         track.renderingType = "html";
+                    }
+                    if(!(document.getElementById('caption-style'))) {
                         this.setCueStyle();
                     }
+                    else if(!(document.getElementById('caption-style').sheet.cssRules.length)) {
+                        this.setCueStyle();
+                    }
+
+
+
                     cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
                     cue.cueHTMLElement = currentItem.cueHTMLElement;
                     cue.regions = currentItem.regions;
@@ -304,25 +312,38 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         setCurrentTrackIdx : function(value){
             currentTrackIdx = value;
         },
-        
+
         setCueStyle: function() {
-            var stylesheet = document.styleSheets[0];
+            var styleElement;
+            if(document.getElementById('caption-style')) {
+                styleElement = document.getElementById('caption-style');
+            } else {
+                styleElement = document.createElement('style');
+                styleElement.id  = 'caption-style';
+            }
+            document.head.appendChild(styleElement);
+            var stylesheet = styleElement.sheet;
+
             if(!this.video.id) {
                 stylesheet.addRule('video::cue','background: transparent');
-                stylesheet.insertRule('video::cue { background: transparent }', stylesheet.rules.length - 1);
             } else if(this.video.id) {
                 stylesheet.addRule("#" + this.video.id + '::cue','background: transparent');
-                stylesheet.insertRule("#" + this.video.id + '::cue { background: transparent }', stylesheet.rules.length - 1);
             } else if(this.video.classList.length !== 0) {
                 stylesheet.addRule("." + this.video.className + '::cue','background: transparent');
-                stylesheet.insertRule("." + this.video.className + '::cue { background: transparent }', stylesheet.rules.length - 1);
             }
         },
-        
+
         removeCueStyle: function() {
-            var stylesheet = document.styleSheets[0];
-            stylesheet.removeRule(stylesheet.rules.length - 1);
-            stylesheet.deleteRule(stylesheet.rules.length - 1);
+            var stylesheet = document.getElementById('caption-style').sheet;
+            if(stylesheet.cssRules) {
+                stylesheet.deleteRule(0);
+            }
+        },
+
+        clearCues: function() {
+            while(captionContainer.firstChild) {
+                captionContainer.removeChild(captionContainer.firstChild);
+            }
         }
 
     };
