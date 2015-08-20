@@ -1045,7 +1045,7 @@ MediaPlayer = function (context) {
         /**
          * Use this method to attach an HTML5 div for dash.js to render rich TTML subtitles.
          *
-         * @param view A div with appropriate CSS in the DOM after the video element.
+         * @param div An unstyled div placed after the video element. It will be styled to match the video size and overlay z-order.
          * @memberof MediaPlayer#
          */
         attachTTMLRenderingDiv: function (div) {

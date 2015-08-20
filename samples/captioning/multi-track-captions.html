@@ -24,8 +24,8 @@
             context = new Dash.di.DashContext();
             player = new MediaPlayer(context);
             player.startup();
-            player.attachTTMLRenderingDiv(TTMLRenderingDiv);
             player.attachView(videoElement);
+            player.attachTTMLRenderingDiv(TTMLRenderingDiv);
             player.setAutoPlay(true);
             player.attachSource(url);
             player.addEventListener(MediaPlayer.events.TEXT_TRACK_ADDED, onTrackAdded);
