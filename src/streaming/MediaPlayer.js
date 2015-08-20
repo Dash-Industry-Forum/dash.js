@@ -880,6 +880,7 @@ MediaPlayer = function (context) {
          * a single piece of content.
          *
          * @return {MediaPlayer.dependencies.ProtectionController} protection controller
+         * @memberof MediaPlayer#
          */
         createProtection: function() {
             return system.getObject("protectionController");
