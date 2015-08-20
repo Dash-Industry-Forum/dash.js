@@ -784,6 +784,33 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * This method sets the selection mode for the initial track. This mode defines how the initial track will be selected
+         * if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
+         *
+         * MediaPlayer.dependencies.MediaController.trackSelectionModes.HIGHEST_BITRATE
+         * this mode makes the player select the track with a highest bitrate. This mode is a default mode.
+         *
+         * MediaPlayer.dependencies.MediaController.trackSelectionModes.WIDEST_RANGE
+         * this mode makes the player select the track with a widest range of bitrates
+         *
+         * @param mode
+         * @memberof MediaPlayer#
+         */
+        setSelectionModeForInitialTrack: function(mode) {
+            mediaController.setSelectionModeForInitialTrack(mode);
+        },
+
+        /**
+         * This method returns the track selection mode.
+         *
+         * @returns mode
+         * @memberof MediaPlayer#
+         */
+        getSelectionModeForInitialTrack: function() {
+            return mediaController.getSelectionModeForInitialTrack();
+        },
+
+        /**
          * @returns {boolean} Current state of adaptive bitrate switching
          * @memberof MediaPlayer#
          *
