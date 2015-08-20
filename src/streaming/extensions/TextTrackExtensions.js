@@ -93,7 +93,6 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                 var newVideoHeight = this.video.clientHeight;
 
                 if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
-                    console.log("videoSize changed to " + newVideoWidth + "x" + newVideoHeight);
                     actualVideoWidth = newVideoWidth;
                     actualVideoHeight = newVideoHeight;
                     captionContainer.style.width = actualVideoWidth + "px";
@@ -109,7 +108,6 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         },
 
         scaleCue: function(activeCue) {
-            console.log("Scaling cue");
             var videoWidth = actualVideoWidth;
             var videoHeight = actualVideoHeight;
             var key,
@@ -237,7 +235,6 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         currentTrack = track;
                         if (track.mode == "showing") {
                             var text = this.cueHTMLElement.innerHTML;
-                            console.log("Showing text: " + text + ", id: " + this.cueID);
                             captionContainer.appendChild(this.cueHTMLElement);
                             this.scaleCue(this);
                         }
