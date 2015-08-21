@@ -188,8 +188,6 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             var track = this.getCurrentTextTrack();
             track.mode = "showing";//make sure tracks are showing to be able to add the cue...
 
-
-
             for(var item in captionData) {
                 var cue,
                     currentItem = captionData[item];
