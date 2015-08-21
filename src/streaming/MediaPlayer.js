@@ -79,6 +79,7 @@ MediaPlayer = function (context) {
         metricsExt,
         metricsModel,
         videoModel,
+        textSourceBuffer,
         DOMStorage,
         initialized = false,
         resetting = false,
@@ -595,6 +596,37 @@ MediaPlayer = function (context) {
          */
         setQualityFor: function (type, value) {
             abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value);
+        },
+
+
+        /**
+         * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
+         * set the track mode on the video object to switch a track when using this method.
+         *
+         * @param idx - Index of track based on the order of the order the tracks are added.  Use MediaPlayer#MediaPlayer.events.TEXT_TRACK_ADDED.
+         * @see {@link MediaPlayer#MediaPlayer.events.TEXT_TRACK_ADDED}
+         * @memberof MediaPlayer#
+         */
+        setTextTrack: function (idx) {
+            if (textSourceBuffer === undefined){
+                textSourceBuffer = system.getObject("textSourceBuffer");
+            }
+
+            var tracks = element.textTracks,
+                ln = tracks.length;
+
+            for(var i=0; i < ln; i++ ){
+                var track = tracks[i],
+                    mode = idx === i ? "showing" : "hidden";
+
+                if (track.mode !== mode){ //checking that mode is not already set by 3rd Party player frameworks that set mode to prevent events.
+                    track.mode = mode;
+                }
+            }
+
+            if (textSourceBuffer.isFragmented) {
+                textSourceBuffer.setTextTrack();
+            }
         },
 
         /**

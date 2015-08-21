@@ -31,6 +31,7 @@
 MediaPlayer.utils.TextTrackExtensions = function () {
     "use strict";
     var Cue,
+        video,
         textTrackQueue = [],
         trackElementArr = [],
         currentTrackIdx = 0,
@@ -39,7 +40,24 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         actualVideoHeight = 0,
         captionContainer = null,
         videoSizeCheckInterval = null,
-        currentTrack = null;
+        isIE11 = false, // Temp solution for the addCue InvalidStateError - https://connect.microsoft.com/IE/feedback/details/1573380/htmltrackelement-track-addcue-throws-invalidstateerror-when-adding-new-cue
+
+        createTrackForUserAgent = function(i){
+            var captionType = trackKindMap[textTrackQueue[i].role];
+            var kind = captionType !== undefined ? captionType : trackKindMap.caption;
+            var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
+            var lang = textTrackQueue[i].lang;
+            var track = isIE11 ? video.addTextTrack("captions", "hello", lang) : document.createElement('track');
+
+             if (!isIE11) {
+                 track.kind = kind;
+                 track.label = label;
+                 track.srclang = lang;
+             }
+
+            return track;
+        };
+
 
     return {
         mediaController:undefined,
@@ -47,30 +65,28 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
         setup: function() {
             Cue = window.VTTCue || window.TextTrackCue;
+
+            //TODO Check if IE has resolved issues: Then revert to not using the addTextTrack API for all browsers.
+            // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
+            // https://connect.microsoft.com/IE/feedback/details/1573380/htmltrackelement-track-addcue-throws-invalidstateerror-when-adding-new-cue
+            isIE11 = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./);
         },
 
         addTextTrack: function(textTrackInfoVO, totalTextTracks) {
 
             textTrackQueue.push(textTrackInfoVO);
-            if (this.video === undefined) {
-                this.video = textTrackInfoVO.video;
+            if (video === undefined) {
+                video = textTrackInfoVO.video;
             }
             captionContainer = this.videoModel.getTTMLRenderingDiv();
 
             if(textTrackQueue.length === totalTextTracks) {
-
                 var defaultIndex = 0;
                 for(var i = 0 ; i < textTrackQueue.length; i++) {
-                    var track = document.createElement('track'),
-                        captionType = trackKindMap[textTrackQueue[i].role];
 
-                    currentTrackIdx = i;
-                    trackElementArr.push(track);
-
-                    track.kind = captionType !== undefined ? captionType : trackKindMap.caption;
-                    track.label = textTrackQueue[i].lang;
-                    track.srclang = textTrackQueue[i].lang;
-
+                    var track = createTrackForUserAgent(i);
+                    currentTrackIdx = i;//set to i for external track setup. rest to default value at end of loop
+                    trackElementArr.push(track); //used to remove tracks from video element when added manually
                     // track.default is an object property identifier that is a reserved word
                     // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
                     /*jshint -W024 */
@@ -79,7 +95,10 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         defaultIndex = i;
                     }
 
-                    this.video.appendChild(track);
+                    if (!isIE11){
+                        video.appendChild(track);
+                    }
+
                     this.addCaptions(0, textTrackQueue[i].captionData);
                 }
 
@@ -88,7 +107,8 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         },
 
         checkVideoSize: function() {
-            if (currentTrack && currentTrack.renderingType === "html") {
+            var track = this.getCurrentTextTrack();
+            if (track && track.renderingType === "html") {
                 var newVideoWidth = this.video.clientWidth;
                 var newVideoHeight = this.video.clientHeight;
 
@@ -99,8 +119,8 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     captionContainer.style.height = actualVideoHeight + "px";
 
                     // Video view has changed size, so resize all active cues
-                    for (var i = 0; i < currentTrack.activeCues.length; ++i) {
-                        var cue = currentTrack.activeCues[i];
+                    for (var i = 0; i < track.activeCues.length; ++i) {
+                        var cue = track.activeCues[i];
                             cue.scaleCue(cue);
                     }
                 }
@@ -166,17 +186,17 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
         addCaptions: function(timeOffset, captionData) {
             var track = this.getCurrentTextTrack();
-            currentTrack = track;
             track.mode = "showing";//make sure tracks are showing to be able to add the cue...
 
-            if (!videoSizeCheckInterval) {
-                videoSizeCheckInterval = 500;
-                setInterval(this.checkVideoSize.bind(this), videoSizeCheckInterval);
-            }
+
 
             for(var item in captionData) {
-                var cue;
-                var currentItem = captionData[item];
+                var cue,
+                    currentItem = captionData[item];
+
+                if (!videoSizeCheckInterval && currentItem.type=="html") {
+                    videoSizeCheckInterval = setInterval(this.checkVideoSize.bind(this), 500);
+                }
 
                 //image subtitle extracted from TTML
                 if(currentItem.type=="image"){
@@ -214,8 +234,6 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         this.setCueStyle();
                     }
 
-
-
                     cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
                     cue.cueHTMLElement = currentItem.cueHTMLElement;
                     cue.regions = currentItem.regions;
@@ -232,7 +250,6 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     captionContainer.style.height = this.video.clientHeight + "px";
 
                     cue.onenter =  function () {
-                        currentTrack = track;
                         if (track.mode == "showing") {
                             captionContainer.appendChild(this.cueHTMLElement);
                             this.scaleCue(this);
@@ -275,11 +292,11 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         },
 
         getCurrentTextTrack: function(){
-            return this.video.textTracks[currentTrackIdx];
+            return video.textTracks[currentTrackIdx];
         },
 
         getTextTrack: function(idx) {
-            return this.video.textTracks[idx];
+            return video.textTracks[idx];
         },
 
         deleteTrackCues: function(track) {
@@ -290,20 +307,31 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                 for (var r = lastIdx; r >= 0 ; r--) {
                     track.removeCue(cues[r]);
                 }
+
+                track.mode = "disabled";
             }
         },
 
         deleteAllTextTracks:  function() {
             var ln = trackElementArr.length;
             for(var i = 0; i < ln; i++){
-                this.video.removeChild(trackElementArr[i]);
+                if (isIE11) {
+                    this.deleteTrackCues(this.getTextTrack(i));
+                }else {
+                    video.removeChild(trackElementArr[i]);
+                }
+
             }
             trackElementArr = [];
             textTrackQueue = [];
+            if (videoSizeCheckInterval){
+                clearInterval(videoSizeCheckInterval);
+            }
+
         },
 
         deleteTextTrack: function(idx) {
-            this.video.removeChild(trackElementArr[idx]);
+            video.removeChild(trackElementArr[idx]);
             trackElementArr.splice(idx, 1);
         },
 

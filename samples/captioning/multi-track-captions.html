@@ -2,21 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <title>WebVTT Dash Demo</title>
+    <title>Multiple Text Track Sample</title>
     <meta name="description" content="" />
 
     <script src="../../dist/dash.debug.js"></script>
 
-
     <script>
         var EXTERNAL_CAPTION_URL = "http://dash.edgesuite.net/dash264/TestCases/4b/qualcomm/1/ED_OnDemand_5SecSeg_Subtitles.mpd", // need to manually seek to get stream to start... issue with MPD but only sample with multi adaptations for external sidecar caption text xml
             FRAGMENTED_CAPTION_URL = "http://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
-            videoElement;
+            videoElement,
+            player;
 
         function startVideo() {
             var url = FRAGMENTED_CAPTION_URL,
                 context,
-                player,
                 TTMLRenderingDiv;
 
             videoElement = document.querySelector(".dash-video-player video");
@@ -40,7 +39,7 @@
                 var track = tracks[i],
                     option = document.createElement("option");
 
-                option.text = track.language;
+                option.text = track.language.toUpperCase() + " : " + track.kind;
                 option.value = i;
                 selectMenu.add(option);
             }
@@ -49,15 +48,9 @@
         }
 
         function onCaptionMenuChange(e){
-            var tracks = videoElement.textTracks,
-                ln = tracks.length,
-                idx = e.currentTarget.selectedIndex - 1;
-
-            for(var i=0; i<ln; i++){
-                var track = tracks[i];
-                track.mode = idx === i ? "showing" : "hidden";
-            }
+            player.setTextTrack(e.currentTarget.selectedIndex - 1);
         }
+
     </script>
 
     <style>
