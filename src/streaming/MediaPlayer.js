@@ -79,6 +79,7 @@ MediaPlayer = function (context) {
         metricsExt,
         metricsModel,
         videoModel,
+        textSourceBuffer,
         DOMStorage,
         initialized = false,
         resetting = false,
@@ -589,12 +590,47 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * Sets the current quality for media type instead of letting the ABR Herstics automatically selecting it..
+         *
          * @param type
          * @param value
          * @memberof MediaPlayer#
          */
         setQualityFor: function (type, value) {
             abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value);
+        },
+
+
+        /**
+         * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
+         * set the track mode on the video object to switch a track when using this method.
+         *
+         * @param idx - Index of track based on the order of the order the tracks are added Use -1 to disable all tracks. (turn captions off).  Use MediaPlayer#MediaPlayer.events.TEXT_TRACK_ADDED.
+         * @see {@link MediaPlayer#MediaPlayer.events.TEXT_TRACK_ADDED}
+         * @memberof MediaPlayer#
+         */
+        setTextTrack: function (idx) {
+            //For external time text file,  the only action needed to change a track is marking the track mode to showing.
+            // Fragmented text tracks need the additional step of calling textSourceBuffer.setTextTrack();
+            if (textSourceBuffer === undefined){
+                textSourceBuffer = system.getObject("textSourceBuffer");
+            }
+
+            var tracks = element.textTracks,
+                ln = tracks.length;
+
+            for(var i=0; i < ln; i++ ){
+                var track = tracks[i],
+                    mode = idx === i ? "showing" : "hidden";
+
+                if (track.mode !== mode){ //checking that mode is not already set by 3rd Party player frameworks that set mode to prevent event retrigger.
+                    track.mode = mode;
+                }
+            }
+
+            if (textSourceBuffer.isFragmented && idx >= 0) {
+                textSourceBuffer.setTextTrack();
+            }
         },
 
         /**
@@ -1050,16 +1086,10 @@ MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          */
         attachTTMLRenderingDiv: function (div) {
-            if (!initialized) {
-                throw "MediaPlayer not initialized!";
+            if (!videoModel) {
+                throw "Must call attachView with video element before you attach TTML Rendering Div";
             }
-
-
-            videoModel = null;
-            if (div) {
-                videoModel = system.getObject("videoModel");
-                videoModel.setTTMLRenderingDiv(div);
-            }
+            videoModel.setTTMLRenderingDiv(div);
         },
 
         /**

@@ -33,20 +33,27 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         allTracksAreDisabled = false,
         parser = null,
 
-        onTextTrackChange = function(evt) {
-            for (var i = 0; i < evt.srcElement.length; i++ ) {
-                var t = evt.srcElement[i],
-                    el = this.videoModel.getElement();
 
-                allTracksAreDisabled = t.mode !== "showing";
-                if (t.mode === "showing" && el.currentTime > 0) { //TODO find a better way to block function when event is triggered at startup when listener is added.  Tried to delay adding listener.
-                    if (currentTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again.
+        onTextTrackChange = function(/*evt*/) {
+            var el = this.videoModel.getElement(),
+                tracks = el.textTracks,
+                ln = tracks.length;
+
+            for (var i = 0; i < ln; i++ ) {
+                var track = tracks[i];
+
+                allTracksAreDisabled = track.mode !== "showing";
+
+                if (track.mode === "showing" && el.currentTime > 0) { //TODO find a better way to block function when event is triggered at startup when listener is added.  Tried to delay adding listener.
+                    if (currentTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
+
                         var previousTextTrack = this.textTrackExtensions.getCurrentTextTrack();
                         this.textTrackExtensions.deleteTrackCues(previousTextTrack);
                         if (previousTextTrack.renderingType === "html") {
                             this.textTrackExtensions.removeCueStyle();
                             this.textTrackExtensions.clearCues();
                         }
+
                         currentTrackIdx = i;
                         this.textTrackExtensions.setCurrentTrackIdx(i);
                         this.textTrackExtensions.deleteTrackCues(this.textTrackExtensions.getCurrentTextTrack());
@@ -117,7 +124,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                     for (i = 0; i < this.mediaInfos.length; i++){
                         createTextTrackFromMediaInfo(null, this.mediaInfos[i]);
                     }
-                    self.videoModel.getElement().textTracks.addEventListener('change', onTextTrackChange.bind(self));
                     this.timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
                 }else {
                     samplesInfo = fragmentExt.getSamplesInfo(bytes);
@@ -188,7 +194,9 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
 
         removeEventListener: function (type, listener, useCapture) {
             this.eventBus.removeEventListener(type, listener, useCapture);
-        }
+        },
+
+        setTextTrack: onTextTrackChange,
     };
 };
 
