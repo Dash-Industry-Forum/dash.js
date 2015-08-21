@@ -359,7 +359,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
         removeCueStyle: function() {
             var stylesheet = document.getElementById('caption-style').sheet;
-            if(stylesheet.cssRules) {
+            if(stylesheet.cssRules && stylesheet.cssRules.length > 0) {
                 stylesheet.deleteRule(0);
             }
         },
