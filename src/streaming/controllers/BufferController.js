@@ -232,10 +232,6 @@ MediaPlayer.dependencies.BufferController = function () {
             checkGapBetweenBuffers.call(self);
             checkIfSufficientBuffer.call(self);
 
-            if (bufferLevel < STALL_THRESHOLD) {
-                notifyIfSufficientBufferStateChanged.call(self, false);
-            }
-
             return true;
         },
 
@@ -401,10 +397,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         checkIfSufficientBuffer = function () {
-            var timeToEnd = this.playbackController.getTimeToStreamEnd();
-                //minLevel = this.streamProcessor.isDynamic() ? minBufferTime / 2 : minBufferTime;
-
-            if (bufferLevel < STALL_THRESHOLD && (minBufferTime < timeToEnd) || (minBufferTime >= timeToEnd && !isBufferingCompleted)) {
+            if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
                 notifyIfSufficientBufferStateChanged.call(this, false);
             } else {
                 notifyIfSufficientBufferStateChanged.call(this, true);
