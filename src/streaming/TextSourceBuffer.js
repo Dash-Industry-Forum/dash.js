@@ -52,6 +52,13 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                     break;
                 }
              }
+        },
+
+        trimCaptionsToSampleLimits = function (cArr, start, end) {
+            cArr.forEach(function (c) {
+                c.start = Math.max(start, c.start);
+                c.end   = Math.min(end, c.end);
+            });
         };
 
     return {
@@ -87,7 +94,9 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 ccContent,
                 mediaInfo = chunk.mediaInfo,
                 mediaType = mediaInfo.type,
-                mimeType = mediaInfo.mimeType;
+                mimeType = mediaInfo.mimeType,
+                sampleStart = 0,
+                sampleEnd = Infinity;
 
             function createTextTrackFromMediaInfo(captionData, mediaInfo) {
                 var textTrackInfo = new MediaPlayer.vo.TextTrackInfo();
@@ -119,8 +128,11 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                         if(!this.firstSubtitleStart){
                             this.firstSubtitleStart = samplesInfo[0].cts-chunk.start*this.timescale;
                         }
-                        samplesInfo[i].cts -= this.firstSubtitleStart;
-                        this.buffered.add(samplesInfo[i].cts/this.timescale,(samplesInfo[i].cts+samplesInfo[i].duration)/this.timescale);
+
+                        sampleStart = samplesInfo[i].cts / this.timescale;
+                        sampleEnd = (samplesInfo[i].cts + samplesInfo[i].duration) / this.timescale;
+
+                        this.buffered.add(sampleStart, sampleEnd);
 
                         //TODO: If do not block here captions will render even though all tracks are hidden.
                         // If I block above this line we get errors in Virtual Buffer. Ideally I need to figure
@@ -132,6 +144,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                         parser = parser !== null ? parser : self.getParser(mimeType); //store locally for fragmented text so we do not fetch from dijon over and over again.
                         try{
                             result = parser.parse(ccContent);
+                            trimCaptionsToSampleLimits(result, sampleStart, sampleEnd);
                             this.textTrackExtensions.addCaptions(this.firstSubtitleStart/this.timescale,result);
                         } catch(e) {
                             //empty cue ?
