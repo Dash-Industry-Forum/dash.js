@@ -628,7 +628,7 @@ MediaPlayer = function (context) {
                 }
             }
 
-            if (textSourceBuffer.isFragmented && idx >= 0) {
+            if (textSourceBuffer.isFragmented) {
                 textSourceBuffer.setTextTrack();
             }
         },

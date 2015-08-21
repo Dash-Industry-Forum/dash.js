@@ -109,8 +109,8 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         checkVideoSize: function() {
             var track = this.getCurrentTextTrack();
             if (track && track.renderingType === "html") {
-                var newVideoWidth = this.video.clientWidth;
-                var newVideoHeight = this.video.clientHeight;
+                var newVideoWidth = video.clientWidth;
+                var newVideoHeight = video.clientHeight;
 
                 if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
                     actualVideoWidth = newVideoWidth;
@@ -244,8 +244,8 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     cue.lineHeight = currentItem.lineHeight;
                     cue.linePadding = currentItem.linePadding;
                     cue.scaleCue = this.scaleCue;
-                    captionContainer.style.width = this.video.clientWidth + "px";
-                    captionContainer.style.height = this.video.clientHeight + "px";
+                    captionContainer.style.width = video.clientWidth + "px";
+                    captionContainer.style.height = video.clientHeight + "px";
 
                     cue.onenter =  function () {
                         if (track.mode == "showing") {
@@ -348,12 +348,12 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             document.head.appendChild(styleElement);
             var stylesheet = styleElement.sheet;
 
-            if(!this.video.id) {
+            if(!video.id) {
                 stylesheet.addRule('video::cue','background: transparent');
-            } else if(this.video.id) {
+            } else if(video.id) {
                 stylesheet.addRule("#" + this.video.id + '::cue','background: transparent');
-            } else if(this.video.classList.length !== 0) {
-                stylesheet.addRule("." + this.video.className + '::cue','background: transparent');
+            } else if(video.classList.length !== 0) {
+                stylesheet.addRule("." + video.className + '::cue','background: transparent');
             }
         },
 
