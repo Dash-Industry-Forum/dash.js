@@ -49,13 +49,20 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
         } else if (node.nodeType == DOMNodeTypes.ELEMENT_NODE) {
             var result = new Object();
             result.__cnt = 0;
+            var children = [];
             var nodeChildren = node.childNodes;
             for (var cidx = 0; cidx < nodeChildren.length; cidx++) {
                 var child = nodeChildren.item(cidx);
                 var childName = getNodeLocalName(child);
                 result.__cnt++;
                 if (result[childName] == null) {
-                    result[childName] = parseDOMChildren(child);
+                    var c = parseDOMChildren(child);
+                    if (childName != "#text" || /[^\s]/.test(c)) {
+                        var o = {};
+                        o[childName] = c;
+                        children.push(o);
+                    }
+                    result[childName] = c;
                     result[childName + "_asArray"] = new Array(1);
                     result[childName + "_asArray"][0] = result[childName];
                 } else {
@@ -69,9 +76,16 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
                     }
                     var aridx = 0;
                     while (result[childName][aridx] != null) aridx++;
-                    result[childName][aridx] = parseDOMChildren(child);
+                    var c = parseDOMChildren(child);
+                    if (childName != "#text" || /[^\s]/.test(c)) {
+                        var o = {};
+                        o[childName] = c;
+                        children.push(o);
+                    }
+                    result[childName][aridx] = c;
                 }
             }
+            result.__children = children;
             for (var aidx = 0; aidx < node.attributes.length; aidx++) {
                 var attr = node.attributes.item(aidx);
                 result.__cnt++;
@@ -344,7 +358,7 @@ function ObjectIron(map) {
             }
         }
         for (pp in source) {
-            if (source.hasOwnProperty(pp)) {
+            if (source.hasOwnProperty(pp) && pp != "__children") {
                 pi = lookup.indexOf(pp);
                 if (pi !== -1) {
                     item = map[pi];
@@ -1449,7 +1463,7 @@ ISOFile.prototype.fetch = function(a) {
 
 MediaPlayer = function(context) {
     "use strict";
-    var VERSION = "1.5.0", DEFAULT_TIME_SERVER = "http://time.akamai.com/?iso", DEFAULT_TIME_SOURCE_SCHEME = "urn:mpeg:dash:utc:http-xsdate:2014", numOfParallelRequestAllowed = 0, system, abrController, mediaController, element, source, protectionController = null, protectionData = null, streamController, rulesController, playbackController, metricsExt, metricsModel, videoModel, DOMStorage, initialized = false, resetting = false, playing = false, autoPlay = true, scheduleWhilePaused = false, bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED, useManifestDateHeaderTimeSource = true, UTCTimingSources = [], liveDelayFragmentCount = 4, usePresentationDelay = false, isReady = function() {
+    var VERSION = "1.5.0", DEFAULT_TIME_SERVER = "http://time.akamai.com/?iso", DEFAULT_TIME_SOURCE_SCHEME = "urn:mpeg:dash:utc:http-xsdate:2014", numOfParallelRequestAllowed = 0, system, abrController, mediaController, element, source, protectionController = null, protectionData = null, streamController, rulesController, playbackController, metricsExt, metricsModel, videoModel, textSourceBuffer, DOMStorage, initialized = false, resetting = false, playing = false, autoPlay = true, scheduleWhilePaused = false, bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED, useManifestDateHeaderTimeSource = true, UTCTimingSources = [], liveDelayFragmentCount = 4, usePresentationDelay = false, isReady = function() {
         return !!element && !!source && !resetting;
     }, play = function() {
         if (!initialized) {
@@ -1470,6 +1484,8 @@ MediaPlayer = function(context) {
         playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
         playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
         playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
+        system.mapValue("liveDelayFragmentCount", liveDelayFragmentCount);
+        system.mapOutlet("liveDelayFragmentCount", "trackController");
         streamController.initialize(autoPlay, protectionController, protectionData);
         DOMStorage.checkInitialBitrate();
         if (typeof source === "string") {
@@ -1549,6 +1565,7 @@ MediaPlayer = function(context) {
         var streamInfo = streamController.getActiveStreamInfo();
         return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
     }, resetAndPlay = function() {
+        this.adapter.reset();
         if (playing && streamController) {
             if (!resetting) {
                 resetting = true;
@@ -1701,6 +1718,21 @@ MediaPlayer = function(context) {
         setQualityFor: function(type, value) {
             abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value);
         },
+        setTextTrack: function(idx) {
+            if (textSourceBuffer === undefined) {
+                textSourceBuffer = system.getObject("textSourceBuffer");
+            }
+            var tracks = element.textTracks, ln = tracks.length;
+            for (var i = 0; i < ln; i++) {
+                var track = tracks[i], mode = idx === i ? "showing" : "hidden";
+                if (track.mode !== mode) {
+                    track.mode = mode;
+                }
+            }
+            if (textSourceBuffer.isFragmented && idx >= 0) {
+                textSourceBuffer.setTextTrack();
+            }
+        },
         getBitrateInfoListFor: function(type) {
             var stream = getActiveStream.call(this);
             return stream ? stream.getBitrateListFor(type) : [];
@@ -1711,10 +1743,17 @@ MediaPlayer = function(context) {
         getInitialBitrateFor: function(type) {
             return abrController.getInitialBitrateFor(type);
         },
+        getStreamsFromManifest: function(manifest) {
+            return this.adapter.getStreamsInfo(manifest);
+        },
         getTracksFor: function(type) {
             var streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
             if (!streamInfo) return [];
             return mediaController.getTracksFor(type, streamInfo);
+        },
+        getTracksForTypeFromManifest: function(type, manifest, streamInfo) {
+            streamInfo = streamInfo || this.adapter.getStreamsInfo(manifest)[0];
+            return streamInfo ? this.adapter.getAllMediaInfoForType(manifest, streamInfo, type) : [];
         },
         getCurrentTrackFor: function(type) {
             var streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
@@ -1806,6 +1845,12 @@ MediaPlayer = function(context) {
                 videoModel.setElement(element);
             }
             resetAndPlay.call(this);
+        },
+        attachTTMLRenderingDiv: function(div) {
+            if (!videoModel) {
+                throw "Must call attachView with video element before you attach TTML Rendering Div";
+            }
+            videoModel.setTTMLRenderingDiv(div);
         },
         attachSource: function(urlOrManifest, protectionCtrl, data) {
             if (!initialized) {
@@ -2323,7 +2368,7 @@ Dash.dependencies.DashHandler = function() {
         var self = this, period, request = new MediaPlayer.vo.FragmentRequest(), presentationStartTime;
         period = representation.adaptation.period;
         request.mediaType = mediaType;
-        request.type = "Initialization Segment";
+        request.type = MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE;
         request.url = getRequestUrl(representation.initialization, representation);
         request.range = representation.range;
         presentationStartTime = period.start;
@@ -2669,7 +2714,7 @@ Dash.dependencies.DashHandler = function() {
         url = replaceIDForTemplate(url, representation.id);
         url = unescapeDollarsInTemplate(url);
         request.mediaType = type;
-        request.type = "Media Segment";
+        request.type = MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE;
         request.url = url;
         request.range = segment.mediaRange;
         request.startTime = segment.presentationStartTime;
@@ -2840,7 +2885,7 @@ Dash.dependencies.DashHandler.eventList = {
 
 Dash.dependencies.DashParser = function() {
     "use strict";
-    var SECONDS_IN_YEAR = 365 * 24 * 60 * 60, SECONDS_IN_MONTH = 30 * 24 * 60 * 60, SECONDS_IN_DAY = 24 * 60 * 60, SECONDS_IN_HOUR = 60 * 60, SECONDS_IN_MIN = 60, MINUTES_IN_HOUR = 60, MILLISECONDS_IN_SECONDS = 1e3, durationRegex = /^([-])?P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/, datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+-])([0-9]{2})([0-9]{2}))?/, numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/, matchers = [ {
+    var SECONDS_IN_YEAR = 365 * 24 * 60 * 60, SECONDS_IN_MONTH = 30 * 24 * 60 * 60, SECONDS_IN_DAY = 24 * 60 * 60, SECONDS_IN_HOUR = 60 * 60, SECONDS_IN_MIN = 60, MINUTES_IN_HOUR = 60, MILLISECONDS_IN_SECONDS = 1e3, durationRegex = /^([-])?P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/, datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+-])([0-9]{2})([0-9]{2}))?/, numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/, httpOrHttpsRegex = /^https?:\/\//i, matchers = [ {
         type: "duration",
         test: function(attr) {
             var attributeList = [ "minBufferTime", "mediaPresentationDuration", "minimumUpdatePeriod", "timeShiftBufferDepth", "maxSegmentDuration", "maxSubsegmentDuration", "suggestedPresentationDelay", "start", "starttime", "duration" ], len = attributeList.length;
@@ -3002,7 +3047,7 @@ Dash.dependencies.DashParser = function() {
             merge: true,
             mergeFunction: function(parentValue, childValue) {
                 var mergedValue;
-                if (childValue.indexOf("http://") === 0) {
+                if (httpOrHttpsRegex.test(childValue)) {
                     mergedValue = childValue;
                 } else {
                     mergedValue = parentValue + childValue;
@@ -3265,7 +3310,7 @@ Dash.dependencies.RepresentationController = function() {
             rep.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(rep, isDynamic);
         }
     }, postponeUpdate = function(availabilityDelay) {
-        var self = this, delay = (availabilityDelay + currentRepresentation.segmentDuration * 3) * 1e3, update = function() {
+        var self = this, delay = (availabilityDelay + currentRepresentation.segmentDuration * this.liveDelayFragmentCount) * 1e3, update = function() {
             if (this.isUpdating()) return;
             updating = true;
             self.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
@@ -3357,6 +3402,7 @@ Dash.dependencies.RepresentationController = function() {
         subscribe: undefined,
         unsubscribe: undefined,
         DOMStorage: undefined,
+        liveDelayFragmentCount: undefined,
         setup: function() {
             this[MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
             this[Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED] = onRepresentationUpdated;
@@ -4261,7 +4307,7 @@ Dash.dependencies.DashMetricsExtensions = function() {
     }, getLatestMPDRequestHeaderValueByID = function(metrics, id) {
         if (metrics === null) return null;
         var httpRequestList = getHttpRequests(metrics), httpRequest = httpRequestList[httpRequestList.length - 1], headers;
-        if (httpRequest.type === "MPD") {
+        if (httpRequest.type === MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE) {
             headers = parseResponseHeaders(httpRequest.responseHeaders);
         }
         return headers[id] === undefined ? null : headers[id];
@@ -4338,7 +4384,7 @@ Dash.dependencies.FragmentExtensions = function() {
         return sampleList;
     }, getMediaTimescaleFromMoov = function(ab) {
         var isoFile = this.boxParser.parse(ab), mdhdBox = isoFile.getBox("mdhd");
-        return mdhdBox.timescale;
+        return mdhdBox ? mdhdBox.timescale : NaN;
     };
     return {
         log: undefined,
@@ -4566,10 +4612,15 @@ MediaPlayer.dependencies.ErrorHandler.prototype = {
 
 MediaPlayer.dependencies.FragmentLoader = function() {
     "use strict";
-    var RETRY_ATTEMPTS = 3, RETRY_INTERVAL = 500, xhrs = [], doLoad = function(request, remainingAttempts) {
-        var req = new XMLHttpRequest(), httpRequestMetrics = null, firstProgress = true, needFailureReport = true, lastTraceTime = null, self = this, handleLoaded = function(requestVO, succeeded) {
+    var RETRY_ATTEMPTS = MediaPlayer.dependencies.FragmentLoader.RETRY_ATTEMPTS, RETRY_INTERVAL = MediaPlayer.dependencies.FragmentLoader.RETRY_INTERVAL, xhrs = [], doLoad = function(request, remainingAttempts) {
+        var req = new XMLHttpRequest(), traces = [], firstProgress = true, needFailureReport = true, lastTraceTime = null, self = this, handleLoaded = function(requestVO, succeeded) {
             needFailureReport = false;
-            var currentTime = new Date(), bytes = req.response, latency, download;
+            var currentTime = new Date(), bytes = req.response, latency, download, httpRequestMetrics = null;
+            traces.push({
+                s: currentTime,
+                d: currentTime.getTime() - lastTraceTime.getTime(),
+                b: [ bytes ? bytes.byteLength : 0 ]
+            });
             if (!requestVO.firstByteDate) {
                 requestVO.firstByteDate = requestVO.requestStartDate;
             }
@@ -4577,17 +4628,20 @@ MediaPlayer.dependencies.FragmentLoader = function() {
             latency = requestVO.firstByteDate.getTime() - requestVO.requestStartDate.getTime();
             download = requestVO.requestEndDate.getTime() - requestVO.firstByteDate.getTime();
             self.log((succeeded ? "loaded " : "failed ") + requestVO.mediaType + ":" + requestVO.type + ":" + requestVO.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
-            httpRequestMetrics.tresponse = requestVO.firstByteDate;
-            httpRequestMetrics.tfinish = requestVO.requestEndDate;
-            httpRequestMetrics.responsecode = req.status;
-            httpRequestMetrics.responseHeaders = req.getAllResponseHeaders();
-            self.metricsModel.appendHttpTrace(httpRequestMetrics, currentTime, currentTime.getTime() - lastTraceTime.getTime(), [ bytes ? bytes.byteLength : 0 ]);
-            lastTraceTime = currentTime;
+            httpRequestMetrics = self.metricsModel.addHttpRequest(request.mediaType, null, request.type, request.url, req.responseURL || null, request.range, request.requestStartDate, requestVO.firstByteDate, requestVO.requestEndDate, req.status, request.duration, req.getAllResponseHeaders());
+            if (succeeded) {
+                traces.forEach(function(trace) {
+                    self.metricsModel.appendHttpTrace(httpRequestMetrics, trace.s, trace.d, trace.b);
+                });
+            }
         };
         xhrs.push(req);
         request.requestStartDate = new Date();
-        httpRequestMetrics = self.metricsModel.addHttpRequest(request.mediaType, null, request.type, request.url, null, request.range, request.requestStartDate, null, null, null, null, request.duration, null);
-        self.metricsModel.appendHttpTrace(httpRequestMetrics, request.requestStartDate, request.requestStartDate.getTime() - request.requestStartDate.getTime(), [ 0 ]);
+        traces.push({
+            s: request.requestStartDate,
+            d: 0,
+            b: [ 0 ]
+        });
         lastTraceTime = request.requestStartDate;
         req.open("GET", self.requestModifierExt.modifyRequestURL(request.url), true);
         req.responseType = "arraybuffer";
@@ -4601,14 +4655,17 @@ MediaPlayer.dependencies.FragmentLoader = function() {
                 firstProgress = false;
                 if (!event.lengthComputable || event.lengthComputable && event.total != event.loaded) {
                     request.firstByteDate = currentTime;
-                    httpRequestMetrics.tresponse = currentTime;
                 }
             }
             if (event.lengthComputable) {
                 request.bytesLoaded = event.loaded;
                 request.bytesTotal = event.total;
             }
-            self.metricsModel.appendHttpTrace(httpRequestMetrics, currentTime, currentTime.getTime() - lastTraceTime.getTime(), [ req.response ? req.response.byteLength : 0 ]);
+            traces.push({
+                s: currentTime,
+                d: currentTime.getTime() - lastTraceTime.getTime(),
+                b: [ req.response ? req.response.byteLength : 0 ]
+            });
             lastTraceTime = currentTime;
             self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_PROGRESS, {
                 request: request
@@ -4707,6 +4764,10 @@ MediaPlayer.dependencies.FragmentLoader = function() {
     };
 };
 
+MediaPlayer.dependencies.FragmentLoader.RETRY_ATTEMPTS = 3;
+
+MediaPlayer.dependencies.FragmentLoader.RETRY_INTERVAL = 500;
+
 MediaPlayer.dependencies.FragmentLoader.prototype = {
     constructor: MediaPlayer.dependencies.FragmentLoader
 };
@@ -4795,21 +4856,22 @@ MediaPlayer.dependencies.ManifestLoader = function() {
         }
         return base;
     }, doLoad = function(url, remainingAttempts) {
-        var baseUrl = parseBaseUrl(url), request = new XMLHttpRequest(), requestTime = new Date(), loadedTime = null, needFailureReport = true, manifest, onload, report, self = this;
+        var baseUrl = parseBaseUrl(url), request = new XMLHttpRequest(), requestTime = new Date(), loadedTime = null, needFailureReport = true, manifest, onload, report, progress, firstProgressCall, self = this;
         onload = function() {
+            var actualUrl = null;
             if (request.status < 200 || request.status > 299) {
                 return;
             }
             needFailureReport = false;
             loadedTime = new Date();
-            self.metricsModel.addHttpRequest("stream", null, "MPD", url, null, null, requestTime, loadedTime, null, request.status, null, null, request.getAllResponseHeaders());
-            if (request.responseURL) {
+            if (request.responseURL && request.responseURL !== url) {
                 baseUrl = parseBaseUrl(request.responseURL);
-                url = request.responseURL;
+                actualUrl = request.responseURL;
             }
+            self.metricsModel.addHttpRequest("stream", null, MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE, url, actualUrl, null, requestTime, request.firstByteDate || null, loadedTime, request.status, null, request.getAllResponseHeaders());
             manifest = self.parser.parse(request.responseText, baseUrl, self.xlinkController);
             if (manifest) {
-                manifest.url = url;
+                manifest.url = actualUrl || url;
                 manifest.loadedTime = loadedTime;
                 self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, loadedTime, manifest.availabilityStartTime);
                 self.xlinkController.resolveManifestOnLoad(manifest);
@@ -4824,7 +4886,7 @@ MediaPlayer.dependencies.ManifestLoader = function() {
                 return;
             }
             needFailureReport = false;
-            self.metricsModel.addHttpRequest("stream", null, "MPD", url, null, null, requestTime, new Date(), request.status, null, null, request.getAllResponseHeaders());
+            self.metricsModel.addHttpRequest("stream", null, MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE, url, request.responseURL || null, null, requestTime, request.firstByteDate || null, new Date(), request.status, null, request.getAllResponseHeaders());
             if (remainingAttempts > 0) {
                 self.log("Failed loading manifest: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
                 remainingAttempts--;
@@ -4837,10 +4899,19 @@ MediaPlayer.dependencies.ManifestLoader = function() {
                 self.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url + " no retry attempts left"));
             }
         };
+        progress = function(event) {
+            if (firstProgressCall) {
+                firstProgressCall = false;
+                if (!event.lengthComputable || event.lengthComputable && event.total != event.loaded) {
+                    request.firstByteDate = new Date();
+                }
+            }
+        };
         try {
             request.onload = onload;
             request.onloadend = report;
             request.onerror = report;
+            request.onprogress = progress;
             request.open("GET", self.requestModifierExt.modifyRequestURL(url), true);
             request.send();
         } catch (e) {
@@ -5029,8 +5100,7 @@ MediaPlayer.dependencies.Stream = function() {
             this.reset();
         }
     }, getMimeTypeOrType = function(mediaInfo) {
-        var isText = mediaInfo.type === "text";
-        return isText ? mediaInfo.mimeType : mediaInfo.type;
+        return mediaInfo.type === "text" ? mediaInfo.mimeType : mediaInfo.type;
     }, isMediaSupported = function(mediaInfo, mediaSource, manifest) {
         var self = this, type = mediaInfo.type, codec, msg;
         if (type === "muxed" && mediaInfo) {
@@ -5051,8 +5121,24 @@ MediaPlayer.dependencies.Stream = function() {
             return false;
         }
         return true;
+    }, onCurrentTrackChanged = function(e) {
+        var processor = getProcessorForMediaInfo.call(this, e.data.oldMediaInfo);
+        if (!processor) return;
+        var currentTime = this.playbackController.getTime(), buffer = processor.getBuffer(), mediaInfo = e.data.newMediaInfo, manifest = this.manifestModel.getValue(), idx = streamProcessors.indexOf(processor), mediaSource = processor.getMediaSource();
+        if (mediaInfo.type !== "fragmentedText") {
+            processor.reset(true);
+            createStreamProcessor.call(this, mediaInfo, manifest, mediaSource, {
+                buffer: buffer,
+                replaceIdx: idx,
+                currentTime: currentTime
+            });
+            this.playbackController.seek(this.playbackController.getTime());
+        } else {
+            processor.setIndexHandlerTime(currentTime);
+            processor.updateMediaInfo(manifest, mediaInfo);
+        }
     }, createStreamProcessor = function(mediaInfo, manifest, mediaSource, optionalSettings) {
-        var self = this, streamProcessor = self.system.getObject("streamProcessor");
+        var self = this, streamProcessor = self.system.getObject("streamProcessor"), allMediaForType = this.adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);
         streamProcessor.initialize(getMimeTypeOrType.call(self, mediaInfo), self.fragmentController, mediaSource, self, eventController);
         self.abrController.updateTopQualityIndex(mediaInfo);
         if (optionalSettings) {
@@ -5060,7 +5146,20 @@ MediaPlayer.dependencies.Stream = function() {
             streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
             streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
         }
-        streamProcessor.updateMediaInfo(manifest, mediaInfo);
+        if (mediaInfo.type === "text" || mediaInfo.type === "fragmentedText") {
+            var idx;
+            for (var i = 0; i < allMediaForType.length; i++) {
+                if (allMediaForType[i].index === mediaInfo.index) {
+                    idx = i;
+                }
+                streamProcessor.updateMediaInfo(manifest, allMediaForType[i]);
+            }
+            if (mediaInfo.type === "fragmentedText") {
+                streamProcessor.updateMediaInfo(manifest, allMediaForType[idx]);
+            }
+        } else {
+            streamProcessor.updateMediaInfo(manifest, mediaInfo);
+        }
         return streamProcessor;
     }, initializeMediaForType = function(type, mediaSource) {
         var self = this, manifest = self.manifestModel.getValue(), allMediaForType = this.adapter.getAllMediaInfoForType(manifest, streamInfo, type), mediaInfo = null, initialMediaInfo;
@@ -5133,7 +5232,7 @@ MediaPlayer.dependencies.Stream = function() {
             streamProcessors[i].createBuffer();
         }
     }, onBufferingCompleted = function() {
-        var processors = getAudioVideoProcessors(), ln = processors.length, i = 0;
+        var processors = getProcessors(), ln = processors.length, i = 0;
         for (i; i < ln; i += 1) {
             if (!processors[i].isBufferingCompleted()) return;
         }
@@ -5144,29 +5243,18 @@ MediaPlayer.dependencies.Stream = function() {
         var type = e.sender.streamProcessor.getType();
         updateError[type] = e.error;
         checkIfInitializationCompleted.call(this);
-    }, onCurrentTrackChanged = function(e) {
-        var processor = getProcessorForMediaInfo.call(this, e.data.oldMediaInfo);
-        if (!processor) return;
-        var currentTime = this.playbackController.getTime(), buffer = processor.getBuffer(), mediaInfo = e.data.newMediaInfo, manifest = this.manifestModel.getValue(), idx = streamProcessors.indexOf(processor), mediaSource = processor.getMediaSource();
-        processor.reset(true);
-        createStreamProcessor.call(this, mediaInfo, manifest, mediaSource, {
-            buffer: buffer,
-            replaceIdx: idx,
-            currentTime: currentTime
-        });
-        this.playbackController.seek(this.playbackController.getTime());
     }, getProcessorForMediaInfo = function(mediaInfo) {
         if (!mediaInfo) return false;
-        var processors = getAudioVideoProcessors.call(this);
+        var processors = getProcessors.call(this);
         return processors.filter(function(processor) {
-            return processor.getMediaInfo().id === mediaInfo.id;
+            return processor.getType() === mediaInfo.type;
         })[0];
-    }, getAudioVideoProcessors = function() {
+    }, getProcessors = function() {
         var arr = [], i = 0, ln = streamProcessors.length, type, controller;
         for (i; i < ln; i += 1) {
             controller = streamProcessors[i];
             type = controller.getType();
-            if (type === "audio" || type === "video") {
+            if (type === "audio" || type === "video" || type === "fragmentedText") {
                 arr.push(controller);
             }
         }
@@ -5325,7 +5413,7 @@ MediaPlayer.dependencies.Stream.eventList = {
 
 MediaPlayer.dependencies.StreamProcessor = function() {
     "use strict";
-    var isDynamic, stream = null, mediaInfo = null, type = null, eventController = null, createBufferControllerForType = function(type) {
+    var isDynamic, stream = null, mediaInfo = null, type = null, eventController = null, mediaInfoArr = [], createBufferControllerForType = function(type) {
         var self = this, controllerName = type === "video" || type === "audio" || type === "fragmentedText" ? "bufferController" : "textController";
         return self.system.getObject(controllerName);
     };
@@ -5397,7 +5485,9 @@ MediaPlayer.dependencies.StreamProcessor = function() {
                 playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, scheduleController);
                 baseUrlExt.subscribe(Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
                 baseUrlExt.subscribe(Dash.dependencies.BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, indexHandler);
-                mediaController.subscribe(MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED, bufferController);
+                if (type === "video" || type === "audio") {
+                    mediaController.subscribe(MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED, bufferController);
+                }
             } else {
                 bufferController.subscribe(MediaPlayer.dependencies.TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
             }
@@ -5450,7 +5540,13 @@ MediaPlayer.dependencies.StreamProcessor = function() {
             if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || newMediaInfo.type === mediaInfo.type)) {
                 mediaInfo = newMediaInfo;
             }
+            if (mediaInfoArr.indexOf(newMediaInfo) === -1) {
+                mediaInfoArr.push(newMediaInfo);
+            }
             this.adapter.updateData(manifest, this);
+        },
+        getMediaInfoArr: function() {
+            return mediaInfoArr;
         },
         getMediaInfo: function() {
             return mediaInfo;
@@ -5547,7 +5643,9 @@ MediaPlayer.dependencies.StreamProcessor = function() {
             fragmentLoader.unsubscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
             fragmentLoader.unsubscribe(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_PROGRESS, abrController);
             fragmentModel.reset();
-            mediaController.unsubscribe(MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED, bufferController);
+            if (type === "video" || type === "audio") {
+                mediaController.unsubscribe(MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED, bufferController);
+            }
             indexHandler.reset();
             this.bufferController.reset(errored);
             this.scheduleController.reset();
@@ -5571,7 +5669,70 @@ MediaPlayer.dependencies.StreamProcessor.prototype = {
 
 MediaPlayer.utils.TTMLParser = function() {
     "use strict";
-    var SECONDS_IN_HOUR = 60 * 60, SECONDS_IN_MIN = 60, timingRegex = /^([0-9][0-9]+):([0-5][0-9]):([0-5][0-9])((\.[0-9]+)|(:[0-9][0-9]))$/, ttml, parseTimings = function(timingStr) {
+    var SECONDS_IN_HOUR = 60 * 60, SECONDS_IN_MIN = 60, timingRegex = /^([0-9][0-9]+):([0-5][0-9]):([0-5][0-9])|(60)(\.([0-9])+)?$/, ttml, ttmlStyling, ttmlLayout, fontSize = {}, lineHeight = {}, linePadding = {}, defaultLayoutProperties = {
+        top: "85%;",
+        left: "5%;",
+        width: "90%;",
+        height: "10%;",
+        "align-items": "flex-start;",
+        overflow: "visible;",
+        "-ms-writing-mode": "lr-tb, horizontal-tb;;",
+        "-webkit-writing-mode": "horizontal-tb;",
+        "-moz-writing-mode": "horizontal-tb;",
+        "writing-mode": "horizontal-tb;"
+    }, defaultStyleProperties = {
+        color: "rgb(255,255,255);",
+        direction: "ltr;",
+        "font-family": "monospace, sans-serif;",
+        "font-style": "normal;",
+        "line-height": "normal;",
+        "font-weight": "normal;",
+        "text-align": "start;",
+        "justify-content": "flex-start;",
+        "text-decoration": "none;",
+        "unicode-bidi": "normal;",
+        "white-space": "normal;",
+        width: "100%;"
+    }, fontFamilies = {
+        monospace: "font-family: monospace;",
+        sansSerif: "font-family: sans-serif;",
+        serif: "font-family: serif;",
+        monospaceSansSerif: "font-family: monospace, sans-serif;",
+        monospaceSerif: "font-family: monospace, serif;",
+        proportionalSansSerif: "font-family: Arial;",
+        proportionalSerif: "font-family: Times New Roman;",
+        "default": "font-family: monospace, sans-serif;"
+    }, textAlign = {
+        right: [ "justify-content: flex-end;", "text-align: right;" ],
+        start: [ "justify-content: flex-start;", "text-align: start;" ],
+        center: [ "justify-content: center;", "text-align: center;" ],
+        end: [ "justify-content: flex-end;", "text-align: end;" ],
+        left: [ "justify-content: flex-start;", "text-align: left;" ]
+    }, multiRowAlign = {
+        start: "text-align: start;",
+        center: "text-align: center;",
+        end: "text-align: end;",
+        auto: ""
+    }, wrapOption = {
+        wrap: "white-space: normal;",
+        noWrap: "white-space: nowrap;"
+    }, unicodeBidi = {
+        normal: "unicode-bidi: normal;",
+        embed: "unicode-bidi: embed;",
+        bidiOverride: "unicode-bidi: bidi-override;"
+    }, displayAlign = {
+        before: "align-items: flex-start;",
+        center: "align-items: center;",
+        after: "align-items: flex-end;"
+    }, writingMode = {
+        lrtb: "-webkit-writing-mode: horizontal-tb;" + "writing-mode: horizontal-tb;",
+        rltb: "-webkit-writing-mode: horizontal-tb;" + "writing-mode: horizontal-tb;" + "direction: rtl;" + "unicode-bidi: bidi-override;",
+        tbrl: "-webkit-writing-mode: vertical-rl;" + "writing-mode: vertical-rl;" + "-webkit-text-orientation: upright;" + "text-orientation: upright;",
+        tblr: "-webkit-writing-mode: vertical-lr;" + "writing-mode: vertical-lr;" + "-webkit-text-orientation: upright;" + "text-orientation: upright;",
+        lr: "-webkit-writing-mode: horizontal-tb;" + "writing-mode: horizontal-tb;",
+        rl: "-webkit-writing-mode: horizontal-tb;" + "writing-mode: horizontal-tb;" + "direction: rtl;",
+        tb: "-webkit-writing-mode: vertical-rl;" + "writing-mode: vertical-rl;" + "-webkit-text-orientation: upright;" + "text-orientation: upright;"
+    }, parseTimings = function(timingStr) {
         var test = timingRegex.test(timingStr), timeParts, parsedTime, frameRate;
         if (!test) {
             return NaN;
@@ -5579,7 +5740,7 @@ MediaPlayer.utils.TTMLParser = function() {
         timeParts = timingStr.split(":");
         parsedTime = parseFloat(timeParts[0]) * SECONDS_IN_HOUR + parseFloat(timeParts[1]) * SECONDS_IN_MIN + parseFloat(timeParts[2]);
         if (timeParts[3]) {
-            frameRate = ttml.tt.frameRate;
+            frameRate = ttml.tt.framRate;
             if (frameRate && !isNaN(frameRate)) {
                 parsedTime += parseFloat(timeParts[3]) / frameRate;
             } else {
@@ -5588,119 +5749,685 @@ MediaPlayer.utils.TTMLParser = function() {
         }
         return parsedTime;
     }, passStructuralConstraints = function() {
-        var passed = false, hasTt = ttml.hasOwnProperty("tt"), hasHead = hasTt ? ttml.tt.hasOwnProperty("head") : false, hasLayout = hasHead ? ttml.tt.head.hasOwnProperty("layout") : false, hasStyling = hasHead ? ttml.tt.head.hasOwnProperty("styling") : false, hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false;
-        if (hasTt && hasHead && hasLayout && hasStyling && hasBody) {
-            passed = true;
-        }
-        return passed;
+        var hasTt = ttml.hasOwnProperty("tt"), hasHead = hasTt ? ttml.tt.hasOwnProperty("head") : false, hasLayout = hasHead ? ttml.tt.head.hasOwnProperty("layout") : false, hasStyling = hasHead ? ttml.tt.head.hasOwnProperty("styling") : false, hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false;
+        return hasTt && hasHead && hasLayout && hasStyling && hasBody;
     }, getNamespacePrefix = function(json, ns) {
         var r = Object.keys(json).filter(function(k) {
-            return k.split(":")[0] === "xmlns" && json[k] === ns;
+            return (k.split(":")[0] === "xmlns" || k.split(":")[1] === "xmlns") && json[k] === ns;
         }).map(function(k) {
-            return k.split(":")[1];
+            return k.split(":")[2] || k.split(":")[1];
         });
         if (r.length != 1) {
             return null;
         }
         return r[0];
-    }, internalParse = function(data) {
-        var captionArray = [], converter = new X2JS([], "", false), errorMsg, cues, cue, startTime, endTime, nsttp, text, i, j, spanNode;
-        ttml = converter.xml_str2json(data);
-        if (!passStructuralConstraints()) {
-            errorMsg = "TTML document has incorrect structure";
-            throw errorMsg;
+    }, removeNamespacePrefix = function(json, nsPrefix) {
+        for (var key in json) {
+            if (json.hasOwnProperty(key)) {
+                if ((typeof json[key] === "object" || json[key] instanceof Object) && !Array.isArray(json[key])) {
+                    removeNamespacePrefix(json[key], nsPrefix);
+                } else if (Array.isArray(json[key])) {
+                    for (var i = 0; i < json[key].length; i++) {
+                        removeNamespacePrefix(json[key][i], nsPrefix);
+                    }
+                }
+                var newKey = key.slice(key.indexOf(nsPrefix) + nsPrefix.length + 1);
+                json[newKey] = json[key];
+                delete json[key];
+            }
         }
-        nsttp = getNamespacePrefix(ttml.tt, "http://www.w3.org/ns/ttml#parameter");
-        if (ttml.tt.hasOwnProperty(nsttp + ":frameRate")) {
-            ttml.tt.frameRate = parseInt(ttml.tt[nsttp + ":frameRate"], 10);
+    }, camelCaseToDash = function(key) {
+        return key.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+    }, convertHexToRGBA = function(rgba) {
+        var hex = rgba.slice(1);
+        var hexMatrice = hex.match(/.{2}/g);
+        var alpha = parseFloat(parseInt(parseInt(hexMatrice[3], 16) / 255 * 1e3) / 1e3);
+        var rgb = hexMatrice.slice(0, 3).map(function(i) {
+            return parseInt(i, 16);
+        });
+        return "rgba(" + rgb.join(",") + "," + alpha + ");";
+    }, arrayContains = function(text, array) {
+        for (var i = 0; i < array.length; i++) {
+            if (array[i].indexOf(text) > -1) {
+                return true;
+            }
         }
-        if (ttml.tt.body.div_asArray) {
-            cues = ttml.tt.body.div_asArray[0].p_asArray;
+        return false;
+    }, getPropertyFromArray = function(text, array) {
+        for (var i = 0; i < array.length; i++) {
+            if (array[i].indexOf(text) > -1) {
+                return array[i];
+            }
+        }
+        return null;
+    }, deletePropertyFromArray = function(property, array) {
+        array.splice(array.indexOf(getPropertyFromArray(property, array)), 1);
+    }, mergeArrays = function(primeArray, arrayToAdd) {
+        for (var i = 0; i < primeArray.length; i++) {
+            for (var j = 0; j < arrayToAdd.length; j++) {
+                if (primeArray[i]) {
+                    if (primeArray[i].split(":")[0].indexOf(arrayToAdd[j].split(":")[0]) > -1) {
+                        primeArray.splice(i, 1);
+                    }
+                }
+            }
+        }
+        return primeArray.concat(arrayToAdd);
+    }, processStyle = function(cueStyle, cellUnit) {
+        var properties = [];
+        for (var key in cueStyle) {
+            if (cueStyle.hasOwnProperty(key)) {
+                var newKey = key.replace("ebutts:", "");
+                newKey = newKey.replace("xml:", "");
+                newKey = newKey.replace("tts:", "");
+                newKey = camelCaseToDash(newKey);
+                cueStyle[newKey] = cueStyle[key];
+                delete cueStyle[key];
+            }
+        }
+        if ("line-padding" in cueStyle) {
+            var valuePadding = parseFloat(cueStyle["line-padding"].slice(cueStyle["line-padding"].indexOf(":") + 1, cueStyle["line-padding"].indexOf("c")));
+            if ("id" in cueStyle) {
+                linePadding[cueStyle.id] = valuePadding;
+            }
+            var valuePaddingInPx = valuePadding * cellUnit[0] + "px;";
+            properties.push("padding-left:" + valuePaddingInPx);
+            properties.push("padding-right:" + valuePaddingInPx);
+        }
+        if ("font-size" in cueStyle) {
+            var valueFtSize = parseFloat(cueStyle["font-size"].slice(cueStyle["font-size"].indexOf(":") + 1, cueStyle["font-size"].indexOf("%")));
+            if ("id" in cueStyle) {
+                fontSize[cueStyle.id] = valueFtSize;
+            }
+            var valueFtSizeInPx = valueFtSize / 100 * cellUnit[1] + "px;";
+            properties.push("font-size:" + valueFtSizeInPx);
+        }
+        if ("line-heigt" in cueStyle) {
+            if (cueStyle["line-height"] === "normal") {
+                properties.push("line-heigth: normal;");
+            } else {
+                var valueLHSize = parseFloat(cueStyle["line-heigt"].slice(cueStyle["line-heigt"].indexOf(":") + 1, cueStyle["line-heigt"].indexOf("%")));
+                if ("id" in cueStyle) {
+                    lineHeight[cueStyle.id] = valueLHSize;
+                }
+                var valueLHSizeInPx = valueLHSize / 100 * cellUnit[1] + "px;";
+                properties.push(key + ":" + valueLHSizeInPx);
+            }
+        }
+        if ("font-family" in cueStyle) {
+            if (cueStyle["font-family"] in fontFamilies) {
+                properties.push(fontFamilies[cueStyle["font-family"]]);
+            } else {
+                properties.push("font-family:" + cueStyle["font-family"] + ";");
+            }
+        }
+        if ("text-align" in cueStyle) {
+            if (cueStyle["text-align"] in textAlign) {
+                properties.push(textAlign[cueStyle["text-align"]][0]);
+                properties.push(textAlign[cueStyle["text-align"]][1]);
+            }
+        }
+        if ("multi-row-align" in cueStyle) {
+            if (arrayContains("text-align", properties) && cueStyle["multi-row-align"] != "auto") {
+                deletePropertyFromArray("text-align", properties);
+            }
+            if (cueStyle["multi-row-align"] in multiRowAlign) {
+                properties.push(multiRowAlign[cueStyle["multi-row-align"]]);
+            }
+        }
+        var rgbaValue;
+        if ("background-color" in cueStyle) {
+            if (cueStyle["background-color"].indexOf("#") > -1 && cueStyle["background-color"].length - 1 === 8) {
+                rgbaValue = convertHexToRGBA(cueStyle["background-color"]);
+                properties.push("background-color: " + rgbaValue);
+            } else {
+                properties.push("background-color:" + cueStyle["background-color"] + ";");
+            }
+        }
+        if ("color" in cueStyle) {
+            if (cueStyle.color.indexOf("#") > -1 && cueStyle.color.length - 1 === 8) {
+                rgbaValue = convertHexToRGBA(cueStyle.color);
+                properties.push("color: " + rgbaValue);
+            } else {
+                properties.push("color:" + cueStyle.color + ";");
+            }
+        }
+        if ("wrap-option" in cueStyle) {
+            if (cueStyle["wrap-option"] in wrapOption) {
+                properties.push(wrapOption[cueStyle["wrap-option"]]);
+            } else {
+                properties.push("white-space:" + cueStyle["wrap-option"]);
+            }
+        }
+        if ("unicode-bidi" in cueStyle) {
+            if (cueStyle["unicode-bidi"] in unicodeBidi) {
+                properties.push(unicodeBidi[cueStyle["unicode-bidi"]]);
+            } else {
+                properties.push("unicode-bidi:" + cueStyle["unicode-bidi"]);
+            }
+        }
+        if ("font-style" in cueStyle) {
+            properties.push("font-style:" + cueStyle["font-style"] + ";");
+        }
+        if ("font-weight" in cueStyle) {
+            properties.push("font-weight:" + cueStyle["font-weight"] + ";");
+        }
+        if ("direction" in cueStyle) {
+            properties.push("direction:" + cueStyle.direction + ";");
+        }
+        if ("text-decoration" in cueStyle) {
+            properties.push("text-decoration:" + cueStyle["text-decoration"] + ";");
+        }
+        return properties;
+    }, findStyleFromID = function(ttmlStyling, cueStyleID) {
+        for (var j = 0; j < ttmlStyling.length; j++) {
+            var currStyle = ttmlStyling[j];
+            if (currStyle["xml:id"] === cueStyleID || currStyle.id === cueStyleID) {
+                return currStyle;
+            }
+        }
+        return null;
+    }, getProcessedStyle = function(reference, cellUnit) {
+        var styles = [];
+        var ids = reference.match(/\S+/g);
+        ids.forEach(function(id) {
+            var cueStyle = findStyleFromID(ttmlStyling, id);
+            if (cueStyle) {
+                var stylesFromId = processStyle(JSON.parse(JSON.stringify(cueStyle)), cellUnit);
+                styles = styles.concat(stylesFromId);
+            }
+        });
+        return styles;
+    }, processRegion = function(cueRegion, cellUnit) {
+        var properties = [];
+        for (var key in cueRegion) {
+            var newKey = key.replace("tts:", "");
+            newKey = newKey.replace("xml:", "");
+            newKey = camelCaseToDash(newKey);
+            cueRegion[newKey] = cueRegion[key];
+            if (newKey !== key) {
+                delete cueRegion[key];
+            }
+        }
+        if ("extent" in cueRegion) {
+            var coordsExtent = cueRegion.extent.split(/\s/);
+            properties.push("width: " + coordsExtent[0] + ";");
+            properties.push("height: " + coordsExtent[1] + ";");
+        }
+        if ("origin" in cueRegion) {
+            var coordsOrigin = cueRegion.origin.split(/\s/);
+            properties.push("left: " + coordsOrigin[0] + ";");
+            properties.push("top: " + coordsOrigin[1] + ";");
+        }
+        if ("display-align" in cueRegion) {
+            properties.push(displayAlign[cueRegion["display-align"]]);
+        }
+        if ("writing-mode" in cueRegion) {
+            properties.push(writingMode[cueRegion["writing-mode"]]);
+        }
+        if ("style" in cueRegion) {
+            var styleFromID = getProcessedStyle(cueRegion.style, cellUnit);
+            properties = properties.concat(styleFromID);
+        }
+        if ("padding" in cueRegion) {
+            properties.push("padding:" + cueRegion.padding + ";");
+        }
+        if ("overflow" in cueRegion) {
+            properties.push("overflow:" + cueRegion.overflow + ";");
+        }
+        if ("show-background" in cueRegion) {
+            properties.push("show-background:" + cueRegion["show-background"] + ";");
+        }
+        if ("id" in cueRegion) {
+            properties.push("regionID:" + cueRegion.id + ";");
+        }
+        return properties;
+    }, findRegionFromID = function(ttmlLayout, cueRegionID) {
+        for (var j = 0; j < ttmlLayout.length; j++) {
+            var currReg = ttmlLayout[j];
+            if (currReg["xml:id"] === cueRegionID || currReg.id === cueRegionID) {
+                return currReg;
+            }
+        }
+        return null;
+    }, getProcessedRegion = function(reference, cellUnit) {
+        var regions = [];
+        var ids = reference.match(/\S+/g);
+        ids.forEach(function(id) {
+            var cueRegion = findRegionFromID(ttmlLayout, id);
+            if (cueRegion) {
+                var regionsFromId = processRegion(JSON.parse(JSON.stringify(cueRegion)), cellUnit);
+                regions = regions.concat(regionsFromId);
+            }
+        });
+        return regions;
+    }, getCellResolution = function() {
+        var defaultCellResolution = [ 32, 15 ];
+        if (ttml.tt.hasOwnProperty("ttp:cellResolution")) {
+            return ttml.tt["ttp:cellResolution"].split(" ").map(parseFloat);
         } else {
-            cues = ttml.tt.body.p_asArray;
+            return defaultCellResolution;
         }
-        if (!cues || cues.length === 0) {
-            errorMsg = "TTML document does not contain any cues";
+    }, applyLinePadding = function(cueHTML, cueStyle) {
+        var linePaddingLeft = getPropertyFromArray("padding-left", cueStyle);
+        var linePaddingRight = getPropertyFromArray("padding-right", cueStyle);
+        var linePadding = linePaddingLeft.concat(" " + linePaddingRight);
+        var outerHTMLBeforeBr = "";
+        var outerHTMLAfterBr = "";
+        var cueInnerHTML = "";
+        var nodeList = Array.prototype.slice.call(cueHTML.children);
+        var brElement = cueHTML.getElementsByClassName("lineBreak")[0];
+        var idx = nodeList.indexOf(brElement);
+        var indices = [];
+        while (idx != -1) {
+            indices.push(idx);
+            idx = nodeList.indexOf(brElement, idx + 1);
+        }
+        var spanStringEnd = "</span>";
+        var br = "<br>";
+        var clonePropertyString = "<span" + ' class="spanPadding" ' + 'style="-webkit-box-decoration-break: clone; ';
+        if (indices.length) {
+            indices.forEach(function(i, index) {
+                if (index === 0) {
+                    var styleBefore = "";
+                    for (var j = 0; j < i; j++) {
+                        outerHTMLBeforeBr += nodeList[j].outerHTML;
+                        if (j === 0) {
+                            styleBefore = linePadding.concat(nodeList[j].style.cssText);
+                        }
+                    }
+                    outerHTMLBeforeBr = clonePropertyString + styleBefore + '">' + outerHTMLBeforeBr;
+                }
+                var styleAfter = "";
+                for (var k = i + 1; k < nodeList.length; k++) {
+                    outerHTMLAfterBr += nodeList[k].outerHTML;
+                    if (k === nodeList.length - 1) {
+                        styleAfter += linePadding.concat(nodeList[k].style.cssText);
+                    }
+                }
+                outerHTMLAfterBr = clonePropertyString + styleAfter + '">' + outerHTMLAfterBr;
+                if (outerHTMLBeforeBr && outerHTMLAfterBr && index === indices.length - 1) {
+                    cueInnerHTML += outerHTMLBeforeBr + spanStringEnd + br + outerHTMLAfterBr + spanStringEnd;
+                } else if (outerHTMLBeforeBr && outerHTMLAfterBr && index !== indices.length - 1) {
+                    cueInnerHTML += outerHTMLBeforeBr + spanStringEnd + br + outerHTMLAfterBr + spanStringEnd + br;
+                } else if (outerHTMLBeforeBr && !outerHTMLAfterBr) {
+                    cueInnerHTML += outerHTMLBeforeBr + spanStringEnd;
+                } else if (!outerHTMLBeforeBr && outerHTMLAfterBr && index === indices.length - 1) {
+                    cueInnerHTML += outerHTMLAfterBr + spanStringEnd;
+                } else if (!outerHTMLBeforeBr && outerHTMLAfterBr && index !== indices.length - 1) {
+                    cueInnerHTML += outerHTMLAfterBr + spanStringEnd + br;
+                }
+            });
+        } else {
+            var style = "";
+            for (var k = 0; k < nodeList.length; k++) {
+                style += nodeList[k].style.cssText;
+            }
+            cueInnerHTML = clonePropertyString + linePadding + style + '">' + cueHTML.innerHTML + spanStringEnd;
+        }
+        return cueInnerHTML;
+    }, constructCue = function(cueElements, cellUnit) {
+        var cue = document.createElement("div");
+        cueElements.forEach(function(el) {
+            if (el.hasOwnProperty("metadata")) {
+                return;
+            }
+            if (el.hasOwnProperty("span")) {
+                var spanElements = el.span.__children;
+                var spanHTMLElement = document.createElement("span");
+                if (el.span.hasOwnProperty("style")) {
+                    var spanStyle = getProcessedStyle(el.span.style, cellUnit);
+                    spanHTMLElement.className = "spanPadding " + el.span.style;
+                    spanHTMLElement.style.cssText = spanStyle.join(" ");
+                }
+                spanElements.forEach(function(spanEl) {
+                    if (spanElements.hasOwnProperty("metadata")) {
+                        return;
+                    }
+                    if (spanEl.hasOwnProperty("#text")) {
+                        var textNode = document.createTextNode(spanEl["#text"]);
+                        spanHTMLElement.appendChild(textNode);
+                    } else if ("br" in spanEl) {
+                        spanHTMLElement.appendChild(document.createElement("br"));
+                    }
+                });
+                cue.appendChild(spanHTMLElement);
+            } else if (el.hasOwnProperty("br")) {
+                var brEl = document.createElement("br");
+                brEl.className = "lineBreak";
+                cue.appendChild(brEl);
+            } else if (el.hasOwnProperty("#text")) {
+                var textNode = document.createElement("span");
+                textNode.innerHTML = el["#text"];
+                cue.appendChild(textNode);
+            }
+        });
+        return cue;
+    }, constructCueRegion = function(cue, div, cellUnit) {
+        var cueRegionProperties = [];
+        var pRegionID = cue.region;
+        var divRegionID = div.region;
+        var divRegion;
+        var pRegion;
+        if (divRegionID) {
+            divRegion = getProcessedRegion(divRegionID, cellUnit);
+        }
+        if (pRegionID) {
+            pRegion = cueRegionProperties.concat(getProcessedRegion(pRegionID, cellUnit));
+            if (divRegion) {
+                cueRegionProperties = mergeArrays(divRegion, pRegion);
+            } else {
+                cueRegionProperties = pRegion;
+            }
+        } else if (divRegion) {
+            cueRegionProperties = divRegion;
+        }
+        applyDefaultProperties(cueRegionProperties, defaultLayoutProperties);
+        return cueRegionProperties;
+    }, constructCueStyle = function(cue, cellUnit) {
+        var cueStyleProperties = [];
+        var pStyleID = cue.style;
+        var bodyStyleID = ttml.tt.body.style;
+        var divStyleID = ttml.tt.body.div.style;
+        var bodyStyle;
+        var divStyle;
+        var pStyle;
+        var styleIDs = "";
+        if (bodyStyleID) {
+            bodyStyle = getProcessedStyle(bodyStyleID, cellUnit);
+            styleIDs = "paragraph " + bodyStyleID;
+        }
+        if (divStyleID) {
+            divStyle = getProcessedStyle(divStyleID, cellUnit);
+            if (bodyStyle) {
+                divStyle = mergeArrays(bodyStyle, divStyle);
+                styleIDs += " " + divStyleID;
+            } else {
+                styleIDs = "paragraph " + divStyleID;
+            }
+        }
+        if (pStyleID) {
+            pStyle = getProcessedStyle(pStyleID, cellUnit);
+            if (bodyStyle && divStyle) {
+                cueStyleProperties = mergeArrays(divStyle, pStyle);
+                styleIDs += " " + pStyleID;
+            } else if (bodyStyle) {
+                cueStyleProperties = mergeArrays(bodyStyle, pStyle);
+                styleIDs += " " + pStyleID;
+            } else if (divStyle) {
+                cueStyleProperties = mergeArrays(divStyle, pStyle);
+                styleIDs += " " + pStyleID;
+            } else {
+                cueStyleProperties = pStyle;
+                styleIDs = "paragraph " + pStyleID;
+            }
+        } else if (bodyStyle && !divStyle) {
+            cueStyleProperties = bodyStyle;
+        } else if (!bodyStyle && divStyle) {
+            cueStyleProperties = divStyle;
+        }
+        applyDefaultProperties(cueStyleProperties, defaultStyleProperties);
+        return [ cueStyleProperties, styleIDs ];
+    }, applyDefaultProperties = function(array, defaultProperties) {
+        for (var key in defaultProperties) {
+            if (defaultProperties.hasOwnProperty(key)) {
+                if (!arrayContains(key, array)) {
+                    array.push(key + ":" + defaultProperties[key]);
+                }
+            }
+        }
+    }, internalParse = function(data) {
+        var self = this, type, converter = new X2JS([], "", false);
+        ttml = converter.xml_str2json(data);
+        if (self.videoModel.getTTMLRenderingDiv()) {
+            type = "html";
+        }
+        var ttNS = getNamespacePrefix(ttml, "http://www.w3.org/ns/ttml");
+        if (ttNS) {
+            removeNamespacePrefix(ttml, ttNS);
+        }
+        ttmlLayout = ttml.tt.head.layout.region_asArray;
+        ttmlStyling = ttml.tt.head.styling.style_asArray;
+        if (!passStructuralConstraints()) {
+            var errorMsg = "TTML document has incorrect structure";
             throw errorMsg;
         }
-        for (i = 0; i < cues.length; i += 1) {
-            cue = cues[i];
-            startTime = parseTimings(cue.begin);
-            endTime = parseTimings(cue.end);
-            if (isNaN(startTime) || isNaN(endTime)) {
-                errorMsg = "TTML document has incorrect timing value";
+        var cellResolution = getCellResolution();
+        var videoWidth = self.videoModel.getElement().clientWidth;
+        var videoHeight = self.videoModel.getElement().clientHeight;
+        var cellUnit = [ videoWidth / cellResolution[0], videoHeight / cellResolution[1] ];
+        defaultStyleProperties["font-size"] = cellUnit[1] + "px;";
+        var regions = [];
+        for (var i = 0; i < ttmlLayout.length; i++) {
+            regions.push(processRegion(JSON.parse(JSON.stringify(ttmlLayout[i])), cellUnit));
+        }
+        var nsttp = getNamespacePrefix(ttml, "http://www.w3.org/ns/ttml#parameter");
+        if (ttml.tt.hasOwnProperty(nsttp + ":frameRate")) {
+            ttml.frameRate = parseInt(ttml.tt[nsttp + ":frameRate"], 10);
+        }
+        var captionArray = [];
+        var divs = ttml.tt.body_asArray[0].__children;
+        divs.forEach(function(div) {
+            var cues = div.div.p_asArray;
+            if (!cues || cues.length === 0) {
+                var errorMsg = "TTML document does not contain any cues";
                 throw errorMsg;
             }
-            if (cue["smpte:backgroundImage"] !== undefined) {
-                var images = ttml.tt.head.metadata.image_asArray;
-                for (j = 0; j < images.length; j += 1) {
-                    if ("#" + images[j]["xml:id"] == cue["smpte:backgroundImage"]) {
-                        captionArray.push({
-                            start: startTime,
-                            end: endTime,
-                            id: images[j]["xml:id"],
-                            data: "data:image/" + images[j].imagetype.toLowerCase() + ";base64, " + images[j].__text,
-                            type: "image"
+            var pStartTime;
+            var pEndTime;
+            var spanStartTime;
+            var spanEndTime;
+            cues.forEach(function(cue) {
+                if (cue.hasOwnProperty("begin") && cue.hasOwnProperty("end")) {
+                    pStartTime = parseTimings(cue.begin);
+                    pEndTime = parseTimings(cue.end);
+                } else if (cue.span.hasOwnProperty("begin") && cue.span.hasOwnProperty("end")) {
+                    spanStartTime = parseTimings(cue.span.begin);
+                    spanEndTime = parseTimings(cue.span.end);
+                } else {
+                    errorMsg = "TTML document has incorrect timing value";
+                    throw errorMsg;
+                }
+                if (cue["smpte:backgroundImage"] !== undefined) {
+                    var images = ttml.tt.head.metadata.image_asArray;
+                    for (var j = 0; j < images.length; j += 1) {
+                        if ("#" + images[j]["xml:id"] == cue["smpte:backgroundImage"]) {
+                            captionArray.push({
+                                start: spanStartTime || pStartTime,
+                                end: spanEndTime || pEndTime,
+                                id: images[j]["xml:id"],
+                                data: "data:image/" + images[j].imagetype.toLowerCase() + ";base64, " + images[j].__text,
+                                type: "image"
+                            });
+                        }
+                    }
+                } else if (type === "html") {
+                    lineHeight = {};
+                    linePadding = {};
+                    fontSize = {};
+                    var cueID = "";
+                    if (cue.hasOwnProperty("id") || cue.hasOwnProperty("xml:id")) {
+                        cueID = cue["xml:id"] || cue.id;
+                    }
+                    if ((isNaN(pStartTime) || isNaN(pEndTime)) && (isNaN(spanStartTime) || isNaN(spanEndTime))) {
+                        errorMsg = "TTML document has incorrect timing value";
+                        throw errorMsg;
+                    }
+                    var cueRegionProperties = constructCueRegion(cue, div.div, cellUnit);
+                    var cueStyleProperties = constructCueStyle(cue, cellUnit);
+                    var styleIDs = cueStyleProperties[1];
+                    cueStyleProperties = cueStyleProperties[0];
+                    var cueParagraph = document.createElement("div");
+                    cueParagraph.className = styleIDs;
+                    var pElements = cue.__children;
+                    var cueDirUniWrapper = constructCue(pElements, cellUnit);
+                    cueDirUniWrapper.className = "cueDirUniWrapper";
+                    if (arrayContains("unicode-bidi", cueStyleProperties)) {
+                        cueDirUniWrapper.style.cssText += getPropertyFromArray("unicode-bidi", cueStyleProperties);
+                        deletePropertyFromArray("unicode-bidi", cueStyleProperties);
+                    }
+                    if (arrayContains("direction", cueStyleProperties)) {
+                        cueDirUniWrapper.style.cssText += getPropertyFromArray("direction", cueStyleProperties);
+                        deletePropertyFromArray("direction", cueStyleProperties);
+                    }
+                    if (arrayContains("padding-left", cueStyleProperties) && arrayContains("padding-right", cueStyleProperties)) {
+                        cueDirUniWrapper.innerHTML = applyLinePadding(cueDirUniWrapper, cueStyleProperties);
+                    }
+                    if (arrayContains("padding-left", cueStyleProperties) && arrayContains("padding-right", cueStyleProperties)) {
+                        deletePropertyFromArray("padding-left", cueStyleProperties);
+                        deletePropertyFromArray("padding-right", cueStyleProperties);
+                    }
+                    var regionID = "";
+                    if (arrayContains("regionID", cueRegionProperties)) {
+                        var wholeRegionID = getPropertyFromArray("regionID", cueRegionProperties);
+                        regionID = wholeRegionID.slice(wholeRegionID.indexOf(":") + 1, wholeRegionID.length - 1);
+                    }
+                    if (cueStyleProperties) {
+                        cueParagraph.style.cssText = cueStyleProperties.join(" ") + "display:flex;";
+                    }
+                    if (cueRegionProperties) {
+                        cueRegionProperties = cueRegionProperties.join(" ");
+                    }
+                    cueParagraph.appendChild(cueDirUniWrapper);
+                    var finalCue = document.createElement("div");
+                    finalCue.appendChild(cueParagraph);
+                    finalCue.id = "subtitle_" + cueID;
+                    finalCue.style.cssText = "position: absolute; z-index: 2147483647; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + cueRegionProperties;
+                    if (Object.keys(fontSize).length === 0) {
+                        fontSize.defaultFontSize = "100";
+                    }
+                    captionArray.push({
+                        start: spanStartTime || pStartTime,
+                        end: spanEndTime || pEndTime,
+                        type: "html",
+                        cueHTMLElement: finalCue,
+                        regions: regions,
+                        regionID: regionID,
+                        cueID: cueID,
+                        videoHeight: videoHeight,
+                        videoWidth: videoWidth,
+                        cellResolution: cellResolution,
+                        fontSize: fontSize || {
+                            defaultFontSize: "100"
+                        },
+                        lineHeight: lineHeight,
+                        linePadding: linePadding
+                    });
+                } else {
+                    var text = "";
+                    var textElements = cue.__children;
+                    if (textElements.length) {
+                        textElements.forEach(function(el) {
+                            if (el.hasOwnProperty("span")) {
+                                var spanElements = el.span.__children;
+                                spanElements.forEach(function(spanEl) {
+                                    if (spanElements.hasOwnProperty("metadata")) {
+                                        return;
+                                    }
+                                    if (spanEl.hasOwnProperty("#text")) {
+                                        text += spanEl["#text"];
+                                    } else if ("br" in spanEl) {
+                                        text += "\n";
+                                    }
+                                });
+                            } else if (el.hasOwnProperty("br")) {
+                                text += "\n";
+                            } else {
+                                text += el.__text;
+                            }
                         });
                     }
+                    captionArray.push({
+                        start: spanStartTime || pStartTime,
+                        end: spanEndTime || pEndTime,
+                        data: text,
+                        type: "text"
+                    });
                 }
-            } else {
-                if (cue.span_asArray) {
-                    spanNode = cue.span_asArray[0];
-                    if (spanNode.__text instanceof Array && spanNode.br_asArray) {
-                        text = spanNode.__text.join("\n");
-                    } else {
-                        text = spanNode.__text;
-                    }
-                } else {
-                    text = cue.__text;
-                }
-                captionArray.push({
-                    start: startTime,
-                    end: endTime,
-                    data: text,
-                    type: "text"
-                });
-            }
-        }
+            });
+        });
         return captionArray;
     };
     return {
-        parse: internalParse
+        parse: internalParse,
+        videoModel: undefined
     };
 };
 
 MediaPlayer.dependencies.TextSourceBuffer = function() {
-    var mediaInfo, mimeType;
+    var currentTrackIdx = 0, allTracksAreDisabled = false, parser = null, onTextTrackChange = function() {
+        var el = this.videoModel.getElement(), tracks = el.textTracks, ln = tracks.length;
+        for (var i = 0; i < ln; i++) {
+            var track = tracks[i];
+            allTracksAreDisabled = track.mode !== "showing";
+            if (track.mode === "showing" && el.currentTime > 0) {
+                if (currentTrackIdx !== i) {
+                    var previousTextTrack = this.textTrackExtensions.getCurrentTextTrack();
+                    this.textTrackExtensions.deleteTrackCues(previousTextTrack);
+                    if (previousTextTrack.renderingType === "html") {
+                        this.textTrackExtensions.removeCueStyle();
+                        this.textTrackExtensions.clearCues();
+                    }
+                    currentTrackIdx = i;
+                    this.textTrackExtensions.setCurrentTrackIdx(i);
+                    this.textTrackExtensions.deleteTrackCues(this.textTrackExtensions.getCurrentTextTrack());
+                    this.fragmentModel.cancelPendingRequests();
+                    this.fragmentModel.abortRequests();
+                    this.buffered.clear();
+                    this.mediaController.setTrack(this.allTracks[i]);
+                }
+                break;
+            }
+        }
+    };
     return {
         system: undefined,
         videoModel: undefined,
         eventBus: undefined,
         errHandler: undefined,
+        adapter: undefined,
+        manifestExt: undefined,
+        mediaController: undefined,
+        streamController: undefined,
         initialize: function(type, bufferController) {
-            mimeType = type;
-            mediaInfo = bufferController.streamProcessor.getMediaInfo();
-            this.buffered = this.system.getObject("customTimeRanges");
-            this.initializationSegmentReceived = false;
-            this.timescale = 9e4;
+            this.sp = bufferController.streamProcessor;
+            this.mediaInfos = this.sp.getMediaInfoArr();
+            this.textTrackExtensions = this.system.getObject("textTrackExtensions");
+            this.isFragmented = !this.manifestExt.getIsTextTrack(type);
+            if (this.isFragmented) {
+                this.fragmentModel = this.sp.getFragmentModel();
+                this.buffered = this.system.getObject("customTimeRanges");
+                this.initializationSegmentReceived = false;
+                this.timescale = 9e4;
+                this.allTracks = this.mediaController.getTracksFor("fragmentedText", this.streamController.getActiveStreamInfo());
+            }
         },
         append: function(bytes, chunk) {
-            var self = this, result, label, lang, samplesInfo, i, ccContent;
-            if (mimeType == "fragmentedText") {
-                var fragmentExt;
+            var self = this, result, samplesInfo, i, ccContent, mediaInfo = chunk.mediaInfo, mediaType = mediaInfo.type, mimeType = mediaInfo.mimeType;
+            function createTextTrackFromMediaInfo(captionData, mediaInfo) {
+                var textTrackInfo = new MediaPlayer.vo.TextTrackInfo();
+                textTrackInfo.captionData = captionData;
+                textTrackInfo.lang = mediaInfo.lang;
+                textTrackInfo.label = mediaInfo.id;
+                textTrackInfo.video = self.videoModel.getElement();
+                textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
+                textTrackInfo.isFragmented = self.isFragmented;
+                textTrackInfo.role = mediaInfo.roles.length > 0 ? mediaInfo.roles[0] : null;
+                self.textTrackExtensions.addTextTrack(textTrackInfo, self.mediaInfos.length);
+                self.eventBus.dispatchEvent({
+                    type: MediaPlayer.events.TEXT_TRACK_ADDED
+                });
+            }
+            if (allTracksAreDisabled) return;
+            if (mediaType === "fragmentedText") {
+                var fragmentExt = self.system.getObject("fragmentExt");
                 if (!this.initializationSegmentReceived) {
                     this.initializationSegmentReceived = true;
-                    label = mediaInfo.id;
-                    lang = mediaInfo.lang;
-                    this.textTrackExtensions = self.getTextTrackExtensions();
-                    this.textTrackExtensions.addTextTrack(self.videoModel.getElement(), result, label, lang, true);
-                    self.eventBus.dispatchEvent({
-                        type: MediaPlayer.events.TEXT_TRACK_ADDED
-                    });
-                    fragmentExt = self.system.getObject("fragmentExt");
+                    for (i = 0; i < this.mediaInfos.length; i++) {
+                        createTextTrackFromMediaInfo(null, this.mediaInfos[i]);
+                    }
                     this.timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
                 } else {
-                    fragmentExt = self.system.getObject("fragmentExt");
                     samplesInfo = fragmentExt.getSamplesInfo(bytes);
                     for (i = 0; i < samplesInfo.length; i++) {
                         if (!this.firstSubtitleStart) {
@@ -5709,7 +6436,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function() {
                         samplesInfo[i].cts -= this.firstSubtitleStart;
                         this.buffered.add(samplesInfo[i].cts / this.timescale, (samplesInfo[i].cts + samplesInfo[i].duration) / this.timescale);
                         ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset, samplesInfo[i].offset + samplesInfo[i].size)));
-                        var parser = this.system.getObject("ttmlParser");
+                        parser = parser !== null ? parser : self.getParser(mimeType);
                         try {
                             result = parser.parse(ccContent);
                             this.textTrackExtensions.addCaptions(this.firstSubtitleStart / this.timescale, result);
@@ -5720,39 +6447,42 @@ MediaPlayer.dependencies.TextSourceBuffer = function() {
                 bytes = new Uint8Array(bytes);
                 ccContent = window.UTF8.decode(bytes);
                 try {
-                    result = self.getParser().parse(ccContent);
-                    label = mediaInfo.id;
-                    lang = mediaInfo.lang;
-                    self.getTextTrackExtensions().addTextTrack(self.videoModel.getElement(), result, label, lang, true);
-                    self.eventBus.dispatchEvent({
-                        type: MediaPlayer.events.TEXT_TRACK_ADDED
-                    });
+                    result = self.getParser(mimeType).parse(ccContent);
+                    createTextTrackFromMediaInfo(result, mediaInfo);
                 } catch (e) {
                     self.errHandler.closedCaptionsError(e, "parse", ccContent);
                 }
             }
         },
-        abort: function() {
-            this.getTextTrackExtensions().deleteCues(this.videoModel.getElement());
+        getIsDefault: function(mediaInfo) {
+            return mediaInfo.index === this.mediaInfos[0].index;
         },
-        getParser: function() {
+        abort: function() {
+            this.videoModel.getElement().textTracks.removeEventListener("change", onTextTrackChange);
+            this.textTrackExtensions.deleteAllTextTracks();
+            allTracksAreDisabled = false;
+            currentTrackIdx = 0;
+            parser = null;
+        },
+        getParser: function(mimeType) {
             var parser;
             if (mimeType === "text/vtt") {
                 parser = this.system.getObject("vttParser");
-            } else if (mimeType === "application/ttml+xml") {
+            } else if (mimeType === "application/ttml+xml" || mimeType === "application/mp4") {
                 parser = this.system.getObject("ttmlParser");
             }
             return parser;
         },
-        getTextTrackExtensions: function() {
-            return this.system.getObject("textTrackExtensions");
+        getAllTracksAreDisabled: function() {
+            return allTracksAreDisabled;
         },
         addEventListener: function(type, listener, useCapture) {
             this.eventBus.addEventListener(type, listener, useCapture);
         },
         removeEventListener: function(type, listener, useCapture) {
             this.eventBus.removeEventListener(type, listener, useCapture);
-        }
+        },
+        setTextTrack: onTextTrackChange
     };
 };
 
@@ -6026,13 +6756,13 @@ MediaPlayer.utils.VTTParser = function() {
 MediaPlayer.dependencies.XlinkLoader = function() {
     "use strict";
     var RETRY_ATTEMPTS = 1, RETRY_INTERVAL = 500, RESOLVE_TO_ZERO = "urn:mpeg:dash:resolve-to-zero:2013", doLoad = function(url, element, resolveObject, remainingAttempts) {
-        var request = new XMLHttpRequest(), self = this, report, onload, content, loadedTime = null, needFailureReport = true, requestTime = new Date();
+        var request = new XMLHttpRequest(), self = this, report, onload, progress, firstProgressCall = true, content, needFailureReport = true, requestTime = new Date();
         onload = function() {
             if (request.status < 200 || request.status > 299) {
                 return;
             }
             needFailureReport = false;
-            self.metricsModel.addHttpRequest("stream", null, "XLink", url, null, null, requestTime, loadedTime, null, request.status, null, null, request.getAllResponseHeaders());
+            self.metricsModel.addHttpRequest("stream", null, MediaPlayer.vo.metrics.HTTPRequest.XLINK_EXPANSION_TYPE, url, request.responseURL || null, null, requestTime, request.firstByteDate || null, new Date(), request.status, null, request.getAllResponseHeaders());
             content = request.responseText;
             element.resolved = true;
             if (content) {
@@ -6054,7 +6784,7 @@ MediaPlayer.dependencies.XlinkLoader = function() {
                 return;
             }
             needFailureReport = false;
-            self.metricsModel.addHttpRequest("stream", null, "xlink", url, null, null, requestTime, new Date(), request.status, null, null, request.getAllResponseHeaders());
+            self.metricsModel.addHttpRequest("stream", null, MediaPlayer.vo.metrics.HTTPRequest.XLINK_EXPANSION_TYPE, url, request.responseURL || null, null, requestTime, request.firstByteDate || null, new Date(), request.status, null, request.getAllResponseHeaders());
             if (remainingAttempts > 0) {
                 console.log("Failed loading xLink content: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
                 remainingAttempts--;
@@ -6064,6 +6794,7 @@ MediaPlayer.dependencies.XlinkLoader = function() {
             } else {
                 console.log("Failed loading Xlink content: " + url + " no retry attempts left");
                 self.errHandler.downloadError("xlink", url, request);
+                element.resolved = true;
                 element.resolvedContent = null;
                 self.notify(MediaPlayer.dependencies.XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
                     element: element,
@@ -6071,10 +6802,19 @@ MediaPlayer.dependencies.XlinkLoader = function() {
                 }, new Error("Failed loading xlink Element: " + url + " no retry attempts left"));
             }
         };
+        progress = function(event) {
+            if (firstProgressCall) {
+                firstProgressCall = false;
+                if (!event.lengthComputable || event.lengthComputable && event.total != event.loaded) {
+                    request.firstByteDate = new Date();
+                }
+            }
+        };
         try {
             request.onload = onload;
             request.onloadend = report;
             request.onerror = report;
+            request.onprogress = progress;
             request.open("GET", self.requestModifierExt.modifyRequestURL(url), true);
             request.send();
         } catch (e) {
@@ -6421,6 +7161,7 @@ MediaPlayer.dependencies.BufferController = function() {
         appendedBytesInfo = chunk;
         var self = this, quality = chunk.quality, isInit = isNaN(chunk.index);
         if (quality !== requiredQuality && isInit || quality !== currentQuality && !isInit) {
+            self.log("reject request - required quality = " + requiredQuality + " current quality = " + currentQuality + " chunk media type = " + chunk.mediaType + " chunk quality = " + quality + " chunk index = " + chunk.index);
             onMediaRejected.call(self, quality, chunk.index);
             return;
         }
@@ -6475,9 +7216,6 @@ MediaPlayer.dependencies.BufferController = function() {
         });
         checkGapBetweenBuffers.call(self);
         checkIfSufficientBuffer.call(self);
-        if (bufferLevel < STALL_THRESHOLD) {
-            notifyIfSufficientBufferStateChanged.call(self, false);
-        }
         return true;
     }, handleInbandEvents = function(data, request, mediaInbandEvents, trackInbandEvents) {
         var events = [], eventBoxes, fragmentStarttime = Math.max(isNaN(request.startTime) ? 0 : request.startTime, 0), eventStreams = [], event, isoFile, inbandEvents;
@@ -6575,8 +7313,7 @@ MediaPlayer.dependencies.BufferController = function() {
         isBufferingCompleted = true;
         this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFERING_COMPLETED);
     }, checkIfSufficientBuffer = function() {
-        var timeToEnd = this.playbackController.getTimeToStreamEnd();
-        if (bufferLevel < STALL_THRESHOLD && minBufferTime < timeToEnd || minBufferTime >= timeToEnd && !isBufferingCompleted) {
+        if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
             notifyIfSufficientBufferStateChanged.call(this, false);
         } else {
             notifyIfSufficientBufferStateChanged.call(this, true);
@@ -7378,7 +8115,9 @@ MediaPlayer.dependencies.PlaybackController = function() {
         if (firstAppended[streamInfo.id] || this.isSeeking()) return;
         var initialSeekTime = getStreamStartTime.call(this, streamInfo);
         this.log("Starting playback at offset: " + initialSeekTime);
-        this.seek(initialSeekTime);
+        this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {
+            seekTime: initialSeekTime
+        });
     }, updateCurrentTime = function() {
         if (this.isPaused() || !isDynamic || videoModel.getElement().readyState === 0) return;
         var currentTime = this.getTime(), actualTime = getActualPresentationTime.call(this, currentTime), timeChanged = !isNaN(actualTime) && actualTime !== currentTime;
@@ -7396,6 +8135,7 @@ MediaPlayer.dependencies.PlaybackController = function() {
         initialStart.call(this);
     }, removeAllListeners = function() {
         if (!videoModel) return;
+        videoModel.unlisten("canplay", onCanPlay);
         videoModel.unlisten("play", onPlaybackStart);
         videoModel.unlisten("playing", onPlaybackPlaying);
         videoModel.unlisten("pause", onPlaybackPaused);
@@ -7476,8 +8216,10 @@ MediaPlayer.dependencies.PlaybackController = function() {
             time: new Date()
         });
     }, onBytesAppended = function(e) {
-        var bufferedStart, ranges = e.data.bufferedRanges, id = streamInfo.id, time = this.getTime(), type = e.sender.streamProcessor.getType(), stream = this.system.getObject("streamController").getStreamById(streamInfo.id), currentEarliestTime = commonEarliestTime[id];
-        if (e.data.index === 0) {
+        var bufferedStart, ranges = e.data.bufferedRanges, id = streamInfo.id, time = this.getTime(), sp = e.sender.streamProcessor, type = sp.getType(), stream = this.system.getObject("streamController").getStreamById(streamInfo.id), streamStart = getStreamStartTime.call(this, streamInfo), startRequest = this.adapter.getFragmentRequestForTime(sp, sp.getCurrentRepresentationInfo(), streamStart, {
+            ignoreIsFinished: true
+        }), startIdx = startRequest ? startRequest.index : null, currentEarliestTime = commonEarliestTime[id];
+        if (e.data.index === startIdx) {
             firstAppended[id] = firstAppended[id] || {};
             firstAppended[id][type] = true;
             firstAppended[id].ready = !(stream.hasMedia("audio") && !firstAppended[id].audio || stream.hasMedia("video") && !firstAppended[id].video);
@@ -7646,7 +8388,7 @@ MediaPlayer.dependencies.PlaybackController.eventList = {
 
 MediaPlayer.dependencies.ProtectionController = function() {
     "use strict";
-    var keySystems = null, pendingNeedKeyData = [], pendingLicenseRequests = [], audioInfo, videoInfo, protDataSet, initialized = false, getProtData = function(keySystem) {
+    var keySystems = null, pendingNeedKeyData = [], audioInfo, videoInfo, protDataSet, initialized = false, getProtData = function(keySystem) {
         var protData = null, keySystemString = keySystem.systemString;
         if (protDataSet) {
             protData = keySystemString in protDataSet ? protDataSet[keySystemString] : null;
@@ -7661,7 +8403,7 @@ MediaPlayer.dependencies.ProtectionController = function() {
         if (audioInfo) {
             audioCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(audioInfo.codec));
         }
-        var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(audioCapabilities, videoCapabilities, "optional", self.sessionType === "temporary" ? "optional" : "required");
+        var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(audioCapabilities, videoCapabilities, "optional", self.sessionType === "temporary" ? "optional" : "required", [ self.sessionType ]);
         var requestedKeySystems = [];
         var ksIdx;
         if (this.keySystem) {
@@ -7723,7 +8465,6 @@ MediaPlayer.dependencies.ProtectionController = function() {
             ksSelected[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = function(event) {
                 if (!event.error) {
                     self.keySystem = self.protectionModel.keySystem;
-                    self.protectionExt.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE, self);
                     self.eventBus.dispatchEvent({
                         type: MediaPlayer.dependencies.ProtectionController.events.KEY_SYSTEM_SELECTED,
                         data: keySystemAccess
@@ -7752,41 +8493,99 @@ MediaPlayer.dependencies.ProtectionController = function() {
         } else {
             pendingNeedKeyData.push(supportedKS);
         }
+    }, sendLicenseRequestCompleteEvent = function(data, error) {
+        this.eventBus.dispatchEvent({
+            type: MediaPlayer.dependencies.ProtectionController.events.LICENSE_REQUEST_COMPLETE,
+            data: data,
+            error: error
+        });
     }, onKeyMessage = function(e) {
         if (e.error) {
             this.log(e.error);
-        } else {
-            var keyMessageEvent = e.data;
-            this.eventBus.dispatchEvent({
-                type: MediaPlayer.dependencies.ProtectionController.events.KEY_MESSAGE,
-                data: e.data
-            });
-            pendingLicenseRequests.push(keyMessageEvent.sessionToken);
-            this.protectionExt.requestLicense(this.keySystem, getProtData(this.keySystem), keyMessageEvent.message, keyMessageEvent.defaultURL, keyMessageEvent.sessionToken);
+            return;
         }
-    }, onLicenseRequestComplete = function(e) {
-        var i, sessionToken = e.error ? e.data : e.data.sessionToken;
-        for (i = 0; i < pendingLicenseRequests.length; i++) {
-            if (pendingLicenseRequests[i] === sessionToken) {
-                pendingLicenseRequests.splice(i, 1);
-                if (!e.error) {
-                    this.log("DRM: License request successful.  Session ID = " + sessionToken.getSessionID());
-                    this.eventBus.dispatchEvent({
-                        type: MediaPlayer.dependencies.ProtectionController.events.LICENSE_REQUEST_COMPLETE,
-                        data: sessionToken
-                    });
-                    this.protectionModel.updateKeySession(sessionToken, e.data.message);
-                } else {
-                    this.log("DRM: License request failed! -- " + e.error);
-                    this.eventBus.dispatchEvent({
-                        type: MediaPlayer.dependencies.ProtectionController.events.LICENSE_REQUEST_COMPLETE,
-                        data: null,
-                        error: "DRM: License request failed! -- " + e.error
-                    });
-                }
-                break;
+        var keyMessage = e.data;
+        this.eventBus.dispatchEvent({
+            type: MediaPlayer.dependencies.ProtectionController.events.KEY_MESSAGE,
+            data: keyMessage
+        });
+        var messageType = keyMessage.messageType ? keyMessage.messageType : "license-request", message = keyMessage.message, sessionToken = keyMessage.sessionToken, protData = getProtData(this.keySystem), keySystemString = this.keySystem.systemString, licenseServerData = this.protectionExt.getLicenseServer(this.keySystem, protData, messageType), sendEvent = sendLicenseRequestCompleteEvent.bind(this), eventData = {
+            sessionToken: sessionToken,
+            messageType: messageType
+        };
+        if (!licenseServerData) {
+            this.log("DRM: License server request not required for this message (type = " + e.data.messageType + ").  Session ID = " + sessionToken.getSessionID());
+            sendEvent(eventData);
+            return;
+        }
+        if (this.protectionExt.isClearKey(this.keySystem)) {
+            var clearkeys = this.protectionExt.processClearKeyLicenseRequest(protData, message);
+            if (clearkeys) {
+                this.log("DRM: ClearKey license request handled by application!");
+                sendEvent(eventData);
+                this.protectionModel.updateKeySession(sessionToken, clearkeys);
+                return;
             }
         }
+        var xhr = new XMLHttpRequest(), self = this;
+        var url = null;
+        if (protData) {
+            if (protData.serverURL) {
+                var serverURL = protData.serverURL;
+                if (typeof serverURL === "string" && serverURL !== "") {
+                    url = serverURL;
+                } else if (typeof serverURL === "object" && serverURL.hasOwnProperty(messageType)) {
+                    url = serverURL[messageType];
+                }
+            } else if (protData.laURL && protData.laURL !== "") {
+                url = protData.laURL;
+            }
+        } else {
+            url = this.keySystem.getLicenseServerURLFromInitData(MediaPlayer.dependencies.protection.CommonEncryption.getPSSHData(sessionToken.initData));
+            if (!url) {
+                url = e.data.laURL;
+            }
+        }
+        url = licenseServerData.getServerURLFromMessage(url, message, messageType);
+        if (!url) {
+            sendEvent(eventData, "DRM: No license server URL specified!");
+            return;
+        }
+        xhr.open(licenseServerData.getHTTPMethod(messageType), url, true);
+        xhr.responseType = licenseServerData.getResponseType(keySystemString, messageType);
+        xhr.onload = function() {
+            if (this.status == 200) {
+                sendEvent(eventData);
+                self.protectionModel.updateKeySession(sessionToken, licenseServerData.getLicenseMessage(this.response, keySystemString, messageType));
+            } else {
+                sendEvent(eventData, "DRM: " + keySystemString + ' update, XHR status is "' + this.statusText + '" (' + this.status + "), expected to be 200. readyState is " + this.readyState + ".  Response is " + (this.response ? licenseServerData.getErrorResponse(this.response, keySystemString, messageType) : "NONE"));
+            }
+        };
+        xhr.onabort = function() {
+            sendEvent(eventData, "DRM: " + keySystemString + ' update, XHR aborted. status is "' + this.statusText + '" (' + this.status + "), readyState is " + this.readyState);
+        };
+        xhr.onerror = function() {
+            sendEvent(eventData, "DRM: " + keySystemString + ' update, XHR error. status is "' + this.statusText + '" (' + this.status + "), readyState is " + this.readyState);
+        };
+        var updateHeaders = function(headers) {
+            var key;
+            if (headers) {
+                for (key in headers) {
+                    if ("authorization" === key.toLowerCase()) {
+                        xhr.withCredentials = true;
+                    }
+                    xhr.setRequestHeader(key, headers[key]);
+                }
+            }
+        };
+        if (protData) {
+            updateHeaders(protData.httpRequestHeaders);
+        }
+        updateHeaders(this.keySystem.getRequestHeadersFromMessage(message));
+        if (protData && protData.withCredentials) {
+            xhr.withCredentials = true;
+        }
+        xhr.send(this.keySystem.getLicenseRequestFromMessage(message));
     }, onNeedKey = function(event) {
         if (event.data.initDataType !== "cenc") {
             this.log("DRM:  Only 'cenc' initData is supported!  Ignoring initData of type: " + event.data.initDataType);
@@ -7801,7 +8600,7 @@ MediaPlayer.dependencies.ProtectionController = function() {
             this.log("Received needkey event with initData, but we don't support any of the key systems!");
             return;
         }
-        selectKeySystem.call(this, supportedKS, true);
+        selectKeySystem.call(this, supportedKS, false);
     }, onServerCertificateUpdated = function(event) {
         if (!event.error) {
             this.log("DRM: License server certificate successfully updated.");
@@ -7898,7 +8697,6 @@ MediaPlayer.dependencies.ProtectionController = function() {
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED] = onKeySessionClosed.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED] = onKeySessionRemoved.bind(this);
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED] = onKeyStatusesChanged.bind(this);
-            this[MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE] = onLicenseRequestComplete.bind(this);
             keySystems = this.protectionExt.getKeySystems();
             this.protectionModel = this.system.getObject("protectionModel");
             this.protectionModel.init();
@@ -7924,7 +8722,7 @@ MediaPlayer.dependencies.ProtectionController = function() {
                 var mediaInfo = videoInfo ? videoInfo : audioInfo;
                 var supportedKS = this.protectionExt.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
                 if (supportedKS && supportedKS.length > 0) {
-                    selectKeySystem.call(this, supportedKS, false);
+                    selectKeySystem.call(this, supportedKS, true);
                 }
                 initialized = true;
             }
@@ -7938,9 +8736,6 @@ MediaPlayer.dependencies.ProtectionController = function() {
         teardown: function() {
             this.setMediaElement(null);
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
-            if (this.keySystem) {
-                this.protectionExt.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE, this);
-            }
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
             this.protectionModel.unsubscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
@@ -8327,7 +9122,7 @@ MediaPlayer.dependencies.StreamController = function() {
         canPlay = true;
         startAutoPlay.call(this);
     }, onError = function(e) {
-        var code = e.data.error.code, msg = "";
+        var code = e.data.error ? e.data.error.code : 0, msg = "";
         if (code === -1) {
             return;
         }
@@ -8350,6 +9145,10 @@ MediaPlayer.dependencies.StreamController = function() {
 
           case 5:
             msg = "MEDIA_ERR_ENCRYPTED";
+            break;
+
+          default:
+            msg = "UNKNOWN";
             break;
         }
         hasMediaError = true;
@@ -8532,7 +9331,7 @@ MediaPlayer.dependencies.StreamController = function() {
     }, onManifestUpdated = function(e) {
         if (!e.error) {
             this.log("Manifest has loaded.");
-            var manifest = e.data.manifest, streamInfo = this.adapter.getStreamsInfo(manifest)[0], mediaInfo = this.adapter.getMediaInfoForType(manifest, streamInfo, "video"), adaptation = this.adapter.getDataForMedia(mediaInfo), useCalculatedLiveEdgeTime = this.manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
+            var manifest = e.data.manifest, streamInfo = this.adapter.getStreamsInfo(manifest)[0], mediaInfo = this.adapter.getMediaInfoForType(manifest, streamInfo, "video") || this.adapter.getMediaInfoForType(manifest, streamInfo, "audio"), adaptation = this.adapter.getDataForMedia(mediaInfo), useCalculatedLiveEdgeTime = this.manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
             if (useCalculatedLiveEdgeTime) {
                 this.log("SegmentTimeline detected using calculated Live Edge Time");
                 useManifestDateHeaderTimeSource = false;
@@ -8655,7 +9454,9 @@ MediaPlayer.dependencies.StreamController = function() {
                 this.mediaSourceExt.detachMediaSource(this.videoModel);
                 mediaSource = null;
             }
-            if (ownProtectionController) {
+            if (!protectionController) {
+                this.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+            } else if (ownProtectionController) {
                 var teardownComplete = {}, self = this;
                 teardownComplete[MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE] = function() {
                     ownProtectionController = false;
@@ -9044,7 +9845,10 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
         }
         return supportedKS;
     },
-    requestLicense: function(keySystem, protData, message, laURL, sessionToken) {
+    getLicenseServer: function(keySystem, protData, messageType) {
+        if (messageType === "license-release" || messageType == "individualization-request") {
+            return null;
+        }
         var licenseServerData = null;
         if (protData && protData.hasOwnProperty("drmtoday")) {
             licenseServerData = this.system.getObject("serverDRMToday");
@@ -9054,64 +9858,16 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
             licenseServerData = this.system.getObject("serverPlayReady");
         } else if (keySystem.systemString === "org.w3.clearkey") {
             licenseServerData = this.system.getObject("serverClearKey");
-        } else {
-            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE, sessionToken, "DRM: Unknown key system! -- " + keySystem.keySystemStr);
-            return;
         }
-        if (keySystem.systemString === "org.w3.clearkey") {
-            try {
-                var clearkeys = MediaPlayer.dependencies.protection.KeySystem_ClearKey.getClearKeysFromProtectionData(protData, message);
-                if (clearkeys) {
-                    var event = new MediaPlayer.vo.protection.LicenseRequestComplete(clearkeys, sessionToken);
-                    this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE, event);
-                    return;
-                }
-            } catch (error) {
-                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE, sessionToken, error.message);
-                return;
-            }
+        return licenseServerData;
+    },
+    processClearKeyLicenseRequest: function(protData, message) {
+        try {
+            return MediaPlayer.dependencies.protection.KeySystem_ClearKey.getClearKeysFromProtectionData(protData, message);
+        } catch (error) {
+            this.log("Failed to retrieve clearkeys from ProtectionData");
+            return null;
         }
-        var xhr = new XMLHttpRequest(), url = protData && protData.laURL && protData.laURL !== "" ? protData.laURL : laURL, self = this;
-        url = licenseServerData.getServerURLFromMessage(url, message);
-        if (!url) {
-            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE, sessionToken, "DRM: No license server URL specified!");
-            return;
-        }
-        xhr.open(licenseServerData.getHTTPMethod(), url, true);
-        xhr.responseType = licenseServerData.getResponseType(keySystem.systemString);
-        xhr.onload = function() {
-            if (this.status == 200) {
-                var event = new MediaPlayer.vo.protection.LicenseRequestComplete(licenseServerData.getLicenseMessage(this.response, keySystem.systemString), sessionToken);
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE, event);
-            } else {
-                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE, sessionToken, "DRM: " + keySystem.systemString + ' update, XHR status is "' + this.statusText + '" (' + this.status + "), expected to be 200. readyState is " + this.readyState + ".  Response is " + (this.response ? licenseServerData.getErrorResponse(this.response, keySystem.systemString) : "NONE"));
-            }
-        };
-        xhr.onabort = function() {
-            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE, sessionToken, "DRM: " + keySystem.systemString + ' update, XHR aborted. status is "' + this.statusText + '" (' + this.status + "), readyState is " + this.readyState);
-        };
-        xhr.onerror = function() {
-            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_LICENSE_REQUEST_COMPLETE, sessionToken, "DRM: " + keySystem.systemString + ' update, XHR error. status is "' + this.statusText + '" (' + this.status + "), readyState is " + this.readyState);
-        };
-        var updateHeaders = function(headers) {
-            var key;
-            if (headers) {
-                for (key in headers) {
-                    if ("authorization" === key.toLowerCase()) {
-                        xhr.withCredentials = true;
-                    }
-                    xhr.setRequestHeader(key, headers[key]);
-                }
-            }
-        };
-        if (protData) {
-            updateHeaders(protData.httpRequestHeaders);
-        }
-        updateHeaders(keySystem.getRequestHeadersFromMessage(message));
-        if (protData && protData.withCredentials) {
-            xhr.withCredentials = true;
-        }
-        xhr.send(keySystem.getLicenseRequestFromMessage(message));
     }
 };
 
@@ -9133,6 +9889,7 @@ MediaPlayer.dependencies.SourceBufferExtensions = function() {
     this.notify = undefined;
     this.subscribe = undefined;
     this.unsubscribe = undefined;
+    this.manifestExt = undefined;
 };
 
 MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
@@ -9141,9 +9898,12 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         "use strict";
         var self = this, codec = mediaInfo.codec, buffer = null;
         try {
+            if (codec.match(/application\/mp4;\s*codecs="stpp"/i)) {
+                throw new Error("not really supported");
+            }
             buffer = mediaSource.addSourceBuffer(codec);
         } catch (ex) {
-            if (mediaInfo.isText || codec.indexOf('codecs="stpp"') != -1) {
+            if (mediaInfo.isText || codec.indexOf('codecs="stpp"') !== -1) {
                 buffer = self.system.getObject("textSourceBuffer");
             } else {
                 throw ex;
@@ -9304,11 +10064,15 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         }
     },
     append: function(buffer, chunk) {
-        var self = this, bytes = chunk.bytes, appendMethod = "append" in buffer ? "append" : "appendBuffer" in buffer ? "appendBuffer" : null;
+        var self = this, bytes = chunk.bytes, appendMethod = "append" in buffer ? "append" : "appendBuffer" in buffer ? "appendBuffer" : null, acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === "Object";
         if (!appendMethod) return;
         try {
             self.waitForUpdateEnd(buffer, function() {
-                buffer[appendMethod](bytes, chunk);
+                if (acceptsChunk) {
+                    buffer[appendMethod](bytes, chunk);
+                } else {
+                    buffer[appendMethod](bytes);
+                }
                 self.waitForUpdateEnd(buffer, function() {
                     self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {
                         buffer: buffer,
@@ -9365,24 +10129,125 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
 
 MediaPlayer.utils.TextTrackExtensions = function() {
     "use strict";
-    var Cue;
+    var Cue, video, textTrackQueue = [], trackElementArr = [], currentTrackIdx = 0, trackKindMap = {
+        subtitle: "subtitles",
+        caption: "captions"
+    }, actualVideoWidth = 0, actualVideoHeight = 0, captionContainer = null, videoSizeCheckInterval = null, isIE11 = false, createTrackForUserAgent = function(i) {
+        var captionType = trackKindMap[textTrackQueue[i].role];
+        var kind = captionType !== undefined ? captionType : trackKindMap.caption;
+        var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
+        var lang = textTrackQueue[i].lang;
+        var track = isIE11 ? video.addTextTrack("captions", "hello", lang) : document.createElement("track");
+        if (!isIE11) {
+            track.kind = kind;
+            track.label = label;
+            track.srclang = lang;
+        }
+        return track;
+    };
     return {
+        mediaController: undefined,
+        videoModel: undefined,
         setup: function() {
             Cue = window.VTTCue || window.TextTrackCue;
+            isIE11 = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./);
         },
-        addTextTrack: function(video, captionData, label, scrlang, isDefaultTrack) {
-            this.track = video.addTextTrack("captions", label, scrlang);
-            this.track.default = isDefaultTrack;
-            this.track.mode = "showing";
-            this.video = video;
-            this.addCaptions(0, captionData);
-            return this.track;
+        addTextTrack: function(textTrackInfoVO, totalTextTracks) {
+            textTrackQueue.push(textTrackInfoVO);
+            if (video === undefined) {
+                video = textTrackInfoVO.video;
+            }
+            captionContainer = this.videoModel.getTTMLRenderingDiv();
+            if (textTrackQueue.length === totalTextTracks) {
+                var defaultIndex = 0;
+                for (var i = 0; i < textTrackQueue.length; i++) {
+                    var track = createTrackForUserAgent(i);
+                    currentTrackIdx = i;
+                    trackElementArr.push(track);
+                    track.default = textTrackQueue[i].defaultTrack;
+                    if (textTrackQueue[i].defaultTrack) {
+                        defaultIndex = i;
+                    }
+                    if (!isIE11) {
+                        video.appendChild(track);
+                    }
+                    this.addCaptions(0, textTrackQueue[i].captionData);
+                }
+                currentTrackIdx = defaultIndex;
+            }
+        },
+        checkVideoSize: function() {
+            var track = this.getCurrentTextTrack();
+            if (track && track.renderingType === "html") {
+                var newVideoWidth = this.video.clientWidth;
+                var newVideoHeight = this.video.clientHeight;
+                if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
+                    actualVideoWidth = newVideoWidth;
+                    actualVideoHeight = newVideoHeight;
+                    captionContainer.style.width = actualVideoWidth + "px";
+                    captionContainer.style.height = actualVideoHeight + "px";
+                    for (var i = 0; i < track.activeCues.length; ++i) {
+                        var cue = track.activeCues[i];
+                        cue.scaleCue(cue);
+                    }
+                }
+            }
+        },
+        scaleCue: function(activeCue) {
+            var videoWidth = actualVideoWidth;
+            var videoHeight = actualVideoHeight;
+            var key, replaceValue, elements;
+            var cellUnit = [ videoWidth / activeCue.cellResolution[0], videoHeight / activeCue.cellResolution[1] ];
+            if (activeCue.linePadding) {
+                for (key in activeCue.linePadding) {
+                    if (activeCue.linePadding.hasOwnProperty(key)) {
+                        var valueLinePadding = activeCue.linePadding[key];
+                        replaceValue = (valueLinePadding * cellUnit[0]).toString();
+                        var elementsSpan = document.getElementsByClassName("spanPadding");
+                        for (var i = 0; i < elementsSpan.length; i++) {
+                            elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-left\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                            elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-right\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        }
+                    }
+                }
+            }
+            if (activeCue.fontSize) {
+                for (key in activeCue.fontSize) {
+                    if (activeCue.fontSize.hasOwnProperty(key)) {
+                        var valueFontSize = activeCue.fontSize[key] / 100;
+                        replaceValue = (valueFontSize * cellUnit[1]).toString();
+                        if (key !== "defaultFontSize") {
+                            elements = document.getElementsByClassName(key);
+                        } else {
+                            elements = document.getElementsByClassName("paragraph");
+                        }
+                        for (var j = 0; j < elements.length; j++) {
+                            elements[j].style.cssText = elements[j].style.cssText.replace(/(font-size\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        }
+                    }
+                }
+            }
+            if (activeCue.lineHeight) {
+                for (key in activeCue.lineHeight) {
+                    if (activeCue.lineHeight.hasOwnProperty(key)) {
+                        var valueLineHeight = activeCue.lineHeight[key] / 100;
+                        replaceValue = (valueLineHeight * cellUnit[1]).toString();
+                        elements = document.getElementsByClassName(key);
+                        for (var k = 0; k < elements.length; k++) {
+                            elements[k].style.cssText = elements[k].style.cssText.replace(/(line-height\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        }
+                    }
+                }
+            }
         },
         addCaptions: function(timeOffset, captionData) {
+            var track = this.getCurrentTextTrack();
+            track.mode = "showing";
             for (var item in captionData) {
-                var cue;
-                var currentItem = captionData[item];
-                var video = this.video;
+                var cue, currentItem = captionData[item];
+                if (!videoSizeCheckInterval && currentItem.type == "html") {
+                    videoSizeCheckInterval = setInterval(this.checkVideoSize.bind(this), 500);
+                }
                 if (currentItem.type == "image") {
                     cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, "");
                     cue.image = currentItem.data;
@@ -9394,14 +10259,51 @@ MediaPlayer.utils.TextTrackExtensions = function() {
                         img.id = "ttmlImage_" + this.id;
                         img.src = this.image;
                         img.className = "cue-image";
-                        video.parentNode.appendChild(img);
+                        captionContainer.appendChild(img);
                     };
                     cue.onexit = function() {
-                        var imgs = video.parentNode.childNodes;
+                        var imgs = captionContainer.childNodes;
                         var i;
                         for (i = 0; i < imgs.length; i++) {
                             if (imgs[i].id == "ttmlImage_" + this.id) {
-                                video.parentNode.removeChild(imgs[i]);
+                                captionContainer.removeChild(imgs[i]);
+                            }
+                        }
+                    };
+                } else if (currentItem.type == "html") {
+                    if (track.renderingType !== "html") {
+                        track.renderingType = "html";
+                    }
+                    if (!document.getElementById("caption-style")) {
+                        this.setCueStyle();
+                    } else if (!document.getElementById("caption-style").sheet.cssRules.length) {
+                        this.setCueStyle();
+                    }
+                    cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, "");
+                    cue.cueHTMLElement = currentItem.cueHTMLElement;
+                    cue.regions = currentItem.regions;
+                    cue.regionID = currentItem.regionID;
+                    cue.cueID = currentItem.cueID;
+                    cue.videoWidth = currentItem.videoWidth;
+                    cue.videoHeight = currentItem.videoHeight;
+                    cue.cellResolution = currentItem.cellResolution;
+                    cue.fontSize = currentItem.fontSize;
+                    cue.lineHeight = currentItem.lineHeight;
+                    cue.linePadding = currentItem.linePadding;
+                    cue.scaleCue = this.scaleCue;
+                    captionContainer.style.width = this.video.clientWidth + "px";
+                    captionContainer.style.height = this.video.clientHeight + "px";
+                    cue.onenter = function() {
+                        if (track.mode == "showing") {
+                            captionContainer.appendChild(this.cueHTMLElement);
+                            this.scaleCue(this);
+                        }
+                    };
+                    cue.onexit = function() {
+                        var divs = captionContainer.childNodes;
+                        for (var i = 0; i < divs.length; ++i) {
+                            if (divs[i].id == "subtitle_" + this.cueID) {
+                                captionContainer.removeChild(divs[i]);
                             }
                         }
                     };
@@ -9422,24 +10324,77 @@ MediaPlayer.utils.TextTrackExtensions = function() {
                         }
                     }
                 }
-                this.track.addCue(cue);
+                track.addCue(cue);
+            }
+            if (!textTrackQueue[currentTrackIdx].isFragmented) {
+                track.mode = textTrackQueue[currentTrackIdx].defaultTrack ? "showing" : "hidden";
             }
         },
-        deleteCues: function(video) {
-            var i = 0, firstValidTrack = false;
-            while (!firstValidTrack) {
-                if (video.textTracks[i].cues !== null) {
-                    firstValidTrack = true;
-                    break;
+        getCurrentTextTrack: function() {
+            return video.textTracks[currentTrackIdx];
+        },
+        getTextTrack: function(idx) {
+            return video.textTracks[idx];
+        },
+        deleteTrackCues: function(track) {
+            if (track.cues) {
+                var cues = track.cues, lastIdx = cues.length - 1;
+                for (var r = lastIdx; r >= 0; r--) {
+                    track.removeCue(cues[r]);
                 }
-                i++;
+                track.mode = "disabled";
             }
-            var track = video.textTracks[i], cues = track.cues, lastIdx = cues.length - 1;
-            for (i = lastIdx; i >= 0; i--) {
-                track.removeCue(cues[i]);
+        },
+        deleteAllTextTracks: function() {
+            var ln = trackElementArr.length;
+            for (var i = 0; i < ln; i++) {
+                if (isIE11) {
+                    this.deleteTrackCues(this.getTextTrack(i));
+                } else {
+                    video.removeChild(trackElementArr[i]);
+                }
             }
-            track.mode = "disabled";
-            track.default = false;
+            trackElementArr = [];
+            textTrackQueue = [];
+            if (videoSizeCheckInterval) {
+                clearInterval(videoSizeCheckInterval);
+            }
+        },
+        deleteTextTrack: function(idx) {
+            video.removeChild(trackElementArr[idx]);
+            trackElementArr.splice(idx, 1);
+        },
+        setCurrentTrackIdx: function(value) {
+            currentTrackIdx = value;
+        },
+        setCueStyle: function() {
+            var styleElement;
+            if (document.getElementById("caption-style")) {
+                styleElement = document.getElementById("caption-style");
+            } else {
+                styleElement = document.createElement("style");
+                styleElement.id = "caption-style";
+            }
+            document.head.appendChild(styleElement);
+            var stylesheet = styleElement.sheet;
+            if (!this.video.id) {
+                stylesheet.addRule("video::cue", "background: transparent");
+            } else if (this.video.id) {
+                stylesheet.addRule("#" + this.video.id + "::cue", "background: transparent");
+            } else if (this.video.classList.length !== 0) {
+                stylesheet.addRule("." + this.video.className + "::cue", "background: transparent");
+            }
+        },
+        removeCueStyle: function() {
+            var stylesheet = document.getElementById("caption-style").sheet;
+            if (stylesheet.cssRules) {
+                stylesheet.deleteRule(0);
+            }
+        },
+        clearCues: function() {
+            while (captionContainer.firstChild) {
+                captionContainer.removeChild(captionContainer.firstChild);
+            }
         }
     };
 };
@@ -9566,6 +10521,7 @@ MediaPlayer.dependencies.FragmentModel = function() {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        manifestExt: undefined,
         setup: function() {
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
@@ -9585,7 +10541,7 @@ MediaPlayer.dependencies.FragmentModel = function() {
             return isLoadingPostponed;
         },
         addRequest: function(value) {
-            if (!value || this.isFragmentLoadedOrPending(value)) return false;
+            if (!this.manifestExt.getIsTextTrack(value.mediaType) && (!value || this.isFragmentLoadedOrPending(value))) return false;
             pendingRequests.push(value);
             addSchedulingInfoMetrics.call(this, value, MediaPlayer.dependencies.FragmentModel.states.PENDING);
             return true;
@@ -9847,19 +10803,21 @@ MediaPlayer.models.MetricsModel = function() {
             this.metricAdded(mediaType, this.adapter.metricsList.TCP_CONNECTION, vo);
             return vo;
         },
-        addHttpRequest: function(mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, interval, mediaduration, responseHeaders) {
+        addHttpRequest: function(mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders) {
             var vo = new MediaPlayer.vo.metrics.HTTPRequest();
+            if (actualurl && actualurl !== url) {
+                this.addHttpRequest(mediaType, null, type, url, null, range, trequest, null, null, null, mediaduration, null);
+                vo.actualurl = actualurl;
+            }
             vo.stream = mediaType;
             vo.tcpid = tcpid;
             vo.type = type;
             vo.url = url;
-            vo.actualurl = actualurl;
             vo.range = range;
             vo.trequest = trequest;
             vo.tresponse = tresponse;
             vo.tfinish = tfinish;
             vo.responsecode = responsecode;
-            vo.interval = interval;
             vo.mediaduration = mediaduration;
             vo.responseHeaders = responseHeaders;
             this.getMetricsFor(mediaType).HttpList.push(vo);
@@ -9872,6 +10830,10 @@ MediaPlayer.models.MetricsModel = function() {
             vo.d = d;
             vo.b = b;
             httpRequest.trace.push(vo);
+            if (!httpRequest.interval) {
+                httpRequest.interval = 0;
+            }
+            httpRequest.interval += d;
             this.metricUpdated(httpRequest.stream, this.adapter.metricsList.HTTP_REQUEST_TRACE, httpRequest);
             return vo;
         },
@@ -10034,8 +10996,7 @@ MediaPlayer.models.ProtectionModel.eventList = {
     ENAME_KEY_SESSION_REMOVED: "keySessionRemoved",
     ENAME_KEY_SESSION_CLOSED: "keySessionClosed",
     ENAME_KEY_STATUSES_CHANGED: "keyStatusesChanged",
-    ENAME_TEARDOWN_COMPLETE: "protectionTeardownComplete",
-    ENAME_LICENSE_REQUEST_COMPLETE: "licenseRequestComplete"
+    ENAME_TEARDOWN_COMPLETE: "protectionTeardownComplete"
 };
 
 MediaPlayer.models.ProtectionModel_01b = function() {
@@ -10046,7 +11007,8 @@ MediaPlayer.models.ProtectionModel_01b = function() {
                 var sessionToken = null;
                 switch (event.type) {
                   case api.needkey:
-                    self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, new MediaPlayer.vo.protection.NeedKey(event.initData, "cenc"));
+                    var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
+                    self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, new MediaPlayer.vo.protection.NeedKey(initData, "cenc"));
                     break;
 
                   case api.keyerror:
@@ -10117,8 +11079,9 @@ MediaPlayer.models.ProtectionModel_01b = function() {
                         }
                     }
                     if (sessionToken) {
-                        sessionToken.keyMessage = event.message;
-                        self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, new MediaPlayer.vo.protection.KeyMessage(sessionToken, event.message, event.defaultURL));
+                        var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
+                        sessionToken.keyMessage = message;
+                        self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, new MediaPlayer.vo.protection.KeyMessage(sessionToken, message, event.defaultURL));
                     } else {
                         self.log("No session token found for key message");
                     }
@@ -10220,15 +11183,20 @@ MediaPlayer.models.ProtectionModel_01b = function() {
             this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
         },
         setMediaElement: function(mediaElement) {
+            if (videoElement === mediaElement) {
+                return;
+            }
             if (videoElement) {
                 removeEventListeners();
             }
             videoElement = mediaElement;
-            videoElement.addEventListener(api.keyerror, eventHandler);
-            videoElement.addEventListener(api.needkey, eventHandler);
-            videoElement.addEventListener(api.keymessage, eventHandler);
-            videoElement.addEventListener(api.keyadded, eventHandler);
-            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
+            if (videoElement) {
+                videoElement.addEventListener(api.keyerror, eventHandler);
+                videoElement.addEventListener(api.needkey, eventHandler);
+                videoElement.addEventListener(api.keymessage, eventHandler);
+                videoElement.addEventListener(api.keyadded, eventHandler);
+                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
+            }
         },
         createKeySession: function(initData) {
             if (!this.keySystem) {
@@ -10243,6 +11211,9 @@ MediaPlayer.models.ProtectionModel_01b = function() {
                     },
                     getExpirationTime: function() {
                         return NaN;
+                    },
+                    getSessionType: function() {
+                        return "temporary";
                     }
                 };
                 pendingSessions.push(newSession);
@@ -10255,7 +11226,7 @@ MediaPlayer.models.ProtectionModel_01b = function() {
         updateKeySession: function(sessionToken, message) {
             var sessionID = sessionToken.sessionID;
             if (!this.protectionExt.isClearKey(this.keySystem)) {
-                videoElement[api.addKey](this.keySystem.systemString, message, sessionToken.initData, sessionID);
+                videoElement[api.addKey](this.keySystem.systemString, new Uint8Array(message), sessionToken.initData, sessionID);
             } else {
                 for (var i = 0; i < message.keyPairs.length; i++) {
                     videoElement[api.addKey](this.keySystem.systemString, message.keyPairs[i].key, message.keyPairs[i].keyID, sessionID);
@@ -10342,7 +11313,8 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function() {
                 switch (event.type) {
                   case "encrypted":
                     if (event.initData) {
-                        self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, new MediaPlayer.vo.protection.NeedKey(event.initData, event.initDataType));
+                        var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
+                        self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, new MediaPlayer.vo.protection.NeedKey(initData, event.initDataType));
                     }
                     break;
                 }
@@ -10355,7 +11327,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function() {
                 break;
             }
         }
-    }, createSessionToken = function(session, initData) {
+    }, createSessionToken = function(session, initData, sessionType) {
         var self = this;
         var token = {
             session: session,
@@ -10367,7 +11339,8 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function() {
                     break;
 
                   case "message":
-                    self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, new MediaPlayer.vo.protection.KeyMessage(this, event.message, undefined, event.messageType));
+                    var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
+                    self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, new MediaPlayer.vo.protection.KeyMessage(this, message, undefined, event.messageType));
                     break;
                 }
             },
@@ -10379,6 +11352,9 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function() {
             },
             getKeyStatuses: function() {
                 return this.session.keyStatuses;
+            },
+            getSessionType: function() {
+                return sessionType;
             }
         };
         session.addEventListener("keystatuseschange", token);
@@ -10485,7 +11461,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function() {
                 throw new Error("Can not create sessions until you have selected a key system");
             }
             var session = mediaKeys.createSession(sessionType);
-            var sessionToken = createSessionToken.call(this, session, initData);
+            var sessionToken = createSessionToken.call(this, session, initData, sessionType);
             var self = this;
             session.generateRequest("cenc", initData).then(function() {
                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, sessionToken);
@@ -10526,7 +11502,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function() {
             var self = this;
             session.remove().then(function() {
                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, sessionToken.getSessionID());
-            }).catch(function(error) {
+            }, function(error) {
                 self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, null, "Error removing session (" + sessionToken.getSessionID() + "). " + error.name);
             });
         },
@@ -10562,7 +11538,8 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function() {
                 switch (event.type) {
                   case api.needkey:
                     if (event.initData) {
-                        self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, new MediaPlayer.vo.protection.NeedKey(event.initData, "cenc"));
+                        var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
+                        self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY, new MediaPlayer.vo.protection.NeedKey(initData, "cenc"));
                     }
                     break;
                 }
@@ -10594,7 +11571,8 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function() {
                     break;
 
                   case api.message:
-                    self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, new MediaPlayer.vo.protection.KeyMessage(this, event.message, event.destinationURL));
+                    var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
+                    self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, new MediaPlayer.vo.protection.KeyMessage(this, message, event.destinationURL));
                     break;
 
                   case api.ready:
@@ -10611,6 +11589,9 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function() {
             },
             getExpirationTime: function() {
                 return NaN;
+            },
+            getSessionType: function() {
+                return "temporary";
             }
         };
     };
@@ -10732,7 +11713,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function() {
         updateKeySession: function(sessionToken, message) {
             var session = sessionToken.session;
             if (!this.protectionExt.isClearKey(this.keySystem)) {
-                session.update(message);
+                session.update(new Uint8Array(message));
             } else {
                 session.update(new Uint8Array(message.toJWK()));
             }
@@ -10853,7 +11834,7 @@ MediaPlayer.models.URIQueryAndFragmentModel.prototype = {
 
 MediaPlayer.models.VideoModel = function() {
     "use strict";
-    var element, stalledStreams = [], isStalled = function() {
+    var element, TTMLRenderingDiv, stalledStreams = [], isStalled = function() {
         return stalledStreams.length > 0;
     }, addStalledStream = function(type) {
         if (type === null || element.seeking) {
@@ -10932,6 +11913,19 @@ MediaPlayer.models.VideoModel = function() {
         setElement: function(value) {
             element = value;
         },
+        getTTMLRenderingDiv: function() {
+            return TTMLRenderingDiv;
+        },
+        setTTMLRenderingDiv: function(div) {
+            TTMLRenderingDiv = div;
+            TTMLRenderingDiv.style.position = "absolute";
+            TTMLRenderingDiv.style.display = "flex";
+            TTMLRenderingDiv.style.overflow = "hidden";
+            TTMLRenderingDiv.style.zIndex = 2147483647;
+            TTMLRenderingDiv.style.pointerEvents = "none";
+            TTMLRenderingDiv.style.top = 0;
+            TTMLRenderingDiv.style.left = 0;
+        },
         setSource: function(source) {
             element.src = source;
         }
@@ -10952,7 +11946,14 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
         return retVal;
     },
     getPSSHData: function(pssh) {
-        return pssh.slice(32);
+        var offset = 8, view = new DataView(pssh);
+        var version = view.getUint8(offset);
+        offset += 20;
+        if (version > 0) {
+            offset += 4 + 16 * view.getUint32(offset);
+        }
+        offset += 4;
+        return pssh.slice(offset);
     },
     getPSSHForKeySystem: function(keySystem, initData) {
         var psshList = MediaPlayer.dependencies.protection.CommonEncryption.parsePSSHList(initData);
@@ -11055,6 +12056,9 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
         },
         getLicenseRequestFromMessage: function(message) {
             return new Uint8Array(message);
+        },
+        getLicenseServerURLFromInitData: function() {
+            return null;
         }
     };
 };
@@ -11082,9 +12086,9 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey.getClearKeysFromProtectio
 
 MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
     "use strict";
-    var keySystemStr = "com.microsoft.playready", keySystemUUID = "9a04f079-9840-4286-ab92-e65be0885f95", getRequestHeaders = function(message) {
-        var msg, xmlDoc, headers = {}, parser = new DOMParser();
-        msg = String.fromCharCode.apply(null, new Uint16Array(message.buffer));
+    var keySystemStr = "com.microsoft.playready", keySystemUUID = "9a04f079-9840-4286-ab92-e65be0885f95", messageFormat = "utf16", getRequestHeaders = function(message) {
+        var msg, xmlDoc, headers = {}, parser = new DOMParser(), dataview = messageFormat === "utf16" ? new Uint16Array(message) : new Uint8Array(message);
+        msg = String.fromCharCode.apply(null, dataview);
         xmlDoc = parser.parseFromString(msg, "application/xml");
         var headerNameList = xmlDoc.getElementsByTagName("name");
         var headerValueList = xmlDoc.getElementsByTagName("value");
@@ -11097,8 +12101,8 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
         }
         return headers;
     }, getLicenseRequest = function(message) {
-        var msg, xmlDoc, parser = new DOMParser(), licenseRequest = null;
-        msg = String.fromCharCode.apply(null, new Uint16Array(message.buffer));
+        var msg, xmlDoc, parser = new DOMParser(), licenseRequest = null, dataview = messageFormat === "utf16" ? new Uint16Array(message) : new Uint8Array(message);
+        msg = String.fromCharCode.apply(null, dataview);
         xmlDoc = parser.parseFromString(msg, "application/xml");
         if (xmlDoc.getElementsByTagName("Challenge")[0]) {
             var Challenge = xmlDoc.getElementsByTagName("Challenge")[0].childNodes[0].nodeValue;
@@ -11107,6 +12111,34 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
             }
         }
         return licenseRequest;
+    }, getLicenseServerURL = function(initData) {
+        if (initData) {
+            var data = new DataView(initData), numRecords = data.getUint16(4, true), offset = 6, parser = new DOMParser();
+            for (var i = 0; i < numRecords; i++) {
+                var recordType = data.getUint16(offset, true);
+                offset += 2;
+                var recordLength = data.getUint16(offset, true);
+                offset += 2;
+                if (recordType !== 1) {
+                    offset += recordLength;
+                    continue;
+                }
+                var recordData = initData.slice(offset, offset + recordLength), record = String.fromCharCode.apply(null, new Uint16Array(recordData)), xmlDoc = parser.parseFromString(record, "application/xml");
+                if (xmlDoc.getElementsByTagName("LA_URL")[0]) {
+                    var laurl = xmlDoc.getElementsByTagName("LA_URL")[0].childNodes[0].nodeValue;
+                    if (laurl) {
+                        return laurl;
+                    }
+                }
+                if (xmlDoc.getElementsByTagName("LUI_URL")[0]) {
+                    var luiurl = xmlDoc.getElementsByTagName("LUI_URL")[0].childNodes[0].nodeValue;
+                    if (luiurl) {
+                        return luiurl;
+                    }
+                }
+            }
+        }
+        return null;
     }, parseInitDataFromContentProtection = function(cpData) {
         var byteCursor = 0, PROSize, PSSHSize, PSSHBoxType = new Uint8Array([ 112, 115, 115, 104, 0, 0, 0, 0 ]), playreadySystemID = new Uint8Array([ 154, 4, 240, 121, 152, 64, 66, 134, 171, 146, 230, 91, 224, 136, 95, 149 ]), uint8arraydecodedPROHeader = null, PSSHBoxBuffer, PSSHBox, PSSHData;
         if ("pssh" in cpData) {
@@ -11142,7 +12174,14 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
         uuid: keySystemUUID,
         getInitData: parseInitDataFromContentProtection,
         getRequestHeadersFromMessage: getRequestHeaders,
-        getLicenseRequestFromMessage: getLicenseRequest
+        getLicenseRequestFromMessage: getLicenseRequest,
+        getLicenseServerURLFromInitData: getLicenseServerURL,
+        setPlayReadyMessageFormat: function(format) {
+            if (format !== "utf8" && format !== "utf16") {
+                throw new Error("Illegal PlayReady message format! -- " + format);
+            }
+            messageFormat = format;
+        }
     };
 };
 
@@ -11163,6 +12202,9 @@ MediaPlayer.dependencies.protection.KeySystem_Widevine = function() {
         },
         getLicenseRequestFromMessage: function(message) {
             return new Uint8Array(message);
+        },
+        getLicenseServerURLFromInitData: function() {
+            return null;
         }
     };
 };
@@ -11216,7 +12258,7 @@ MediaPlayer.dependencies.protection.servers.DRMToday = function() {
         "com.widevine.alpha": {
             responseType: "json",
             getLicenseMessage: function(response) {
-                return new Uint8Array(BASE64.decodeArray(response.license));
+                return BASE64.decodeArray(response.license);
             },
             getErrorResponse: function(response) {
                 return response;
@@ -11225,7 +12267,7 @@ MediaPlayer.dependencies.protection.servers.DRMToday = function() {
         "com.microsoft.playready": {
             responseType: "arraybuffer",
             getLicenseMessage: function(response) {
-                return new Uint8Array(response);
+                return response;
             },
             getErrorResponse: function(response) {
                 return String.fromCharCode.apply(null, new Uint8Array(response));
@@ -11270,7 +12312,7 @@ MediaPlayer.dependencies.protection.servers.PlayReady = function() {
             return "arraybuffer";
         },
         getLicenseMessage: function(serverResponse) {
-            return new Uint8Array(serverResponse);
+            return serverResponse;
         },
         getErrorResponse: function(serverResponse) {
             return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
@@ -11295,7 +12337,7 @@ MediaPlayer.dependencies.protection.servers.Widevine = function() {
             return "arraybuffer";
         },
         getLicenseMessage: function(serverResponse) {
-            return new Uint8Array(serverResponse);
+            return serverResponse;
         },
         getErrorResponse: function(serverResponse) {
             return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
@@ -11498,7 +12540,7 @@ MediaPlayer.rules.ThroughputRule = function() {
         if (arr.length > sampleAmount) {
             arr.shift();
         }
-        return averageThroughput * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY;
+        return averageThroughput * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY / 1e3;
     };
     return {
         log: undefined,
@@ -11513,9 +12555,11 @@ MediaPlayer.rules.ThroughputRule = function() {
                 return;
             }
             downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1e3;
-            lastRequestThroughput = Math.round(lastRequest.trace[lastRequest.trace.length - 1].b * 8 / downloadTime);
-            storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
-            averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic)) / 1024;
+            if (lastRequest.trace.length) {
+                lastRequestThroughput = Math.round(lastRequest.trace[lastRequest.trace.length - 1].b * 8 / downloadTime);
+                storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
+            }
+            averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic));
             abrController.setAverageThroughput(mediaType, averageThroughput);
             if (abrController.getAbandonmentStateFor(mediaType) !== MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
                 if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED && (bufferLevelVO.level >= MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD * 2 || isDynamic)) {
@@ -11769,7 +12813,7 @@ MediaPlayer.rules.BufferLevelRule = function() {
                     start: currentTime,
                     end: currentTime + bufferLevel
                 }
-            }), appendedLevel = appendedChunks && appendedChunks.length > 0 ? appendedChunks[appendedChunks.length - 1].bufferedRange.end - appendedChunks[0].bufferedRange.start : null, actualBufferLevel = switchMode === MediaPlayer.dependencies.MediaController.trackSwitchModes.NEVER_REPLACE ? bufferLevel : appendedLevel || 0, scheduleCtrl = scheduleController[streamId][mediaType], representationInfo = scheduleCtrl.streamProcessor.getCurrentRepresentationInfo(), isDynamic = scheduleCtrl.streamProcessor.isDynamic(), rate = this.metricsExt.getCurrentPlaybackRate(metrics), duration = streamInfo.manifestInfo.duration, bufferedDuration = actualBufferLevel / Math.max(rate, 1), fragmentDuration = representationInfo.fragmentDuration, timeToEnd = isDynamic ? Number.POSITIVE_INFINITY : duration - currentTime, requiredBufferLength = Math.min(getRequiredBufferLength.call(this, isDynamic, duration, scheduleCtrl), timeToEnd), remainingDuration = Math.max(requiredBufferLength - bufferedDuration, 0), fragmentCount;
+            }), appendedLevel = appendedChunks && appendedChunks.length > 0 ? appendedChunks[appendedChunks.length - 1].bufferedRange.end - currentTime : null, actualBufferLevel = switchMode === MediaPlayer.dependencies.MediaController.trackSwitchModes.NEVER_REPLACE ? bufferLevel : appendedLevel || 0, scheduleCtrl = scheduleController[streamId][mediaType], representationInfo = scheduleCtrl.streamProcessor.getCurrentRepresentationInfo(), isDynamic = scheduleCtrl.streamProcessor.isDynamic(), rate = this.metricsExt.getCurrentPlaybackRate(metrics), duration = streamInfo.manifestInfo.duration, bufferedDuration = actualBufferLevel / Math.max(rate, 1), fragmentDuration = representationInfo.fragmentDuration, timeToEnd = isDynamic ? Number.POSITIVE_INFINITY : duration - currentTime, requiredBufferLength = Math.min(getRequiredBufferLength.call(this, isDynamic, duration, scheduleCtrl), timeToEnd), remainingDuration = Math.max(requiredBufferLength - bufferedDuration, 0), fragmentCount;
             fragmentCount = Math.ceil(remainingDuration / fragmentDuration);
             if (bufferedDuration >= timeToEnd && !isCompletedT(streamId, mediaType)) {
                 fragmentCount = fragmentCount || 1;
@@ -11843,6 +12887,7 @@ MediaPlayer.rules.PlaybackTimeRule = function() {
         sourceBufferExt: undefined,
         virtualBuffer: undefined,
         playbackController: undefined,
+        textSourceBuffer: undefined,
         setup: function() {
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
         },
@@ -11856,10 +12901,14 @@ MediaPlayer.rules.PlaybackTimeRule = function() {
                 state: MediaPlayer.dependencies.FragmentModel.states.REJECTED
             })[0], keepIdx = !!rejected && !hasSeekTarget, currentTime = streamProcessor.getIndexHandlerTime(), playbackTime = this.playbackController.getTime(), rejectedEnd = rejected ? rejected.startTime + rejected.duration : null, useRejected = !hasSeekTarget && rejected && (rejectedEnd > playbackTime && rejected.startTime <= currentTime || isNaN(currentTime)), buffer = streamProcessor.bufferController.getBuffer(), appendedChunks, range = null, time, request;
             time = hasSeekTarget ? st : useRejected ? rejected.startTime : currentTime;
+            if (!hasSeekTarget && !rejected && time > playbackTime + MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY) {
+                callback(new MediaPlayer.rules.SwitchRequest(null, p));
+                return;
+            }
             if (rejected) {
                 sc.getFragmentModel().removeRejectedRequest(rejected);
             }
-            if (isNaN(time)) {
+            if (isNaN(time) || mediaType === "fragmentedText" && this.textSourceBuffer.getAllTracksAreDisabled()) {
                 callback(new MediaPlayer.rules.SwitchRequest(null, p));
                 return;
             }
@@ -12023,7 +13072,7 @@ MediaPlayer.rules.SameTimeRequestRule = function() {
                     state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED,
                     time: time
                 })[0];
-                if (!sameTimeReq && req.index !== getLastMediaRequestIdx.call(this, streamId, req.mediaType)) {
+                if (!sameTimeReq && req.index !== getLastMediaRequestIdx.call(this, streamId, req.mediaType) && type !== "fragmentedText") {
                     shouldWait = true;
                     break;
                 }
@@ -12345,6 +13394,10 @@ MediaPlayer.utils.CustomTimeRanges = function() {
                 }
             }
             this.length = this.customTimeRangeArray.length;
+        },
+        clear: function() {
+            this.customTimeRangeArray = [];
+            this.length = 0;
         },
         remove: function(start, end) {
             for (var i = 0; i < this.customTimeRangeArray.length; i++) {
@@ -13050,6 +14103,21 @@ MediaPlayer.vo.StreamInfo.prototype = {
     constructor: MediaPlayer.vo.StreamInfo
 };
 
+MediaPlayer.vo.TextTrackInfo = function() {
+    "use strict";
+    this.video = null;
+    this.captionData = null;
+    this.label = null;
+    this.lang = null;
+    this.defaultTrack = false;
+    this.role = null;
+    this.isFragmented = false;
+};
+
+MediaPlayer.vo.TextTrackInfo.prototype = {
+    constructor: MediaPlayer.vo.TextTrackInfo
+};
+
 MediaPlayer.vo.TrackInfo = function() {
     "use strict";
     this.id = null;
@@ -13151,11 +14219,19 @@ MediaPlayer.vo.metrics.HTTPRequest.Trace.prototype = {
     constructor: MediaPlayer.vo.metrics.HTTPRequest.Trace
 };
 
-MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE = "Media Segment";
+MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE = "MPD";
+
+MediaPlayer.vo.metrics.HTTPRequest.XLINK_EXPANSION_TYPE = "XLink Expansion";
 
 MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE = "Initialization Segment";
 
-MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE = "MPD";
+MediaPlayer.vo.metrics.HTTPRequest.INDEX_SEGMENT_TYPE = "Index Segment";
+
+MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE = "Media Segment";
+
+MediaPlayer.vo.metrics.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = "Bitstream Switching Segment";
+
+MediaPlayer.vo.metrics.HTTPRequest.OTHER_TYPE = "other";
 
 MediaPlayer.vo.metrics.ManifestUpdate = function() {
     "use strict";
@@ -13333,7 +14409,7 @@ MediaPlayer.vo.protection.KeyMessage = function(sessionToken, message, defaultUR
     this.sessionToken = sessionToken;
     this.message = message;
     this.defaultURL = defaultURL;
-    this.messageType = messageType;
+    this.messageType = messageType ? messageType : "license-request";
 };
 
 MediaPlayer.vo.protection.KeyMessage.prototype = {
@@ -13359,22 +14435,24 @@ MediaPlayer.vo.protection.KeySystemAccess.prototype = {
     constructor: MediaPlayer.vo.protection.KeySystemAccess
 };
 
-MediaPlayer.vo.protection.KeySystemConfiguration = function(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState) {
+MediaPlayer.vo.protection.KeySystemConfiguration = function(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, sessionTypes) {
     this.initDataTypes = [ "cenc" ];
     this.audioCapabilities = audioCapabilities;
     this.videoCapabilities = videoCapabilities;
     this.distinctiveIdentifier = distinctiveIdentifier;
     this.persistentState = persistentState;
+    this.sessionTypes = sessionTypes;
 };
 
 MediaPlayer.vo.protection.KeySystemConfiguration.prototype = {
     constructor: MediaPlayer.vo.protection.KeySystemConfiguration
 };
 
-MediaPlayer.vo.protection.LicenseRequestComplete = function(message, sessionToken) {
+MediaPlayer.vo.protection.LicenseRequestComplete = function(message, sessionToken, messageType) {
     "use strict";
     this.message = message;
     this.sessionToken = sessionToken;
+    this.messageType = messageType ? messageType : "license-request";
 };
 
 MediaPlayer.vo.protection.LicenseRequestComplete.prototype = {
@@ -13399,8 +14477,8 @@ MediaPlayer.vo.protection.NeedKey.prototype = {
     constructor: MediaPlayer.vo.protection.NeedKey
 };
 
-MediaPlayer.vo.protection.ProtectionData = function(laURL, httpRequestHeaders, clearkeys) {
-    this.laURL = laURL;
+MediaPlayer.vo.protection.ProtectionData = function(serverURL, httpRequestHeaders, clearkeys) {
+    this.serverURL = serverURL;
     this.httpRequestHeaders = httpRequestHeaders;
     this.clearkeys = clearkeys;
 };
