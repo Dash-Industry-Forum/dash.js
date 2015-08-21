@@ -41,6 +41,12 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 allTracksAreDisabled = t.mode !== "showing";
                 if (t.mode === "showing" && el.currentTime > 0) { //TODO find a better way to block function when event is triggered at startup when listener is added.  Tried to delay adding listener.
                     if (currentTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again.
+                        var previousTextTrack = this.textTrackExtensions.getCurrentTextTrack();
+                        this.textTrackExtensions.deleteTrackCues(previousTextTrack);
+                        if (previousTextTrack.renderingType === "html") {
+                            this.textTrackExtensions.removeCueStyle();
+                            this.textTrackExtensions.clearCues();
+                        }
                         currentTrackIdx = i;
                         this.textTrackExtensions.setCurrentTrackIdx(i);
                         this.textTrackExtensions.deleteTrackCues(this.textTrackExtensions.getCurrentTextTrack());
@@ -51,7 +57,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                     }
                     break;
                 }
-             }
+            }
         };
 
     return {

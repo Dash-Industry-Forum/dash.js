@@ -182,7 +182,7 @@ function ObjectIron(map) {
 
             // iterate over the objects and look for any of the items we care about
             for (pp in source) {
-                if (source.hasOwnProperty(pp)) {
+                if (source.hasOwnProperty(pp) && pp != "__children") {
                     pi = lookup.indexOf(pp);
                     if (pi !== -1) {
                         item = map[pi];

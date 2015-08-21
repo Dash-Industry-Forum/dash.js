@@ -34,10 +34,16 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         textTrackQueue = [],
         trackElementArr = [],
         currentTrackIdx = 0,
-        trackKindMap = {subtitle:"subtitles", caption:"captions"};
+        trackKindMap = {subtitle:"subtitles", caption:"captions"},
+        actualVideoWidth = 0,
+        actualVideoHeight = 0,
+        captionContainer = null,
+        videoSizeCheckInterval = null,
+        currentTrack = null;
 
     return {
         mediaController:undefined,
+        videoModel:undefined,
 
         setup: function() {
             Cue = window.VTTCue || window.TextTrackCue;
@@ -49,6 +55,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             if (this.video === undefined) {
                 this.video = textTrackInfoVO.video;
             }
+            captionContainer = this.videoModel.getTTMLRenderingDiv();
 
             if(textTrackQueue.length === totalTextTracks) {
 
@@ -80,15 +87,96 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             }
         },
 
-        addCaptions: function(timeOffset, captionData) {
+        checkVideoSize: function() {
+            if (currentTrack && currentTrack.renderingType === "html") {
+                var newVideoWidth = this.video.clientWidth;
+                var newVideoHeight = this.video.clientHeight;
 
+                if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
+                    actualVideoWidth = newVideoWidth;
+                    actualVideoHeight = newVideoHeight;
+                    captionContainer.style.width = actualVideoWidth + "px";
+                    captionContainer.style.height = actualVideoHeight + "px";
+
+                    // Video view has changed size, so resize all active cues
+                    for (var i = 0; i < currentTrack.activeCues.length; ++i) {
+                        var cue = currentTrack.activeCues[i];
+                            cue.scaleCue(cue);
+                    }
+                }
+            }
+        },
+
+        scaleCue: function(activeCue) {
+            var videoWidth = actualVideoWidth;
+            var videoHeight = actualVideoHeight;
+            var key,
+                replaceValue,
+                elements;
+
+            var cellUnit = [videoWidth / activeCue.cellResolution[0], videoHeight / activeCue.cellResolution[1]];
+
+            if (activeCue.linePadding) {
+                for (key in activeCue.linePadding) {
+                    if (activeCue.linePadding.hasOwnProperty(key)) {
+                        var valueLinePadding = activeCue.linePadding[key];
+                        replaceValue = (valueLinePadding * cellUnit[0]).toString();
+                        // Compute the CellResolution unit in order to process properties using sizing (fontSize, linePadding, etc).
+                        var elementsSpan = document.getElementsByClassName('spanPadding');
+                        for (var i = 0; i < elementsSpan.length; i++) {
+                            elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-left\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                            elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-right\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        }
+                    }
+                }
+            }
+
+            if(activeCue.fontSize) {
+                for (key in activeCue.fontSize) {
+                    if (activeCue.fontSize.hasOwnProperty(key)) {
+                        var valueFontSize = activeCue.fontSize[key] / 100;
+                        replaceValue  = (valueFontSize * cellUnit[1]).toString();
+
+                        if (key !== 'defaultFontSize') {
+                            elements = document.getElementsByClassName(key);
+                        } else {
+                            elements = document.getElementsByClassName('paragraph');
+                        }
+
+                        for (var j = 0; j < elements.length; j++) {
+                            elements[j].style.cssText = elements[j].style.cssText.replace(/(font-size\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        }
+                    }
+                }
+            }
+
+            if (activeCue.lineHeight) {
+                for (key in activeCue.lineHeight) {
+                    if (activeCue.lineHeight.hasOwnProperty(key)) {
+                        var valueLineHeight = activeCue.lineHeight[key] / 100;
+                        replaceValue = (valueLineHeight * cellUnit[1]).toString();
+                        elements = document.getElementsByClassName(key);
+                        for (var k = 0; k < elements.length; k++) {
+                            elements[k].style.cssText = elements[k].style.cssText.replace(/(line-height\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        }
+                    }
+                }
+            }
+        },
+
+        addCaptions: function(timeOffset, captionData) {
             var track = this.getCurrentTextTrack();
+            currentTrack = track;
             track.mode = "showing";//make sure tracks are showing to be able to add the cue...
+
+            if (!videoSizeCheckInterval) {
+                videoSizeCheckInterval = 500;
+                setInterval(this.checkVideoSize.bind(this), videoSizeCheckInterval);
+            }
 
             for(var item in captionData) {
                 var cue;
                 var currentItem = captionData[item];
-                var video=this.video;
 
                 //image subtitle extracted from TTML
                 if(currentItem.type=="image"){
@@ -102,15 +190,60 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         img.id = 'ttmlImage_'+this.id;
                         img.src = this.image;
                         img.className = 'cue-image';
-                        video.parentNode.appendChild(img);
+                        captionContainer.appendChild(img);
                     };
 
                     cue.onexit =  function () {
-                        var imgs = video.parentNode.childNodes;
+                        var imgs = captionContainer.childNodes;
                         var i;
                         for(i=0;i<imgs.length;i++){
                             if(imgs[i].id=='ttmlImage_'+this.id){
-                                video.parentNode.removeChild(imgs[i]);
+                                captionContainer.removeChild(imgs[i]);
+                            }
+                        }
+                    };
+                }
+                else if (currentItem.type=="html") {
+                    if (track.renderingType !== "html") {
+                        track.renderingType = "html";
+                    }
+                    if(!(document.getElementById('caption-style'))) {
+                        this.setCueStyle();
+                    }
+                    else if(!(document.getElementById('caption-style').sheet.cssRules.length)) {
+                        this.setCueStyle();
+                    }
+
+
+
+                    cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
+                    cue.cueHTMLElement = currentItem.cueHTMLElement;
+                    cue.regions = currentItem.regions;
+                    cue.regionID = currentItem.regionID;
+                    cue.cueID=currentItem.cueID;
+                    cue.videoWidth = currentItem.videoWidth;
+                    cue.videoHeight = currentItem.videoHeight;
+                    cue.cellResolution = currentItem.cellResolution;
+                    cue.fontSize = currentItem.fontSize;
+                    cue.lineHeight = currentItem.lineHeight;
+                    cue.linePadding = currentItem.linePadding;
+                    cue.scaleCue = this.scaleCue;
+                    captionContainer.style.width = this.video.clientWidth + "px";
+                    captionContainer.style.height = this.video.clientHeight + "px";
+
+                    cue.onenter =  function () {
+                        currentTrack = track;
+                        if (track.mode == "showing") {
+                            captionContainer.appendChild(this.cueHTMLElement);
+                            this.scaleCue(this);
+                        }
+                    };
+
+                    cue.onexit =  function () {
+                        var divs = captionContainer.childNodes;
+                        for (var i = 0; i < divs.length; ++i) {
+                            if (divs[i].id == "subtitle_" + this.cueID) {
+                                captionContainer.removeChild(divs[i]);
                             }
                         }
                     };
@@ -176,6 +309,39 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
         setCurrentTrackIdx : function(value){
             currentTrackIdx = value;
+        },
+
+        setCueStyle: function() {
+            var styleElement;
+            if(document.getElementById('caption-style')) {
+                styleElement = document.getElementById('caption-style');
+            } else {
+                styleElement = document.createElement('style');
+                styleElement.id  = 'caption-style';
+            }
+            document.head.appendChild(styleElement);
+            var stylesheet = styleElement.sheet;
+
+            if(!this.video.id) {
+                stylesheet.addRule('video::cue','background: transparent');
+            } else if(this.video.id) {
+                stylesheet.addRule("#" + this.video.id + '::cue','background: transparent');
+            } else if(this.video.classList.length !== 0) {
+                stylesheet.addRule("." + this.video.className + '::cue','background: transparent');
+            }
+        },
+
+        removeCueStyle: function() {
+            var stylesheet = document.getElementById('caption-style').sheet;
+            if(stylesheet.cssRules) {
+                stylesheet.deleteRule(0);
+            }
+        },
+
+        clearCues: function() {
+            while(captionContainer.firstChild) {
+                captionContainer.removeChild(captionContainer.firstChild);
+            }
         }
 
     };

@@ -1044,6 +1044,25 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * Use this method to attach an HTML5 div for dash.js to render rich TTML subtitles.
+         *
+         * @param div An unstyled div placed after the video element. It will be styled to match the video size and overlay z-order.
+         * @memberof MediaPlayer#
+         */
+        attachTTMLRenderingDiv: function (div) {
+            if (!initialized) {
+                throw "MediaPlayer not initialized!";
+            }
+
+
+            videoModel = null;
+            if (div) {
+                videoModel = system.getObject("videoModel");
+                videoModel.setTTMLRenderingDiv(div);
+            }
+        },
+
+        /**
          * Use this method to set a source URL to a valid MPD manifest file OR
          * a previously downloaded and parsed manifest object.  Optionally, can
          * also provide protection information
