@@ -348,12 +348,12 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             document.head.appendChild(styleElement);
             var stylesheet = styleElement.sheet;
 
-            if(!video.id) {
-                stylesheet.addRule('video::cue','background: transparent');
-            } else if(video.id) {
-                stylesheet.addRule("#" + this.video.id + '::cue','background: transparent');
+            if(video.id) {
+                stylesheet.addRule("#" + video.id + '::cue','background: transparent');
             } else if(video.classList.length !== 0) {
                 stylesheet.addRule("." + video.className + '::cue','background: transparent');
+            } else {
+                    stylesheet.addRule('video::cue','background: transparent');
             }
         },
 
