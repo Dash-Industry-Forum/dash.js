@@ -318,7 +318,8 @@ Dash.dependencies.DashHandler = function () {
                     if (nextFrag && nextFrag.hasOwnProperty("t")) {
                         repeatEndTime = nextFrag.t / fTimescale;
                     } else {
-                        repeatEndTime = self.timelineConverter.calcMediaTimeFromPresentationTime(representation.segmentAvailabilityRange.end, representation);
+                        var availabilityEnd = representation.segmentAvailabilityRange ? representation.segmentAvailabilityRange.end : (this.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic).end);
+                        repeatEndTime = self.timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
                         representation.segmentDuration = frag.d / fTimescale;
                     }
 
