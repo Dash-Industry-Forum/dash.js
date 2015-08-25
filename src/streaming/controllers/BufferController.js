@@ -414,7 +414,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         notifyIfSufficientBufferStateChanged = function(state) {
-            if (hasSufficientBuffer === state) return;
+            if (hasSufficientBuffer === state || (type === "fragmentedText" && this.textSourceBuffer.getAllTracksAreDisabled())) return;
 
             hasSufficientBuffer = state;
 
@@ -667,6 +667,7 @@ MediaPlayer.dependencies.BufferController = function () {
         subscribe: undefined,
         unsubscribe: undefined,
         virtualBuffer: undefined,
+        textSourceBuffer:undefined,
 
         setup: function() {
             this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
