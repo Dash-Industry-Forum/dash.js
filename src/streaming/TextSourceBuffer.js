@@ -29,42 +29,51 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 MediaPlayer.dependencies.TextSourceBuffer = function () {
-    var currentTrackIdx = 0,
-        allTracksAreDisabled = false,
+    var allTracksAreDisabled = false,
         parser = null,
 
 
-        onTextTrackChange = function(/*evt*/) {
+        setTextTrack = function() {
             var el = this.videoModel.getElement(),
                 tracks = el.textTracks,
-                ln = tracks.length;
+                ln = tracks.length,
+                self = this;
 
             for (var i = 0; i < ln; i++ ) {
                 var track = tracks[i];
 
                 allTracksAreDisabled = track.mode !== "showing";
 
-                if (track.mode === "showing" && el.currentTime > 0) { //TODO find a better way to block function when event is triggered at startup when listener is added.  Tried to delay adding listener.
-                    if (currentTrackIdx !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
+                if (track.mode === "showing") {
+                    if (self.textTrackExtensions.getCurrentTrackIdx() !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
 
-                        var previousTextTrack = this.textTrackExtensions.getCurrentTextTrack();
-                        this.textTrackExtensions.deleteTrackCues(previousTextTrack);
-                        if (previousTextTrack.renderingType === "html") {
-                            this.textTrackExtensions.removeCueStyle();
-                            this.textTrackExtensions.clearCues();
+                        var previousTextTrack = self.textTrackExtensions.getCurrentTextTrack(); //will be null when all tracks are disabled and turning back on.
+                        if (previousTextTrack !== undefined) {
+                            self.textTrackExtensions.deleteTrackCues(previousTextTrack);
+                            if (previousTextTrack.renderingType === "html") {
+                                self.textTrackExtensions.removeCueStyle();
+                                self.textTrackExtensions.clearCues();
+                            }
+                        }
+                        self.textTrackExtensions.setCurrentTrackIdx(i);
+
+                        if (!self.mediaController.isCurrentTrack(self.allTracks[i])){
+                            self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
+                            self.fragmentModel.cancelPendingRequests();
+                            self.fragmentModel.abortRequests();
+                            self.buffered.clear();
+                            self.mediaController.setTrack(self.allTracks[i]);
                         }
 
-                        currentTrackIdx = i;
-                        this.textTrackExtensions.setCurrentTrackIdx(i);
-                        this.textTrackExtensions.deleteTrackCues(this.textTrackExtensions.getCurrentTextTrack());
-                        this.fragmentModel.cancelPendingRequests();
-                        this.fragmentModel.abortRequests();
-                        this.buffered.clear();
-                        this.mediaController.setTrack(this.allTracks[i]);
                     }
                     break;
                 }
             }
+
+            if (allTracksAreDisabled){
+                self.textTrackExtensions.setCurrentTrackIdx(-1);
+            }
+
         };
 
     return {
@@ -163,14 +172,15 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         },
 
         getIsDefault:function(mediaInfo){
-            return mediaInfo.index === this.mediaInfos[0].index; //TODO How to tag default. currently same order as in manifest. Is there a way to mark a text adaptation set as the default one?
+            //TODO How to tag default. currently same order as listed in manifest.
+            // Is there a way to mark a text adaptation set as the default one? DASHIF meeting talk about using role which is being used for track KIND
+            // Eg subtitles etc. You can have multiple role tags per adaptation Not defined in the spec yet.
+            return mediaInfo.index === this.mediaInfos[0].index;
         },
 
         abort:function() {
-            this.videoModel.getElement().textTracks.removeEventListener('change', onTextTrackChange);
             this.textTrackExtensions.deleteAllTextTracks();
             allTracksAreDisabled = false;
-            currentTrackIdx = 0;
             parser = null;
         },
 
@@ -196,7 +206,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
             this.eventBus.removeEventListener(type, listener, useCapture);
         },
 
-        setTextTrack: onTextTrackChange,
+        setTextTrack: setTextTrack,
     };
 };
 

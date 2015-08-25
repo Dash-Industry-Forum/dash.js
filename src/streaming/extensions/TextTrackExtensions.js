@@ -34,13 +34,13 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         video,
         textTrackQueue = [],
         trackElementArr = [],
-        currentTrackIdx = 0,
+        currentTrackIdx = -1,
         trackKindMap = {subtitle:"subtitles", caption:"captions"},
         actualVideoWidth = 0,
         actualVideoHeight = 0,
         captionContainer = null,
         videoSizeCheckInterval = null,
-        isIE11 = false, // Temp solution for the addCue InvalidStateError - https://connect.microsoft.com/IE/feedback/details/1573380/htmltrackelement-track-addcue-throws-invalidstateerror-when-adding-new-cue
+        isIE11 = false,// Temp solution for the addCue InvalidStateError..
 
         createTrackForUserAgent = function(i){
             var captionType = trackKindMap[textTrackQueue[i].role];
@@ -65,7 +65,6 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
         setup: function() {
             Cue = window.VTTCue || window.TextTrackCue;
-
             //TODO Check if IE has resolved issues: Then revert to not using the addTextTrack API for all browsers.
             // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
             // https://connect.microsoft.com/IE/feedback/details/1573380/htmltrackelement-track-addcue-throws-invalidstateerror-when-adding-new-cue
@@ -83,25 +82,22 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             if(textTrackQueue.length === totalTextTracks) {
                 var defaultIndex = 0;
                 for(var i = 0 ; i < textTrackQueue.length; i++) {
-
                     var track = createTrackForUserAgent(i);
                     currentTrackIdx = i;//set to i for external track setup. rest to default value at end of loop
                     trackElementArr.push(track); //used to remove tracks from video element when added manually
-                    // track.default is an object property identifier that is a reserved word
-                    // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
-                    /*jshint -W024 */
-                    track.default = textTrackQueue[i].defaultTrack;
+
                     if (textTrackQueue[i].defaultTrack) {
+                        // track.default is an object property identifier that is a reserved word
+                        // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
+                        /*jshint -W024 */
+                        track.default = true;
                         defaultIndex = i;
                     }
-
                     if (!isIE11){
                         video.appendChild(track);
                     }
-
                     this.addCaptions(0, textTrackQueue[i].captionData);
                 }
-
                 currentTrackIdx = defaultIndex;
             }
         },
@@ -293,6 +289,14 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             return video.textTracks[currentTrackIdx];
         },
 
+        getCurrentTrackIdx: function(){
+            return currentTrackIdx;
+        },
+
+        setCurrentTrackIdx : function(value){
+            currentTrackIdx = value;
+        },
+
         getTextTrack: function(idx) {
             return video.textTracks[idx];
         },
@@ -333,10 +337,6 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             trackElementArr.splice(idx, 1);
         },
 
-        setCurrentTrackIdx : function(value){
-            currentTrackIdx = value;
-        },
-
         setCueStyle: function() {
             var styleElement;
             if(document.getElementById('caption-style')) {
@@ -347,7 +347,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             }
             document.head.appendChild(styleElement);
             var stylesheet = styleElement.sheet;
-
+            
             if(video.id) {
                 stylesheet.addRule("#" + video.id + '::cue','background: transparent');
             } else if(video.classList.length !== 0) {
