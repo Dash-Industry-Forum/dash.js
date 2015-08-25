@@ -32,7 +32,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
     var allTracksAreDisabled = false,
         parser = null,
 
-
         setTextTrack = function() {
             var el = this.videoModel.getElement(),
                 tracks = el.textTracks,
@@ -41,12 +40,9 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
 
             for (var i = 0; i < ln; i++ ) {
                 var track = tracks[i];
-
                 allTracksAreDisabled = track.mode !== "showing";
-
                 if (track.mode === "showing") {
                     if (self.textTrackExtensions.getCurrentTrackIdx() !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
-
                         var previousTextTrack = self.textTrackExtensions.getCurrentTextTrack(); //will be null when all tracks are disabled and turning back on.
                         if (previousTextTrack !== undefined) {
                             self.textTrackExtensions.deleteTrackCues(previousTextTrack);
@@ -56,7 +52,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                             }
                         }
                         self.textTrackExtensions.setCurrentTrackIdx(i);
-
                         if (!self.mediaController.isCurrentTrack(self.allTracks[i])){
                             self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
                             self.fragmentModel.cancelPendingRequests();
@@ -64,7 +59,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                             self.buffered.clear();
                             self.mediaController.setTrack(self.allTracks[i]);
                         }
-
                     }
                     break;
                 }
@@ -73,7 +67,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
             if (allTracksAreDisabled){
                 self.textTrackExtensions.setCurrentTrackIdx(-1);
             }
-
         };
 
     return {
@@ -92,7 +85,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
             this.textTrackExtensions = this.system.getObject("textTrackExtensions");
             this.isFragmented = !this.manifestExt.getIsTextTrack(type);
             if (this.isFragmented){
-                // do not call following if not fragmented text....
                 this.fragmentModel = this.sp.getFragmentModel();
                 this.buffered =  this.system.getObject("customTimeRanges");
                 this.initializationSegmentReceived= false;
@@ -124,8 +116,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
             }
 
-            if (allTracksAreDisabled) return;
-
             if(mediaType === "fragmentedText"){
                 var fragmentExt = self.system.getObject("fragmentExt");
                 if(!this.initializationSegmentReceived){
@@ -142,15 +132,8 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                         }
                         samplesInfo[i].cts -= this.firstSubtitleStart;
                         this.buffered.add(samplesInfo[i].cts/this.timescale,(samplesInfo[i].cts+samplesInfo[i].duration)/this.timescale);
-
-                        //TODO: If do not block here captions will render even though all tracks are hidden.
-                        // If I block above this line we get errors in Virtual Buffer. Ideally I need to figure
-                        // out how to stop text fragments fom loading when they are not being rendered. But so
-                        // far all attempts to do this result in all media stopping.
-
-
                         ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset,samplesInfo[i].offset+samplesInfo[i].size)));
-                        parser = parser !== null ? parser : self.getParser(mimeType); //store locally for fragmented text so we do not fetch from dijon over and over again.
+                        parser = parser !== null ? parser : self.getParser(mimeType);
                         try{
                             result = parser.parse(ccContent);
                             this.textTrackExtensions.addCaptions(this.firstSubtitleStart/this.timescale,result);

@@ -153,7 +153,7 @@ MediaPlayer.utils.TTMLParser = function() {
 
             // In case a frameRate is provided, we adjust the parsed time.
             if (timeParts[3]) {
-                frameRate = ttml.tt.framRate;
+                frameRate = ttml.tt.frameRate;
                 if (frameRate && !isNaN(frameRate)) {
                     parsedTime += parseFloat(timeParts[3]) / frameRate;
                 } else {
@@ -870,11 +870,11 @@ MediaPlayer.utils.TTMLParser = function() {
             }
 
             // Get the namespace prefixe.
-            var nsttp = getNamespacePrefix(ttml, "http://www.w3.org/ns/ttml#parameter");
+            var nsttp = getNamespacePrefix(ttml.tt, "http://www.w3.org/ns/ttml#parameter");
 
             // Set the framerate.
             if (ttml.tt.hasOwnProperty(nsttp + ":frameRate")) {
-                ttml.frameRate = parseInt(ttml.tt[nsttp + ":frameRate"], 10);
+                ttml.tt.frameRate = parseInt(ttml.tt[nsttp + ":frameRate"], 10);
             }
             var captionArray = [];
             // Extract the div
@@ -1075,7 +1075,7 @@ MediaPlayer.utils.TTMLParser = function() {
                                 } else if (el.hasOwnProperty('br')) {
                                     text += "\n";
                                 } else {
-                                    text += el.__text;
+                                    text += cue.__text;
                                 }
                             });
                         }
