@@ -32,6 +32,7 @@ MediaPlayer.dependencies.MediaController = function () {
 
      var tracks = {},
          initialSettings,
+         selectionMode,
          switchMode,
 
          storeLastSettings = function(type, value) {
@@ -41,11 +42,17 @@ MediaPlayer.dependencies.MediaController = function () {
          },
 
          extractSettings = function(mediaInfo) {
-             return {
-                 lang: mediaInfo.lang,
-                 viewpoint: mediaInfo.viewpoint,
-                 roles: mediaInfo.roles
-             };
+             var settings = {
+                     lang: mediaInfo.lang,
+                     viewpoint: mediaInfo.viewpoint,
+                     roles: mediaInfo.roles,
+                     accessibility: mediaInfo.accessibility,
+                     audioChannelConfiguration: mediaInfo.audioChannelConfiguration
+                 },
+                 notEmpty = settings.lang || settings.viewpoint || (settings.role && settings.role.length > 0) ||
+                     (settings.accessibility && settings.accessibility.length > 0) || (settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0);
+
+             return notEmpty ? settings : null;
          },
 
          matchSettings = function(settings, track) {
@@ -53,9 +60,15 @@ MediaPlayer.dependencies.MediaController = function () {
                  matchViewPoint = !settings.viewpoint || (settings.viewpoint === track.viewpoint),
                  matchRole = !settings.role || !!track.roles.filter(function(item) {
                      return item === settings.role;
+                 })[0],
+                 matchAccessibility = !settings.accessibility || !!track.accessibility.filter(function(item) {
+                     return item === settings.accessibility;
+                 })[0],
+                 matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function(item) {
+                     return item === settings.audioChannelConfiguration;
                  })[0];
 
-             return (matchLang && matchViewPoint && matchRole);
+             return (matchLang && matchViewPoint && matchRole && matchAccessibility && matchAudioChannelConfiguration);
          },
 
          resetSwitchMode = function() {
@@ -70,6 +83,69 @@ MediaPlayer.dependencies.MediaController = function () {
                  audio: null,
                  video: null
              };
+         },
+
+         selectInitialTrack = function(tracks) {
+             var mode = this.getSelectionModeForInitialTrack(),
+                 tmpArr = [],
+                 getTracksWithHighestBitrate = function(trackArr) {
+                     var max = 0,
+                         result = [],
+                         tmp;
+
+                     trackArr.forEach(function(track) {
+                         tmp = Math.max.apply(Math, track.bitrateList);
+
+                         if (tmp > max) {
+                             max = tmp;
+                             result = [track];
+                         } else if (tmp === max) {
+                             result.push(track);
+                         }
+                     });
+
+                     return result;
+                 },
+                 getTracksWithWidestRange = function(trackArr) {
+                     var max = 0,
+                         result = [],
+                         tmp;
+
+                     trackArr.forEach(function(track) {
+                         tmp = track.representationCount;
+
+                         if (tmp > max) {
+                             max = tmp;
+                             result = [track];
+                         } else if (tmp === max) {
+                             result.push(track);
+                         }
+                     });
+
+                     return result;
+                 };
+
+             switch (mode) {
+                case MediaPlayer.dependencies.MediaController.trackSelectionModes.HIGHEST_BITRATE:
+                    tmpArr = getTracksWithHighestBitrate(tracks);
+
+                    if (tmpArr.length > 1) {
+                        tmpArr = getTracksWithWidestRange(tmpArr);
+                    }
+                    break;
+                case MediaPlayer.dependencies.MediaController.trackSelectionModes.WIDEST_RANGE:
+                    tmpArr = getTracksWithWidestRange(tracks);
+
+                    if (tmpArr.length > 1) {
+                        tmpArr = getTracksWithHighestBitrate(tracks);
+                    }
+                    break;
+                default:
+                    this.log("track selection mode is not supported: " + mode);
+                    break;
+             }
+
+             return tmpArr[0];
          },
 
          createTrackInfo = function() {
@@ -140,7 +216,7 @@ MediaPlayer.dependencies.MediaController = function () {
                 }
 
                 if (!isSet) {
-                    self.setTrack(tracksForType[0]);
+                    self.setTrack(selectInitialTrack.call(self, tracksForType));
                 }
             });
         },
@@ -239,6 +315,14 @@ MediaPlayer.dependencies.MediaController = function () {
                 delete settings.roles;
             }
 
+            if (settings.accessibility) {
+                settings.accessibility = settings.accessibility[0];
+            }
+
+            if (settings.audioChannelConfiguration) {
+                settings.audioChannelConfiguration = settings.audioChannelConfiguration[0];
+            }
+
             storeLastSettings.call(this, type, settings);
         },
 
@@ -290,6 +374,28 @@ MediaPlayer.dependencies.MediaController = function () {
         },
 
         /**
+         * @param mode
+         * @memberof MediaController#
+         */
+        setSelectionModeForInitialTrack: function(mode) {
+            var isModeSupported = !!MediaPlayer.dependencies.MediaController.trackSelectionModes[mode];
+
+            if (!isModeSupported) {
+                this.log("track selection mode is not supported: " + mode);
+                return;
+            }
+            selectionMode = mode;
+        },
+
+        /**
+         * @returns mode
+         * @memberof MediaController#
+         */
+        getSelectionModeForInitialTrack: function() {
+            return selectionMode || MediaPlayer.dependencies.MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE;
+        },
+
+        /**
          * @param type
          * @returns {Boolean}
          * @memberof MediaController#
@@ -305,7 +411,14 @@ MediaPlayer.dependencies.MediaController = function () {
          * @memberof MediaController#
          */
         isTracksEqual: function(t1, t2) {
-            return (t1.id === t2.id && t1.viewpoint === t2.viewpoint && t1.lang === t2.lang && t1.roles.toString() == t2.roles.toString());
+            var sameId = t1.id === t2.id,
+                sameViewpoint = t1.viewpoint === t2.viewpoint,
+                sameLang = t1.lang === t2.lang,
+                sameRoles = t1.roles.toString() == t2.roles.toString(),
+                sameAccessibility = t1.accessibility.toString() == t2.accessibility.toString(),
+                sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() == t2.audioChannelConfiguration.toString();
+
+            return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
         },
 
         /**
@@ -334,3 +447,10 @@ MediaPlayer.dependencies.MediaController.trackSwitchModes = {
     NEVER_REPLACE: "NEVER_REPLACE",
     ALWAYS_REPLACE: "ALWAYS_REPLACE"
 };
+
+MediaPlayer.dependencies.MediaController.trackSelectionModes = {
+    HIGHEST_BITRATE: "HIGHEST_BITRATE",
+    WIDEST_RANGE: "WIDEST_RANGE"
+};
+
+MediaPlayer.dependencies.MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE = MediaPlayer.dependencies.MediaController.trackSelectionModes.HIGHEST_BITRATE;
