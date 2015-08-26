@@ -166,7 +166,7 @@ MediaPlayer.utils.VirtualBuffer = function () {
             var streamId = chunk.streamId,
                 mediaType = chunk.mediaInfo.type,
                 bufferedRanges = data[streamId][mediaType].actualBufferedRanges,
-                oldChunk = this.getChunks({streamId: streamId, mediaType: mediaType, appended: true, index: chunk.index})[0],
+                oldChunk = this.getChunks({streamId: streamId, mediaType: mediaType, appended: true, start: chunk.start})[0],
                 diff,
                 idx;
 
