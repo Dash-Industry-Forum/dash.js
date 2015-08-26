@@ -1075,7 +1075,7 @@ MediaPlayer.utils.TTMLParser = function() {
                                 } else if (el.hasOwnProperty('br')) {
                                     text += "\n";
                                 } else {
-                                    text += cue.__text;
+                                    text += el['#text'];
                                 }
                             });
                         }
