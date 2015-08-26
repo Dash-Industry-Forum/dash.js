@@ -177,7 +177,7 @@ MediaPlayer.utils.VirtualBuffer = function () {
                 data[streamId][mediaType].appended.push(chunk);
             }
 
-            sortArrayByProperty(data[streamId][mediaType].appended, "index");
+            sortArrayByProperty(data[streamId][mediaType].appended, "start");
             diff = this.sourceBufferExt.getRangeDifference(bufferedRanges, buffer);
 
             if (!diff) {
