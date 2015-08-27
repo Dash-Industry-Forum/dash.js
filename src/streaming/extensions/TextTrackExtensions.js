@@ -47,7 +47,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             var kind = captionType !== undefined ? captionType : trackKindMap.caption;
             var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
             var lang = textTrackQueue[i].lang;
-            var track = isIE11 ? video.addTextTrack("captions", "hello", lang) : document.createElement('track');
+            var track = isIE11 ? video.addTextTrack(kind, label, lang) : document.createElement('track');
 
              if (!isIE11) {
                  track.kind = kind;
@@ -182,6 +182,8 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
         addCaptions: function(timeOffset, captionData) {
             var track = this.getCurrentTextTrack();
+            if(!track) return;
+
             track.mode = "showing";//make sure tracks are showing to be able to add the cue...
 
             for(var item in captionData) {
@@ -286,7 +288,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         },
 
         getCurrentTextTrack: function(){
-            return video.textTracks[currentTrackIdx];
+            return currentTrackIdx >= 0 ? video.textTracks[currentTrackIdx] : null;
         },
 
         getCurrentTrackIdx: function(){
