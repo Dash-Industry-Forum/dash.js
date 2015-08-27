@@ -46,8 +46,8 @@ MediaPlayer.dependencies.Stream = function () {
         // Encrypted Media Extensions
         onProtectionError = function(event) {
             if (event.error) {
-                this.errHandler.mediaKeySessionError(event.data);
-                this.log(event.data);
+                this.errHandler.mediaKeySessionError(event.error);
+                this.log(event.error);
                 this.reset();
             }
         },

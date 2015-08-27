@@ -76,8 +76,7 @@ Dash.dependencies.DashAdapter = function () {
             var mediaInfo = new MediaPlayer.vo.MediaInfo(),
                 self = this,
                 a = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index],
-                viewpoint,
-                roles;
+                viewpoint;
 
             mediaInfo.id = adaptation.id;
             mediaInfo.index = adaptation.index;
@@ -87,10 +86,15 @@ Dash.dependencies.DashAdapter = function () {
             mediaInfo.lang = this.manifestExt.getLanguageForAdaptation(a);
             viewpoint = this.manifestExt.getViewpointForAdaptation(a);
             mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;
-            roles = this.manifestExt.getRolesForAdaptation(a).map(function(role){
+            mediaInfo.accessibility = this.manifestExt.getAccessibilityForAdaptation(a).map(function(accessibility){
+                return accessibility.value;
+            });
+            mediaInfo.audioChannelConfiguration =  this.manifestExt.getAudioChannelConfigurationForAdaptation(a).map(function(audioChannelConfiguration){
+                return audioChannelConfiguration.value;
+            });
+            mediaInfo.roles = this.manifestExt.getRolesForAdaptation(a).map(function(role){
                 return role.value;
             });
-            mediaInfo.roles = roles;
             mediaInfo.codec = this.manifestExt.getCodec(a);
             mediaInfo.mimeType = this.manifestExt.getMimeType(a);
             mediaInfo.contentProtection = this.manifestExt.getContentProtectionData(a);
