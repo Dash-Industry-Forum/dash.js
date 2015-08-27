@@ -682,8 +682,26 @@ MediaPlayer.utils.TTMLParser = function() {
                             spanHTMLElement.appendChild(textNode);
                             // If the element is a 'br' tag
                         } else if ('br' in spanEl) {
-                            // Create a br element.
-                            spanHTMLElement.appendChild(document.createElement('br'));
+                            // To handle br inside span we need to add the current span
+                            // to the cue and then create a br and add that the cue
+                            // then create a new span that we use for the next line of
+                            // text, that is a copy of the current span
+
+                            // Add the current span to the cue
+                            cue.appendChild(spanHTMLElement);
+
+                            // Create a br and add that to the cue
+                            var brEl = document.createElement('br');
+                            brEl.className = 'lineBreak';
+                            cue.appendChild(brEl);
+
+                            // Create an replacement span and copy the style and classname from the old one
+                            var newSpanHTMLElement = document.createElement('span');
+                            newSpanHTMLElement.className = spanHTMLElement.className;
+                            newSpanHTMLElement.style.cssText = spanHTMLElement.style.cssText;
+
+                            // Replace the current span with the one we just created
+                            spanHTMLElement = newSpanHTMLElement;
                         }
                     });
                     // We append the element to the cue container.
