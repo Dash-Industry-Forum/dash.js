@@ -44,7 +44,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 if (track.mode === "showing") {
                     if (self.textTrackExtensions.getCurrentTrackIdx() !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
                         var previousTextTrack = self.textTrackExtensions.getCurrentTextTrack(); //will be null when all tracks are disabled and turning back on.
-                        if (previousTextTrack !== undefined) {
+                        if (previousTextTrack !== null) {
                             self.textTrackExtensions.deleteTrackCues(previousTextTrack);
                             if (previousTextTrack.renderingType === "html") {
                                 self.textTrackExtensions.removeCueStyle();
