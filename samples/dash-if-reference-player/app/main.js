@@ -178,6 +178,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             movingDownload = {},
             movingRatio = {},
             droppedFramesValue = 0,
+            requestsQueue,
             fillmoving = function(type, Requests){
                 var requestWindow,
                     downloadTimes,
@@ -224,6 +225,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             bufferLevel = metricsExt.getCurrentBufferLevel(metrics);
             httpRequests = metricsExt.getHttpRequests(metrics);
             droppedFramesMetrics = metricsExt.getCurrentDroppedFrames(metrics);
+            requestsQueue = metricsExt.getRequestsQueue(metrics);
 
             fillmoving("video", httpRequests);
             fillmoving("audio", httpRequests);
@@ -274,7 +276,8 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 droppedFramesValue: droppedFramesValue,
                 movingLatency: movingLatency,
                 movingDownload: movingDownload,
-                movingRatio: movingRatio
+                movingRatio: movingRatio,
+                requestsQueue: requestsQueue
             }
         }
         else {
@@ -391,7 +394,14 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     function metricChanged(e) {
         var metrics,
             point,
-            treeData;
+            treeData,
+            bufferedRanges = [];
+
+        // get current buffered ranges of video element and keep them up to date
+        for (var i = 0, len = video.buffered.length; i < len; i += 1) {
+            bufferedRanges.push(video.buffered.start(i) + ' - ' + video.buffered.end(i));
+        }
+        $scope.bufferedRanges = bufferedRanges;
 
         if (e.data.stream == "video") {
             metrics = getCribbedMetricsFor("video");
@@ -402,6 +412,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 $scope.videoMaxIndex = metrics.numBitratesValue;
                 $scope.videoBufferLength = metrics.bufferLengthValue;
                 $scope.videoDroppedFrames = metrics.droppedFramesValue;
+                $scope.videoRequestsQueue = metrics.requestsQueue;
                 if (metrics.movingLatency["video"]) {
                     $scope.videoLatencyCount = metrics.movingLatency["video"].count;
                     $scope.videoLatency = metrics.movingLatency["video"].low.toFixed(3) + " < " + metrics.movingLatency["video"].average.toFixed(3) + " < " + metrics.movingLatency["video"].high.toFixed(3);
@@ -433,6 +444,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 $scope.audioMaxIndex = metrics.numBitratesValue;
                 $scope.audioBufferLength = metrics.bufferLengthValue;
                 $scope.audioDroppedFrames = metrics.droppedFramesValue;
+                $scope.audioRequestsQueue = metrics.requestsQueue;
                 if (metrics.movingLatency["audio"]) {
                     $scope.audioLatencyCount = metrics.movingLatency["audio"].count;
                     $scope.audioLatency = metrics.movingLatency["audio"].low.toFixed(3) + " < " + metrics.movingLatency["audio"].average.toFixed(3) + " < " + metrics.movingLatency["audio"].high.toFixed(3);

@@ -28,24 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.models.MetricsList = function () {
+MediaPlayer.vo.metrics.RequestsQueue = function () {
     "use strict";
 
-    return {
-        TcpList: [],
-        HttpList: [],
-        RepSwitchList: [],
-        BufferLevel: [],
-        BufferState: [],
-        PlayList: [],
-        DroppedFrames: [],
-        SchedulingInfo: [],
-        DVRInfo: [],
-        ManifestUpdate: [],
-        RequestsQueue: null
-    };
+    this.pendingRequests = [];
+    this.loadingRequests = [];
+    this.executedRequests = [];
+    this.rejectedRequests = [];
 };
 
-MediaPlayer.models.MetricsList.prototype = {
-    constructor: MediaPlayer.models.MetricsList
+MediaPlayer.vo.metrics.RequestsQueue.prototype = {
+    constructor: MediaPlayer.vo.metrics.RequestsQueue
 };

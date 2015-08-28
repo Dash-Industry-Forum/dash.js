@@ -318,6 +318,7 @@ Dash.dependencies.DashAdapter = function () {
             DVR_INFO: "DVRInfo",
             DROPPED_FRAMES: "DroppedFrames",
             SCHEDULING_INFO: "SchedulingInfo",
+            REQUESTS_QUEUE: "RequestsQueue",
             MANIFEST_UPDATE: "ManifestUpdate",
             MANIFEST_UPDATE_STREAM_INFO: "ManifestUpdatePeriodInfo",
             MANIFEST_UPDATE_TRACK_INFO: "ManifestUpdateRepresentationInfo",

@@ -167,6 +167,7 @@
     <script src="../../src/streaming/vo/metrics/TCPConnection.js"></script>
     <script src="../../src/streaming/vo/metrics/DroppedFrames.js"></script>
     <script src="../../src/streaming/vo/metrics/SchedulingInfo.js"></script>
+    <script src="../../src/streaming/vo/metrics/RequestsQueue.js"></script>
     <script src="../../src/streaming/vo/metrics/ManifestUpdate.js"></script>
     <script src="../../src/streaming/vo/metrics/DVRInfo.js"></script>
 
@@ -521,6 +522,7 @@
                                     <li><a href="#stream-metrics" tabindex="-1" data-toggle="tab">Stream</a></li>
                                 </ul>
                             </li>
+                            <li><a href="#requests" data-toggle="tab">Requests</a></li>
                             <li><a href="#notes" data-toggle="tab">Release Notes</a></li>
                         </ul>
                         <div id="debugTabContent" class="tab-content">
@@ -568,6 +570,53 @@
                                     data-node-label="text"
                                     data-node-children="items">
                                 </div>
+                            </div>
+                            <div class="tab-pane" id="requests">
+                                <div class="video-requests col-md-4">
+                                    <div>Pending Requests (Video)</div>
+                                    <ul ng-repeat = "request in videoRequestsQueue.pendingRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Loading Requests (Video)</div>
+                                    <ul ng-repeat = "request in videoRequestsQueue.loadingRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Executed Requests (Video)</div>
+                                    <ul ng-repeat = "request in videoRequestsQueue.executedRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Rejected Requests (Video)</div>
+                                    <ul ng-repeat = "request in videoRequestsQueue.rejectedRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                </div>
+
+                                <div class="audio-requests col-md-4">
+                                    <div>Pending Requests (Audio)</div>
+                                    <ul ng-repeat = "request in audioRequestsQueue.pendingRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Loading Requests (Audio)</div>
+                                    <ul ng-repeat = "request in audioRequestsQueue.loadingRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Executed Requests (Audio)</div>
+                                    <ul ng-repeat = "request in audioRequestsQueue.executedRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Rejected Requests (Audio)</div>
+                                    <ul ng-repeat = "request in audioRequestsQueue.rejectedRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                </div>
+
+                                <div class="buffered-ranges col-md-4">
+                                    <div>Buffered Ranges (Video + Audio)</div>
+                                    <ul ng-repeat = "bufferedRange in bufferedRanges">
+                                        <li>{{bufferedRange}}</li>
+                                    </ul>
+                                </div>
+
                             </div>
                             <div class="tab-pane" id="notes">
                                 <div ng-repeat="note in releaseNotes" class="note-box">
