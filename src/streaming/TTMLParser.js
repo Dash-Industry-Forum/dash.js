@@ -682,8 +682,28 @@ MediaPlayer.utils.TTMLParser = function() {
                             spanHTMLElement.appendChild(textNode);
                             // If the element is a 'br' tag
                         } else if ('br' in spanEl) {
-                            // Create a br element.
-                            spanHTMLElement.appendChild(document.createElement('br'));
+                            // To handle br inside span we need to add the current span
+                            // to the cue and then create a br and add that the cue
+                            // then create a new span that we use for the next line of
+                            // text, that is a copy of the current span
+
+                            // Add the current span to the cue, only if it has childNodes (text)
+                            if (spanHTMLElement.hasChildNodes()) {
+                                cue.appendChild(spanHTMLElement);
+                            }
+
+                            // Create a br and add that to the cue
+                            var brEl = document.createElement('br');
+                            brEl.className = 'lineBreak';
+                            cue.appendChild(brEl);
+
+                            // Create an replacement span and copy the style and classname from the old one
+                            var newSpanHTMLElement = document.createElement('span');
+                            newSpanHTMLElement.className = spanHTMLElement.className;
+                            newSpanHTMLElement.style.cssText = spanHTMLElement.style.cssText;
+
+                            // Replace the current span with the one we just created
+                            spanHTMLElement = newSpanHTMLElement;
                         }
                     });
                     // We append the element to the cue container.
@@ -1065,7 +1085,7 @@ MediaPlayer.utils.TTMLParser = function() {
                                         }
                                         // If the element is a string
                                         if (spanEl.hasOwnProperty('#text')) {
-                                            text += spanEl['#text'];
+                                            text += spanEl['#text'].replace(/[\r\n]+/gm, " ").trim();
                                             // If the element is a 'br' tag
                                         } else if ('br' in spanEl) {
                                             // Create a br element.
@@ -1075,7 +1095,7 @@ MediaPlayer.utils.TTMLParser = function() {
                                 } else if (el.hasOwnProperty('br')) {
                                     text += "\n";
                                 } else {
-                                    text += el['#text'];
+                                    text += el['#text'].replace(/[\r\n]+/gm, " ").trim();
                                 }
                             });
                         }
