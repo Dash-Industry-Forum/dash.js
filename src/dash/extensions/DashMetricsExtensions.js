@@ -329,7 +329,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
             var httpRequestList,
                 httpRequest,
-                headers = [],
+                headers = {},
                 i;
 
             if (metrics === null) {
