@@ -206,15 +206,26 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         img.id = 'ttmlImage_'+this.id;
                         img.src = this.image;
                         img.className = 'cue-image';
-                        captionContainer.appendChild(img);
+                        if (captionContainer) {
+                            captionContainer.appendChild(img);
+                        } else {
+                            video.parentNode.appendChild(img);
+                        }
                     };
 
                     cue.onexit =  function () {
-                        var imgs = captionContainer.childNodes;
-                        var i;
+                        var container,
+                            i,
+                            imgs;
+                        if (captionContainer) {
+                            container = captionContainer;
+                        } else {
+                            container = video.parentNode;
+                        }
+                        imgs = container.childNodes;
                         for(i=0;i<imgs.length;i++){
                             if(imgs[i].id=='ttmlImage_'+this.id){
-                                captionContainer.removeChild(imgs[i]);
+                                container.removeChild(imgs[i]);
                             }
                         }
                     };
