@@ -687,8 +687,10 @@ MediaPlayer.utils.TTMLParser = function() {
                             // then create a new span that we use for the next line of
                             // text, that is a copy of the current span
 
-                            // Add the current span to the cue
-                            cue.appendChild(spanHTMLElement);
+                            // Add the current span to the cue, only if it has childNodes (text)
+                            if (spanHTMLElement.hasChildNodes()) {
+                                cue.appendChild(spanHTMLElement);
+                            }
 
                             // Create a br and add that to the cue
                             var brEl = document.createElement('br');
@@ -1083,7 +1085,7 @@ MediaPlayer.utils.TTMLParser = function() {
                                         }
                                         // If the element is a string
                                         if (spanEl.hasOwnProperty('#text')) {
-                                            text += spanEl['#text'];
+                                            text += spanEl['#text'].replace(/[\r\n]+/gm, " ").trim();
                                             // If the element is a 'br' tag
                                         } else if ('br' in spanEl) {
                                             // Create a br element.
@@ -1093,7 +1095,7 @@ MediaPlayer.utils.TTMLParser = function() {
                                 } else if (el.hasOwnProperty('br')) {
                                     text += "\n";
                                 } else {
-                                    text += el['#text'];
+                                    text += el['#text'].replace(/[\r\n]+/gm, " ").trim();
                                 }
                             });
                         }
