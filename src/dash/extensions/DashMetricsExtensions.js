@@ -329,15 +329,26 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return curentDVRInfo;
         },
 
-        getLatestMPDRequestHeaderValueByID = function(metrics, id) {
+        getLatestMPDRequestHeaderValueByID = function (metrics, id) {
 
-            if (metrics === null) return null;
-            var httpRequestList = getHttpRequests(metrics),
-                httpRequest = httpRequestList[httpRequestList.length-1],
-                headers;
+            var httpRequestList,
+                httpRequest,
+                headers = {},
+                i;
 
-            if (httpRequest.type === MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE) {
-                headers = parseResponseHeaders(httpRequest.responseHeaders);
+            if (metrics === null) {
+                return null;
+            }
+
+            httpRequestList = getHttpRequests(metrics);
+
+            for (i = httpRequestList.length - 1; i >= 0; i -= 1) {
+                httpRequest = httpRequestList[i];
+
+                if (httpRequest.type === MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE) {
+                    headers = parseResponseHeaders(httpRequest.responseHeaders);
+                    break;
+                }
             }
 
             return headers[id] === undefined ? null :  headers[id];
