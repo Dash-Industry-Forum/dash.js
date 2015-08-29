@@ -224,7 +224,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 },
 
                 isEqualMedia = function(req1, req2) {
-                    return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
+                    return ((req1.mediaType === req2.mediaType) && (req1.startTime === req2.startTime));
                 },
 
                 isEqualInit = function(req1, req2) {
@@ -240,11 +240,11 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     // It can take a few moments to get into the buffer
                     if (!inBuffer) {
                         d = new Date();
-                        d.setSeconds(d.getSeconds() + 3);
+                        d.setSeconds(d.getSeconds() - 3);
                         for (var i = 0; i < executedRequests.length; i += 1) {
                             req = executedRequests[i];
 
-                            if (isEqualMedia(request, req) && req.requestEndDate <= d) {
+                            if (isEqualMedia(request, req) && req.requestEndDate >= d) {
                                 return false;
                             }
                         }
