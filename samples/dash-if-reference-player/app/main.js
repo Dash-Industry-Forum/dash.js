@@ -398,7 +398,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             bufferedRanges = [];
 
         // get current buffered ranges of video element and keep them up to date
-        for (var i = 0, len = video.buffered.length; i < len; i += 1) {
+        for (var i = 0; i < video.buffered.length; i += 1) {
             bufferedRanges.push(video.buffered.start(i) + ' - ' + video.buffered.end(i));
         }
         $scope.bufferedRanges = bufferedRanges;
