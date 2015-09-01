@@ -192,6 +192,12 @@ chart {
 	background-color: #f5fffa;
 }
 
+.btn-caption,
+.btn-mute,
+.btn-fullscreen,
+.btn-play-pause{
+    padding:5px 10px !important;
+}
 
 #notes {
     height: 340px;

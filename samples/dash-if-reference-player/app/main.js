@@ -94,6 +94,7 @@ app.directive('chart', function() {
 
 app.controller('DashController', function($scope, Sources, Notes, Contributors, PlayerLibraries, ShowcaseLibraries) {
     var player,
+        controlbar,
         video,
         context,
         videoSeries = [],
@@ -555,6 +556,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     video = document.querySelector(".dash-video-player video");
     context = new Dash.di.DashContext();
     player = new MediaPlayer(context);
+
     $scope.version = player.getVersion();
 
     player.startup();
@@ -563,9 +565,11 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     player.addEventListener(MediaPlayer.events.METRIC_UPDATED, metricUpdated.bind(this));
     player.addEventListener(MediaPlayer.events.STREAM_SWITCH_COMPLETED, streamSwitch.bind(this));
     player.addEventListener(MediaPlayer.events.STREAM_INITIALIZED, streamInitialized.bind(this));
-
     player.attachView(video);
     player.setAutoPlay(true);
+    controlbar = new ControlBar(player);
+    controlbar.initialize();
+    controlbar.disable() //controlbar.hide() // other option
 
     ////////////////////////////////////////
     //
@@ -650,6 +654,8 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         }
         player.attachSource($scope.selectedItem.url, null, protData);
         player.setAutoSwitchQuality($scope.abrEnabled);
+        controlbar.enable();
+
         if ($scope.initialSettings.audio) {
             player.setInitialMediaSettingsFor("audio", {lang: $scope.initialSettings.audio});
         }
