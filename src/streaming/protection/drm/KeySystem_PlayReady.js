@@ -40,7 +40,7 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
 
     var keySystemStr = "com.microsoft.playready",
         keySystemUUID = "9a04f079-9840-4286-ab92-e65be0885f95",
-        messageFormat = "utf16",
+        messageFormat = "utf8",
 
         getRequestHeaders = function(message) {
             var msg,
