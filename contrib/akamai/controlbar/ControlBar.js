@@ -36,7 +36,7 @@ var ControlBar = function(dashjsMediaPlayer) {
         captionMenu = null,
         lastValumeLevel = NaN,
         seeking = false,
-        //TODO - CREATE ALL ELEMENTS INSIDE "videoController" AND JUST REQUIRE ONE DIV IN PLAYER TO BE CREATED BELOW VIDEO ELEMENT NAMED "videoController"
+        //TODO - CREATE ALL ELEMENTS INSIDE "videoController" AND JUST REQUIRE ONE DIV IN PLAYER TO BE CREATED BELOW VIDEO ELEMENT WITH ID "videoController"
         videoController = document.getElementById("videoController"),
         playPauseBtn = document.getElementById("playPauseBtn"),
         captionBtn = document.getElementById("captionBtn"),
@@ -214,11 +214,15 @@ var ControlBar = function(dashjsMediaPlayer) {
 // CAPTION MENU
 //************************************************************************************
 
-        onCaptionClick = function(e){
+        onTracksAdded = function(e){
             if (!captionMenu) {
-                createCaptionMenu();
+                createCaptionMenu(e.data);
+                captionBtn.addEventListener("click", onCaptionClick);
+                captionBtn.classList.remove("hide");
             }
+        },
 
+        onCaptionClick = function(e){
             if (captionMenu.classList.contains("hide")){
                 captionMenu.classList.remove("hide");
                 captionMenu.onmouseleave = function(e){
@@ -227,13 +231,11 @@ var ControlBar = function(dashjsMediaPlayer) {
             }else{
                 captionMenu.classList.add("hide");
             }
-
             captionMenu.style.position = isFullscreen() ? "fixed" : "absolute";
             positionCaptionMenu();
         },
 
-        createCaptionMenu = function() {
-
+        createCaptionMenu = function(info) {
             captionMenu = document.createElement("div");
             captionMenu.id = "captionMenu";
             captionMenu.classList.add("caption-menu");
@@ -242,14 +244,15 @@ var ControlBar = function(dashjsMediaPlayer) {
             captionMenu.appendChild(document.createElement("ul"));
             videoController.appendChild(captionMenu);
 
-            var tracks = video.textTracks;
-            for(var i = 0; i < tracks.length+1; i++) {
+            var tracks = info.tracks,
+                ln = tracks.length + 1; //add extra iteration for off button.;
 
+            for(var i = 0; i < ln; i++) { //TODO refactor to not offset "i' all over the code. Maybe just build elements push array then build default off button and shift to front then add to DOM?
                 var captionItem = document.createElement("li");
                 captionItem.id = "captionItem_"+i
                 captionItem.index = i;
                 captionItem.selected = false;
-                captionItem.innerHTML = i === 0 ? tracks[i].kind +" off" : tracks[i-1].language.toUpperCase() + " : " + tracks[i-1].kind;
+                captionItem.innerHTML = i === 0 ? tracks[i].kind +" off" : tracks[i-1].lang + " : " + tracks[i-1].kind; //subtract to offset for off button.
                 captionItem.onmouseover = function(e){
                     if (this.selected !== true){
                         this.classList.add("caption-item-over");
@@ -261,7 +264,7 @@ var ControlBar = function(dashjsMediaPlayer) {
                 captionItem.onclick = setCaptionItemsState.bind(captionItem);
                 captionMenu.querySelector("ul").appendChild(captionItem);
             }
-            setCaptionItemsState(1);//TODO add APi to media player to get starting text track idx!
+            setCaptionItemsState(info.index + 1);
             window.addEventListener("resize", positionCaptionMenu, true);
         },
 
@@ -309,13 +312,18 @@ var ControlBar = function(dashjsMediaPlayer) {
                     inputEvent.initEvent('input', true, true);
                     e.target.dispatchEvent(inputEvent);
                     if (addChange) {
-                        e.target.removeEventListener('mouseup', fireChange);
+                        e.target.removeEventListener('mouseup', fireChange);//TODO can not clean up this event on destroy. refactor needed!
                         e.target.addEventListener('mouseup', fireChange);
                     }
                 }
 
             }, true);
+        },
+
+        isIE = function(){
+            return !!navigator.userAgent.match(/Trident.*rv[ :]*11\./)
         };
+
 
 //************************************************************************************
 // PUBLIC API
@@ -334,14 +342,15 @@ var ControlBar = function(dashjsMediaPlayer) {
                 throw new Error("Please call initialize after you have called attachView on MediaPlayer.js");
             }
 
+            video.controls = false;
+            captionBtn.classList.add("hide");
+
             playPauseBtn.addEventListener("click", onPlayPauseClick);
-            captionBtn.addEventListener("click", onCaptionClick);
             muteBtn.addEventListener("click", onMuteClick);
             fullscreenBtn.addEventListener("click", onFullscreenClick);
             seekbar.addEventListener("change", onSeekBarChange, true);
             seekbar.addEventListener("input", onSeeking, true);
             volumebar.addEventListener("input", setVolume, true);
-            video.controls = false;
             video.addEventListener("play", onPlayStart);
             video.addEventListener("pause", onPlaybackPaused);
             video.addEventListener("timeupdate", onPlayTimeUpdate);
@@ -350,9 +359,10 @@ var ControlBar = function(dashjsMediaPlayer) {
             document.addEventListener("msfullscreenchange", onFullScreenChange, false);
             document.addEventListener("mozfullscreenchange", onFullScreenChange, false);
             document.addEventListener("webkitfullscreenchange", onFullScreenChange, false);
+            player.addEventListener(MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);
 
             //IE 11 Input Fix.
-            if (!!navigator.userAgent.match(/Trident.*rv[ :]*11\./)) {
+            if (isIE()) {
                 coerceIEInputAndChangeEvents(seekbar, true);
                 coerceIEInputAndChangeEvents(volumebar, false);
             }
@@ -373,6 +383,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             if (captionMenu) {
                 videoController.removeChild(captionMenu);
                 captionMenu = null;
+                captionBtn.classList.add("hide");
             }
             currentCaptionMenuIdx = 0;
             seeking = false;
@@ -395,6 +406,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             document.removeEventListener("msfullscreenchange", onFullScreenChange);
             document.removeEventListener("mozfullscreenchange", onFullScreenChange);
             document.removeEventListener("webkitfullscreenchange", onFullScreenChange);
+            player.removeEventListener(MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);
         }
     }
 }

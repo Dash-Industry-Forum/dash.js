@@ -130,6 +130,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         }
         player.attachSource($scope.selectedItem.url, null, protectionData);
         player.setAutoSwitchQuality($scope.abrEnabled);
+        controlbar.reset();
         controlbar.enable();
     };
 

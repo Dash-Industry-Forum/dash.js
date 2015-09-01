@@ -1366,6 +1366,7 @@ MediaPlayer.events = {
     STREAM_SWITCH_COMPLETED: "streamswitchcompleted",
     STREAM_INITIALIZED: "streaminitialized",
     TEXT_TRACK_ADDED: "texttrackadded",
+    TEXT_TRACKS_ADDED: "alltexttracksadded",
     BUFFER_LOADED: "bufferloaded",
     BUFFER_EMPTY: "bufferstalled",
     ERROR: "error",
