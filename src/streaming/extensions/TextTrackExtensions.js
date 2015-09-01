@@ -35,7 +35,6 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         textTrackQueue = [],
         trackElementArr = [],
         currentTrackIdx = -1,
-        trackKindMap = {subtitle:"subtitles", caption:"captions"},
         actualVideoWidth = 0,
         actualVideoHeight = 0,
         captionContainer = null,
@@ -43,8 +42,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         isIE11 = false,// Temp solution for the addCue InvalidStateError..
 
         createTrackForUserAgent = function(i){
-            var captionType = trackKindMap[textTrackQueue[i].role];
-            var kind = captionType !== undefined ? captionType : trackKindMap.caption;
+            var kind = textTrackQueue[i].kind;
             var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
             var lang = textTrackQueue[i].lang;
             var track = isIE11 ? video.addTextTrack(kind, label, lang) : document.createElement('track');
@@ -62,6 +60,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
     return {
         mediaController:undefined,
         videoModel:undefined,
+        eventBus:undefined,
 
         setup: function() {
             Cue = window.VTTCue || window.TextTrackCue;
@@ -97,8 +96,10 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         video.appendChild(track);
                     }
                     this.addCaptions(0, textTrackQueue[i].captionData);
+                    this.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
                 }
                 currentTrackIdx = defaultIndex;
+                this.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACKS_ADDED, data:{index:currentTrackIdx, tracks:textTrackQueue}});//send default idx.
             }
         },
 
@@ -382,6 +383,5 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                 captionContainer.removeChild(captionContainer.firstChild);
             }
         }
-
     };
 };

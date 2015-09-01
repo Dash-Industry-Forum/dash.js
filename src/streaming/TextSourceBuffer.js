@@ -72,7 +72,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
     return {
         system:undefined,
         videoModel: undefined,
-        eventBus:undefined,
         errHandler: undefined,
         adapter: undefined,
         manifestExt:undefined,
@@ -104,16 +103,17 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 mimeType = mediaInfo.mimeType;
 
             function createTextTrackFromMediaInfo(captionData, mediaInfo) {
-                var textTrackInfo = new MediaPlayer.vo.TextTrackInfo();
+                var textTrackInfo = new MediaPlayer.vo.TextTrackInfo(),
+                    trackKindMap = {subtitle:"subtitles", caption:"captions"};
+
                 textTrackInfo.captionData = captionData;
                 textTrackInfo.lang = mediaInfo.lang;
                 textTrackInfo.label = mediaInfo.id;
                 textTrackInfo.video = self.videoModel.getElement();
                 textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
                 textTrackInfo.isFragmented = self.isFragmented;
-                textTrackInfo.role = (mediaInfo.roles.length > 0) ? mediaInfo.roles[0] : null;
+                textTrackInfo.kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
                 self.textTrackExtensions.addTextTrack(textTrackInfo, self.mediaInfos.length);
-                self.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
             }
 
             if(mediaType === "fragmentedText"){
@@ -179,14 +179,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
 
         getAllTracksAreDisabled : function (){
             return allTracksAreDisabled;
-        },
-
-        addEventListener: function (type, listener, useCapture) {
-            this.eventBus.addEventListener(type, listener, useCapture);
-        },
-
-        removeEventListener: function (type, listener, useCapture) {
-            this.eventBus.removeEventListener(type, listener, useCapture);
         },
 
         setTextTrack: setTextTrack,

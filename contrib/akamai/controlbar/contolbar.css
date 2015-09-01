@@ -1,12 +1,6 @@
 /**************************************************/
 /*Control bar*/
 /**************************************************/
-*{
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-}
-
 .hide{
     display: none;
 }
@@ -245,4 +239,10 @@ input[type="range"]::-ms-thumb {
     border: none;
     border-radius: 2px;
     background-color:rgb(0, 150, 215);
+}
+
+div#videoController input[type="range"]{
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }

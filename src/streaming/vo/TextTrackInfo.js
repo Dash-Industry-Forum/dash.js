@@ -35,7 +35,7 @@ MediaPlayer.vo.TextTrackInfo = function () {
     this.label = null;
     this.lang = null;
     this.defaultTrack = false;
-    this.role = null;
+    this.kind = null;
     this.isFragmented = false;
 };
 
