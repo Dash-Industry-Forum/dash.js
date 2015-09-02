@@ -235,11 +235,15 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     if (track.renderingType !== "html") {
                         track.renderingType = "html";
                     }
-                    if(!(document.getElementById('caption-style'))) {
-                        this.setCueStyle();
-                    }
-                    else if(!(document.getElementById('caption-style').sheet.cssRules.length)) {
-                        this.setCueStyle();
+
+                    /* Don't do cue styling for TextTrackCue */
+                    if (Cue !== window.TextTrackCue) {
+                        if(!(document.getElementById('caption-style'))) {
+                            this.setCueStyle();
+                        }
+                        else if(!(document.getElementById('caption-style').sheet.cssRules.length)) {
+                            this.setCueStyle();
+                        }
                     }
 
                     cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
@@ -372,9 +376,14 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         },
 
         removeCueStyle: function() {
-            var stylesheet = document.getElementById('caption-style').sheet;
-            if(stylesheet.cssRules && stylesheet.cssRules.length > 0) {
-                stylesheet.deleteRule(0);
+            /* Don't do anything if this is a TextTrackCue, this is placed here because
+               TextSourceBuffer (that calls this function, has no clue if this is a
+               VTTCue or a TextTrackCue */
+            if (Cue !== window.TextTrackCue) {
+                var stylesheet = document.getElementById('caption-style').sheet;
+                if(stylesheet.cssRules && stylesheet.cssRules.length > 0) {
+                    stylesheet.deleteRule(0);
+                }
             }
         },
 
