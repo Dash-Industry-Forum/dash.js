@@ -118,8 +118,11 @@ Dash.dependencies.TimelineConverter = function () {
             //the Media Segment list is further restricted by the CheckTime together with the MPD attribute
             // MPD@timeShiftBufferDepth such that only Media Segments for which the sum of the start time of the
             // Media Segment and the Period start time falls in the interval [NOW- MPD@timeShiftBufferDepth - @duration, min(CheckTime, NOW)] are included.
-            start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth), 0);
-            end = (isNaN(checkTime) ? now : Math.min(checkTime, now)) - d;
+            start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth), representation.adaptation.period.start);
+            var timeAnchor = (isNaN(checkTime) ? now : Math.min(checkTime, now));
+            var periodEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
+            end = timeAnchor >= periodEnd  && (timeAnchor - d) < periodEnd ? periodEnd : timeAnchor - d;
+            //end = (isNaN(checkTime) ? now : Math.min(checkTime, now)) - d;
             range = {start: start, end: end};
 
             return range;
