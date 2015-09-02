@@ -119,6 +119,8 @@ MediaPlayer.dependencies.Stream = function () {
                 streamProcessor.setBuffer(optionalSettings.buffer);
                 streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
                 streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
+            } else {
+                streamProcessors.push(streamProcessor);
             }
 
             if((mediaInfo.type === "text" || mediaInfo.type === "fragmentedText")) {
@@ -169,7 +171,7 @@ MediaPlayer.dependencies.Stream = function () {
             // TODO : How to tell index handler live/duration?
             // TODO : Pass to controller and then pass to each method on handler?
 
-            streamProcessors.push(createStreamProcessor.call(this, initialMediaInfo, manifest, mediaSource));
+            createStreamProcessor.call(this, initialMediaInfo, manifest, mediaSource);
         },
 
         initializeMedia = function (mediaSource) {
@@ -211,8 +213,6 @@ MediaPlayer.dependencies.Stream = function () {
                 hasError = !!updateError.audio || !!updateError.video,
                 error = hasError ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.Stream.DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null,
                 i = 0;
-
-            if (ln === 0) return;
 
             for (i; i < ln; i += 1) {
                 if (streamProcessors[i].isUpdating() || isUpdating) return;
