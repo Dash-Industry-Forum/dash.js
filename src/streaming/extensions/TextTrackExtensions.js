@@ -346,6 +346,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             textTrackQueue = [];
             if (videoSizeCheckInterval){
                 clearInterval(videoSizeCheckInterval);
+                videoSizeCheckInterval = null;
             }
 
         },
