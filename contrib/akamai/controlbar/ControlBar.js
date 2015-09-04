@@ -36,6 +36,7 @@ var ControlBar = function(dashjsMediaPlayer) {
         captionMenu = null,
         lastValumeLevel = NaN,
         seeking = false,
+        videoControllerVisibleTimeout = 0,
         //TODO - CREATE ALL ELEMENTS INSIDE "videoController" AND JUST REQUIRE ONE DIV IN PLAYER TO BE CREATED BELOW VIDEO ELEMENT WITH ID "videoController"
         videoController = document.getElementById("videoController"),
         playPauseBtn = document.getElementById("playPauseBtn"),
@@ -145,11 +146,15 @@ var ControlBar = function(dashjsMediaPlayer) {
 //************************************************************************************
 
         setDuration = function(value){
-            durationDisplay.innerHTML = player.convertToTimeCode(value);
+            if (!isNaN(value)) {
+                durationDisplay.innerHTML = player.convertToTimeCode(value);
+            }
         },
 
         setTime = function(value){
-            timeDisplay.innerHTML = player.convertToTimeCode(value);
+            if (!isNaN(value)) {
+                timeDisplay.innerHTML = player.convertToTimeCode(value);
+            }
         },
 
         updateDuration = function(){
@@ -170,6 +175,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             } else {
                 exitFullscreen();
             }
+            captionMenu.classList.add("hide");
         },
 
         isFullscreen = function (){
@@ -187,9 +193,26 @@ var ControlBar = function(dashjsMediaPlayer) {
                 video.webkitRequestFullScreen();
             }
             videoController.classList.add('video-controller-fullscreen');
+            window.addEventListener("mousemove", onFullScreenMouseMove);
+            onFullScreenMouseMove();
+        },
+
+        onFullScreenMouseMove = function () {
+            clearFullscreenState();
+            videoControllerVisibleTimeout = setTimeout(function(){
+                videoController.classList.add("hide");
+            }, 4000);
+        },
+
+        clearFullscreenState = function () {
+            clearTimeout(videoControllerVisibleTimeout);
+            videoController.classList.remove("hide");
         },
 
         exitFullscreen = function () {
+            window.removeEventListener("mousemove", onFullScreenMouseMove);
+            clearFullscreenState();
+
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             } else if (document.mozCancelFullScreen){
@@ -208,6 +231,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             } else {
                 exitFullscreen();
             }
+            captionMenu.classList.add("hide");
         },
 
 //************************************************************************************
@@ -269,9 +293,11 @@ var ControlBar = function(dashjsMediaPlayer) {
         },
 
         positionCaptionMenu = function () {
-            var menu_y = videoController.offsetTop - captionMenu.offsetHeight;
-            captionMenu.style.top = menu_y+"px";
-            captionMenu.style.left = captionBtn.offsetLeft+"px";
+            if (captionMenu) {
+                var menu_y = videoController.offsetTop - captionMenu.offsetHeight;
+                captionMenu.style.top = menu_y+"px";
+                captionMenu.style.left = captionBtn.offsetLeft+"px";
+            }
         },
 
         setCaptionItemsState = function (value) {
@@ -367,21 +393,21 @@ var ControlBar = function(dashjsMediaPlayer) {
                 coerceIEInputAndChangeEvents(volumebar, false);
             }
         },
-        show:function(){
+        show : function(){
             videoController.classList.remove("hide");
         },
-        hide:function(){
+        hide : function(){
             videoController.classList.add("hide");
         },
-        disable:function(){
+        disable : function(){
             videoController.classList.add("disable");
         },
-        enable:function(){
+        enable : function(){
             videoController.classList.remove("disable");
         },
-        reset:function(){
+        reset : function(){
             if (captionMenu) {
-                window.addEventListener("resize", positionCaptionMenu, true);
+                window.removeEventListener("resize", positionCaptionMenu);
                 videoController.removeChild(captionMenu);
                 captionMenu = null;
                 captionBtn.classList.add("hide");
@@ -389,7 +415,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             currentCaptionMenuIdx = 0;
             seeking = false;
         },
-        destroy: function(){
+        destroy : function(){
             reset();
             window.removeEventListener("resize", positionCaptionMenu);
             playPauseBtn.removeEventListener("click", onPlayPauseClick);
