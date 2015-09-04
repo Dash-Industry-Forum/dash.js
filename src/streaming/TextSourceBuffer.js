@@ -104,7 +104,12 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
 
             function createTextTrackFromMediaInfo(captionData, mediaInfo) {
                 var textTrackInfo = new MediaPlayer.vo.TextTrackInfo(),
-                    trackKindMap = {subtitle:"subtitles", caption:"captions"};
+                    trackKindMap = {subtitle:"subtitles", caption:"captions"},//Dash Spec has no "s" on end of KIND but HTML needs plural.
+                    getKind = function () {
+                        var kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
+                        kind = (kind !== trackKindMap.caption || kind !== trackKindMap.subtitle) ? trackKindMap.caption : kind;
+                        return kind;
+                    };
 
                 textTrackInfo.captionData = captionData;
                 textTrackInfo.lang = mediaInfo.lang;
@@ -112,7 +117,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 textTrackInfo.video = self.videoModel.getElement();
                 textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
                 textTrackInfo.isFragmented = self.isFragmented;
-                textTrackInfo.kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
+                textTrackInfo.kind = getKind();
                 self.textTrackExtensions.addTextTrack(textTrackInfo, self.mediaInfos.length);
             }
 
