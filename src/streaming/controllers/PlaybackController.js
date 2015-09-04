@@ -395,6 +395,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
             return videoModel.getElement().played;
         },
 
+        getIsDynamic: function(){
+            return isDynamic;
+        },
+
         setLiveStartTime: function(value) {
             liveStartTime = value;
         },

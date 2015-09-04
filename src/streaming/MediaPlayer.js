@@ -168,25 +168,36 @@ MediaPlayer = function (context) {
         },
 
         seek = function(value) {
-            this.getVideoModel().getElement().currentTime = this.getDVRSeekOffset(value);
+            var s = playbackController.getIsDynamic() ? this.getDVRSeekOffset(value) : value;
+            this.getVideoModel().setCurrentTime(s);
         },
 
         time = function () {
-            var metric = getDVRInfoMetric.call(this);
-            return (metric === null) ? 0 : this.duration() - (metric.range.end - metric.time);
+            var t = videoModel.getCurrentTime();
+
+            if (playbackController.getIsDynamic()) {
+                var metric = getDVRInfoMetric.call(this);
+                t = (metric === null) ? 0 : this.duration() - (metric.range.end - metric.time);
+            }
+            return t;
         },
 
         duration  = function () {
-            var metric = getDVRInfoMetric.call(this),
-                range;
+            var d = videoModel.getElement().duration;
 
-            if (metric === null) {
-                return 0;
+            if (playbackController.getIsDynamic()) {
+
+                var metric = getDVRInfoMetric.call(this),
+                    range;
+
+                if (metric === null) {
+                    return 0;
+                }
+
+                range = metric.range.end - metric.range.start;
+                d = range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize;
             }
-
-            range = metric.range.end - metric.range.start;
-
-            return range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize;
+            return d;
         },
 
         getAsUTC = function(valToConvert) {

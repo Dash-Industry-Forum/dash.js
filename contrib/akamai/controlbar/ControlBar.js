@@ -381,6 +381,7 @@ var ControlBar = function(dashjsMediaPlayer) {
         },
         reset:function(){
             if (captionMenu) {
+                window.addEventListener("resize", positionCaptionMenu, true);
                 videoController.removeChild(captionMenu);
                 captionMenu = null;
                 captionBtn.classList.add("hide");
