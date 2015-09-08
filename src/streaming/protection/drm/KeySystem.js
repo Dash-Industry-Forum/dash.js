@@ -83,6 +83,19 @@ MediaPlayer.dependencies.protection.KeySystem = function() {};
  */
 
 /**
+ * For some key systems, the CDM requires different configurations passed to it when
+ * trying to access it. It is basically just a function wrapper for
+ * MediaPlayer.dependencies.protection.CommonEncryption.getKeySystemConfigurations
+ *
+ * @function
+ * @name MediaPlayer.dependencies.protection.KeySystem#getKeySystemConfigurations
+ * @param {object} videoInfo contains relevant info about video (mimeType, codec)
+ * @param {object} audioInfo contains relevant info about audio (mimeType, codec)
+ * @param {String} sessionType the session type like "temporary" or "persistent-license"
+ * @returns {Array} list of {MediaPlayer.vo.protection.KeySystemConfiguration}
+ */
+
+/**
  * For some key systems, the CDM message contains HTTP headers that
  * can be parsed by the application and attached to the license request.
  * Returns a header object with key/value pairs as object properties/values
