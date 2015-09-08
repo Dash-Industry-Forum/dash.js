@@ -133,6 +133,7 @@ var ControlBar = function(dashjsMediaPlayer) {
         },
 
         onSeeking = function(e){
+            //TODO Add call to seek in trick-mode once implemented. Preview Frames.
             seeking = true;
             setTime(parseFloat(seekbar.value));
         },
@@ -175,7 +176,9 @@ var ControlBar = function(dashjsMediaPlayer) {
             } else {
                 exitFullscreen();
             }
-            captionMenu.classList.add("hide");
+            if (captionMenu) {
+                captionMenu.classList.add("hide");
+            }
         },
 
         isFullscreen = function (){
@@ -231,7 +234,9 @@ var ControlBar = function(dashjsMediaPlayer) {
             } else {
                 exitFullscreen();
             }
-            captionMenu.classList.add("hide");
+            if (captionMenu) {
+                captionMenu.classList.add("hide");
+            }
         },
 
 //************************************************************************************
