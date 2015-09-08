@@ -44,6 +44,8 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
 
         getInitData: MediaPlayer.dependencies.protection.CommonEncryption.parseInitDataFromContentProtection,
 
+        getKeySystemConfigurations: MediaPlayer.dependencies.protection.CommonEncryption.getKeySystemConfigurations,
+
         getRequestHeadersFromMessage: function(/*message*/) { return null; },
 
         getLicenseRequestFromMessage: function(message) { return new Uint8Array(message); },

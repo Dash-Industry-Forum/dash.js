@@ -198,6 +198,8 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
 
         getInitData: parseInitDataFromContentProtection,
 
+        getKeySystemConfigurations: MediaPlayer.dependencies.protection.CommonEncryption.getKeySystemConfigurations,
+
         getRequestHeadersFromMessage: getRequestHeaders,
 
         getLicenseRequestFromMessage: getLicenseRequest,

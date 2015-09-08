@@ -66,17 +66,6 @@ MediaPlayer.dependencies.ProtectionController = function () {
             var self = this;
 
             // Build our request object for requestKeySystemAccess
-            var audioCapabilities = [], videoCapabilities = [];
-            if (videoInfo) {
-                videoCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(videoInfo.codec));
-            }
-            if (audioInfo) {
-                audioCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(audioInfo.codec));
-            }
-            var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(
-                    audioCapabilities, videoCapabilities, "optional",
-                    (self.sessionType === "temporary") ? "optional" : "required",
-                    [self.sessionType]);
             var requestedKeySystems = [];
 
             var ksIdx;
@@ -85,7 +74,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 for (ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
                     if (this.keySystem === supportedKS[ksIdx].ks) {
 
-                        requestedKeySystems.push({ks: supportedKS[ksIdx].ks, configs: [ksConfig]});
+                        requestedKeySystems.push({ks: supportedKS[ksIdx].ks, configs: supportedKS[ksIdx].ks.getKeySystemConfigurations(videoInfo, audioInfo, self.sessionType)});
 
                         // Ensure that we would be granted key system access using the key
                         // system and codec information
@@ -120,7 +109,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
 
                 // Add all key systems to our request list since we have yet to select a key system
                 for (var i = 0; i < supportedKS.length; i++) {
-                    requestedKeySystems.push({ks: supportedKS[i].ks, configs: [ksConfig]});
+                    requestedKeySystems.push({ks: supportedKS[i].ks, configs: supportedKS[i].ks.getKeySystemConfigurations(videoInfo, audioInfo, self.sessionType)});
                 }
 
                 var ksSelected = {},
