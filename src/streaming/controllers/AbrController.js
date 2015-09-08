@@ -36,6 +36,7 @@ MediaPlayer.dependencies.AbrController = function () {
         qualityDict = {},
         confidenceDict = {},
         bitrateDict = {},
+        averageThroughputDict = {},
         streamProcessorDict={},
         abandonmentStateDict = {},
         abandonmentTimeout,
@@ -130,7 +131,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
         onFragmentLoadProgress = function(evt) {
 
-            if (MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD === 0) { //check to see if there are parallel request or just one at a time.
+            if (MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD === 0 && autoSwitchBitrate) { //check to see if there are parallel request or just one at a time.
 
                 var self = this,
                     type = evt.data.request.mediaType,
@@ -347,12 +348,20 @@ MediaPlayer.dependencies.AbrController = function () {
             return infoList;
         },
 
+        setAverageThroughput: function(type, value) {
+            averageThroughputDict[type] = value;
+        },
+
+        getAverageThroughput: function(type) {
+            return averageThroughputDict[type];
+        },
+
         updateTopQualityIndex: function(mediaInfo) {
             var type = mediaInfo.type,
                 streamId = mediaInfo.streamInfo.id,
                 max;
 
-            max = mediaInfo.trackCount - 1;
+            max = mediaInfo.representationCount - 1;
             setTopQualityIndex(type, streamId, max);
 
             return max;
@@ -380,6 +389,7 @@ MediaPlayer.dependencies.AbrController = function () {
             confidenceDict = {};
             streamProcessorDict = {};
             abandonmentStateDict = {};
+            averageThroughputDict = {};
             clearTimeout(abandonmentTimeout);
             abandonmentTimeout = null;
         }

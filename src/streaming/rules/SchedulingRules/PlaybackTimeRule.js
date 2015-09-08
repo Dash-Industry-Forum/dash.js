@@ -49,7 +49,9 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
     return {
         adapter: undefined,
         sourceBufferExt: undefined,
+        virtualBuffer: undefined,
         playbackController: undefined,
+        textSourceBuffer:undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
@@ -62,35 +64,43 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
         },
 
         execute: function(context, callback) {
-            var mediaType = context.getMediaInfo().type,
+            var mediaInfo = context.getMediaInfo(),
+                mediaType = mediaInfo.type,
                 streamId = context.getStreamInfo().id,
                 sc = scheduleController[streamId][mediaType],
                 // EPSILON is used to avoid javascript floating point issue, e.g. if request.startTime = 19.2,
                 // request.duration = 3.83, than request.startTime + request.startTime = 19.2 + 1.92 = 21.119999999999997
                 EPSILON = 0.1,
                 streamProcessor = scheduleController[streamId][mediaType].streamProcessor,
-                track = streamProcessor.getCurrentTrack(),
+                representationInfo = streamProcessor.getCurrentRepresentationInfo(),
                 st = seekTarget ? seekTarget[mediaType] : null,
                 hasSeekTarget = (st !== undefined) && (st !== null),
                 p = hasSeekTarget ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
                 rejected = sc.getFragmentModel().getRequests({state: MediaPlayer.dependencies.FragmentModel.states.REJECTED})[0],
                 keepIdx = !!rejected && !hasSeekTarget,
-                currentTime = this.adapter.getIndexHandlerTime(streamProcessor),
+                currentTime = streamProcessor.getIndexHandlerTime(),
                 playbackTime = this.playbackController.getTime(),
                 rejectedEnd = rejected ? rejected.startTime + rejected.duration : null,
                 useRejected = !hasSeekTarget && rejected && ((rejectedEnd > playbackTime) && (rejected.startTime <= currentTime) || isNaN(currentTime)),
                 buffer = streamProcessor.bufferController.getBuffer(),
+                appendedChunks,
                 range = null,
                 time,
                 request;
 
             time = hasSeekTarget ? st : ((useRejected ? (rejected.startTime) : currentTime));
 
+            // limit proceeding index handler to max buffer -> limit pending requests queue
+            if (!hasSeekTarget && !rejected && (time > playbackTime + MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY)) {
+                callback(new MediaPlayer.rules.SwitchRequest(null, p));
+                return;
+            }
+
             if (rejected) {
                 sc.getFragmentModel().removeRejectedRequest(rejected);
             }
 
-            if (isNaN(time)) {
+            if (isNaN(time) || (mediaType === "fragmentedText" && this.textSourceBuffer.getAllTracksAreDisabled())) {
                 callback(new MediaPlayer.rules.SwitchRequest(null, p));
                 return;
             }
@@ -101,30 +111,32 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
 
             if (buffer) {
                 range = this.sourceBufferExt.getBufferRange(streamProcessor.bufferController.getBuffer(), time);
-
                 if (range !== null) {
-                    time = range.end;
+                    appendedChunks = this.virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: range});
+                    if (appendedChunks && appendedChunks.length > 0) {
+                        time = appendedChunks[appendedChunks.length-1].bufferedRange.end;
+                    }
                 }
             }
 
-            request = this.adapter.getFragmentRequestForTime(streamProcessor, track, time, {keepIdx: keepIdx});
+            request = this.adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: keepIdx});
 
             if (useRejected && request && request.index !== rejected.index) {
-                request = this.adapter.getFragmentRequestForTime(streamProcessor, track, rejected.startTime + (rejected.duration / 2) + EPSILON, {keepIdx: keepIdx, timeThreshold: 0});
+                request = this.adapter.getFragmentRequestForTime(streamProcessor, representationInfo, rejected.startTime + (rejected.duration / 2) + EPSILON, {keepIdx: keepIdx, timeThreshold: 0});
             }
 
             while (request && streamProcessor.getFragmentModel().isFragmentLoadedOrPending(request)) {
                 if (request.action === "complete") {
                     request = null;
-                    this.adapter.setIndexHandlerTime(streamProcessor, NaN);
+                    streamProcessor.setIndexHandlerTime(NaN);
                     break;
                 }
 
-                request = this.adapter.getNextFragmentRequest(streamProcessor, track);
+                request = this.adapter.getNextFragmentRequest(streamProcessor, representationInfo);
             }
 
             if (request && !useRejected) {
-                this.adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
             }
 
             callback(new MediaPlayer.rules.SwitchRequest(request, p));

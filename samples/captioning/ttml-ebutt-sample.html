@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Multiple Language EBU Timed Text Sample</title>
+    <meta name="description" content="" />
+
+    <script src="../../dist/dash.debug.js"></script>
+    
+
+    <script>
+        /* TEST CONTENT.
+         http://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd
+         http://vm2.dashif.org/dash/vod/testpic_2s/stpp_two_regions_multi_color.mpd
+         http://vm2.dashif.org/livesimg//testpic_2s/multi_subs.mpd
+         http://vm2.dashif.org/livesimg//testpic_2s/stpp_two_regions_multi_color.mpd
+        */
+        var CAPTION_URL = "http://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
+            videoElement,
+            player;
+
+        function startVideo() {
+            var url = CAPTION_URL,
+                context,
+                TTMLRenderingDiv;
+
+            videoElement = document.querySelector(".dash-video-player video");
+            TTMLRenderingDiv = document.querySelector("#ttml-rendering-div");
+            context = new Dash.di.DashContext();
+            player = new MediaPlayer(context);
+            player.startup();
+            player.attachView(videoElement);
+            player.attachTTMLRenderingDiv(TTMLRenderingDiv);
+            player.setAutoPlay(true);
+            player.attachSource(url);
+            player.addEventListener(MediaPlayer.events.TEXT_TRACK_ADDED, onTrackAdded);
+        }
+
+        function onTrackAdded(e){
+            var selectMenu = document.getElementById("caption-menu"),
+                tracks = videoElement.textTracks,
+                ln = tracks.length;
+
+            for(var i=0; i<ln; i++){
+                var track = tracks[i],
+                    option = document.createElement("option");
+
+                option.text = track.language.toUpperCase() + " : " + track.kind;
+                option.value = i;
+                selectMenu.add(option);
+            }
+            selectMenu.selectedIndex = 1;
+            selectMenu.addEventListener("change", onCaptionMenuChange);
+        }
+
+        function onCaptionMenuChange(e){
+            player.setTextTrack(e.currentTarget.selectedIndex - 1);
+        }
+
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+
+    <body onload="startVideo()">
+        <div class="dash-video-player">
+            <video controls="true"></video>
+            <div id="ttml-rendering-div"></div>
+        </div>
+        <div>
+            <select id="caption-menu">
+                <option value="-1">Turn Captions OFF</option>
+            </select>
+        </div>
+    </body>
+</html>

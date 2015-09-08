@@ -75,7 +75,7 @@
         },
         {
             "name": "Envivio",
-            "url": "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd",
+            "url": "http://dash.edgesuite.net/envivio/august2015/manifest.mpd",
             "browsers": "cdsbi"
         },
         {
@@ -193,7 +193,7 @@
             "browsers": "",
             "protData": {
                 "com.widevine.alpha": {
-                    "laURL": "https://html5.cablelabs.com:8025"
+                    "serverURL": "https://html5.cablelabs.com:8025"
                 }
             }
         },
@@ -203,7 +203,7 @@
             "browsers": "",
             "protData": {
                 "com.widevine.alpha": {
-                    "laURL": "https://html5.cablelabs.com:8025"
+                    "serverURL": "https://html5.cablelabs.com:8025"
                 },
                 "org.w3.clearkey": {
                     "clearkeys": {
@@ -218,7 +218,7 @@
             "browsers": "",
             "protData": {
                 "com.widevine.alpha": {
-                    "laURL": "https://html5.cablelabs.com:8025"
+                    "serverURL": "https://html5.cablelabs.com:8025"
                 },
                 "org.w3.clearkey": {
                     "clearkeys": {
@@ -244,14 +244,14 @@
             "protData": {
                 "com.widevine.alpha": {
                     "drmtoday": true,
-                    "laURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/",
+                    "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/",
                     "httpRequestHeaders": {
                         "dt-custom-data": "eyJ1c2VySWQiOiIxMjM0NSIsInNlc3Npb25JZCI6ImV3b2dJQ0p3Y205bWFXeGxJaUE2SUhzS0lDQWdJQ0p3ZFhKamFHRnpaU0lnT2lCN0lIMEtJQ0I5TEFvZ0lDSnZkWFJ3ZFhSUWNtOTBaV04wYVc5dUlpQTZJSHNLSUNBZ0lDSmthV2RwZEdGc0lpQTZJR1poYkhObExBb2dJQ0FnSW1GdVlXeHZaM1ZsSWlBNklHWmhiSE5sTEFvZ0lDQWdJbVZ1Wm05eVkyVWlJRG9nWm1Gc2MyVUtJQ0I5TEFvZ0lDSnpkRzl5WlV4cFkyVnVjMlVpSURvZ1ptRnNjMlVLZlFvSyIsIm1lcmNoYW50IjoiY2FibGVsYWJzIn0K"
                     }
                 },
                 "com.microsoft.playready": {
                     "drmtoday": true,
-                    "laURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                    "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
                     "httpRequestHeaders": {
                         "http-header-CustomData": "eyJ1c2VySWQiOiIxMjM0NSIsInNlc3Npb25JZCI6ImV3b2dJQ0p3Y205bWFXeGxJaUE2SUhzS0lDQWdJQ0p3ZFhKamFHRnpaU0lnT2lCN0lIMEtJQ0I5TEFvZ0lDSnZkWFJ3ZFhSUWNtOTBaV04wYVc5dUlpQTZJSHNLSUNBZ0lDSmthV2RwZEdGc0lpQTZJR1poYkhObExBb2dJQ0FnSW1GdVlXeHZaM1ZsSWlBNklHWmhiSE5sTEFvZ0lDQWdJbVZ1Wm05eVkyVWlJRG9nWm1Gc2MyVUtJQ0I5TEFvZ0lDSnpkRzl5WlV4cFkyVnVjMlVpSURvZ1ptRnNjMlVLZlFvSyIsIm1lcmNoYW50IjoiY2FibGVsYWJzIn0K"
                     }
@@ -265,19 +265,50 @@
             "protData": {
                 "com.widevine.alpha": {
                     "drmtoday": true,
-                    "laURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/",
+                    "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/",
                     "httpRequestHeaders": {
                         "dt-custom-data": "eyJ1c2VySWQiOiIxMjM0NSIsInNlc3Npb25JZCI6ImV3b2dJQ0p3Y205bWFXeGxJaUE2SUhzS0lDQWdJQ0p3ZFhKamFHRnpaU0lnT2lCN0lIMEtJQ0I5TEFvZ0lDSnZkWFJ3ZFhSUWNtOTBaV04wYVc5dUlpQTZJSHNLSUNBZ0lDSmthV2RwZEdGc0lpQTZJR1poYkhObExBb2dJQ0FnSW1GdVlXeHZaM1ZsSWlBNklHWmhiSE5sTEFvZ0lDQWdJbVZ1Wm05eVkyVWlJRG9nWm1Gc2MyVUtJQ0I5TEFvZ0lDSnpkRzl5WlV4cFkyVnVjMlVpSURvZ1ptRnNjMlVLZlFvSyIsIm1lcmNoYW50IjoiY2FibGVsYWJzIn0K"
                     }
                 },
                 "com.microsoft.playready": {
                     "drmtoday": true,
-                    "laURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                    "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
                     "httpRequestHeaders": {
                         "http-header-CustomData": "eyJ1c2VySWQiOiIxMjM0NSIsInNlc3Npb25JZCI6ImV3b2dJQ0p3Y205bWFXeGxJaUE2SUhzS0lDQWdJQ0p3ZFhKamFHRnpaU0lnT2lCN0lIMEtJQ0I5TEFvZ0lDSnZkWFJ3ZFhSUWNtOTBaV04wYVc5dUlpQTZJSHNLSUNBZ0lDSmthV2RwZEdGc0lpQTZJR1poYkhObExBb2dJQ0FnSW1GdVlXeHZaM1ZsSWlBNklHWmhiSE5sTEFvZ0lDQWdJbVZ1Wm05eVkyVWlJRG9nWm1Gc2MyVUtJQ0I5TEFvZ0lDSnpkRzl5WlV4cFkyVnVjMlVpSURvZ1ptRnNjMlVLZlFvSyIsIm1lcmNoYW50IjoiY2FibGVsYWJzIn0K"
                     }
                 }
             }
+        },
+        {
+            "name": "CableLabs Cenc PR/WV (2-Period, 2-Key)",
+            "url": "http://html5.cablelabs.com:8100/cenc/prwv_mp/dash.mpd",
+            "browsers": "",
+            "protData": {
+                "com.widevine.alpha": {
+                    "drmtoday": true,
+                    "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/",
+                    "httpRequestHeaders": {
+                        "dt-custom-data": "eyJ1c2VySWQiOiIxMjM0NSIsInNlc3Npb25JZCI6ImV3b2dJQ0p3Y205bWFXeGxJaUE2SUhzS0lDQWdJQ0p3ZFhKamFHRnpaU0lnT2lCN0lIMEtJQ0I5TEFvZ0lDSnZkWFJ3ZFhSUWNtOTBaV04wYVc5dUlpQTZJSHNLSUNBZ0lDSmthV2RwZEdGc0lpQTZJR1poYkhObExBb2dJQ0FnSW1GdVlXeHZaM1ZsSWlBNklHWmhiSE5sTEFvZ0lDQWdJbVZ1Wm05eVkyVWlJRG9nWm1Gc2MyVUtJQ0I5TEFvZ0lDSnpkRzl5WlV4cFkyVnVjMlVpSURvZ1ptRnNjMlVLZlFvSyIsIm1lcmNoYW50IjoiY2FibGVsYWJzIn0K"
+                    }
+                },
+                "com.microsoft.playready": {
+                    "drmtoday": true,
+                    "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                    "httpRequestHeaders": {
+                        "http-header-CustomData": "eyJ1c2VySWQiOiIxMjM0NSIsInNlc3Npb25JZCI6ImV3b2dJQ0p3Y205bWFXeGxJaUE2SUhzS0lDQWdJQ0p3ZFhKamFHRnpaU0lnT2lCN0lIMEtJQ0I5TEFvZ0lDSnZkWFJ3ZFhSUWNtOTBaV04wYVc5dUlpQTZJSHNLSUNBZ0lDSmthV2RwZEdGc0lpQTZJR1poYkhObExBb2dJQ0FnSW1GdVlXeHZaM1ZsSWlBNklHWmhiSE5sTEFvZ0lDQWdJbVZ1Wm05eVkyVWlJRG9nWm1Gc2MyVUtJQ0I5TEFvZ0lDSnpkRzl5WlV4cFkyVnVjMlVpSURvZ1ptRnNjMlVLZlFvSyIsIm1lcmNoYW50IjoiY2FibGVsYWJzIn0K"
+                    }
+                }
+            }
+        },
+        {
+            "name": "BBC R&D Testcard",
+            "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
+            "browsers": ""
+        },
+        {
+            "name": "BBC R&D EBU-TT-D Subtitling Test",
+            "url": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-all.mpd",
+            "browsers": ""
         }
     ]
 }

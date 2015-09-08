@@ -54,13 +54,12 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             return type == "fragmentedText";
         }
 
-
         if (col) {
-            for (i = 0, len = col.length; i < len; i += 1) {
-                if (col[i].contentType === type) {
-                    result = true;
-                    found = true;
-                }
+            if (col.length > 1) {
+                return (type == "muxed");
+            } else if (col[0] && col[0].contentType === type) {
+                result = true;
+                found = true;
             }
         }
 
@@ -112,6 +111,10 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return this.getIsTypeOf(adaptation, "text");
     },
 
+    getIsMuxed: function(adaptation) {
+        return this.getIsTypeOf(adaptation, "muxed");
+    },
+
     getIsTextTrack: function(type) {
         return (type === "text/vtt" || type === "application/ttml+xml");
     },
@@ -126,11 +129,27 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return lang;
     },
 
-    getIsMain: function (/*adaptation*/) {
+    getViewpointForAdaptation: function(adaptation) {
+        return adaptation.hasOwnProperty("Viewpoint") ? adaptation.Viewpoint : null;
+    },
+
+    getRolesForAdaptation: function(adaptation) {
+        return adaptation.hasOwnProperty("Role_asArray") ? adaptation.Role_asArray : [];
+    },
+
+    getAccessibilityForAdaptation: function(adaptation) {
+        return adaptation.hasOwnProperty("Accessibility_asArray") ? adaptation.Accessibility_asArray : [];
+    },
+
+    getAudioChannelConfigurationForAdaptation: function(adaptation) {
+        return adaptation.hasOwnProperty("AudioChannelConfiguration_asArray") ? adaptation.AudioChannelConfiguration_asArray : [];
+    },
+
+    getIsMain: function (adaptation) {
         "use strict";
-        // TODO : Check "Role" node.
-        // TODO : Use this somewhere.
-        return false;
+        return this.getRolesForAdaptation(adaptation).filter(function(role){
+            return role.value === "main";
+        })[0];
     },
 
     processAdaptation: function (adaptation) {
@@ -457,8 +476,10 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
             adaptationSet.index = i;
             adaptationSet.period = period;
-            
-            if(this.getIsAudio(a)){
+
+            if (this.getIsMuxed(a)) {
+                adaptationSet.type = "muxed";
+            } else if(this.getIsAudio(a)){
                 adaptationSet.type="audio";
             }else if (this.getIsVideo(a)){
                 adaptationSet.type="video";

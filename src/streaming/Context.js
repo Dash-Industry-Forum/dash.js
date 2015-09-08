@@ -28,6 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+/**
+ * Dijon Context Object
+ *
+ * @class
+ */
 MediaPlayer.di.Context = function () {
     "use strict";
 
@@ -42,9 +48,8 @@ MediaPlayer.di.Context = function () {
         } else if (MediaPlayer.models.ProtectionModel_01b.detect(videoElement)) {
             this.system.mapClass('protectionModel', MediaPlayer.models.ProtectionModel_01b);
         } else {
-            var debug = this.system.getObject("debug");
-            debug.log("No supported version of EME detected on this user agent!");
-            debug.log("Attempts to play encrypted content will fail!");
+            this.debug.log("No supported version of EME detected on this user agent!");
+            this.debug.log("Attempts to play encrypted content will fail!");
         }
     };
 
@@ -53,16 +58,17 @@ MediaPlayer.di.Context = function () {
         setup : function () {
             this.system.autoMapOutlets = true;
 
-            this.system.mapSingleton('debug', MediaPlayer.utils.Debug);
-            this.system.mapSingleton('eventBus', MediaPlayer.utils.EventBus);
+            this.system.mapClass('eventBusCl', MediaPlayer.utils.EventBus);
             this.system.mapSingleton('capabilities', MediaPlayer.utils.Capabilities);
             this.system.mapSingleton('DOMStorage', MediaPlayer.utils.DOMStorage);
             this.system.mapClass('customTimeRanges', MediaPlayer.utils.CustomTimeRanges);
             this.system.mapSingleton('virtualBuffer', MediaPlayer.utils.VirtualBuffer);
+            this.system.mapClass('isoFile', MediaPlayer.utils.IsoFile);
 
             this.system.mapSingleton('textTrackExtensions', MediaPlayer.utils.TextTrackExtensions);
             this.system.mapSingleton('vttParser', MediaPlayer.utils.VTTParser);
             this.system.mapSingleton('ttmlParser', MediaPlayer.utils.TTMLParser);
+            this.system.mapSingleton('boxParser', MediaPlayer.utils.BoxParser);
 
             this.system.mapSingleton('videoModel', MediaPlayer.models.VideoModel);
             this.system.mapSingleton('manifestModel', MediaPlayer.models.ManifestModel);
@@ -111,8 +117,8 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('liveEdgeWithTimeSynchronizationRule', MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule);
             this.system.mapSingleton('synchronizationRulesCollection', MediaPlayer.rules.SynchronizationRulesCollection);
 
-            this.system.mapSingleton('xlinkController', MediaPlayer.dependencies.XlinkController);
-            this.system.mapSingleton('xlinkLoader', MediaPlayer.dependencies.XlinkLoader);
+            this.system.mapClass('xlinkController', MediaPlayer.dependencies.XlinkController);
+            this.system.mapClass('xlinkLoader', MediaPlayer.dependencies.XlinkLoader);
             this.system.mapClass('streamProcessor', MediaPlayer.dependencies.StreamProcessor);
             this.system.mapClass('eventController', MediaPlayer.dependencies.EventController);
             this.system.mapClass('textController', MediaPlayer.dependencies.TextController);
@@ -123,6 +129,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('fragmentLoader', MediaPlayer.dependencies.FragmentLoader);
             this.system.mapClass('fragmentModel', MediaPlayer.dependencies.FragmentModel);
             this.system.mapSingleton('streamController', MediaPlayer.dependencies.StreamController);
+            this.system.mapSingleton('mediaController', MediaPlayer.dependencies.MediaController);
             this.system.mapClass('stream', MediaPlayer.dependencies.Stream);
             this.system.mapClass('scheduleController', MediaPlayer.dependencies.ScheduleController);
             this.system.mapSingleton('timeSyncController', MediaPlayer.dependencies.TimeSyncController);

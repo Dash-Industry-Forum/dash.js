@@ -155,13 +155,14 @@ Dash.dependencies.DashHandler = function () {
             period = representation.adaptation.period;
 
             request.mediaType = mediaType;
-            request.type = "Initialization Segment";
+            request.type = MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE;
             request.url = getRequestUrl(representation.initialization, representation);
             request.range = representation.range;
             presentationStartTime = period.start;
             request.availabilityStartTime = self.timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation.adaptation.period.mpd, isDynamic);
             request.availabilityEndTime = self.timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, period.mpd, isDynamic);
             request.quality = representation.index;
+            request.mediaInfo = self.streamProcessor.getMediaInfo();
 
             return request;
         },
@@ -317,7 +318,8 @@ Dash.dependencies.DashHandler = function () {
                     if (nextFrag && nextFrag.hasOwnProperty("t")) {
                         repeatEndTime = nextFrag.t / fTimescale;
                     } else {
-                        repeatEndTime = self.timelineConverter.calcMediaTimeFromPresentationTime(representation.segmentAvailabilityRange.end, representation);
+                        var availabilityEnd = representation.segmentAvailabilityRange ? representation.segmentAvailabilityRange.end : (this.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic).end);
+                        repeatEndTime = self.timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
                         representation.segmentDuration = frag.d / fTimescale;
                     }
 
@@ -352,7 +354,12 @@ Dash.dependencies.DashHandler = function () {
                             continue;
                         }
 
-                        if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale))) {
+                        // In some cases when requiredMediaTime = actual end time of the last segment
+                        // it is possible that this time a bit exceeds the declared end time of the last segment.
+                        // in this case we still need to include the last segment in the segment list. to do this we
+                        // use a correction factor = 1.5. This number is used because the largest possible deviation is
+                        // is 50% of segment duration.
+                        if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale)*1.5)) {
                             segments.push(createSegment.call(self, frag));
                         }
                     }
@@ -419,7 +426,7 @@ Dash.dependencies.DashHandler = function () {
             else {
                 representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
             }
-            
+
             return segments;
         },
 
@@ -652,7 +659,7 @@ Dash.dependencies.DashHandler = function () {
             representation.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
             if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
-                error = new MediaPlayer.vo.Error(Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE, "no segments are available yet", {availabilityDelay: Math.abs(representation.segmentAvailabilityRange.end)});
+                error = new MediaPlayer.vo.Error(Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE, "no segments are available yet", {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
                 self.notify(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation}, error);
                 return;
             }
@@ -779,7 +786,7 @@ Dash.dependencies.DashHandler = function () {
             url = unescapeDollarsInTemplate(url);
 
             request.mediaType = type;
-            request.type = "Media Segment";
+            request.type = MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE;
             request.url = url;
             request.range = segment.mediaRange;
             request.startTime = segment.presentationStartTime;
@@ -790,6 +797,7 @@ Dash.dependencies.DashHandler = function () {
             request.wallStartTime = segment.wallStartTime;
             request.quality = representation.index;
             request.index = segment.availabilityIdx;
+            request.mediaInfo = this.streamProcessor.getMediaInfo();
 
             return request;
         },
@@ -832,6 +840,8 @@ Dash.dependencies.DashHandler = function () {
                 request.action = request.ACTION_COMPLETE;
                 request.index = index;
                 request.mediaType = type;
+                request.mediaInfo = self.streamProcessor.getMediaInfo();
+
                 self.log("Signal complete.");
                 self.log(request);
             } else {
@@ -887,6 +897,7 @@ Dash.dependencies.DashHandler = function () {
                 request.action = request.ACTION_COMPLETE;
                 request.index = idx;
                 request.mediaType = type;
+                request.mediaInfo = self.streamProcessor.getMediaInfo();
                 self.log("Signal complete.");
                 //self.log(request);
             } else {
@@ -965,7 +976,7 @@ Dash.dependencies.DashHandler = function () {
         },
 
         initialize: function(streamProcessor) {
-            this.subscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, streamProcessor.trackController);
+            this.subscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, streamProcessor.representationController);
             type = streamProcessor.getType();
             this.setMediaType(type);
             isDynamic = streamProcessor.isDynamic();
@@ -1000,7 +1011,7 @@ Dash.dependencies.DashHandler = function () {
             requestedTime = undefined;
             index = -1;
             isDynamic = undefined;
-            this.unsubscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.trackController);
+            this.unsubscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.representationController);
         },
 
         getInitRequest: getInit,

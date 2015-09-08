@@ -43,6 +43,7 @@ MediaPlayer.utils.Debug = function () {
 
         setup: function() {
             this.system.mapValue('log', this.log);
+            this.system.mapOutlet('log');
             eventBus = this.eventBus;
         },
         /**

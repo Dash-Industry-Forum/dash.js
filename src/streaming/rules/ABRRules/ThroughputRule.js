@@ -67,7 +67,7 @@ MediaPlayer.rules.ThroughputRule = function () {
                 arr.shift();
             }
 
-            return averageThroughput * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY;
+            return (averageThroughput * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY) / 1000;
         };
 
 
@@ -84,13 +84,13 @@ MediaPlayer.rules.ThroughputRule = function () {
                 mediaInfo = context.getMediaInfo(),
                 mediaType = mediaInfo.type,
                 current = context.getCurrentValue(),
-                trackInfo = context.getTrackInfo(),
+                representationInfo = context.getTrackInfo(),
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 streamProcessor = context.getStreamProcessor(),
                 abrController = streamProcessor.getABRController(),
                 isDynamic= streamProcessor.isDynamic(),
                 lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
-                waitToSwitchTime = !isNaN(trackInfo.fragmentDuration) ? trackInfo.fragmentDuration / 2 : 2,
+                waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2,
                 downloadTime,
                 averageThroughput,
                 lastRequestThroughput,
@@ -107,23 +107,27 @@ MediaPlayer.rules.ThroughputRule = function () {
             }
 
             downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
-            lastRequestThroughput = Math.round((lastRequest.trace[lastRequest.trace.length - 1].b * 8 ) / downloadTime);
 
-            storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
+            if (lastRequest.trace.length) {
+                lastRequestThroughput = Math.round((lastRequest.trace[lastRequest.trace.length - 1].b * 8 ) / downloadTime);
+                storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
+            }
+
             averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic));
+            abrController.setAverageThroughput(mediaType, averageThroughput);
 
             if (abrController.getAbandonmentStateFor(mediaType) !== MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
 
                 if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
                     (bufferLevelVO.level >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD*2) || isDynamic)) {
-                    var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput/1000);
+                    var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
                     switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
                 }
 
                 if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
                     self.log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
                         switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
-                            switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak", "Average throughput", Math.round(averageThroughput/1024), "kbps");
+                            switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak", "Average throughput", Math.round(averageThroughput), "kbps");
                 }
             }
 

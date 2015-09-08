@@ -34,6 +34,7 @@ MediaPlayer.dependencies.SourceBufferExtensions = function () {
     this.notify = undefined;
     this.subscribe = undefined;
     this.unsubscribe = undefined;
+    this.manifestExt = undefined;
 };
 
 MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
@@ -45,10 +46,20 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         var self = this,
             codec = mediaInfo.codec,
             buffer = null;
+
         try {
+            // Safari claims to support anything starting 'application/mp4'.
+            // it definitely doesn't understand 'application/mp4;codecs="stpp"'
+            // - currently no browser does, so check for it and use our own
+            // implementation.
+            if (codec.match(/application\/mp4;\s*codecs="stpp"/i)) {
+                throw new Error("not really supported");
+            }
+
             buffer = mediaSource.addSourceBuffer(codec);
-        } catch(ex) {
-            if ((mediaInfo.isText)||(codec.indexOf('codecs="stpp"')!=-1)) {
+
+        } catch (ex) {
+            if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp"') !== -1)) {
                 buffer = self.system.getObject("textSourceBuffer");
             } else {
                 throw ex;
@@ -164,6 +175,81 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
         return length;
     },
 
+    getRangeDifference: function(currentRanges, buffer) {
+        if (!buffer) return null;
+
+        //TODO we may need to look for a more elegant and robust method
+        // The logic below checks that is the difference between currentRanges and actual SourceBuffer ranges
+
+        var newRanges = this.getAllRanges(buffer),
+            newStart,
+            newEnd,
+            equalStart,
+            equalEnd,
+            currentRange,
+            nextCurrentRange,
+            nextNewRange,
+            hasRange,
+            diff;
+
+        if (!newRanges) return null;
+
+        for (var i = 0, ln = newRanges.length; i < ln; i += 1) {
+            hasRange = currentRanges.length > i;
+            currentRange = hasRange ? {start: currentRanges.start(i), end: currentRanges.end(i)} : null;
+            newStart = newRanges.start(i);
+            newEnd = newRanges.end(i);
+
+            // if there is no range with the same index it means that a new range has been added. This range is
+            // the difference we are looking for
+            // Example
+            // current ranges
+            // 0|---range1---|4  8|--range2--|12
+            // new ranges
+            // 0|---range1---|4| 8|--range2--|12  16|--range3--|20
+
+            if (!currentRange) {
+                diff = {start: newStart, end: newEnd};
+                return diff;
+            }
+
+            equalStart = currentRange.start === newStart;
+            equalEnd = currentRange.end === newEnd;
+
+            // if ranges are equal do nothing here and go the next ranges
+            if (equalStart && equalEnd) continue;
+
+            // start or/and end of the range has been changed
+            if (equalStart) {
+                diff = {start: currentRange.end, end: newEnd};
+            } else if (equalEnd) {
+                diff = {start: newStart, end: currentRange.start};
+            } else {
+                // new range has been added before the current one
+                diff = {start: newStart, end: newEnd};
+                return diff;
+            }
+
+            // if there is next current range but no next new range (it it is not equal the next current range) it means
+            // that the ranges have been merged
+            // Example 1
+            // current ranges
+            // 0|---range1---|4  8|--range2--|12  16|---range3---|
+            // new ranges
+            // 0|-----------range1-----------|12  16|---range3--|
+            nextCurrentRange = currentRanges.length > (i+1) ? {start: currentRanges.start(i+1), end: currentRanges.end(i+1)} : null;
+            nextNewRange = (i+1) < ln ? {start: newRanges.start(i+1), end: newRanges.end(i+1)} : null;
+
+            if (nextCurrentRange && (!nextNewRange || (nextNewRange.start !== nextCurrentRange.start || nextNewRange.end !== nextCurrentRange.end))) {
+                diff.end = nextCurrentRange.start;
+            }
+
+            return diff;
+        }
+
+        return null;
+    },
+
     waitForUpdateEnd: function(buffer, callback) {
         "use strict";
         var intervalId,
@@ -204,14 +290,22 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
     append: function (buffer, chunk) {
         var self = this,
             bytes = chunk.bytes,
-            appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null);
+            appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null),
+            // our user-defined sourcebuffer-like object has Object as its
+            // prototype whereas built-in SourceBuffers will have something
+            // more sensible. do not pass chunk to built-in append.
+            acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === "Object";
 
         if (!appendMethod) return;
 
         try {
             self.waitForUpdateEnd(buffer, function() {
-                buffer[appendMethod](bytes, chunk);
-
+                if (acceptsChunk) {
+                    // chunk.start is used in calculations by TextSourceBuffer
+                    buffer[appendMethod](bytes, chunk);
+                } else {
+                    buffer[appendMethod](bytes);
+                }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 self.waitForUpdateEnd(buffer, function() {
                     self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
@@ -31,13 +31,13 @@
 MediaPlayer.dependencies.FragmentLoader = function () {
     "use strict";
 
-    var RETRY_ATTEMPTS = 3,
-        RETRY_INTERVAL = 500,
+    var RETRY_ATTEMPTS = MediaPlayer.dependencies.FragmentLoader.RETRY_ATTEMPTS,
+        RETRY_INTERVAL = MediaPlayer.dependencies.FragmentLoader.RETRY_INTERVAL,
         xhrs = [],
 
         doLoad = function (request, remainingAttempts) {
             var req = new XMLHttpRequest(),
-                httpRequestMetrics = null,
+                traces = [],
                 firstProgress = true,
                 needFailureReport = true,
                 lastTraceTime = null,
@@ -48,7 +48,14 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     var currentTime = new Date(),
                         bytes = req.response,
                         latency,
-                        download;
+                        download,
+                        httpRequestMetrics = null;
+
+                    traces.push({
+                        s: currentTime,
+                        d: currentTime.getTime() - lastTraceTime.getTime(),
+                        b: [bytes ? bytes.byteLength : 0]
+                    });
 
                     if (!requestVO.firstByteDate) {
                         requestVO.firstByteDate = requestVO.requestStartDate;
@@ -60,39 +67,41 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
                     self.log((succeeded ? "loaded " : "failed ") + requestVO.mediaType + ":" + requestVO.type + ":" + requestVO.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
 
-                    httpRequestMetrics.tresponse = requestVO.firstByteDate;
-                    httpRequestMetrics.tfinish = requestVO.requestEndDate;
-                    httpRequestMetrics.responsecode = req.status;
-                    httpRequestMetrics.responseHeaders = req.getAllResponseHeaders();
+                    httpRequestMetrics = self.metricsModel.addHttpRequest(
+                        request.mediaType,
+                        null,
+                        request.type,
+                        request.url,
+                        req.responseURL || null,
+                        request.range,
+                        request.requestStartDate,
+                        requestVO.firstByteDate,
+                        requestVO.requestEndDate,
+                        req.status,
+                        request.duration,
+                        req.getAllResponseHeaders()
+                    );
 
-                    self.metricsModel.appendHttpTrace(httpRequestMetrics,
-                        currentTime,
-                        currentTime.getTime() - lastTraceTime.getTime(),
-                        [bytes ? bytes.byteLength : 0]);
-                    lastTraceTime = currentTime;
+                    if (succeeded) {
+                        // trace is only for successful requests
+                        traces.forEach(function (trace) {
+                            self.metricsModel.appendHttpTrace(httpRequestMetrics,
+                                                              trace.s,
+                                                              trace.d,
+                                                              trace.b);
+                        });
+                    }
                 };
 
                 xhrs.push(req);
                 request.requestStartDate = new Date();
 
-                httpRequestMetrics = self.metricsModel.addHttpRequest(request.mediaType,
-                                                                      null,
-                                                                      request.type,
-                                                                      request.url,
-                                                                      null,
-                                                                      request.range,
-                                                                      request.requestStartDate,
-                                                                      null,
-                                                                      null,
-                                                                      null,
-                                                                      null,
-                                                                      request.duration,
-                                                                      null);
+                traces.push({
+                    s: request.requestStartDate,
+                    d: 0,
+                    b: [0]
+                });
 
-                self.metricsModel.appendHttpTrace(httpRequestMetrics,
-                                                  request.requestStartDate,
-                                                  request.requestStartDate.getTime() - request.requestStartDate.getTime(),
-                                                  [0]);
                 lastTraceTime = request.requestStartDate;
 
                 req.open("GET", self.requestModifierExt.modifyRequestURL(request.url), true);
@@ -113,7 +122,6 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                         firstProgress = false;
                         if (!event.lengthComputable || (event.lengthComputable && event.total != event.loaded)) {
                             request.firstByteDate = currentTime;
-                            httpRequestMetrics.tresponse = currentTime;
                         }
                     }
 
@@ -122,10 +130,12 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                         request.bytesTotal = event.total;
                     }
 
-                    self.metricsModel.appendHttpTrace(httpRequestMetrics,
-                                                      currentTime,
-                                                      currentTime.getTime() - lastTraceTime.getTime(),
-                                                      [req.response ? req.response.byteLength : 0]);
+                    traces.push({
+                        s: currentTime,
+                        d: currentTime.getTime() - lastTraceTime.getTime(),
+                        b: [req.response ? req.response.byteLength : 0]
+                    });
+
                     lastTraceTime = currentTime;
                     self.notify(MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_PROGRESS, {request: request});
                 };
@@ -231,6 +241,9 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         }
     };
 };
+
+MediaPlayer.dependencies.FragmentLoader.RETRY_ATTEMPTS = 3;
+MediaPlayer.dependencies.FragmentLoader.RETRY_INTERVAL = 500;
 
 MediaPlayer.dependencies.FragmentLoader.prototype = {
     constructor: MediaPlayer.dependencies.FragmentLoader

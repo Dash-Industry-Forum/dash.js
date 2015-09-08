@@ -114,20 +114,46 @@ MediaPlayer.models.MetricsModel = function () {
             return vo;
         },
 
-        addHttpRequest: function (mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, interval, mediaduration, responseHeaders) {
+        addHttpRequest: function (mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders) {
             var vo = new MediaPlayer.vo.metrics.HTTPRequest();
+
+            // ISO 23009-1 D.4.3 NOTE 2:
+            // All entries for a given object will have the same URL and range
+            // and so can easily be correlated. If there were redirects or
+            // failures there will be one entry for each redirect/failure.
+            // The redirect-to URL or alternative url (where multiple have been
+            // provided in the MPD) will appear as the actualurl of the next
+            // entry with the same url value.
+            if (actualurl && (actualurl !== url)) {
+
+                // given the above, add an entry for the original request
+                this.addHttpRequest(
+                    mediaType,
+                    null,
+                    type,
+                    url,
+                    null,
+                    range,
+                    trequest,
+                    null, // unknown
+                    null, // unknown
+                    null, // unknown, probably a 302
+                    mediaduration,
+                    null
+                );
+
+                vo.actualurl = actualurl;
+            }
 
             vo.stream = mediaType;
             vo.tcpid = tcpid;
             vo.type = type;
             vo.url = url;
-            vo.actualurl = actualurl;
             vo.range = range;
             vo.trequest = trequest;
             vo.tresponse = tresponse;
             vo.tfinish = tfinish;
             vo.responsecode = responsecode;
-            vo.interval = interval;
             vo.mediaduration = mediaduration;
             vo.responseHeaders = responseHeaders;
             this.getMetricsFor(mediaType).HttpList.push(vo);
@@ -145,12 +171,18 @@ MediaPlayer.models.MetricsModel = function () {
 
             httpRequest.trace.push(vo);
 
+            if (!httpRequest.interval) {
+                httpRequest.interval = 0;
+            }
+
+            httpRequest.interval += d;
+
             this.metricUpdated(httpRequest.stream, this.adapter.metricsList.HTTP_REQUEST_TRACE, httpRequest);
             return vo;
         },
 
-        addTrackSwitch: function (mediaType, t, mt, to, lto) {
-            var vo = new MediaPlayer.vo.metrics.TrackSwitch();
+        addRepresentationSwitch: function (mediaType, t, mt, to, lto) {
+            var vo = new MediaPlayer.vo.metrics.RepresentationSwitch();
 
             vo.t = t;
             vo.mt = mt;
@@ -236,6 +268,19 @@ MediaPlayer.models.MetricsModel = function () {
             return vo;
         },
 
+        addRequestsQueue: function(mediaType, pendingRequests, loadingRequests, executedRequests, rejectedRequests) {
+            var vo = new MediaPlayer.vo.metrics.RequestsQueue();
+
+            vo.pendingRequests = pendingRequests;
+            vo.loadingRequests = loadingRequests;
+            vo.executedRequests = executedRequests;
+            vo.rejectedRequests = rejectedRequests;
+
+            this.getMetricsFor(mediaType).RequestsQueue = vo;
+
+            this.metricAdded(mediaType, this.adapter.metricsList.REQUESTS_QUEUE, vo);
+        },
+
         addManifestUpdate: function(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
             var vo = new MediaPlayer.vo.metrics.ManifestUpdate(),
                 metrics = this.getMetricsFor("stream");
@@ -284,7 +329,7 @@ MediaPlayer.models.MetricsModel = function () {
             return null;
         },
 
-        addManifestUpdateTrackInfo: function(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
+        addManifestUpdateRepresentationInfo: function(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
             if (manifestUpdate) {
                 var vo = new MediaPlayer.vo.metrics.ManifestUpdate.TrackInfo();
 

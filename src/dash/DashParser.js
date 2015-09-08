@@ -41,6 +41,7 @@ Dash.dependencies.DashParser = function () {
         durationRegex = /^([-])?P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/,
         datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+-])([0-9]{2})([0-9]{2}))?/,
         numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/,
+        httpOrHttpsRegex = /^https?:\/\//i,
         matchers = [
             {
                 type: "duration",
@@ -286,7 +287,7 @@ Dash.dependencies.DashParser = function () {
                         var mergedValue;
 
                         // child is absolute, don't merge
-                        if (childValue.indexOf("http://") === 0) {
+                        if (httpOrHttpsRegex.test(childValue)) {
                             mergedValue = childValue;
                         } else {
                             mergedValue = parentValue + childValue;
@@ -345,7 +346,7 @@ Dash.dependencies.DashParser = function () {
             return result;
         },
 
-        internalParse = function (data, baseUrl) {
+        internalParse = function (data, baseUrl, xlinkController) {
             //this.log("Doing parse.");
 
             var manifest,
@@ -382,8 +383,8 @@ Dash.dependencies.DashParser = function () {
                 iron.run(manifest);
                 ironed = new Date();
 
-                this.xlinkController.setMatchers(matchers);
-                this.xlinkController.setIron(iron);
+                xlinkController.setMatchers(matchers);
+                xlinkController.setIron(iron);
 
                 this.log("Parsing complete: ( xml2json: " + (json.getTime() - start.getTime()) + "ms, objectiron: " + (ironed.getTime() - json.getTime()) + "ms, total: " + ((ironed.getTime() - start.getTime()) / 1000) + "s)");
             } catch (err) {
@@ -396,7 +397,6 @@ Dash.dependencies.DashParser = function () {
     return {
         log: undefined,
         errHandler: undefined,
-        xlinkController: undefined,
         parse: internalParse
     };
 };

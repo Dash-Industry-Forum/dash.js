@@ -39,6 +39,7 @@
     var streams = [],
         activeStream,
         protectionController,
+        ownProtectionController = false,
         protectionData,
         STREAM_END_THRESHOLD = 0.2,
         autoPlay = true,
@@ -51,6 +52,9 @@
         useManifestDateHeaderTimeSource,
 
         attachEvents = function (stream) {
+            var mediaController = this.system.getObject("mediaController");
+
+            mediaController.subscribe(MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED, stream);
             stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
             stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
         },
@@ -88,7 +92,7 @@
         },
 
         onError = function (e) {
-            var code = e.data.error.code,
+            var code = e.data.error ? e.data.error.code : 0,
                 msg = "";
 
             if (code === -1) {
@@ -112,12 +116,17 @@
                 case 5:
                     msg = "MEDIA_ERR_ENCRYPTED";
                     break;
+                default:
+                    msg = "UNKNOWN";
+                    break;
             }
 
             hasMediaError = true;
 
             this.log("Video Element Error: " + msg);
-            this.log(e.error);
+            if (e.error) {
+                this.log(e.error);
+            }
             this.errHandler.mediaSourceError(msg);
             this.reset();
         },
@@ -305,6 +314,24 @@
 
             streamsInfo = self.adapter.getStreamsInfo(manifest);
 
+            if (this.capabilities.supportsEncryptedMedia()) {
+                if (!protectionController) {
+                    protectionController = this.system.getObject("protectionController");
+                    this.eventBus.dispatchEvent({
+                        type: MediaPlayer.events.PROTECTION_CREATED,
+                        data: {
+                            controller: protectionController,
+                            manifest: manifest
+                        }
+                    });
+                    ownProtectionController = true;
+                }
+                protectionController.setMediaElement(this.videoModel.getElement());
+                if (protectionData) {
+                    protectionController.setProtectionData(protectionData);
+                }
+            }
+
             try {
                 if (streamsInfo.length === 0) {
                     throw new Error("There are no streams");
@@ -392,13 +419,27 @@
         onManifestUpdated = function(e) {
             if (!e.error) {
                 this.log("Manifest has loaded.");
-                //self.log(self.manifestModel.getValue());
-                // before composing streams, attempt to synchronize with some
-                // time source (if there are any available)
-                var manifestUTCTimingSources = this.manifestExt.getUTCTimingSources(e.data.manifest),
-                    allUTCTimingSources = manifestUTCTimingSources.concat(UTCTimingSources); //manifest utc time source(s) take precedence over default or explicitly added sources.
+                //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
+                //is SegmentTimeline to avoid using time source
+                var manifest = e.data.manifest,
+                    streamInfo = this.adapter.getStreamsInfo(manifest)[0],
+                    mediaInfo = (
+                        this.adapter.getMediaInfoForType(manifest, streamInfo, "video") ||
+                        this.adapter.getMediaInfoForType(manifest, streamInfo, "audio")
+                    ),
+                    adaptation = this.adapter.getDataForMedia(mediaInfo),
+                    useCalculatedLiveEdgeTime = this.manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
 
-                this.timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource);
+                if (useCalculatedLiveEdgeTime) {
+                    this.log("SegmentTimeline detected using calculated Live Edge Time");
+                    useManifestDateHeaderTimeSource = false;
+                }
+
+                var manifestUTCTimingSources = this.manifestExt.getUTCTimingSources(e.data.manifest),
+                    allUTCTimingSources = (!this.manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ) ?  manifestUTCTimingSources :  manifestUTCTimingSources.concat(UTCTimingSources);
+
+                this.timeSyncController.initialize(useCalculatedLiveEdgeTime ? manifestUTCTimingSources : allUTCTimingSources, useManifestDateHeaderTimeSource);
+
             } else {
                 this.reset();
             }
@@ -406,6 +447,7 @@
 
     return {
         system: undefined,
+        capabilities: undefined,
         videoModel: undefined,
         manifestUpdater: undefined,
         manifestLoader: undefined,
@@ -498,9 +540,13 @@
         },
 
         reset: function () {
+
             if (!!activeStream) {
                 detachEvents.call(this, activeStream);
             }
+
+            var mediaController = this.system.getObject("mediaController"),
+                stream;
 
             this.timeSyncController.unsubscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.unsubscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
@@ -508,8 +554,9 @@
             this.timeSyncController.reset();
 
             for (var i = 0, ln = streams.length; i < ln; i++) {
-                var stream = streams[i];
+                stream = streams[i];
                 stream.unsubscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this);
+                mediaController.unsubscribe(MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED, stream);
                 stream.reset(hasMediaError);
             }
 
@@ -521,7 +568,11 @@
             this.manifestUpdater.unsubscribe(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
             this.manifestUpdater.reset();
             this.metricsModel.clearAllCurrentMetrics();
+
+            // We need this later to notify users of protection system teardown
+            var manifestUrl = (this.manifestModel.getValue()) ? this.manifestModel.getValue().url : null;
             this.manifestModel.setValue(null);
+
             this.timelineConverter.reset();
             this.liveEdgeFinder.reset();
             this.adapter.reset();
@@ -532,13 +583,42 @@
             canPlay = false;
             hasMediaError = false;
 
-            protectionController = null;
-            protectionData = null;
+            if (mediaSource) {
+                this.mediaSourceExt.detachMediaSource(this.videoModel);
+                mediaSource = null;
+            }
 
-            if (!mediaSource) return;
+            // Teardown the protection system, if necessary
+            if (!protectionController) {
+                this.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+            }
+            else if (ownProtectionController) {
+                var teardownComplete = {},
+                        self = this;
+                teardownComplete[MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
 
-            this.mediaSourceExt.detachMediaSource(this.videoModel);
-            mediaSource = null;
+                    // Complete teardown process
+                    ownProtectionController = false;
+                    protectionController = null;
+                    protectionData = null;
+
+                    if (manifestUrl) {
+                        self.eventBus.dispatchEvent({
+                            type: MediaPlayer.events.PROTECTION_DESTROYED,
+                            data: manifestUrl
+                        });
+                    }
+
+                    self.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+                };
+                protectionController.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
+                protectionController.teardown();
+            } else {
+                protectionController.setMediaElement(null);
+                protectionController = null;
+                protectionData = null;
+                this.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+            }
         }
     };
 };
@@ -548,5 +628,6 @@ MediaPlayer.dependencies.StreamController.prototype = {
 };
 
 MediaPlayer.dependencies.StreamController.eventList = {
-    ENAME_STREAMS_COMPOSED: "streamsComposed"
+    ENAME_STREAMS_COMPOSED: "streamsComposed",
+    ENAME_TEARDOWN_COMPLETE: "streamTeardownComplete"
 };

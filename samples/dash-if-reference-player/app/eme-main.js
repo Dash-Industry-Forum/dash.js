@@ -46,6 +46,7 @@ var app = angular.module('DashPlayer', [
 app.controller('DashController', function($scope, Sources, Notes, Contributors, PlayerLibraries, ShowcaseLibraries) {
     var player,
         video,
+        controlbar,
         context;
 
     $scope.drmData = [];
@@ -81,9 +82,11 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     player.startup();
     player.addEventListener(MediaPlayer.events.ERROR, onError.bind(this));
-
     player.attachView(video);
     player.setAutoPlay(true);
+    controlbar = new ControlBar(player, video);
+    controlbar.initialize();
+    controlbar.disable() //controlbar.hide() // other option
 
     function getUrlVars() {
         var vars = {};
@@ -127,6 +130,18 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         }
         player.attachSource($scope.selectedItem.url, null, protectionData);
         player.setAutoSwitchQuality($scope.abrEnabled);
+        controlbar.reset();
+        controlbar.enable();
+    };
+
+    $scope.getLoadedMessage = function(session) {
+        if (session.sessionToken.getSessionType() === "temporary")
+            return "Temporary (Not Persistent)";
+        return (session.isLoaded) ? "Loaded" : "Not Loaded";
+    };
+
+    $scope.isLoaded = function(session) {
+        return session.isLoaded || session.sessionToken.getSessionType() === "temporary";
     };
 
     $scope.arrayToCommaSeparated = function(ar) {
@@ -140,11 +155,164 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         return retVal;
     };
 
+    var addDRMData = function(manifest, protCtrl) {
+        var data = {
+            manifest: manifest,
+            protCtrl: protCtrl,
+            licenseReceived: false,
+            sessions: []
+        };
+        var findSession = function(sessionID) {
+            for (var i = 0; i < data.sessions.length; i++) {
+                if (data.sessions[i].sessionID === sessionID)
+                    return data.sessions[i];
+            }
+            return null;
+        };
+        $scope.drmData.push(data);
+        $scope.safeApply();
+
+        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SYSTEM_SELECTED, function(e) {
+            if (!e.error) {
+                data.ksconfig = e.data.ksConfiguration;
+            } else {
+                data.error = e.error;
+            }
+            $scope.safeApply();
+        });
+        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SESSION_CREATED, function(e) {
+            if (!e.error) {
+                var persistedSession = findSession(e.data.getSessionID());
+                if (persistedSession) {
+                    persistedSession.isLoaded = true;
+                    persistedSession.sessionToken = e.data;
+                } else {
+                    var sessionToken = e.data;
+                    data.sessions.push({
+                        sessionToken: sessionToken,
+                        sessionID: e.data.getSessionID(),
+                        isLoaded: true
+                    });
+                }
+            } else {
+                data.error = e.error;
+            }
+            $scope.safeApply();
+        });
+        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SESSION_REMOVED, function(e) {
+            if (!e.error) {
+                var session = findSession(e.data);
+                if (session) {
+                    session.isLoaded = false;
+                    session.sessionToken = null;
+                }
+            } else {
+                data.error = e.error;
+            }
+            $scope.safeApply();
+        });
+        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SESSION_CLOSED, function(e) {
+            if (!e.error) {
+                for (var i = 0; i < data.sessions.length; i++) {
+                    if (data.sessions[i].sessionID === e.data) {
+                        data.sessions.splice(i, 1);
+                        break;
+                    }
+                }
+            } else {
+                data.error = e.error;
+            }
+            $scope.safeApply();
+        });
+        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_STATUSES_CHANGED, function(e) {
+            var session = findSession(e.data.getSessionID());
+            if (session) {
+                var toGUID = function(uakey) {
+                    var keyIdx = 0, retVal = "", i, zeroPad = function(str) {
+                        return (str.length === 1) ? "0" + str : str;
+                    };
+                    for (i = 0; i < 4; i++, keyIdx++)
+                        retVal += zeroPad(uakey[keyIdx].toString(16));
+                    retVal += "-";
+                    for (i = 0; i < 2; i++, keyIdx++)
+                        retVal += zeroPad(uakey[keyIdx].toString(16));
+                    retVal += "-";
+                    for (i = 0; i < 2; i++, keyIdx++)
+                        retVal += zeroPad(uakey[keyIdx].toString(16));
+                    retVal += "-";
+                    for (i = 0; i < 2; i++, keyIdx++)
+                        retVal += zeroPad(uakey[keyIdx].toString(16));
+                    retVal += "-";
+                    for (i = 0; i < 6; i++, keyIdx++)
+                        retVal += zeroPad(uakey[keyIdx].toString(16));
+                    return retVal;
+                };
+                session.keystatus = [];
+                e.data.getKeyStatuses().forEach(function(status, key){
+                    session.keystatus.push({
+                        key: toGUID(new Uint8Array(key)),
+                        status: status
+                    });
+                });
+                $scope.safeApply();
+            }
+        });
+        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_MESSAGE, function(e) {
+            var session = findSession(e.data.sessionToken.getSessionID());
+            if (session) {
+                session.lastMessage = "Last Message: " + e.data.message.byteLength + " bytes";
+                if (e.data.messageType) {
+                    session.lastMessage += " (" + e.data.messageType + "). ";
+                } else {
+                    session.lastMessage += ". ";
+                }
+                session.lastMessage += "Waiting for response from license server...";
+                $scope.safeApply();
+            }
+        });
+        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.LICENSE_REQUEST_COMPLETE, function(e) {
+            if (!e.error) {
+                var session = findSession(e.data.sessionToken.getSessionID());
+                if (session) {
+                    session.lastMessage = "Successful response received from license server for message type '" + e.data.messageType + "'!";
+                    data.licenseReceived = true;
+                }
+            } else {
+                data.error = "License request failed for message type '" + e.data.messageType + "'! " + e.error;
+            }
+            $scope.safeApply();
+        });
+        return data;
+    };
+
+    // Listen for protection system creation/destruction by the player itself.  This will
+    // only happen in the case where we do not not provide a ProtectionController
+    // to the player via MediaPlayer.attachSource()
+    player.addEventListener(MediaPlayer.events.PROTECTION_CREATED, function (e) {
+        var data = addDRMData(e.data.manifest, e.data.controller);
+        data.isPlaying = true;
+        for (var i = 0; i < $scope.drmData.length; i++) {
+            if ($scope.drmData[i] !== data) {
+                $scope.drmData[i].isPlaying = false;
+            }
+        }
+        $scope.safeApply();
+    });
+    player.addEventListener(MediaPlayer.events.PROTECTION_DESTROYED, function (e) {
+        for (var i = 0; i < $scope.drmData.length; i++) {
+            if ($scope.drmData[i].manifest.url === e.data) {
+                $scope.drmData.splice(i, 1);
+                break;
+            }
+        }
+        $scope.safeApply();
+    });
+
     var manifestLoaded = function (manifest/*, error*/) {
         if (manifest) {
             var found = false;
             for (var i = 0; i < $scope.drmData.length; i++) {
-                if (manifest.url === $scope.drmData[i].url) {
+                if (manifest.url === $scope.drmData[i].manifest.url) {
                     found = true;
                     break;
                 }
@@ -152,145 +320,14 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             if (!found) {
                 var sessiontype = $("#session-type").find(".active").children().attr("id");
                 var protCtrl = player.createProtection();
-                var data = {
-                    url: manifest.url,
-                    protCtrl: protCtrl,
-                    manifest: manifest,
-                    sessions: []
-                };
-                var findSession = function(sessionID) {
-                    for (var i = 0; i < data.sessions.length; i++) {
-                        if (data.sessions[i].sessionID === sessionID)
-                            return data.sessions[i];
-                    }
-                    return null;
-                };
-                var removeSession = function(sessionID) {
-                };
-                $scope.drmData.push(data);
-                $scope.safeApply();
-
-                data[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(e) {
-                    if (!e.error) {
-                        data.ksconfig = e.data.ksConfiguration;
-                        $scope.safeApply();
-                    } else {
-                        data.error = e.error;
-                    }
-                };
-                data[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = function(e) {
-                    if (!e.error) {
-                        $scope.safeApply();
-                    } else {
-                        data.error = e.error;
-                    }
-                };
-                data[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED] = function(e) {
-                    if (!e.error) {
-                        var removedSession = findSession(e.data.getSessionID());
-                        if (removedSession) {
-                            removedSession.removed = false;
-                            removedSession.sessionToken = e.data;
-                        } else {
-                            data.sessions.push({
-                                sessionToken: e.data,
-                                sessionID: e.data.getSessionID(),
-                                removed: false
-                            });
-                        }
-                        $scope.safeApply();
-                    } else {
-                        data.error = e.error;
-                    }
-                };
-                data[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED] = function(e) {
-                    if (!e.error) {
-                        var session = findSession(e.data);
-                        if (session) {
-                            session.removed = true;
-                            session.sessionToken = null;
-                        }
-                        $scope.safeApply();
-                    } else {
-                        data.error = e.error;
-                    }
-                };
-                data[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED] = function(e) {
-                    if (!e.error) {
-                        for (var i = 0; i < data.sessions.length; i++) {
-                            if (data.sessions[i].sessionID === e.data) {
-                                data.sessions.splice(i, 1);
-                                break;
-                            }
-                        }
-                        $scope.safeApply();
-                    } else {
-                        data.error = e.error;
-                    }
-                };
-                data[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED] = function(e) {
-                    var session = findSession(e.data.getSessionID());
-                    if (session) {
-                        var toGUID = function(uakey) {
-                            var keyIdx = 0, retVal = "", i, zeroPad = function(str) {
-                                return (str.length === 1) ? "0" + str : str;
-                            };
-                            for (i = 0; i < 4; i++, keyIdx++)
-                                retVal += zeroPad(uakey[keyIdx].toString(16));
-                            retVal += "-";
-                            for (i = 0; i < 2; i++, keyIdx++)
-                                retVal += zeroPad(uakey[keyIdx].toString(16));
-                            retVal += "-";
-                            for (i = 0; i < 2; i++, keyIdx++)
-                                retVal += zeroPad(uakey[keyIdx].toString(16));
-                            retVal += "-";
-                            for (i = 0; i < 2; i++, keyIdx++)
-                                retVal += zeroPad(uakey[keyIdx].toString(16));
-                            retVal += "-";
-                            for (i = 0; i < 6; i++, keyIdx++)
-                                retVal += zeroPad(uakey[keyIdx].toString(16));
-                            return retVal;
-                        };
-                        session.keystatus = [];
-                        e.data.getKeyStatuses().forEach(function(status, key){
-                            session.keystatus.push({
-                                key: toGUID(new Uint8Array(key)),
-                                status: status
-                            });
-                        });
-                        $scope.safeApply();
-                    }
-                };
-                data[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE] = function(e) {
-                    var session = findSession(e.data.sessionToken.getSessionID());
-                    if (session) {
-                        session.lastMessage = "Last Message: " + e.data.message.byteLength + " bytes ";
-                        if (e.data.messageType) {
-                            session.lastMessage += "(" + e.data.messageType + ")";
-                        }
-                        $scope.safeApply();
-                    }
-                };
-                data[MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR] = function(e) {
-                    data.error = e.data;
-                    $scope.safeApply();
-                };
-
-                protCtrl.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, data);
-                protCtrl.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, data);
-                protCtrl.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, data);
-                protCtrl.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, data);
-                protCtrl.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, data);
-                protCtrl.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED, data);
-                protCtrl.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, data);
-                protCtrl.subscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, data);
-
                 if ($scope.selectedItem.hasOwnProperty("protData")) {
                     protCtrl.setProtectionData($scope.selectedItem.protData);
                 }
 
-                protCtrl.init(manifest);
+                addDRMData(manifest, protCtrl);
+
                 protCtrl.setSessionType(sessiontype);
+                protCtrl.init(manifest);
             }
 
         } else {
@@ -305,6 +342,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     $scope.play = function(data) {
         player.attachSource(data.manifest, data.protCtrl);
+        for (var i = 0; i < $scope.drmData.length; i++) {
+            var drmData = $scope.drmData[i];
+            drmData.isPlaying = !!(drmData === data);
+        }
     };
 
     $scope.loadSession = function(protCtrl, session) {

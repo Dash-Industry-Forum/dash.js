@@ -32,14 +32,18 @@
 /**
  * Event indicating the receipt of a response from a license server
  *
- * @param message {Uint8Array} license response message
- * @param requestData a request-specific data object
+ * @param {Uint8Array} message license response message
+ * @param {MediaPlayer.vo.protection.SessionToken} sessionToken the session to
+ * @param {String} [messageType="license-request"] the message type that is associated
+ * with this object's response message.  Supported message types can be found
+ * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @constructor
  */
-MediaPlayer.vo.protection.LicenseRequestComplete = function(message, requestData) {
+MediaPlayer.vo.protection.LicenseRequestComplete = function(message, sessionToken, messageType) {
     "use strict";
     this.message = message;
-    this.requestData = requestData;
+    this.sessionToken = sessionToken;
+    this.messageType = messageType ? messageType : "license-request";
 };
 
 MediaPlayer.vo.protection.LicenseRequestComplete.prototype = {

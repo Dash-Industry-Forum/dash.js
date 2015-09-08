@@ -29,20 +29,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * CableLabs ClearKey license server implementation
+ *
+ * For testing purposes and evaluating potential uses for ClearKey, we have developed
+ * a dirt-simple API for requesting ClearKey licenses from a remote server.
+ *
+ * @implements MediaPlayer.dependencies.protection.servers.LicenseServer
+ * @class
+ */
 MediaPlayer.dependencies.protection.servers.ClearKey = function() {
     "use strict";
 
     return {
 
-        /**
-         * Returns a new or updated license server URL based on information
-         * found in the CDM message
-         *
-         * @param url the initially established URL (from ProtectionData or initData)
-         * @param message the CDM message
-         * @returns {string} the URL to use in license requests
-         */
-        getServerURLFromMessage: function(url, message) {
+        getServerURLFromMessage: function(url, message/*, messageType*/) {
             // Build ClearKey server query string
             var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
             url += "/?";
@@ -53,29 +54,11 @@ MediaPlayer.dependencies.protection.servers.ClearKey = function() {
             return url;
         },
 
-        /**
-         * Returns the HTTP method to be used (i.e. "GET", "POST", etc.) in
-         * XMLHttpRequest.open().
-         *
-         * @returns {string} the HTTP method
-         */
-        getHTTPMethod: function() { return 'GET'; },
+        getHTTPMethod: function(/*messageType*/) { return 'GET'; },
 
-        /**
-         * Returns the response type to set for XMLHttpRequest.responseType
-         *
-         * @returns {string} the response type
-         */
         getResponseType: function(/*keySystemStr*/) { return 'json'; },
 
-        /**
-         * Parses the license server response to retrieve the message intended for
-         * the CDM.
-         *
-         * @param serverResponse the response as returned in XMLHttpRequest.response
-         * @returns {Object} message that will be sent to the CDM
-         */
-        getLicenseMessage: function(serverResponse/*, keySystemStr*/) {
+        getLicenseMessage: function(serverResponse/*, keySystemStr, messageType*/) {
             if (!serverResponse.hasOwnProperty("keys")) {
                 return null;
             }
@@ -89,44 +72,8 @@ MediaPlayer.dependencies.protection.servers.ClearKey = function() {
             return new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs);
         },
 
-        /**
-         * Parses the license server response during error conditions and returns a
-         * string to display for debugging purposes
-         *
-         * @param serverResponse the server response
-         */
-        getErrorResponse: function(serverResponse/*, keySystemStr*/) {
+        getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
             return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
-        },
-
-        /**
-         * Returns desired clearkeys (as specified in the CDM message) from protection data
-         *
-         * @param protData the protection data
-         * @param message {ArrayBuffer} the ClearKey CDM message
-         * @returns {MediaPlayer.vo.protection.ClearKeyKeySet} the key set or null if none found
-         * @throws {Error} if a keyID specified in the CDM message was not found in the
-         * protection data
-         */
-        getClearKeysFromProtectionData: function(protData, message) {
-            var clearkeySet = null;
-            if (protData) {
-                // ClearKey is the only system that does not require a license server URL, so we
-                // handle it here when keys are specified in protection data
-                var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
-                var keyPairs = [];
-                for (var i = 0; i < jsonMsg.kids.length; i++) {
-                    var clearkeyID = jsonMsg.kids[i],
-                            clearkey = (protData.clearkeys.hasOwnProperty(clearkeyID)) ? protData.clearkeys[clearkeyID] : null;
-                    if (!clearkey) {
-                        throw new Error("DRM: ClearKey keyID (" + clearkeyID + ") is not known!");
-                    }
-                    // KeyIDs from CDM are not base64 padded.  Keys may or may not be padded
-                    keyPairs.push(new MediaPlayer.vo.protection.KeyPair(clearkeyID, clearkey));
-                }
-                clearkeySet = new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs);
-            }
-            return clearkeySet;
         }
     };
 };

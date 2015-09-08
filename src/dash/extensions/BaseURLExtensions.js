@@ -31,227 +31,69 @@
 Dash.dependencies.BaseURLExtensions = function () {
     "use strict";
 
-        // From YouTube player.  Reformatted for JSLint.
-    var parseSIDX = function (ab, ab_first_byte_offset) {
-            var d = new DataView(ab),
-                sidx = {},
-                pos = 0,
-                offset,
-                time,
-                sidxEnd,
-                i,
-                ref_type,
-                ref_size,
-                ref_dur,
-                type,
-                size,
-                charCode;
-
-            while (type !== "sidx" && pos < d.byteLength) {
-                size = d.getUint32(pos); // subtract 8 for including the size and type
-                pos += 4;
-
-                type = "";
-                for (i = 0; i < 4; i += 1) {
-                    charCode = d.getInt8(pos);
-                    type += String.fromCharCode(charCode);
-                    pos += 1;
-                }
-
-                if (type !== "moof" && type !== "traf" && type !== "sidx") {
-                    pos += size - 8;
-                } else if (type === "sidx") {
-                    // reset the position to the beginning of the box...
-                    // if we do not reset the position, the evaluation
-                    // of sidxEnd to ab.byteLength will fail.
-                    pos -= 8;
-                }
-            }
-
-            sidxEnd = d.getUint32(pos, false) + pos;
-            if (sidxEnd > ab.byteLength) {
-                throw "sidx terminates after array buffer";
-            }
-
-            sidx.version = d.getUint8(pos + 8);
-            pos += 12;
-
-            // skipped reference_ID(32)
-            sidx.timescale = d.getUint32(pos + 4, false);
-            pos += 8;
-
-            if (sidx.version === 0) {
-                sidx.earliest_presentation_time = d.getUint32(pos, false);
-                sidx.first_offset = d.getUint32(pos + 4, false);
-                pos += 8;
-            } else {
-                // TODO(strobe): Overflow checks
-                sidx.earliest_presentation_time = utils.Math.to64BitNumber(d.getUint32(pos + 4, false), d.getUint32(pos, false));
-                //first_offset = utils.Math.to64BitNumber(d.getUint32(pos + 8, false), d.getUint32(pos + 12, false));
-                sidx.first_offset = (d.getUint32(pos + 8, false) << 32) + d.getUint32(pos + 12, false);
-                pos += 16;
-            }
-
-            sidx.first_offset += sidxEnd + (ab_first_byte_offset || 0);
-
-            // skipped reserved(16)
-            sidx.reference_count = d.getUint16(pos + 2, false);
-            pos += 4;
-
-            sidx.references = [];
-            offset = sidx.first_offset;
-            time = sidx.earliest_presentation_time;
-
-            for (i = 0; i < sidx.reference_count; i += 1) {
-                ref_size = d.getUint32(pos, false);
-                ref_type = (ref_size >>> 31);
-                ref_size = ref_size & 0x7fffffff;
-                ref_dur = d.getUint32(pos + 4, false);
-                pos += 12;
-                sidx.references.push({
-                    'size': ref_size,
-                    'type': ref_type,
-                    'offset': offset,
-                    'duration': ref_dur,
-                    'time': time,
-                    'timescale': sidx.timescale
-                });
-                offset += ref_size;
-                time += ref_dur;
-            }
-
-            if (pos !== sidxEnd) {
-                throw "Error: final pos " + pos + " differs from SIDX end " + sidxEnd;
-            }
-
-            return sidx;
-        },
-
-        parseSegments = function (data, media, offset) {
-            var parsed,
-                ref,
-                segments,
+    var getSegmentsForSidx = function (sidx, info) {
+            var refs = sidx.references,
+                len = refs.length,
+                timescale = sidx.timescale,
+                time = sidx.earliest_presentation_time,
+                start = info.range.start + sidx.first_offset + sidx.size,
+                segments = [],
                 segment,
-                i,
-                len,
-                start,
-                end;
+                end,
+                duration,
+                size;
 
-            parsed = parseSIDX.call(this, data, offset);
-            ref = parsed.references;
-            segments = [];
+            for (var i = 0; i < len; i += 1) {
+                duration = refs[i].subsegment_duration;
+                size = refs[i].referenced_size;
 
-            for (i = 0, len = ref.length; i < len; i += 1) {
                 segment = new Dash.vo.Segment();
-                segment.duration = ref[i].duration;
-                segment.media = media;
-                segment.startTime = ref[i].time;
-                segment.timescale = ref[i].timescale;
-
-                start = ref[i].offset;
-                end = ref[i].offset + ref[i].size - 1;
+                segment.duration = duration;
+                segment.media = info.url;
+                segment.startTime = time;
+                segment.timescale = timescale;
+                end = start + size - 1;
                 segment.mediaRange = start + "-" + end;
-
                 segments.push(segment);
+                time += duration;
+                start += size;
             }
 
-            this.log("Parsed SIDX box: " + segments.length + " segments.");
             return segments;
         },
 
-        findInit = function (data, info, callback) {
-            var ftyp,
-                moov,
+        findInitRange = function (isoFile) {
+            var ftyp = isoFile.getBox("ftyp"),
+                moov = isoFile.getBox("moov"),
                 start,
                 end,
-                d = new DataView(data),
-                pos = 0,
-                type = "",
-                size = 0,
-                i,
-                c,
-                request,
-                loaded = false,
-                irange,
-                self = this;
+                initRange = null;
 
-            self.log("Searching for initialization.");
+            this.log("Searching for initialization.");
 
-            while (type !== "moov" && pos < d.byteLength) {
-                size = d.getUint32(pos); // subtract 8 for including the size and type
-                pos += 4;
+            if (moov && moov.isComplete) {
+                start = ftyp ? ftyp.offset : moov.offset;
+                end = moov.offset + moov.size - 1;
+                initRange = start + "-" + end;
 
-                type = "";
-                for (i = 0; i < 4; i += 1) {
-                    c = d.getInt8(pos);
-                    type += String.fromCharCode(c);
-                    pos += 1;
-                }
-
-                if (type === "ftyp") {
-                    ftyp = pos - 8;
-                }
-                if (type === "moov") {
-                    moov = pos - 8;
-                }
-                if (type !== "moov") {
-                    pos += size - 8;
-                }
+                this.log("Found the initialization.  Range: " + initRange);
             }
 
-            if (type !== "moov") {
-                // Case 1
-                // We didn't download enough bytes to find the moov.
-                // TODO : Load more bytes.
-                //        Be sure to detect EOF.
-                //        Throw error is no moov is found in the entire file.
-                //        Protection from loading the entire file?
-                self.log("Loading more bytes to find initialization.");
-                info.range.start = 0;
-                info.range.end = info.bytesLoaded + info.bytesToLoad;
-
-                request = new XMLHttpRequest();
-
-                request.onloadend = function () {
-                    if (!loaded) {
-                        callback.call(self, null, new Error("Error loading initialization."));
-                    }
-                };
-
-                request.onload = function () {
-                    loaded = true;
-                    info.bytesLoaded = info.range.end;
-                    findInit.call(self, request.response, function (segments) {
-                        callback.call(self, segments);
-                    });
-                };
-
-                request.onerror = function () {
-                    callback.call(self, null, new Error("Error loading initialization."));
-                };
-
-                sendRequest.call(self, request, info);
-            } else {
-                // Case 2
-                // We have the entire range, so continue.
-                start = ftyp === undefined ? moov : ftyp;
-                end = moov + size - 1;
-                irange = start + "-" + end;
-
-                self.log("Found the initialization.  Range: " + irange);
-                callback.call(self, irange);
-            }
+            return initRange;
         },
 
-        loadInit = function (representation) {
+        loadInit = function (representation, loadingInfo) {
             var request = new XMLHttpRequest(),
                 needFailureReport = true,
                 self = this,
+                initRange = null,
+                isoFile = null,
                 media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
-                info = {
+                info = loadingInfo || {
                     url: media,
-                    range: {},
+                    range: {start: 0,
+                            end: 1500},
                     searching: false,
                     bytesLoaded: 0,
                     bytesToLoad: 1500,
@@ -259,29 +101,29 @@ Dash.dependencies.BaseURLExtensions = function () {
                 };
 
             self.log("Start searching for initialization.");
-            info.range.start = 0;
-            info.range.end = info.bytesToLoad;
 
             request.onload = function () {
-                if (request.status < 200 || request.status > 299)
-                {
-                  return;
-                }
+                if (request.status < 200 || request.status > 299) return;
+
                 needFailureReport = false;
 
                 info.bytesLoaded = info.range.end;
-                findInit.call(self, request.response, info, function (range) {
-                    representation.range = range;
+                isoFile = self.boxParser.parse(request.response);
+                initRange = findInitRange.call(self, isoFile);
+
+                if (initRange) {
+                    representation.range = initRange;
                     representation.initialization = media;
                     self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {representation: representation});
-                });
+                } else {
+                    info.range.end = info.bytesLoaded + info.bytesToLoad;
+                    loadInit.call(self, representation, info);
+                }
+
             };
 
             request.onloadend = request.onerror = function () {
-                if (!needFailureReport)
-                {
-                  return;
-                }
+                if (!needFailureReport) return;
                 needFailureReport = false;
 
                 self.errHandler.downloadError("initialization", info.url, request);
@@ -292,204 +134,103 @@ Dash.dependencies.BaseURLExtensions = function () {
             self.log("Perform init search: " + info.url);
         },
 
-        findSIDX = function (data, info, representation, callback) {
-            var segments,
-                d = new DataView(data),
+        loadSegments = function (representation, type, theRange, loadingInfo, callback) {
+            var self = this,
+                hasRange = theRange !== null,
                 request = new XMLHttpRequest(),
-                pos = 0,
-                type = "",
-                size = 0,
-                bytesAvailable,
-                sidxBytes,
-                sidxSlice,
-                sidxOut,
-                i,
-                c,
-                needFailureReport = true,
-                parsed,
-                ref,
-                loadMultiSidx = false,
-                self = this;
-
-            self.log("Searching for SIDX box.");
-            self.log(info.bytesLoaded + " bytes loaded.");
-
-            while (type !== "sidx" && pos < d.byteLength) {
-                size = d.getUint32(pos); // subtract 8 for including the size and type
-                pos += 4;
-
-                type = "";
-                for (i = 0; i < 4; i += 1) {
-                    c = d.getInt8(pos);
-                    type += String.fromCharCode(c);
-                    pos += 1;
-                }
-
-                if (type !== "sidx") {
-                    pos += size - 8;
-                }
-            }
-
-            bytesAvailable = d.byteLength - pos;
-
-            if (type !== "sidx") {
-                // Case 1
-                // We didn't download enough bytes to find the sidx.
-                // TODO : Load more bytes.
-                //        Be sure to detect EOF.
-                //        Throw error is no sidx is found in the entire file.
-                //        Protection from loading the entire file?
-                callback.call(self);
-            } else if (bytesAvailable < (size - 8)) {
-                // Case 2
-                // We don't have the entire box.
-                // Increase the number of bytes to read and load again.
-                self.log("Found SIDX but we don't have all of it.");
-
-                info.range.start = 0;
-                info.range.end = info.bytesLoaded + (size - bytesAvailable);
-
-                request.onload = function () {
-                    if (request.status < 200 || request.status > 299)
-                    {
-                      return;
-                    }
-                    needFailureReport = false;
-
-                    info.bytesLoaded = info.range.end;
-                    findSIDX.call(self, request.response, info, representation, callback);
-                };
-
-                request.onloadend = request.onerror = function () {
-                    if (!needFailureReport)
-                    {
-                      return;
-                    }
-                    needFailureReport = false;
-
-                    self.errHandler.downloadError("SIDX", info.url, request);
-                    callback.call(self);
-                };
-
-                sendRequest.call(self, request, info);
-            } else {
-                // Case 3
-                // We have the entire box, so parse it and continue.
-                info.range.start = pos - 8;
-                info.range.end = info.range.start + size;
-
-                self.log("Found the SIDX box.  Start: " + info.range.start + " | End: " + info.range.end);
-//                sidxBytes = data.slice(info.range.start, info.range.end);
-                sidxBytes = new ArrayBuffer(info.range.end - info.range.start);
-                sidxOut = new Uint8Array(sidxBytes);
-                sidxSlice = new Uint8Array(data, info.range.start, info.range.end - info.range.start);
-                sidxOut.set(sidxSlice);
-
-                parsed = this.parseSIDX.call(this, sidxBytes, info.range.start);
-
-                // We need to check to see if we are loading multiple sidx.
-                // For now just check the first reference and assume they are all the same.
-                // TODO : Can the referenceTypes be mixed?
-                // TODO : Load them all now, or do it as needed?
-
-                ref = parsed.references;
-                if (ref !== null && ref !== undefined && ref.length > 0) {
-                    loadMultiSidx = (ref[0].type === 1);
-                }
-
-                if (loadMultiSidx) {
-                    self.log("Initiate multiple SIDX load.");
-
-                    var j, len, ss, se, r, segs = [],
-                        count = 0,
-                        tmpCallback = function(segments) {
-                            if (segments) {
-                                segs = segs.concat(segments);
-                                count += 1;
-
-                                if (count >= len) {
-                                    callback.call(self, segs);
-                                }
-                            } else {
-                                callback.call(self);
-                            }
-                        };
-
-                    for (j = 0, len = ref.length; j < len; j += 1) {
-                        ss = ref[j].offset;
-                        se = ref[j].offset + ref[j].size - 1;
-                        r = ss + "-" + se;
-
-                        loadSegments.call(self, representation, null, r, tmpCallback);
-                    }
-
-                } else {
-                    self.log("Parsing segments from SIDX.");
-                    segments = parseSegments.call(self, sidxBytes, info.url, info.range.start);
-                    callback.call(self, segments);
-                }
-            }
-        },
-
-        loadSegments = function (representation, type, theRange, callback) {
-            var request = new XMLHttpRequest(),
-                segments,
-                parts,
                 media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
                     AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
                 needFailureReport = true,
-                self = this,
+                isoFile = null,
+                sidx = null,
                 info = {
                     url: media,
-                    range: {},
-                    searching: false,
-                    bytesLoaded: 0,
+                    range: hasRange ? theRange : {start: 0, end: 1500},
+                    searching: !hasRange,
+                    bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
                     bytesToLoad: 1500,
                     request: request
                 };
 
-            // We might not know exactly where the sidx box is.
-            // Load the first n bytes (say 1500) and look for it.
-            if (theRange === null) {
-                self.log("No known range for SIDX request.");
-                info.searching = true;
-                info.range.start = 0;
-                info.range.end = info.bytesToLoad;
-            } else {
-                parts = theRange.split("-");
-                info.range.start = parseFloat(parts[0]);
-                info.range.end = parseFloat(parts[1]);
-            }
-
             request.onload = function () {
-                if (request.status < 200 || request.status > 299)
-                {
-                  return;
-                }
-                needFailureReport = false;
+                if (request.status < 200 || request.status > 299) return;
 
-                // If we didn't know where the SIDX box was, we have to look for it.
-                // Iterate over the data checking out the boxes to find it.
-                if (info.searching) {
-                    info.bytesLoaded = info.range.end;
-                    findSIDX.call(self, request.response, info, representation, function (segments) {
-                        if (segments) {
-                            callback.call(self, segments, representation, type);
+                var extraBytes = info.bytesToLoad,
+                    loadedLength = request.response.byteLength;
+
+                needFailureReport = false;
+                info.bytesLoaded = info.range.end - info.range.start;
+                isoFile = self.boxParser.parse(request.response);
+                sidx = isoFile.getBox("sidx");
+
+                if (!sidx || !sidx.isComplete) {
+                    if (sidx) {
+                        info.range.start = sidx.offset || info.range.start;
+                        info.range.end = info.range.start + (sidx.size || extraBytes);
+                    } else if (loadedLength < info.bytesLoaded) {
+                        // if we have reached a search limit or if we have reached the end of the file we have to stop trying to find sidx
+                        callback.call(self, null, representation, type);
+                        return;
+                    } else {
+                        var lastBox = isoFile.getLastBox();
+
+                        if (lastBox && lastBox.size) {
+                            info.range.start = lastBox.offset + lastBox.size;
+                            info.range.end = info.range.start + extraBytes;
+                        } else {
+                            info.range.end += extraBytes;
                         }
-                    });
+                    }
+                    loadSegments.call(self, representation, type, info.range, info, callback);
                 } else {
-                    segments = parseSegments.call(self, request.response, info.url, info.range.start);
-                    callback.call(self, segments, representation, type);
+                    var ref = sidx.references,
+                        loadMultiSidx,
+                        segments;
+
+                    if (ref !== null && ref !== undefined && ref.length > 0) {
+                        loadMultiSidx = (ref[0].reference_type === 1);
+                    }
+
+                    if (loadMultiSidx) {
+                        self.log("Initiate multiple SIDX load.");
+                        info.range.end = info.range.start + sidx.size;
+
+                        var j, len, ss, se, r, segs = [],
+                            count = 0,
+                            offset = (sidx.offset || info.range.start) + sidx.size,
+                            tmpCallback = function(result) {
+                                if (result) {
+                                    segs = segs.concat(result);
+                                    count += 1;
+
+                                    if (count >= len) {
+                                        callback.call(self, segs, representation, type);
+                                    }
+                                } else {
+                                    callback.call(self, null, representation, type);
+                                }
+                            };
+
+                        for (j = 0, len = ref.length; j < len; j += 1) {
+                            ss = offset;
+                            se = offset + ref[j].referenced_size - 1;
+                            offset = offset + ref[j].referenced_size;
+                            r = {start: ss, end: se};
+                            loadSegments.call(self, representation, null, r, info, tmpCallback);
+                        }
+
+                    } else {
+                        self.log("Parsing segments from SIDX.");
+                        segments = getSegmentsForSidx.call(self, sidx, info);
+                        callback.call(self, segments, representation, type);
+                    }
                 }
             };
 
             request.onloadend = request.onerror = function () {
-                if (!needFailureReport)
-                {
-                  return;
-                }
-                needFailureReport = false;
+                if (!needFailureReport) return;
 
+                needFailureReport = false;
                 self.errHandler.downloadError("SIDX", info.url, request);
                 callback.call(self, null, representation, type);
             };
@@ -520,18 +261,19 @@ Dash.dependencies.BaseURLExtensions = function () {
         log: undefined,
         errHandler: undefined,
         requestModifierExt:undefined,
+        boxParser: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
 
         loadSegments: function(representation, type, range) {
-            loadSegments.call(this, representation, type, range, onLoaded.bind(this));
+            var parts = range ? range.split("-") : null;
+            range = parts ? {start: parseFloat(parts[0]), end: parseFloat(parts[1])} : null;
+
+            loadSegments.call(this, representation, type, range, null, onLoaded.bind(this));
         },
 
-        loadInitialization: loadInit,
-        parseSegments: parseSegments,
-        parseSIDX: parseSIDX,
-        findSIDX: findSIDX
+        loadInitialization: loadInit
     };
 };
 

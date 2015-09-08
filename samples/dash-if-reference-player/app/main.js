@@ -94,7 +94,9 @@ app.directive('chart', function() {
 
 app.controller('DashController', function($scope, Sources, Notes, Contributors, PlayerLibraries, ShowcaseLibraries) {
     var player,
+        controlbar,
         video,
+        ttmlDiv,
         context,
         videoSeries = [],
         audioSeries = [],
@@ -135,6 +137,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     var converter = new MetricsTreeConverter();
     $scope.videoMetrics = null;
     $scope.audioMetrics = null;
+    $scope.streamMetrics = null;
 
     $scope.getVideoTreeMetrics = function () {
         var metrics = player.getMetricsFor("video");
@@ -144,6 +147,11 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     $scope.getAudioTreeMetrics = function () {
         var metrics = player.getMetricsFor("audio");
         $scope.audioMetrics = converter.toTreeViewDataSource(metrics);
+    }
+
+    $scope.getStreamTreeMetrics = function () {
+        var metrics = player.getMetricsFor("stream");
+        $scope.streamMetrics = converter.toTreeViewDataSource(metrics);
     }
 
     // from: https://gist.github.com/siongui/4969449
@@ -172,6 +180,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             movingDownload = {},
             movingRatio = {},
             droppedFramesValue = 0,
+            requestsQueue,
             fillmoving = function(type, Requests){
                 var requestWindow,
                     downloadTimes,
@@ -218,6 +227,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             bufferLevel = metricsExt.getCurrentBufferLevel(metrics);
             httpRequests = metricsExt.getHttpRequests(metrics);
             droppedFramesMetrics = metricsExt.getCurrentDroppedFrames(metrics);
+            requestsQueue = metricsExt.getRequestsQueue(metrics);
 
             fillmoving("video", httpRequests);
             fillmoving("audio", httpRequests);
@@ -268,7 +278,8 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 droppedFramesValue: droppedFramesValue,
                 movingLatency: movingLatency,
                 movingDownload: movingDownload,
-                movingRatio: movingRatio
+                movingRatio: movingRatio,
+                requestsQueue: requestsQueue
             }
         }
         else {
@@ -385,7 +396,14 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     function metricChanged(e) {
         var metrics,
             point,
-            treeData;
+            treeData,
+            bufferedRanges = [];
+
+        // get current buffered ranges of video element and keep them up to date
+        for (var i = 0; i < video.buffered.length; i += 1) {
+            bufferedRanges.push(video.buffered.start(i) + ' - ' + video.buffered.end(i));
+        }
+        $scope.bufferedRanges = bufferedRanges;
 
         if (e.data.stream == "video") {
             metrics = getCribbedMetricsFor("video");
@@ -396,6 +414,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 $scope.videoMaxIndex = metrics.numBitratesValue;
                 $scope.videoBufferLength = metrics.bufferLengthValue;
                 $scope.videoDroppedFrames = metrics.droppedFramesValue;
+                $scope.videoRequestsQueue = metrics.requestsQueue;
                 if (metrics.movingLatency["video"]) {
                     $scope.videoLatencyCount = metrics.movingLatency["video"].count;
                     $scope.videoLatency = metrics.movingLatency["video"].low.toFixed(3) + " < " + metrics.movingLatency["video"].average.toFixed(3) + " < " + metrics.movingLatency["video"].high.toFixed(3);
@@ -427,6 +446,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 $scope.audioMaxIndex = metrics.numBitratesValue;
                 $scope.audioBufferLength = metrics.bufferLengthValue;
                 $scope.audioDroppedFrames = metrics.droppedFramesValue;
+                $scope.audioRequestsQueue = metrics.requestsQueue;
                 if (metrics.movingLatency["audio"]) {
                     $scope.audioLatencyCount = metrics.movingLatency["audio"].count;
                     $scope.audioLatency = metrics.movingLatency["audio"].low.toFixed(3) + " < " + metrics.movingLatency["audio"].average.toFixed(3) + " < " + metrics.movingLatency["audio"].high.toFixed(3);
@@ -470,6 +490,13 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
     function streamSwitch(e) {
         $scope.streamInfo = e.data.toStreamInfo;
+    }
+
+    function streamInitialized(e) {
+        var availableTracks = {};
+        availableTracks.audio = player.getTracksFor("audio");
+        availableTracks.video = player.getTracksFor("video");
+        $scope.availableTracks = availableTracks;
     }
 
     ////////////////////////////////////////
@@ -530,6 +557,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     video = document.querySelector(".dash-video-player video");
     context = new Dash.di.DashContext();
     player = new MediaPlayer(context);
+
     $scope.version = player.getVersion();
 
     player.startup();
@@ -537,9 +565,19 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     player.addEventListener(MediaPlayer.events.METRIC_CHANGED, metricChanged.bind(this));
     player.addEventListener(MediaPlayer.events.METRIC_UPDATED, metricUpdated.bind(this));
     player.addEventListener(MediaPlayer.events.STREAM_SWITCH_COMPLETED, streamSwitch.bind(this));
-
+    player.addEventListener(MediaPlayer.events.STREAM_INITIALIZED, streamInitialized.bind(this));
     player.attachView(video);
+
+    /* Only do this for Chrome and Safari, but not for Edge (Edge signals both Chrome and Safari) */
+    if (navigator.userAgent.match(/(Chrome|Safari)/) && !navigator.userAgent.match(/Edge/)) 
+    {
+        ttmlDiv = document.querySelector("#video-caption");
+        player.attachTTMLRenderingDiv(ttmlDiv);
+    }
     player.setAutoPlay(true);
+    controlbar = new ControlBar(player);
+    controlbar.initialize();
+    controlbar.disable() //controlbar.hide() // other option
 
     ////////////////////////////////////////
     //
@@ -617,13 +655,42 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     }
 
     $scope.doLoad = function () {
-        var protData = null;
+        var protData = null,
+            initialSettings;
         if ($scope.selectedItem.hasOwnProperty("protData")) {
             protData = $scope.selectedItem.protData;
         }
         player.attachSource($scope.selectedItem.url, null, protData);
         player.setAutoSwitchQuality($scope.abrEnabled);
+        controlbar.reset();
+        controlbar.enable();
+
+        if ($scope.initialSettings.audio) {
+            player.setInitialMediaSettingsFor("audio", {lang: $scope.initialSettings.audio});
+        }
+        if ($scope.initialSettings.video) {
+            player.setInitialMediaSettingsFor("video", {role: $scope.initialSettings.video});
+        }
+
         $scope.manifestUpdateInfo = null;
+    }
+
+    $scope.switchTrack = function(track, type) {
+        if (!track || (track === player.getCurrentTrackFor(type))) return;
+
+        player.setCurrentTrack(track);
+    }
+
+    $scope.changeTrackSwitchMode = function(mode, type) {
+        player.setTrackSwitchModeFor(type, mode);
+    }
+
+    $scope.initialSettings = {audio: null, video: null};
+    $scope.mediaSettingsCacheEnabled = true;
+
+    $scope.setMediaSettingsCacheEnabled = function(enabled) {
+        $scope.mediaSettingsCacheEnabled = enabled;
+        player.enableLastMediaSettingsCaching(enabled);
     }
 
     $scope.hasLogo = function (item) {

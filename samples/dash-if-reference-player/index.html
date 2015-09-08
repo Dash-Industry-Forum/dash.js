@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-glyphicons.css">
     <link rel="stylesheet" href="app/lib/angular.treeview/css/angular.treeview.css">
     <link rel="stylesheet" href="app/css/main.css">
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/contolbar.css">
 
     <!-- http://jquery.com/ -->
     <script src="app/lib/jquery/jquery-1.10.2.min.js"></script>
@@ -24,6 +25,9 @@
 
     <!-- https://github.com/creynders/dijon-framework -->
     <script src="../../src/lib/dijon.js"></script>
+
+    <!-- https://github.com/madebyhiro/codem-isoboxer -->
+    <script src="../../src/lib/iso_boxer.min.js"></script>
 
     <!-- http://bannister.us/weblog/2007/06/09/simple-base64-encodedecode-javascript/ -->
     <script src="../../src/lib/base64.js"></script>
@@ -50,17 +54,22 @@
     <script src="../../src/streaming/utils/Debug.js"></script>
     <script src="../../src/streaming/utils/CustomTimeRanges.js"></script>
     <script src="../../src/streaming/utils/VirtualBuffer.js"></script>
+    <script src="../../src/streaming/utils/BoxParser.js"></script>
+    <script src="../../src/streaming/utils/IsoFile.js"></script>
     <script src="../../src/streaming/extensions/RequestModifierExtensions.js"></script>
     <script src="../../src/streaming/models/VideoModel.js"></script>
     <script src="../../src/streaming/vo/FragmentRequest.js"></script>
     <script src="../../src/streaming/vo/TrackInfo.js"></script>
+    <script src="../../src/streaming/vo/TextTrackInfo.js"></script>
     <script src="../../src/streaming/vo/MediaInfo.js"></script>
     <script src="../../src/streaming/vo/StreamInfo.js"></script>
+    <script src="../../src/streaming/vo/TextTrackInfo.js"></script>
     <script src="../../src/streaming/vo/ManifestInfo.js"></script>
     <script src="../../src/streaming/vo/Event.js"></script>
     <script src="../../src/streaming/vo/Error.js"></script>
     <script src="../../src/streaming/vo/BitrateInfo.js"></script>
     <script src="../../src/streaming/vo/DataChunk.js"></script>
+    <script src="../../src/streaming/vo/IsoBox.js"></script>
     <script src="../../src/streaming/ManifestLoader.js"></script>
     <script src="../../src/streaming/ManifestUpdater.js"></script>
     <script src="../../src/streaming/models/ManifestModel.js"></script>
@@ -73,6 +82,7 @@
     <script src="../../src/streaming/FragmentLoader.js"></script>
     <script src="../../src/streaming/models/FragmentModel.js"></script>
     <script src="../../src/streaming/controllers/StreamController.js"></script>
+    <script src="../../src/streaming/controllers/MediaController.js"></script>
     <script src="../../src/streaming/StreamProcessor.js"></script>
     <script src="../../src/streaming/controllers/ScheduleController.js"></script>
     <script src="../../src/streaming/TimeSyncController.js"></script>
@@ -159,6 +169,7 @@
     <script src="../../src/streaming/vo/metrics/TCPConnection.js"></script>
     <script src="../../src/streaming/vo/metrics/DroppedFrames.js"></script>
     <script src="../../src/streaming/vo/metrics/SchedulingInfo.js"></script>
+    <script src="../../src/streaming/vo/metrics/RequestsQueue.js"></script>
     <script src="../../src/streaming/vo/metrics/ManifestUpdate.js"></script>
     <script src="../../src/streaming/vo/metrics/DVRInfo.js"></script>
 
@@ -185,6 +196,7 @@
 
     <!-- App -->
     <script src="app/metrics.js"></script>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="app/main.js"></script>
 </head>
 <body ng-controller="DashController">
@@ -261,6 +273,32 @@
         <div class="row">
             <div class="dash-video-player col-md-9">
                 <video controls="true"></video>
+                <div id="video-caption"></div>
+                <div id="videoController" class="video-controller unselectable">
+                    <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
+                        <span id="iconPlayPause" class="icon-play"></span>
+                    </div>
+                    <span id="videoTime" class="time-display">00:00:00</span>
+
+                    <div id="fullscreenBtn" class="btn-fullscreen" title="Fullscreen">
+                        <span class="icon-fullscreen-enter"></span>
+                    </div>
+                    <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01" />
+
+                    <div id="muteBtn" class="btn-mute" title="Mute">
+                        <span id="iconMute" class="icon-mute-off"></span>
+                    </div>
+                    <div id="captionBtn" class="btn-caption" title="Closed Caption">
+                        <span class="icon-caption"></span>
+                    </div>
+
+                    <span id="videoDuration" class="duration-display">00:00:00</span>
+
+                    <div class="seekContainer">
+                        <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
+                    </div>
+                </div>
+
             </div>
             <div class="col-md-3">
                 <div class="panel">
@@ -279,6 +317,26 @@
                                 class="btn btn-default active"
                                 ng-class="{active:abrEnabled == true}"
                                 ng-click="setAbrEnabled(true)">
+                                <span>On</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="panel-heading panel-top">
+                        <span class="panel-title">Cache media settings</span>
+                        <div class="btn-group">
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                ng-class="{active:mediaSettingsCacheEnabled == false}"
+                                ng-click="setMediaSettingsCacheEnabled(false)">
+                                <span>Off</span>
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-default active"
+                                ng-class="{active:mediaSettingsCacheEnabled == true}"
+                                ng-click="setMediaSettingsCacheEnabled(true)">
                                 <span>On</span>
                             </button>
                         </div>
@@ -314,6 +372,24 @@
                         <p class="text-success" title="[low] < [average] < [high]">{{videoRatio}}</p>
                         <p class="text-primary">Dropped Frames: <span class="text-success">{{videoDroppedFrames}}</span></p>
                     </div>
+                    <ul class="nav nav-tabs">
+                        <li class="dropdown">
+                            <a href="#" id="videoTracksDropdown" class="dropdown-toggle" data-toggle="dropdown">Tracks <b class="caret"></b></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li ng-repeat="track in availableTracks.video" ng-click="switchTrack(track, 'video')">
+                                    <a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" id="videoTrackSwitchModeDropdown" class="dropdown-toggle" data-toggle="dropdown">Track switch mode<b class="caret"></b></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li ng-click="changeTrackSwitchMode('ALWAYS_REPLACE', 'video')"><a>always replace</a></li>
+                                <li ng-click="changeTrackSwitchMode('NEVER_REPLACE', 'video')"><a>never replace</a></li>
+                            </ul>
+                        </li>
+                        <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">
+                    </ul>
                 </div>
                 <div class="panel">
                     <div class="panel-heading panel-top">
@@ -344,6 +420,24 @@
                         <p class="text-primary">Ratio: <span class="text-success">last {{audioRatioCount}} segments</span></p>
                         <p class="text-success" title="[low] < [average] < [high]">{{audioRatio}}</p>
                     </div>
+                    <ul class="nav nav-tabs">
+                        <li class="dropdown">
+                            <a href="#" id="audioTracksDropdown" class="dropdown-toggle" data-toggle="dropdown">Tracks <b class="caret"></b></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li ng-repeat="track in availableTracks.audio" ng-click="switchTrack(track, 'audio')">
+                                    <a>lang: {{track.lang || "undefined"}}, viewpoint: {{track.viewpoint || "undefined"}}, roles: {{track.roles || "undefined"}}</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" id="audioTrackSwitchModeDropdown" class="dropdown-toggle" data-toggle="dropdown">Track switch mode<b class="caret"></b></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li ng-click="changeTrackSwitchMode('ALWAYS_REPLACE', 'audio')"><a>always replace</a></li>
+                                <li ng-click="changeTrackSwitchMode('NEVER_REPLACE', 'audio')"><a>never replace</a></li>
+                            </ul>
+                        </li>
+                        <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'" ng-model="initialSettings.audio">
+                    </ul>
                 </div>
             </div>
         </div>
@@ -454,8 +548,10 @@
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="metricsDropdown">
                                     <li><a href="#video-metrics" tabindex="-1" data-toggle="tab">Video</a></li>
                                     <li><a href="#audio-metrics" tabindex="-1" data-toggle="tab">Audio</a></li>
+                                    <li><a href="#stream-metrics" tabindex="-1" data-toggle="tab">Stream</a></li>
                                 </ul>
                             </li>
+                            <li><a href="#requests" data-toggle="tab">Requests</a></li>
                             <li><a href="#notes" data-toggle="tab">Release Notes</a></li>
                         </ul>
                         <div id="debugTabContent" class="tab-content">
@@ -488,6 +584,68 @@
                                     data-node-label="text"
                                     data-node-children="items">
                                 </div>
+                            </div>
+                            <div class="tab-pane" id="stream-metrics">
+                                <button
+                                    type="button"
+                                    class="btn btn-default"
+                                    ng-click="getStreamTreeMetrics()">
+                                    Stream - Update
+                                </button>
+                                <div
+                                    class="tree"
+                                    data-angular-treeview="true"
+                                    data-tree-model="streamMetrics"
+                                    data-node-label="text"
+                                    data-node-children="items">
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="requests">
+                                <div class="video-requests col-md-4">
+                                    <div>Pending Requests (Video)</div>
+                                    <ul ng-repeat = "request in videoRequestsQueue.pendingRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Loading Requests (Video)</div>
+                                    <ul ng-repeat = "request in videoRequestsQueue.loadingRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Executed Requests (Video)</div>
+                                    <ul ng-repeat = "request in videoRequestsQueue.executedRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Rejected Requests (Video)</div>
+                                    <ul ng-repeat = "request in videoRequestsQueue.rejectedRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                </div>
+
+                                <div class="audio-requests col-md-4">
+                                    <div>Pending Requests (Audio)</div>
+                                    <ul ng-repeat = "request in audioRequestsQueue.pendingRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Loading Requests (Audio)</div>
+                                    <ul ng-repeat = "request in audioRequestsQueue.loadingRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Executed Requests (Audio)</div>
+                                    <ul ng-repeat = "request in audioRequestsQueue.executedRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                    <div>Rejected Requests (Audio)</div>
+                                    <ul ng-repeat = "request in audioRequestsQueue.rejectedRequests">
+                                        <li>{{request.startTime}}</li>
+                                    </ul>
+                                </div>
+
+                                <div class="buffered-ranges col-md-4">
+                                    <div>Buffered Ranges (Video + Audio)</div>
+                                    <ul ng-repeat = "bufferedRange in bufferedRanges">
+                                        <li>{{bufferedRange}}</li>
+                                    </ul>
+                                </div>
+
                             </div>
                             <div class="tab-pane" id="notes">
                                 <div ng-repeat="note in releaseNotes" class="note-box">

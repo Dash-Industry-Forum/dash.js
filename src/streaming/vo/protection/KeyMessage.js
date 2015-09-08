@@ -36,16 +36,16 @@
  * to which the key message is associated
  * @param {ArrayBuffer} message the key message
  * @param [defaultURL] license acquisition URL provided by the CDM
- * @param [messageType] the message type.  One of "license-request",
- * "license-renewal", "license-release", "individualization-request"
- * @constructor
+ * @param [messageType="license-request"] the message type.  Supported message types can be found
+ * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
+ * @class
  */
 MediaPlayer.vo.protection.KeyMessage = function(sessionToken, message, defaultURL, messageType) {
     "use strict";
     this.sessionToken = sessionToken;
     this.message = message;
     this.defaultURL = defaultURL;
-    this.messageType = messageType;
+    this.messageType = messageType ? messageType : "license-request";
 };
 
 MediaPlayer.vo.protection.KeyMessage.prototype = {

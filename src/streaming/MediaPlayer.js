@@ -62,12 +62,13 @@ MediaPlayer = function (context) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    var VERSION = "1.4.0",
+    var VERSION = "1.5.0",
         DEFAULT_TIME_SERVER = "http://time.akamai.com/?iso",
         DEFAULT_TIME_SOURCE_SCHEME = "urn:mpeg:dash:utc:http-xsdate:2014",
         numOfParallelRequestAllowed = 0,
         system,
         abrController,
+        mediaController,
         element,
         source,
         protectionController = null,
@@ -78,8 +79,10 @@ MediaPlayer = function (context) {
         metricsExt,
         metricsModel,
         videoModel,
+        textSourceBuffer,
         DOMStorage,
         initialized = false,
+        resetting = false,
         playing = false,
         autoPlay = true,
         scheduleWhilePaused = false,
@@ -90,7 +93,7 @@ MediaPlayer = function (context) {
         usePresentationDelay = false,
 
         isReady = function () {
-            return (!!element && !!source);
+            return (!!element && !!source && !resetting);
         },
 
         play = function () {
@@ -115,6 +118,9 @@ MediaPlayer = function (context) {
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
             playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
+
+            system.mapValue("liveDelayFragmentCount", liveDelayFragmentCount);
+            system.mapOutlet("liveDelayFragmentCount", "trackController");
 
             streamController.initialize(autoPlay, protectionController, protectionData);
             DOMStorage.checkInitialBitrate();
@@ -162,25 +168,36 @@ MediaPlayer = function (context) {
         },
 
         seek = function(value) {
-            this.getVideoModel().getElement().currentTime = this.getDVRSeekOffset(value);
+            var s = playbackController.getIsDynamic() ? this.getDVRSeekOffset(value) : value;
+            this.getVideoModel().setCurrentTime(s);
         },
 
         time = function () {
-            var metric = getDVRInfoMetric.call(this);
-            return (metric === null) ? 0 : this.duration() - (metric.range.end - metric.time);
+            var t = videoModel.getCurrentTime();
+
+            if (playbackController.getIsDynamic()) {
+                var metric = getDVRInfoMetric.call(this);
+                t = (metric === null) ? 0 : this.duration() - (metric.range.end - metric.time);
+            }
+            return t;
         },
 
         duration  = function () {
-            var metric = getDVRInfoMetric.call(this),
-                range;
+            var d = videoModel.getElement().duration;
 
-            if (metric === null) {
-                return 0;
+            if (playbackController.getIsDynamic()) {
+
+                var metric = getDVRInfoMetric.call(this),
+                    range;
+
+                if (metric === null) {
+                    return 0;
+                }
+
+                range = metric.range.end - metric.range.start;
+                d = range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize;
             }
-
-            range = metric.range.end - metric.range.start;
-
-            return range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize;
+            return d;
         },
 
         getAsUTC = function(valToConvert) {
@@ -233,22 +250,48 @@ MediaPlayer = function (context) {
             }
         },
 
-        doReset = function() {
-            if (playing && streamController) {
-                playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, streamController);
-                playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
-                playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
-                playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
+        getActiveStream = function() {
+            var streamInfo = streamController.getActiveStreamInfo();
 
-                streamController.reset();
-                abrController.reset();
-                rulesController.reset();
-                playbackController.reset();
-                streamController = null;
-                playing = false;
+            return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
+        },
+
+        resetAndPlay = function() {
+            this.adapter.reset();
+            if (playing && streamController) {
+                if (!resetting) {
+                    resetting = true;
+                    playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, streamController);
+                    playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
+                    playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
+                    playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
+
+                    var teardownComplete = {},
+                            self = this;
+                    teardownComplete[MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
+
+                        // Finish rest of shutdown process
+                        abrController.reset();
+                        rulesController.reset();
+                        playbackController.reset();
+                        mediaController.reset();
+                        streamController = null;
+                        playing = false;
+
+                        resetting = false;
+                        if (isReady.call(self)) {
+                            doAutoPlay.call(self);
+                        }
+                    };
+                    streamController.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
+                    streamController.reset();
+                }
+            } else {
+                if (isReady.call(this)) {
+                    doAutoPlay.call(this);
+                }
             }
         };
-
 
 
     // Overload dijon getObject function
@@ -265,8 +308,22 @@ MediaPlayer = function (context) {
 
     // Set up DI.
     system = new dijon.System();
+
     system.mapValue("system", system);
     system.mapOutlet("system");
+
+    // Map the single EventBus instance that will be used throughout the player
+    // to deliver events to the application
+    system.mapValue("eventBus", new MediaPlayer.utils.EventBus());
+    system.mapOutlet("eventBus");
+
+    // Dash.di.Context makes calls to Debug in its setup() function, so we need to
+    // map it here and explicitly inject Debug before we do a global inject into context
+    var debug = new MediaPlayer.utils.Debug();
+    system.mapValue("debug", debug);
+    system.mapOutlet("debug");
+    system.injectInto(debug);
+    debug.setup();
     system.injectInto(context);
 
     return {
@@ -286,6 +343,7 @@ MediaPlayer = function (context) {
             metricsModel = system.getObject("metricsModel");
             DOMStorage = system.getObject("DOMStorage");
             playbackController = system.getObject("playbackController");
+            mediaController = system.getObject("mediaController");
             this.restoreDefaultUTCTimingSources();
         },
 
@@ -320,6 +378,14 @@ MediaPlayer = function (context) {
          */
         getVersion: function () {
             return VERSION;
+        },
+
+        /**
+         * @returns {Object} An instance of system object based on the string name in Context.js or DashContext.js
+         * @memberof MediaPlayer#
+         */
+        getObjectByContextName: function (name) {
+            return system.getObject(name);
         },
 
         /**
@@ -392,6 +458,23 @@ MediaPlayer = function (context) {
          */
         enableLastBitrateCaching: function (enable, ttl) {
             DOMStorage.enableLastBitrateCaching(enable, ttl);
+        },
+
+        /**
+         * Set to false if you would like to disable the last known lang for audio (or camera angle for video) from being stored during playback and used
+         * to set the initial settings for subsequent playback within the expiration window.
+         *
+         * The default expiration is one hour, defined in milliseconds. If expired, the default settings will be used
+         * for that session and a new settings will be stored during that session.
+         *
+         * @param enable - Boolean - Will toggle if feature is enabled. True to enable, False to disable.
+         * @param ttl Number - (Optional) A value defined in milliseconds representing how long to cache the settings for. Time to live.
+         * @default enable = True, ttl = 360000 (1 hour)
+         * @memberof MediaPlayer#
+         *
+         */
+        enableLastMediaSettingsCaching: function (enable, ttl) {
+            DOMStorage.enableLastMediaSettingsCaching(enable, ttl);
         },
 
         /**
@@ -518,6 +601,8 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * Sets the current quality for media type instead of letting the ABR Herstics automatically selecting it..
+         *
          * @param type
          * @param value
          * @memberof MediaPlayer#
@@ -526,16 +611,48 @@ MediaPlayer = function (context) {
             abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value);
         },
 
+
+        /**
+         * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
+         * set the track mode on the video object to switch a track when using this method.
+         *
+         * @param idx - Index of track based on the order of the order the tracks are added Use -1 to disable all tracks. (turn captions off).  Use MediaPlayer#MediaPlayer.events.TEXT_TRACK_ADDED.
+         * @see {@link MediaPlayer#MediaPlayer.events.TEXT_TRACK_ADDED}
+         * @memberof MediaPlayer#
+         */
+        setTextTrack: function (idx) {
+            //For external time text file,  the only action needed to change a track is marking the track mode to showing.
+            // Fragmented text tracks need the additional step of calling textSourceBuffer.setTextTrack();
+            if (textSourceBuffer === undefined){
+                textSourceBuffer = system.getObject("textSourceBuffer");
+            }
+
+            var tracks = element.textTracks,
+                ln = tracks.length;
+
+            for(var i=0; i < ln; i++ ){
+                var track = tracks[i],
+                    mode = idx === i ? "showing" : "hidden";
+
+                if (track.mode !== mode){ //checking that mode is not already set by 3rd Party player frameworks that set mode to prevent event retrigger.
+                    track.mode = mode;
+                }
+            }
+
+            if (textSourceBuffer.isFragmented) {
+                textSourceBuffer.setTextTrack();
+            }
+        },
+
         /**
          * @param type
          * @returns {Array}
          * @memberof MediaPlayer#
          */
         getBitrateInfoListFor: function(type) {
-            var streamInfo = streamController.getActiveStreamInfo(),
-                stream = streamController.getStreamById(streamInfo.id);
+            var stream = getActiveStream.call(this);
 
-            return stream.getBitrateListFor(type);
+            return stream ? stream.getBitrateListFor(type) : [];
         },
 
         /**
@@ -554,6 +671,154 @@ MediaPlayer = function (context) {
          */
         getInitialBitrateFor: function(type) {
             return abrController.getInitialBitrateFor(type);
+        },
+
+        /**
+         * This method returns the list of all available streams from a given manifest
+         * @param manifest
+         * @returns {Array} list of {@link MediaPlayer.vo.StreamInfo}
+         * @memberof MediaPlayer#
+         */
+        getStreamsFromManifest: function(manifest) {
+            return this.adapter.getStreamsInfo(manifest);
+        },
+
+        /**
+         * This method returns the list of all available tracks for a given media type
+         * @param type
+         * @returns {Array} list of {@link MediaPlayer.vo.MediaInfo}
+         * @memberof MediaPlayer#
+         */
+        getTracksFor: function(type) {
+            var streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
+
+            if (!streamInfo) return [];
+
+            return mediaController.getTracksFor(type, streamInfo);
+        },
+
+        /**
+         * This method returns the list of all available tracks for a given media type and streamInfo from a given manifest
+         * @param type
+         * @param manifest
+         * @param streamInfo
+         * @returns {Array} list of {@link MediaPlayer.vo.MediaInfo}
+         * @memberof MediaPlayer#
+         */
+        getTracksForTypeFromManifest: function(type, manifest, streamInfo) {
+            streamInfo = streamInfo || this.adapter.getStreamsInfo(manifest)[0];
+
+            return streamInfo ? this.adapter.getAllMediaInfoForType(manifest, streamInfo, type) : [];
+        },
+
+        /**
+         * @param type
+         * @returns {Object} {@link MediaPlayer.vo.MediaInfo}
+         * @memberof MediaPlayer#
+         */
+        getCurrentTrackFor: function(type) {
+            var streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
+
+            if (!streamInfo) return null;
+
+            return mediaController.getCurrentTrackFor(type, streamInfo);
+        },
+
+        /**
+         * This method allows to set media settings that will be used to pick the initial track. Format of the settings
+         * is following:
+         * {lang: langValue,
+         *  viewpoint: viewpointValue,
+         *  audioChannelConfiguration: audioChannelConfigurationValue,
+         *  accessibility: accessibilityValue,
+         *  role: roleValue}
+         *
+         *
+         * @param type
+         * @param value {Object}
+         * @memberof MediaPlayer#
+         */
+        setInitialMediaSettingsFor: function(type, value) {
+            mediaController.setInitialSettings(type, value);
+        },
+
+        /**
+         * This method returns media settings that is used to pick the initial track. Format of the settings
+         * is following:
+         * {lang: langValue,
+         *  viewpoint: viewpointValue,
+         *  audioChannelConfiguration: audioChannelConfigurationValue,
+         *  accessibility: accessibilityValue,
+         *  role: roleValue}
+         * @param type
+         * @returns {Object}
+         * @memberof MediaPlayer#
+         */
+        getInitialMediaSettingsFor: function(type) {
+            return mediaController.getInitialSettings(type);
+        },
+
+        /**
+         * @param track instance of {@link MediaPlayer.vo.MediaInfo}
+         * @memberof MediaPlayer#
+         */
+        setCurrentTrack: function(track) {
+            mediaController.setTrack(track);
+        },
+
+        /**
+         * This method returns the current track switch mode.
+         *
+         * @param type
+         * @returns mode
+         * @memberof MediaPlayer#
+         */
+        getTrackSwitchModeFor: function(type) {
+            return mediaController.getSwitchMode(type);
+        },
+
+        /**
+         * This method sets the current track switch mode. Available options are:
+         *
+         * MediaPlayer.dependencies.MediaController.trackSwitchModes.NEVER_REPLACE
+         * (used to forbid clearing the buffered data (prior to current playback position) after track switch. Default for video)
+         *
+         * MediaPlayer.dependencies.MediaController.trackSwitchModes.ALWAYS_REPLACE
+         * (used to clear the buffered data (prior to current playback position) after track switch. Default for audio)
+         *
+         * @param type
+         * @param mode
+         * @memberof MediaPlayer#
+         */
+        setTrackSwitchModeFor: function(type, mode) {
+            mediaController.setSwitchMode(type, mode);
+        },
+
+        /**
+         * This method sets the selection mode for the initial track. This mode defines how the initial track will be selected
+         * if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
+         *
+         * MediaPlayer.dependencies.MediaController.trackSelectionModes.HIGHEST_BITRATE
+         * this mode makes the player select the track with a highest bitrate. This mode is a default mode.
+         *
+         * MediaPlayer.dependencies.MediaController.trackSelectionModes.WIDEST_RANGE
+         * this mode makes the player select the track with a widest range of bitrates
+         *
+         * @param mode
+         * @memberof MediaPlayer#
+         */
+        setSelectionModeForInitialTrack: function(mode) {
+            mediaController.setSelectionModeForInitialTrack(mode);
+        },
+
+        /**
+         * This method returns the track selection mode.
+         *
+         * @returns mode
+         * @memberof MediaPlayer#
+         */
+        getSelectionModeForInitialTrack: function() {
+            return mediaController.getSelectionModeForInitialTrack();
         },
 
         /**
@@ -693,18 +958,28 @@ MediaPlayer = function (context) {
          * a single piece of content.
          *
          * @return {MediaPlayer.dependencies.ProtectionController} protection controller
+         * @memberof MediaPlayer#
          */
         createProtection: function() {
             return system.getObject("protectionController");
         },
 
         /**
-         * Allows application to retrieve a manifest
+         * A Callback function provided when retrieving manifests
+         *
+         * @callback MediaPlayer~retrieveManifestCallback
+         * @param {Object} manifest JSON version of the manifest XML data or null if an
+         * error was encountered
+         * @param {String} error An error string or null if the operation was successful
+         */
+
+        /**
+         * Allows application to retrieve a manifest.  Manifest loading is asynchronous and
+         * requires the app-provided callback function
          *
          * @param {string} url the manifest url
-         * @param {function} callback function that accepts two parameters.  The first is
-         * a successfully parsed manifest or null, the second is a string that contains error
-         * information in the case that the first parameter is null
+         * @param {MediaPlayer~retrieveManifestCallback} callback manifest retrieval callback
+         * @memberof MediaPlayer#
          */
         retrieveManifest: function(url, callback) {
             (function(manifestUrl) {
@@ -843,12 +1118,20 @@ MediaPlayer = function (context) {
             }
 
             // TODO : update
+            resetAndPlay.call(this);
+        },
 
-            doReset.call(this);
-
-            if (isReady.call(this)) {
-                doAutoPlay.call(this);
+        /**
+         * Use this method to attach an HTML5 div for dash.js to render rich TTML subtitles.
+         *
+         * @param div An unstyled div placed after the video element. It will be styled to match the video size and overlay z-order.
+         * @memberof MediaPlayer#
+         */
+        attachTTMLRenderingDiv: function (div) {
+            if (!videoModel) {
+                throw "Must call attachView with video element before you attach TTML Rendering Div";
             }
+            videoModel.setTTMLRenderingDiv(div);
         },
 
         /**
@@ -883,12 +1166,7 @@ MediaPlayer = function (context) {
             protectionData = data;
 
             // TODO : update
-
-            doReset.call(this);
-
-            if (isReady.call(this)) {
-                doAutoPlay.call(this);
-            }
+            resetAndPlay.call(this);
         },
 
         /**
@@ -1023,31 +1301,83 @@ MediaPlayer.prototype = {
     constructor: MediaPlayer
 };
 
-
+/**
+ * Namespace for {@MediaPlayer} dependencies
+ * @namespace
+ */
 MediaPlayer.dependencies = {};
+
+/**
+ * Namespace for {@MediaPlayer} protection-related objects
+ * @namespace
+ */
 MediaPlayer.dependencies.protection = {};
+
+/**
+ * Namespace for {@MediaPlayer} license server implementations
+ * @namespace
+ */
 MediaPlayer.dependencies.protection.servers = {};
+
+/**
+ * Namespace for {@MediaPlayer} utility classes
+ * @namespace
+ */
 MediaPlayer.utils = {};
+
+/**
+ * Namespace for {@MediaPlayer} model classes
+ * @namespace
+ */
 MediaPlayer.models = {};
+
+/**
+ * Namespace for {@MediaPlayer} data objects
+ * @namespace
+ */
 MediaPlayer.vo = {};
+
+/**
+ * Namespace for {@MediaPlayer} metrics-related data objects
+ * @@namespace
+ */
 MediaPlayer.vo.metrics = {};
+
+/**
+ * Namespace for {@MediaPlayer} protection-related data objects
+ * @namespace
+ */
 MediaPlayer.vo.protection = {};
+
+/**
+ * Namespace for {@MediaPlayer} rules classes
+ * @namespace
+ */
 MediaPlayer.rules = {};
+
+/**
+ * Namespace for {@MediaPlayer} dependency-injection helper classes
+ * @namespace
+ */
 MediaPlayer.di = {};
 
 /**
  * The list of events supported by MediaPlayer
  */
 MediaPlayer.events = {
+    RESET_COMPLETE: "resetComplete",
     METRICS_CHANGED: "metricschanged",
     METRIC_CHANGED: "metricchanged",
     METRIC_UPDATED: "metricupdated",
     METRIC_ADDED: "metricadded",
     MANIFEST_LOADED: "manifestloaded",
+    PROTECTION_CREATED: "protectioncreated",
+    PROTECTION_DESTROYED: "protectiondestroyed",
     STREAM_SWITCH_STARTED: "streamswitchstarted",
     STREAM_SWITCH_COMPLETED: "streamswitchcompleted",
     STREAM_INITIALIZED: "streaminitialized",
     TEXT_TRACK_ADDED: "texttrackadded",
+    TEXT_TRACKS_ADDED: "alltexttracksadded",
     BUFFER_LOADED: "bufferloaded",
     BUFFER_EMPTY: "bufferstalled",
     ERROR: "error",

@@ -46,11 +46,45 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
 
         getRequestHeadersFromMessage: function(/*message*/) { return null; },
 
-        getLicenseRequestFromMessage: function(message) { return new Uint8Array(message); }
+        getLicenseRequestFromMessage: function(message) { return new Uint8Array(message); },
+
+        getLicenseServerURLFromInitData: function(/*initData*/) { return null; }
     };
 };
 
 MediaPlayer.dependencies.protection.KeySystem_ClearKey.prototype = {
     constructor: MediaPlayer.dependencies.protection.KeySystem_ClearKey
 };
+
+/**
+ * Returns desired clearkeys (as specified in the CDM message) from protection data
+ *
+ * @param {MediaPlayer.vo.protection.ProtectionData} protData the protection data
+ * @param {ArrayBuffer} message the ClearKey CDM message
+ * @returns {MediaPlayer.vo.protection.ClearKeyKeySet} the key set or null if none found
+ * @throws {Error} if a keyID specified in the CDM message was not found in the
+ * protection data
+ * @memberof MediaPlayer.dependencies.protection.KeySystem_ClearKey
+ */
+MediaPlayer.dependencies.protection.KeySystem_ClearKey.getClearKeysFromProtectionData = function(protData, message) {
+    var clearkeySet = null;
+    if (protData) {
+        // ClearKey is the only system that does not require a license server URL, so we
+        // handle it here when keys are specified in protection data
+        var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
+        var keyPairs = [];
+        for (var i = 0; i < jsonMsg.kids.length; i++) {
+            var clearkeyID = jsonMsg.kids[i],
+                    clearkey = (protData.clearkeys.hasOwnProperty(clearkeyID)) ? protData.clearkeys[clearkeyID] : null;
+            if (!clearkey) {
+                throw new Error("DRM: ClearKey keyID (" + clearkeyID + ") is not known!");
+            }
+            // KeyIDs from CDM are not base64 padded.  Keys may or may not be padded
+            keyPairs.push(new MediaPlayer.vo.protection.KeyPair(clearkeyID, clearkey));
+        }
+        clearkeySet = new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs);
+    }
+    return clearkeySet;
+};
+
 

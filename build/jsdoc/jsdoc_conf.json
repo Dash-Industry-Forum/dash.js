@@ -5,7 +5,7 @@
     "source": {
         "include": ["../src/streaming/", "../src/dash/"]
     },
-    "plugins": [],
+    "plugins": [ "plugins/markdown" ],
     "templates": {	
 		"cleverLinks"           : false,
 		"monospaceLinks"        : true,

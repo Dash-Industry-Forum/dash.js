@@ -13,7 +13,7 @@
     "loopfunc" : true,
     "predef" : [
         "dijon",
-        "Q",
+        "ISOBoxer",
         "ObjectIron",
         "X2JS",
         "kendo",

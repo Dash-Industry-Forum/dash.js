@@ -4,6 +4,11 @@
     margin-bottom: 20px;
 }
 
+.sessionPanelPlaying {
+    border-width: 5px;
+    border-color: green;
+}
+
 .keyid {
     font-family: monospace;
 }

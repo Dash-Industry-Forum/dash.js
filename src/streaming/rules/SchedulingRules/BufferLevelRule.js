@@ -122,6 +122,8 @@ MediaPlayer.rules.BufferLevelRule = function () {
         metricsModel: undefined,
         abrController: undefined,
         playbackController: undefined,
+        mediaController: undefined,
+        virtualBuffer: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
@@ -138,7 +140,8 @@ MediaPlayer.rules.BufferLevelRule = function () {
         execute: function(context, callback) {
             var streamInfo = context.getStreamInfo(),
                 streamId = streamInfo.id,
-                mediaType = context.getMediaInfo().type;
+                mediaInfo = context.getMediaInfo(),
+                mediaType = mediaInfo.type;
 
             if (isBufferLevelOutranT(streamId, mediaType)) {
                 callback(new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
@@ -146,15 +149,19 @@ MediaPlayer.rules.BufferLevelRule = function () {
             }
 
             var metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
+                switchMode = this.mediaController.getSwitchMode(),
                 bufferLevel = this.metricsExt.getCurrentBufferLevel(metrics) ? this.metricsExt.getCurrentBufferLevel(metrics).level : 0,
+                currentTime = this.playbackController.getTime(),
+                appendedChunks = this.virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: {start: currentTime, end: (currentTime + bufferLevel)}}),
+                appendedLevel = (appendedChunks && appendedChunks.length > 0) ? (appendedChunks[appendedChunks.length-1].bufferedRange.end - currentTime) : null,
+                actualBufferLevel = switchMode === MediaPlayer.dependencies.MediaController.trackSwitchModes.NEVER_REPLACE ? bufferLevel : (appendedLevel || 0),
                 scheduleCtrl = scheduleController[streamId][mediaType],
-                track = scheduleCtrl.streamProcessor.getCurrentTrack(),
+                representationInfo = scheduleCtrl.streamProcessor.getCurrentRepresentationInfo(),
                 isDynamic = scheduleCtrl.streamProcessor.isDynamic(),
                 rate = this.metricsExt.getCurrentPlaybackRate(metrics),
                 duration = streamInfo.manifestInfo.duration,
-                bufferedDuration = bufferLevel / Math.max(rate, 1),
-                fragmentDuration = track.fragmentDuration,
-                currentTime = this.playbackController.getTime(),
+                bufferedDuration = actualBufferLevel / Math.max(rate, 1),
+                fragmentDuration = representationInfo.fragmentDuration,
                 timeToEnd = isDynamic ? Number.POSITIVE_INFINITY : duration - currentTime,
                 requiredBufferLength = Math.min(getRequiredBufferLength.call(this, isDynamic, duration, scheduleCtrl), timeToEnd),
                 remainingDuration = Math.max(requiredBufferLength - bufferedDuration, 0),

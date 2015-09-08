@@ -39,71 +39,139 @@ MediaPlayer.dependencies.Stream = function () {
         isUpdating = false,
         isInitialized = false,
         protectionController,
-        ownProtectionController = false,
+        boundProtectionErrorHandler,
 
         eventController = null,
 
         // Encrypted Media Extensions
         onProtectionError = function(event) {
-            this.errHandler.mediaKeySessionError(event.data);
-            this.log(event.data);
-            this.reset();
+            if (event.error) {
+                this.errHandler.mediaKeySessionError(event.error);
+                this.log(event.error);
+                this.reset();
+            }
+        },
+
+        getMimeTypeOrType = function(mediaInfo) {
+            return mediaInfo.type === "text"? mediaInfo.mimeType : mediaInfo.type;
+        },
+
+        isMediaSupported = function(mediaInfo, mediaSource, manifest) {
+            var self = this,
+                type = mediaInfo.type,
+                codec,
+                msg;
+
+            if (type === "muxed" && mediaInfo) {
+                msg = "Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines";
+                this.log(msg);
+                this.errHandler.manifestError(msg, "multiplexedrep", this.manifestModel.getValue());
+                return false;
+            }
+
+            if ((type === "text") || (type === "fragmentedText")) return true;
+
+            codec = mediaInfo.codec;
+            self.log(type + " codec: " + codec);
+
+            if (!!mediaInfo.contentProtection && !self.capabilities.supportsEncryptedMedia()) {
+                self.errHandler.capabilityError("encryptedmedia");
+            } else if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
+                msg = type + "Codec (" + codec + ") is not supported.";
+                self.errHandler.manifestError(msg, "codec", manifest);
+                self.log(msg);
+                return false;
+            }
+
+            return true;
+        },
+
+        onCurrentTrackChanged = function(e) {
+            var processor = getProcessorForMediaInfo.call(this, e.data.oldMediaInfo);
+            if (!processor) return;
+
+            var currentTime = this.playbackController.getTime(),
+                buffer = processor.getBuffer(),
+                mediaInfo = e.data.newMediaInfo,
+                manifest = this.manifestModel.getValue(),
+                idx = streamProcessors.indexOf(processor),
+                mediaSource = processor.getMediaSource();
+
+            if (mediaInfo.type !== "fragmentedText"){
+                processor.reset(true);
+                createStreamProcessor.call(this, mediaInfo, manifest, mediaSource, {buffer: buffer, replaceIdx: idx, currentTime: currentTime});
+                this.playbackController.seek(this.playbackController.getTime());
+            }else {
+                processor.setIndexHandlerTime(currentTime);
+                processor.updateMediaInfo(manifest, mediaInfo);
+            }
+        },
+
+        createStreamProcessor = function(mediaInfo, manifest, mediaSource, optionalSettings) {
+            var self = this,
+                streamProcessor = self.system.getObject("streamProcessor"),
+                allMediaForType = this.adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);
+
+            streamProcessor.initialize(getMimeTypeOrType.call(self, mediaInfo), self.fragmentController, mediaSource, self, eventController);
+            self.abrController.updateTopQualityIndex(mediaInfo);
+
+            if (optionalSettings) {
+                streamProcessor.setBuffer(optionalSettings.buffer);
+                streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
+                streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
+            } else {
+                streamProcessors.push(streamProcessor);
+            }
+
+            if((mediaInfo.type === "text" || mediaInfo.type === "fragmentedText")) {
+                var idx;
+                for(var i = 0; i < allMediaForType.length; i++){
+                    if(allMediaForType[i].index === mediaInfo.index) {
+                        idx = i;
+                    }
+                    streamProcessor.updateMediaInfo(manifest, allMediaForType[i]);//creates text tracks for all adaptations in one stream processor
+                }
+                if(mediaInfo.type === "fragmentedText"){
+                    streamProcessor.updateMediaInfo(manifest, allMediaForType[idx]);//sets the initial media info
+                }
+            }else {
+                streamProcessor.updateMediaInfo(manifest, mediaInfo);
+            }
+
+            return streamProcessor;
         },
 
         initializeMediaForType = function(type, mediaSource) {
             var self = this,
-                mimeType = null,
                 manifest = self.manifestModel.getValue(),
-                codec,
-                getCodecOrMimeType = function(mediaInfo) {
-                    return mediaInfo.codec;
-                },
-                streamProcessor,
-                mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, type);
+                allMediaForType = this.adapter.getAllMediaInfoForType(manifest, streamInfo, type),
+                mediaInfo = null,
+                initialMediaInfo;
 
-            if (type === "text") {
-                getCodecOrMimeType = function(mediaInfo) {
-                    mimeType = mediaInfo.mimeType;
-
-                    return mimeType;
-                };
-            }
-
-            if (mediaInfo !== null) {
-                //self.log("Create " + type + " buffer.");
-                var codecOrMime = getCodecOrMimeType.call(self, mediaInfo),
-                    contentProtectionData;
-
-                if ((type !== "text") && (type !== "fragmentedText")) {
-                    codec = codecOrMime;
-                    self.log(type + " codec: " + codec);
-
-                    contentProtectionData = mediaInfo.contentProtection;
-
-                    if (!!contentProtectionData && !self.capabilities.supportsEncryptedMedia()) {
-                        self.errHandler.capabilityError("encryptedmedia");
-                    } else {
-                        if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
-                            var msg = type + "Codec (" + codec + ") is not supported.";
-                            self.errHandler.manifestError(msg, "codec", manifest);
-                            self.log(msg);
-                            return;
-                        }
-                    }
-                }
-
-                // TODO : How to tell index handler live/duration?
-                // TODO : Pass to controller and then pass to each method on handler?
-
-                streamProcessor = self.system.getObject("streamProcessor");
-                streamProcessors.push(streamProcessor);
-                streamProcessor.initialize(mimeType || type, self.fragmentController, mediaSource, self, eventController);
-                self.abrController.updateTopQualityIndex(mediaInfo);
-                streamProcessor.updateMediaInfo(manifest, mediaInfo);
-                //self.debug.log(type + " is ready!");
-            } else {
+            if (!allMediaForType || allMediaForType.length === 0) {
                 self.log("No " + type + " data.");
+                return;
             }
+
+            for (var i = 0, ln = allMediaForType.length; i < ln; i += 1) {
+                mediaInfo = allMediaForType[i];
+
+                if (!isMediaSupported.call(self, mediaInfo, mediaSource, manifest)) continue;
+
+                if (self.mediaController.isMultiTrackSupportedByType(mediaInfo.type)) {
+                    self.mediaController.addTrack(mediaInfo, streamInfo);
+                }
+            }
+
+            if (this.mediaController.getTracksFor(type, streamInfo).length === 0) return;
+
+            this.mediaController.checkInitialMediaSettings(streamInfo);
+            initialMediaInfo = this.mediaController.getCurrentTrackFor(type, streamInfo);
+
+            // TODO : How to tell index handler live/duration?
+            // TODO : Pass to controller and then pass to each method on handler?
+
+            createStreamProcessor.call(this, initialMediaInfo, manifest, mediaSource);
         },
 
         initializeMedia = function (mediaSource) {
@@ -120,6 +188,7 @@ MediaPlayer.dependencies.Stream = function () {
             initializeMediaForType.call(self, "audio", mediaSource);
             initializeMediaForType.call(self, "text", mediaSource);
             initializeMediaForType.call(self, "fragmentedText", mediaSource);
+            initializeMediaForType.call(self, "muxed", mediaSource);
 
             createBuffers.call(self);
 
@@ -134,9 +203,8 @@ MediaPlayer.dependencies.Stream = function () {
                 self.liveEdgeFinder.initialize(streamProcessors[0]);
                 self.liveEdgeFinder.subscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, self.playbackController);
                 //self.log("Playback initialized!");
+                checkIfInitializationCompleted.call(this);
             }
-
-            checkIfInitializationCompleted.call(this);
         },
 
         checkIfInitializationCompleted = function() {
@@ -185,7 +253,7 @@ MediaPlayer.dependencies.Stream = function () {
         },
 
         onBufferingCompleted = function(/*e*/) {
-            var processors = getAudioVideoProcessors(),
+            var processors = getProcessors(),
                 ln = processors.length,
                 i = 0;
 
@@ -205,7 +273,17 @@ MediaPlayer.dependencies.Stream = function () {
             checkIfInitializationCompleted.call(this);
         },
 
-        getAudioVideoProcessors = function() {
+        getProcessorForMediaInfo = function(mediaInfo) {
+            if (!mediaInfo) return false;
+
+            var processors = getProcessors.call(this);
+
+            return processors.filter(function(processor){
+                return (processor.getType() === mediaInfo.type);
+            })[0];
+        },
+
+        getProcessors = function() {
             var arr = [],
                 i = 0,
                 ln = streamProcessors.length,
@@ -216,7 +294,7 @@ MediaPlayer.dependencies.Stream = function () {
                 controller = streamProcessors[i];
                 type = controller.getType();
 
-                if (type === "audio" || type === "video") {
+                if (type === "audio" || type === "video" || type === "fragmentedText") {
                     arr.push(controller);
                 }
             }
@@ -265,6 +343,7 @@ MediaPlayer.dependencies.Stream = function () {
         videoModel: undefined,
         fragmentController: undefined,
         playbackController: undefined,
+        mediaController: undefined,
         capabilities: undefined,
         log: undefined,
         errHandler: undefined,
@@ -277,25 +356,22 @@ MediaPlayer.dependencies.Stream = function () {
         setup: function () {
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFERING_COMPLETED] = onBufferingCompleted;
             this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
-
-            // Protection event handlers
-            this[MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR] = onProtectionError.bind(this);
+            this[MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED] = onCurrentTrackChanged;
         },
 
-        initialize: function(strmInfo, protectionCtrl, protectionData) {
+        initialize: function(strmInfo, protectionCtrl) {
             streamInfo = strmInfo;
-            if (this.capabilities.supportsEncryptedMedia()) {
-                if (!protectionCtrl) {
-                    protectionCtrl = this.system.getObject("protectionController");
-                    ownProtectionController = true;
-                }
-                protectionController = protectionCtrl;
-                protectionController.subscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
-                protectionController.setMediaElement(this.videoModel.getElement());
-                if (protectionData) {
-                    protectionController.setProtectionData(protectionData);
-                }
-            }
+            protectionController = protectionCtrl;
+
+            // Protection error handler
+            boundProtectionErrorHandler = onProtectionError.bind(this);
+            protectionController.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
+            protectionController.addEventListener(MediaPlayer.dependencies.ProtectionController.events.SERVER_CERTIFICATE_UPDATED, boundProtectionErrorHandler);
+            protectionController.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_ADDED, boundProtectionErrorHandler);
+            protectionController.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SESSION_CREATED, boundProtectionErrorHandler);
+            protectionController.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
+            protectionController.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
+            protectionController.addEventListener(MediaPlayer.dependencies.ProtectionController.events.LICENSE_REQUEST_COMPLETE, boundProtectionErrorHandler);
         },
 
         /**
@@ -356,14 +432,13 @@ MediaPlayer.dependencies.Stream = function () {
             this.liveEdgeFinder.abortSearch();
             this.liveEdgeFinder.unsubscribe(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.playbackController);
 
-            if (protectionController) {
-                protectionController.unsubscribe(MediaPlayer.dependencies.ProtectionController.eventList.ENAME_PROTECTION_ERROR, this);
-                if (ownProtectionController) {
-                    protectionController.teardown();
-                    protectionController = null;
-                    ownProtectionController = false;
-                }
-            }
+            protectionController.removeEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
+            protectionController.removeEventListener(MediaPlayer.dependencies.ProtectionController.events.SERVER_CERTIFICATE_UPDATED, boundProtectionErrorHandler);
+            protectionController.removeEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_ADDED, boundProtectionErrorHandler);
+            protectionController.removeEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SESSION_CREATED, boundProtectionErrorHandler);
+            protectionController.removeEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
+            protectionController.removeEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
+            protectionController.removeEventListener(MediaPlayer.dependencies.ProtectionController.events.LICENSE_REQUEST_COMPLETE, boundProtectionErrorHandler);
 
             isMediaInitialized = false;
             isStreamActivated = false;

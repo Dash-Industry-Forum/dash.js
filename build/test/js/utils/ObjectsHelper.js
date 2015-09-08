@@ -41,8 +41,15 @@
             context = new Dash.di.DashContext();
             system.mapValue("system", system);
             system.mapOutlet("system");
+            system.mapValue("eventBus", new MediaPlayer.utils.EventBus());
+            system.mapOutlet("eventBus");
+            var debug = new MediaPlayer.utils.Debug();
+            system.mapValue("debug", debug);
+            system.mapOutlet("debug");
+            system.injectInto(debug);
             system.injectInto(context);
             notifier = system.getObject("notifier");
+
         };
 
     objectsHelper =  {
@@ -50,8 +57,8 @@
             return createObject("abrController");
         },
 
-        getTrackController: function(type) {
-            var ctrl = createObject("trackController");
+        getRepresentationController: function(type) {
+            var ctrl = createObject("representationController");
             ctrl.streamProcessor = getDummyStreamProcessor(type);
 
             return ctrl;
@@ -67,8 +74,11 @@
             return createObject("timelineConverter");
         },
 
-        getIndexHandler: function() {
-            return createObject("indexHandler");
+        getIndexHandler: function(type) {
+            var handler = createObject("indexHandler");
+            handler.streamProcessor = getDummyStreamProcessor(type);
+
+            return handler;
         },
 
         getFragmentController: function() {

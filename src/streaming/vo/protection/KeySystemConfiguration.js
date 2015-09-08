@@ -30,19 +30,32 @@
  */
 
 /**
+ * Represents a set of configurations that describe the capabilities desired for
+ * support by a given CDM
  *
- * @param {MediaPlayer.vo.protection.MediaCapability[]} audioCapabilities
- * @param {MediaPlayer.vo.protection.MediaCapability[]} videoCapabilities
- * @param {string} [distinctiveIdentifier]
- * @param {string} [persistentState]
- * @constructor
+ * @param {MediaPlayer.vo.protection.MediaCapability[]} audioCapabilities array of
+ * desired audio capabilities.  Higher preference capabilities should be placed earlier
+ * in the array.
+ * @param {MediaPlayer.vo.protection.MediaCapability[]} videoCapabilities array of
+ * desired video capabilities.  Higher preference capabilities should be placed earlier
+ * in the array.
+ * @param {string} [distinctiveIdentifier="optional"] desired use of distinctive identifiers.
+ * One of "required", "optional", or "not-allowed"
+ * @param {string} [persistentState="optional"] desired support for persistent storage of
+ * key systems.  One of "required", "optional", or "not-allowed"
+ * @param {string[]} [sessionTypes=["temporary"]] List of session types that must
+ * be supported by the key system
+ * @class
  */
-MediaPlayer.vo.protection.KeySystemConfiguration = function(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState) {
+MediaPlayer.vo.protection.KeySystemConfiguration = function(audioCapabilities, videoCapabilities,
+                                                            distinctiveIdentifier, persistentState,
+                                                            sessionTypes) {
     this.initDataTypes = [ "cenc" ];
     this.audioCapabilities = audioCapabilities;
     this.videoCapabilities = videoCapabilities;
     this.distinctiveIdentifier = distinctiveIdentifier;
     this.persistentState = persistentState;
+    this.sessionTypes = sessionTypes;
 };
 
 MediaPlayer.vo.protection.KeySystemConfiguration.prototype = {

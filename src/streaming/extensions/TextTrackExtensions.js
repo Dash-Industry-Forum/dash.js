@@ -30,32 +30,170 @@
  */
 MediaPlayer.utils.TextTrackExtensions = function () {
     "use strict";
-    var Cue;
+    var Cue,
+        video,
+        textTrackQueue = [],
+        trackElementArr = [],
+        currentTrackIdx = -1,
+        actualVideoWidth = 0,
+        actualVideoHeight = 0,
+        captionContainer = null,
+        videoSizeCheckInterval = null,
+        isIE11 = false,// Temp solution for the addCue InvalidStateError..
+
+        createTrackForUserAgent = function(i){
+            var kind = textTrackQueue[i].kind;
+            var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
+            var lang = textTrackQueue[i].lang;
+            var track = isIE11 ? video.addTextTrack(kind, label, lang) : document.createElement('track');
+
+             if (!isIE11) {
+                 track.kind = kind;
+                 track.label = label;
+                 track.srclang = lang;
+             }
+
+            return track;
+        };
+
 
     return {
+        mediaController:undefined,
+        videoModel:undefined,
+        eventBus:undefined,
+
         setup: function() {
             Cue = window.VTTCue || window.TextTrackCue;
+            //TODO Check if IE has resolved issues: Then revert to not using the addTextTrack API for all browsers.
+            // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
+            // https://connect.microsoft.com/IE/feedback/details/1573380/htmltrackelement-track-addcue-throws-invalidstateerror-when-adding-new-cue
+            isIE11 = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./);
         },
 
-        addTextTrack: function(video, captionData,  label, scrlang, isDefaultTrack) {
+        addTextTrack: function(textTrackInfoVO, totalTextTracks) {
 
-            //TODO: Ability to define the KIND in the MPD - ie subtitle vs caption....
-            this.track = video.addTextTrack("captions", label, scrlang);
-            // track.default is an object property identifier that is a reserved word
-            // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
-            /*jshint -W024 */
-            this.track.default = isDefaultTrack;
-            this.track.mode = "showing";
-            this.video=video;
-            this.addCaptions(0, captionData);
-            return this.track;
+            textTrackQueue.push(textTrackInfoVO);
+            if (video === undefined) {
+                video = textTrackInfoVO.video;
+            }
+            captionContainer = this.videoModel.getTTMLRenderingDiv();
+
+            if(textTrackQueue.length === totalTextTracks) {
+                var defaultIndex = 0;
+                for(var i = 0 ; i < textTrackQueue.length; i++) {
+                    var track = createTrackForUserAgent(i);
+                    currentTrackIdx = i;//set to i for external track setup. rest to default value at end of loop
+                    trackElementArr.push(track); //used to remove tracks from video element when added manually
+
+                    if (textTrackQueue[i].defaultTrack) {
+                        // track.default is an object property identifier that is a reserved word
+                        // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
+                        /*jshint -W024 */
+                        track.default = true;
+                        defaultIndex = i;
+                    }
+                    if (!isIE11){
+                        video.appendChild(track);
+                    }
+                    this.addCaptions(0, textTrackQueue[i].captionData);
+                    this.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
+                }
+                currentTrackIdx = defaultIndex;
+                this.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACKS_ADDED, data:{index:currentTrackIdx, tracks:textTrackQueue}});//send default idx.
+            }
+        },
+
+        checkVideoSize: function() {
+            var track = this.getCurrentTextTrack();
+            if (track && track.renderingType === "html") {
+                var newVideoWidth = video.clientWidth;
+                var newVideoHeight = video.clientHeight;
+
+                if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
+                    actualVideoWidth = newVideoWidth;
+                    actualVideoHeight = newVideoHeight;
+                    captionContainer.style.width = actualVideoWidth + "px";
+                    captionContainer.style.height = actualVideoHeight + "px";
+
+                    // Video view has changed size, so resize all active cues
+                    for (var i = 0; i < track.activeCues.length; ++i) {
+                        var cue = track.activeCues[i];
+                            cue.scaleCue(cue);
+                    }
+                }
+            }
+        },
+
+        scaleCue: function(activeCue) {
+            var videoWidth = actualVideoWidth;
+            var videoHeight = actualVideoHeight;
+            var key,
+                replaceValue,
+                elements;
+
+            var cellUnit = [videoWidth / activeCue.cellResolution[0], videoHeight / activeCue.cellResolution[1]];
+
+            if (activeCue.linePadding) {
+                for (key in activeCue.linePadding) {
+                    if (activeCue.linePadding.hasOwnProperty(key)) {
+                        var valueLinePadding = activeCue.linePadding[key];
+                        replaceValue = (valueLinePadding * cellUnit[0]).toString();
+                        // Compute the CellResolution unit in order to process properties using sizing (fontSize, linePadding, etc).
+                        var elementsSpan = document.getElementsByClassName('spanPadding');
+                        for (var i = 0; i < elementsSpan.length; i++) {
+                            elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-left\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                            elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-right\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        }
+                    }
+                }
+            }
+
+            if(activeCue.fontSize) {
+                for (key in activeCue.fontSize) {
+                    if (activeCue.fontSize.hasOwnProperty(key)) {
+                        var valueFontSize = activeCue.fontSize[key] / 100;
+                        replaceValue  = (valueFontSize * cellUnit[1]).toString();
+
+                        if (key !== 'defaultFontSize') {
+                            elements = document.getElementsByClassName(key);
+                        } else {
+                            elements = document.getElementsByClassName('paragraph');
+                        }
+
+                        for (var j = 0; j < elements.length; j++) {
+                            elements[j].style.cssText = elements[j].style.cssText.replace(/(font-size\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        }
+                    }
+                }
+            }
+
+            if (activeCue.lineHeight) {
+                for (key in activeCue.lineHeight) {
+                    if (activeCue.lineHeight.hasOwnProperty(key)) {
+                        var valueLineHeight = activeCue.lineHeight[key] / 100;
+                        replaceValue = (valueLineHeight * cellUnit[1]).toString();
+                        elements = document.getElementsByClassName(key);
+                        for (var k = 0; k < elements.length; k++) {
+                            elements[k].style.cssText = elements[k].style.cssText.replace(/(line-height\s*:\s*)[\d.,]+(?=\s*px)/gi, "$1" + replaceValue);
+                        }
+                    }
+                }
+            }
         },
 
         addCaptions: function(timeOffset, captionData) {
+            var track = this.getCurrentTextTrack();
+            if(!track) return;
+
+            track.mode = "showing";//make sure tracks are showing to be able to add the cue...
+
             for(var item in captionData) {
-                var cue;
-                var currentItem = captionData[item];
-                var video=this.video;
+                var cue,
+                    currentItem = captionData[item];
+
+                if (!videoSizeCheckInterval && currentItem.type=="html") {
+                    videoSizeCheckInterval = setInterval(this.checkVideoSize.bind(this), 500);
+                }
 
                 //image subtitle extracted from TTML
                 if(currentItem.type=="image"){
@@ -69,15 +207,72 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         img.id = 'ttmlImage_'+this.id;
                         img.src = this.image;
                         img.className = 'cue-image';
-                        video.parentNode.appendChild(img);
+                        if (captionContainer) {
+                            captionContainer.appendChild(img);
+                        } else {
+                            video.parentNode.appendChild(img);
+                        }
                     };
 
                     cue.onexit =  function () {
-                        var imgs = video.parentNode.childNodes;
-                        var i;
+                        var container,
+                            i,
+                            imgs;
+                        if (captionContainer) {
+                            container = captionContainer;
+                        } else {
+                            container = video.parentNode;
+                        }
+                        imgs = container.childNodes;
                         for(i=0;i<imgs.length;i++){
                             if(imgs[i].id=='ttmlImage_'+this.id){
-                                video.parentNode.removeChild(imgs[i]);
+                                container.removeChild(imgs[i]);
+                            }
+                        }
+                    };
+                }
+                else if (currentItem.type=="html") {
+                    if (track.renderingType !== "html") {
+                        track.renderingType = "html";
+                    }
+
+                    /* Don't do cue styling for TextTrackCue */
+                    if (Cue !== window.TextTrackCue) {
+                        if(!(document.getElementById('caption-style'))) {
+                            this.setCueStyle();
+                        }
+                        else if(!(document.getElementById('caption-style').sheet.cssRules.length)) {
+                            this.setCueStyle();
+                        }
+                    }
+
+                    cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
+                    cue.cueHTMLElement = currentItem.cueHTMLElement;
+                    cue.regions = currentItem.regions;
+                    cue.regionID = currentItem.regionID;
+                    cue.cueID=currentItem.cueID;
+                    cue.videoWidth = currentItem.videoWidth;
+                    cue.videoHeight = currentItem.videoHeight;
+                    cue.cellResolution = currentItem.cellResolution;
+                    cue.fontSize = currentItem.fontSize;
+                    cue.lineHeight = currentItem.lineHeight;
+                    cue.linePadding = currentItem.linePadding;
+                    cue.scaleCue = this.scaleCue;
+                    captionContainer.style.width = video.clientWidth + "px";
+                    captionContainer.style.height = video.clientHeight + "px";
+
+                    cue.onenter =  function () {
+                        if (track.mode == "showing") {
+                            captionContainer.appendChild(this.cueHTMLElement);
+                            this.scaleCue(this);
+                        }
+                    };
+
+                    cue.onexit =  function () {
+                        var divs = captionContainer.childNodes;
+                        for (var i = 0; i < divs.length; ++i) {
+                            if (divs[i].id == "subtitle_" + this.cueID) {
+                                captionContainer.removeChild(divs[i]);
                             }
                         }
                     };
@@ -99,38 +294,104 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         }
                     }
                 }
-                this.track.addCue(cue);
+
+                track.addCue(cue);
+            }
+
+            if (!textTrackQueue[currentTrackIdx].isFragmented){
+                track.mode = textTrackQueue[currentTrackIdx].defaultTrack ? "showing" : "hidden";
             }
         },
-        deleteCues: function(video) {
-            //when multiple tracks are supported - iterate through and delete all cues from all tracks.
 
-            var i = 0,
-                firstValidTrack = false;
+        getCurrentTextTrack: function(){
+            return currentTrackIdx >= 0 ? video.textTracks[currentTrackIdx] : null;
+        },
 
-            while (!firstValidTrack)
-            {
-                if (video.textTracks[i].cues !== null)
-                {
-                    firstValidTrack = true;
-                    break;
+        getCurrentTrackIdx: function(){
+            return currentTrackIdx;
+        },
+
+        setCurrentTrackIdx : function(value){
+            currentTrackIdx = value;
+        },
+
+        getTextTrack: function(idx) {
+            return video.textTracks[idx];
+        },
+
+        deleteTrackCues: function(track) {
+            if (track.cues){
+                var cues = track.cues,
+                    lastIdx = cues.length - 1;
+
+                for (var r = lastIdx; r >= 0 ; r--) {
+                    track.removeCue(cues[r]);
                 }
-                i++;
+
+                track.mode = "disabled";
+            }
+        },
+
+        deleteAllTextTracks:  function() {
+            var ln = trackElementArr.length;
+            for(var i = 0; i < ln; i++){
+                if (isIE11) {
+                    this.deleteTrackCues(this.getTextTrack(i));
+                }else {
+                    video.removeChild(trackElementArr[i]);
+                }
+
+            }
+            trackElementArr = [];
+            textTrackQueue = [];
+            if (videoSizeCheckInterval){
+                clearInterval(videoSizeCheckInterval);
+                videoSizeCheckInterval = null;
             }
 
-            var track = video.textTracks[i],
-                cues = track.cues,
-                lastIdx = cues.length - 1;
+        },
 
-            for (i = lastIdx; i >= 0 ; i--) {
-                track.removeCue(cues[i]);
+        deleteTextTrack: function(idx) {
+            video.removeChild(trackElementArr[idx]);
+            trackElementArr.splice(idx, 1);
+        },
+
+        setCueStyle: function() {
+            var styleElement;
+            if(document.getElementById('caption-style')) {
+                styleElement = document.getElementById('caption-style');
+            } else {
+                styleElement = document.createElement('style');
+                styleElement.id  = 'caption-style';
             }
+            document.head.appendChild(styleElement);
+            var stylesheet = styleElement.sheet;
+            
+            if(video.id) {
+                stylesheet.addRule("#" + video.id + '::cue','background: transparent');
+            } else if(video.classList.length !== 0) {
+                stylesheet.addRule("." + video.className + '::cue','background: transparent');
+            } else {
+                    stylesheet.addRule('video::cue','background: transparent');
+            }
+        },
 
-            track.mode = "disabled";
-            // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
-            /*jshint -W024 */
-            track.default = false;
+        removeCueStyle: function() {
+            /* Don't do anything if this is a TextTrackCue, this is placed here because
+               TextSourceBuffer (that calls this function, has no clue if this is a
+               VTTCue or a TextTrackCue */
+            if (Cue !== window.TextTrackCue) {
+                var stylesheet = document.getElementById('caption-style').sheet;
+                if(stylesheet.cssRules && stylesheet.cssRules.length > 0) {
+                    stylesheet.deleteRule(0);
+                }
+            }
+        },
+
+        clearCues: function() {
+            while(captionContainer.firstChild) {
+                captionContainer.removeChild(captionContainer.firstChild);
+            }
         }
-
     };
 };
