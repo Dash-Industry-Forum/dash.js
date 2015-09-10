@@ -160,8 +160,6 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 pendingReqs = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
                 loadingLength = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING}).length;
 
-                if (model.getIsPostponed() && !isNaN(req.startTime)) continue;
-
                 if (loadingLength > MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD) {
                     callback(new MediaPlayer.rules.SwitchRequest([], p));
                     return;
