@@ -168,7 +168,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                         ' chunk media type = ' + chunk.mediaType +
                                         ' chunk quality = ' + quality +
                                         ' chunk index = ' + chunk.index);
-                onMediaRejected.call(self, quality, chunk.index);
+                onMediaRejected.call(self, quality, chunk.index, chunk.start);
                 return;
             }
             //self.log("Push bytes: " + data.byteLength);
@@ -511,9 +511,9 @@ MediaPlayer.dependencies.BufferController = function () {
             appendNext.call(this);
         },
 
-        onMediaRejected = function(quality, index) {
+        onMediaRejected = function(quality, index, startTime) {
             isAppendingInProgress = false;
-            this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_REJECTED, {quality: quality, index: index});
+            this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_REJECTED, {quality: quality, index: index, start: startTime});
             appendNext.call(this);
         },
 

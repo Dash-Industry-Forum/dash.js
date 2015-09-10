@@ -880,7 +880,7 @@ Dash.dependencies.DashHandler = function () {
             //self.log("Getting the next request.");
 
             if (index === -1) {
-                return null;                
+                return null;
             }
 
             requestedTime = null;
