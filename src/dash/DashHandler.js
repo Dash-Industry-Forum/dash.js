@@ -880,7 +880,7 @@ Dash.dependencies.DashHandler = function () {
             //self.log("Getting the next request.");
 
             if (index === -1) {
-                throw "You must call getSegmentRequestForTime first.";
+                return null;
             }
 
             requestedTime = null;
