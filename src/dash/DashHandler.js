@@ -890,7 +890,14 @@ Dash.dependencies.DashHandler = function () {
             //self.log("New index: " + index);
 
             finished = isMediaFinished.call(self, representation);
-
+			
+            //Recheck if there be more segments, and then recheck if finished
+            if(!finished)
+            {
+                getSegments.call(self, representation);
+                finished = isMediaFinished.call(self, representation);
+            }
+			
             //self.log("Stream finished? " + finished);
             if (finished) {
                 request = new MediaPlayer.vo.FragmentRequest();
@@ -901,7 +908,7 @@ Dash.dependencies.DashHandler = function () {
                 self.log("Signal complete.");
                 //self.log(request);
             } else {
-                getSegments.call(self, representation);
+                //getSegments.call(self, representation);   //Getting segments after checking if finished changes the state 
                 //self.log("Got segments.");
                 //self.log(segments);
                 segment = getSegmentByIndex(idx, representation);
