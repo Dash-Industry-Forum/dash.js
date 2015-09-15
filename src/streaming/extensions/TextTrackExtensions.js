@@ -348,7 +348,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                 clearInterval(videoSizeCheckInterval);
                 videoSizeCheckInterval = null;
             }
-
+            this.clearCues();
         },
 
         deleteTextTrack: function(idx) {
@@ -389,8 +389,10 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         },
 
         clearCues: function() {
-            while(captionContainer.firstChild) {
-                captionContainer.removeChild(captionContainer.firstChild);
+            if (captionContainer) {
+                while(captionContainer.firstChild) {
+                    captionContainer.removeChild(captionContainer.firstChild);
+                }
             }
         }
     };
