@@ -40,6 +40,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         captionContainer = null,
         videoSizeCheckInterval = null,
         isIE11 = false,// Temp solution for the addCue InvalidStateError..
+        fullscreenAttribute = null,
 
         createTrackForUserAgent = function(i){
             var kind = textTrackQueue[i].kind;
@@ -68,6 +69,15 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
             // https://connect.microsoft.com/IE/feedback/details/1573380/htmltrackelement-track-addcue-throws-invalidstateerror-when-adding-new-cue
             isIE11 = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./);
+            if (document.fullscreenElement !== undefined) {
+                fullscreenAttribute = "fullscreenElement"; // Standard and Edge
+            } else if (document.webkitIsFullScreen !== undefined) {
+                fullscreenAttribute = "webkitIsFullScreen"; // Chrome and Safari (and Edge)
+            } else if (document.msFullScreenElement) { // IE11
+                fullscreenAttribute = "msFullScreenElement";
+            } else if (document.mozFullScreen) { // Firefox
+                fullscreenAttribute = "mozFullScreen";
+            }
         },
 
         addTextTrack: function(textTrackInfoVO, totalTextTracks) {
@@ -119,6 +129,12 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     for (var i = 0; i < track.activeCues.length; ++i) {
                         var cue = track.activeCues[i];
                             cue.scaleCue(cue);
+                    }
+                    
+                    if (fullscreenAttribute && document[fullscreenAttribute]) {
+                        captionContainer.style.zIndex = 2147483647;
+                    } else {
+                        captionContainer.style.zIndex = null;
                     }
                 }
             }

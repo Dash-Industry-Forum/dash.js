@@ -163,7 +163,6 @@ MediaPlayer.models.VideoModel = function () {
             TTMLRenderingDiv.style.position = 'absolute';
             TTMLRenderingDiv.style.display = 'flex';
             TTMLRenderingDiv.style.overflow = 'hidden';
-            TTMLRenderingDiv.style.zIndex = 2147483647;
             TTMLRenderingDiv.style.pointerEvents = 'none';
             TTMLRenderingDiv.style.top = 0;
             TTMLRenderingDiv.style.left = 0;

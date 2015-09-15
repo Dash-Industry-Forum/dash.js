@@ -1046,7 +1046,7 @@ MediaPlayer.utils.TTMLParser = function() {
                         var finalCue = document.createElement("div");
                         finalCue.appendChild(cueParagraph);
                         finalCue.id = "subtitle_" + cueID;
-                        finalCue.style.cssText = "position: absolute; z-index: 2147483647; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + cueRegionProperties;
+                        finalCue.style.cssText = "position: absolute; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + cueRegionProperties;
 
                         if(Object.keys(fontSize).length === 0) {
                             fontSize.defaultFontSize = '100';
