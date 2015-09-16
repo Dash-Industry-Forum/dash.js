@@ -426,12 +426,17 @@
                         this.adapter.getMediaInfoForType(manifest, streamInfo, "video") ||
                         this.adapter.getMediaInfoForType(manifest, streamInfo, "audio")
                     ),
-                    adaptation = this.adapter.getDataForMedia(mediaInfo),
+                    adaptation,
+                    useCalculatedLiveEdgeTime;
+
+                if (mediaInfo) {
+                    adaptation = this.adapter.getDataForMedia(mediaInfo);
                     useCalculatedLiveEdgeTime = this.manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
 
-                if (useCalculatedLiveEdgeTime) {
-                    this.log("SegmentTimeline detected using calculated Live Edge Time");
-                    useManifestDateHeaderTimeSource = false;
+                    if (useCalculatedLiveEdgeTime) {
+                        this.log("SegmentTimeline detected using calculated Live Edge Time");
+                        useManifestDateHeaderTimeSource = false;
+                    }
                 }
 
                 var manifestUTCTimingSources = this.manifestExt.getUTCTimingSources(e.data.manifest),
