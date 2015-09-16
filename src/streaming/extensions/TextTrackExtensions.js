@@ -41,6 +41,8 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         videoSizeCheckInterval = null,
         isIE11 = false,// Temp solution for the addCue InvalidStateError..
         fullscreenAttribute = null,
+        displayCCOnTop = false,
+        topZIndex = 2147483647,
 
         createTrackForUserAgent = function(i){
             var kind = textTrackQueue[i].kind;
@@ -78,6 +80,14 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             } else if (document.mozFullScreen) { // Firefox
                 fullscreenAttribute = "mozFullScreen";
             }
+        },
+
+        displayCConTop: function(value) {
+            displayCCOnTop = value;
+
+            if (!captionContainer || document[fullscreenAttribute]) return;
+
+            captionContainer.style.zIndex = value ? topZIndex : null;
         },
 
         addTextTrack: function(textTrackInfoVO, totalTextTracks) {
@@ -130,9 +140,9 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         var cue = track.activeCues[i];
                             cue.scaleCue(cue);
                     }
-                    
-                    if (fullscreenAttribute && document[fullscreenAttribute]) {
-                        captionContainer.style.zIndex = 2147483647;
+
+                    if ((fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop) {
+                        captionContainer.style.zIndex = topZIndex;
                     } else {
                         captionContainer.style.zIndex = null;
                     }
