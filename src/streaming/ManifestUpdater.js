@@ -56,10 +56,11 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
         update = function (manifest) {
 
             var delay,
-                timeSinceLastUpdate;
+                timeSinceLastUpdate,
+                date = new Date();
 
             this.manifestModel.setValue(manifest);
-            this.log("Manifest has been refreshed.");
+            this.log("Manifest has been refreshed at " + date + "[" + date.getTime() + "] ");
 
             delay = this.manifestExt.getRefreshDelay(manifest);
             timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;

@@ -345,6 +345,7 @@ MediaPlayer = function (context) {
             playbackController = system.getObject("playbackController");
             mediaController = system.getObject("mediaController");
             this.restoreDefaultUTCTimingSources();
+            this.debug.log("[dash.js "+ VERSION +"] " + "new MediaPlayer instance has been created");
         },
 
         /**
