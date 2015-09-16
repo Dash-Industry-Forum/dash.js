@@ -1099,6 +1099,17 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * This method serves to control captions z-index value. If 'true' is passed, the captions will have the highest z-index and be
+         * displayed on top of other html elements. Default value is 'false' (z-index is not set).
+         * @param value {Boolean}
+         */
+        displayCaptionsOnTop: function(value) {
+            var textTrackExt = system.getObject("textTrackExtensions");
+
+            textTrackExt.displayCConTop(value);
+        },
+
+        /**
          * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
          *
          * @param view An HTML5 VideoElement that has already been defined in the DOM.
