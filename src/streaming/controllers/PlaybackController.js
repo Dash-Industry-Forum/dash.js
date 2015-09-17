@@ -285,8 +285,8 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (this.isSeeking()) {
                 commonEarliestTime = {};
             } else {
-                // seek to the start of buffered range to avoid stalling caused by a shift between audio and video media time
-                this.seek(commonEarliestTime[id]);
+                // seek to the max of period start or start of buffered range to avoid stalling caused by a shift between audio and video media time                
+                this.seek(Math.max(commonEarliestTime[id], streamStart));
                 // prevents seeking the second time for the same Period
                 firstAppended[id].seekCompleted = true;
             }
