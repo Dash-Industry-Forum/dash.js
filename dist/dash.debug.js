@@ -1518,17 +1518,26 @@ MediaPlayer = function(context) {
         }
         return val;
     }, seek = function(value) {
-        this.getVideoModel().getElement().currentTime = this.getDVRSeekOffset(value);
+        var s = playbackController.getIsDynamic() ? this.getDVRSeekOffset(value) : value;
+        this.getVideoModel().setCurrentTime(s);
     }, time = function() {
-        var metric = getDVRInfoMetric.call(this);
-        return metric === null ? 0 : this.duration() - (metric.range.end - metric.time);
-    }, duration = function() {
-        var metric = getDVRInfoMetric.call(this), range;
-        if (metric === null) {
-            return 0;
+        var t = videoModel.getCurrentTime();
+        if (playbackController.getIsDynamic()) {
+            var metric = getDVRInfoMetric.call(this);
+            t = metric === null ? 0 : this.duration() - (metric.range.end - metric.time);
         }
-        range = metric.range.end - metric.range.start;
-        return range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize;
+        return t;
+    }, duration = function() {
+        var d = videoModel.getElement().duration;
+        if (playbackController.getIsDynamic()) {
+            var metric = getDVRInfoMetric.call(this), range;
+            if (metric === null) {
+                return 0;
+            }
+            range = metric.range.end - metric.range.start;
+            d = range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize;
+        }
+        return d;
     }, getAsUTC = function(valToConvert) {
         var metric = getDVRInfoMetric.call(this), availableFrom, utcValue;
         if (metric === null) {
@@ -1729,7 +1738,7 @@ MediaPlayer = function(context) {
                     track.mode = mode;
                 }
             }
-            if (textSourceBuffer.isFragmented && idx >= 0) {
+            if (textSourceBuffer.isFragmented) {
                 textSourceBuffer.setTextTrack();
             }
         },
@@ -1774,6 +1783,12 @@ MediaPlayer = function(context) {
         },
         setTrackSwitchModeFor: function(type, mode) {
             mediaController.setSwitchMode(type, mode);
+        },
+        setSelectionModeForInitialTrack: function(mode) {
+            mediaController.setSelectionModeForInitialTrack(mode);
+        },
+        getSelectionModeForInitialTrack: function() {
+            return mediaController.getSelectionModeForInitialTrack();
         },
         getAutoSwitchQuality: function() {
             return abrController.getAutoSwitchBitrate();
@@ -1923,6 +1938,7 @@ MediaPlayer.events = {
     STREAM_SWITCH_COMPLETED: "streamswitchcompleted",
     STREAM_INITIALIZED: "streaminitialized",
     TEXT_TRACK_ADDED: "texttrackadded",
+    TEXT_TRACKS_ADDED: "alltexttracksadded",
     BUFFER_LOADED: "bufferloaded",
     BUFFER_EMPTY: "bufferstalled",
     ERROR: "error",
@@ -2076,7 +2092,7 @@ Dash.dependencies.DashAdapter = function() {
         trackInfo.mediaInfo = convertAdaptationToMediaInfo.call(this, manifest, representation.adaptation);
         return trackInfo;
     }, convertAdaptationToMediaInfo = function(manifest, adaptation) {
-        var mediaInfo = new MediaPlayer.vo.MediaInfo(), self = this, a = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index], viewpoint, roles;
+        var mediaInfo = new MediaPlayer.vo.MediaInfo(), self = this, a = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index], viewpoint;
         mediaInfo.id = adaptation.id;
         mediaInfo.index = adaptation.index;
         mediaInfo.type = adaptation.type;
@@ -2085,10 +2101,15 @@ Dash.dependencies.DashAdapter = function() {
         mediaInfo.lang = this.manifestExt.getLanguageForAdaptation(a);
         viewpoint = this.manifestExt.getViewpointForAdaptation(a);
         mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;
-        roles = this.manifestExt.getRolesForAdaptation(a).map(function(role) {
+        mediaInfo.accessibility = this.manifestExt.getAccessibilityForAdaptation(a).map(function(accessibility) {
+            return accessibility.value;
+        });
+        mediaInfo.audioChannelConfiguration = this.manifestExt.getAudioChannelConfigurationForAdaptation(a).map(function(audioChannelConfiguration) {
+            return audioChannelConfiguration.value;
+        });
+        mediaInfo.roles = this.manifestExt.getRolesForAdaptation(a).map(function(role) {
             return role.value;
         });
-        mediaInfo.roles = roles;
         mediaInfo.codec = this.manifestExt.getCodec(a);
         mediaInfo.mimeType = this.manifestExt.getMimeType(a);
         mediaInfo.contentProtection = this.manifestExt.getContentProtectionData(a);
@@ -2217,6 +2238,7 @@ Dash.dependencies.DashAdapter = function() {
             DVR_INFO: "DVRInfo",
             DROPPED_FRAMES: "DroppedFrames",
             SCHEDULING_INFO: "SchedulingInfo",
+            REQUESTS_QUEUE: "RequestsQueue",
             MANIFEST_UPDATE: "ManifestUpdate",
             MANIFEST_UPDATE_STREAM_INFO: "ManifestUpdatePeriodInfo",
             MANIFEST_UPDATE_TRACK_INFO: "ManifestUpdateRepresentationInfo",
@@ -2445,7 +2467,8 @@ Dash.dependencies.DashHandler = function() {
                 if (nextFrag && nextFrag.hasOwnProperty("t")) {
                     repeatEndTime = nextFrag.t / fTimescale;
                 } else {
-                    repeatEndTime = self.timelineConverter.calcMediaTimeFromPresentationTime(representation.segmentAvailabilityRange.end, representation);
+                    var availabilityEnd = representation.segmentAvailabilityRange ? representation.segmentAvailabilityRange.end : this.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic).end;
+                    repeatEndTime = self.timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
                     representation.segmentDuration = frag.d / fTimescale;
                 }
                 repeat = Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1;
@@ -2472,7 +2495,7 @@ Dash.dependencies.DashHandler = function() {
                         if (isAvailableSegmentNumberCalculated) break;
                         continue;
                     }
-                    if (scaledTime >= requiredMediaTime - frag.d / fTimescale) {
+                    if (scaledTime >= requiredMediaTime - frag.d / fTimescale * 1.5) {
                         segments.push(createSegment.call(self, frag));
                     }
                 }
@@ -2645,7 +2668,7 @@ Dash.dependencies.DashHandler = function() {
         representation.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
         if (representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start && !representation.useCalculatedLiveEdgeTime) {
             error = new MediaPlayer.vo.Error(Dash.dependencies.DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE, "no segments are available yet", {
-                availabilityDelay: Math.abs(representation.segmentAvailabilityRange.end)
+                availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end
             });
             self.notify(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {
                 representation: representation
@@ -3180,8 +3203,10 @@ Dash.dependencies.TimelineConverter = function() {
         }
         checkTime = representation.adaptation.period.mpd.checkTime;
         now = calcPresentationTimeFromWallTime(new Date(), representation.adaptation.period);
-        start = Math.max(now - representation.adaptation.period.mpd.timeShiftBufferDepth, 0);
-        end = (isNaN(checkTime) ? now : Math.min(checkTime, now)) - d;
+        start = Math.max(now - representation.adaptation.period.mpd.timeShiftBufferDepth, representation.adaptation.period.start);
+        var timeAnchor = isNaN(checkTime) ? now : Math.min(checkTime, now);
+        var periodEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
+        end = timeAnchor >= periodEnd && timeAnchor - d < periodEnd ? periodEnd : timeAnchor - d;
         range = {
             start: start,
             end: end
@@ -3716,6 +3741,12 @@ Dash.dependencies.DashManifestExtensions.prototype = {
     getRolesForAdaptation: function(adaptation) {
         return adaptation.hasOwnProperty("Role_asArray") ? adaptation.Role_asArray : [];
     },
+    getAccessibilityForAdaptation: function(adaptation) {
+        return adaptation.hasOwnProperty("Accessibility_asArray") ? adaptation.Accessibility_asArray : [];
+    },
+    getAudioChannelConfigurationForAdaptation: function(adaptation) {
+        return adaptation.hasOwnProperty("AudioChannelConfiguration_asArray") ? adaptation.AudioChannelConfiguration_asArray : [];
+    },
     getIsMain: function(adaptation) {
         "use strict";
         return this.getRolesForAdaptation(adaptation).filter(function(role) {
@@ -4224,6 +4255,8 @@ Dash.dependencies.DashMetricsExtensions = function() {
         bufferLevelLastIndex = bufferLevelLength - 1;
         currentBufferLevel = bufferLevel[bufferLevelLastIndex];
         return currentBufferLevel;
+    }, getRequestsQueue = function(metrics) {
+        return metrics.RequestsQueue;
     }, getCurrentPlaybackRate = function(metrics) {
         if (metrics === null) {
             return null;
@@ -4305,10 +4338,17 @@ Dash.dependencies.DashMetricsExtensions = function() {
         curentDVRInfo = dvrInfo[dvrInfoLastIndex];
         return curentDVRInfo;
     }, getLatestMPDRequestHeaderValueByID = function(metrics, id) {
-        if (metrics === null) return null;
-        var httpRequestList = getHttpRequests(metrics), httpRequest = httpRequestList[httpRequestList.length - 1], headers;
-        if (httpRequest.type === MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE) {
-            headers = parseResponseHeaders(httpRequest.responseHeaders);
+        var httpRequestList, httpRequest, headers = {}, i;
+        if (metrics === null) {
+            return null;
+        }
+        httpRequestList = getHttpRequests(metrics);
+        for (i = httpRequestList.length - 1; i >= 0; i -= 1) {
+            httpRequest = httpRequestList[i];
+            if (httpRequest.type === MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE) {
+                headers = parseResponseHeaders(httpRequest.responseHeaders);
+                break;
+            }
         }
         return headers[id] === undefined ? null : headers[id];
     }, getLatestFragmentRequestHeaderValueByID = function(metrics, id) {
@@ -4350,7 +4390,8 @@ Dash.dependencies.DashMetricsExtensions = function() {
         getCurrentDVRInfo: getCurrentDVRInfo,
         getCurrentManifestUpdate: getCurrentManifestUpdate,
         getLatestFragmentRequestHeaderValueByID: getLatestFragmentRequestHeaderValueByID,
-        getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID
+        getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID,
+        getRequestsQueue: getRequestsQueue
     };
 };
 
@@ -5095,8 +5136,8 @@ MediaPlayer.dependencies.Stream = function() {
     "use strict";
     var streamProcessors = [], isStreamActivated = false, isMediaInitialized = false, streamInfo = null, updateError = {}, isUpdating = false, isInitialized = false, protectionController, boundProtectionErrorHandler, eventController = null, onProtectionError = function(event) {
         if (event.error) {
-            this.errHandler.mediaKeySessionError(event.data);
-            this.log(event.data);
+            this.errHandler.mediaKeySessionError(event.error);
+            this.log(event.error);
             this.reset();
         }
     }, getMimeTypeOrType = function(mediaInfo) {
@@ -5145,6 +5186,8 @@ MediaPlayer.dependencies.Stream = function() {
             streamProcessor.setBuffer(optionalSettings.buffer);
             streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
             streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
+        } else {
+            streamProcessors.push(streamProcessor);
         }
         if (mediaInfo.type === "text" || mediaInfo.type === "fragmentedText") {
             var idx;
@@ -5177,7 +5220,7 @@ MediaPlayer.dependencies.Stream = function() {
         if (this.mediaController.getTracksFor(type, streamInfo).length === 0) return;
         this.mediaController.checkInitialMediaSettings(streamInfo);
         initialMediaInfo = this.mediaController.getCurrentTrackFor(type, streamInfo);
-        streamProcessors.push(createStreamProcessor.call(this, initialMediaInfo, manifest, mediaSource));
+        createStreamProcessor.call(this, initialMediaInfo, manifest, mediaSource);
     }, initializeMedia = function(mediaSource) {
         var self = this, manifest = self.manifestModel.getValue(), events;
         eventController = self.system.getObject("eventController");
@@ -5203,7 +5246,6 @@ MediaPlayer.dependencies.Stream = function() {
         }
     }, checkIfInitializationCompleted = function() {
         var self = this, ln = streamProcessors.length, hasError = !!updateError.audio || !!updateError.video, error = hasError ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.Stream.DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null, i = 0;
-        if (ln === 0) return;
         for (i; i < ln; i += 1) {
             if (streamProcessors[i].isUpdating() || isUpdating) return;
         }
@@ -5740,7 +5782,7 @@ MediaPlayer.utils.TTMLParser = function() {
         timeParts = timingStr.split(":");
         parsedTime = parseFloat(timeParts[0]) * SECONDS_IN_HOUR + parseFloat(timeParts[1]) * SECONDS_IN_MIN + parseFloat(timeParts[2]);
         if (timeParts[3]) {
-            frameRate = ttml.tt.framRate;
+            frameRate = ttml.tt.frameRate;
             if (frameRate && !isNaN(frameRate)) {
                 parsedTime += parseFloat(timeParts[3]) / frameRate;
             } else {
@@ -6088,7 +6130,16 @@ MediaPlayer.utils.TTMLParser = function() {
                         var textNode = document.createTextNode(spanEl["#text"]);
                         spanHTMLElement.appendChild(textNode);
                     } else if ("br" in spanEl) {
-                        spanHTMLElement.appendChild(document.createElement("br"));
+                        if (spanHTMLElement.hasChildNodes()) {
+                            cue.appendChild(spanHTMLElement);
+                        }
+                        var brEl = document.createElement("br");
+                        brEl.className = "lineBreak";
+                        cue.appendChild(brEl);
+                        var newSpanHTMLElement = document.createElement("span");
+                        newSpanHTMLElement.className = spanHTMLElement.className;
+                        newSpanHTMLElement.style.cssText = spanHTMLElement.style.cssText;
+                        spanHTMLElement = newSpanHTMLElement;
                     }
                 });
                 cue.appendChild(spanHTMLElement);
@@ -6201,9 +6252,9 @@ MediaPlayer.utils.TTMLParser = function() {
         for (var i = 0; i < ttmlLayout.length; i++) {
             regions.push(processRegion(JSON.parse(JSON.stringify(ttmlLayout[i])), cellUnit));
         }
-        var nsttp = getNamespacePrefix(ttml, "http://www.w3.org/ns/ttml#parameter");
+        var nsttp = getNamespacePrefix(ttml.tt, "http://www.w3.org/ns/ttml#parameter");
         if (ttml.tt.hasOwnProperty(nsttp + ":frameRate")) {
-            ttml.frameRate = parseInt(ttml.tt[nsttp + ":frameRate"], 10);
+            ttml.tt.frameRate = parseInt(ttml.tt[nsttp + ":frameRate"], 10);
         }
         var captionArray = [];
         var divs = ttml.tt.body_asArray[0].__children;
@@ -6325,7 +6376,7 @@ MediaPlayer.utils.TTMLParser = function() {
                                         return;
                                     }
                                     if (spanEl.hasOwnProperty("#text")) {
-                                        text += spanEl["#text"];
+                                        text += spanEl["#text"].replace(/[\r\n]+/gm, " ").trim();
                                     } else if ("br" in spanEl) {
                                         text += "\n";
                                     }
@@ -6333,7 +6384,7 @@ MediaPlayer.utils.TTMLParser = function() {
                             } else if (el.hasOwnProperty("br")) {
                                 text += "\n";
                             } else {
-                                text += el.__text;
+                                text += el["#text"].replace(/[\r\n]+/gm, " ").trim();
                             }
                         });
                     }
@@ -6355,35 +6406,40 @@ MediaPlayer.utils.TTMLParser = function() {
 };
 
 MediaPlayer.dependencies.TextSourceBuffer = function() {
-    var currentTrackIdx = 0, allTracksAreDisabled = false, parser = null, onTextTrackChange = function() {
-        var el = this.videoModel.getElement(), tracks = el.textTracks, ln = tracks.length;
+    var allTracksAreDisabled = false, parser = null, setTextTrack = function() {
+        var el = this.videoModel.getElement(), tracks = el.textTracks, ln = tracks.length, self = this;
         for (var i = 0; i < ln; i++) {
             var track = tracks[i];
             allTracksAreDisabled = track.mode !== "showing";
-            if (track.mode === "showing" && el.currentTime > 0) {
-                if (currentTrackIdx !== i) {
-                    var previousTextTrack = this.textTrackExtensions.getCurrentTextTrack();
-                    this.textTrackExtensions.deleteTrackCues(previousTextTrack);
-                    if (previousTextTrack.renderingType === "html") {
-                        this.textTrackExtensions.removeCueStyle();
-                        this.textTrackExtensions.clearCues();
+            if (track.mode === "showing") {
+                if (self.textTrackExtensions.getCurrentTrackIdx() !== i) {
+                    var previousTextTrack = self.textTrackExtensions.getCurrentTextTrack();
+                    if (previousTextTrack !== null) {
+                        self.textTrackExtensions.deleteTrackCues(previousTextTrack);
+                        if (previousTextTrack.renderingType === "html") {
+                            self.textTrackExtensions.removeCueStyle();
+                            self.textTrackExtensions.clearCues();
+                        }
                     }
-                    currentTrackIdx = i;
-                    this.textTrackExtensions.setCurrentTrackIdx(i);
-                    this.textTrackExtensions.deleteTrackCues(this.textTrackExtensions.getCurrentTextTrack());
-                    this.fragmentModel.cancelPendingRequests();
-                    this.fragmentModel.abortRequests();
-                    this.buffered.clear();
-                    this.mediaController.setTrack(this.allTracks[i]);
+                    self.textTrackExtensions.setCurrentTrackIdx(i);
+                    if (!self.mediaController.isCurrentTrack(self.allTracks[i])) {
+                        self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
+                        self.fragmentModel.cancelPendingRequests();
+                        self.fragmentModel.abortRequests();
+                        self.buffered.clear();
+                        self.mediaController.setTrack(self.allTracks[i]);
+                    }
                 }
                 break;
             }
+        }
+        if (allTracksAreDisabled) {
+            self.textTrackExtensions.setCurrentTrackIdx(-1);
         }
     };
     return {
         system: undefined,
         videoModel: undefined,
-        eventBus: undefined,
         errHandler: undefined,
         adapter: undefined,
         manifestExt: undefined,
@@ -6405,20 +6461,23 @@ MediaPlayer.dependencies.TextSourceBuffer = function() {
         append: function(bytes, chunk) {
             var self = this, result, samplesInfo, i, ccContent, mediaInfo = chunk.mediaInfo, mediaType = mediaInfo.type, mimeType = mediaInfo.mimeType;
             function createTextTrackFromMediaInfo(captionData, mediaInfo) {
-                var textTrackInfo = new MediaPlayer.vo.TextTrackInfo();
+                var textTrackInfo = new MediaPlayer.vo.TextTrackInfo(), trackKindMap = {
+                    subtitle: "subtitles",
+                    caption: "captions"
+                }, getKind = function() {
+                    var kind = mediaInfo.roles.length > 0 ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
+                    kind = kind !== trackKindMap.caption || kind !== trackKindMap.subtitle ? trackKindMap.caption : kind;
+                    return kind;
+                };
                 textTrackInfo.captionData = captionData;
                 textTrackInfo.lang = mediaInfo.lang;
                 textTrackInfo.label = mediaInfo.id;
                 textTrackInfo.video = self.videoModel.getElement();
                 textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
                 textTrackInfo.isFragmented = self.isFragmented;
-                textTrackInfo.role = mediaInfo.roles.length > 0 ? mediaInfo.roles[0] : null;
+                textTrackInfo.kind = getKind();
                 self.textTrackExtensions.addTextTrack(textTrackInfo, self.mediaInfos.length);
-                self.eventBus.dispatchEvent({
-                    type: MediaPlayer.events.TEXT_TRACK_ADDED
-                });
             }
-            if (allTracksAreDisabled) return;
             if (mediaType === "fragmentedText") {
                 var fragmentExt = self.system.getObject("fragmentExt");
                 if (!this.initializationSegmentReceived) {
@@ -6458,10 +6517,8 @@ MediaPlayer.dependencies.TextSourceBuffer = function() {
             return mediaInfo.index === this.mediaInfos[0].index;
         },
         abort: function() {
-            this.videoModel.getElement().textTracks.removeEventListener("change", onTextTrackChange);
             this.textTrackExtensions.deleteAllTextTracks();
             allTracksAreDisabled = false;
-            currentTrackIdx = 0;
             parser = null;
         },
         getParser: function(mimeType) {
@@ -6476,13 +6533,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function() {
         getAllTracksAreDisabled: function() {
             return allTracksAreDisabled;
         },
-        addEventListener: function(type, listener, useCapture) {
-            this.eventBus.addEventListener(type, listener, useCapture);
-        },
-        removeEventListener: function(type, listener, useCapture) {
-            this.eventBus.removeEventListener(type, listener, useCapture);
-        },
-        setTextTrack: onTextTrackChange
+        setTextTrack: setTextTrack
     };
 };
 
@@ -7098,7 +7149,7 @@ MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY = .9;
 
 MediaPlayer.dependencies.BufferController = function() {
     "use strict";
-    var STALL_THRESHOLD = .5, requiredQuality = 0, currentQuality = -1, isBufferingCompleted = false, bufferLevel = 0, bufferTarget = 0, criticalBufferLevel = Number.POSITIVE_INFINITY, mediaSource, maxAppendedIndex = -1, lastIndex = -1, type, buffer = null, minBufferTime, hasSufficientBuffer = null, appendedBytesInfo, isBufferLevelOutrun = false, isAppendingInProgress = false, inbandEventFound = false, createBuffer = function(mediaInfo) {
+    var STALL_THRESHOLD = .5, requiredQuality = 0, currentQuality = -1, isBufferingCompleted = false, bufferLevel = 0, bufferTarget = 0, criticalBufferLevel = Number.POSITIVE_INFINITY, mediaSource, maxAppendedIndex = -1, lastIndex = -1, type, buffer = null, minBufferTime, hasSufficientBuffer = null, appendedBytesInfo, wallclockTicked = 0, isBufferLevelOutrun = false, isAppendingInProgress = false, inbandEventFound = false, createBuffer = function(mediaInfo) {
         if (!mediaInfo || !mediaSource || !this.streamProcessor) return null;
         var sourceBuffer = null;
         try {
@@ -7271,6 +7322,14 @@ MediaPlayer.dependencies.BufferController = function() {
     }, hasEnoughSpaceToAppend = function() {
         var self = this, totalBufferedTime = self.sourceBufferExt.getTotalBufferedTime(buffer);
         return totalBufferedTime < criticalBufferLevel;
+    }, pruneBuffer = function() {
+        var bufferToPrune = 0, currentTime = this.playbackController.getTime(), currentRange = this.sourceBufferExt.getBufferRange(buffer, currentTime);
+        if (currentRange !== null) {
+            bufferToPrune = currentTime - currentRange.start - MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP;
+            if (bufferToPrune > 0) {
+                this.sourceBufferExt.remove(buffer, 0, Math.round(currentRange.start + bufferToPrune), mediaSource);
+            }
+        }
     }, getClearRange = function() {
         var self = this, currentTime, removeStart, removeEnd, range, req;
         if (!buffer) return null;
@@ -7321,7 +7380,7 @@ MediaPlayer.dependencies.BufferController = function() {
     }, getBufferState = function() {
         return hasSufficientBuffer ? MediaPlayer.dependencies.BufferController.BUFFER_LOADED : MediaPlayer.dependencies.BufferController.BUFFER_EMPTY;
     }, notifyIfSufficientBufferStateChanged = function(state) {
-        if (hasSufficientBuffer === state) return;
+        if (hasSufficientBuffer === state || type === "fragmentedText" && this.textSourceBuffer.getAllTracksAreDisabled()) return;
         hasSufficientBuffer = state;
         var bufferState = getBufferState(), eventName = bufferState === MediaPlayer.dependencies.BufferController.BUFFER_LOADED ? MediaPlayer.events.BUFFER_LOADED : MediaPlayer.events.BUFFER_EMPTY;
         addBufferMetrics.call(this);
@@ -7480,6 +7539,10 @@ MediaPlayer.dependencies.BufferController = function() {
         }
     }, onWallclockTimeUpdated = function() {
         appendNext.call(this);
+        wallclockTicked += 1;
+        if (wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL === 0) {
+            pruneBuffer.call(this);
+        }
     }, onPlaybackRateChanged = function() {
         checkIfSufficientBuffer.call(this);
     };
@@ -7504,6 +7567,7 @@ MediaPlayer.dependencies.BufferController = function() {
         subscribe: undefined,
         unsubscribe: undefined,
         virtualBuffer: undefined,
+        textSourceBuffer: undefined,
         setup: function() {
             this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
             this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitializationLoaded;
@@ -7612,6 +7676,10 @@ MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD = 20;
 MediaPlayer.dependencies.BufferController.BUFFER_LOADED = "bufferLoaded";
 
 MediaPlayer.dependencies.BufferController.BUFFER_EMPTY = "bufferStalled";
+
+MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP = 30;
+
+MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL = 30;
 
 MediaPlayer.dependencies.BufferController.prototype = {
     constructor: MediaPlayer.dependencies.BufferController
@@ -7894,7 +7962,7 @@ MediaPlayer.dependencies.FragmentController.eventList = {
 };
 
 MediaPlayer.dependencies.MediaController = function() {
-    var tracks = {}, initialSettings, switchMode, storeLastSettings = function(type, value) {
+    var tracks = {}, initialSettings, selectionMode, switchMode, storeLastSettings = function(type, value) {
         if (this.DOMStorage.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
             localStorage.setItem(MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_" + type.toUpperCase() + "_SETTINGS_KEY"], JSON.stringify({
                 settings: value,
@@ -7902,16 +7970,23 @@ MediaPlayer.dependencies.MediaController = function() {
             }));
         }
     }, extractSettings = function(mediaInfo) {
-        return {
+        var settings = {
             lang: mediaInfo.lang,
             viewpoint: mediaInfo.viewpoint,
-            roles: mediaInfo.roles
-        };
+            roles: mediaInfo.roles,
+            accessibility: mediaInfo.accessibility,
+            audioChannelConfiguration: mediaInfo.audioChannelConfiguration
+        }, notEmpty = settings.lang || settings.viewpoint || settings.role && settings.role.length > 0 || settings.accessibility && settings.accessibility.length > 0 || settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0;
+        return notEmpty ? settings : null;
     }, matchSettings = function(settings, track) {
         var matchLang = !settings.lang || settings.lang === track.lang, matchViewPoint = !settings.viewpoint || settings.viewpoint === track.viewpoint, matchRole = !settings.role || !!track.roles.filter(function(item) {
             return item === settings.role;
+        })[0], matchAccessibility = !settings.accessibility || !!track.accessibility.filter(function(item) {
+            return item === settings.accessibility;
+        })[0], matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function(item) {
+            return item === settings.audioChannelConfiguration;
         })[0];
-        return matchLang && matchViewPoint && matchRole;
+        return matchLang && matchViewPoint && matchRole && matchAccessibility && matchAudioChannelConfiguration;
     }, resetSwitchMode = function() {
         switchMode = {
             audio: MediaPlayer.dependencies.MediaController.trackSwitchModes.ALWAYS_REPLACE,
@@ -7922,6 +7997,52 @@ MediaPlayer.dependencies.MediaController = function() {
             audio: null,
             video: null
         };
+    }, selectInitialTrack = function(tracks) {
+        var mode = this.getSelectionModeForInitialTrack(), tmpArr = [], getTracksWithHighestBitrate = function(trackArr) {
+            var max = 0, result = [], tmp;
+            trackArr.forEach(function(track) {
+                tmp = Math.max.apply(Math, track.bitrateList);
+                if (tmp > max) {
+                    max = tmp;
+                    result = [ track ];
+                } else if (tmp === max) {
+                    result.push(track);
+                }
+            });
+            return result;
+        }, getTracksWithWidestRange = function(trackArr) {
+            var max = 0, result = [], tmp;
+            trackArr.forEach(function(track) {
+                tmp = track.representationCount;
+                if (tmp > max) {
+                    max = tmp;
+                    result = [ track ];
+                } else if (tmp === max) {
+                    result.push(track);
+                }
+            });
+            return result;
+        };
+        switch (mode) {
+          case MediaPlayer.dependencies.MediaController.trackSelectionModes.HIGHEST_BITRATE:
+            tmpArr = getTracksWithHighestBitrate(tracks);
+            if (tmpArr.length > 1) {
+                tmpArr = getTracksWithWidestRange(tmpArr);
+            }
+            break;
+
+          case MediaPlayer.dependencies.MediaController.trackSelectionModes.WIDEST_RANGE:
+            tmpArr = getTracksWithWidestRange(tracks);
+            if (tmpArr.length > 1) {
+                tmpArr = getTracksWithHighestBitrate(tracks);
+            }
+            break;
+
+          default:
+            this.log("track selection mode is not supported: " + mode);
+            break;
+        }
+        return tmpArr[0];
     }, createTrackInfo = function() {
         return {
             audio: {
@@ -7976,7 +8097,7 @@ MediaPlayer.dependencies.MediaController = function() {
                     });
                 }
                 if (!isSet) {
-                    self.setTrack(tracksForType[0]);
+                    self.setTrack(selectInitialTrack.call(self, tracksForType));
                 }
             });
         },
@@ -8023,6 +8144,12 @@ MediaPlayer.dependencies.MediaController = function() {
                 settings.role = settings.roles[0];
                 delete settings.roles;
             }
+            if (settings.accessibility) {
+                settings.accessibility = settings.accessibility[0];
+            }
+            if (settings.audioChannelConfiguration) {
+                settings.audioChannelConfiguration = settings.audioChannelConfiguration[0];
+            }
             storeLastSettings.call(this, type, settings);
         },
         setInitialSettings: function(type, value) {
@@ -8044,11 +8171,23 @@ MediaPlayer.dependencies.MediaController = function() {
         getSwitchMode: function(type) {
             return switchMode[type];
         },
+        setSelectionModeForInitialTrack: function(mode) {
+            var isModeSupported = !!MediaPlayer.dependencies.MediaController.trackSelectionModes[mode];
+            if (!isModeSupported) {
+                this.log("track selection mode is not supported: " + mode);
+                return;
+            }
+            selectionMode = mode;
+        },
+        getSelectionModeForInitialTrack: function() {
+            return selectionMode || MediaPlayer.dependencies.MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE;
+        },
         isMultiTrackSupportedByType: function(type) {
             return type === "audio" || type === "video" || type === "text" || type === "fragmentedText";
         },
         isTracksEqual: function(t1, t2) {
-            return t1.id === t2.id && t1.viewpoint === t2.viewpoint && t1.lang === t2.lang && t1.roles.toString() == t2.roles.toString();
+            var sameId = t1.id === t2.id, sameViewpoint = t1.viewpoint === t2.viewpoint, sameLang = t1.lang === t2.lang, sameRoles = t1.roles.toString() == t2.roles.toString(), sameAccessibility = t1.accessibility.toString() == t2.accessibility.toString(), sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() == t2.audioChannelConfiguration.toString();
+            return sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration;
         },
         reset: function() {
             resetSwitchMode.call(this);
@@ -8073,6 +8212,13 @@ MediaPlayer.dependencies.MediaController.trackSwitchModes = {
     NEVER_REPLACE: "NEVER_REPLACE",
     ALWAYS_REPLACE: "ALWAYS_REPLACE"
 };
+
+MediaPlayer.dependencies.MediaController.trackSelectionModes = {
+    HIGHEST_BITRATE: "HIGHEST_BITRATE",
+    WIDEST_RANGE: "WIDEST_RANGE"
+};
+
+MediaPlayer.dependencies.MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE = MediaPlayer.dependencies.MediaController.trackSelectionModes.HIGHEST_BITRATE;
 
 MediaPlayer.dependencies.PlaybackController = function() {
     "use strict";
@@ -8228,8 +8374,12 @@ MediaPlayer.dependencies.PlaybackController = function() {
         bufferedStart = Math.max(ranges.start(0), streamInfo.start);
         commonEarliestTime[id] = commonEarliestTime[id] === undefined ? bufferedStart : Math.max(commonEarliestTime[id], bufferedStart);
         if (currentEarliestTime === commonEarliestTime[id] && time === currentEarliestTime || !firstAppended[id] || !firstAppended[id].ready || time > commonEarliestTime[id]) return;
-        this.seek(commonEarliestTime[id]);
-        firstAppended[id].seekCompleted = true;
+        if (this.isSeeking()) {
+            commonEarliestTime = {};
+        } else {
+            this.seek(commonEarliestTime[id]);
+            firstAppended[id].seekCompleted = true;
+        }
     }, onBufferLevelStateChanged = function(e) {
         var type = e.sender.streamProcessor.getType(), senderStreamInfo = e.sender.streamProcessor.getStreamInfo();
         if (senderStreamInfo.id !== streamInfo.id) return;
@@ -8308,6 +8458,9 @@ MediaPlayer.dependencies.PlaybackController = function() {
         },
         getPlayedRanges: function() {
             return videoModel.getElement().played;
+        },
+        getIsDynamic: function() {
+            return isDynamic;
         },
         setLiveStartTime: function(value) {
             liveStartTime = value;
@@ -10129,15 +10282,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
 
 MediaPlayer.utils.TextTrackExtensions = function() {
     "use strict";
-    var Cue, video, textTrackQueue = [], trackElementArr = [], currentTrackIdx = 0, trackKindMap = {
-        subtitle: "subtitles",
-        caption: "captions"
-    }, actualVideoWidth = 0, actualVideoHeight = 0, captionContainer = null, videoSizeCheckInterval = null, isIE11 = false, createTrackForUserAgent = function(i) {
-        var captionType = trackKindMap[textTrackQueue[i].role];
-        var kind = captionType !== undefined ? captionType : trackKindMap.caption;
+    var Cue, video, textTrackQueue = [], trackElementArr = [], currentTrackIdx = -1, actualVideoWidth = 0, actualVideoHeight = 0, captionContainer = null, videoSizeCheckInterval = null, isIE11 = false, createTrackForUserAgent = function(i) {
+        var kind = textTrackQueue[i].kind;
         var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
         var lang = textTrackQueue[i].lang;
-        var track = isIE11 ? video.addTextTrack("captions", "hello", lang) : document.createElement("track");
+        var track = isIE11 ? video.addTextTrack(kind, label, lang) : document.createElement("track");
         if (!isIE11) {
             track.kind = kind;
             track.label = label;
@@ -10148,6 +10297,7 @@ MediaPlayer.utils.TextTrackExtensions = function() {
     return {
         mediaController: undefined,
         videoModel: undefined,
+        eventBus: undefined,
         setup: function() {
             Cue = window.VTTCue || window.TextTrackCue;
             isIE11 = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./);
@@ -10164,23 +10314,33 @@ MediaPlayer.utils.TextTrackExtensions = function() {
                     var track = createTrackForUserAgent(i);
                     currentTrackIdx = i;
                     trackElementArr.push(track);
-                    track.default = textTrackQueue[i].defaultTrack;
                     if (textTrackQueue[i].defaultTrack) {
+                        track.default = true;
                         defaultIndex = i;
                     }
                     if (!isIE11) {
                         video.appendChild(track);
                     }
                     this.addCaptions(0, textTrackQueue[i].captionData);
+                    this.eventBus.dispatchEvent({
+                        type: MediaPlayer.events.TEXT_TRACK_ADDED
+                    });
                 }
                 currentTrackIdx = defaultIndex;
+                this.eventBus.dispatchEvent({
+                    type: MediaPlayer.events.TEXT_TRACKS_ADDED,
+                    data: {
+                        index: currentTrackIdx,
+                        tracks: textTrackQueue
+                    }
+                });
             }
         },
         checkVideoSize: function() {
             var track = this.getCurrentTextTrack();
             if (track && track.renderingType === "html") {
-                var newVideoWidth = this.video.clientWidth;
-                var newVideoHeight = this.video.clientHeight;
+                var newVideoWidth = video.clientWidth;
+                var newVideoHeight = video.clientHeight;
                 if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
                     actualVideoWidth = newVideoWidth;
                     actualVideoHeight = newVideoHeight;
@@ -10242,6 +10402,7 @@ MediaPlayer.utils.TextTrackExtensions = function() {
         },
         addCaptions: function(timeOffset, captionData) {
             var track = this.getCurrentTextTrack();
+            if (!track) return;
             track.mode = "showing";
             for (var item in captionData) {
                 var cue, currentItem = captionData[item];
@@ -10259,14 +10420,23 @@ MediaPlayer.utils.TextTrackExtensions = function() {
                         img.id = "ttmlImage_" + this.id;
                         img.src = this.image;
                         img.className = "cue-image";
-                        captionContainer.appendChild(img);
+                        if (captionContainer) {
+                            captionContainer.appendChild(img);
+                        } else {
+                            video.parentNode.appendChild(img);
+                        }
                     };
                     cue.onexit = function() {
-                        var imgs = captionContainer.childNodes;
-                        var i;
+                        var container, i, imgs;
+                        if (captionContainer) {
+                            container = captionContainer;
+                        } else {
+                            container = video.parentNode;
+                        }
+                        imgs = container.childNodes;
                         for (i = 0; i < imgs.length; i++) {
                             if (imgs[i].id == "ttmlImage_" + this.id) {
-                                captionContainer.removeChild(imgs[i]);
+                                container.removeChild(imgs[i]);
                             }
                         }
                     };
@@ -10274,10 +10444,12 @@ MediaPlayer.utils.TextTrackExtensions = function() {
                     if (track.renderingType !== "html") {
                         track.renderingType = "html";
                     }
-                    if (!document.getElementById("caption-style")) {
-                        this.setCueStyle();
-                    } else if (!document.getElementById("caption-style").sheet.cssRules.length) {
-                        this.setCueStyle();
+                    if (Cue !== window.TextTrackCue) {
+                        if (!document.getElementById("caption-style")) {
+                            this.setCueStyle();
+                        } else if (!document.getElementById("caption-style").sheet.cssRules.length) {
+                            this.setCueStyle();
+                        }
                     }
                     cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, "");
                     cue.cueHTMLElement = currentItem.cueHTMLElement;
@@ -10291,8 +10463,8 @@ MediaPlayer.utils.TextTrackExtensions = function() {
                     cue.lineHeight = currentItem.lineHeight;
                     cue.linePadding = currentItem.linePadding;
                     cue.scaleCue = this.scaleCue;
-                    captionContainer.style.width = this.video.clientWidth + "px";
-                    captionContainer.style.height = this.video.clientHeight + "px";
+                    captionContainer.style.width = video.clientWidth + "px";
+                    captionContainer.style.height = video.clientHeight + "px";
                     cue.onenter = function() {
                         if (track.mode == "showing") {
                             captionContainer.appendChild(this.cueHTMLElement);
@@ -10331,7 +10503,13 @@ MediaPlayer.utils.TextTrackExtensions = function() {
             }
         },
         getCurrentTextTrack: function() {
-            return video.textTracks[currentTrackIdx];
+            return currentTrackIdx >= 0 ? video.textTracks[currentTrackIdx] : null;
+        },
+        getCurrentTrackIdx: function() {
+            return currentTrackIdx;
+        },
+        setCurrentTrackIdx: function(value) {
+            currentTrackIdx = value;
         },
         getTextTrack: function(idx) {
             return video.textTracks[idx];
@@ -10358,14 +10536,12 @@ MediaPlayer.utils.TextTrackExtensions = function() {
             textTrackQueue = [];
             if (videoSizeCheckInterval) {
                 clearInterval(videoSizeCheckInterval);
+                videoSizeCheckInterval = null;
             }
         },
         deleteTextTrack: function(idx) {
             video.removeChild(trackElementArr[idx]);
             trackElementArr.splice(idx, 1);
-        },
-        setCurrentTrackIdx: function(value) {
-            currentTrackIdx = value;
         },
         setCueStyle: function() {
             var styleElement;
@@ -10377,18 +10553,20 @@ MediaPlayer.utils.TextTrackExtensions = function() {
             }
             document.head.appendChild(styleElement);
             var stylesheet = styleElement.sheet;
-            if (!this.video.id) {
+            if (video.id) {
+                stylesheet.addRule("#" + video.id + "::cue", "background: transparent");
+            } else if (video.classList.length !== 0) {
+                stylesheet.addRule("." + video.className + "::cue", "background: transparent");
+            } else {
                 stylesheet.addRule("video::cue", "background: transparent");
-            } else if (this.video.id) {
-                stylesheet.addRule("#" + this.video.id + "::cue", "background: transparent");
-            } else if (this.video.classList.length !== 0) {
-                stylesheet.addRule("." + this.video.className + "::cue", "background: transparent");
             }
         },
         removeCueStyle: function() {
-            var stylesheet = document.getElementById("caption-style").sheet;
-            if (stylesheet.cssRules) {
-                stylesheet.deleteRule(0);
+            if (Cue !== window.TextTrackCue) {
+                var stylesheet = document.getElementById("caption-style").sheet;
+                if (stylesheet.cssRules && stylesheet.cssRules.length > 0) {
+                    stylesheet.deleteRule(0);
+                }
             }
         },
         clearCues: function() {
@@ -10485,6 +10663,7 @@ MediaPlayer.dependencies.FragmentModel = function() {
         if (!request) return;
         var mediaType = request.mediaType, now = new Date(), type = request.type, startTime = request.startTime, availabilityStartTime = request.availabilityStartTime, duration = request.duration, quality = request.quality, range = request.range;
         this.metricsModel.addSchedulingInfo(mediaType, now, type, startTime, availabilityStartTime, duration, quality, range, state);
+        this.metricsModel.addRequestsQueue(mediaType, pendingRequests, loadingRequests, executedRequests, rejectedRequests);
     }, onLoadingCompleted = function(e) {
         var request = e.data.request, response = e.data.response, error = e.error;
         loadingRequests.splice(loadingRequests.indexOf(request), 1);
@@ -10897,6 +11076,15 @@ MediaPlayer.models.MetricsModel = function() {
             this.getMetricsFor(mediaType).SchedulingInfo.push(vo);
             this.metricAdded(mediaType, this.adapter.metricsList.SCHEDULING_INFO, vo);
             return vo;
+        },
+        addRequestsQueue: function(mediaType, pendingRequests, loadingRequests, executedRequests, rejectedRequests) {
+            var vo = new MediaPlayer.vo.metrics.RequestsQueue();
+            vo.pendingRequests = pendingRequests;
+            vo.loadingRequests = loadingRequests;
+            vo.executedRequests = executedRequests;
+            vo.rejectedRequests = rejectedRequests;
+            this.getMetricsFor(mediaType).RequestsQueue = vo;
+            this.metricAdded(mediaType, this.adapter.metricsList.REQUESTS_QUEUE, vo);
         },
         addManifestUpdate: function(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
             var vo = new MediaPlayer.vo.metrics.ManifestUpdate(), metrics = this.getMetricsFor("stream");
@@ -13835,7 +14023,7 @@ MediaPlayer.utils.VirtualBuffer = function() {
                 streamId: streamId,
                 mediaType: mediaType,
                 appended: true,
-                index: chunk.index
+                start: chunk.start
             })[0], diff, idx;
             if (oldChunk) {
                 idx = data[streamId][mediaType].appended.indexOf(oldChunk);
@@ -13843,7 +14031,7 @@ MediaPlayer.utils.VirtualBuffer = function() {
             } else {
                 data[streamId][mediaType].appended.push(chunk);
             }
-            sortArrayByProperty(data[streamId][mediaType].appended, "index");
+            sortArrayByProperty(data[streamId][mediaType].appended, "start");
             diff = this.sourceBufferExt.getRangeDifference(bufferedRanges, buffer);
             if (!diff) {
                 if (oldChunk) {
@@ -14056,6 +14244,8 @@ MediaPlayer.vo.MediaInfo = function() {
     this.representationCount = 0;
     this.lang = null;
     this.viewpoint = null;
+    this.accessibility = null;
+    this.audioChannelConfiguration = null;
     this.roles = null;
     this.codec = null;
     this.mimeType = null;
@@ -14081,7 +14271,8 @@ MediaPlayer.models.MetricsList = function() {
         DroppedFrames: [],
         SchedulingInfo: [],
         DVRInfo: [],
-        ManifestUpdate: []
+        ManifestUpdate: [],
+        RequestsQueue: null
     };
 };
 
@@ -14110,7 +14301,7 @@ MediaPlayer.vo.TextTrackInfo = function() {
     this.label = null;
     this.lang = null;
     this.defaultTrack = false;
-    this.role = null;
+    this.kind = null;
     this.isFragmented = false;
 };
 
@@ -14330,6 +14521,18 @@ MediaPlayer.vo.metrics.RepresentationSwitch = function() {
 
 MediaPlayer.vo.metrics.RepresentationSwitch.prototype = {
     constructor: MediaPlayer.vo.metrics.RepresentationSwitch
+};
+
+MediaPlayer.vo.metrics.RequestsQueue = function() {
+    "use strict";
+    this.pendingRequests = [];
+    this.loadingRequests = [];
+    this.executedRequests = [];
+    this.rejectedRequests = [];
+};
+
+MediaPlayer.vo.metrics.RequestsQueue.prototype = {
+    constructor: MediaPlayer.vo.metrics.RequestsQueue
 };
 
 MediaPlayer.vo.metrics.SchedulingInfo = function() {
