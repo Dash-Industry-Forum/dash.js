@@ -40,3 +40,5 @@ Dash.vo.Period = function () {
 Dash.vo.Period.prototype = {
     constructor: Dash.vo.Period
 };
+
+Dash.vo.Period.DEFAULT_ID = "defaultId";
