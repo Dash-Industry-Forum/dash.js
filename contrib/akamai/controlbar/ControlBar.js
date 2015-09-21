@@ -32,6 +32,7 @@ var ControlBar = function(dashjsMediaPlayer) {
 
     var player = dashjsMediaPlayer,
         video,
+        videoContainer,
         currentCaptionMenuIdx = 0,
         captionMenu = null,
         lastValumeLevel = NaN,
@@ -186,14 +187,16 @@ var ControlBar = function(dashjsMediaPlayer) {
         },
 
         enterFullscreen = function () {
-            if (video.requestFullscreen) {
-                video.requestFullscreen();
-            } else if (video.msRequestFullscreen) {
-                video.msRequestFullscreen();
-            } else if (video.mozRequestFullScreen) {
-                video.mozRequestFullScreen();
+            var element = videoContainer || video;
+
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            } else if (element.msRequestFullscreen) {
+                element.msRequestFullscreen();
+            } else if (element.mozRequestFullScreen) {
+                element.mozRequestFullScreen();
             } else {
-                video.webkitRequestFullScreen();
+                element.webkitRequestFullScreen();
             }
             videoController.classList.add('video-controller-fullscreen');
             window.addEventListener("mousemove", onFullScreenMouseMove);
@@ -374,6 +377,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             }
 
             video.controls = false;
+            videoContainer = player.getVideoContainer();
             captionBtn.classList.add("hide");
 
             playPauseBtn.addEventListener("click", onPlayPauseClick);
