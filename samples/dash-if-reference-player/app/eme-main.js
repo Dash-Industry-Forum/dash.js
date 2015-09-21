@@ -83,6 +83,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     player.startup();
     player.addEventListener(MediaPlayer.events.ERROR, onError.bind(this));
     player.attachView(video);
+    player.attachVideoContainer(document.getElementById("videoContainer"));
     player.setAutoPlay(true);
     controlbar = new ControlBar(player, video);
     controlbar.initialize();

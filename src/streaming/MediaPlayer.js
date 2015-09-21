@@ -417,7 +417,13 @@ MediaPlayer = function (context) {
             return videoModel;
         },
 
-
+        /**
+         * @returns {@link object}
+         * @memberof MediaPlayer#
+         */
+        getVideoContainer: function () {
+            return videoModel ? videoModel.getVideoContainer() : null;
+        },
 
         /**
          * <p>Changing this value will lower or increase live stream latency.  The detected segment duration will be multiplied by this value
@@ -1108,6 +1114,20 @@ MediaPlayer = function (context) {
             var textTrackExt = system.getObject("textTrackExtensions");
 
             textTrackExt.displayCConTop(value);
+        },
+
+        /**
+         * Use this method to attach an HTML5 element that wraps the video element.
+         *
+         * @param container The HTML5 element containing the video element.
+         * @memberof MediaPlayer#
+         */
+        attachVideoContainer: function(container) {
+            if (!videoModel) {
+                throw "Must call attachView with video element before you attach container element";
+            }
+
+            videoModel.setVideoContainer(container);
         },
 
         /**
