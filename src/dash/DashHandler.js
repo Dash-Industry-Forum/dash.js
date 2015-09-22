@@ -195,7 +195,8 @@ Dash.dependencies.DashHandler = function () {
                     fTime = seg.presentationStartTime - period.start;
                     sDuration = representation.adaptation.period.duration;
                     this.log(representation.segmentInfoType + ": " + fTime + " / " + sDuration);
-                    isFinished = (fTime >= sDuration);
+                    var timescale = representation.timescale;
+                    isFinished = (Math.round(fTime*timescale)/timescale >= Math.round(sDuration*timescale)/timescale);
                 }
             } else {
                 isFinished = true;
