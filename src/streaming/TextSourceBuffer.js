@@ -47,7 +47,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                         if (previousTextTrack !== null) {
                             self.textTrackExtensions.deleteTrackCues(previousTextTrack);
                             if (previousTextTrack.renderingType === "html") {
-                                self.textTrackExtensions.removeCueStyle();
+                                self.textTrackExtensions.removeNativeCueStyle();
                                 self.textTrackExtensions.clearCues();
                             }
                         }
