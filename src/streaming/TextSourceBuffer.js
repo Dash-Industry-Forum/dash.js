@@ -107,7 +107,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                     trackKindMap = {subtitle:"subtitles", caption:"captions"},//Dash Spec has no "s" on end of KIND but HTML needs plural.
                     getKind = function () {
                         var kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
-                        kind = (kind !== trackKindMap.caption || kind !== trackKindMap.subtitle) ? trackKindMap.caption : kind;
+                        kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
                         return kind;
                     };
 
