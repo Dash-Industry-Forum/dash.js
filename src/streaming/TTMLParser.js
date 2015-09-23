@@ -726,7 +726,7 @@ MediaPlayer.utils.TTMLParser = function() {
                 else if (el.hasOwnProperty('#text')) {
                     // Add the text to an individual span element (to add line padding if it is defined).
                     var textNode = document.createElement('span');
-                    textNode.innerHTML = el['#text'];
+                    textNode.textContent = el['#text'];
 
                     // We append the element to the cue container.
                     cue.appendChild(textNode);

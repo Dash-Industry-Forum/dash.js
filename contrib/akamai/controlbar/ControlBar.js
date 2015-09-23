@@ -149,13 +149,13 @@ var ControlBar = function(dashjsMediaPlayer) {
 
         setDuration = function(value){
             if (!isNaN(value)) {
-                durationDisplay.innerHTML = player.convertToTimeCode(value);
+                durationDisplay.textContent = player.convertToTimeCode(value);
             }
         },
 
         setTime = function(value){
             if (!isNaN(value)) {
-                timeDisplay.innerHTML = player.convertToTimeCode(value);
+                timeDisplay.textContent = player.convertToTimeCode(value);
             }
         },
 
@@ -284,7 +284,7 @@ var ControlBar = function(dashjsMediaPlayer) {
                 captionItem.id = "captionItem_"+i
                 captionItem.index = i;
                 captionItem.selected = false;
-                captionItem.innerHTML = i === 0 ? tracks[i].kind +" off" : tracks[i-1].lang + " : " + tracks[i-1].kind; //subtract to offset for off button.
+                captionItem.textContent = i === 0 ? tracks[i].kind +" off" : tracks[i-1].lang + " : " + tracks[i-1].kind; //subtract to offset for off button.
                 captionItem.onmouseover = function(e){
                     if (this.selected !== true){
                         this.classList.add("caption-item-over");
