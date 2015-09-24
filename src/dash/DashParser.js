@@ -346,6 +346,28 @@ Dash.dependencies.DashParser = function () {
             return result;
         },
 
+        // Use this function to encode an HTML string
+        encodeProp = function(value) {
+            return (typeof value === "string") ? document.createElement('a').appendChild(document.createTextNode(value)).parentNode.innerHTML : value;
+        },
+
+        encodeObj = function(obj) {
+            var prop,
+                propName;
+
+            for (propName in obj) {
+                prop = obj[propName];
+
+                if (prop instanceof Array) {
+                    prop.forEach(function(item){
+                        encodeObj(item);
+                    });
+                } else {
+                    obj[propName] = encodeProp(obj[propName]);
+                }
+            }
+        },
+
         internalParse = function (data, baseUrl, xlinkController) {
             //this.log("Doing parse.");
 
@@ -380,6 +402,8 @@ Dash.dependencies.DashParser = function () {
                 }
 
                 //this.log("Flatten manifest properties.");
+                encodeObj(manifest);
+
                 iron.run(manifest);
                 ironed = new Date();
 
