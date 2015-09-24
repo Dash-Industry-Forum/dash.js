@@ -122,12 +122,10 @@ MediaPlayer.rules.BufferLevelRule = function () {
         metricsModel: undefined,
         abrController: undefined,
         playbackController: undefined,
-<<<<<<< HEAD
         mediaController: undefined,
         virtualBuffer: undefined,
-=======
         log:undefined,
->>>>>>> working commit check point.  VOD works live does not.  Buffer level is still growing to fast in some cases.
+
 
         //setup: function() {
         //    //this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
