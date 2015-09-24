@@ -129,7 +129,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 range = request.range;
 
             this.metricsModel.addSchedulingInfo(mediaType, now, type, startTime, availabilityStartTime, duration, quality, range, state);
-            this.metricsModel.addRequestsQueue(mediaType, pendingRequests, loadingRequests, executedRequests, rejectedRequests);
+            this.metricsModel.addRequestsQueue(mediaType, loadingRequests, executedRequests);
         },
 
         onLoadingCompleted = function(e) {

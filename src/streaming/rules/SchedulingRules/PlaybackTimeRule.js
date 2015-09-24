@@ -60,6 +60,8 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
 
         execute: function(context, callback) {
             var mediaType = context.getMediaInfo().type,
+                mediaInfo = context.getMediaInfo(),
+                streamId = context.getStreamInfo().id,
                 streamProcessor = context.getStreamProcessor(),
                 sc = streamProcessor.getScheduleController(),
                 representationInfo = streamProcessor.getCurrentRepresentationInfo(),

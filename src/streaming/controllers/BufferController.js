@@ -165,7 +165,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
                 chunk = this.virtualBuffer.extract({streamId: streamId, mediaType: type, segmentType: MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE, limit: 1})[0];
                 if (!chunk) {
-                    // this.log("XXXX about to return appendNext... without appending since no media chunk")
+                    this.log("XXXX about to return appendNext... without appending since no media chunk")
                     return;
                 }
 
@@ -192,6 +192,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 chunk = self.virtualBuffer.getChunks(filter)[0];
 
             if (chunk) {
+                //if (isAppendingInProgress || !buffer) return;
                 appendToBuffer.call(self, chunk);
             } else {
                 // if we have not loaded the init fragment for the current quality, do it
@@ -295,12 +296,11 @@ MediaPlayer.dependencies.BufferController = function () {
 
         updateBufferLevel = function() {
             var self = this,
-                currentTime = self.playbackController.getTime(),
+                currentTime = self.playbackController.getTime();
 
             bufferLevel = self.sourceBufferExt.getBufferLength(buffer, currentTime);
 
             self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, {bufferLevel: bufferLevel});
-            //checkGapBetweenBuffers.call(self);
             checkIfSufficientBuffer.call(self);
 
             if (bufferLevel < STALL_THRESHOLD) {
@@ -591,22 +591,7 @@ MediaPlayer.dependencies.BufferController = function () {
             addBufferMetrics.call(this);
         },
 
-        switchInitData = function() {
-            var self = this,
-                streamId = getStreamId.call(self),
-                filter = {streamId: streamId, mediaType: type, segmentType: MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE,
-                    quality: requiredQuality},
-                chunk = self.virtualBuffer.getChunks(filter)[0];
 
-            if (chunk) {
-                if (isAppendingInProgress || !buffer) return;
-
-                appendToBuffer.call(self, chunk);
-            } else {
-                // if we have not loaded the init fragment for the current quality, do it
-                self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_INIT_REQUESTED, {requiredQuality: requiredQuality});
-            }
-        },
 
         onCurrentTrackChanged = function(e) {
             if (!buffer) return;

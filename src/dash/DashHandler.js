@@ -712,27 +712,6 @@ Dash.dependencies.DashHandler = function () {
                 }
             }
 
-            // TODO : This is horrible.
-            // Temp fix for SegmentTimeline refreshes.
-            //if (idx === -1) {
-            //    idx = 0;
-            //}
-
-            /*
-            if (segments && segments.length > 0) {
-                idx = 0;
-                ft = segments[0].startTime / segments[0].timescale;
-                frag = null;
-
-                while (ft <= time && (idx + 1) < segments.length) {
-                    frag = segments[idx];
-                    ft += frag.duration / frag.timescale;
-                    idx += 1;
-                }
-                idx -= 1;
-            }
-            */
-
             return idx;
         },
 
