@@ -40,6 +40,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         captionContainer = null,
         videoSizeCheckInterval = null,
         isIE11 = false,// Temp solution for the addCue InvalidStateError..
+        isChrome = false,
         fullscreenAttribute = null,
         displayCCOnTop = false,
         topZIndex = 2147483647,
@@ -71,12 +72,13 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
             // https://connect.microsoft.com/IE/feedback/details/1573380/htmltrackelement-track-addcue-throws-invalidstateerror-when-adding-new-cue
             isIE11 = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./);
+            isChrome = !!navigator.userAgent.match(/Chrome/) && !navigator.userAgent.match(/Edge/);
             if (document.fullscreenElement !== undefined) {
                 fullscreenAttribute = "fullscreenElement"; // Standard and Edge
             } else if (document.webkitIsFullScreen !== undefined) {
                 fullscreenAttribute = "webkitIsFullScreen"; // Chrome and Safari (and Edge)
-            } else if (document.msFullScreenElement) { // IE11
-                fullscreenAttribute = "msFullScreenElement";
+            } else if (document.msFullscreenElement) { // IE11
+                fullscreenAttribute = "msFullscreenElement";
             } else if (document.mozFullScreen) { // Firefox
                 fullscreenAttribute = "mozFullScreen";
             }
@@ -262,14 +264,8 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         track.renderingType = "html";
                     }
 
-                    /* Don't do cue styling for TextTrackCue */
-                    if (Cue !== window.TextTrackCue) {
-                        if(!(document.getElementById('caption-style'))) {
-                            this.setCueStyle();
-                        }
-                        else if(!(document.getElementById('caption-style').sheet.cssRules.length)) {
-                            this.setCueStyle();
-                        }
+                    if (isChrome) { //Hide the native empty cues.
+                        this.setNativeCueStyle();
                     }
 
                     cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
@@ -382,35 +378,30 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             trackElementArr.splice(idx, 1);
         },
 
-        setCueStyle: function() {
-            var styleElement;
-            if(document.getElementById('caption-style')) {
-                styleElement = document.getElementById('caption-style');
-            } else {
-                styleElement = document.createElement('style');
-                styleElement.id  = 'caption-style';
-            }
+        /* Set native cue style to transparent background to avoid it being displayed. */
+        setNativeCueStyle: function() {
+            var styleElement = document.getElementById('native-cue-style');
+            if (styleElement) return; //Already set
+
+            styleElement = document.createElement('style');
+            styleElement.id  = 'native-cue-style';
             document.head.appendChild(styleElement);
             var stylesheet = styleElement.sheet;
-            
             if(video.id) {
-                stylesheet.addRule("#" + video.id + '::cue','background: transparent');
+                stylesheet.insertRule("#" + video.id + '::cue {background: transparent}', 0);
             } else if(video.classList.length !== 0) {
-                stylesheet.addRule("." + video.className + '::cue','background: transparent');
+                stylesheet.insertRule("." + video.className + '::cue {background: transparent}', 0);
             } else {
-                    stylesheet.addRule('video::cue','background: transparent');
+                stylesheet.insertRule('video::cue {background: transparent}', 0);
             }
         },
 
-        removeCueStyle: function() {
-            /* Don't do anything if this is a TextTrackCue, this is placed here because
-               TextSourceBuffer (that calls this function, has no clue if this is a
-               VTTCue or a TextTrackCue */
-            if (Cue !== window.TextTrackCue) {
-                var stylesheet = document.getElementById('caption-style').sheet;
-                if(stylesheet.cssRules && stylesheet.cssRules.length > 0) {
-                    stylesheet.deleteRule(0);
-                }
+        /* Remove the extra cue style with transparent background for native cues. */
+        removeNativeCueStyle: function() {
+            if (!isChrome) return;
+            var styleElement = document.getElementById('native-cue-style');
+            if (styleElement) {
+                document.head.removeChild(styleElement);
             }
         },
 
