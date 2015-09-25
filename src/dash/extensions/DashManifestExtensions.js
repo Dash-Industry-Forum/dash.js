@@ -123,7 +123,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         var lang = "";
 
         if (adaptation.hasOwnProperty("lang")) {
-            lang = adaptation.lang;
+            //Filter out any other characters not allowed according to RFC5646
+            lang = adaptation.lang.replace(/[^A-Za-z0-9-]/g,"");
         }
 
         return lang;
