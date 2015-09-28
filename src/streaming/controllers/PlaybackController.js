@@ -375,6 +375,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
             return ((getStreamStartTime.call(this, streamInfo) + streamInfo.duration) - currentTime);
         },
 
+        isPlaybackStarted: function() {
+            return this.getPlayedRanges() > 0;
+        },
+
         getStreamId: function() {
             return streamInfo.id;
         },
