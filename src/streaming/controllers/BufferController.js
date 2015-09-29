@@ -417,20 +417,20 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         /* prune buffer on our own in background to avoid browsers pruning buffer silently */
-        //pruneBuffer = function() {
-        //    var bufferToPrune = 0,
-        //        currentTime = this.playbackController.getTime(),
-        //        currentRange = this.sourceBufferExt.getBufferRange(buffer, currentTime);
-        //
-        //    // we want to get rid off buffer that is more than x seconds behind current time
-        //    if (currentRange !== null) {
-        //        bufferToPrune = currentTime - currentRange.start - MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP;
-        //        if (bufferToPrune > 0) {
-        //            isPruningInProgress = true;
-        //            this.sourceBufferExt.remove(buffer, 0, Math.round(currentRange.start + bufferToPrune), mediaSource);
-        //        }
-        //    }
-        //},
+        pruneBuffer = function() {
+            var bufferToPrune = 0,
+                currentTime = this.playbackController.getTime(),
+                currentRange = this.sourceBufferExt.getBufferRange(buffer, currentTime);
+
+            // we want to get rid off buffer that is more than x seconds behind current time
+            if (currentRange !== null) {
+                bufferToPrune = currentTime - currentRange.start - MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP;
+                if (bufferToPrune > 0) {
+                    isPruningInProgress = true;
+                    this.sourceBufferExt.remove(buffer, 0, Math.round(currentRange.start + bufferToPrune), mediaSource);
+                }
+            }
+        },
 
 
         getClearRange = function() {
@@ -593,11 +593,11 @@ MediaPlayer.dependencies.BufferController = function () {
 
         onWallclockTimeUpdated = function(/*e*/) {
 
-            // constantly prune buffer every x seconds
-            //wallclockTicked += 1;
-            //if ((wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
-            //    pruneBuffer.call(this);
-            //}
+             //constantly prune buffer every x seconds
+            wallclockTicked += 1;
+            if ((wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
+                pruneBuffer.call(this);
+            }
 
         },
 
