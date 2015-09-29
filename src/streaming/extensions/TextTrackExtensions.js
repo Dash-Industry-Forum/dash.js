@@ -35,6 +35,8 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         textTrackQueue = [],
         trackElementArr = [],
         currentTrackIdx = -1,
+        actualVideoLeft = 0,
+        actualVideoTop = 0,
         actualVideoWidth = 0,
         actualVideoHeight = 0,
         captionContainer = null,
@@ -125,15 +127,51 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             }
         },
 
+        getVideoVisibleVideoSize: function(viewWidth, viewHeight, videoWidth, videoHeight) {
+            var viewAspectRatio = viewWidth / viewHeight;
+            var videoAspectRatio = videoWidth / videoHeight;
+
+            var videoPictureX = 0;
+            var videoPictureY = 0;
+            var videoPictureWidth = 0;
+            var videoPictureHeight = 0;
+
+            if (viewAspectRatio > videoAspectRatio) {
+                videoPictureHeight = viewHeight;
+                videoPictureWidth = (videoPictureHeight / videoHeight) * videoWidth;
+                videoPictureX = (viewWidth - videoPictureWidth) / 2;
+                videoPictureY = 0;
+            } else {
+                videoPictureWidth = viewWidth;
+                videoPictureHeight = (videoPictureWidth / videoWidth) * videoHeight;
+                videoPictureX = 0;
+                videoPictureY = (viewHeight - videoPictureHeight) / 2;
+            }
+
+            return { x:videoPictureX,
+                     y:videoPictureY,
+                     w:videoPictureWidth,
+                     h:videoPictureHeight }; /* Maximal picture size in videos aspect ratio */
+        },
+
         checkVideoSize: function() {
             var track = this.getCurrentTextTrack();
             if (track && track.renderingType === "html") {
                 var newVideoWidth = video.clientWidth;
                 var newVideoHeight = video.clientHeight;
 
+                var realVideoSize = this.getVideoVisibleVideoSize(video.clientWidth, video.clientHeight, video.videoWidth, video.videoHeight);
+
+                newVideoWidth = realVideoSize.w;
+                newVideoHeight = realVideoSize.h;
+
                 if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
+                    actualVideoLeft = realVideoSize.x;
+                    actualVideoTop = realVideoSize.y;
                     actualVideoWidth = newVideoWidth;
                     actualVideoHeight = newVideoHeight;
+                    captionContainer.style.left = actualVideoLeft + "px";
+                    captionContainer.style.top = actualVideoTop + "px";
                     captionContainer.style.width = actualVideoWidth + "px";
                     captionContainer.style.height = actualVideoHeight + "px";
 
@@ -280,8 +318,10 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     cue.lineHeight = currentItem.lineHeight;
                     cue.linePadding = currentItem.linePadding;
                     cue.scaleCue = this.scaleCue;
-                    captionContainer.style.width = video.clientWidth + "px";
-                    captionContainer.style.height = video.clientHeight + "px";
+                    captionContainer.style.left = actualVideoLeft + "px";
+                    captionContainer.style.top = actualVideoTop + "px";
+                    captionContainer.style.width = actualVideoWidth + "px";
+                    captionContainer.style.height = actualVideoHeight + "px";
 
                     cue.onenter =  function () {
                         if (track.mode == "showing") {
