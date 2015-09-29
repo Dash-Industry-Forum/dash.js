@@ -170,7 +170,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             fragmentsToLoad = result.value;
             if (fragmentsToLoad > 0 && !self.bufferController.getIsAppendingInProgress() && !isFragmentLoading) {
                 isFragmentLoading = true;
-                this.abrController.getPlaybackQuality(this.streamProcessor,  getNextFragment.bind(self, onGetNextFragment.bind(self)) );
+                this.abrController.getPlaybackQuality(this.streamProcessor,  getNextFragment.bind(self, onGetNextFragment.bind(self)));
             } else {
 
                 validateTimeout = setTimeout(function(){

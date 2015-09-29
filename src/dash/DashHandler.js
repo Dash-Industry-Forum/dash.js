@@ -804,10 +804,6 @@ Dash.dependencies.DashHandler = function () {
 
             self.log("Getting the request for time: " + time);
 
-            if (type === "video" && time === 0){
-                console.log("what the fuck is going on")
-            }
-
             index = getIndexForSegments.call(self, time, representation, timeThreshold);
             //Index may be -1 if getSegments needs to update.  So after getSegments is called and updated then try to get index again.
             getSegments.call(self, representation);
