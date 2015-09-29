@@ -97,18 +97,12 @@ MediaPlayer.dependencies.FragmentModel = function () {
             var requests;
 
             switch (state) {
-                //case MediaPlayer.dependencies.FragmentModel.states.PENDING:
-                //    requests = pendingRequests;
-                //    break;
                 case MediaPlayer.dependencies.FragmentModel.states.LOADING:
                     requests = loadingRequests;
                     break;
                 case MediaPlayer.dependencies.FragmentModel.states.EXECUTED:
                     requests = executedRequests;
                     break;
-                //case MediaPlayer.dependencies.FragmentModel.states.REJECTED:
-                //    requests = rejectedRequests;
-                //    break;
                 default:
                     requests = [];
             }
@@ -256,33 +250,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return filteredRequests;
         },
 
-        //getLoadingTime: function() {
-        //    var loadingTime = 0,
-        //        req,
-        //        i;
-        //
-        //    // get the latest loaded request and calculate its loading time. In case requestEndDate/firstByteDate properties
-        //    // have not been set (e.g. for a request with action='complete') we should get the previous request.
-        //    for (i = executedRequests.length - 1; i >= 0; i -= 1) {
-        //        req = executedRequests[i];
-        //
-        //        if ((req.requestEndDate instanceof Date) && (req.firstByteDate instanceof Date)) {
-        //            loadingTime = req.requestEndDate.getTime() - req.firstByteDate.getTime();
-        //            break;
-        //        }
-        //    }
-        //
-        //    return loadingTime;
-        //},
-        //
-        //removeExecutedRequest: function(request) {
-        //    removeRequest.call(this, executedRequests, request);
-        //},
-
-        //removeRejectedRequest: function(request) {
-        //    removeRequest.call(this, rejectedRequests, request);
-        //},
-
         removeExecutedRequestsBeforeTime: function(time) {
             var lastIdx = executedRequests.length - 1,
                 start = NaN,
@@ -298,31 +265,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 }
             }
         },
-
-        //cancelPendingRequests: function(quality) {
-        //    var self = this,
-        //        reqs = pendingRequests,
-        //        canceled = reqs;
-        //
-        //    pendingRequests = [];
-        //
-        //    if (quality !== undefined) {
-        //        pendingRequests = reqs.filter(function(request) {
-        //            if (request.quality === quality) {
-        //                return false;
-        //            }
-        //
-        //            canceled.splice(canceled.indexOf(request), 1);
-        //            return true;
-        //        });
-        //    }
-        //
-        //    canceled.forEach(function(request) {
-        //        addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.CANCELED);
-        //    });
-        //
-        //    return canceled;
-        //},
 
         abortRequests: function() {
             var reqs = [];
@@ -353,7 +295,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
             switch (request.action) {
                 case "complete":
-                    // Stream has completed, execute the correspoinding callback
+                    // Stream has completed, execute the corresponding callback
                     executedRequests.push(request);
                     addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.EXECUTED);
                     self.notify(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED, {request: request});
@@ -370,13 +312,9 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         reset: function() {
             this.abortRequests();
-            //this.cancelPendingRequests();
             context = null;
             executedRequests = [];
-            //pendingRequests = [];
             loadingRequests = [];
-            //rejectedRequests = [];
-            //isLoadingPostponed = false;
         }
     };
 };

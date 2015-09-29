@@ -119,7 +119,7 @@ MediaPlayer.rules.ThroughputRule = function () {
             if (abrController.getAbandonmentStateFor(mediaType) !== MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
 
                 if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED || isDynamic) {
-                    var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput/1000);
+                    var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
                     streamProcessor.getScheduleController().setTimeToLoadDelay(0); // TODO Watch out for seek event - no delay when seeking.!!
                     switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
                 }
