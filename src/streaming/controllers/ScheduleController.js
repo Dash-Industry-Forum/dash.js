@@ -124,8 +124,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
 
         replaceCanceledRequests = function(canceledRequests) {
-            return //TODO Only using this for abandonment so figure out if I can make it simpler by passing the request ID abandoned to reload.
-
             var ln = canceledRequests.length,
             // EPSILON is used to avoid javascript floating point issue, e.g. if request.startTime = 19.2,
             // request.duration = 3.83, than request.startTime + request.startTime = 19.2 + 1.92 = 21.119999999999997
@@ -150,6 +148,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         validate = function () {
             if (isStopped || (this.playbackController.isPaused() && (this.playbackController.getPlayedRanges().length > 0) && !this.scheduleWhilePaused)) return;
+            //this.log("XXX validate");
             getRequiredFragmentCount.call(this, onGetRequiredFragmentCount.bind(this));
         },
 
@@ -168,7 +167,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         onGetRequiredFragmentCount = function(result) {
             var self = this;
-            fragmentsToLoad = result .value;
+            fragmentsToLoad = result.value;
             if (fragmentsToLoad > 0 && !self.bufferController.getIsAppendingInProgress() && !isFragmentLoading) {
                 isFragmentLoading = true;
                 this.abrController.getPlaybackQuality(this.streamProcessor,  getNextFragment.bind(self, onGetNextFragment.bind(self)) );
@@ -191,18 +190,9 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onGetNextFragment = function(result) {
-            var self = this;
-
             if (result.value) {
                 fragmentModel.executeRequest(result.value);
             }
-            //else {
-            //    isFragmentLoading = false;
-            //    validateTimeout = setTimeout(function(){
-            //        //self.log("XXX looping back to validate")
-            //        validate.call(self);
-            //    }, 1000)
-            //}
         },
 
         onQualityChanged = function(e) {
@@ -261,9 +251,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onBytesAppended = function(e) {
-            this.log("XXX - Appended bytes complete for index:" , e.data.index);
-
-
+            //this.log("XXX - Appended bytes complete for index:" , e.data.index);
             addPlaylistTraceMetrics.call(this);
             validate.call(this);
 
@@ -334,7 +322,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onPlaybackSeeking = function(e) {
-
             if (!initialPlayback) {
                 isFragmentLoading = false;
             }

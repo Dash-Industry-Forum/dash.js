@@ -99,10 +99,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             // cache the initialization data to use it next time the quality has changed
             this.virtualBuffer.append(chunk);
-
-            //appendNext.call(this);
             switchInitData.call(this, getStreamId.call(this),  requiredQuality);
-
         },
 
 		onMediaLoaded = function (e) {
@@ -127,11 +124,7 @@ MediaPlayer.dependencies.BufferController = function () {
             chunk.bytes = deleteInbandEvents.call(this, bytes);
 
             this.virtualBuffer.append(chunk);
-
-            //this.log("XXXX about to call appendNext...")
             appendNext.call(this);
-
-
 		},
 
         appendNext = function() {
@@ -147,25 +140,12 @@ MediaPlayer.dependencies.BufferController = function () {
                 streamId = getStreamId.call(self),
                 chunk;
 
-            //if (isAppendingInProgress || !buffer){
-            //    this.log("XXXX about to return appendNext... without appending")
-            //    return;
-            //}
-
-            //if (currentQuality === -1) {
-            //    switchInitData.call(this, streamId,  requiredQuality);
-            //    return;
-            //}
-
             if (appendingMediaChunk) {
                 chunk = appendingMediaChunk;
             } else {
 
-                //if (!buffer || isAppendingInProgress || !hasEnoughSpaceToAppend.call(this)) return;
-
                 chunk = this.virtualBuffer.extract({streamId: streamId, mediaType: type, segmentType: MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE, limit: 1})[0];
                 if (!chunk) {
-                    this.log("XXXX about to return appendNext... without appending since no media chunk")
                     return;
                 }
 
@@ -173,13 +153,11 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             if (chunk.quality === currentQuality) {
-                //this.log("XXXX about to append media chunk from appendNext", chunk.index)
                 appendingMediaChunk = false;
                 appendToBuffer.call(this, chunk);
             }
             else {
                 // we need to change currentQuality by init data
-               // this.log("XXXX about to switch init from appendNext", appendingMediaChunk.quality)
                 switchInitData.call(this, streamId, appendingMediaChunk.quality);
             }
         },
@@ -192,7 +170,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 chunk = self.virtualBuffer.getChunks(filter)[0];
 
             if (chunk) {
-                //if (isAppendingInProgress || !buffer) return;
                 appendToBuffer.call(self, chunk);
             } else {
                 // if we have not loaded the init fragment for the current quality, do it
@@ -232,7 +209,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 isAppendingInProgress = false;
                 return;
             }
-
 
             if (!hasEnoughSpaceToAppend.call(self)) {
                 self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel});
@@ -441,20 +417,20 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         /* prune buffer on our own in background to avoid browsers pruning buffer silently */
-        pruneBuffer = function() {
-            var bufferToPrune = 0,
-                currentTime = this.playbackController.getTime(),
-                currentRange = this.sourceBufferExt.getBufferRange(buffer, currentTime);
-
-            // we want to get rid off buffer that is more than x seconds behind current time
-            if (currentRange !== null) {
-                bufferToPrune = currentTime - currentRange.start - MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP;
-                if (bufferToPrune > 0) {
-                    isPruningInProgress = true;
-                    this.sourceBufferExt.remove(buffer, 0, Math.round(currentRange.start + bufferToPrune), mediaSource);
-                }
-            }
-        },
+        //pruneBuffer = function() {
+        //    var bufferToPrune = 0,
+        //        currentTime = this.playbackController.getTime(),
+        //        currentRange = this.sourceBufferExt.getBufferRange(buffer, currentTime);
+        //
+        //    // we want to get rid off buffer that is more than x seconds behind current time
+        //    if (currentRange !== null) {
+        //        bufferToPrune = currentTime - currentRange.start - MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP;
+        //        if (bufferToPrune > 0) {
+        //            isPruningInProgress = true;
+        //            this.sourceBufferExt.remove(buffer, 0, Math.round(currentRange.start + bufferToPrune), mediaSource);
+        //        }
+        //    }
+        //},
 
 
         getClearRange = function() {
@@ -520,7 +496,6 @@ MediaPlayer.dependencies.BufferController = function () {
         getStreamId = function() {
             return this.streamProcessor.getStreamInfo().id;
         },
-
 
         onMediaAppended = function(index) {
             this.virtualBuffer.storeAppendedChunk(appendedBytesInfo, buffer);
@@ -619,10 +594,10 @@ MediaPlayer.dependencies.BufferController = function () {
         onWallclockTimeUpdated = function(/*e*/) {
 
             // constantly prune buffer every x seconds
-            wallclockTicked += 1;
-            if ((wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
-                pruneBuffer.call(this);
-            }
+            //wallclockTicked += 1;
+            //if ((wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
+            //    pruneBuffer.call(this);
+            //}
 
         },
 

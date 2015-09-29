@@ -260,7 +260,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
                 type = sp.getType(),
                 stream = this.system.getObject("streamController").getStreamById(streamInfo.id),
                 streamStart = getStreamStartTime.call(this, streamInfo),
-                startRequest = this.adapter.getFragmentRequestForTime(sp, sp.getCurrentRepresentationInfo(), streamStart, {ignoreIsFinished: true}),
+                //startRequest = this.adapter.getFragmentRequestForTime(sp, sp.getCurrentRepresentationInfo(), streamStart, {ignoreIsFinished: true}),
                 startIdx = startRequest ? startRequest.index : null,
                 currentEarliestTime = commonEarliestTime[id];
 
@@ -280,12 +280,12 @@ MediaPlayer.dependencies.PlaybackController = function () {
             // time exceeds the common earliest time
             if ((currentEarliestTime === commonEarliestTime[id] && (time === currentEarliestTime)) || !firstAppended[id] || !firstAppended[id].ready || (time > commonEarliestTime[id])) return;
 
-            // reset common earliest time every time user seeks
-            // to avoid mismatches when buffers have been discarded/pruned
+             //reset common earliest time every time user seeks
+             //to avoid mismatches when buffers have been discarded/pruned
             if (this.isSeeking()) {
                 commonEarliestTime = {};
             } else {
-                // seek to the max of period start or start of buffered range to avoid stalling caused by a shift between audio and video media time                
+                // seek to the max of period start or start of buffered range to avoid stalling caused by a shift between audio and video media time
                 this.seek(Math.max(commonEarliestTime[id], streamStart));
                 // prevents seeking the second time for the same Period
                 firstAppended[id].seekCompleted = true;
