@@ -569,12 +569,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     player.attachView(video);
     player.attachVideoContainer(document.getElementById("videoContainer"));
 
-    /* Only do this for Chrome and Safari, but not for Edge (Edge signals both Chrome and Safari) */
-    if (navigator.userAgent.match(/(Chrome|Safari)/) && !navigator.userAgent.match(/Edge/)) 
-    {
-        ttmlDiv = document.querySelector("#video-caption");
-        player.attachTTMLRenderingDiv(ttmlDiv);
-    }
+    // Add HTML-rendered TTML subtitles
+    ttmlDiv = document.querySelector("#video-caption");
+    player.attachTTMLRenderingDiv(ttmlDiv);
+
     player.setAutoPlay(true);
     controlbar = new ControlBar(player);
     controlbar.initialize();

@@ -41,7 +41,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         actualVideoHeight = 0,
         captionContainer = null,
         videoSizeCheckInterval = null,
-        isIE11 = false,// Temp solution for the addCue InvalidStateError..
+        isIE11orEdge = false,// Temp solution for the addCue InvalidStateError..
         isChrome = false,
         fullscreenAttribute = null,
         displayCCOnTop = false,
@@ -51,9 +51,9 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             var kind = textTrackQueue[i].kind;
             var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
             var lang = textTrackQueue[i].lang;
-            var track = isIE11 ? video.addTextTrack(kind, label, lang) : document.createElement('track');
+            var track = isIE11orEdge ? video.addTextTrack(kind, label, lang) : document.createElement('track');
 
-             if (!isIE11) {
+             if (!isIE11orEdge) {
                  track.kind = kind;
                  track.label = label;
                  track.srclang = lang;
@@ -73,7 +73,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             //TODO Check if IE has resolved issues: Then revert to not using the addTextTrack API for all browsers.
             // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
             // https://connect.microsoft.com/IE/feedback/details/1573380/htmltrackelement-track-addcue-throws-invalidstateerror-when-adding-new-cue
-            isIE11 = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./);
+            isIE11orEdge = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./) || navigator.userAgent.match(/Edge/);
             isChrome = !!navigator.userAgent.match(/Chrome/) && !navigator.userAgent.match(/Edge/);
             if (document.fullscreenElement !== undefined) {
                 fullscreenAttribute = "fullscreenElement"; // Standard and Edge
@@ -116,7 +116,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         track.default = true;
                         defaultIndex = i;
                     }
-                    if (!isIE11){
+                    if (!isIE11orEdge){
                         video.appendChild(track);
                     }
                     this.addCaptions(0, textTrackQueue[i].captionData);
@@ -397,7 +397,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         deleteAllTextTracks:  function() {
             var ln = trackElementArr.length;
             for(var i = 0; i < ln; i++){
-                if (isIE11) {
+                if (isIE11orEdge) {
                     this.deleteTrackCues(this.getTextTrack(i));
                 }else {
                     video.removeChild(trackElementArr[i]);

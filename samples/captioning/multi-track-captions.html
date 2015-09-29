@@ -24,10 +24,10 @@
             player.attachView(videoElement);
             player.setAutoPlay(true);
             player.attachSource(url);
-            player.addEventListener(MediaPlayer.events.TEXT_TRACK_ADDED, onTrackAdded);
+            player.addEventListener(MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);
         }
 
-        function onTrackAdded(e){
+        function onTracksAdded(e){
             var selectMenu = document.getElementById("caption-menu"),
                 tracks = videoElement.textTracks,
                 ln = tracks.length;
