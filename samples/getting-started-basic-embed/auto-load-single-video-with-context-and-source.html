@@ -24,14 +24,14 @@
             //Example adding video and source
             video = document.querySelector("#video3");
             source = document.createElement("source");
-            source.src = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
+            source.src = "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd";
             source.type = "application/dash+xml";
             player = Dash.create(video, source);
 
             //Example adding video, source and context
             video = document.querySelector("#video4");
             source = document.createElement("source");
-            source.src = "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd";
+            source.src = "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd";
             source.type = "application/dash+xml";
             context = new Dash.di.DashContext();  // you could add a custom DashContext at this point
             player = Dash.create(video, source, context);
@@ -47,10 +47,10 @@
     <body onload="init()">
         <div>
             <video id="video1" autoplay controls="true">
-                <source src="http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd" type="application/dash+xml"/>
+                <source src="http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd" type="application/dash+xml"/>
             </video>
             <p/>
-            <video id="video2" autoplay src="http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd" controls="true"/>
+            <video id="video2" autoplay src="http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd" controls="true"/>
             <p/>
             <video id="video3" autoplay controls="true">
             </video>
