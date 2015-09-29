@@ -90,15 +90,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         doStop = function (cancelPending) {
             if (isStopped) return;
-
             isStopped = true;
-
             this.log("stop");
-            // cancel the requests that have already been created, but not loaded yet.
-            //if (cancelPending) {
-            //    fragmentModel.cancelPendingRequests();
-            //}
-
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
         },
 
@@ -111,11 +104,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             request = self.adapter.getInitRequest(self.streamProcessor, quality);
 
             if (request !== null) {
-                //self.log("Loading initialization: " + request.mediaType + ":" + request.startTime);
-                //self.log(request);
                 fragmentModel.executeRequest(request)
-
-                //self.fragmentController.prepareFragmentForLoading(fragmentModel, request);
             }
 
             return request;
@@ -233,16 +222,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON);
         },
 
-        //onMediaFragmentLoadingStart = function(e) {
-        //    var self = this;
-        //
-        //    if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel()) return;
-        //
-        //   // validate.call(self);
-        //},
-
         onFragmentLoadingCompleted = function (e) {
-            //this.log("XXX - Loading complete for index: ", e.data.request.index);
             if (!isNaN(e.data.request.index))
                 isFragmentLoading = false
 
@@ -251,10 +231,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onBytesAppended = function(e) {
-            //this.log("XXX - Appended bytes complete for index:" , e.data.index);
             addPlaylistTraceMetrics.call(this);
             validate.call(this);
-
         },
 
         onDataUpdateStarted = function(/*e*/) {
