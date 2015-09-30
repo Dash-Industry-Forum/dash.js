@@ -100,7 +100,7 @@ public class MainActivity extends FragmentActivity implements MediaRouteAdapter 
 			), 
 			new Stream(
 				"Envivio",
-	            "http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd"
+	            "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd"
 			),
 			new Stream(
 				"Segment List",
