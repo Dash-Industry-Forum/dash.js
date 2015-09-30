@@ -1147,6 +1147,8 @@ MediaPlayer = function (context) {
             if (element) {
                 videoModel = system.getObject("videoModel");
                 videoModel.setElement(element);
+                // Workaround to force Firefox to fire the canplay event.
+                element.preload = "auto";
             }
 
             // TODO : update
