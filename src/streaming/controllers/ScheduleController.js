@@ -64,15 +64,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         doStart = function () {
             if (!ready) return;
-
             isStopped = false;
-
             if (initialPlayback) {
                 initialPlayback = false;
             }
-
             this.log("start");
-
             //if starting from a pause we want to call validate to kick off the cycle that was stopped by pausing stream.
             if (this.playbackController.getPlayedRanges().length > 0) {
                 validate.call(this);
@@ -137,7 +133,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         validate = function () {
             if (isStopped || (this.playbackController.isPaused() && (this.playbackController.getPlayedRanges().length > 0) && !this.scheduleWhilePaused)) return;
-            //this.log("XXX validate");
+            this.log("XXX validate");
             getRequiredFragmentCount.call(this, onGetRequiredFragmentCount.bind(this));
         },
 
@@ -300,6 +296,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onPlaybackSeeking = function(e) {
+
             if (!initialPlayback) {
                 isFragmentLoading = false;
             }
@@ -311,6 +308,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
             addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
 
             this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentationInfo.DVRWindow.end - this.playbackController.getTime()});
+
+            if (isDynamic){
+                validate.call(this);
+            }
+
         },
 
         onPlaybackRateChanged = function(/*e*/) {
