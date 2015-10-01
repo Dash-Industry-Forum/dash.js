@@ -144,7 +144,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
         onPlaybackSeeking = function(e){
             if (delayLoadingTimeout !== undefined){
                 clearTimeout(delayLoadingTimeout);
-
             }
         };
 

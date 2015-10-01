@@ -35,15 +35,10 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
         scheduleController = {},
 
         onPlaybackSeeking = function(e) {
-            // TODO this a dirty workaround to call this handler after a handelr from ScheduleController class. That
-            // handler calls FragmentModel.cancelPendingRequests(). We should cancel pending requests before we start
-            // creating requests for a seeking time.
-            setTimeout(function() {
-                var time = e.data.seekTime;
-                seekTarget.audio = time;
-                seekTarget.video = time;
-                seekTarget.fragmentedText=time;
-            },0);
+            var time = e.data.seekTime;
+            seekTarget.audio = time;
+            seekTarget.video = time;
+            seekTarget.fragmentedText=time;
         };
 
     return {
@@ -59,21 +54,21 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
         },
 
         execute: function(context, callback) {
-            var mediaType = context.getMediaInfo().type,
-                mediaInfo = context.getMediaInfo(),
-                streamId = context.getStreamInfo().id,
-                streamProcessor = context.getStreamProcessor(),
-                sc = streamProcessor.getScheduleController(),
-                representationInfo = streamProcessor.getCurrentRepresentationInfo(),
-                st = seekTarget ? seekTarget[mediaType] : null,
-                hasSeekTarget = (st !== undefined) && (st !== null),
-                p = hasSeekTarget ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
-                keepIdx = !hasSeekTarget,
-                currentTime = this.adapter.getIndexHandlerTime(streamProcessor),
-                buffer = streamProcessor.bufferController.getBuffer(),
-                appendedChunks,
-                range = null,
-                time,
+                var mediaType = context.getMediaInfo().type,
+                    mediaInfo = context.getMediaInfo(),
+                    streamId = context.getStreamInfo().id,
+                    streamProcessor = context.getStreamProcessor(),
+                    sc = streamProcessor.getScheduleController(),
+                    representationInfo = streamProcessor.getCurrentRepresentationInfo(),
+                    st = seekTarget ? seekTarget[mediaType] : null,
+                    hasSeekTarget = (st !== undefined) && (st !== null),
+                    p = hasSeekTarget ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
+                    keepIdx = !hasSeekTarget,
+                    currentTime = this.adapter.getIndexHandlerTime(streamProcessor),
+                    buffer = streamProcessor.bufferController.getBuffer(),
+                    appendedChunks,
+                    range = null,
+                    time,
                 request;
 
             time = hasSeekTarget ? st : currentTime;

@@ -153,6 +153,10 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             if (chunk.quality === currentQuality) {
+
+                //TODO May need this for MP buffer switch as buffer will be null while new SB established.  But returning here and blocking progression may require validate to be called.
+                //if (!buffer || isAppendingInProgress || !hasEnoughSpaceToAppend.call(this)) return;
+
                 appendingMediaChunk = false;
                 appendToBuffer.call(this, chunk);
             }
@@ -229,7 +233,6 @@ MediaPlayer.dependencies.BufferController = function () {
                     }
                 }
             }
-
             //finish appending
             isAppendingInProgress = false;
             if (!isNaN(appendedBytesInfo.index)) {
@@ -242,7 +245,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 }
             }
 
-            self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED, {quality: appendedBytesInfo.quality, index: appendedBytesInfo.index, bufferedRanges: ranges});
+            self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED, {quality: appendedBytesInfo.quality, startTime: appendedBytesInfo.start, index: appendedBytesInfo.index, bufferedRanges: ranges});
         },
 
         onQualityChanged = function(e) {
@@ -263,6 +266,7 @@ MediaPlayer.dependencies.BufferController = function () {
         onPlaybackSeeking = function() {
             isAppendingInProgress = false;
             onPlaybackProgression.call(this);
+
         },
 
         onPlaybackProgression = function() {

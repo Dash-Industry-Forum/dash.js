@@ -260,12 +260,11 @@ MediaPlayer.dependencies.PlaybackController = function () {
                 type = sp.getType(),
                 stream = this.system.getObject("streamController").getStreamById(streamInfo.id),
                 streamStart = getStreamStartTime.call(this, streamInfo),
-                //startRequest = this.adapter.getFragmentRequestForTime(sp, sp.getCurrentRepresentationInfo(), streamStart, {ignoreIsFinished: true}),
-                startIdx = startRequest ? startRequest.index : null,
+                segStart = e.data.startTime,
                 currentEarliestTime = commonEarliestTime[id];
 
             // if index is zero it means that the first segment of the Period has been appended
-            if (e.data.index === startIdx) {
+            if (segStart === streamStart) {
                 firstAppended[id] = firstAppended[id] || {};
                 firstAppended[id][type] = true;
                 firstAppended[id].ready = !((stream.hasMedia("audio") && !firstAppended[id].audio) || (stream.hasMedia("video") && !firstAppended[id].video));
