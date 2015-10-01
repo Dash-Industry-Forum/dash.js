@@ -36,21 +36,14 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
             var el = this.videoModel.getElement(),
                 tracks = el.textTracks,
                 ln = tracks.length,
-                self = this;
+                self = this,
+                previousTextTrack = self.textTrackExtensions.getCurrentTextTrack();
 
             for (var i = 0; i < ln; i++ ) {
                 var track = tracks[i];
                 allTracksAreDisabled = track.mode !== "showing";
                 if (track.mode === "showing") {
                     if (self.textTrackExtensions.getCurrentTrackIdx() !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
-                        var previousTextTrack = self.textTrackExtensions.getCurrentTextTrack(); //will be null when all tracks are disabled and turning back on.
-                        if (previousTextTrack !== null) {
-                            self.textTrackExtensions.deleteTrackCues(previousTextTrack);
-                            if (previousTextTrack.renderingType === "html") {
-                                self.textTrackExtensions.removeNativeCueStyle();
-                                self.textTrackExtensions.clearCues();
-                            }
-                        }
                         self.textTrackExtensions.setCurrentTrackIdx(i);
                         if (!self.mediaController.isCurrentTrack(self.allTracks[i])){
                             self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
@@ -59,8 +52,18 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                             self.buffered.clear();
                             self.mediaController.setTrack(self.allTracks[i]);
                         }
+                    } else {
+                        previousTextTrack = null;
                     }
                     break;
+                }
+            }
+            
+            if (previousTextTrack) {
+                self.textTrackExtensions.deleteTrackCues(previousTextTrack);
+                if (previousTextTrack.renderingType === "html") {
+                    self.textTrackExtensions.removeNativeCueStyle();
+                    self.textTrackExtensions.clearCues();
                 }
             }
 
