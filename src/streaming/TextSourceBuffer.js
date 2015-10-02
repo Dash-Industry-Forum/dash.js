@@ -116,7 +116,8 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
 
                 textTrackInfo.captionData = captionData;
                 textTrackInfo.lang = mediaInfo.lang;
-                textTrackInfo.label = mediaInfo.id;
+                textTrackInfo.label = mediaInfo.id; // AdaptationSet id (an unsigned int)
+                textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
                 textTrackInfo.video = self.videoModel.getElement();
                 textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
                 textTrackInfo.isFragmented = self.isFragmented;
