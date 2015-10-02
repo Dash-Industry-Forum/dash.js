@@ -103,6 +103,9 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             captionContainer = this.videoModel.getTTMLRenderingDiv();
 
             if(textTrackQueue.length === totalTextTracks) {
+                textTrackQueue.sort(function(a, b) { //Sort in same order as in manifest
+                    return a.index - b.index;
+                });
                 var defaultIndex = 0;
                 for(var i = 0 ; i < textTrackQueue.length; i++) {
                     var track = createTrackForUserAgent(i);
