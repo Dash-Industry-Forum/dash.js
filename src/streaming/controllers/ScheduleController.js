@@ -46,6 +46,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         isFragmentLoading = false,
         timeToloadDelay = 0,
         validateTimeout,
+        seekTarget = NaN,
 
         clearPlayListTraceMetrics = function (endTime, stopreason) {
             var duration = 0,
@@ -133,12 +134,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         validate = function () {
             if (isStopped || (this.playbackController.isPaused() && (this.playbackController.getPlayedRanges().length > 0) && !this.scheduleWhilePaused)) return;
-            this.log("XXX validate");
             getRequiredFragmentCount.call(this, onGetRequiredFragmentCount.bind(this));
+            //this.log("validate", type);
         },
 
         getRequiredFragmentCount = function(callback) {
-            //ASK THE BUFFER LEVEL RULE IF I SHOULD DOWNLOAD OR NOT BASED ON BUFFER TARGET IN RULE.  TARGET CAN BE DYNAMIC BUT RIGHT NOW IS STATIC
             var self =this,
                 rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES);
 
@@ -148,8 +148,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             });
         },
 
-
-
         onGetRequiredFragmentCount = function(result) {
             var self = this;
             fragmentsToLoad = result.value;
@@ -157,11 +155,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 isFragmentLoading = true;
                 this.abrController.getPlaybackQuality(this.streamProcessor,  getNextFragment.bind(self, onGetNextFragment.bind(self)));
             } else {
-
                 validateTimeout = setTimeout(function(){
-                    //self.log("XXX looping back to validate")
+                    //self.log("timeout going back to validate")
                     validate.call(self);
-                }, 1000)
+                }, 1000) //TODO should this be something based on fragment duration?
             }
         },
 
@@ -258,9 +255,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
-        //onBufferLevelUpdated = function(/*e*/) {
-        //},
-
         onQuotaExceeded = function(/*e*/) {
             doStop.call(this, false);
         },
@@ -304,24 +298,20 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var metrics = this.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = this.metricsExt.getCurrentManifestUpdate(metrics);
 
-            this.log("seek: " + e.data.seekTime);
+            seekTarget = e.data.seekTime
+            this.log("seek: " + seekTarget);
             addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
 
             this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentationInfo.DVRWindow.end - this.playbackController.getTime()});
 
-            if (isDynamic){
+            if (isDynamic){ // need to validate again for dynamic after first seek
                 validate.call(this);
             }
-
         },
 
         onPlaybackRateChanged = function(/*e*/) {
             addPlaylistTraceMetrics.call(this);
         },
-
-        //onWallclockTimeUpdated = function(/*e*/) {
-        //    //validate.call(this);
-        //},
 
         onLiveEdgeSearchCompleted = function(e) {
             if (e.error) return;
@@ -378,14 +368,12 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
             this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
 
-            //this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START] = onMediaFragmentLoadingStart;
             this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
             this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
 
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_CLEARED] = onBufferCleared;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED] = onBufferLevelStateChanged;
-            //this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED] = onBufferLevelUpdated;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_INIT_REQUESTED] = onInitRequested;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_QUOTA_EXCEEDED] = onQuotaExceeded;
 
@@ -394,7 +382,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED] = onPlaybackStarted;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED] = onPlaybackRateChanged;
-            //this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
         },
 
         initialize: function(typeValue, streamProcessor) {
@@ -412,12 +399,16 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         },
 
-        getFragmentModel: function() {
-            return fragmentModel;
+        getSeekTarget: function() {
+            return seekTarget;
         },
 
-        getFragmentToLoadCount:function () {
-            return fragmentsToLoad;
+        setSeekTarget: function(value) {
+            seekTarget = value;
+        },
+
+        getFragmentModel: function() {
+            return fragmentModel;
         },
 
         setTimeToLoadDelay: function(value){
@@ -439,6 +430,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             fragmentModel.abortRequests();
             self.fragmentController.detachModel(fragmentModel);
             fragmentsToLoad = 0;
+            seekTarget = NaN;
         },
 
         start: doStart,

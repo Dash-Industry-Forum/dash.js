@@ -84,7 +84,7 @@ MediaPlayer = function (context) {
         playing = false,
         autoPlay = true,
         scheduleWhilePaused = false,
-        bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
+        //bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
         useManifestDateHeaderTimeSource = true,
         UTCTimingSources = [],
         liveDelayFragmentCount = 4,
@@ -133,8 +133,8 @@ MediaPlayer = function (context) {
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
             system.mapValue("numOfParallelRequestAllowed", numOfParallelRequestAllowed);
             system.mapOutlet("numOfParallelRequestAllowed", "scheduleController");
-            system.mapValue("bufferMax", bufferMax);
-            system.mapOutlet("bufferMax", "bufferController");
+            //system.mapValue("bufferMax", bufferMax);
+            //system.mapOutlet("bufferMax", "bufferController");
 
             rulesController.initialize();
         },
@@ -563,21 +563,21 @@ MediaPlayer = function (context) {
             return scheduleWhilePaused;
         },
 
-        /**
-         * @param value
-         * @memberof MediaPlayer#
-         */
-        setBufferMax: function(value) {
-            bufferMax = value;
-        },
-
-        /**
-         * @returns {string}
-         * @memberof MediaPlayer#
-         */
-        getBufferMax: function() {
-            return bufferMax;
-        },
+        ///**
+        // * @param value
+        // * @memberof MediaPlayer#
+        // */
+        //setBufferMax: function(value) {
+        //    bufferMax = value;
+        //},
+        //
+        ///**
+        // * @returns {string}
+        // * @memberof MediaPlayer#
+        // */
+        //getBufferMax: function() {
+        //    return bufferMax;
+        //},
 
         /**
          * @returns {object}
