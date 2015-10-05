@@ -38,7 +38,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         isDynamic,
         currentRepresentationInfo,
         initialPlayback = true,
-        lastValidationTime = null,
         isStopped = false,
         playListMetrics = null,
         playListTraceMetrics = null,
@@ -85,7 +84,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             doStart.call(this);
         },
 
-        doStop = function (cancelPending) {
+        doStop = function () {
             if (isStopped) return;
             isStopped = true;
             this.log("stop");
@@ -101,7 +100,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             request = self.adapter.getInitRequest(self.streamProcessor, quality);
 
             if (request !== null) {
-                fragmentModel.executeRequest(request)
+                fragmentModel.executeRequest(request);
             }
 
             return request;
@@ -158,7 +157,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 validateTimeout = setTimeout(function(){
                     //self.log("timeout going back to validate")
                     validate.call(self);
-                }, 1000) //TODO should this be something based on fragment duration?
+                }, 1000); //TODO should this be something based on fragment duration?
             }
         },
 
@@ -216,20 +215,20 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onFragmentLoadingCompleted = function (e) {
-            if (!isNaN(e.data.request.index))
-                isFragmentLoading = false
-
+            if (!isNaN(e.data.request.index)){
+                isFragmentLoading = false;
+            }
             if (!e.error) return;
             doStop.call(this);
         },
 
-        onBytesAppended = function(e) {
+        onBytesAppended = function() {
             addPlaylistTraceMetrics.call(this);
             validate.call(this);
         },
 
-        onDataUpdateStarted = function(/*e*/) {
-            doStop.call(this, false);
+        onDataUpdateStarted = function() {
+            doStop.call(this);
         },
 
         onInitRequested = function(e) {
@@ -255,8 +254,8 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
         },
 
-        onQuotaExceeded = function(/*e*/) {
-            doStop.call(this, false);
+        onQuotaExceeded = function() {
+            doStop.call(this);
         },
 
         addPlaylistMetrics = function(stopReason) {
@@ -285,7 +284,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             fragmentModel.executeRequest(req);
         },
 
-        onPlaybackStarted = function(/*e*/) {
+        onPlaybackStarted = function() {
             doStart.call(this);
         },
 
@@ -298,7 +297,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var metrics = this.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = this.metricsExt.getCurrentManifestUpdate(metrics);
 
-            seekTarget = e.data.seekTime
+            seekTarget = e.data.seekTime;
             this.log("seek: " + seekTarget);
             addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
 
@@ -424,7 +423,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         reset: function() {
             var self = this;
 
-            doStop.call(self, true);
+            doStop.call(self);
             self.bufferController.unsubscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, self.scheduleRulesCollection.bufferLevelRule);
             self.bufferController.unsubscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, self.scheduleRulesCollection.bufferLevelRule);
             fragmentModel.abortRequests();

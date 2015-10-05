@@ -234,6 +234,8 @@ MediaPlayer.dependencies.BufferController = function () {
             //finish appending
             isAppendingInProgress = false;
             if (!isNaN(appendedBytesInfo.index)) {
+                this.virtualBuffer.storeAppendedChunk(appendedBytesInfo, buffer);
+                removeOldTrackData.call(this);
                 maxAppendedIndex = Math.max(appendedBytesInfo.index, maxAppendedIndex);
                 checkIfBufferingCompleted.call(this);
             } else {
@@ -497,15 +499,6 @@ MediaPlayer.dependencies.BufferController = function () {
 
         getStreamId = function() {
             return this.streamProcessor.getStreamInfo().id;
-        },
-
-        onMediaAppended = function(index) {
-            this.virtualBuffer.storeAppendedChunk(appendedBytesInfo, buffer);
-
-            removeOldTrackData.call(this);
-
-            maxAppendedIndex = Math.max(index,maxAppendedIndex);
-            checkIfBufferingCompleted.call(this);
         },
 
         removeOldTrackData = function() {

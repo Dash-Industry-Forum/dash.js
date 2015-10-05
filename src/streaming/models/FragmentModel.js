@@ -141,7 +141,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             this.notify(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {request: request, response: response}, error);
         },
 
-        onPlaybackSeeking = function(e){
+        onPlaybackSeeking = function(){
             if (delayLoadingTimeout !== undefined){
                 clearTimeout(delayLoadingTimeout);
             }
@@ -206,7 +206,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     return isLoaded;
                 };
 
-            //check(pendingRequests) ||
             return (check(loadingRequests) || check(executedRequests));
         },
 
@@ -282,9 +281,10 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
             if (!request) return;
 
+            //Adds the ability to delay single fragment loading time to control buffer. Needed for Advanced ABR rules.
             if (now < request.delayLoadingTime ) {
                 delayLoadingTimeout = setTimeout(function(){
-                    self.executeRequest(request)
+                    self.executeRequest(request);
                 }, (request.delayLoadingTime - now) );
                 return;
             }
