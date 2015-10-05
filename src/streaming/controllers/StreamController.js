@@ -192,7 +192,7 @@
                 duration = activeStream.getStreamInfo().duration;
 
             return streams.filter(function(stream){
-                return (stream.getStreamInfo().start === (start + duration));
+                return (Math.round(stream.getStreamInfo().start * 1000)/1000 === Math.round((start + duration)*1000)/1000);
             })[0];
         },
 
@@ -209,7 +209,7 @@
                 stream = streams[i];
                 duration += stream.getDuration();
 
-                if (time < duration) {
+                if (Math.round(time * 1000)/1000 < Math.round(duration * 1000)/1000) {
                     return stream;
                 }
             }
