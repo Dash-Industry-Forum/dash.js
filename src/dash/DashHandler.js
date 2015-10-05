@@ -184,6 +184,7 @@ Dash.dependencies.DashHandler = function () {
                 period = representation.adaptation.period,
                 isFinished = false,
                 seg,
+                segmentInfoType = representation.segmentInfoType,
                 fTime;
 
             if (index < 0) {
@@ -195,7 +196,7 @@ Dash.dependencies.DashHandler = function () {
                     fTime = seg.presentationStartTime - period.start;
                     sDuration = representation.adaptation.period.duration;
                     this.log(representation.segmentInfoType + ": " + fTime + " / " + sDuration);
-                    isFinished = (fTime >= sDuration);
+                    isFinished = segmentInfoType === "SegmentTimeline" ? false : (fTime >= sDuration);
                 }
             } else {
                 isFinished = true;
