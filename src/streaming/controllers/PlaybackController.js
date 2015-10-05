@@ -376,7 +376,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         isPlaybackStarted: function() {
-            return this.getPlayedRanges() > 0;
+            return this.getTime() > 0;
         },
 
         getStreamId: function() {
