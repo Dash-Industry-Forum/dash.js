@@ -103,14 +103,12 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('insufficientBufferRule', MediaPlayer.rules.InsufficientBufferRule);
             this.system.mapClass('bufferOccupancyRule', MediaPlayer.rules.BufferOccupancyRule);
             this.system.mapClass('throughputRule', MediaPlayer.rules.ThroughputRule);
-            this.system.mapSingleton('abrRulesCollection', MediaPlayer.rules.ABRRulesCollection);
+            this.system.mapClass('abandonRequestRule', MediaPlayer.rules.AbandonRequestsRule);
 
+            this.system.mapSingleton('abrRulesCollection', MediaPlayer.rules.ABRRulesCollection);
             this.system.mapSingleton('rulesController', MediaPlayer.rules.RulesController);
             this.system.mapClass('bufferLevelRule', MediaPlayer.rules.BufferLevelRule);
-            this.system.mapClass('pendingRequestsRule', MediaPlayer.rules.PendingRequestsRule);
             this.system.mapClass('playbackTimeRule', MediaPlayer.rules.PlaybackTimeRule);
-            this.system.mapClass('sameTimeRequestRule', MediaPlayer.rules.SameTimeRequestRule);
-            this.system.mapClass('abandonRequestRule', MediaPlayer.rules.AbandonRequestsRule);
             this.system.mapSingleton('scheduleRulesCollection', MediaPlayer.rules.ScheduleRulesCollection);
 
             this.system.mapClass('liveEdgeBinarySearchRule', MediaPlayer.rules.LiveEdgeBinarySearchRule);
