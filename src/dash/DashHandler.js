@@ -803,7 +803,6 @@ Dash.dependencies.DashHandler = function () {
             requestedTime = time;
 
             self.log("Getting the request for time: " + time);
-
             index = getIndexForSegments.call(self, time, representation, timeThreshold);
             //Index may be -1 if getSegments needs to update.  So after getSegments is called and updated then try to get index again.
             getSegments.call(self, representation);
@@ -811,21 +810,18 @@ Dash.dependencies.DashHandler = function () {
                 index = getIndexForSegments.call(self, time, representation, timeThreshold);
             }
 
-            finished = !ignoreIsFinished ? isMediaFinished.call(self, representation) : false;
+            self.log("Index for time " + time + " is " + index);
 
-            //self.log("Stream finished? " + finished);
+            finished = !ignoreIsFinished ? isMediaFinished.call(self, representation) : false;
             if (finished) {
                 request = new MediaPlayer.vo.FragmentRequest();
                 request.action = request.ACTION_COMPLETE;
                 request.index = index;
                 request.mediaType = type;
                 request.mediaInfo = self.streamProcessor.getMediaInfo();
+                self.log("Signal complete.", request);
 
-                self.log("Signal complete.");
-                self.log(request);
             } else {
-                //self.log("Got a request.");
-                //self.log(request);
                 segment = getSegmentByIndex(index, representation);
                 request = getRequestForSegment.call(self, segment);
             }
@@ -852,25 +848,16 @@ Dash.dependencies.DashHandler = function () {
                 idx,
                 self = this;
 
-            if (!representation) {
-                return null;
-            }
-
-            //self.log("Getting the next request.");
-
-            if (index === -1) {
+            if (!representation || index === -1) {
                 return null;
             }
 
             requestedTime = null;
             index += 1;
             idx = index;
-
-            //self.log("New index: " + index);
+            self.log("Getting the next request at index: " + index);
 
             finished = isMediaFinished.call(self, representation);
-
-            self.log("Stream finished? " + finished);
             if (finished) {
                 request = new MediaPlayer.vo.FragmentRequest();
                 request.action = request.ACTION_COMPLETE;
@@ -878,11 +865,8 @@ Dash.dependencies.DashHandler = function () {
                 request.mediaType = type;
                 request.mediaInfo = self.streamProcessor.getMediaInfo();
                 self.log("Signal complete.");
-                //self.log(request);
             } else {
                 getSegments.call(self, representation);
-                //self.log("Got segments.");
-                //self.log(segments);
                 segment = getSegmentByIndex(idx, representation);
                 request = getRequestForSegment.call(self, segment);
             }

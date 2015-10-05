@@ -94,9 +94,7 @@ MediaPlayer.dependencies.BufferController = function () {
             if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel()) return;
 
             self.log("Initialization finished loading");
-
             chunk = e.data.chunk;
-
             // cache the initialization data to use it next time the quality has changed
             this.virtualBuffer.append(chunk);
             switchInitData.call(this, getStreamId.call(this),  requiredQuality);
@@ -755,14 +753,16 @@ MediaPlayer.dependencies.BufferController = function () {
     };
 };
 
-MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED = "required";
-MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN = "min";
-MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY = "infinity";
-MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME = 12;
+//MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED = "required";
+//MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN = "min";
+//MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY = "infinity";
+
 MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD = 4;
+MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME = 12;
 MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY = 30;
-MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 300;
+MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
 MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+
 MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD = 20;
 MediaPlayer.dependencies.BufferController.BUFFER_LOADED = "bufferLoaded";
 MediaPlayer.dependencies.BufferController.BUFFER_EMPTY = "bufferStalled";

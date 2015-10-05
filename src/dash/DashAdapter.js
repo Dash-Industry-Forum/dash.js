@@ -215,7 +215,6 @@ Dash.dependencies.DashAdapter = function () {
 
         getNextFragmentRequest = function(streamProcessor, trackInfo) {
             var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.representationController);
-
             return streamProcessor.indexHandler.getNextSegmentRequest(representation);
         },
 

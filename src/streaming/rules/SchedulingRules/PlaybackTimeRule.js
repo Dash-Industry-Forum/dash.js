@@ -31,16 +31,6 @@
 MediaPlayer.rules.PlaybackTimeRule = function () {
     "use strict";
 
-    var seekTarget = {},
-        scheduleController = {},
-
-        onPlaybackSeeking = function(e) {
-            var time = e.data.seekTime;
-            seekTarget.audio = time;
-            seekTarget.video = time;
-            seekTarget.fragmentedText=time;
-        };
-
     return {
         adapter: undefined,
         sourceBufferExt: undefined,
@@ -49,29 +39,23 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
         textSourceBuffer:undefined,
         log:undefined,
 
-        setup: function() {
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
-        },
-
         execute: function(context, callback) {
                 var mediaType = context.getMediaInfo().type,
                     mediaInfo = context.getMediaInfo(),
                     streamId = context.getStreamInfo().id,
                     streamProcessor = context.getStreamProcessor(),
-                    sc = streamProcessor.getScheduleController(),
+                    streamController = streamProcessor.getScheduleController(),
                     representationInfo = streamProcessor.getCurrentRepresentationInfo(),
-                    st = seekTarget ? seekTarget[mediaType] : null,
-                    hasSeekTarget = (st !== undefined) && (st !== null),
+                    seekTarget = streamController.getSeekTarget(),//seekTarget ? seekTarget[mediaType] : null,
+                    hasSeekTarget = !isNaN(seekTarget),
                     p = hasSeekTarget ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
                     keepIdx = !hasSeekTarget,
-                    currentTime = this.adapter.getIndexHandlerTime(streamProcessor),
+                    time = hasSeekTarget ? seekTarget : this.adapter.getIndexHandlerTime(streamProcessor),
                     buffer = streamProcessor.bufferController.getBuffer(),
                     appendedChunks,
                     range = null,
-                    time,
-                request;
+                    request;
 
-            time = hasSeekTarget ? st : currentTime;
 
             if (isNaN(time) || (mediaType === "fragmentedText" && this.textSourceBuffer.getAllTracksAreDisabled())) {
                 callback(new MediaPlayer.rules.SwitchRequest(null, p));
@@ -79,7 +63,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             }
 
             if (hasSeekTarget) {
-                seekTarget[mediaType] = null;
+                streamController.setSeekTarget(NaN);
             }
 
             if (buffer) {
@@ -106,17 +90,11 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
 
             if (request ) {
                 streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
-                request.delayLoadingTime = new Date().getTime() + sc.getTimeToLoadDelay();
-
+                request.delayLoadingTime = new Date().getTime() + streamController.getTimeToLoadDelay();
             }
 
             callback(new MediaPlayer.rules.SwitchRequest(request, p));
         },
-
-        reset: function() {
-            seekTarget = {};
-            scheduleController = {};
-        }
     };
 };
 

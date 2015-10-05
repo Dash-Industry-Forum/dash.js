@@ -158,9 +158,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
         manifestExt:undefined,
 
         setup: function() {
-            //this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
-            //this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
-            //this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_REJECTED] = onBytesRejected;
             this[MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED] = onLoadingCompleted;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
         },
@@ -200,7 +197,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                         req = arr[i];
 
                         if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
-                            //self.log(request.mediaType + " Fragment already loaded for time: " + request.startTime);
+                            //self.log(request.mediaType + "Fragment already loaded for time: " + request.startTime);
                             isLoaded = true;
                             break;
                         }
