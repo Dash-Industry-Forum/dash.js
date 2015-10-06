@@ -405,6 +405,14 @@ MediaPlayer.utils.TTMLParser = function() {
             if ('text-decoration' in cueStyle) {
                 properties.push('text-decoration:' + cueStyle['text-decoration'] + ';');
             }
+
+            // Handle white-space preserve
+            if (ttml.tt.hasOwnProperty('xml:space')) {
+                if (ttml.tt['xml:space'] === 'preserve') {
+                    properties.push('white-space: pre;');
+                }
+            }
+
             return properties;
         },
 
