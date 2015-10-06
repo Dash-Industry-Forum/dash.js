@@ -41,7 +41,7 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
             var URIFragmentData = [],
                 testQuery = new RegExp(/[?]/),
                 testFragment = new RegExp(/[#]/),
-                testHTTPS = new RegExp(/^(https:)?\/\//g),
+                testHTTPS = new RegExp(/^(https:)?\/\//i),
                 isQuery = testQuery.test(uri),
                 isFragment = testFragment.test(uri),
                 mappedArr;

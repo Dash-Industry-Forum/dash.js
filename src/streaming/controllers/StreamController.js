@@ -441,15 +441,14 @@
                 }
 
                 var manifestUTCTimingSources = self.manifestExt.getUTCTimingSources(e.data.manifest),
-                    allUTCTimingSources = (!self.manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ) ?  manifestUTCTimingSources :  manifestUTCTimingSources.concat(UTCTimingSources);
-
-                if (self.uriQueryFragModel.isManifestHTTPS()){
+                    allUTCTimingSources = (!self.manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ) ?  manifestUTCTimingSources :  manifestUTCTimingSources.concat(UTCTimingSources),
+                    isHTTPS = self.uriQueryFragModel.isManifestHTTPS();
                     //If https is detected on manifest then lets apply that protocol to timing sources.
                     allUTCTimingSources.forEach(function(item){
-                        item.value = item.value.replace(/^http:\/\//i, 'https://');
-                        self.log("https was detected on the manifest url, adding SSL to timing source protocol: " , item.value);
+                        item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? "https://" : "http://");
+                        self.log("Matching timing source protocol to manifest protocol: " , item.value);
                     });
-                }
+
                 self .timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource);
 
             } else {
