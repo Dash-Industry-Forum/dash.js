@@ -417,35 +417,43 @@
         },
 
         onManifestUpdated = function(e) {
+            var self = this;
             if (!e.error) {
                 //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
                 //is SegmentTimeline to avoid using time source
                 var manifest = e.data.manifest,
-                    streamInfo = this.adapter.getStreamsInfo(manifest)[0],
+                    streamInfo = self.adapter.getStreamsInfo(manifest)[0],
                     mediaInfo = (
-                        this.adapter.getMediaInfoForType(manifest, streamInfo, "video") ||
-                        this.adapter.getMediaInfoForType(manifest, streamInfo, "audio")
+                        self.adapter.getMediaInfoForType(manifest, streamInfo, "video") ||
+                        self.adapter.getMediaInfoForType(manifest, streamInfo, "audio")
                     ),
                     adaptation,
                     useCalculatedLiveEdgeTime;
 
                 if (mediaInfo) {
-                    adaptation = this.adapter.getDataForMedia(mediaInfo);
-                    useCalculatedLiveEdgeTime = this.manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
+                    adaptation = self .adapter.getDataForMedia(mediaInfo);
+                    useCalculatedLiveEdgeTime = self.manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
 
                     if (useCalculatedLiveEdgeTime) {
-                        this.log("SegmentTimeline detected using calculated Live Edge Time");
+                        self .log("SegmentTimeline detected using calculated Live Edge Time");
                         useManifestDateHeaderTimeSource = false;
                     }
                 }
 
-                var manifestUTCTimingSources = this.manifestExt.getUTCTimingSources(e.data.manifest),
-                    allUTCTimingSources = (!this.manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ) ?  manifestUTCTimingSources :  manifestUTCTimingSources.concat(UTCTimingSources);
+                var manifestUTCTimingSources = self.manifestExt.getUTCTimingSources(e.data.manifest),
+                    allUTCTimingSources = (!self.manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ) ?  manifestUTCTimingSources :  manifestUTCTimingSources.concat(UTCTimingSources);
 
-                this.timeSyncController.initialize(useCalculatedLiveEdgeTime ? manifestUTCTimingSources : allUTCTimingSources, useManifestDateHeaderTimeSource);
+                if (self.uriQueryFragModel.isManifestHTTPS()){
+                    //If https is detected on manifest then lets apply that protocol to timing sources.
+                    allUTCTimingSources.forEach(function(item){
+                        item.value = item.value.replace(/^http:\/\//i, 'https://');
+                        self.log("https was detected on the manifest url, adding SSL to timing source protocol: " , item.value);
+                    });
+                }
+                self .timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource);
 
             } else {
-                this.reset();
+                self.reset();
             }
         };
 
@@ -474,6 +482,7 @@
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        uriQueryFragModel:undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED] = onManifestUpdated;
