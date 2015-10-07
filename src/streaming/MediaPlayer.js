@@ -63,8 +63,6 @@ MediaPlayer = function (context) {
  * 7) Push fragmemt bytes into SourceBuffer.
  */
     var VERSION = "1.5.0",
-        DEFAULT_TIME_SERVER = "http://time.akamai.com/?iso",
-        DEFAULT_TIME_SOURCE_SCHEME = "urn:mpeg:dash:utc:http-xsdate:2014",
         numOfParallelRequestAllowed = 0,
         system,
         abrController,
@@ -1088,7 +1086,7 @@ MediaPlayer = function (context) {
          * @see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
          */
         restoreDefaultUTCTimingSources: function() {
-            this.addUTCTimingSource(DEFAULT_TIME_SOURCE_SCHEME, DEFAULT_TIME_SERVER);
+            this.addUTCTimingSource(MediaPlayer.UTCTimingSources.default.scheme, MediaPlayer.UTCTimingSources.default.value);
         },
 
 
@@ -1398,6 +1396,11 @@ MediaPlayer.di = {};
 /**
  * The list of events supported by MediaPlayer
  */
+
+MediaPlayer.UTCTimingSources = {
+    default:{scheme:"urn:mpeg:dash:utc:http-xsdate:2014", value:"http://time.akamai.com/?iso"}
+}
+
 MediaPlayer.events = {
     RESET_COMPLETE: "resetComplete",
     METRICS_CHANGED: "metricschanged",
