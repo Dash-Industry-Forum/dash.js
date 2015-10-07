@@ -268,6 +268,7 @@ Dash.dependencies.DashHandler = function () {
                 calculatedRange,
                 hasEnoughSegments,
                 requiredMediaTime,
+                isStartSegmentForRequestedTimeFound = false,
                 startIdx,
                 endIdx,
                 fTimescale,
@@ -360,7 +361,10 @@ Dash.dependencies.DashHandler = function () {
                         // in this case we still need to include the last segment in the segment list. to do this we
                         // use a correction factor = 1.5. This number is used because the largest possible deviation is
                         // is 50% of segment duration.
-                        if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale)*1.5)) {
+                        if (isStartSegmentForRequestedTimeFound) {
+                            segments.push(createSegment.call(self, frag));
+                        }  else if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale)*1.5)) {
+                            isStartSegmentForRequestedTimeFound = true;
                             segments.push(createSegment.call(self, frag));
                         }
                     }
