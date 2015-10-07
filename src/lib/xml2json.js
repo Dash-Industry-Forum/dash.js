@@ -349,10 +349,18 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 	}
 	
 	this.parseXmlString = function(xmlDocStr) {
-		var xmlDoc;
+		var xmlDoc,
+			parser,
+			ns;
+
 		if (window.DOMParser) {
-			var parser=new window.DOMParser();			
+			parser = new window.DOMParser();
+			ns = parser.parseFromString('<', 'text/xml').getElementsByTagName("parsererror")[0].namespaceURI;
 			xmlDoc = parser.parseFromString( xmlDocStr, "text/xml" );
+
+			if(xmlDoc.getElementsByTagNameNS(ns, 'parsererror').length) {
+				xmlDoc = undefined;
+			}
 		}
 		else {
 			// IE :(
@@ -372,7 +380,7 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 	
 	this.xml_str2json = function (xmlDocStr) {
 		var xmlDoc = this.parseXmlString(xmlDocStr);	
-		return this.xml2json(xmlDoc);
+		return xmlDoc ? this.xml2json(xmlDoc) : undefined;
 	}
 
 	this.json2xml_str = function (jsonObj) {
