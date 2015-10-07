@@ -50,16 +50,14 @@
     color: white;
     text-shadow: none;
     -webkit-font-smoothing: antialiased;
-
 }
 
 .time-display,
 .duration-display{
-    padding:11px;
+    padding:10px;
     color: white;
     font-weight: normal;
     font-size: .9em;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .time-display{
@@ -72,7 +70,7 @@
 
 .btn-play-pause{
     float: left;
-    padding:9px 10px;
+    padding:10px;
     cursor: pointer;
 }
 
@@ -80,7 +78,7 @@
 .btn-mute,
 .btn-fullscreen {
     float: right;
-    padding:9px 10px;
+    padding:10px;
     cursor: pointer;
 }
 
@@ -115,7 +113,6 @@
 .caption-item-selected{
     font-weight: normal;
     font-size: .9em;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .caption-item-unselected{

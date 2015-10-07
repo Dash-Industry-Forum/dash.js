@@ -33,7 +33,6 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
 
     var URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData(),
         URIQueryData = [],
-        isHTTPS = false,
 
         parseURI = function (uri) {
             if (!uri) return null;
@@ -41,12 +40,9 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
             var URIFragmentData = [],
                 testQuery = new RegExp(/[?]/),
                 testFragment = new RegExp(/[#]/),
-                testHTTPS = new RegExp(/^(https:)?\/\//i),
                 isQuery = testQuery.test(uri),
                 isFragment = testFragment.test(uri),
                 mappedArr;
-
-            isHTTPS = testHTTPS.test(uri);
 
             function reduceArray(previousValue, currentValue, index, array) {
                 var arr =  array[0].split(/[=]/);
@@ -89,19 +85,13 @@ MediaPlayer.models.URIQueryAndFragmentModel = function () {
         getURIFragmentData:function(){
             return URIFragmentDataVO;
         },
-
         getURIQueryData: function(){
             return URIQueryData;
-        },
-
-        isManifestHTTPS:function(){
-            return isHTTPS;
         },
 
         reset: function() {
             URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData();
             URIQueryData = [];
-            isHTTPS = false;
         }
     };
 };
