@@ -125,7 +125,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 request = this.adapter.getFragmentRequestForTime(streamProcessor, representationInfo, rejected.startTime + (rejected.duration / 2) + EPSILON, {keepIdx: keepIdx, timeThreshold: 0});
             }
 
-            while (request && streamProcessor.getFragmentModel().isFragmentLoadedOrPending(request)) {
+            while (request && streamProcessor.getFragmentModel().isFragmentLoadedOrPendingAndNotDiscarded(request)) {
                 if (request.action === "complete") {
                     request = null;
                     streamProcessor.setIndexHandlerTime(NaN);

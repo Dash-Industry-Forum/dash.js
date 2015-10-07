@@ -37,6 +37,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
         pendingRequests = [],
         loadingRequests = [],
         rejectedRequests = [],
+        failedRequests = [],
 
         isLoadingPostponed = false,
 
@@ -112,6 +113,9 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 case MediaPlayer.dependencies.FragmentModel.states.REJECTED:
                     requests = rejectedRequests;
                     break;
+                case MediaPlayer.dependencies.FragmentModel.states.FAILED:
+                    requests = failedRequests;
+                    break;
                 default:
                     requests = [];
             }
@@ -144,6 +148,8 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
             if (response && !error) {
                 executedRequests.push(request);
+            } else {
+                failedRequests.push(request);
             }
 
             addSchedulingInfoMetrics.call(this, request, error ? MediaPlayer.dependencies.FragmentModel.states.FAILED : MediaPlayer.dependencies.FragmentModel.states.EXECUTED);
@@ -181,6 +187,8 @@ MediaPlayer.dependencies.FragmentModel = function () {
         subscribe: undefined,
         unsubscribe: undefined,
         manifestExt:undefined,
+        videoModel: undefined,
+        sourceBufferExt: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
@@ -207,7 +215,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         addRequest: function(value) {
 
-            if (!this.manifestExt.getIsTextTrack(value.mediaType) && (!value || this.isFragmentLoadedOrPending(value))) return false;
+            if (!this.manifestExt.getIsTextTrack(value.mediaType) && (!value || this.isFragmentLoadedOrPendingAndNotDiscarded(value))) return false;
 
             pendingRequests.push(value);
             addSchedulingInfoMetrics.call(this, value, MediaPlayer.dependencies.FragmentModel.states.PENDING);
@@ -215,7 +223,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return true;
         },
 
-        isFragmentLoadedOrPending: function(request) {
+        isFragmentLoadedOrPendingAndNotDiscarded: function(request) {
             var isEqualComplete = function(req1, req2) {
                     return ((req1.action === "complete") && (req1.action === req2.action));
                 },
@@ -226,6 +234,28 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
                 isEqualInit = function(req1, req2) {
                     return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
+                },
+
+                isDiscarded = function() {
+                    var buffer = this.videoModel.getElement(),
+                        inBuffer = this.sourceBufferExt.getBufferRange(buffer, request.availabilityStartTime) !== null,
+                        req,
+                        d;
+
+                    // It can take a few moments to get into the buffer
+                    if (!inBuffer) {
+                        d = new Date();
+                        d.setSeconds(d.getSeconds() + 3);
+                        for (var i = 0; i < executedRequests.length; i += 1) {
+                            req = executedRequests[i];
+
+                            if (isEqualMedia(request, req) && req.requestEndDate <= d) {
+                                return false;
+                            }
+                        }
+                    }
+
+                    return !inBuffer;
                 },
 
                 check = function(arr) {
@@ -247,7 +277,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     return isLoaded;
                 };
 
-            return (check(pendingRequests) || check(loadingRequests) || check(executedRequests));
+            return (check(pendingRequests) || check(loadingRequests) || check(failedRequests) || (check(executedRequests) && !isDiscarded.call(this)));
         },
 
         /**
@@ -364,7 +394,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             }
 
             loadingRequests = [];
-            
+
             return reqs;
         },
 
