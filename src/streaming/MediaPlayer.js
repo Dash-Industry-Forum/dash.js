@@ -1393,14 +1393,17 @@ MediaPlayer.rules = {};
  */
 MediaPlayer.di = {};
 
+
+/**
+ * The default timing source used for live edge time sync.
+ */
+MediaPlayer.UTCTimingSources = {
+    default:{scheme:"urn:mpeg:dash:utc:http-xsdate:2014", value:"http://time.akamai.com/?iso"}
+};
+
 /**
  * The list of events supported by MediaPlayer
  */
-
-MediaPlayer.UTCTimingSources = {
-    default:{scheme:"urn:mpeg:dash:utc:http-xsdate:2014", value:"http://time.akamai.com/?iso"}
-}
-
 MediaPlayer.events = {
     RESET_COMPLETE: "resetComplete",
     METRICS_CHANGED: "metricschanged",
