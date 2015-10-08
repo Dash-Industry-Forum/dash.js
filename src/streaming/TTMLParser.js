@@ -859,6 +859,10 @@ MediaPlayer.utils.TTMLParser = function() {
             // Parse the TTML in a JSON object.
             ttml = converter.xml_str2json(data);
 
+            if (!ttml) {
+                throw "TTML document could not be parsed";
+            }
+
             if (self.videoModel.getTTMLRenderingDiv()) {
                 type = 'html';
             }

@@ -349,10 +349,32 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 	}
 	
 	this.parseXmlString = function(xmlDocStr) {
-		var xmlDoc;
+		var xmlDoc,
+			parser,
+			ns;
+
 		if (window.DOMParser) {
-			var parser=new window.DOMParser();			
-			xmlDoc = parser.parseFromString( xmlDocStr, "text/xml" );
+			parser = new window.DOMParser();
+
+			try {
+				ns = parser.parseFromString('<', 'text/xml').getElementsByTagName("parsererror")[0].namespaceURI;
+			} catch (e) {
+				// IE11 will definitely throw SyntaxError here
+				// ns will be undefined
+			}
+
+			try {
+				xmlDoc = parser.parseFromString( xmlDocStr, "text/xml" );
+
+				if (ns) {
+					if(xmlDoc.getElementsByTagNameNS(ns, 'parsererror').length) {
+						xmlDoc = undefined;
+					}
+				}
+			} catch (e) {
+				// IE11 may throw SyntaxError here if xmlDocStr is
+				// not well formed. xmlDoc will be undefined
+			}
 		}
 		else {
 			// IE :(
@@ -372,7 +394,7 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 	
 	this.xml_str2json = function (xmlDocStr) {
 		var xmlDoc = this.parseXmlString(xmlDocStr);	
-		return this.xml2json(xmlDoc);
+		return xmlDoc ? this.xml2json(xmlDoc) : undefined;
 	}
 
 	this.json2xml_str = function (jsonObj) {

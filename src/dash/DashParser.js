@@ -359,6 +359,11 @@ Dash.dependencies.DashParser = function () {
             try {
                 //this.log("Converting from XML.");
                 manifest = converter.xml_str2json(data);
+
+                if (!manifest) {
+                    throw "parser error";
+                }
+
                 json = new Date();
 
                 if (!manifest.hasOwnProperty("BaseURL")) {
