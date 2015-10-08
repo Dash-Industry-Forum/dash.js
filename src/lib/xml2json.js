@@ -355,11 +355,25 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 
 		if (window.DOMParser) {
 			parser = new window.DOMParser();
-			ns = parser.parseFromString('<', 'text/xml').getElementsByTagName("parsererror")[0].namespaceURI;
-			xmlDoc = parser.parseFromString( xmlDocStr, "text/xml" );
 
-			if(xmlDoc.getElementsByTagNameNS(ns, 'parsererror').length) {
-				xmlDoc = undefined;
+			try {
+				ns = parser.parseFromString('<', 'text/xml').getElementsByTagName("parsererror")[0].namespaceURI;
+			} catch (e) {
+				// IE11 will definitely throw SyntaxError here
+				// ns will be undefined
+			}
+
+			try {
+				xmlDoc = parser.parseFromString( xmlDocStr, "text/xml" );
+
+				if (ns) {
+					if(xmlDoc.getElementsByTagNameNS(ns, 'parsererror').length) {
+						xmlDoc = undefined;
+					}
+				}
+			} catch (e) {
+				// IE11 may throw SyntaxError here if xmlDocStr is
+				// not well formed. xmlDoc will be undefined
 			}
 		}
 		else {
