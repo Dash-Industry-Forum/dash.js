@@ -31,7 +31,7 @@
 MediaPlayer.dependencies.PlaybackController = function () {
     "use strict";
 
-    var WALLCLOCK_TIME_UPDATE_INTERVAL = 1000,
+    var WALLCLOCK_TIME_UPDATE_INTERVAL = 50, //This value influences the startup time for live.
         currentTime = 0,
         liveStartTime = NaN,
         wallclockTimeIntervalId = null,
