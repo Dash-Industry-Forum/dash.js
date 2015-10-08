@@ -270,8 +270,10 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         onPlaybackProgression = function() {
-            updateBufferLevel.call(this);
-            addBufferMetrics.call(this);
+            if (!isBufferingCompleted){
+                updateBufferLevel.call(this);
+                addBufferMetrics.call(this);
+            }
         },
 
         updateBufferLevel = function() {
