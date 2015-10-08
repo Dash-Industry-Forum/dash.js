@@ -36,8 +36,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
             var el = this.videoModel.getElement(),
                 tracks = el.textTracks,
                 ln = tracks.length,
-                self = this,
-                previousTextTrack = self.textTrackExtensions.getCurrentTextTrack();
+                self = this;
 
             for (var i = 0; i < ln; i++ ) {
                 var track = tracks[i];
@@ -45,25 +44,17 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 if (track.mode === "showing") {
                     if (self.textTrackExtensions.getCurrentTrackIdx() !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
                         self.textTrackExtensions.setCurrentTrackIdx(i);
-                        if (!self.mediaController.isCurrentTrack(self.allTracks[i])){
-                            self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
-                            self.fragmentModel.cancelPendingRequests();
-                            self.fragmentModel.abortRequests();
-                            self.buffered.clear();
-                            self.mediaController.setTrack(self.allTracks[i]);
+                        if (self.isFragmented) {
+                            if (!self.mediaController.isCurrentTrack(self.allTracks[i])) {
+                                self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
+                                self.fragmentModel.cancelPendingRequests();
+                                self.fragmentModel.abortRequests();
+                                self.buffered.clear();
+                                self.mediaController.setTrack(self.allTracks[i]);
+                            }
                         }
-                    } else {
-                        previousTextTrack = null;
                     }
                     break;
-                }
-            }
-            
-            if (previousTextTrack) {
-                self.textTrackExtensions.deleteTrackCues(previousTextTrack);
-                if (previousTextTrack.renderingType === "html") {
-                    self.textTrackExtensions.removeNativeCueStyle();
-                    self.textTrackExtensions.clearCues();
                 }
             }
 
@@ -112,12 +103,24 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                         var kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
                         kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
                         return kind;
+                    },
+                    
+                    checkTTML = function () {
+                        var ttml = false;
+                        if (mediaInfo.codec && mediaInfo.codec.search("stpp") >= 0) {
+                            ttml = true;
+                        }
+                        if (mediaInfo.mimeType && mediaInfo.mimeType.search("ttml") >= 0) {
+                            ttml = true;
+                        }
+                        return ttml;
                     };
 
                 textTrackInfo.captionData = captionData;
                 textTrackInfo.lang = mediaInfo.lang;
                 textTrackInfo.label = mediaInfo.id; // AdaptationSet id (an unsigned int)
                 textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
+                textTrackInfo.isTTML = checkTTML();
                 textTrackInfo.video = self.videoModel.getElement();
                 textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
                 textTrackInfo.isFragmented = self.isFragmented;

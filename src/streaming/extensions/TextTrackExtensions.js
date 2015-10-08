@@ -100,12 +100,12 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             if (video === undefined) {
                 video = textTrackInfoVO.video;
             }
-            captionContainer = this.videoModel.getTTMLRenderingDiv();
 
             if(textTrackQueue.length === totalTextTracks) {
                 textTrackQueue.sort(function(a, b) { //Sort in same order as in manifest
                     return a.index - b.index;
                 });
+                captionContainer = this.videoModel.getTTMLRenderingDiv();
                 var defaultIndex = 0;
                 for(var i = 0 ; i < textTrackQueue.length; i++) {
                     var track = createTrackForUserAgent(i);
@@ -122,10 +122,16 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     if (!isIE11orEdge){
                         video.appendChild(track);
                     }
+                    var textTrack = video.textTracks[i];
+                    if (captionContainer && textTrackQueue[i].isTTML) {
+                        textTrack.renderingType = "html";
+                    } else {
+                        textTrack.renderingType = "default";
+                    }
                     this.addCaptions(0, textTrackQueue[i].captionData);
                     this.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
                 }
-                currentTrackIdx = defaultIndex;
+                this.setCurrentTrackIdx(defaultIndex);
                 this.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACKS_ADDED, data:{index:currentTrackIdx, tracks:textTrackQueue}});//send default idx.
             }
         },
@@ -300,15 +306,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         }
                     };
                 }
-                else if (currentItem.type=="html") {
-                    if (track.renderingType !== "html") {
-                        track.renderingType = "html";
-                    }
-
-                    if (isChrome) { //Hide the native empty cues.
-                        this.setNativeCueStyle();
-                    }
-
+                else if (currentItem.type === "html") {
                     cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
                     cue.cueHTMLElement = currentItem.cueHTMLElement;
                     cue.regions = currentItem.regions;
@@ -376,8 +374,19 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             return currentTrackIdx;
         },
 
-        setCurrentTrackIdx : function(value){
-            currentTrackIdx = value;
+        setCurrentTrackIdx : function(idx){
+            currentTrackIdx = idx;
+            this.clearCues();
+            if (idx >= 0) {
+                var track = video.textTracks[idx];
+                if (track.renderingType === "html") {
+                    this.setNativeCueStyle();
+                } else {
+                    this.removeNativeCueStyle();
+                }
+            } else {
+                this.removeNativeCueStyle();
+            }
         },
 
         getTextTrack: function(idx) {
@@ -423,6 +432,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
         /* Set native cue style to transparent background to avoid it being displayed. */
         setNativeCueStyle: function() {
+            if (!isChrome) return;
             var styleElement = document.getElementById('native-cue-style');
             if (styleElement) return; //Already set
 

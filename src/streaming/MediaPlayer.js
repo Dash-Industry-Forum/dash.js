@@ -644,9 +644,7 @@ MediaPlayer = function (context) {
                 }
             }
 
-            if (textSourceBuffer.isFragmented) {
-                textSourceBuffer.setTextTrack();
-            }
+            textSourceBuffer.setTextTrack();
         },
 
         /**
