@@ -385,7 +385,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         initialize: function(typeValue, streamProcessor) {
             var self = this;
-
             type = typeValue;
             self.setMediaType(type);
             self.streamProcessor = streamProcessor;
@@ -395,7 +394,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             isDynamic = streamProcessor.isDynamic();
             fragmentModel = this.fragmentController.getModel(this);
             MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD = self.numOfParallelRequestAllowed;
-
         },
 
         getSeekTarget: function() {
@@ -422,13 +420,12 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         reset: function() {
             var self = this;
-
             doStop.call(self);
-            self.bufferController.unsubscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, self.scheduleRulesCollection.bufferLevelRule);
-            self.bufferController.unsubscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, self.scheduleRulesCollection.bufferLevelRule);
             fragmentModel.abortRequests();
             self.fragmentController.detachModel(fragmentModel);
+            isFragmentLoading = false;
             fragmentsToLoad = 0;
+            timeToloadDelay = 0;
             seekTarget = NaN;
         },
 
