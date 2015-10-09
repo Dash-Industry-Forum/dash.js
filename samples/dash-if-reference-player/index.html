@@ -56,6 +56,7 @@
     <script src="../../src/streaming/utils/VirtualBuffer.js"></script>
     <script src="../../src/streaming/utils/BoxParser.js"></script>
     <script src="../../src/streaming/utils/IsoFile.js"></script>
+    <script src="../../src/streaming/utils/RNG.js"></script>
     <script src="../../src/streaming/extensions/RequestModifierExtensions.js"></script>
     <script src="../../src/streaming/models/VideoModel.js"></script>
     <script src="../../src/streaming/vo/FragmentRequest.js"></script>
@@ -172,6 +173,27 @@
     <script src="../../src/streaming/vo/metrics/RequestsQueue.js"></script>
     <script src="../../src/streaming/vo/metrics/ManifestUpdate.js"></script>
     <script src="../../src/streaming/vo/metrics/DVRInfo.js"></script>
+    <script src="../../src/streaming/vo/metrics/DVBErrors.js"></script>
+
+    <!-- Reporting -->
+    <script src="../../src/streaming/controllers/MetricsController.js"></script>
+    <script src="../../src/streaming/controllers/MetricsCollectionController.js"></script>
+    <script src="../../src/streaming/metrics/RangeController.js"></script>
+    <script src="../../src/streaming/metrics/MetricsHandlersController.js"></script>
+    <script src="../../src/streaming/metrics/ReportingController.js"></script>
+
+    <script src="../../src/streaming/metrics/reporting/ReportingFactory.js"></script>
+    <script src="../../src/streaming/metrics/reporting/reporters/DVBReporting.js"></script>
+
+    <script src="../../src/streaming/metrics/metrics/MetricsHandlerFactory.js"></script>
+    <script src="../../src/streaming/metrics/metrics/handlers/BufferLevel.js"></script>
+    <script src="../../src/streaming/metrics/metrics/handlers/DVBErrors.js"></script>
+    <script src="../../src/streaming/metrics/metrics/handlers/GenericMetricHandler.js"></script>
+    <script src="../../src/streaming/metrics/metrics/handlers/HttpList.js"></script>
+    <script src="../../src/streaming/metrics/metrics/handlers/PlayList.js"></script>
+
+    <script src="../../src/streaming/metrics/utils/MetricSerialiser.js"></script>
+    <script src="../../src/streaming/metrics/utils/HandlerHelpers.js"></script>
 
     <!-- Dash -->
     <script src="../../src/dash/Dash.js"></script>
@@ -184,6 +206,9 @@
     <script src="../../src/dash/vo/Event.js"></script>
     <script src="../../src/dash/vo/EventStream.js"></script>
     <script src="../../src/dash/vo/UTCTiming.js"></script>
+    <script src="../../src/dash/vo/Metrics.js"></script>
+    <script src="../../src/dash/vo/Range.js"></script>
+    <script src="../../src/dash/vo/Reporting.js"></script>
     <script src="../../src/dash/DashParser.js"></script>
     <script src="../../src/dash/DashHandler.js"></script>
     <script src="../../src/dash/controllers/RepresentationController.js"></script>

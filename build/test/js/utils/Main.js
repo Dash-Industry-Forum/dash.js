@@ -213,11 +213,11 @@ function populateMetricsFor(type, bitrateValue, bitrateIndex, pendingIndex, numB
         numBitratesValue = metricsExt.getMaxIndexForBufferType(type);
 
         if (bufferLevel !== null) {
-            bufferLengthValue = bufferLevel.level.toPrecision(5);
+            bufferLengthValue = (bufferLevel.level / 1000).toPrecision(5);
         }
 
         if (httpRequest !== null) {
-            lastFragmentDuration = httpRequest.mediaduration;
+            lastFragmentDuration = httpRequest._mediaduration;
             lastFragmentDownloadTime = httpRequest.tresponse.getTime() - httpRequest.trequest.getTime();
 
             // convert milliseconds to seconds

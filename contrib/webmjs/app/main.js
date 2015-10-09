@@ -187,27 +187,27 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                     latencyTimes = requestWindow.map(function (req){ return Math.abs(req.tresponse.getTime() - req.trequest.getTime()) / 1000;});
 
                     movingLatency[type] = {
-                        average: latencyTimes.reduce(function(l, r) {return l + r;}) / latencyTimes.length, 
-                        high: latencyTimes.reduce(function(l, r) {return l < r ? r : l;}), 
-                        low: latencyTimes.reduce(function(l, r) {return l < r ? l : r;}), 
+                        average: latencyTimes.reduce(function(l, r) {return l + r;}) / latencyTimes.length,
+                        high: latencyTimes.reduce(function(l, r) {return l < r ? r : l;}),
+                        low: latencyTimes.reduce(function(l, r) {return l < r ? l : r;}),
                         count: latencyTimes.length
                     };
 
                     downloadTimes = requestWindow.map(function (req){ return Math.abs(req.tfinish.getTime() - req.tresponse.getTime()) / 1000;});
 
                     movingDownload[type] = {
-                        average: downloadTimes.reduce(function(l, r) {return l + r;}) / downloadTimes.length, 
-                        high: downloadTimes.reduce(function(l, r) {return l < r ? r : l;}), 
-                        low: downloadTimes.reduce(function(l, r) {return l < r ? l : r;}), 
+                        average: downloadTimes.reduce(function(l, r) {return l + r;}) / downloadTimes.length,
+                        high: downloadTimes.reduce(function(l, r) {return l < r ? r : l;}),
+                        low: downloadTimes.reduce(function(l, r) {return l < r ? l : r;}),
                         count: downloadTimes.length
                     };
 
                     durationTimes = requestWindow.map(function (req){ return req.mediaduration;});
 
                     movingRatio[type] = {
-                        average: (durationTimes.reduce(function(l, r) {return l + r;}) / downloadTimes.length) / movingDownload[type].average, 
-                        high: durationTimes.reduce(function(l, r) {return l < r ? r : l;}) / movingDownload[type].low, 
-                        low: durationTimes.reduce(function(l, r) {return l < r ? l : r;}) / movingDownload[type].high, 
+                        average: (durationTimes.reduce(function(l, r) {return l + r;}) / downloadTimes.length) / movingDownload[type].average,
+                        high: durationTimes.reduce(function(l, r) {return l < r ? r : l;}) / movingDownload[type].low,
+                        low: durationTimes.reduce(function(l, r) {return l < r ? l : r;}) / movingDownload[type].high,
                         count: durationTimes.length
                     };
                 }
@@ -232,7 +232,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             numBitratesValue = metricsExt.getMaxIndexForBufferType(type);
 
             if (bufferLevel !== null) {
-                bufferLengthValue = bufferLevel.level.toPrecision(5);
+                bufferLengthValue = (bufferLevel.level / 1000).toPrecision(5);
             }
 
             if (droppedFramesMetrics !== null) {
@@ -535,28 +535,28 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     }
 
     // Get initial stream if it was passed in.
-	var paramUrl = null;
+    var paramUrl = null;
 
     if (vars && vars.hasOwnProperty("url")) {
-    	paramUrl = vars.url;
+        paramUrl = vars.url;
     }
 
     if (vars && vars.hasOwnProperty("mpd")) {
-    	paramUrl = vars.mpd;
+        paramUrl = vars.mpd;
     }
 
     if (paramUrl !== null) {
-    	var startPlayback = true;
-    
-    	$scope.selectedItem = {};
+        var startPlayback = true;
+
+        $scope.selectedItem = {};
         $scope.selectedItem.url = paramUrl;
 
         if (vars.hasOwnProperty("autoplay")) {
-        	startPlayback = (vars.autoplay === 'true');
+            startPlayback = (vars.autoplay === 'true');
         }
 
-    	if (startPlayback) {
-	    	$scope.doLoad();
-		}
+        if (startPlayback) {
+            $scope.doLoad();
+        }
     }
 });

@@ -50,6 +50,47 @@
         mediaSource,
         UTCTimingSources,
         useManifestDateHeaderTimeSource,
+        initialPlayback = true,
+        isPaused = false,
+        playListMetrics = null,
+
+        flushPlaylistMetrics = function (reason, time) {
+            time = time || new Date();
+
+            if (playListMetrics) {
+                if (activeStream) {
+                    activeStream.getProcessors().forEach(function (p) {
+                        var ctrlr = p.getScheduleController();
+                        if(ctrlr) {
+                            ctrlr.finalisePlayList(
+                                time,
+                                reason
+                            );
+                        }
+                    });
+                }
+
+                this.metricsModel.addPlayList(playListMetrics);
+
+                playListMetrics = null;
+            }
+        },
+
+        addPlaylistMetrics = function (startReason) {
+            playListMetrics = new MediaPlayer.vo.metrics.PlayList();
+            playListMetrics.start = new Date();
+            playListMetrics.mstart = this.playbackController.getTime() * 1000;
+            playListMetrics.starttype = startReason;
+
+            if (activeStream) {
+                activeStream.getProcessors().forEach(function (p) {
+                    var ctrlr = p.getScheduleController();
+                    if(ctrlr) {
+                        ctrlr.setPlayList(playListMetrics);
+                    }
+                });
+            }
+        },
 
         attachEvents = function (stream) {
             var mediaController = this.system.getObject("mediaController");
@@ -88,7 +129,9 @@
 
         onCanPlay = function(/*e*/) {
             canPlay = true;
-            startAutoPlay.call(this);
+            if (!isPaused) {
+                startAutoPlay.call(this);
+            }
         },
 
         onError = function (e) {
@@ -128,7 +171,8 @@
                 this.log(e.error);
             }
             this.errHandler.mediaSourceError(msg);
-            this.reset();
+
+            this.reset(true);
         },
 
         /*
@@ -155,7 +199,16 @@
         },
 
         onEnded = function(/*e*/) {
-            switchStream.call(this, activeStream, getNextStream());
+            var nextStream = getNextStream();
+
+            switchStream.call(this, activeStream, nextStream);
+
+            flushPlaylistMetrics.call(
+                this,
+                nextStream ?
+                    MediaPlayer.vo.metrics.PlayList.Trace.END_OF_PERIOD_STOP_REASON :
+                    MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON
+            );
         },
 
         /*
@@ -166,7 +219,31 @@
             var seekingStream = getStreamForTime(e.data.seekTime);
 
             if (seekingStream && seekingStream !== activeStream) {
+                flushPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.Trace.END_OF_PERIOD_STOP_REASON);
                 switchStream.call(this, activeStream, seekingStream, e.data.seekTime);
+            } else {
+                flushPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
+            }
+
+            addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
+        },
+
+        onStarted = function (/*e*/) {
+            if (initialPlayback) {
+                initialPlayback = false;
+                addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.INITIAL_PLAYOUT_START_REASON);
+            } else {
+                if (isPaused) {
+                    isPaused = false;
+                    addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.RESUME_FROM_PAUSE_START_REASON);
+                }
+            }
+        },
+
+        onPaused = function (e) {
+            if (!e.data.ended) {
+                isPaused = true;
+                flushPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
             }
         },
 
@@ -388,7 +465,7 @@
                 checkIfUpdateCompleted.call(self);
             } catch(e) {
                 self.errHandler.manifestError(e.message, "nostreamscomposed", manifest);
-                self.reset();
+                self.reset(true);
             }
         },
 
@@ -453,8 +530,9 @@
 
                 self.timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource);
 
+                this.metricsCollectionController.initialize(this.manifestExt.getMetrics(manifest));
             } else {
-                self.reset();
+                this.reset(true);
             }
         };
 
@@ -484,6 +562,7 @@
         subscribe: undefined,
         unsubscribe: undefined,
         uriQueryFragModel:undefined,
+        metricsCollectionController: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED] = onManifestUpdated;
@@ -498,6 +577,8 @@
 
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY] = onCanPlay;
             this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR] = onError;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED] = onStarted;
+            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED] = onPaused;
 
         },
 
@@ -553,11 +634,19 @@
             this.manifestUpdater.setManifest(manifest);
         },
 
-        reset: function () {
+        reset: function (fail) {
 
             if (!!activeStream) {
                 detachEvents.call(this, activeStream);
             }
+
+            flushPlaylistMetrics.call(
+                this,
+                fail ?
+                    MediaPlayer.vo.metrics.PlayList.Trace.FAILURE_STOP_REASON :
+                    MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON
+            );
+
 
             var mediaController = this.system.getObject("mediaController"),
                 stream;
@@ -566,6 +655,8 @@
             this.timeSyncController.unsubscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
             this.timeSyncController.unsubscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
             this.timeSyncController.reset();
+
+            this.metricsCollectionController.reset();
 
             for (var i = 0, ln = streams.length; i < ln; i++) {
                 stream = streams[i];
@@ -596,6 +687,8 @@
             activeStream = null;
             canPlay = false;
             hasMediaError = false;
+            initialPlayback = true;
+            isPaused = false;
 
             if (mediaSource) {
                 this.mediaSourceExt.detachMediaSource(this.videoModel);

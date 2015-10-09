@@ -31,6 +31,28 @@
 MediaPlayer.models.MetricsModel = function () {
     "use strict";
 
+    var appendHttpTrace = function (httpRequest, s, d, b) {
+        var vo = new MediaPlayer.vo.metrics.HTTPRequest.Trace();
+
+        vo.s = s;
+        vo.d = d;
+        vo.b = b;
+
+        if (!httpRequest.trace) {
+            httpRequest.trace = [];
+        }
+
+        httpRequest.trace.push(vo);
+
+        if (!httpRequest.interval) {
+            httpRequest.interval = 0;
+        }
+
+        httpRequest.interval += d;
+
+        return vo;
+    };
+
     return {
         system : undefined,
         eventBus: undefined,
@@ -114,7 +136,7 @@ MediaPlayer.models.MetricsModel = function () {
             return vo;
         },
 
-        addHttpRequest: function (mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders) {
+        addHttpRequest: function (mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders, traces) {
             var vo = new MediaPlayer.vo.metrics.HTTPRequest();
 
             // ISO 23009-1 D.4.3 NOTE 2:
@@ -139,45 +161,39 @@ MediaPlayer.models.MetricsModel = function () {
                     null, // unknown
                     null, // unknown, probably a 302
                     mediaduration,
+                    null,
                     null
                 );
 
                 vo.actualurl = actualurl;
             }
 
-            vo.stream = mediaType;
             vo.tcpid = tcpid;
             vo.type = type;
             vo.url = url;
             vo.range = range;
             vo.trequest = trequest;
             vo.tresponse = tresponse;
-            vo.tfinish = tfinish;
             vo.responsecode = responsecode;
-            vo.mediaduration = mediaduration;
-            vo.responseHeaders = responseHeaders;
+
+            vo._tfinish = tfinish;
+            vo._stream = mediaType;
+            vo._mediaduration = mediaduration;
+            vo._responseHeaders = responseHeaders;
+
+            if (traces) {
+                traces.forEach(function (trace) {
+                    appendHttpTrace(vo, trace.s, trace.d, trace.b);
+                });
+            } else {
+                // The interval and trace shall be absent for redirect and failure records.
+                delete vo.interval;
+                delete vo.trace;
+            }
+
             this.getMetricsFor(mediaType).HttpList.push(vo);
 
             this.metricAdded(mediaType, this.adapter.metricsList.HTTP_REQUEST, vo);
-            return vo;
-        },
-
-        appendHttpTrace: function (httpRequest, s, d, b) {
-            var vo = new MediaPlayer.vo.metrics.HTTPRequest.Trace();
-
-            vo.s = s;
-            vo.d = d;
-            vo.b = b;
-
-            httpRequest.trace.push(vo);
-
-            if (!httpRequest.interval) {
-                httpRequest.interval = 0;
-            }
-
-            httpRequest.interval += d;
-
-            this.metricUpdated(httpRequest.stream, this.adapter.metricsList.HTTP_REQUEST_TRACE, httpRequest);
             return vo;
         },
 
@@ -187,7 +203,12 @@ MediaPlayer.models.MetricsModel = function () {
             vo.t = t;
             vo.mt = mt;
             vo.to = to;
-            vo.lto = lto;
+
+            if (lto) {
+                vo.lto = lto;
+            } else {
+                delete vo.lto;
+            }
 
             this.getMetricsFor(mediaType).RepSwitchList.push(vo);
 
@@ -349,34 +370,22 @@ MediaPlayer.models.MetricsModel = function () {
             return null;
         },
 
-        addPlayList: function (mediaType, start, mstart, starttype) {
-            var vo = new MediaPlayer.vo.metrics.PlayList();
+        addPlayList: function (vo) {
+            var type = "stream";
 
-            vo.stream = mediaType;
-            vo.start = start;
-            vo.mstart = mstart;
-            vo.starttype = starttype;
+            if (vo.trace) {
+                vo.trace.forEach(function (trace) {
+                    if (trace.hasOwnProperty("subreplevel") && !trace.subreplevel) {
+                        delete trace.subreplevel;
+                    }
+                });
+            } else {
+                delete vo.trace;
+            }
 
-            this.getMetricsFor(mediaType).PlayList.push(vo);
+            this.getMetricsFor(type).PlayList.push(vo);
 
-            this.metricAdded(mediaType, this.adapter.metricsList.PLAY_LIST, vo);
-            return vo;
-        },
-
-        appendPlayListTrace: function (playList, trackId, subreplevel, start, mstart, duration, playbackspeed, stopreason) {
-            var vo = new MediaPlayer.vo.metrics.PlayList.Trace();
-
-            vo.representationid = trackId;
-            vo.subreplevel = subreplevel;
-            vo.start = start;
-            vo.mstart = mstart;
-            vo.duration = duration;
-            vo.playbackspeed = playbackspeed;
-            vo.stopreason = stopreason;
-
-            playList.trace.push(vo);
-
-            this.metricUpdated(playList.stream, this.adapter.metricsList.PLAY_LIST_TRACE, playList);
+            this.metricAdded(type, this.adapter.metricsList.PLAY_LIST, vo);
             return vo;
         }
     };

@@ -192,29 +192,37 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return metrics.RequestsQueue;
         },
 
-        getCurrentPlaybackRate = function (metrics) {
+        getLatestPlayList = function (metrics) {
             if (metrics === null) {
                 return null;
             }
 
-            var playList = metrics.PlayList,
-                trace,
-                currentRate;
+            var playList = metrics.PlayList;
 
             if (playList === null || playList.length <= 0) {
                 return null;
             }
 
-            trace = playList[playList.length - 1].trace;
+            return playList[playList.length - 1];
+        },
+/*
+        getLatestPlayListTrace = function (metrics) {
+            var playList = getLatestPlayList(metrics),
+                trace;
+
+            if (playList === null) {
+                return null;
+            }
+
+            trace = playList.trace;
 
             if (trace === null || trace.length <= 0) {
                 return null;
             }
 
-            currentRate = trace[trace.length - 1].playbackspeed;
-            return currentRate;
+            return trace[trace.length - 1];
         },
-
+*/
         getCurrentHttpRequest = function (metrics) {
             if (metrics === null) {
                 return null;
@@ -361,9 +369,12 @@ Dash.dependencies.DashMetricsExtensions = function () {
             var httpRequest = getCurrentHttpRequest(metrics),
                 headers;
 
-            if (httpRequest === null || httpRequest.responseHeaders === null) return null;
+            if (httpRequest === null || httpRequest._responseHeaders === null) {
+                return null;
+            }
 
-            headers = parseResponseHeaders(httpRequest.responseHeaders);
+            headers = parseResponseHeaders(httpRequest._responseHeaders);
+
             return headers[id] === undefined ? null :  headers[id];
         },
 
@@ -416,7 +427,6 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getMaxAllowedIndexForBufferType : getMaxAllowedIndexForBufferType,
         getCurrentRepresentationSwitch : getCurrentRepresentationSwitch,
         getCurrentBufferLevel : getCurrentBufferLevel,
-        getCurrentPlaybackRate: getCurrentPlaybackRate,
         getCurrentHttpRequest : getCurrentHttpRequest,
         getHttpRequests : getHttpRequests,
         getCurrentDroppedFrames : getCurrentDroppedFrames,
@@ -425,7 +435,8 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getCurrentManifestUpdate: getCurrentManifestUpdate,
         getLatestFragmentRequestHeaderValueByID:getLatestFragmentRequestHeaderValueByID,
         getLatestMPDRequestHeaderValueByID:getLatestMPDRequestHeaderValueByID,
-        getRequestsQueue: getRequestsQueue
+        getRequestsQueue: getRequestsQueue,
+        getLatestPlayList: getLatestPlayList
     };
 };
 
