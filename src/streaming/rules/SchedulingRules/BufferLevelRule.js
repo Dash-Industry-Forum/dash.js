@@ -89,6 +89,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
         },
 
         reset: function() {
+            isCompleted = {};
         }
     };
 };

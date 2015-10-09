@@ -731,10 +731,9 @@ MediaPlayer.dependencies.BufferController = function () {
             self.sourceBufferExt.unsubscribe(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, onAppended);
             self.sourceBufferExt.unsubscribe(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, self, onRemoved);
             appendedBytesInfo = null;
-
             this.virtualBuffer.unsubscribe(MediaPlayer.utils.VirtualBuffer.eventList.CHUNK_APPENDED, self, onChunkAppended);
-
-            //isBufferLevelOutrun = false;
+            appendingMediaChunk = false;
+            isBufferingCompleted = false;
             isAppendingInProgress = false;
             isPruningInProgress = false;
 
