@@ -278,10 +278,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onClosedCaptioningRequested = function(e) {
-            var self = this,
-                req = getInitRequest.call(self, e.data.CCIndex);
-
-            fragmentModel.executeRequest(req);
+            getInitRequest.call(this, e.data.CCIndex);
         },
 
         onPlaybackStarted = function() {
