@@ -68,6 +68,8 @@ MediaPlayer.dependencies.BufferController = function () {
 
             this.setBuffer(sourceBuffer);
             updateBufferTimestampOffset.call(this, this.streamProcessor.getRepresentationInfoForQuality(requiredQuality).MSETimeOffset);
+			// We may already have some segments in a virtual buffer by this moment. Let's try to append them to the real one.
+			appendNext.call(this);
 
             return sourceBuffer;
         },
@@ -133,6 +135,7 @@ MediaPlayer.dependencies.BufferController = function () {
             // Otherwise, leave the media chunk in appendingMediaChunk and check the init chunk corresponding to the media chunk.
             // If we have the corresponding init chunk, append the init chunk to the source buffer; appendingMediaChunk will be processed shortly through onAppended().
             // Otherwise, fire the ENAME_INIT_REQUESTED event.
+			if (!buffer || isAppendingInProgress || !hasEnoughSpaceToAppend.call(this)) return;
 
             var self = this,
                 streamId = getStreamId.call(self),
@@ -172,6 +175,8 @@ MediaPlayer.dependencies.BufferController = function () {
                 chunk = self.virtualBuffer.getChunks(filter)[0];
 
             if (chunk) {
+				if (!buffer) return;
+
                 appendToBuffer.call(self, chunk);
             } else {
                 // if we have not loaded the init fragment for the current quality, do it
