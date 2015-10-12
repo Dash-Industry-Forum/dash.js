@@ -123,7 +123,7 @@ MediaPlayer.dependencies.BufferController = function () {
             switchInitData.call(self);
         },
 
-        onMediaLoaded = function (e) {
+		onMediaLoaded = function (e) {
             if (e.data.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
 
             var events,
@@ -147,7 +147,7 @@ MediaPlayer.dependencies.BufferController = function () {
             this.virtualBuffer.append(chunk);
 
             appendNext.call(this);
-        },
+		},
 
         appendToBuffer = function(chunk) {
             isAppendingInProgress = true;
@@ -335,7 +335,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 leastLevel = Math.min(audioBufferLevel.level, videoBufferLevel.level);
             }
 
-            return leastLevel / 1000;
+            return leastLevel;
         },
 
         hasEnoughSpaceToAppend = function() {
@@ -492,7 +492,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 level += virtualLevel;
             }
 
-            this.metricsModel.addBufferLevel(type, new Date(), level * 1000);
+            this.metricsModel.addBufferLevel(type, new Date(), level);
         },
 
         getStreamId = function() {
@@ -819,7 +819,7 @@ MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED = "required";
 MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN = "min";
 MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY = "infinity";
 MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME = 12;
-MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD_MS = 4000;
+MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD = 4;
 MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY = 30;
 MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 300;
 MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;

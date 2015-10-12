@@ -43,10 +43,7 @@ MediaPlayer.dependencies.XlinkLoader = function () {
                 firstProgressCall = true,
                 content,
                 needFailureReport = true,
-                requestStartTime = new Date(),
-                traces = [],
-                lastTraceTime = requestStartTime,
-                lastTraceReceivedCount = 0;
+                requestTime = new Date();
 
             onload = function () {
                 if (request.status < 200 || request.status > 299) {
@@ -60,13 +57,12 @@ MediaPlayer.dependencies.XlinkLoader = function () {
                     url,
                     request.responseURL || null,
                     null,
-                    requestStartTime,
+                    requestTime,
                     request.firstByteDate || null,
                     new Date(),
                     request.status,
                     null,
-                    request.getAllResponseHeaders(),
-                    traces);
+                    request.getAllResponseHeaders());
 
                 content = request.responseText;
                 element.resolved = true;
@@ -87,12 +83,9 @@ MediaPlayer.dependencies.XlinkLoader = function () {
             };
 
             report = function () {
-                var errorMsg = "Failed loading XLink content: " + url;
-
                 if (!needFailureReport) {
                     return;
                 }
-
                 needFailureReport = false;
 
                 self.metricsModel.addHttpRequest("stream",
@@ -101,22 +94,21 @@ MediaPlayer.dependencies.XlinkLoader = function () {
                     url,
                     request.responseURL || null,
                     null,
-                    requestStartTime,
+                    requestTime,
                     request.firstByteDate || null,
                     new Date(),
                     request.status,
                     null,
-                    request.getAllResponseHeaders(),
-                    null);
+                    request.getAllResponseHeaders());
 
                 if (remainingAttempts > 0) {
-                    self.log(errorMsg + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                    console.log("Failed loading xLink content: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
                     remainingAttempts--;
                     setTimeout(function () {
                         doLoad.call(self, url, element, resolveObject, remainingAttempts);
                     }, RETRY_INTERVAL);
                 } else {
-                    self.log(errorMsg + ", no retry attempts left");
+                    console.log("Failed loading Xlink content: " + url + " no retry attempts left");
                     self.errHandler.downloadError("xlink", url, request);
                     element.resolved = true;
                     element.resolvedContent = null;
@@ -128,32 +120,16 @@ MediaPlayer.dependencies.XlinkLoader = function () {
             };
 
             progress = function (event) {
-                var currentTime = new Date();
-
                 if (firstProgressCall) {
                     firstProgressCall = false;
-                    if (!event.lengthComputable || (event.lengthComputable && event.total !== event.loaded)) {
-                        request.firstByteDate = currentTime;
+                    if (!event.lengthComputable || (event.lengthComputable && event.total != event.loaded)) {
+                        request.firstByteDate = new Date();
                     }
                 }
-
-                if (event.lengthComputable) {
-                    request.bytesLoaded = event.loaded;
-                    request.bytesTotal = event.total;
-                }
-
-                traces.push({
-                    s: lastTraceTime,
-                    d: currentTime.getTime() - lastTraceTime.getTime(),
-                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
-                });
-
-                lastTraceTime = currentTime;
-                lastTraceReceivedCount = event.loaded;
             };
 
             try {
-                //self.log("Start loading manifest: " + url);
+                //console.log("Start loading manifest: " + url);
                 request.onload = onload;
                 request.onloadend = report;
                 request.onerror = report;
@@ -161,7 +137,7 @@ MediaPlayer.dependencies.XlinkLoader = function () {
                 request.open("GET", self.requestModifierExt.modifyRequestURL(url), true);
                 request.send();
             } catch (e) {
-                self.log("Error");
+                console.log("Error");
                 request.onerror();
             }
         };
@@ -173,7 +149,6 @@ MediaPlayer.dependencies.XlinkLoader = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
-        log: undefined,
 
         load: function (url, element, resolveObject) {
             // Error handling: resolveToZero, no valid url

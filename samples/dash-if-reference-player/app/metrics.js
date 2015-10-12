@@ -21,7 +21,7 @@ MetricsTreeConverter = function () {
                 tMetric.text = "t: " + bufferMetric.t;
 
                 levelMetric = {};
-                levelMetric.text = "level: " + bufferMetric.level / 1000;
+                levelMetric.text = "level: " + bufferMetric.level;
 
                 treeMetric.items.push(tMetric);
                 treeMetric.items.push(levelMetric);
@@ -39,7 +39,6 @@ MetricsTreeConverter = function () {
                 representationidMetric,
                 subreplevelMetric,
                 startMetric,
-                mstartMetric,
                 durationMetric,
                 playbackspeedMetric,
                 stopreasonMetric,
@@ -55,32 +54,27 @@ MetricsTreeConverter = function () {
 
                 representationidMetric = {};
                 representationidMetric.text = "representationid: " + bufferMetric.representationid;
-                treeMetric.items.push(representationidMetric);
 
-                if (bufferMetric.subreplevel) {
-                    subreplevelMetric = {};
-                    subreplevelMetric.text = "subreplevel: " + bufferMetric.subreplevel;
-                    treeMetric.items.push(subreplevelMetric);
-                }
+                subreplevelMetric = {};
+                subreplevelMetric.text = "subreplevel: " + bufferMetric.subreplevel;
 
                 startMetric = {};
                 startMetric.text = "start: " + bufferMetric.start;
-                treeMetric.items.push(startMetric);
-
-                mstartMetric = {};
-                mstartMetric.text = "mstart: " + (bufferMetric.mstart / 1000);
-                treeMetric.items.push(mstartMetric);
 
                 durationMetric = {};
                 durationMetric.text = "duration: " + bufferMetric.duration;
-                treeMetric.items.push(durationMetric);
 
                 playbackspeedMetric = {};
                 playbackspeedMetric.text = "playbackspeed: " + bufferMetric.playbackspeed;
-                treeMetric.items.push(playbackspeedMetric);
 
                 stopreasonMetric = {};
                 stopreasonMetric.text = "stopreason: " + bufferMetric.stopreason;
+
+                treeMetric.items.push(representationidMetric);
+                treeMetric.items.push(subreplevelMetric);
+                treeMetric.items.push(startMetric);
+                treeMetric.items.push(durationMetric);
+                treeMetric.items.push(playbackspeedMetric);
                 treeMetric.items.push(stopreasonMetric);
 
                 treeMetrics.push(treeMetric);
@@ -97,7 +91,6 @@ MetricsTreeConverter = function () {
                 mstartMetric,
                 startTypeMetric,
                 traceMetric,
-                traceMetrics,
                 i;
 
             for (i = 0; i < playListMetrics.length; i += 1) {
@@ -110,27 +103,21 @@ MetricsTreeConverter = function () {
 
                 startMetric = {};
                 startMetric.text = "start: " + bufferMetric.start;
-                treeMetric.items.push(startMetric);
 
                 mstartMetric = {};
-                mstartMetric.text = "mstart: " + (bufferMetric.mstart / 1000);
-                treeMetric.items.push(mstartMetric);
+                mstartMetric.text = "mstart: " + bufferMetric.mstart;
 
                 startTypeMetric = {};
                 startTypeMetric.text = "starttype: " + bufferMetric.starttype;
+
+                traceMetric = {};
+                traceMetric.text = "trace";
+                traceMetric.items = playListTraceMetricsToTreeMetrics(bufferMetric.trace);
+
+                treeMetric.items.push(startMetric);
+                treeMetric.items.push(mstartMetric);
                 treeMetric.items.push(startTypeMetric);
-
-                traceMetrics = playListTraceMetricsToTreeMetrics(bufferMetric.trace);
-
-                if (traceMetrics) {
-                    traceMetric = {};
-                    traceMetric.text = "trace";
-                    traceMetric.items = traceMetrics;
-                }
-
-                if (traceMetric.items.length) {
-                    treeMetric.items.push(traceMetric);
-                }
+                treeMetric.items.push(traceMetric);
 
                 treeMetrics.push(treeMetric);
             }
@@ -141,7 +128,7 @@ MetricsTreeConverter = function () {
         representationSwitchToTreeMetrics = function (representationSwitch) {
             var treeMetrics = [],
                 treeMetric,
-                switchMetric,
+                bufferMetric,
                 tMetric,
                 mtMetric,
                 toMetric,
@@ -149,7 +136,7 @@ MetricsTreeConverter = function () {
                 i;
 
             for (i = 0; i < representationSwitch.length; i += 1) {
-                switchMetric = representationSwitch[i];
+                bufferMetric = representationSwitch[i];
 
                 treeMetric = {};
                 treeMetric.text = "Representation Switch: " + (i + 1);
@@ -157,22 +144,21 @@ MetricsTreeConverter = function () {
                 treeMetric.collapsed = true;
 
                 tMetric = {};
-                tMetric.text = "t: " + switchMetric.t;
-                treeMetric.items.push(tMetric);
+                tMetric.text = "t: " + bufferMetric.t;
 
                 mtMetric = {};
-                mtMetric.text = "mt: " + (switchMetric.mt / 1000);
-                treeMetric.items.push(mtMetric);
+                mtMetric.text = "mt: " + bufferMetric.mt;
 
                 toMetric = {};
-                toMetric.text = "to: " + switchMetric.to;
-                treeMetric.items.push(toMetric);
+                toMetric.text = "to: " + bufferMetric.to;
 
-                if (switchMetric.lto) {
-                    ltoMetric = {};
-                    ltoMetric.text = "lto: " + switchMetric.lto;
-                    treeMetric.items.push(ltoMetric);
-                }
+                ltoMetric = {};
+                ltoMetric.text = "lto: " + bufferMetric.lto;
+
+                treeMetric.items.push(tMetric);
+                treeMetric.items.push(mtMetric);
+                treeMetric.items.push(toMetric);
+                treeMetric.items.push(ltoMetric);
 
                 treeMetrics.push(treeMetric);
             }
@@ -274,52 +260,49 @@ MetricsTreeConverter = function () {
 
                 tcpidMetric = {};
                 tcpidMetric.text = "tcpid: " + bufferMetric.tcpid;
-                treeMetric.items.push(tcpidMetric);
 
                 typeMetric = {};
                 typeMetric.text = "type: " + bufferMetric.type;
-                treeMetric.items.push(typeMetric);
 
                 urlMetric = {};
                 urlMetric.text = "url: " + bufferMetric.url;
-                treeMetric.items.push(urlMetric);
 
                 actualurlMetric = {};
                 actualurlMetric.text = "actualurl: " + bufferMetric.actualurl;
-                treeMetric.items.push(actualurlMetric);
 
                 rangeMetric = {};
                 rangeMetric.text = "range: " + bufferMetric.range;
-                treeMetric.items.push(rangeMetric);
 
                 trequestMetric = {};
                 trequestMetric.text = "trequest: " + bufferMetric.trequest;
-                treeMetric.items.push(trequestMetric);
 
                 tresponseMetric = {};
                 tresponseMetric.text = "tresponse: " + bufferMetric.tresponse;
-                treeMetric.items.push(tresponseMetric);
 
                 responsecodeMetric = {};
                 responsecodeMetric.text = "responsecode: " + bufferMetric.responsecode;
-                treeMetric.items.push(responsecodeMetric);
 
-                if (bufferMetric.interval) {
-                    intervalMetric = {};
-                    intervalMetric.text = "interval: " + bufferMetric.interval;
-                    treeMetric.items.push(intervalMetric);
-                }
+                intervalMetric = {};
+                intervalMetric.text = "interval: " + bufferMetric.interval;
 
                 mediadurationMetric = {};
-                mediadurationMetric.text = "mediaduration: " + bufferMetric._mediaduration;
-                treeMetric.items.push(mediadurationMetric);
+                mediadurationMetric.text = "mediaduration: " + bufferMetric.mediaduration;
 
-                if (bufferMetric.trace) {
-                    traceMetric = {};
-                    traceMetric.text = "trace";
-                    traceMetric.items = httpRequestTraceToTreeMetric(bufferMetric.trace);
-                    treeMetric.items.push(traceMetric);
-                }
+                traceMetric = {};
+                traceMetric.text = "trace";
+                traceMetric.items = httpRequestTraceToTreeMetric(bufferMetric.trace);
+
+                treeMetric.items.push(tcpidMetric);
+                treeMetric.items.push(typeMetric);
+                treeMetric.items.push(urlMetric);
+                treeMetric.items.push(actualurlMetric);
+                treeMetric.items.push(rangeMetric);
+                treeMetric.items.push(trequestMetric);
+                treeMetric.items.push(tresponseMetric);
+                treeMetric.items.push(responsecodeMetric);
+                treeMetric.items.push(intervalMetric);
+                treeMetric.items.push(mediadurationMetric);
+                treeMetric.items.push(traceMetric);
 
                 treeMetrics.push(treeMetric);
             }
