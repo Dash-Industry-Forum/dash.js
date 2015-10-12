@@ -1,0 +1,17 @@
+{
+  "name": "dash-industry-forum",
+  "version": "1.5.0",
+  "homepage": "https://github.com/mcferren/dash.js",
+  "description": "\"adaptive streaming\"",
+  "authors": [
+    "Dash Industry Forum"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
