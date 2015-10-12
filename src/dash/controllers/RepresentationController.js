@@ -79,9 +79,9 @@ Dash.dependencies.RepresentationController = function () {
         addRepresentationSwitch = function() {
             var now = new Date(),
                 currentRepresentation = this.getCurrentRepresentation(),
-                currentVideoTimeMs = this.streamProcessor.playbackController.getTime() * 1000;
+                currentVideoTime = this.streamProcessor.playbackController.getTime();
 
-            this.metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
+            this.metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
         },
 
         addDVRMetric = function() {

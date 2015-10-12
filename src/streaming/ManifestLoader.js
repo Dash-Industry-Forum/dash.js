@@ -36,7 +36,8 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         parseBaseUrl = function (url) {
             var base = "";
 
-            if (url.indexOf("/") !== -1) {
+            if (url.indexOf("/") !== -1)
+            {
                 if (url.indexOf("?") !== -1) {
                     url = url.substring(0, url.indexOf("?"));
                 }
@@ -50,27 +51,25 @@ MediaPlayer.dependencies.ManifestLoader = function () {
             var baseUrl = parseBaseUrl(url),
                 request = new XMLHttpRequest(),
                 requestTime = new Date(),
+                loadedTime = null,
                 needFailureReport = true,
                 manifest,
                 onload,
                 report,
                 progress,
                 firstProgressCall,
-                lastTraceTime = requestTime,
-                lastTraceReceivedCount = 0,
-                traces = [],
                 self = this;
 
             onload = function () {
                 var actualUrl = null,
-                    errorMsg,
-                    loadedTime = new Date();
+                    errorMsg;
 
                 if (request.status < 200 || request.status > 299) {
                     return;
                 }
 
                 needFailureReport = false;
+                loadedTime = new Date();
 
                 // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
                 if (request.responseURL && request.responseURL !== url) {
@@ -89,8 +88,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  loadedTime,
                                                  request.status,
                                                  null,
-                                                 request.getAllResponseHeaders(),
-                                                 traces);
+                                                 request.getAllResponseHeaders());
 
                 manifest = self.parser.parse(request.responseText, baseUrl, self.xlinkController);
 
@@ -119,8 +117,9 @@ MediaPlayer.dependencies.ManifestLoader = function () {
             };
 
             report = function () {
-                if (!needFailureReport) {
-                    return;
+                if (!needFailureReport)
+                {
+                  return;
                 }
                 needFailureReport = false;
 
@@ -135,13 +134,11 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                                                  new Date(),
                                                  request.status,
                                                  null,
-                                                 request.getAllResponseHeaders(),
-                                                 null);
-
+                                                 request.getAllResponseHeaders());
                 if (remainingAttempts > 0) {
                     self.log("Failed loading manifest: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
                     remainingAttempts--;
-                    setTimeout(function () {
+                    setTimeout(function() {
                         doLoad.call(self, url, remainingAttempts);
                     }, RETRY_INTERVAL);
                 } else {
@@ -152,23 +149,12 @@ MediaPlayer.dependencies.ManifestLoader = function () {
             };
 
             progress = function (event) {
-                var currentTime = new Date();
-
                 if (firstProgressCall) {
                     firstProgressCall = false;
-                    if (!event.lengthComputable || (event.lengthComputable && event.total !== event.loaded)) {
-                        request.firstByteDate = currentTime;
+                    if (!event.lengthComputable || (event.lengthComputable && event.total != event.loaded)) {
+                        request.firstByteDate = new Date();
                     }
                 }
-
-                traces.push({
-                    s: lastTraceTime,
-                    d: currentTime.getTime() - lastTraceTime.getTime(),
-                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
-                });
-
-                lastTraceTime = currentTime;
-                lastTraceReceivedCount = event.loaded;
             };
 
             try {
@@ -179,11 +165,11 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 request.onprogress = progress;
                 request.open("GET", self.requestModifierExt.modifyRequestURL(url), true);
                 request.send();
-            } catch (e) {
+            } catch(e) {
                 request.onerror();
             }
         },
-        onXlinkReady = function (event) {
+        onXlinkReady = function(event) {
             this.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: event.data.manifest});
         };
 
@@ -192,19 +178,19 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         parser: undefined,
         errHandler: undefined,
         metricsModel: undefined,
-        requestModifierExt: undefined,
+        requestModifierExt:undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
         system: undefined,
 
-        load: function (url) {
+        load: function(url) {
             doLoad.call(this, url, RETRY_ATTEMPTS);
         },
-        setup: function () {
+        setup: function() {
             onXlinkReady = onXlinkReady.bind(this);
             this.xlinkController = this.system.getObject("xlinkController");
-            this.xlinkController.subscribe(MediaPlayer.dependencies.XlinkController.eventList.ENAME_XLINK_READY, this, onXlinkReady);
+            this.xlinkController.subscribe(MediaPlayer.dependencies.XlinkController.eventList.ENAME_XLINK_READY,this,onXlinkReady);
         }
     };
 };

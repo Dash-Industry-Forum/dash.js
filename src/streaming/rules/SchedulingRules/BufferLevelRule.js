@@ -124,7 +124,6 @@ MediaPlayer.rules.BufferLevelRule = function () {
         playbackController: undefined,
         mediaController: undefined,
         virtualBuffer: undefined,
-        videoModel: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
@@ -151,7 +150,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
 
             var metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
                 switchMode = this.mediaController.getSwitchMode(),
-                bufferLevel = (this.metricsExt.getCurrentBufferLevel(metrics) ? this.metricsExt.getCurrentBufferLevel(metrics).level : 0) / 1000,
+                bufferLevel = this.metricsExt.getCurrentBufferLevel(metrics) ? this.metricsExt.getCurrentBufferLevel(metrics).level : 0,
                 currentTime = this.playbackController.getTime(),
                 appendedChunks = this.virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: {start: currentTime, end: (currentTime + bufferLevel)}}),
                 appendedLevel = (appendedChunks && appendedChunks.length > 0) ? (appendedChunks[appendedChunks.length-1].bufferedRange.end - currentTime) : null,
@@ -159,9 +158,9 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 scheduleCtrl = scheduleController[streamId][mediaType],
                 representationInfo = scheduleCtrl.streamProcessor.getCurrentRepresentationInfo(),
                 isDynamic = scheduleCtrl.streamProcessor.isDynamic(),
-                rate = this.videoModel.getPlaybackRate(),
+                rate = this.metricsExt.getCurrentPlaybackRate(metrics),
                 duration = streamInfo.manifestInfo.duration,
-                bufferedDuration = actualBufferLevel / Math.max(Math.abs(rate), 1),
+                bufferedDuration = actualBufferLevel / Math.max(rate, 1),
                 fragmentDuration = representationInfo.fragmentDuration,
                 timeToEnd = isDynamic ? Number.POSITIVE_INFINITY : duration - currentTime,
                 requiredBufferLength = Math.min(getRequiredBufferLength.call(this, isDynamic, duration, scheduleCtrl), timeToEnd),

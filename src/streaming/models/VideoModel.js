@@ -97,10 +97,6 @@ MediaPlayer.models.VideoModel = function () {
             return element.paused;
         },
 
-        hasEnded: function () {
-            return element.ended;
-        },
-
         getPlaybackRate:  function () {
             return element.playbackRate;
         },

@@ -309,9 +309,10 @@ Dash.dependencies.DashAdapter = function () {
         timelineConverter: undefined,
 
         metricsList: {
-            TCP_CONNECTION: "TcpList",
-            HTTP_REQUEST: "HttpList",
-            TRACK_SWITCH : "RepSwitchList",
+            TCP_CONNECTION: "TcpConnection",
+            HTTP_REQUEST: "HttpRequest",
+            HTTP_REQUEST_TRACE: "HttpRequestTrace",
+            TRACK_SWITCH : "RepresentationSwitch",
             BUFFER_LEVEL: "BufferLevel",
             BUFFER_STATE: "BufferState",
             DVR_INFO: "DVRInfo",
@@ -321,7 +322,8 @@ Dash.dependencies.DashAdapter = function () {
             MANIFEST_UPDATE: "ManifestUpdate",
             MANIFEST_UPDATE_STREAM_INFO: "ManifestUpdatePeriodInfo",
             MANIFEST_UPDATE_TRACK_INFO: "ManifestUpdateRepresentationInfo",
-            PLAY_LIST: "PlayList"
+            PLAY_LIST: "PlayList",
+            PLAY_LIST_TRACE: "PlayListTrace"
         },
 
         convertDataToTrack: convertRepresentationToTrackInfo,

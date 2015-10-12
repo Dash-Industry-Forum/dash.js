@@ -115,8 +115,6 @@ MediaPlayer = function (context) {
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
-            playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, streamController);
-            playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, streamController);
             playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
 
             system.mapValue("liveDelayFragmentCount", liveDelayFragmentCount);
@@ -265,8 +263,6 @@ MediaPlayer = function (context) {
                     playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
                     playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
                     playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
-                    playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, streamController);
-                    playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, streamController);
 
                     var teardownComplete = {},
                             self = this;
@@ -1388,15 +1384,6 @@ MediaPlayer.vo.protection = {};
  * @namespace
  */
 MediaPlayer.rules = {};
-
-/**
- * Namespace for {@MediaPlayer} reporting classes
- * @namespace
- */
-MediaPlayer.metrics = {};
-MediaPlayer.metrics.reporting = {};
-MediaPlayer.metrics.handlers = {};
-MediaPlayer.metrics.utils = {};
 
 /**
  * Namespace for {@MediaPlayer} dependency-injection helper classes
