@@ -118,9 +118,11 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
         },
 
         execute: function(context, callback) {
-            var streamId = context.getStreamInfo().id,
+            var streamInfo = context.getStreamInfo(),
+                streamId = streamInfo.id,
                 current = context.getCurrentValue(),
                 p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
+                playbackController = this.playbackController,
                 fragmentModels = this.fragmentModels[streamId],
                 type,
                 model,
@@ -142,7 +144,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 return;
             }
 
-            currentTime = this.playbackController.getTime();
+            currentTime = playbackController.isPlaybackStarted() ? playbackController.getTime() : playbackController.getStreamStartTime(streamInfo);
             reqForCurrentTime = getForTime(fragmentModels, currentTime);
             req = reqForCurrentTime || findClosestToTime(fragmentModels, currentTime) || current;
 
@@ -159,8 +161,6 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
                 pendingReqs = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
                 loadingLength = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING}).length;
-
-                if (model.getIsPostponed() && !isNaN(req.startTime)) continue;
 
                 if (loadingLength > MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD) {
                     callback(new MediaPlayer.rules.SwitchRequest([], p));

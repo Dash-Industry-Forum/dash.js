@@ -35,19 +35,25 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         textTrackQueue = [],
         trackElementArr = [],
         currentTrackIdx = -1,
+        actualVideoLeft = 0,
+        actualVideoTop = 0,
         actualVideoWidth = 0,
         actualVideoHeight = 0,
         captionContainer = null,
         videoSizeCheckInterval = null,
-        isIE11 = false,// Temp solution for the addCue InvalidStateError..
+        isIE11orEdge = false,// Temp solution for the addCue InvalidStateError..
+        isChrome = false,
+        fullscreenAttribute = null,
+        displayCCOnTop = false,
+        topZIndex = 2147483647,
 
         createTrackForUserAgent = function(i){
             var kind = textTrackQueue[i].kind;
             var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
             var lang = textTrackQueue[i].lang;
-            var track = isIE11 ? video.addTextTrack(kind, label, lang) : document.createElement('track');
+            var track = isIE11orEdge ? video.addTextTrack(kind, label, lang) : document.createElement('track');
 
-             if (!isIE11) {
+             if (!isIE11orEdge) {
                  track.kind = kind;
                  track.label = label;
                  track.srclang = lang;
@@ -67,7 +73,25 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             //TODO Check if IE has resolved issues: Then revert to not using the addTextTrack API for all browsers.
             // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
             // https://connect.microsoft.com/IE/feedback/details/1573380/htmltrackelement-track-addcue-throws-invalidstateerror-when-adding-new-cue
-            isIE11 = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./);
+            isIE11orEdge = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./) || navigator.userAgent.match(/Edge/);
+            isChrome = !!navigator.userAgent.match(/Chrome/) && !navigator.userAgent.match(/Edge/);
+            if (document.fullscreenElement !== undefined) {
+                fullscreenAttribute = "fullscreenElement"; // Standard and Edge
+            } else if (document.webkitIsFullScreen !== undefined) {
+                fullscreenAttribute = "webkitIsFullScreen"; // Chrome and Safari (and Edge)
+            } else if (document.msFullscreenElement) { // IE11
+                fullscreenAttribute = "msFullscreenElement";
+            } else if (document.mozFullScreen) { // Firefox
+                fullscreenAttribute = "mozFullScreen";
+            }
+        },
+
+        displayCConTop: function(value) {
+            displayCCOnTop = value;
+
+            if (!captionContainer || document[fullscreenAttribute]) return;
+
+            captionContainer.style.zIndex = value ? topZIndex : null;
         },
 
         addTextTrack: function(textTrackInfoVO, totalTextTracks) {
@@ -76,9 +100,12 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             if (video === undefined) {
                 video = textTrackInfoVO.video;
             }
-            captionContainer = this.videoModel.getTTMLRenderingDiv();
 
             if(textTrackQueue.length === totalTextTracks) {
+                textTrackQueue.sort(function(a, b) { //Sort in same order as in manifest
+                    return a.index - b.index;
+                });
+                captionContainer = this.videoModel.getTTMLRenderingDiv();
                 var defaultIndex = 0;
                 for(var i = 0 ; i < textTrackQueue.length; i++) {
                     var track = createTrackForUserAgent(i);
@@ -92,15 +119,48 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         track.default = true;
                         defaultIndex = i;
                     }
-                    if (!isIE11){
+                    if (!isIE11orEdge){
                         video.appendChild(track);
+                    }
+                    var textTrack = video.textTracks[i];
+                    if (captionContainer && textTrackQueue[i].isTTML) {
+                        textTrack.renderingType = "html";
+                    } else {
+                        textTrack.renderingType = "default";
                     }
                     this.addCaptions(0, textTrackQueue[i].captionData);
                     this.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
                 }
-                currentTrackIdx = defaultIndex;
+                this.setCurrentTrackIdx(defaultIndex);
                 this.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACKS_ADDED, data:{index:currentTrackIdx, tracks:textTrackQueue}});//send default idx.
             }
+        },
+
+        getVideoVisibleVideoSize: function(viewWidth, viewHeight, videoWidth, videoHeight) {
+            var viewAspectRatio = viewWidth / viewHeight;
+            var videoAspectRatio = videoWidth / videoHeight;
+
+            var videoPictureX = 0;
+            var videoPictureY = 0;
+            var videoPictureWidth = 0;
+            var videoPictureHeight = 0;
+
+            if (viewAspectRatio > videoAspectRatio) {
+                videoPictureHeight = viewHeight;
+                videoPictureWidth = (videoPictureHeight / videoHeight) * videoWidth;
+                videoPictureX = (viewWidth - videoPictureWidth) / 2;
+                videoPictureY = 0;
+            } else {
+                videoPictureWidth = viewWidth;
+                videoPictureHeight = (videoPictureWidth / videoWidth) * videoHeight;
+                videoPictureX = 0;
+                videoPictureY = (viewHeight - videoPictureHeight) / 2;
+            }
+
+            return { x:videoPictureX,
+                     y:videoPictureY,
+                     w:videoPictureWidth,
+                     h:videoPictureHeight }; /* Maximal picture size in videos aspect ratio */
         },
 
         checkVideoSize: function() {
@@ -109,9 +169,18 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                 var newVideoWidth = video.clientWidth;
                 var newVideoHeight = video.clientHeight;
 
+                var realVideoSize = this.getVideoVisibleVideoSize(video.clientWidth, video.clientHeight, video.videoWidth, video.videoHeight);
+
+                newVideoWidth = realVideoSize.w;
+                newVideoHeight = realVideoSize.h;
+
                 if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
+                    actualVideoLeft = realVideoSize.x;
+                    actualVideoTop = realVideoSize.y;
                     actualVideoWidth = newVideoWidth;
                     actualVideoHeight = newVideoHeight;
+                    captionContainer.style.left = actualVideoLeft + "px";
+                    captionContainer.style.top = actualVideoTop + "px";
                     captionContainer.style.width = actualVideoWidth + "px";
                     captionContainer.style.height = actualVideoHeight + "px";
 
@@ -119,6 +188,12 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     for (var i = 0; i < track.activeCues.length; ++i) {
                         var cue = track.activeCues[i];
                             cue.scaleCue(cue);
+                    }
+
+                    if ((fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop) {
+                        captionContainer.style.zIndex = topZIndex;
+                    } else {
+                        captionContainer.style.zIndex = null;
                     }
                 }
             }
@@ -231,21 +306,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         }
                     };
                 }
-                else if (currentItem.type=="html") {
-                    if (track.renderingType !== "html") {
-                        track.renderingType = "html";
-                    }
-
-                    /* Don't do cue styling for TextTrackCue */
-                    if (Cue !== window.TextTrackCue) {
-                        if(!(document.getElementById('caption-style'))) {
-                            this.setCueStyle();
-                        }
-                        else if(!(document.getElementById('caption-style').sheet.cssRules.length)) {
-                            this.setCueStyle();
-                        }
-                    }
-
+                else if (currentItem.type === "html") {
                     cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
                     cue.cueHTMLElement = currentItem.cueHTMLElement;
                     cue.regions = currentItem.regions;
@@ -258,8 +319,10 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                     cue.lineHeight = currentItem.lineHeight;
                     cue.linePadding = currentItem.linePadding;
                     cue.scaleCue = this.scaleCue;
-                    captionContainer.style.width = video.clientWidth + "px";
-                    captionContainer.style.height = video.clientHeight + "px";
+                    captionContainer.style.left = actualVideoLeft + "px";
+                    captionContainer.style.top = actualVideoTop + "px";
+                    captionContainer.style.width = actualVideoWidth + "px";
+                    captionContainer.style.height = actualVideoHeight + "px";
 
                     cue.onenter =  function () {
                         if (track.mode == "showing") {
@@ -311,8 +374,19 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             return currentTrackIdx;
         },
 
-        setCurrentTrackIdx : function(value){
-            currentTrackIdx = value;
+        setCurrentTrackIdx : function(idx){
+            currentTrackIdx = idx;
+            this.clearCues();
+            if (idx >= 0) {
+                var track = video.textTracks[idx];
+                if (track.renderingType === "html") {
+                    this.setNativeCueStyle();
+                } else {
+                    this.removeNativeCueStyle();
+                }
+            } else {
+                this.removeNativeCueStyle();
+            }
         },
 
         getTextTrack: function(idx) {
@@ -335,7 +409,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         deleteAllTextTracks:  function() {
             var ln = trackElementArr.length;
             for(var i = 0; i < ln; i++){
-                if (isIE11) {
+                if (isIE11orEdge) {
                     this.deleteTrackCues(this.getTextTrack(i));
                 }else {
                     video.removeChild(trackElementArr[i]);
@@ -348,7 +422,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                 clearInterval(videoSizeCheckInterval);
                 videoSizeCheckInterval = null;
             }
-
+            this.clearCues();
         },
 
         deleteTextTrack: function(idx) {
@@ -356,41 +430,39 @@ MediaPlayer.utils.TextTrackExtensions = function () {
             trackElementArr.splice(idx, 1);
         },
 
-        setCueStyle: function() {
-            var styleElement;
-            if(document.getElementById('caption-style')) {
-                styleElement = document.getElementById('caption-style');
-            } else {
-                styleElement = document.createElement('style');
-                styleElement.id  = 'caption-style';
-            }
+        /* Set native cue style to transparent background to avoid it being displayed. */
+        setNativeCueStyle: function() {
+            if (!isChrome) return;
+            var styleElement = document.getElementById('native-cue-style');
+            if (styleElement) return; //Already set
+
+            styleElement = document.createElement('style');
+            styleElement.id  = 'native-cue-style';
             document.head.appendChild(styleElement);
             var stylesheet = styleElement.sheet;
-            
             if(video.id) {
-                stylesheet.addRule("#" + video.id + '::cue','background: transparent');
+                stylesheet.insertRule("#" + video.id + '::cue {background: transparent}', 0);
             } else if(video.classList.length !== 0) {
-                stylesheet.addRule("." + video.className + '::cue','background: transparent');
+                stylesheet.insertRule("." + video.className + '::cue {background: transparent}', 0);
             } else {
-                    stylesheet.addRule('video::cue','background: transparent');
+                stylesheet.insertRule('video::cue {background: transparent}', 0);
             }
         },
 
-        removeCueStyle: function() {
-            /* Don't do anything if this is a TextTrackCue, this is placed here because
-               TextSourceBuffer (that calls this function, has no clue if this is a
-               VTTCue or a TextTrackCue */
-            if (Cue !== window.TextTrackCue) {
-                var stylesheet = document.getElementById('caption-style').sheet;
-                if(stylesheet.cssRules && stylesheet.cssRules.length > 0) {
-                    stylesheet.deleteRule(0);
-                }
+        /* Remove the extra cue style with transparent background for native cues. */
+        removeNativeCueStyle: function() {
+            if (!isChrome) return;
+            var styleElement = document.getElementById('native-cue-style');
+            if (styleElement) {
+                document.head.removeChild(styleElement);
             }
         },
 
         clearCues: function() {
-            while(captionContainer.firstChild) {
-                captionContainer.removeChild(captionContainer.firstChild);
+            if (captionContainer) {
+                while(captionContainer.firstChild) {
+                    captionContainer.removeChild(captionContainer.firstChild);
+                }
             }
         }
     };

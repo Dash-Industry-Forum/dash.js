@@ -61,7 +61,8 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 self = this;
 
             onload = function () {
-                var actualUrl = null;
+                var actualUrl = null,
+                    errorMsg;
 
                 if (request.status < 200 || request.status > 299) {
                     return;
@@ -97,7 +98,21 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                     self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, loadedTime, manifest.availabilityStartTime);
                     self.xlinkController.resolveManifestOnLoad(manifest);
                 } else {
-                    self.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: null}, new MediaPlayer.vo.Error(null, "Failed loading manifest: " + url, null));
+                    errorMsg = "Failed loading manifest: " + url + ", parsing failed";
+
+                    self.notify(
+                        MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED,
+                        {
+                            manifest: null
+                        },
+                        new MediaPlayer.vo.Error(
+                            MediaPlayer.dependencies.ManifestLoader.PARSERERROR_ERROR_CODE,
+                            errorMsg,
+                            null
+                        )
+                    );
+
+                    self.log(errorMsg);
                 }
             };
 
@@ -183,6 +198,8 @@ MediaPlayer.dependencies.ManifestLoader = function () {
 MediaPlayer.dependencies.ManifestLoader.prototype = {
     constructor: MediaPlayer.dependencies.ManifestLoader
 };
+
+MediaPlayer.dependencies.ManifestLoader.PARSERERROR_ERROR_CODE = 1;
 
 MediaPlayer.dependencies.ManifestLoader.eventList = {
     ENAME_MANIFEST_LOADED: "manifestLoaded"

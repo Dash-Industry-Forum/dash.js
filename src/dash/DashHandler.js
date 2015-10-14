@@ -184,6 +184,7 @@ Dash.dependencies.DashHandler = function () {
                 period = representation.adaptation.period,
                 isFinished = false,
                 seg,
+                segmentInfoType = representation.segmentInfoType,
                 fTime;
 
             if (index < 0) {
@@ -195,7 +196,7 @@ Dash.dependencies.DashHandler = function () {
                     fTime = seg.presentationStartTime - period.start;
                     sDuration = representation.adaptation.period.duration;
                     this.log(representation.segmentInfoType + ": " + fTime + " / " + sDuration);
-                    isFinished = (fTime >= sDuration);
+                    isFinished = segmentInfoType === "SegmentTimeline" ? false : (fTime >= sDuration);
                 }
             } else {
                 isFinished = true;
@@ -267,6 +268,7 @@ Dash.dependencies.DashHandler = function () {
                 calculatedRange,
                 hasEnoughSegments,
                 requiredMediaTime,
+                isStartSegmentForRequestedTimeFound = false,
                 startIdx,
                 endIdx,
                 fTimescale,
@@ -359,7 +361,10 @@ Dash.dependencies.DashHandler = function () {
                         // in this case we still need to include the last segment in the segment list. to do this we
                         // use a correction factor = 1.5. This number is used because the largest possible deviation is
                         // is 50% of segment duration.
-                        if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale)*1.5)) {
+                        if (isStartSegmentForRequestedTimeFound) {
+                            segments.push(createSegment.call(self, frag));
+                        }  else if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale)*1.5)) {
+                            isStartSegmentForRequestedTimeFound = true;
                             segments.push(createSegment.call(self, frag));
                         }
                     }
@@ -880,7 +885,7 @@ Dash.dependencies.DashHandler = function () {
             //self.log("Getting the next request.");
 
             if (index === -1) {
-                throw "You must call getSegmentRequestForTime first.";
+                return null;
             }
 
             requestedTime = null;

@@ -62,9 +62,7 @@ MediaPlayer = function (context) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    var VERSION = "1.5.0",
-        DEFAULT_TIME_SERVER = "http://time.akamai.com/?iso",
-        DEFAULT_TIME_SOURCE_SCHEME = "urn:mpeg:dash:utc:http-xsdate:2014",
+    var VERSION = "1.5.1",
         numOfParallelRequestAllowed = 0,
         system,
         abrController,
@@ -345,6 +343,7 @@ MediaPlayer = function (context) {
             playbackController = system.getObject("playbackController");
             mediaController = system.getObject("mediaController");
             this.restoreDefaultUTCTimingSources();
+            this.debug.log("[dash.js "+ VERSION +"] " + "new MediaPlayer instance has been created");
         },
 
         /**
@@ -416,7 +415,13 @@ MediaPlayer = function (context) {
             return videoModel;
         },
 
-
+        /**
+         * @returns {@link object}
+         * @memberof MediaPlayer#
+         */
+        getVideoContainer: function () {
+            return videoModel ? videoModel.getVideoContainer() : null;
+        },
 
         /**
          * <p>Changing this value will lower or increase live stream latency.  The detected segment duration will be multiplied by this value
@@ -639,9 +644,7 @@ MediaPlayer = function (context) {
                 }
             }
 
-            if (textSourceBuffer.isFragmented) {
-                textSourceBuffer.setTextTrack();
-            }
+            textSourceBuffer.setTextTrack();
         },
 
         /**
@@ -1081,7 +1084,7 @@ MediaPlayer = function (context) {
          * @see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
          */
         restoreDefaultUTCTimingSources: function() {
-            this.addUTCTimingSource(DEFAULT_TIME_SOURCE_SCHEME, DEFAULT_TIME_SERVER);
+            this.addUTCTimingSource(MediaPlayer.UTCTimingSources.default.scheme, MediaPlayer.UTCTimingSources.default.value);
         },
 
 
@@ -1096,6 +1099,31 @@ MediaPlayer = function (context) {
          */
         enableManifestDateHeaderTimeSource: function(value) {
             useManifestDateHeaderTimeSource = value;
+        },
+
+        /**
+         * This method serves to control captions z-index value. If 'true' is passed, the captions will have the highest z-index and be
+         * displayed on top of other html elements. Default value is 'false' (z-index is not set).
+         * @param value {Boolean}
+         */
+        displayCaptionsOnTop: function(value) {
+            var textTrackExt = system.getObject("textTrackExtensions");
+
+            textTrackExt.displayCConTop(value);
+        },
+
+        /**
+         * Use this method to attach an HTML5 element that wraps the video element.
+         *
+         * @param container The HTML5 element containing the video element.
+         * @memberof MediaPlayer#
+         */
+        attachVideoContainer: function(container) {
+            if (!videoModel) {
+                throw "Must call attachView with video element before you attach container element";
+            }
+
+            videoModel.setVideoContainer(container);
         },
 
         /**
@@ -1115,6 +1143,8 @@ MediaPlayer = function (context) {
             if (element) {
                 videoModel = system.getObject("videoModel");
                 videoModel.setElement(element);
+                // Workaround to force Firefox to fire the canplay event.
+                element.preload = "auto";
             }
 
             // TODO : update
@@ -1360,6 +1390,14 @@ MediaPlayer.rules = {};
  * @namespace
  */
 MediaPlayer.di = {};
+
+
+/**
+ * The default timing source used for live edge time sync.
+ */
+MediaPlayer.UTCTimingSources = {
+    default:{scheme:"urn:mpeg:dash:utc:http-xsdate:2014", value:"http://time.akamai.com/?iso"}
+};
 
 /**
  * The list of events supported by MediaPlayer

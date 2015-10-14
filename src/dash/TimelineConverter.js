@@ -121,7 +121,7 @@ Dash.dependencies.TimelineConverter = function () {
             start = Math.max((now - representation.adaptation.period.mpd.timeShiftBufferDepth), representation.adaptation.period.start);
             var timeAnchor = (isNaN(checkTime) ? now : Math.min(checkTime, now));
             var periodEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
-            end = timeAnchor >= periodEnd  && (timeAnchor - d) < periodEnd ? periodEnd : timeAnchor - d;
+            end = (timeAnchor >= periodEnd  && (timeAnchor - d) < periodEnd ? periodEnd : timeAnchor) - d;
             //end = (isNaN(checkTime) ? now : Math.min(checkTime, now)) - d;
             range = {start: start, end: end};
 

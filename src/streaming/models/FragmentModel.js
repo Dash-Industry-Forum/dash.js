@@ -151,7 +151,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
         },
 
         onBytesRejected = function(e) {
-            var req = this.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, quality: e.data.quality, index: e.data.index})[0];
+            var req = this.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, quality: e.data.quality, time: e.data.start})[0];
             // if request for an unappropriate quality has not been removed yet, do it now
             if (req) {
                 removeRequest.call(this, executedRequests, req);

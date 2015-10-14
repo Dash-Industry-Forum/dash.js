@@ -33,6 +33,7 @@ MediaPlayer.models.VideoModel = function () {
 
     var element,
         TTMLRenderingDiv,
+        videoContainer,
         stalledStreams = [],
         //_currentTime = 0,
 
@@ -152,6 +153,14 @@ MediaPlayer.models.VideoModel = function () {
         setElement: function (value) {
             element = value;
         },
+
+        getVideoContainer: function() {
+            return videoContainer;
+        },
+
+        setVideoContainer: function(value) {
+            videoContainer = value;
+        },
         
         getTTMLRenderingDiv: function () {
             return TTMLRenderingDiv;
@@ -163,7 +172,6 @@ MediaPlayer.models.VideoModel = function () {
             TTMLRenderingDiv.style.position = 'absolute';
             TTMLRenderingDiv.style.display = 'flex';
             TTMLRenderingDiv.style.overflow = 'hidden';
-            TTMLRenderingDiv.style.zIndex = 2147483647;
             TTMLRenderingDiv.style.pointerEvents = 'none';
             TTMLRenderingDiv.style.top = 0;
             TTMLRenderingDiv.style.left = 0;

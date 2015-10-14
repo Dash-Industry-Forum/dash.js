@@ -32,6 +32,7 @@ var ControlBar = function(dashjsMediaPlayer) {
 
     var player = dashjsMediaPlayer,
         video,
+        videoContainer,
         currentCaptionMenuIdx = 0,
         captionMenu = null,
         lastValumeLevel = NaN,
@@ -148,13 +149,13 @@ var ControlBar = function(dashjsMediaPlayer) {
 
         setDuration = function(value){
             if (!isNaN(value)) {
-                durationDisplay.innerHTML = player.convertToTimeCode(value);
+                durationDisplay.textContent = player.convertToTimeCode(value);
             }
         },
 
         setTime = function(value){
             if (!isNaN(value)) {
-                timeDisplay.innerHTML = player.convertToTimeCode(value);
+                timeDisplay.textContent = player.convertToTimeCode(value);
             }
         },
 
@@ -186,14 +187,16 @@ var ControlBar = function(dashjsMediaPlayer) {
         },
 
         enterFullscreen = function () {
-            if (video.requestFullscreen) {
-                video.requestFullscreen();
-            } else if (video.msRequestFullscreen) {
-                video.msRequestFullscreen();
-            } else if (video.mozRequestFullScreen) {
-                video.mozRequestFullScreen();
+            var element = videoContainer || video;
+
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            } else if (element.msRequestFullscreen) {
+                element.msRequestFullscreen();
+            } else if (element.mozRequestFullScreen) {
+                element.mozRequestFullScreen();
             } else {
-                video.webkitRequestFullScreen();
+                element.webkitRequestFullScreen();
             }
             videoController.classList.add('video-controller-fullscreen');
             window.addEventListener("mousemove", onFullScreenMouseMove);
@@ -281,7 +284,7 @@ var ControlBar = function(dashjsMediaPlayer) {
                 captionItem.id = "captionItem_"+i
                 captionItem.index = i;
                 captionItem.selected = false;
-                captionItem.innerHTML = i === 0 ? tracks[i].kind +" off" : tracks[i-1].lang + " : " + tracks[i-1].kind; //subtract to offset for off button.
+                captionItem.textContent = i === 0 ? tracks[i].kind +" off" : tracks[i-1].lang + " : " + tracks[i-1].kind; //subtract to offset for off button.
                 captionItem.onmouseover = function(e){
                     if (this.selected !== true){
                         this.classList.add("caption-item-over");
@@ -374,6 +377,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             }
 
             video.controls = false;
+            videoContainer = player.getVideoContainer();
             captionBtn.classList.add("hide");
 
             playPauseBtn.addEventListener("click", onPlayPauseClick);
@@ -387,7 +391,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             video.addEventListener("timeupdate", onPlayTimeUpdate);
             video.addEventListener("seeked", onSeeked);
             document.addEventListener("fullscreenchange", onFullScreenChange, false);
-            document.addEventListener("msfullscreenchange", onFullScreenChange, false);
+            document.addEventListener("MSFullscreenChange", onFullScreenChange, false);
             document.addEventListener("mozfullscreenchange", onFullScreenChange, false);
             document.addEventListener("webkitfullscreenchange", onFullScreenChange, false);
             player.addEventListener(MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);
@@ -435,7 +439,7 @@ var ControlBar = function(dashjsMediaPlayer) {
             video.removeEventListener("timeupdate", onPlayTimeUpdate);
             video.removeEventListener("seeked", onSeeked);
             document.removeEventListener("fullscreenchange", onFullScreenChange);
-            document.removeEventListener("msfullscreenchange", onFullScreenChange);
+            document.removeEventListener("MSFullscreenChange", onFullScreenChange);
             document.removeEventListener("mozfullscreenchange", onFullScreenChange);
             document.removeEventListener("webkitfullscreenchange", onFullScreenChange);
             player.removeEventListener(MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded);

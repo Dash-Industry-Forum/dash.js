@@ -4,14 +4,14 @@
     <meta charset="utf-8"/>
     <title>Dash JavaScript Player</title>
     <meta name="description" content="" />
-    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+    <link rel="icon" type="image/x-icon" href="http://dashif.org/wp-content/uploads/2014/12/dashif.ico" />
     <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
 
     <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-glyphicons.css">
     <link rel="stylesheet" href="app/lib/angular.treeview/css/angular.treeview.css">
     <link rel="stylesheet" href="app/css/main.css">
-    <link rel="stylesheet" href="../../contrib/akamai/controlbar/contolbar.css">
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
 
     <!-- http://jquery.com/ -->
     <script src="app/lib/jquery/jquery-1.10.2.min.js"></script>
@@ -272,33 +272,34 @@
 
         <div class="row">
             <div class="dash-video-player col-md-9">
-                <video controls="true"></video>
-                <div id="video-caption"></div>
-                <div id="videoController" class="video-controller unselectable">
-                    <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
-                        <span id="iconPlayPause" class="icon-play"></span>
-                    </div>
-                    <span id="videoTime" class="time-display">00:00:00</span>
+                <div id="videoContainer">
+                    <video controls="true"></video>
+                    <div id="video-caption"></div>
+                    <div id="videoController" class="video-controller unselectable">
+                        <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
+                            <span id="iconPlayPause" class="icon-play"></span>
+                        </div>
+                        <span id="videoTime" class="time-display">00:00:00</span>
 
-                    <div id="fullscreenBtn" class="btn-fullscreen" title="Fullscreen">
-                        <span class="icon-fullscreen-enter"></span>
-                    </div>
-                    <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01" />
+                        <div id="fullscreenBtn" class="btn-fullscreen" title="Fullscreen">
+                            <span class="icon-fullscreen-enter"></span>
+                        </div>
+                        <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01" />
 
-                    <div id="muteBtn" class="btn-mute" title="Mute">
-                        <span id="iconMute" class="icon-mute-off"></span>
-                    </div>
-                    <div id="captionBtn" class="btn-caption" title="Closed Caption">
-                        <span class="icon-caption"></span>
-                    </div>
+                        <div id="muteBtn" class="btn-mute" title="Mute">
+                            <span id="iconMute" class="icon-mute-off"></span>
+                        </div>
+                        <div id="captionBtn" class="btn-caption" title="Closed Caption">
+                            <span class="icon-caption"></span>
+                        </div>
 
-                    <span id="videoDuration" class="duration-display">00:00:00</span>
+                        <span id="videoDuration" class="duration-display">00:00:00</span>
 
-                    <div class="seekContainer">
-                        <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
+                        <div class="seekContainer">
+                            <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
+                        </div>
                     </div>
                 </div>
-
             </div>
             <div class="col-md-3">
                 <div class="panel">

@@ -43,21 +43,15 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 allTracksAreDisabled = track.mode !== "showing";
                 if (track.mode === "showing") {
                     if (self.textTrackExtensions.getCurrentTrackIdx() !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
-                        var previousTextTrack = self.textTrackExtensions.getCurrentTextTrack(); //will be null when all tracks are disabled and turning back on.
-                        if (previousTextTrack !== null) {
-                            self.textTrackExtensions.deleteTrackCues(previousTextTrack);
-                            if (previousTextTrack.renderingType === "html") {
-                                self.textTrackExtensions.removeCueStyle();
-                                self.textTrackExtensions.clearCues();
-                            }
-                        }
                         self.textTrackExtensions.setCurrentTrackIdx(i);
-                        if (!self.mediaController.isCurrentTrack(self.allTracks[i])){
-                            self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
-                            self.fragmentModel.cancelPendingRequests();
-                            self.fragmentModel.abortRequests();
-                            self.buffered.clear();
-                            self.mediaController.setTrack(self.allTracks[i]);
+                        if (self.isFragmented) {
+                            if (!self.mediaController.isCurrentTrack(self.allTracks[i])) {
+                                self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
+                                self.fragmentModel.cancelPendingRequests();
+                                self.fragmentModel.abortRequests();
+                                self.buffered.clear();
+                                self.mediaController.setTrack(self.allTracks[i]);
+                            }
                         }
                     }
                     break;
@@ -107,13 +101,26 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                     trackKindMap = {subtitle:"subtitles", caption:"captions"},//Dash Spec has no "s" on end of KIND but HTML needs plural.
                     getKind = function () {
                         var kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
-                        kind = (kind !== trackKindMap.caption || kind !== trackKindMap.subtitle) ? trackKindMap.caption : kind;
+                        kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
                         return kind;
+                    },
+                    
+                    checkTTML = function () {
+                        var ttml = false;
+                        if (mediaInfo.codec && mediaInfo.codec.search("stpp") >= 0) {
+                            ttml = true;
+                        }
+                        if (mediaInfo.mimeType && mediaInfo.mimeType.search("ttml") >= 0) {
+                            ttml = true;
+                        }
+                        return ttml;
                     };
 
                 textTrackInfo.captionData = captionData;
                 textTrackInfo.lang = mediaInfo.lang;
-                textTrackInfo.label = mediaInfo.id;
+                textTrackInfo.label = mediaInfo.id; // AdaptationSet id (an unsigned int)
+                textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
+                textTrackInfo.isTTML = checkTTML();
                 textTrackInfo.video = self.videoModel.getElement();
                 textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
                 textTrackInfo.isFragmented = self.isFragmented;

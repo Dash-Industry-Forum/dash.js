@@ -49,6 +49,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
         isBufferLevelOutrun = false,
         isAppendingInProgress = false,
+        isPruningInProgress = false,
         inbandEventFound = false,
 
         createBuffer = function(mediaInfo) {
@@ -167,7 +168,7 @@ MediaPlayer.dependencies.BufferController = function () {
                                         ' chunk media type = ' + chunk.mediaType +
                                         ' chunk quality = ' + quality +
                                         ' chunk index = ' + chunk.index);
-                onMediaRejected.call(self, quality, chunk.index);
+                onMediaRejected.call(self, quality, chunk.index, chunk.start);
                 return;
             }
             //self.log("Push bytes: " + data.byteLength);
@@ -354,6 +355,7 @@ MediaPlayer.dependencies.BufferController = function () {
             if (currentRange !== null) {
                 bufferToPrune = currentTime - currentRange.start - MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP;
                 if (bufferToPrune > 0) {
+                    isPruningInProgress = true;
                     this.sourceBufferExt.remove(buffer, 0, Math.round(currentRange.start + bufferToPrune), mediaSource);
                 }
             }
@@ -401,6 +403,9 @@ MediaPlayer.dependencies.BufferController = function () {
 
             // After the buffer has been cleared we need to update the virtual range that reflects the actual ranges
             // of SourceBuffer. We also need to update the list of appended chunks
+            if (isPruningInProgress) {
+                isPruningInProgress = false;
+            }
             this.virtualBuffer.updateBufferedRanges({streamId: getStreamId.call(this), mediaType: type}, this.sourceBufferExt.getAllRanges(buffer));
             updateBufferLevel.call(this);
             this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_CLEARED, {from: e.data.from, to: e.data.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend.call(this)});
@@ -506,9 +511,9 @@ MediaPlayer.dependencies.BufferController = function () {
             appendNext.call(this);
         },
 
-        onMediaRejected = function(quality, index) {
+        onMediaRejected = function(quality, index, startTime) {
             isAppendingInProgress = false;
-            this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_REJECTED, {quality: quality, index: index});
+            this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_REJECTED, {quality: quality, index: index, start: startTime});
             appendNext.call(this);
         },
 
@@ -559,7 +564,7 @@ MediaPlayer.dependencies.BufferController = function () {
             var streamId = getStreamId.call(this),
                 chunk;
 
-            if (!buffer || isBufferLevelOutrun || isAppendingInProgress || waitingForInit.call(this) || !hasEnoughSpaceToAppend.call(this)) return;
+            if (!buffer || isPruningInProgress || isBufferLevelOutrun || isAppendingInProgress || waitingForInit.call(this) || !hasEnoughSpaceToAppend.call(this)) return;
 
             chunk = this.virtualBuffer.extract({streamId: streamId, mediaType: type, segmentType: MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE, limit: 1})[0];
 
@@ -659,7 +664,7 @@ MediaPlayer.dependencies.BufferController = function () {
             appendNext.call(this);
             // constantly prune buffer every x seconds
             wallclockTicked += 1;
-            if ((wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0) {
+            if ((wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
                 pruneBuffer.call(this);
             }
         },
@@ -798,6 +803,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             isBufferLevelOutrun = false;
             isAppendingInProgress = false;
+            isPruningInProgress = false;
 
             if (!errored) {
                 self.sourceBufferExt.abort(mediaSource, buffer);

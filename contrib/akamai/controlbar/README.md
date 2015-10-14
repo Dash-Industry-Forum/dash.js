@@ -2,7 +2,7 @@
 
 1. **Import CSS and JS**
 ```
-<link rel="stylesheet" href="../../contrib/akamai/controlbar/contolbar.css">
+<link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
 <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
 ```
 

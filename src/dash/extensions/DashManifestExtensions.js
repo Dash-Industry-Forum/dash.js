@@ -123,7 +123,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         var lang = "";
 
         if (adaptation.hasOwnProperty("lang")) {
-            lang = adaptation.lang;
+            //Filter out any other characters not allowed according to RFC5646
+            lang = adaptation.lang.replace(/[^A-Za-z0-9-]/g,"");
         }
 
         return lang;
@@ -543,8 +544,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 vo1.duration = vo.start - vo1.start;
             }
 
-            if (vo !== null && p.hasOwnProperty("id")){
-                vo.id = p.id;
+            if (vo !== null) {
+                vo.id = this.getPeriodId(p);
             }
 
             if (vo !== null && p.hasOwnProperty("duration")){
@@ -575,6 +576,20 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         }
 
         return periods;
+    },
+
+    getPeriodId: function(p) {
+        if (!p) {
+            throw new Error("Period cannot be null or undefined");
+        }
+
+        var id = Dash.vo.Period.DEFAULT_ID;
+
+        if (p.hasOwnProperty("id") && p.id !== "__proto__") {
+            id = p.id;
+        }
+
+        return id;
     },
 
     getMpd: function(manifest) {

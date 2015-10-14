@@ -5,47 +5,30 @@
     <title>Multiple Language Timed Text Sample</title>
     <meta name="description" content="" />
 
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="../../dist/dash.debug.js"></script>
 
     <script>
         var EXTERNAL_CAPTION_URL = "http://dash.edgesuite.net/dash264/TestCases/4b/qualcomm/1/ED_OnDemand_5SecSeg_Subtitles.mpd", // need to manually seek to get stream to start... issue with MPD but only sample with multi adaptations for external sidecar caption text xml
             FRAGMENTED_CAPTION_URL = "http://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
             videoElement,
+            controlbar,
             player;
 
         function startVideo() {
             var url = FRAGMENTED_CAPTION_URL,
                 context;
 
-            videoElement = document.querySelector(".dash-video-player video");
+            videoElement = document.querySelector(".videoContainer video");
             context = new Dash.di.DashContext();
             player = new MediaPlayer(context);
             player.startup();
             player.attachView(videoElement);
+            controlbar = new ControlBar(player); // Checkout ControlBar.js for more info on how to target/add text tracks to UI
+            controlbar.initialize();
             player.setAutoPlay(true);
             player.attachSource(url);
-            player.addEventListener(MediaPlayer.events.TEXT_TRACK_ADDED, onTrackAdded);
-        }
-
-        function onTrackAdded(e){
-            var selectMenu = document.getElementById("caption-menu"),
-                tracks = videoElement.textTracks,
-                ln = tracks.length;
-
-            for(var i=0; i<ln; i++){
-                var track = tracks[i],
-                    option = document.createElement("option");
-
-                option.text = track.language.toUpperCase() + " : " + track.kind;
-                option.value = i;
-                selectMenu.add(option);
-            }
-            selectMenu.selectedIndex = 1;
-            selectMenu.addEventListener("change", onCaptionMenuChange);
-        }
-
-        function onCaptionMenuChange(e){
-            player.setTextTrack(e.currentTarget.selectedIndex - 1);
         }
 
     </script>
@@ -55,16 +38,40 @@
             width: 640px;
             height: 360px;
         }
+
+        .videoContainer{
+            width: 640px;
+        }
     </style>
 
     <body onload="startVideo()">
-        <div class="dash-video-player">
-            <video controls="true"></video>
-        </div>
-        <div>
-            <select id="caption-menu">
-                <option value="-1">Turn Captions OFF</option>
-            </select>
+        <div class="videoContainer">
+            <video preload="auto" autoplay="true" > </video>
+
+            <div id="videoController" class="video-controller unselectable">
+                <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
+                    <span id="iconPlayPause" class="icon-play"></span>
+                </div>
+                <span id="videoTime" class="time-display">00:00:00</span>
+
+                <div id="fullscreenBtn" class="btn-fullscreen" title="Fullscreen">
+                    <span class="icon-fullscreen-enter"></span>
+                </div>
+                <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01" />
+
+                <div id="muteBtn" class="btn-mute" title="Mute">
+                    <span id="iconMute" class="icon-mute-off"></span>
+                </div>
+                <div id="captionBtn" class="btn-caption" title="Closed Caption">
+                    <span class="icon-caption"></span>
+                </div>
+
+                <span id="videoDuration" class="duration-display">00:00:00</span>
+
+                <div class="seekContainer">
+                    <input type="range" id="seekbar" value="0" class="seekbar" min="0" step="0.01"/>
+                </div>
+            </div>
         </div>
     </body>
 </html>

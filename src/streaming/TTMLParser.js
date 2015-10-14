@@ -405,6 +405,14 @@ MediaPlayer.utils.TTMLParser = function() {
             if ('text-decoration' in cueStyle) {
                 properties.push('text-decoration:' + cueStyle['text-decoration'] + ';');
             }
+
+            // Handle white-space preserve
+            if (ttml.tt.hasOwnProperty('xml:space')) {
+                if (ttml.tt['xml:space'] === 'preserve') {
+                    properties.push('white-space: pre;');
+                }
+            }
+
             return properties;
         },
 
@@ -726,7 +734,7 @@ MediaPlayer.utils.TTMLParser = function() {
                 else if (el.hasOwnProperty('#text')) {
                     // Add the text to an individual span element (to add line padding if it is defined).
                     var textNode = document.createElement('span');
-                    textNode.innerHTML = el['#text'];
+                    textNode.textContent = el['#text'];
 
                     // We append the element to the cue container.
                     cue.appendChild(textNode);
@@ -850,6 +858,10 @@ MediaPlayer.utils.TTMLParser = function() {
 
             // Parse the TTML in a JSON object.
             ttml = converter.xml_str2json(data);
+
+            if (!ttml) {
+                throw "TTML document could not be parsed";
+            }
 
             if (self.videoModel.getTTMLRenderingDiv()) {
                 type = 'html';
@@ -1046,7 +1058,7 @@ MediaPlayer.utils.TTMLParser = function() {
                         var finalCue = document.createElement("div");
                         finalCue.appendChild(cueParagraph);
                         finalCue.id = "subtitle_" + cueID;
-                        finalCue.style.cssText = "position: absolute; z-index: 2147483647; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + cueRegionProperties;
+                        finalCue.style.cssText = "position: absolute; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + cueRegionProperties;
 
                         if(Object.keys(fontSize).length === 0) {
                             fontSize.defaultFontSize = '100';
