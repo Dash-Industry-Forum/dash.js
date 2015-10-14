@@ -10,6 +10,69 @@
             ]
         },
         {
+            "title": "Release Notes v1.5.1",
+            "items": [
+                "HTTPS Delivery Support",
+                "Fixes for closed captions",
+                "Fixes for full screen mode",
+                "Fixes for 'Load video at time' feature",
+                "Other minor fixes",
+                "Debugging - trace out framework version and date/time of execution (Enhancement)"                
+            ]
+        },
+        {
+            "title": "Release Notes v1.5.0",
+            "items": [
+                "Fully Integrated Box Parser (For extracting items like EMSG)",
+                "Multiple Video Adaptation Support",
+                "Multiple Audio Adaptation Support",
+                "Multiple Text Adaptation Support",
+                "Richly styled TTML subtitling (almost complete EBU-TT-D)",
+                "Support for Safari and Firefox",
+                "Multiperiod DRM/EME Protection",
+                "Buffer Pruning/Seeking (Enhancement)",
+                "HTTP Metric Improvements",
+                "DRM/EME JSDocs (Enhancement)",
+                "Improved support for app-specific DRM license servers",
+                "Fixes for Multiperiod",
+                "Fixes for xLink onload",
+                "Fixes for TextTrack",
+                "Fixes for Cross Browser",
+                "Fixes for Scheduling",
+                "Fixes for Live edge detection.",
+                "Fixes for HTTPS Timeserver calls",
+                "Fixes for DRM/EME"
+            ]
+        },
+		{
+            "title": "Release Notes v1.4.0",
+            "items": [
+                "Multiperiod re-design",
+                "Enhanced xlink support for xlink onLoad",
+                "DRM support and improvements with key prefetching API.",
+                "Optimize Starting bit rate selection including",
+                "starting index API",
+                "starting bitrate API",
+                "maxBitrateAllowed API",
+                "Last known Bitrate cached with TTL for starting bitrate",
+                "Defaults down to starting at bitrate <= 1 mbps",
+                "Live edge detection enhancements (current order of fallback)",
+                "UTC Manifest attribute detection",
+                "Segment Timeline Advertised Frag ID",
+                "Default NTP time server with API to add and remove more.",
+                "DateHeader lookup",
+                "Default back to live edge binary search.",
+                "Fragment Abandonment ABR rule (Abandon download and switch).",
+                "Scheduling API to set number of allowed parallel request.",
+                "WebVTT caption style support",
+                "Header License Consistency",
+                "Author File Added",
+                "Node compliance",
+                "JSDoc enhancements",
+                "Various bug fixes"
+            ]
+        },
+        {
             "title": "Release Notes v1.3.0",
             "items": [
                 "New folder structure for entire project",
