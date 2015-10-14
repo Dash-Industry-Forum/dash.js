@@ -21,7 +21,7 @@ Put the following code in your web page
 <body onLoad="Dash.createAll()">
    <div>
        <video class="dashjs-player" autoplay preload="none" controls="true">
-              <source src="http://dash.edgesuite.net/envivio/dashpr/clear/Manifest.mpd" type="application/dash+xml"/>
+              <source src="http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd" type="application/dash+xml"/>
        </video>
    </div>
 </body>
@@ -70,7 +70,7 @@ Add dash.all.js to the end of the body.
 Now comes the good stuff. We need to create a dash context. Then from that context we create a media player, initialize it, attach it to our "videoPlayer" and then tell it where to get the video from. We will do this in an anonymous self executing function, that way it will run as soon as the page loads. So, here is how we do it:
 ``` js
 (function(){
-    var url = "http://dash.edgesuite.net/dash264/TestCases/1c/qualcomm/2/MultiRate.mpd";
+    var url = "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd";
     var context = new Dash.di.DashContext();
     var player = new MediaPlayer(context);
     player.startup();
@@ -93,7 +93,7 @@ When it is all done, it should look similar to this:
         <script src="yourPathToDash/dash.all.js"></script>
         <script>
             (function(){
-                var url = "http://dash.edgesuite.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd";
+                var url = "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd";
                 var context = new Dash.di.DashContext();
                 var player = new MediaPlayer(context);
                 player.startup();
