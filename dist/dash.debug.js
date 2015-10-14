@@ -235,10 +235,20 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
         return result;
     }
     this.parseXmlString = function(xmlDocStr) {
-        var xmlDoc;
+        var xmlDoc, parser, ns;
         if (window.DOMParser) {
-            var parser = new window.DOMParser();
-            xmlDoc = parser.parseFromString(xmlDocStr, "text/xml");
+            parser = new window.DOMParser();
+            try {
+                ns = parser.parseFromString("<", "text/xml").getElementsByTagName("parsererror")[0].namespaceURI;
+            } catch (e) {}
+            try {
+                xmlDoc = parser.parseFromString(xmlDocStr, "text/xml");
+                if (ns) {
+                    if (xmlDoc.getElementsByTagNameNS(ns, "parsererror").length) {
+                        xmlDoc = undefined;
+                    }
+                }
+            } catch (e) {}
         } else {
             if (xmlDocStr.indexOf("<?") == 0) {
                 xmlDocStr = xmlDocStr.substr(xmlDocStr.indexOf("?>") + 2);
@@ -254,7 +264,7 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
     };
     this.xml_str2json = function(xmlDocStr) {
         var xmlDoc = this.parseXmlString(xmlDocStr);
-        return this.xml2json(xmlDoc);
+        return xmlDoc ? this.xml2json(xmlDoc) : undefined;
     };
     this.json2xml_str = function(jsonObj) {
         return parseJSONObject(jsonObj);
@@ -1463,7 +1473,7 @@ ISOFile.prototype.fetch = function(a) {
 
 MediaPlayer = function(context) {
     "use strict";
-    var VERSION = "1.5.0", DEFAULT_TIME_SERVER = "http://time.akamai.com/?iso", DEFAULT_TIME_SOURCE_SCHEME = "urn:mpeg:dash:utc:http-xsdate:2014", numOfParallelRequestAllowed = 0, system, abrController, mediaController, element, source, protectionController = null, protectionData = null, streamController, rulesController, playbackController, metricsExt, metricsModel, videoModel, textSourceBuffer, DOMStorage, initialized = false, resetting = false, playing = false, autoPlay = true, scheduleWhilePaused = false, bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED, useManifestDateHeaderTimeSource = true, UTCTimingSources = [], liveDelayFragmentCount = 4, usePresentationDelay = false, isReady = function() {
+    var VERSION = "1.5.1", numOfParallelRequestAllowed = 0, system, abrController, mediaController, element, source, protectionController = null, protectionData = null, streamController, rulesController, playbackController, metricsExt, metricsModel, videoModel, textSourceBuffer, DOMStorage, initialized = false, resetting = false, playing = false, autoPlay = true, scheduleWhilePaused = false, bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED, useManifestDateHeaderTimeSource = true, UTCTimingSources = [], liveDelayFragmentCount = 4, usePresentationDelay = false, isReady = function() {
         return !!element && !!source && !resetting;
     }, play = function() {
         if (!initialized) {
@@ -1649,6 +1659,7 @@ MediaPlayer = function(context) {
             playbackController = system.getObject("playbackController");
             mediaController = system.getObject("mediaController");
             this.restoreDefaultUTCTimingSources();
+            this.debug.log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
         },
         addEventListener: function(type, listener, useCapture) {
             type = type.toLowerCase();
@@ -1675,6 +1686,9 @@ MediaPlayer = function(context) {
         },
         getVideoModel: function() {
             return videoModel;
+        },
+        getVideoContainer: function() {
+            return videoModel ? videoModel.getVideoContainer() : null;
         },
         setLiveDelayFragmentCount: function(value) {
             liveDelayFragmentCount = value;
@@ -1738,9 +1752,7 @@ MediaPlayer = function(context) {
                     track.mode = mode;
                 }
             }
-            if (textSourceBuffer.isFragmented) {
-                textSourceBuffer.setTextTrack();
-            }
+            textSourceBuffer.setTextTrack();
         },
         getBitrateInfoListFor: function(type) {
             var stream = getActiveStream.call(this);
@@ -1844,10 +1856,20 @@ MediaPlayer = function(context) {
             UTCTimingSources = [];
         },
         restoreDefaultUTCTimingSources: function() {
-            this.addUTCTimingSource(DEFAULT_TIME_SOURCE_SCHEME, DEFAULT_TIME_SERVER);
+            this.addUTCTimingSource(MediaPlayer.UTCTimingSources.default.scheme, MediaPlayer.UTCTimingSources.default.value);
         },
         enableManifestDateHeaderTimeSource: function(value) {
             useManifestDateHeaderTimeSource = value;
+        },
+        displayCaptionsOnTop: function(value) {
+            var textTrackExt = system.getObject("textTrackExtensions");
+            textTrackExt.displayCConTop(value);
+        },
+        attachVideoContainer: function(container) {
+            if (!videoModel) {
+                throw "Must call attachView with video element before you attach container element";
+            }
+            videoModel.setVideoContainer(container);
         },
         attachView: function(view) {
             if (!initialized) {
@@ -1858,6 +1880,7 @@ MediaPlayer = function(context) {
             if (element) {
                 videoModel = system.getObject("videoModel");
                 videoModel.setElement(element);
+                element.preload = "auto";
             }
             resetAndPlay.call(this);
         },
@@ -1924,6 +1947,13 @@ MediaPlayer.vo.protection = {};
 MediaPlayer.rules = {};
 
 MediaPlayer.di = {};
+
+MediaPlayer.UTCTimingSources = {
+    "default": {
+        scheme: "urn:mpeg:dash:utc:http-xsdate:2014",
+        value: "http://time.akamai.com/?iso"
+    }
+};
 
 MediaPlayer.events = {
     RESET_COMPLETE: "resetComplete",
@@ -2405,7 +2435,7 @@ Dash.dependencies.DashHandler = function() {
         request = generateInitRequest.call(self, representation, type);
         return request;
     }, isMediaFinished = function(representation) {
-        var sDuration, period = representation.adaptation.period, isFinished = false, seg, fTime;
+        var sDuration, period = representation.adaptation.period, isFinished = false, seg, segmentInfoType = representation.segmentInfoType, fTime;
         if (index < 0) {
             isFinished = false;
         } else if (isDynamic || index < representation.availableSegmentsNumber) {
@@ -2414,7 +2444,7 @@ Dash.dependencies.DashHandler = function() {
                 fTime = seg.presentationStartTime - period.start;
                 sDuration = representation.adaptation.period.duration;
                 this.log(representation.segmentInfoType + ": " + fTime + " / " + sDuration);
-                isFinished = fTime >= sDuration;
+                isFinished = segmentInfoType === "SegmentTimeline" ? false : fTime >= sDuration;
             }
         } else {
             isFinished = true;
@@ -2440,7 +2470,7 @@ Dash.dependencies.DashHandler = function() {
         seg.availabilityIdx = index;
         return seg;
     }, getSegmentsFromTimeline = function(representation) {
-        var self = this, template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate, timeline = template.SegmentTimeline, isAvailableSegmentNumberCalculated = representation.availableSegmentsNumber > 0, maxSegmentsAhead = 10, segments = [], fragments, frag, i, len, j, repeat, repeatEndTime, nextFrag, time = 0, scaledTime = 0, availabilityIdx = -1, calculatedRange, hasEnoughSegments, requiredMediaTime, startIdx, endIdx, fTimescale, createSegment = function(s) {
+        var self = this, template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate, timeline = template.SegmentTimeline, isAvailableSegmentNumberCalculated = representation.availableSegmentsNumber > 0, maxSegmentsAhead = 10, segments = [], fragments, frag, i, len, j, repeat, repeatEndTime, nextFrag, time = 0, scaledTime = 0, availabilityIdx = -1, calculatedRange, hasEnoughSegments, requiredMediaTime, isStartSegmentForRequestedTimeFound = false, startIdx, endIdx, fTimescale, createSegment = function(s) {
             return getTimeBasedSegment.call(self, representation, time, s.d, fTimescale, template.media, s.mediaRange, availabilityIdx);
         };
         fTimescale = representation.timescale;
@@ -2495,7 +2525,10 @@ Dash.dependencies.DashHandler = function() {
                         if (isAvailableSegmentNumberCalculated) break;
                         continue;
                     }
-                    if (scaledTime >= requiredMediaTime - frag.d / fTimescale * 1.5) {
+                    if (isStartSegmentForRequestedTimeFound) {
+                        segments.push(createSegment.call(self, frag));
+                    } else if (scaledTime >= requiredMediaTime - frag.d / fTimescale * 1.5) {
+                        isStartSegmentForRequestedTimeFound = true;
                         segments.push(createSegment.call(self, frag));
                     }
                 }
@@ -2797,7 +2830,7 @@ Dash.dependencies.DashHandler = function() {
             return null;
         }
         if (index === -1) {
-            throw "You must call getSegmentRequestForTime first.";
+            return null;
         }
         requestedTime = null;
         index += 1;
@@ -3120,6 +3153,9 @@ Dash.dependencies.DashParser = function() {
         var manifest, converter = new X2JS(matchers, "", true), iron = new ObjectIron(getDashMap()), start = new Date(), json = null, ironed = null;
         try {
             manifest = converter.xml_str2json(data);
+            if (!manifest) {
+                throw "parser error";
+            }
             json = new Date();
             if (!manifest.hasOwnProperty("BaseURL")) {
                 manifest.BaseURL = baseUrl;
@@ -3206,7 +3242,7 @@ Dash.dependencies.TimelineConverter = function() {
         start = Math.max(now - representation.adaptation.period.mpd.timeShiftBufferDepth, representation.adaptation.period.start);
         var timeAnchor = isNaN(checkTime) ? now : Math.min(checkTime, now);
         var periodEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
-        end = timeAnchor >= periodEnd && timeAnchor - d < periodEnd ? periodEnd : timeAnchor - d;
+        end = (timeAnchor >= periodEnd && timeAnchor - d < periodEnd ? periodEnd : timeAnchor) - d;
         range = {
             start: start,
             end: end
@@ -3731,7 +3767,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
     getLanguageForAdaptation: function(adaptation) {
         var lang = "";
         if (adaptation.hasOwnProperty("lang")) {
-            lang = adaptation.lang;
+            lang = adaptation.lang.replace(/[^A-Za-z0-9-]/g, "");
         }
         return lang;
     },
@@ -4006,8 +4042,8 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             if (vo1 !== null && isNaN(vo1.duration)) {
                 vo1.duration = vo.start - vo1.start;
             }
-            if (vo !== null && p.hasOwnProperty("id")) {
-                vo.id = p.id;
+            if (vo !== null) {
+                vo.id = this.getPeriodId(p);
             }
             if (vo !== null && p.hasOwnProperty("duration")) {
                 vo.duration = p.duration;
@@ -4029,6 +4065,16 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             vo1.duration = self.getEndTimeForLastPeriod(manifest, vo1) - vo1.start;
         }
         return periods;
+    },
+    getPeriodId: function(p) {
+        if (!p) {
+            throw new Error("Period cannot be null or undefined");
+        }
+        var id = Dash.vo.Period.DEFAULT_ID;
+        if (p.hasOwnProperty("id") && p.id !== "__proto__") {
+            id = p.id;
+        }
+        return id;
     },
     getMpd: function(manifest) {
         var mpd = new Dash.vo.Mpd();
@@ -4515,6 +4561,8 @@ Dash.vo.Period.prototype = {
     constructor: Dash.vo.Period
 };
 
+Dash.vo.Period.DEFAULT_ID = "defaultId";
+
 Dash.vo.Representation = function() {
     "use strict";
     this.id = null;
@@ -4899,7 +4947,7 @@ MediaPlayer.dependencies.ManifestLoader = function() {
     }, doLoad = function(url, remainingAttempts) {
         var baseUrl = parseBaseUrl(url), request = new XMLHttpRequest(), requestTime = new Date(), loadedTime = null, needFailureReport = true, manifest, onload, report, progress, firstProgressCall, self = this;
         onload = function() {
-            var actualUrl = null;
+            var actualUrl = null, errorMsg;
             if (request.status < 200 || request.status > 299) {
                 return;
             }
@@ -4917,9 +4965,11 @@ MediaPlayer.dependencies.ManifestLoader = function() {
                 self.metricsModel.addManifestUpdate("stream", manifest.type, requestTime, loadedTime, manifest.availabilityStartTime);
                 self.xlinkController.resolveManifestOnLoad(manifest);
             } else {
+                errorMsg = "Failed loading manifest: " + url + ", parsing failed";
                 self.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {
                     manifest: null
-                }, new MediaPlayer.vo.Error(null, "Failed loading manifest: " + url, null));
+                }, new MediaPlayer.vo.Error(MediaPlayer.dependencies.ManifestLoader.PARSERERROR_ERROR_CODE, errorMsg, null));
+                self.log(errorMsg);
             }
         };
         report = function() {
@@ -4988,6 +5038,8 @@ MediaPlayer.dependencies.ManifestLoader.prototype = {
     constructor: MediaPlayer.dependencies.ManifestLoader
 };
 
+MediaPlayer.dependencies.ManifestLoader.PARSERERROR_ERROR_CODE = 1;
+
 MediaPlayer.dependencies.ManifestLoader.eventList = {
     ENAME_MANIFEST_LOADED: "manifestLoaded"
 };
@@ -5006,9 +5058,9 @@ MediaPlayer.dependencies.ManifestUpdater = function() {
             refreshTimer = setTimeout(onRefreshTimer.bind(this), Math.min(refreshDelay * 1e3, Math.pow(2, 31) - 1), this);
         }
     }, update = function(manifest) {
-        var delay, timeSinceLastUpdate;
+        var delay, timeSinceLastUpdate, date = new Date();
         this.manifestModel.setValue(manifest);
-        this.log("Manifest has been refreshed.");
+        this.log("Manifest has been refreshed at " + date + "[" + date.getTime() + "] ");
         delay = this.manifestExt.getRefreshDelay(manifest);
         timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1e3;
         refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
@@ -5960,6 +6012,11 @@ MediaPlayer.utils.TTMLParser = function() {
         if ("text-decoration" in cueStyle) {
             properties.push("text-decoration:" + cueStyle["text-decoration"] + ";");
         }
+        if (ttml.tt.hasOwnProperty("xml:space")) {
+            if (ttml.tt["xml:space"] === "preserve") {
+                properties.push("white-space: pre;");
+            }
+        }
         return properties;
     }, findStyleFromID = function(ttmlStyling, cueStyleID) {
         for (var j = 0; j < ttmlStyling.length; j++) {
@@ -6149,7 +6206,7 @@ MediaPlayer.utils.TTMLParser = function() {
                 cue.appendChild(brEl);
             } else if (el.hasOwnProperty("#text")) {
                 var textNode = document.createElement("span");
-                textNode.innerHTML = el["#text"];
+                textNode.textContent = el["#text"];
                 cue.appendChild(textNode);
             }
         });
@@ -6230,6 +6287,9 @@ MediaPlayer.utils.TTMLParser = function() {
     }, internalParse = function(data) {
         var self = this, type, converter = new X2JS([], "", false);
         ttml = converter.xml_str2json(data);
+        if (!ttml) {
+            throw "TTML document could not be parsed";
+        }
         if (self.videoModel.getTTMLRenderingDiv()) {
             type = "html";
         }
@@ -6343,7 +6403,7 @@ MediaPlayer.utils.TTMLParser = function() {
                     var finalCue = document.createElement("div");
                     finalCue.appendChild(cueParagraph);
                     finalCue.id = "subtitle_" + cueID;
-                    finalCue.style.cssText = "position: absolute; z-index: 2147483647; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + cueRegionProperties;
+                    finalCue.style.cssText = "position: absolute; margin: 0; display: flex; box-sizing: border-box; pointer-events: none;" + cueRegionProperties;
                     if (Object.keys(fontSize).length === 0) {
                         fontSize.defaultFontSize = "100";
                     }
@@ -6413,21 +6473,15 @@ MediaPlayer.dependencies.TextSourceBuffer = function() {
             allTracksAreDisabled = track.mode !== "showing";
             if (track.mode === "showing") {
                 if (self.textTrackExtensions.getCurrentTrackIdx() !== i) {
-                    var previousTextTrack = self.textTrackExtensions.getCurrentTextTrack();
-                    if (previousTextTrack !== null) {
-                        self.textTrackExtensions.deleteTrackCues(previousTextTrack);
-                        if (previousTextTrack.renderingType === "html") {
-                            self.textTrackExtensions.removeCueStyle();
-                            self.textTrackExtensions.clearCues();
-                        }
-                    }
                     self.textTrackExtensions.setCurrentTrackIdx(i);
-                    if (!self.mediaController.isCurrentTrack(self.allTracks[i])) {
-                        self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
-                        self.fragmentModel.cancelPendingRequests();
-                        self.fragmentModel.abortRequests();
-                        self.buffered.clear();
-                        self.mediaController.setTrack(self.allTracks[i]);
+                    if (self.isFragmented) {
+                        if (!self.mediaController.isCurrentTrack(self.allTracks[i])) {
+                            self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
+                            self.fragmentModel.cancelPendingRequests();
+                            self.fragmentModel.abortRequests();
+                            self.buffered.clear();
+                            self.mediaController.setTrack(self.allTracks[i]);
+                        }
                     }
                 }
                 break;
@@ -6466,12 +6520,23 @@ MediaPlayer.dependencies.TextSourceBuffer = function() {
                     caption: "captions"
                 }, getKind = function() {
                     var kind = mediaInfo.roles.length > 0 ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
-                    kind = kind !== trackKindMap.caption || kind !== trackKindMap.subtitle ? trackKindMap.caption : kind;
+                    kind = kind === trackKindMap.caption || kind === trackKindMap.subtitle ? kind : trackKindMap.caption;
                     return kind;
+                }, checkTTML = function() {
+                    var ttml = false;
+                    if (mediaInfo.codec && mediaInfo.codec.search("stpp") >= 0) {
+                        ttml = true;
+                    }
+                    if (mediaInfo.mimeType && mediaInfo.mimeType.search("ttml") >= 0) {
+                        ttml = true;
+                    }
+                    return ttml;
                 };
                 textTrackInfo.captionData = captionData;
                 textTrackInfo.lang = mediaInfo.lang;
                 textTrackInfo.label = mediaInfo.id;
+                textTrackInfo.index = mediaInfo.index;
+                textTrackInfo.isTTML = checkTTML();
                 textTrackInfo.video = self.videoModel.getElement();
                 textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
                 textTrackInfo.isFragmented = self.isFragmented;
@@ -7149,7 +7214,7 @@ MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY = .9;
 
 MediaPlayer.dependencies.BufferController = function() {
     "use strict";
-    var STALL_THRESHOLD = .5, requiredQuality = 0, currentQuality = -1, isBufferingCompleted = false, bufferLevel = 0, bufferTarget = 0, criticalBufferLevel = Number.POSITIVE_INFINITY, mediaSource, maxAppendedIndex = -1, lastIndex = -1, type, buffer = null, minBufferTime, hasSufficientBuffer = null, appendedBytesInfo, wallclockTicked = 0, isBufferLevelOutrun = false, isAppendingInProgress = false, inbandEventFound = false, createBuffer = function(mediaInfo) {
+    var STALL_THRESHOLD = .5, requiredQuality = 0, currentQuality = -1, isBufferingCompleted = false, bufferLevel = 0, bufferTarget = 0, criticalBufferLevel = Number.POSITIVE_INFINITY, mediaSource, maxAppendedIndex = -1, lastIndex = -1, type, buffer = null, minBufferTime, hasSufficientBuffer = null, appendedBytesInfo, wallclockTicked = 0, isBufferLevelOutrun = false, isAppendingInProgress = false, isPruningInProgress = false, inbandEventFound = false, createBuffer = function(mediaInfo) {
         if (!mediaInfo || !mediaSource || !this.streamProcessor) return null;
         var sourceBuffer = null;
         try {
@@ -7213,7 +7278,7 @@ MediaPlayer.dependencies.BufferController = function() {
         var self = this, quality = chunk.quality, isInit = isNaN(chunk.index);
         if (quality !== requiredQuality && isInit || quality !== currentQuality && !isInit) {
             self.log("reject request - required quality = " + requiredQuality + " current quality = " + currentQuality + " chunk media type = " + chunk.mediaType + " chunk quality = " + quality + " chunk index = " + chunk.index);
-            onMediaRejected.call(self, quality, chunk.index);
+            onMediaRejected.call(self, quality, chunk.index, chunk.start);
             return;
         }
         self.sourceBufferExt.append(buffer, chunk);
@@ -7327,6 +7392,7 @@ MediaPlayer.dependencies.BufferController = function() {
         if (currentRange !== null) {
             bufferToPrune = currentTime - currentRange.start - MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP;
             if (bufferToPrune > 0) {
+                isPruningInProgress = true;
                 this.sourceBufferExt.remove(buffer, 0, Math.round(currentRange.start + bufferToPrune), mediaSource);
             }
         }
@@ -7354,6 +7420,9 @@ MediaPlayer.dependencies.BufferController = function() {
         self.sourceBufferExt.remove(buffer, removeStart, removeEnd, mediaSource);
     }, onRemoved = function(e) {
         if (buffer !== e.data.buffer) return;
+        if (isPruningInProgress) {
+            isPruningInProgress = false;
+        }
         this.virtualBuffer.updateBufferedRanges({
             streamId: getStreamId.call(this),
             mediaType: type
@@ -7428,11 +7497,12 @@ MediaPlayer.dependencies.BufferController = function() {
             onInitAppended.call(this, quality);
         }
         appendNext.call(this);
-    }, onMediaRejected = function(quality, index) {
+    }, onMediaRejected = function(quality, index, startTime) {
         isAppendingInProgress = false;
         this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_REJECTED, {
             quality: quality,
-            index: index
+            index: index,
+            start: startTime
         });
         appendNext.call(this);
     }, onInitAppended = function(quality) {
@@ -7469,7 +7539,7 @@ MediaPlayer.dependencies.BufferController = function() {
         }
     }, appendNextMedia = function() {
         var streamId = getStreamId.call(this), chunk;
-        if (!buffer || isBufferLevelOutrun || isAppendingInProgress || waitingForInit.call(this) || !hasEnoughSpaceToAppend.call(this)) return;
+        if (!buffer || isPruningInProgress || isBufferLevelOutrun || isAppendingInProgress || waitingForInit.call(this) || !hasEnoughSpaceToAppend.call(this)) return;
         chunk = this.virtualBuffer.extract({
             streamId: streamId,
             mediaType: type,
@@ -7540,7 +7610,7 @@ MediaPlayer.dependencies.BufferController = function() {
     }, onWallclockTimeUpdated = function() {
         appendNext.call(this);
         wallclockTicked += 1;
-        if (wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL === 0) {
+        if (wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL === 0 && !isAppendingInProgress) {
             pruneBuffer.call(this);
         }
     }, onPlaybackRateChanged = function() {
@@ -7646,6 +7716,7 @@ MediaPlayer.dependencies.BufferController = function() {
             this.virtualBuffer.unsubscribe(MediaPlayer.utils.VirtualBuffer.eventList.CHUNK_APPENDED, self, onChunkAppended);
             isBufferLevelOutrun = false;
             isAppendingInProgress = false;
+            isPruningInProgress = false;
             if (!errored) {
                 self.sourceBufferExt.abort(mediaSource, buffer);
                 self.sourceBufferExt.removeSourceBuffer(mediaSource, buffer);
@@ -8222,7 +8293,7 @@ MediaPlayer.dependencies.MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE = Med
 
 MediaPlayer.dependencies.PlaybackController = function() {
     "use strict";
-    var WALLCLOCK_TIME_UPDATE_INTERVAL = 1e3, currentTime = 0, liveStartTime = NaN, wallclockTimeIntervalId = null, commonEarliestTime = {}, firstAppended = {}, streamInfo, videoModel, isDynamic, liveDelayFragmentCount = NaN, useSuggestedPresentationDelay, getStreamStartTime = function(streamInfo) {
+    var WALLCLOCK_TIME_UPDATE_INTERVAL = 50, currentTime = 0, liveStartTime = NaN, wallclockTimeIntervalId = null, commonEarliestTime = {}, firstAppended = {}, streamInfo, videoModel, isDynamic, liveDelayFragmentCount = NaN, useSuggestedPresentationDelay, getStreamStartTime = function(streamInfo) {
         var presentationStartTime, startTimeOffset = parseInt(this.uriQueryFragModel.getURIFragmentData().s);
         if (isDynamic) {
             if (!isNaN(startTimeOffset) && startTimeOffset > 1262304e3) {
@@ -8377,7 +8448,7 @@ MediaPlayer.dependencies.PlaybackController = function() {
         if (this.isSeeking()) {
             commonEarliestTime = {};
         } else {
-            this.seek(commonEarliestTime[id]);
+            this.seek(Math.max(commonEarliestTime[id], streamStart));
             firstAppended[id].seekCompleted = true;
         }
     }, onBufferLevelStateChanged = function(e) {
@@ -8443,6 +8514,9 @@ MediaPlayer.dependencies.PlaybackController = function() {
         getTimeToStreamEnd: function() {
             var currentTime = videoModel.getCurrentTime();
             return getStreamStartTime.call(this, streamInfo) + streamInfo.duration - currentTime;
+        },
+        isPlaybackStarted: function() {
+            return this.getTime() > 0;
         },
         getStreamId: function() {
             return streamInfo.id;
@@ -9482,17 +9556,27 @@ MediaPlayer.dependencies.StreamController = function() {
     }, onTimeSyncAttemptCompleted = function() {
         composeStreams.call(this);
     }, onManifestUpdated = function(e) {
+        var self = this;
         if (!e.error) {
-            this.log("Manifest has loaded.");
-            var manifest = e.data.manifest, streamInfo = this.adapter.getStreamsInfo(manifest)[0], mediaInfo = this.adapter.getMediaInfoForType(manifest, streamInfo, "video") || this.adapter.getMediaInfoForType(manifest, streamInfo, "audio"), adaptation = this.adapter.getDataForMedia(mediaInfo), useCalculatedLiveEdgeTime = this.manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
-            if (useCalculatedLiveEdgeTime) {
-                this.log("SegmentTimeline detected using calculated Live Edge Time");
-                useManifestDateHeaderTimeSource = false;
+            var manifest = e.data.manifest, streamInfo = self.adapter.getStreamsInfo(manifest)[0], mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, "video") || self.adapter.getMediaInfoForType(manifest, streamInfo, "audio"), adaptation, useCalculatedLiveEdgeTime;
+            if (mediaInfo) {
+                adaptation = self.adapter.getDataForMedia(mediaInfo);
+                useCalculatedLiveEdgeTime = self.manifestExt.getRepresentationsForAdaptation(manifest, adaptation)[0].useCalculatedLiveEdgeTime;
+                if (useCalculatedLiveEdgeTime) {
+                    self.log("SegmentTimeline detected using calculated Live Edge Time");
+                    useManifestDateHeaderTimeSource = false;
+                }
             }
-            var manifestUTCTimingSources = this.manifestExt.getUTCTimingSources(e.data.manifest), allUTCTimingSources = !this.manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ? manifestUTCTimingSources : manifestUTCTimingSources.concat(UTCTimingSources);
-            this.timeSyncController.initialize(useCalculatedLiveEdgeTime ? manifestUTCTimingSources : allUTCTimingSources, useManifestDateHeaderTimeSource);
+            var manifestUTCTimingSources = self.manifestExt.getUTCTimingSources(e.data.manifest), allUTCTimingSources = !self.manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ? manifestUTCTimingSources : manifestUTCTimingSources.concat(UTCTimingSources), isHTTPS = self.uriQueryFragModel.isManifestHTTPS();
+            allUTCTimingSources.forEach(function(item) {
+                if (item.value.replace(/.*?:\/\//g, "") === MediaPlayer.UTCTimingSources.default.value.replace(/.*?:\/\//g, "")) {
+                    item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? "https://" : "http://");
+                    self.log("Matching default timing source protocol to manifest protocol: ", item.value);
+                }
+            });
+            self.timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource);
         } else {
-            this.reset();
+            self.reset();
         }
     };
     return {
@@ -9520,6 +9604,7 @@ MediaPlayer.dependencies.StreamController = function() {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        uriQueryFragModel: undefined,
         setup: function() {
             this[MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED] = onManifestUpdated;
             this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
@@ -10282,12 +10367,12 @@ MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
 
 MediaPlayer.utils.TextTrackExtensions = function() {
     "use strict";
-    var Cue, video, textTrackQueue = [], trackElementArr = [], currentTrackIdx = -1, actualVideoWidth = 0, actualVideoHeight = 0, captionContainer = null, videoSizeCheckInterval = null, isIE11 = false, createTrackForUserAgent = function(i) {
+    var Cue, video, textTrackQueue = [], trackElementArr = [], currentTrackIdx = -1, actualVideoLeft = 0, actualVideoTop = 0, actualVideoWidth = 0, actualVideoHeight = 0, captionContainer = null, videoSizeCheckInterval = null, isIE11orEdge = false, isChrome = false, fullscreenAttribute = null, displayCCOnTop = false, topZIndex = 2147483647, createTrackForUserAgent = function(i) {
         var kind = textTrackQueue[i].kind;
         var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
         var lang = textTrackQueue[i].lang;
-        var track = isIE11 ? video.addTextTrack(kind, label, lang) : document.createElement("track");
-        if (!isIE11) {
+        var track = isIE11orEdge ? video.addTextTrack(kind, label, lang) : document.createElement("track");
+        if (!isIE11orEdge) {
             track.kind = kind;
             track.label = label;
             track.srclang = lang;
@@ -10300,15 +10385,33 @@ MediaPlayer.utils.TextTrackExtensions = function() {
         eventBus: undefined,
         setup: function() {
             Cue = window.VTTCue || window.TextTrackCue;
-            isIE11 = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./);
+            isIE11orEdge = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./) || navigator.userAgent.match(/Edge/);
+            isChrome = !!navigator.userAgent.match(/Chrome/) && !navigator.userAgent.match(/Edge/);
+            if (document.fullscreenElement !== undefined) {
+                fullscreenAttribute = "fullscreenElement";
+            } else if (document.webkitIsFullScreen !== undefined) {
+                fullscreenAttribute = "webkitIsFullScreen";
+            } else if (document.msFullscreenElement) {
+                fullscreenAttribute = "msFullscreenElement";
+            } else if (document.mozFullScreen) {
+                fullscreenAttribute = "mozFullScreen";
+            }
+        },
+        displayCConTop: function(value) {
+            displayCCOnTop = value;
+            if (!captionContainer || document[fullscreenAttribute]) return;
+            captionContainer.style.zIndex = value ? topZIndex : null;
         },
         addTextTrack: function(textTrackInfoVO, totalTextTracks) {
             textTrackQueue.push(textTrackInfoVO);
             if (video === undefined) {
                 video = textTrackInfoVO.video;
             }
-            captionContainer = this.videoModel.getTTMLRenderingDiv();
             if (textTrackQueue.length === totalTextTracks) {
+                textTrackQueue.sort(function(a, b) {
+                    return a.index - b.index;
+                });
+                captionContainer = this.videoModel.getTTMLRenderingDiv();
                 var defaultIndex = 0;
                 for (var i = 0; i < textTrackQueue.length; i++) {
                     var track = createTrackForUserAgent(i);
@@ -10318,15 +10421,21 @@ MediaPlayer.utils.TextTrackExtensions = function() {
                         track.default = true;
                         defaultIndex = i;
                     }
-                    if (!isIE11) {
+                    if (!isIE11orEdge) {
                         video.appendChild(track);
+                    }
+                    var textTrack = video.textTracks[i];
+                    if (captionContainer && textTrackQueue[i].isTTML) {
+                        textTrack.renderingType = "html";
+                    } else {
+                        textTrack.renderingType = "default";
                     }
                     this.addCaptions(0, textTrackQueue[i].captionData);
                     this.eventBus.dispatchEvent({
                         type: MediaPlayer.events.TEXT_TRACK_ADDED
                     });
                 }
-                currentTrackIdx = defaultIndex;
+                this.setCurrentTrackIdx(defaultIndex);
                 this.eventBus.dispatchEvent({
                     type: MediaPlayer.events.TEXT_TRACKS_ADDED,
                     data: {
@@ -10336,19 +10445,56 @@ MediaPlayer.utils.TextTrackExtensions = function() {
                 });
             }
         },
+        getVideoVisibleVideoSize: function(viewWidth, viewHeight, videoWidth, videoHeight) {
+            var viewAspectRatio = viewWidth / viewHeight;
+            var videoAspectRatio = videoWidth / videoHeight;
+            var videoPictureX = 0;
+            var videoPictureY = 0;
+            var videoPictureWidth = 0;
+            var videoPictureHeight = 0;
+            if (viewAspectRatio > videoAspectRatio) {
+                videoPictureHeight = viewHeight;
+                videoPictureWidth = videoPictureHeight / videoHeight * videoWidth;
+                videoPictureX = (viewWidth - videoPictureWidth) / 2;
+                videoPictureY = 0;
+            } else {
+                videoPictureWidth = viewWidth;
+                videoPictureHeight = videoPictureWidth / videoWidth * videoHeight;
+                videoPictureX = 0;
+                videoPictureY = (viewHeight - videoPictureHeight) / 2;
+            }
+            return {
+                x: videoPictureX,
+                y: videoPictureY,
+                w: videoPictureWidth,
+                h: videoPictureHeight
+            };
+        },
         checkVideoSize: function() {
             var track = this.getCurrentTextTrack();
             if (track && track.renderingType === "html") {
                 var newVideoWidth = video.clientWidth;
                 var newVideoHeight = video.clientHeight;
+                var realVideoSize = this.getVideoVisibleVideoSize(video.clientWidth, video.clientHeight, video.videoWidth, video.videoHeight);
+                newVideoWidth = realVideoSize.w;
+                newVideoHeight = realVideoSize.h;
                 if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight) {
+                    actualVideoLeft = realVideoSize.x;
+                    actualVideoTop = realVideoSize.y;
                     actualVideoWidth = newVideoWidth;
                     actualVideoHeight = newVideoHeight;
+                    captionContainer.style.left = actualVideoLeft + "px";
+                    captionContainer.style.top = actualVideoTop + "px";
                     captionContainer.style.width = actualVideoWidth + "px";
                     captionContainer.style.height = actualVideoHeight + "px";
                     for (var i = 0; i < track.activeCues.length; ++i) {
                         var cue = track.activeCues[i];
                         cue.scaleCue(cue);
+                    }
+                    if (fullscreenAttribute && document[fullscreenAttribute] || displayCCOnTop) {
+                        captionContainer.style.zIndex = topZIndex;
+                    } else {
+                        captionContainer.style.zIndex = null;
                     }
                 }
             }
@@ -10440,17 +10586,7 @@ MediaPlayer.utils.TextTrackExtensions = function() {
                             }
                         }
                     };
-                } else if (currentItem.type == "html") {
-                    if (track.renderingType !== "html") {
-                        track.renderingType = "html";
-                    }
-                    if (Cue !== window.TextTrackCue) {
-                        if (!document.getElementById("caption-style")) {
-                            this.setCueStyle();
-                        } else if (!document.getElementById("caption-style").sheet.cssRules.length) {
-                            this.setCueStyle();
-                        }
-                    }
+                } else if (currentItem.type === "html") {
                     cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, "");
                     cue.cueHTMLElement = currentItem.cueHTMLElement;
                     cue.regions = currentItem.regions;
@@ -10463,8 +10599,10 @@ MediaPlayer.utils.TextTrackExtensions = function() {
                     cue.lineHeight = currentItem.lineHeight;
                     cue.linePadding = currentItem.linePadding;
                     cue.scaleCue = this.scaleCue;
-                    captionContainer.style.width = video.clientWidth + "px";
-                    captionContainer.style.height = video.clientHeight + "px";
+                    captionContainer.style.left = actualVideoLeft + "px";
+                    captionContainer.style.top = actualVideoTop + "px";
+                    captionContainer.style.width = actualVideoWidth + "px";
+                    captionContainer.style.height = actualVideoHeight + "px";
                     cue.onenter = function() {
                         if (track.mode == "showing") {
                             captionContainer.appendChild(this.cueHTMLElement);
@@ -10508,8 +10646,19 @@ MediaPlayer.utils.TextTrackExtensions = function() {
         getCurrentTrackIdx: function() {
             return currentTrackIdx;
         },
-        setCurrentTrackIdx: function(value) {
-            currentTrackIdx = value;
+        setCurrentTrackIdx: function(idx) {
+            currentTrackIdx = idx;
+            this.clearCues();
+            if (idx >= 0) {
+                var track = video.textTracks[idx];
+                if (track.renderingType === "html") {
+                    this.setNativeCueStyle();
+                } else {
+                    this.removeNativeCueStyle();
+                }
+            } else {
+                this.removeNativeCueStyle();
+            }
         },
         getTextTrack: function(idx) {
             return video.textTracks[idx];
@@ -10526,7 +10675,7 @@ MediaPlayer.utils.TextTrackExtensions = function() {
         deleteAllTextTracks: function() {
             var ln = trackElementArr.length;
             for (var i = 0; i < ln; i++) {
-                if (isIE11) {
+                if (isIE11orEdge) {
                     this.deleteTrackCues(this.getTextTrack(i));
                 } else {
                     video.removeChild(trackElementArr[i]);
@@ -10538,40 +10687,40 @@ MediaPlayer.utils.TextTrackExtensions = function() {
                 clearInterval(videoSizeCheckInterval);
                 videoSizeCheckInterval = null;
             }
+            this.clearCues();
         },
         deleteTextTrack: function(idx) {
             video.removeChild(trackElementArr[idx]);
             trackElementArr.splice(idx, 1);
         },
-        setCueStyle: function() {
-            var styleElement;
-            if (document.getElementById("caption-style")) {
-                styleElement = document.getElementById("caption-style");
-            } else {
-                styleElement = document.createElement("style");
-                styleElement.id = "caption-style";
-            }
+        setNativeCueStyle: function() {
+            if (!isChrome) return;
+            var styleElement = document.getElementById("native-cue-style");
+            if (styleElement) return;
+            styleElement = document.createElement("style");
+            styleElement.id = "native-cue-style";
             document.head.appendChild(styleElement);
             var stylesheet = styleElement.sheet;
             if (video.id) {
-                stylesheet.addRule("#" + video.id + "::cue", "background: transparent");
+                stylesheet.insertRule("#" + video.id + "::cue {background: transparent}", 0);
             } else if (video.classList.length !== 0) {
-                stylesheet.addRule("." + video.className + "::cue", "background: transparent");
+                stylesheet.insertRule("." + video.className + "::cue {background: transparent}", 0);
             } else {
-                stylesheet.addRule("video::cue", "background: transparent");
+                stylesheet.insertRule("video::cue {background: transparent}", 0);
             }
         },
-        removeCueStyle: function() {
-            if (Cue !== window.TextTrackCue) {
-                var stylesheet = document.getElementById("caption-style").sheet;
-                if (stylesheet.cssRules && stylesheet.cssRules.length > 0) {
-                    stylesheet.deleteRule(0);
-                }
+        removeNativeCueStyle: function() {
+            if (!isChrome) return;
+            var styleElement = document.getElementById("native-cue-style");
+            if (styleElement) {
+                document.head.removeChild(styleElement);
             }
         },
         clearCues: function() {
-            while (captionContainer.firstChild) {
-                captionContainer.removeChild(captionContainer.firstChild);
+            if (captionContainer) {
+                while (captionContainer.firstChild) {
+                    captionContainer.removeChild(captionContainer.firstChild);
+                }
             }
         }
     };
@@ -10679,7 +10828,7 @@ MediaPlayer.dependencies.FragmentModel = function() {
         var req = this.getRequests({
             state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED,
             quality: e.data.quality,
-            index: e.data.index
+            time: e.data.start
         })[0];
         if (req) {
             removeRequest.call(this, executedRequests, req);
@@ -11967,9 +12116,10 @@ MediaPlayer.models.ProtectionModel_3Feb2014.prototype = {
 
 MediaPlayer.models.URIQueryAndFragmentModel = function() {
     "use strict";
-    var URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData(), URIQueryData = [], parseURI = function(uri) {
+    var URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData(), URIQueryData = [], isHTTPS = false, parseURI = function(uri) {
         if (!uri) return null;
-        var URIFragmentData = [], testQuery = new RegExp(/[?]/), testFragment = new RegExp(/[#]/), isQuery = testQuery.test(uri), isFragment = testFragment.test(uri), mappedArr;
+        var URIFragmentData = [], testQuery = new RegExp(/[?]/), testFragment = new RegExp(/[#]/), testHTTPS = new RegExp(/^(https:)?\/\//i), isQuery = testQuery.test(uri), isFragment = testFragment.test(uri), mappedArr;
+        isHTTPS = testHTTPS.test(uri);
         function reduceArray(previousValue, currentValue, index, array) {
             var arr = array[0].split(/[=]/);
             array.push({
@@ -12009,9 +12159,13 @@ MediaPlayer.models.URIQueryAndFragmentModel = function() {
         getURIQueryData: function() {
             return URIQueryData;
         },
+        isManifestHTTPS: function() {
+            return isHTTPS;
+        },
         reset: function() {
             URIFragmentDataVO = new MediaPlayer.vo.URIFragmentData();
             URIQueryData = [];
+            isHTTPS = false;
         }
     };
 };
@@ -12022,7 +12176,7 @@ MediaPlayer.models.URIQueryAndFragmentModel.prototype = {
 
 MediaPlayer.models.VideoModel = function() {
     "use strict";
-    var element, TTMLRenderingDiv, stalledStreams = [], isStalled = function() {
+    var element, TTMLRenderingDiv, videoContainer, stalledStreams = [], isStalled = function() {
         return stalledStreams.length > 0;
     }, addStalledStream = function(type) {
         if (type === null || element.seeking) {
@@ -12101,6 +12255,12 @@ MediaPlayer.models.VideoModel = function() {
         setElement: function(value) {
             element = value;
         },
+        getVideoContainer: function() {
+            return videoContainer;
+        },
+        setVideoContainer: function(value) {
+            videoContainer = value;
+        },
         getTTMLRenderingDiv: function() {
             return TTMLRenderingDiv;
         },
@@ -12109,7 +12269,6 @@ MediaPlayer.models.VideoModel = function() {
             TTMLRenderingDiv.style.position = "absolute";
             TTMLRenderingDiv.style.display = "flex";
             TTMLRenderingDiv.style.overflow = "hidden";
-            TTMLRenderingDiv.style.zIndex = 2147483647;
             TTMLRenderingDiv.style.pointerEvents = "none";
             TTMLRenderingDiv.style.top = 0;
             TTMLRenderingDiv.style.left = 0;
@@ -13208,12 +13367,12 @@ MediaPlayer.rules.SameTimeRequestRule = function() {
             this.fragmentModels[streamid] = fragmentModels;
         },
         execute: function(context, callback) {
-            var streamId = context.getStreamInfo().id, current = context.getCurrentValue(), p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT, fragmentModels = this.fragmentModels[streamId], type, model, sameTimeReq, mIdx, req, currentTime, wallclockTime = new Date(), time = null, reqForCurrentTime, mLength = fragmentModels ? fragmentModels.length : null, shouldWait = false, reqsToExecute = [], pendingReqs, loadingLength;
+            var streamInfo = context.getStreamInfo(), streamId = streamInfo.id, current = context.getCurrentValue(), p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT, playbackController = this.playbackController, fragmentModels = this.fragmentModels[streamId], type, model, sameTimeReq, mIdx, req, currentTime, wallclockTime = new Date(), time = null, reqForCurrentTime, mLength = fragmentModels ? fragmentModels.length : null, shouldWait = false, reqsToExecute = [], pendingReqs, loadingLength;
             if (!fragmentModels || !mLength) {
                 callback(new MediaPlayer.rules.SwitchRequest([], p));
                 return;
             }
-            currentTime = this.playbackController.getTime();
+            currentTime = playbackController.isPlaybackStarted() ? playbackController.getTime() : playbackController.getStreamStartTime(streamInfo);
             reqForCurrentTime = getForTime(fragmentModels, currentTime);
             req = reqForCurrentTime || findClosestToTime(fragmentModels, currentTime) || current;
             if (!req) {
@@ -13230,7 +13389,6 @@ MediaPlayer.rules.SameTimeRequestRule = function() {
                 loadingLength = model.getRequests({
                     state: MediaPlayer.dependencies.FragmentModel.states.LOADING
                 }).length;
-                if (model.getIsPostponed() && !isNaN(req.startTime)) continue;
                 if (loadingLength > MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD) {
                     callback(new MediaPlayer.rules.SwitchRequest([], p));
                     return;
