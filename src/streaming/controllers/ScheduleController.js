@@ -88,6 +88,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             if (isStopped) return;
             isStopped = true;
             this.log("stop");
+            clearInterval(validateTimeout);
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
         },
 
@@ -240,7 +241,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             // the executed requests for which playback time is inside the time interval that has been removed from the buffer
             fragmentModel.removeExecutedRequestsBeforeTime(e.data.to);
 
-            if (e.data.hasEnoughSpaceToAppend) {
+            if (e.data.hasEnoughSpaceToAppend && !this.bufferController.isBufferingCompleted()) {
                 doStart.call(this);
             }
         },

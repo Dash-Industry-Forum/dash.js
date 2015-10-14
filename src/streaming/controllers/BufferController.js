@@ -275,10 +275,10 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         onPlaybackProgression = function() {
-            if (!isBufferingCompleted){
+
                 updateBufferLevel.call(this);
                 addBufferMetrics.call(this);
-            }
+
         },
 
         updateBufferLevel = function() {
@@ -288,10 +288,9 @@ MediaPlayer.dependencies.BufferController = function () {
             bufferLevel = self.sourceBufferExt.getBufferLength(buffer, currentTime);
 
             self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, {bufferLevel: bufferLevel});
-            checkIfSufficientBuffer.call(self);
 
-            if (bufferLevel < STALL_THRESHOLD) {
-                notifyIfSufficientBufferStateChanged.call(self, false);
+            if (!this.streamProcessor.getStreamInfo().isLast){
+                checkIfSufficientBuffer.call(self);
             }
         },
 
