@@ -31,39 +31,25 @@
 MediaPlayer.rules.BufferLevelRule = function () {
     "use strict";
 
-    var isCompleted = {},
-        getBufferTarget = function (context) {
+    var getBufferTarget = function (context) {
             var streamProcessor = context.getStreamProcessor(),
                 streamInfo = context.getStreamInfo(),
-                mediaInfo = context.getMediaInfo(),
-                mediaType = mediaInfo.type,
-                streamId = streamInfo.id,
                 duration = streamInfo.manifestInfo.duration,
                 isDynamic = streamProcessor.isDynamic(), //TODO make is dynamic false if live stream is playing more than X seconds from live edge in DVR window. So it will act like VOD.
                 isLongFormContent = (duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
-                isComplete = isCompleted[streamId] && isCompleted[streamId][mediaType],
                 bufferTarget = NaN;
 
-            if (!isComplete){
-                if (!isDynamic && this.abrController.isPlayingAtTopQuality(streamInfo)) {//TODO || allow larger buffer targets if we stabilize on a non top quality for more than 30 seconds.
-                    bufferTarget = isLongFormContent ? MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM : MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY;
-                }else if (!isDynamic) {
-                    //General VOD target non top quality and not stabilized on a given quality.
-                    bufferTarget = MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME;
-                } else {
-                    bufferTarget = this.playbackController.getLiveDelay();
-                }
+            if (!isDynamic && this.abrController.isPlayingAtTopQuality(streamInfo)) {//TODO || allow larger buffer targets if we stabilize on a non top quality for more than 30 seconds.
+                bufferTarget = isLongFormContent ? MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM : MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY;
+            }else if (!isDynamic) {
+                //General VOD target non top quality and not stabilized on a given quality.
+                bufferTarget = MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME;
+            } else {
+                bufferTarget = this.playbackController.getLiveDelay();
             }
 
             return bufferTarget;
-        },
-
-        onStreamCompleted = function (e) {
-            var streamId = e.data.fragmentModel.getContext().streamProcessor.getStreamInfo().id;
-            isCompleted[streamId] = isCompleted[streamId] || {};
-            isCompleted[streamId][e.data.request.mediaType] = true;
         };
-
 
     return {
         metricsExt: undefined,
@@ -71,10 +57,6 @@ MediaPlayer.rules.BufferLevelRule = function () {
         abrController: undefined,
         playbackController: undefined,
         log:undefined,
-
-        setup: function() { //TODO figure out what is needed for for Multiperiod Transition
-            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
-        },
 
         execute: function(context, callback) {
             var mediaInfo = context.getMediaInfo(),
@@ -88,9 +70,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
             callback(new MediaPlayer.rules.SwitchRequest(fragmentCount, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
         },
 
-        reset: function() {
-            isCompleted = {};
-        }
+        reset: function() {}
     };
 };
 
