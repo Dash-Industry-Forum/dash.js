@@ -44,13 +44,11 @@ View the /samples folder for many other examples of embedding and using the play
     * npm install -g grunt-cli
 
 ### Build / Run tests
-1. Change directories to the build folder
-    * cd build/
-2. Install all Node Modules defined in package.json
+1. Install all Node Modules defined in package.json
     * npm install
-3. Run all the GruntFile.js task (Complete Build and Test)
+2. Run all the GruntFile.js task (Complete Build and Test)
     * grunt
-4. You can also target individual tasks:
+3. You can also target individual tasks:
     * grunt uglify
     * grunt jsdoc
     * grunt jshint
