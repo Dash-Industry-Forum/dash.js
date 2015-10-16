@@ -11,8 +11,8 @@ module.exports = function(grunt) {
     },
     watch: {},
     jshint: {
-      all: ["../src/dash/**/*.js", 
-			"../src/streaming/**/*.js"],
+      all: ["./src/dash/**/*.js", 
+			      "./src/streaming/**/*.js"],
       options: {
         jshintrc: ".jshintrc"
       }
@@ -20,30 +20,26 @@ module.exports = function(grunt) {
     uglify: {
       min: {
         files: {
-          "../dist/dash.min.js": [
-            "../src/streaming/MediaPlayer.js",
-            "../src/streaming/Context.js",
-            "../src/dash/Dash.js",
-            "../src/dash/DashContext.js",
-            "../src/dash/**/*.js",
-            "../src/streaming/**/*.js"
+          "dist/dash.min.js": [
+            "./src/streaming/MediaPlayer.js",
+            "./src/streaming/Context.js",
+            "./src/dash/Dash.js",
+            "./src/dash/DashContext.js",
+            "./src/dash/**/*.js",
+            "./src/streaming/**/*.js"
           ]
         }
       },
       all: {
         files: {
-          "../dist/dash.all.js": [
-            "../src/lib/xml2json.js",
-            "../src/lib/objectiron.js",
-            "../src/lib/dijon.js",
-            "../src/lib/base64.js",
-			"../src/lib/iso_boxer.min.js",
-            "../src/streaming/MediaPlayer.js",
-            "../src/streaming/Context.js",
-            "../src/dash/Dash.js",
-            "../src/dash/DashContext.js",
-            "../src/dash/**/*.js",
-            "../src/streaming/**/*.js"
+          "dist/dash.all.js": [
+            "./externals/*.js",            
+            "./src/streaming/MediaPlayer.js",
+            "./src/streaming/Context.js",
+            "./src/dash/Dash.js",
+            "./src/dash/DashContext.js",
+            "./src/dash/**/*.js",
+            "./src/streaming/**/*.js"
           ]
         }
       },
@@ -54,33 +50,28 @@ module.exports = function(grunt) {
           mangle: false
         },
         files: {
-          "../dist/dash.debug.js": [
-            "../src/lib/xml2json.js",
-            "../src/lib/objectiron.js",
-            "../src/lib/dijon.js",
-            "../src/lib/base64.js",
-			"../src/lib/iso_boxer.min.js",
-            "../src/streaming/MediaPlayer.js",
-            "../src/streaming/Context.js",
-            "../src/dash/Dash.js",
-            "../src/dash/DashContext.js",
-            "../src/dash/**/*.js",
-            "../src/streaming/**/*.js"
+          "dist/dash.debug.js": [            
+			      "./externals/*.js",
+            "./src/streaming/MediaPlayer.js",
+            "./src/streaming/Context.js",
+            "./src/dash/Dash.js",
+            "./src/dash/DashContext.js",
+            "./src/dash/**/*.js",
+            "./src/streaming/**/*.js"
           ]
         }
       }
     },
     jasmine: {
-      tests: {        
-        src: [
-            "../src/streaming/MediaPlayer.js",
-            "../src/streaming/Context.js",
-            "../src/dash/Dash.js",
-            "../src/dash/DashContext.js",
-            "../src/dash/**/*.js",
-            "../src/streaming/**/*.js",
-			"../src/lib/**/*.js"
-        ],
+        tests: {        
+          src: [
+              "./src/streaming/MediaPlayer.js",
+              "./src/streaming/Context.js",
+              "./src/dash/Dash.js",
+              "./src/dash/DashContext.js",
+              "./src/dash/**/*.js",
+              "./src/streaming/**/*.js"
+          ],
         options: {
           host: 'http://127.0.0.1:8000',		  
           keepRunner: true,
@@ -101,17 +92,13 @@ module.exports = function(grunt) {
             './test/js/streaming/AbrControllerSpec.js'
           ],
           vendor: [
-            ".grunt/src/lib/xml2json.js",
-            ".grunt/src/lib/objectiron.js",
-            ".grunt/src/lib/dijon.js",	
-            ".grunt/src/lib/base64.js",
-			".grunt/src/lib/iso_boxer.min.js"
+            "./externals/*.js"
           ],
           template: require('grunt-template-jasmine-istanbul'),
           templateOptions: {
-            coverage: './reports/coverage.json',
-            report: './reports/coverage',
-            files: '../**/*'
+            coverage: './build/reports/coverage.json',
+            report: './build/reports/coverage',
+            files: './**/*'
           },
           junit: {
             path: grunt.option('jsunit-path'),
@@ -123,8 +110,8 @@ module.exports = function(grunt) {
     jsdoc: {
         dist: {
             options: {
-                destination: '../docs/jsdocs',
-                configure: "jsdoc/jsdoc_conf.json"
+                destination: './docs/jsdocs',
+                configure: "./build/jsdoc/jsdoc_conf.json"
             }
         }
     }

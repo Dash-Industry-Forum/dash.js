@@ -1,10 +1,21 @@
 {
   "name": "dashjs",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
   "main": "dist/dash.all.js",
   "scripts": {
-    "test": "cd build && npm install && grunt"
+    "test": "npm install && grunt"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-contrib-connect": "~0.7.1",
+    "grunt-contrib-jasmine": "~0.8.0",
+    "grunt-contrib-jshint": "~0.8.0",
+    "grunt-contrib-uglify": "~0.2.4",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-jsdoc": "~0.6.4",
+    "grunt-template-jasmine-istanbul": "=0.3.0",
+    "jasmine-sinon": "~0.3.1"
   },
   "repository": {
     "type": "git",

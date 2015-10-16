@@ -11,9 +11,9 @@ module.exports = function(grunt) {
     },
     watch: {},
     jshint: {
-      all: ["../../src/**/*.js","!../../src/lib/*.js", "./app/js/webm/*.js"],
+      all: ["../../src/**/*.js", "./app/js/webm/*.js"],
       options: {
-        jshintrc: "../../build/.jshintrc"
+        jshintrc: "../../.jshintrc"
       }
     },
     uglify : {
@@ -33,10 +33,7 @@ module.exports = function(grunt) {
       all : {
         files: {
           "dash.webm.all.js" : [
-            "../../src/lib/xml2json.js",
-            "../../src/lib/objectiron.js",
-            "../../src/lib/dijon.js",
-            "../../src/lib/base64.js",
+            "../../externals/*.js",
             "../../src/streaming/MediaPlayer.js",
             "../../src/streaming/Context.js",
             "../../src/dash/Dash.js",
@@ -56,10 +53,7 @@ module.exports = function(grunt) {
         },
         files: {
             "dash.webm.debug.js" : [
-              "../../src/lib/xml2json.js",
-              "../../src/lib/objectiron.js",
-              "../../src/lib/dijon.js",
-              "../../src/lib/base64.js",
+              "../../externals/*.js",
               "../../src/streaming/MediaPlayer.js",
               "../../src/streaming/Context.js",
               "../../src/dash/Dash.js",
@@ -93,7 +87,7 @@ module.exports = function(grunt) {
              './test/js/webm/WebmURLExtensions_Suite.js'
      			],
           vendor: [
-                "../../src/lib/dijon.js"
+                "../../externals/*.js"
             ],
           template : require('grunt-template-jasmine-istanbul'),
           templateOptions: {
