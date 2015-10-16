@@ -73,7 +73,8 @@ module.exports = function(grunt) {
               "./src/streaming/**/*.js"
           ],
         options: {
-          host: 'http://127.0.0.1:8000',		  
+          host: 'http://127.0.0.1:8000',
+          outfile: "./test/_SpecRunner.html",
           keepRunner: true,
           helpers: [
             "./test/js/utils/Helpers.js",
