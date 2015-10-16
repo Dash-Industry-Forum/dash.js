@@ -157,6 +157,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     };
 
     var addDRMData = function(manifest, protCtrl) {
+
+        // Assign the session type to be used for this controller
+        protCtrl.setSessionType($("#session-type").find(".active").children().attr("id"));
+
         var data = {
             manifest: manifest,
             protCtrl: protCtrl,
@@ -319,7 +323,6 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 }
             }
             if (!found) {
-                var sessiontype = $("#session-type").find(".active").children().attr("id");
                 var protCtrl = player.createProtection();
                 if ($scope.selectedItem.hasOwnProperty("protData")) {
                     protCtrl.setProtectionData($scope.selectedItem.protData);
@@ -327,7 +330,6 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
                 addDRMData(manifest, protCtrl);
 
-                protCtrl.setSessionType(sessiontype);
                 protCtrl.init(manifest);
             }
 
