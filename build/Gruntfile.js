@@ -36,8 +36,6 @@ module.exports = function(grunt) {
             "../src/lib/xml2json.js",
             "../src/lib/objectiron.js",
             "../src/lib/dijon.js",
-            "../src/lib/Math.js",
-            "../src/lib/long.js",
             "../src/lib/base64.js",
 			"../src/lib/iso_boxer.min.js",
             "../src/streaming/MediaPlayer.js",
@@ -60,8 +58,6 @@ module.exports = function(grunt) {
             "../src/lib/xml2json.js",
             "../src/lib/objectiron.js",
             "../src/lib/dijon.js",
-            "../src/lib/Math.js",
-            "../src/lib/long.js",
             "../src/lib/base64.js",
 			"../src/lib/iso_boxer.min.js",
             "../src/streaming/MediaPlayer.js",
@@ -107,8 +103,6 @@ module.exports = function(grunt) {
           vendor: [
             ".grunt/src/lib/xml2json.js",
             ".grunt/src/lib/objectiron.js",
-            ".grunt/src/lib/Math.js",
-            ".grunt/src/lib/long.js",
             ".grunt/src/lib/dijon.js",	
             ".grunt/src/lib/base64.js",
 			".grunt/src/lib/iso_boxer.min.js"
