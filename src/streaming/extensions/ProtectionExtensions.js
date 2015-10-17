@@ -231,6 +231,12 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      */
     getLicenseServer: function(keySystem, protData, messageType) {
 
+        // Our default server implementations do not do anything with "license-release"
+        // messages, so we just send a success event
+        if (messageType === "license-release") {
+            return null;
+        }
+
         var licenseServerData = null;
         if (protData && protData.hasOwnProperty("drmtoday")) {
             licenseServerData = this.system.getObject("serverDRMToday");
