@@ -141,8 +141,6 @@
 
     <script src="../../src/streaming/rules/SchedulingRules/ScheduleRulesCollection.js"></script>
     <script src="../../src/streaming/rules/SchedulingRules/BufferLevelRule.js"></script>
-    <script src="../../src/streaming/rules/SchedulingRules/PendingRequestsRule.js"></script>
-    <script src="../../src/streaming/rules/SchedulingRules/SameTimeRequestRule.js"></script>
     <script src="../../src/streaming/rules/SchedulingRules/PlaybackTimeRule.js"></script>
 
     <script src="../../src/streaming/rules/SynchronizationRules/LiveEdgeBinarySearchRule.js"></script>
@@ -601,10 +599,6 @@
                             </div>
                             <div class="tab-pane" id="requests">
                                 <div class="video-requests col-md-4">
-                                    <div>Pending Requests (Video)</div>
-                                    <ul ng-repeat = "request in videoRequestsQueue.pendingRequests">
-                                        <li>{{request.startTime}}</li>
-                                    </ul>
                                     <div>Loading Requests (Video)</div>
                                     <ul ng-repeat = "request in videoRequestsQueue.loadingRequests">
                                         <li>{{request.startTime}}</li>
@@ -613,27 +607,15 @@
                                     <ul ng-repeat = "request in videoRequestsQueue.executedRequests">
                                         <li>{{request.startTime}}</li>
                                     </ul>
-                                    <div>Rejected Requests (Video)</div>
-                                    <ul ng-repeat = "request in videoRequestsQueue.rejectedRequests">
-                                        <li>{{request.startTime}}</li>
-                                    </ul>
                                 </div>
 
                                 <div class="audio-requests col-md-4">
-                                    <div>Pending Requests (Audio)</div>
-                                    <ul ng-repeat = "request in audioRequestsQueue.pendingRequests">
-                                        <li>{{request.startTime}}</li>
-                                    </ul>
                                     <div>Loading Requests (Audio)</div>
                                     <ul ng-repeat = "request in audioRequestsQueue.loadingRequests">
                                         <li>{{request.startTime}}</li>
                                     </ul>
                                     <div>Executed Requests (Audio)</div>
                                     <ul ng-repeat = "request in audioRequestsQueue.executedRequests">
-                                        <li>{{request.startTime}}</li>
-                                    </ul>
-                                    <div>Rejected Requests (Audio)</div>
-                                    <ul ng-repeat = "request in audioRequestsQueue.rejectedRequests">
                                         <li>{{request.startTime}}</li>
                                     </ul>
                                 </div>

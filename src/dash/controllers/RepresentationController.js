@@ -234,9 +234,12 @@ Dash.dependencies.RepresentationController = function () {
 
             if (e.data.mediaType !== self.streamProcessor.getType() || self.streamProcessor.getStreamInfo().id !== e.data.streamInfo.id) return;
 
-            currentRepresentation = self.getRepresentationForQuality(e.data.newQuality);
-            setLocalStorage.call(self, e.data.mediaType, currentRepresentation.bandwidth);
-            addRepresentationSwitch.call(self);
+            if (e.data.oldQuality !== e.data.newQuality){
+                currentRepresentation = self.getRepresentationForQuality(e.data.newQuality);
+                setLocalStorage.call(self, e.data.mediaType, currentRepresentation.bandwidth);
+                addRepresentationSwitch.call(self);
+            }
+
         },
 
         setLocalStorage = function(type, bitrate) {

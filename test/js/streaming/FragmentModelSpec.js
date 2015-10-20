@@ -15,9 +15,9 @@ describe("FragmentModel", function () {
         expect(typeof fragmentModel[loadingCompletedEventName]).toEqual("function");
     });
 
-    it("should not be postponed after creation", function () {
-        expect(fragmentModel.getIsPostponed()).toBeFalsy();
-    });
+    //it("should not be postponed after creation", function () {
+    //    expect(fragmentModel.getIsPostponed()).toBeFalsy();
+    //});
 
     it("should not have any loading, pending, executed or rejected requests", function () {
         var expectedValue = 0;
@@ -33,34 +33,6 @@ describe("FragmentModel", function () {
             fragmentModel = objectsHelper.getFragmentModel();
             context = {streamProcessor:{getType:function(){return "video";}}};
             fragmentModel.setContext(context);
-            fragmentModel.addRequest(initRequest);
-            fragmentModel.addRequest(mediaRequest);
-        });
-
-        it("should not add duplicated requests", function () {
-            expect(fragmentModel.addRequest(initRequest)).toBeFalsy();
-            expect(fragmentModel.addRequest(mediaRequest)).toBeFalsy();
-        });
-
-        it("should detect duplicated requests", function () {
-            expect(fragmentModel.isFragmentLoadedOrPending(initRequest)).toBeTruthy();
-            expect(fragmentModel.isFragmentLoadedOrPending(mediaRequest)).toBeTruthy();
-        });
-
-        it("should return pending requests", function () {
-            var expectedValue = 2,
-                pendingRequests = fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
-
-            expect(pendingRequests.length).toEqual(expectedValue);
-        });
-
-        it("should be able to cancel pending requests", function () {
-            var expectedValue = 0,
-                pendingRequests;
-
-            fragmentModel.cancelPendingRequests();
-            pendingRequests = fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
-            expect(pendingRequests.length).toEqual(expectedValue);
         });
 
         it("should fire streamCompleted event for a complete request", function () {
@@ -72,16 +44,9 @@ describe("FragmentModel", function () {
             };
 
             fragmentModel.subscribe(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED, observer);
-
-            expect(fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING}).length).toBe(2);
-            fragmentModel.addRequest(completeRequest);
-            expect(fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING}).length).toBe(3);
             fragmentModel.executeRequest(completeRequest);
-
             expect(fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING}).length).toBe(0);
-            expect(fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING}).length).toBe(2);
             expect(fragmentModel.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED}).length).toBe(1);
-
             expect(isFired).toBeTruthy();
         });
 

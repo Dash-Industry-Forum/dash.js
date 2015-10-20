@@ -713,27 +713,6 @@ Dash.dependencies.DashHandler = function () {
                 }
             }
 
-            // TODO : This is horrible.
-            // Temp fix for SegmentTimeline refreshes.
-            //if (idx === -1) {
-            //    idx = 0;
-            //}
-
-            /*
-            if (segments && segments.length > 0) {
-                idx = 0;
-                ft = segments[0].startTime / segments[0].timescale;
-                frag = null;
-
-                while (ft <= time && (idx + 1) < segments.length) {
-                    frag = segments[idx];
-                    ft += frag.duration / frag.timescale;
-                    idx += 1;
-                }
-                idx -= 1;
-            }
-            */
-
             return idx;
         },
 
@@ -824,39 +803,30 @@ Dash.dependencies.DashHandler = function () {
             requestedTime = time;
 
             self.log("Getting the request for time: " + time);
-
             index = getIndexForSegments.call(self, time, representation, timeThreshold);
+            //Index may be -1 if getSegments needs to update.  So after getSegments is called and updated then try to get index again.
             getSegments.call(self, representation);
-
             if (index < 0) {
                 index = getIndexForSegments.call(self, time, representation, timeThreshold);
             }
 
-            //self.log("Got segments.");
-            //self.log(segments);
-            //self.log("Got a list of segments, so dig deeper.");
             self.log("Index for time " + time + " is " + index);
 
             finished = !ignoreIsFinished ? isMediaFinished.call(self, representation) : false;
-
-            //self.log("Stream finished? " + finished);
             if (finished) {
                 request = new MediaPlayer.vo.FragmentRequest();
                 request.action = request.ACTION_COMPLETE;
                 request.index = index;
                 request.mediaType = type;
                 request.mediaInfo = self.streamProcessor.getMediaInfo();
+                self.log("Signal complete.", request);
 
-                self.log("Signal complete.");
-                self.log(request);
             } else {
-                //self.log("Got a request.");
-                //self.log(request);
                 segment = getSegmentByIndex(index, representation);
                 request = getRequestForSegment.call(self, segment);
             }
 
-            if (keepIdx) {
+            if (keepIdx && idx >= 0) {
                 index = idx;
             }
 
@@ -878,25 +848,16 @@ Dash.dependencies.DashHandler = function () {
                 idx,
                 self = this;
 
-            if (!representation) {
-                return null;
-            }
-
-            //self.log("Getting the next request.");
-
-            if (index === -1) {
+            if (!representation || index === -1) {
                 return null;
             }
 
             requestedTime = null;
             index += 1;
             idx = index;
-
-            //self.log("New index: " + index);
+            self.log("Getting the next request at index: " + index);
 
             finished = isMediaFinished.call(self, representation);
-
-            //self.log("Stream finished? " + finished);
             if (finished) {
                 request = new MediaPlayer.vo.FragmentRequest();
                 request.action = request.ACTION_COMPLETE;
@@ -904,11 +865,8 @@ Dash.dependencies.DashHandler = function () {
                 request.mediaType = type;
                 request.mediaInfo = self.streamProcessor.getMediaInfo();
                 self.log("Signal complete.");
-                //self.log(request);
             } else {
                 getSegments.call(self, representation);
-                //self.log("Got segments.");
-                //self.log(segments);
                 segment = getSegmentByIndex(idx, representation);
                 request = getRequestForSegment.call(self, segment);
             }
@@ -1017,6 +975,10 @@ Dash.dependencies.DashHandler = function () {
             index = -1;
             isDynamic = undefined;
             this.unsubscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.representationController);
+        },
+
+        getCurrentIndex : function(){
+          return index;
         },
 
         getInitRequest: getInit,

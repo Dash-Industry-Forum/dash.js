@@ -30,11 +30,8 @@
  */
 MediaPlayer.vo.metrics.RequestsQueue = function () {
     "use strict";
-
-    this.pendingRequests = [];
     this.loadingRequests = [];
     this.executedRequests = [];
-    this.rejectedRequests = [];
 };
 
 MediaPlayer.vo.metrics.RequestsQueue.prototype = {

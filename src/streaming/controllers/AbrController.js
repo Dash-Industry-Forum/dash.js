@@ -148,7 +148,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
                         if (switchRequest.confidence === MediaPlayer.rules.SwitchRequest.prototype.STRONG) {
 
-                            var requests = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING}),
+                            var requests = fragmentModel.getRequests({state:MediaPlayer.dependencies.FragmentModel.states.LOADING, }),
                                 newQuality = switchRequest.value,
                                 currentQuality = self.getQualityFor(type, self.streamController.getActiveStreamInfo());
 
@@ -196,7 +196,7 @@ MediaPlayer.dependencies.AbrController = function () {
             autoSwitchBitrate = value;
         },
 
-        getPlaybackQuality: function (streamProcessor) {
+        getPlaybackQuality: function (streamProcessor, completedCallback) {
             var self = this,
                 type = streamProcessor.getType(),
                 streamId = streamProcessor.getStreamInfo().id,
@@ -204,7 +204,6 @@ MediaPlayer.dependencies.AbrController = function () {
                 oldQuality,
                 rules,
                 confidence,
-
                 callback = function(res) {
                     var topQualityIdx = getTopQualityIndex.call(self, type, streamId);
 
@@ -220,31 +219,38 @@ MediaPlayer.dependencies.AbrController = function () {
                         quality = topQualityIdx;
                     }
 
-                    oldQuality = getInternalQuality(type, streamId);
+                    //oldQuality = getInternalQuality(type, streamId);
+                    //
+                    //if (quality === oldQuality || (abandonmentStateDict[type].state === MediaPlayer.dependencies.AbrController.ABANDON_LOAD &&  quality > oldQuality)) return;
+                    if (quality !== oldQuality) {
 
-                    if (quality === oldQuality || (abandonmentStateDict[type].state === MediaPlayer.dependencies.AbrController.ABANDON_LOAD &&  quality > oldQuality)) return;
+                        setInternalQuality(type, streamId, quality);
+                        //self.log("New quality of " + quality);
+                        setInternalConfidence(type, streamId, confidence);
+                        //self.log("New confidence of " + confidence);
+                        self.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
+                    }
 
-                    setInternalQuality(type, streamId, quality);
-                    //self.log("New quality of " + quality);
-                    setInternalConfidence(type, streamId, confidence);
-                    //self.log("New confidence of " + confidence);
-
-                    self.notify(MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
+                    if (completedCallback !== undefined) {
+                        completedCallback();
+                    }
                 };
 
             quality = getInternalQuality(type, streamId);
             confidence = getInternalConfidence(type, streamId);
 
-
             //self.log("ABR enabled? (" + autoSwitchBitrate + ")");
-            if (!autoSwitchBitrate) return;
-
-            //self.log("Check ABR rules.");
-            rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES);
-            self.rulesController.applyRules(rules, streamProcessor, callback.bind(self), quality, function(currentValue, newValue) {
-                currentValue = currentValue === MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
-                return Math.max(currentValue, newValue);
-            });
+            if (!autoSwitchBitrate) {
+                if (completedCallback !== undefined) {
+                    completedCallback();
+                }
+            } else {
+                rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES);
+                self.rulesController.applyRules(rules, streamProcessor, callback.bind(self), quality, function(currentValue, newValue) {
+                    currentValue = currentValue === MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
+                    return Math.max(currentValue, newValue);
+                });
+            }
         },
 
         setPlaybackQuality: function (type, streamInfo, newPlaybackQuality) {

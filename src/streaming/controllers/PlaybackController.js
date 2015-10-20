@@ -108,10 +108,9 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         initialStart = function() {
             if (firstAppended[streamInfo.id] || this.isSeeking()) return;
-
             var initialSeekTime = getStreamStartTime.call(this, streamInfo);
-            this.log("Starting playback at offset: " + initialSeekTime);
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime: initialSeekTime});
+            this.log("Starting playback at offset: " + initialSeekTime);
         },
 
         updateCurrentTime = function() {
@@ -166,35 +165,34 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackStart = function() {
-            this.log("<video> play");
+            this.log("Native video element event: play");
             updateCurrentTime.call(this);
             startUpdatingWallclockTime.call(this);
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, {startTime: this.getTime()});
         },
 
         onPlaybackPlaying = function() {
-            this.log("<video> playing");
+            this.log("Native video element event: playing");
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PLAYING, {playingTime: this.getTime()});
         },
 
         onPlaybackPaused = function() {
-            this.log("<video> pause");
+            this.log("Native video element event: pause");
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED);
         },
 
         onPlaybackSeeking = function() {
-            this.log("<video> seek");
             startUpdatingWallclockTime.call(this);
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime: this.getTime()});
+            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime:this.getTime() });
         },
 
         onPlaybackSeeked = function() {
-            this.log("<video> seeked");
+            this.log("Native video element event: seeked");
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKED);
         },
 
         onPlaybackTimeUpdated = function() {
-            //this.log("<video> timeupdate");
+            //this.log("Native video element event: timeupdate");
             var time = this.getTime();
 
             if (time === currentTime) return;
@@ -204,7 +202,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackProgress = function() {
-            //this.log("<video> progress");
+            //this.log("Native video element event: progress");
             var ranges = videoModel.getElement().buffered,
                 lastRange,
                 bufferEndTime,
@@ -220,23 +218,21 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onPlaybackRateChanged = function() {
-            this.log("<video> ratechange: ", this.getPlaybackRate());
+            this.log("Native video element event: ratechange: ", this.getPlaybackRate());
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED);
         },
 
         onPlaybackMetaDataLoaded = function() {
-            this.log("<video> loadedmetadata");
-
+            this.log("Native video element event: loadedmetadata");
             if (!isDynamic || this.timelineConverter.isTimeSyncCompleted()) {
                 initialStart.call(this);
             }
-
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED);
             startUpdatingWallclockTime.call(this);
         },
 
-        onPlaybackEnded = function(/*e*/) {
-            this.log("<video> ended");
+        onPlaybackEnded = function() {
+            this.log("Native video element event: ended");
             stopUpdatingWallclockTime.call(this);
             this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ENDED);
         },
@@ -260,12 +256,11 @@ MediaPlayer.dependencies.PlaybackController = function () {
                 type = sp.getType(),
                 stream = this.system.getObject("streamController").getStreamById(streamInfo.id),
                 streamStart = getStreamStartTime.call(this, streamInfo),
-                startRequest = this.adapter.getFragmentRequestForTime(sp, sp.getCurrentRepresentationInfo(), streamStart, {ignoreIsFinished: true}),
-                startIdx = startRequest ? startRequest.index : null,
+                segStart = e.data.startTime,
                 currentEarliestTime = commonEarliestTime[id];
 
             // if index is zero it means that the first segment of the Period has been appended
-            if (e.data.index === startIdx) {
+            if (segStart === streamStart) {
                 firstAppended[id] = firstAppended[id] || {};
                 firstAppended[id][type] = true;
                 firstAppended[id].ready = !((stream.hasMedia("audio") && !firstAppended[id].audio) || (stream.hasMedia("video") && !firstAppended[id].video));
@@ -280,12 +275,12 @@ MediaPlayer.dependencies.PlaybackController = function () {
             // time exceeds the common earliest time
             if ((currentEarliestTime === commonEarliestTime[id] && (time === currentEarliestTime)) || !firstAppended[id] || !firstAppended[id].ready || (time > commonEarliestTime[id])) return;
 
-            // reset common earliest time every time user seeks
-            // to avoid mismatches when buffers have been discarded/pruned
+             //reset common earliest time every time user seeks
+             //to avoid mismatches when buffers have been discarded/pruned
             if (this.isSeeking()) {
                 commonEarliestTime = {};
             } else {
-                // seek to the max of period start or start of buffered range to avoid stalling caused by a shift between audio and video media time                
+                // seek to the max of period start or start of buffered range to avoid stalling caused by a shift between audio and video media time
                 this.seek(Math.max(commonEarliestTime[id], streamStart));
                 // prevents seeking the second time for the same Period
                 firstAppended[id].seekCompleted = true;

@@ -268,16 +268,12 @@ MediaPlayer.models.MetricsModel = function () {
             return vo;
         },
 
-        addRequestsQueue: function(mediaType, pendingRequests, loadingRequests, executedRequests, rejectedRequests) {
+        addRequestsQueue: function(mediaType, loadingRequests, executedRequests) {
             var vo = new MediaPlayer.vo.metrics.RequestsQueue();
-
-            vo.pendingRequests = pendingRequests;
             vo.loadingRequests = loadingRequests;
             vo.executedRequests = executedRequests;
-            vo.rejectedRequests = rejectedRequests;
 
             this.getMetricsFor(mediaType).RequestsQueue = vo;
-
             this.metricAdded(mediaType, this.adapter.metricsList.REQUESTS_QUEUE, vo);
         },
 
