@@ -141,6 +141,29 @@ module.exports = function(grunt) {
           ext:'.js'
         }]
       }
+    },
+
+    browserify: {
+      build: {
+        files: {
+          'dist/dash.debug.js': [
+            "./src/dash/**/*.js", 
+			      "./src/streaming/**/*.js"]
+        },
+        options: {
+          browserifyOptions: {
+            debug: true,
+          },
+          plugin: [
+            [ 'browserify-derequire' ]
+          ],
+          transform: [
+            require('babelify').configure({
+              sourceMapRelative: './src/'
+            })
+          ]
+        }
+      }
     }
   });
 
@@ -150,6 +173,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-babel');
   grunt.loadNpmTasks('grunt-jsdoc');
 
