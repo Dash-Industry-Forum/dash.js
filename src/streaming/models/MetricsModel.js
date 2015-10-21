@@ -28,23 +28,24 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import EventBus from "../utils/EventBus.js";
+
 MediaPlayer.models.MetricsModel = function () {
     "use strict";
 
     return {
         system : undefined,
-        eventBus: undefined,
         adapter: undefined,
         streamMetrics: {},
         metricsChanged: function () {
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: MediaPlayer.events.METRICS_CHANGED,
                 data: {}
             });
         },
 
         metricChanged: function (mediaType) {
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: MediaPlayer.events.METRIC_CHANGED,
                 data: {stream: mediaType}
             });
@@ -52,7 +53,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         metricUpdated: function (mediaType, metricType, vo) {
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: MediaPlayer.events.METRIC_UPDATED,
                 data: {stream: mediaType, metric: metricType, value: vo}
             });
@@ -60,7 +61,7 @@ MediaPlayer.models.MetricsModel = function () {
         },
 
         metricAdded: function (mediaType, metricType, vo) {
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: MediaPlayer.events.METRIC_ADDED,
                 data: {stream: mediaType, metric: metricType, value: vo}
             });

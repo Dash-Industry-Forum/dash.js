@@ -28,16 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import EventBus from "./utils/EventBus.js";
+
 MediaPlayer.dependencies.ErrorHandler = function () {
     "use strict";
     var errorEvent = MediaPlayer.events.ERROR;
 
     return {
-        eventBus: undefined,
-
         // "mediasource"|"mediakeys"
         capabilityError: function (err) {
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: errorEvent,
                 error: "capability",
                 event: err
@@ -46,7 +46,7 @@ MediaPlayer.dependencies.ErrorHandler = function () {
 
         // {id: "manifest"|"SIDX"|"content"|"initialization", url: "", request: {XMLHttpRequest instance}}
         downloadError: function (id, url, request) {
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: errorEvent,
                 error: "download",
                 event: {id: id, url: url, request: request}
@@ -55,7 +55,7 @@ MediaPlayer.dependencies.ErrorHandler = function () {
 
         // {message: "", id: "codec"|"parse"|"nostreams", manifest: {parsed manifest}}
         manifestError: function (message, id, manifest) {
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: errorEvent,
                 error: "manifestError",
                 event: {message: message, id: id, manifest: manifest}
@@ -63,7 +63,7 @@ MediaPlayer.dependencies.ErrorHandler = function () {
         },
 
         closedCaptionsError: function (message, id, ccContent) {
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: errorEvent,
                 error: "cc",
                 event: {message: message, id: id, cc: ccContent}
@@ -71,7 +71,7 @@ MediaPlayer.dependencies.ErrorHandler = function () {
         },
 
         mediaSourceError: function (err) {
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: errorEvent,
                 error: "mediasource",
                 event: err
@@ -79,7 +79,7 @@ MediaPlayer.dependencies.ErrorHandler = function () {
         },
 
         mediaKeySessionError: function (err) {
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: errorEvent,
                 error: "key_session",
                 event: err
@@ -87,7 +87,7 @@ MediaPlayer.dependencies.ErrorHandler = function () {
         },
 
         mediaKeyMessageError: function (err) {
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: errorEvent,
                 error: "key_message",
                 event: err
@@ -95,7 +95,7 @@ MediaPlayer.dependencies.ErrorHandler = function () {
         },
 
         mediaKeySystemSelectionError: function (err) {
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: errorEvent,
                 error: "key_system_selection",
                 event: err

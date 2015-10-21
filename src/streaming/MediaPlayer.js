@@ -33,6 +33,8 @@
  * @param context - New instance of a dijon.js context (i.e. new Dash.di.DashContext()).  You can pass a custom context that extends Dash.di.DashContext to override item(s) in the DashContext.
  */
 
+//import EventBus from "./utils/EventBus.js";
+
 class MediaPlayer{
 
     
@@ -88,11 +90,6 @@ class MediaPlayer{
             this.system.mapValue("system", this.system);
             this.system.mapOutlet("system");
 
-            // Map the single EventBus instance that will be used throughout the player
-            // to deliver events to the application
-            this.system.mapValue("eventBus", new MediaPlayer.utils.EventBus());
-            this.system.mapOutlet("eventBus");
-
             //// Dash.di.Context makes calls to Debug in its setup() function, so we need to
             //// map it here and explicitly inject Debug before we do a global inject into context
             var debug = new MediaPlayer.utils.Debug();
@@ -106,7 +103,6 @@ class MediaPlayer{
 
             this.notifier = undefined;
             this.debug = undefined;
-            this.eventBus = undefined;
             this.capabilities = undefined;
             this.adapter = undefined;
             this.errHandler = undefined;
@@ -341,7 +337,7 @@ class MediaPlayer{
      */
     addEventListener(type, listener, useCapture) {
         type = type.toLowerCase();
-        this.eventBus.addEventListener(type, listener, useCapture);
+        eventBus.addEventListener(type, listener, useCapture);
     }
 
     /**
@@ -352,7 +348,7 @@ class MediaPlayer{
      */
     removeEventListener(type, listener, useCapture) {
         type = type.toLowerCase();
-        this.eventBus.removeEventListener(type, listener, useCapture);
+        eventBus.removeEventListener(type, listener, useCapture);
     }
 
     /**

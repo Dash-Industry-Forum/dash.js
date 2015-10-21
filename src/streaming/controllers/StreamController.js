@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import EventBus from "../utils/EventBus.js";
+
  MediaPlayer.dependencies.StreamController = function () {
     "use strict";
 
@@ -65,7 +67,7 @@
         },
 
         fireSwitchEvent = function(stage, fromStream, toStream) {
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: stage,
                 data: {
                     fromStreamInfo: fromStream ? fromStream.getStreamInfo() : null,
@@ -317,7 +319,7 @@
             if (this.capabilities.supportsEncryptedMedia()) {
                 if (!protectionController) {
                     protectionController = this.system.getObject("protectionController");
-                    this.eventBus.dispatchEvent({
+                    EventBus.dispatchEvent({
                         type: MediaPlayer.events.PROTECTION_CREATED,
                         data: {
                             controller: protectionController,
@@ -479,7 +481,6 @@
         timeSyncController: undefined,
         virtualBuffer: undefined,
         errHandler: undefined,
-        eventBus: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
@@ -617,7 +618,7 @@
                     protectionData = null;
 
                     if (manifestUrl) {
-                        self.eventBus.dispatchEvent({
+                        EventBus.dispatchEvent({
                             type: MediaPlayer.events.PROTECTION_DESTROYED,
                             data: manifestUrl
                         });

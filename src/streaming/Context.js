@@ -58,7 +58,6 @@ MediaPlayer.di.Context = function () {
         setup : function () {
             this.system.autoMapOutlets = true;
 
-            this.system.mapClass('eventBusCl', MediaPlayer.utils.EventBus);
             this.system.mapSingleton('capabilities', MediaPlayer.utils.Capabilities);
             this.system.mapSingleton('DOMStorage', MediaPlayer.utils.DOMStorage);
             this.system.mapClass('customTimeRanges', MediaPlayer.utils.CustomTimeRanges);

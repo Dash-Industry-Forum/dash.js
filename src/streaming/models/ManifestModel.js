@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import EventBus from "../utils/EventBus.js";
+
 MediaPlayer.models.ManifestModel = function () {
     "use strict";
 
@@ -35,7 +37,6 @@ MediaPlayer.models.ManifestModel = function () {
 
     return {
         system: undefined,
-        eventBus: undefined,
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
@@ -47,7 +48,7 @@ MediaPlayer.models.ManifestModel = function () {
         setValue: function (value) {
             manifest = value;
 
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: MediaPlayer.events.MANIFEST_LOADED,
                 data: value
             });

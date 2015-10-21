@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import EventBus from "../utils/EventBus.js";
+
 MediaPlayer.dependencies.BufferController = function () {
     "use strict";
     var STALL_THRESHOLD = 0.5,
@@ -342,7 +344,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 eventName = (bufferState === MediaPlayer.dependencies.BufferController.BUFFER_LOADED) ? MediaPlayer.events.BUFFER_LOADED : MediaPlayer.events.BUFFER_EMPTY;
             addBufferMetrics.call(this);
 
-            this.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: eventName,
                 data: {
                     bufferType: type
@@ -608,7 +610,6 @@ MediaPlayer.dependencies.BufferController = function () {
 
     return {
         sourceBufferExt: undefined,
-        eventBus: undefined,
         bufferMax: undefined,
         manifestModel: undefined,
         errHandler: undefined,

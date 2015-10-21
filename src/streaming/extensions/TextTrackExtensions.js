@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import EventBus from "../utils/EventBus.js";
+
 MediaPlayer.utils.TextTrackExtensions = function () {
     "use strict";
     var Cue,
@@ -66,7 +68,6 @@ MediaPlayer.utils.TextTrackExtensions = function () {
     return {
         mediaController:undefined,
         videoModel:undefined,
-        eventBus:undefined,
 
         setup: function() {
             Cue = window.VTTCue || window.TextTrackCue;
@@ -129,10 +130,10 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         textTrack.renderingType = "default";
                     }
                     this.addCaptions(0, textTrackQueue[i].captionData);
-                    this.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
+                    EventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
                 }
                 this.setCurrentTrackIdx(defaultIndex);
-                this.eventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACKS_ADDED, data:{index:currentTrackIdx, tracks:textTrackQueue}});//send default idx.
+                EventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACKS_ADDED, data:{index:currentTrackIdx, tracks:textTrackQueue}});//send default idx.
             }
         },
 

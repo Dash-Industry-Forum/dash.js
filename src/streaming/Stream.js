@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import EventBus from "./utils/EventBus.js";
+
 MediaPlayer.dependencies.Stream = function () {
     "use strict";
 
@@ -220,7 +222,7 @@ MediaPlayer.dependencies.Stream = function () {
 
             isInitialized = true;
 
-            self.eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: MediaPlayer.events.STREAM_INITIALIZED,
                 data: {streamInfo: streamInfo}
             });
@@ -336,7 +338,6 @@ MediaPlayer.dependencies.Stream = function () {
 
     return {
         system: undefined,
-        eventBus: undefined,
         manifestModel: undefined,
         sourceBufferExt: undefined,
         adapter: undefined,

@@ -28,14 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import EventBus from "./EventBus.js";
+
 MediaPlayer.utils.Debug = function () {
     "use strict";
 
     var logToBrowserConsole = true,
         showLogTimestamp = false,
         showCalleeName = false,
-        startTime = new Date().getTime(),
-        eventBus;
+        startTime = new Date().getTime();
 
     return {
         system: undefined,
@@ -44,7 +45,6 @@ MediaPlayer.utils.Debug = function () {
         setup: function() {
             this.system.mapValue('log', this.log);
             this.system.mapOutlet('log');
-            eventBus = this.eventBus;
         },
         /**
          * Prepends a timestamp in milliseconds to each log message.
@@ -116,7 +116,7 @@ MediaPlayer.utils.Debug = function () {
                 console.log(message);
             }
 
-            eventBus.dispatchEvent({
+            EventBus.dispatchEvent({
                 type: "log",
                 message: message
             });
