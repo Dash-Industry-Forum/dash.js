@@ -9,7 +9,17 @@ module.exports = function(grunt) {
         }
       }
     },
-    watch: {},
+    watch: {
+      scripts: {
+        files: ["./src/dash/**/*.js", 
+			      "./src/streaming/**/*.js"],
+        tasks: ['babel','uglify'],
+        options: {
+          interrupt: true,
+          reload: true
+        },
+      },
+    },
     jshint: {
       all: ["./src/dash/**/*.js", 
 			      "./src/streaming/**/*.js"],
@@ -18,31 +28,32 @@ module.exports = function(grunt) {
       }
     },
     uglify: {
-      min: {
-        files: {
-          "dist/dash.min.js": [
-            "./src/streaming/MediaPlayer.js",
-            "./src/streaming/Context.js",
-            "./src/dash/Dash.js",
-            "./src/dash/DashContext.js",
-            "./src/dash/**/*.js",
-            "./src/streaming/**/*.js"
-          ]
-        }
-      },
-      all: {
-        files: {
-          "dist/dash.all.js": [
-            "./externals/*.js",            
-            "./src/streaming/MediaPlayer.js",
-            "./src/streaming/Context.js",
-            "./src/dash/Dash.js",
-            "./src/dash/DashContext.js",
-            "./src/dash/**/*.js",
-            "./src/streaming/**/*.js"
-          ]
-        }
-      },
+      // TODO uncomment this after refactor is done
+      // min: {
+      //   files: {
+      //     "dist/dash.min.js": [
+      //       "./src/streaming/MediaPlayer.js",
+      //       "./src/streaming/Context.js",
+      //       "./src/dash/Dash.js",
+      //       "./src/dash/DashContext.js",
+      //       "./src/dash/**/*.js",
+      //       "./src/streaming/**/*.js"
+      //     ]
+      //   }
+      // },
+      // all: {
+      //   files: {
+      //     "dist/dash.all.js": [
+      //       "./externals/*.js",            
+      //       "./src/streaming/MediaPlayer.js",
+      //       "./src/streaming/Context.js",
+      //       "./src/dash/Dash.js",
+      //       "./src/dash/DashContext.js",
+      //       "./src/dash/**/*.js",
+      //       "./src/streaming/**/*.js"
+      //     ]
+      //   }
+      // },
       debug: {
         options: {
           beautify: true,
@@ -50,14 +61,15 @@ module.exports = function(grunt) {
           mangle: false
         },
         files: {
+          // TODO path to src should be updated after refactor is done
           "dist/dash.debug.js": [            
 			      "./externals/*.js",
-            "./src/streaming/MediaPlayer.js",
-            "./src/streaming/Context.js",
-            "./src/dash/Dash.js",
-            "./src/dash/DashContext.js",
-            "./src/dash/**/*.js",
-            "./src/streaming/**/*.js"
+            "./dist/src/streaming/MediaPlayer.js",
+            "./dist/src/streaming/Context.js",
+            "./dist/src/dash/Dash.js",
+            "./dist/src/dash/DashContext.js",
+            "./dist/src/dash/**/*.js",
+            "./dist/src/streaming/**/*.js"
           ]
         }
       }
@@ -142,5 +154,5 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-jsdoc');
 
   // Define tasks
-  grunt.registerTask('default', ['babel' /*,'jshint'  , 'connect:default_options','jasmine','uglify', 'jsdoc'*/]);
+  grunt.registerTask('default', ['babel', 'uglify', 'watch'/*,'jshint'  , 'connect:default_options','jasmine', 'jsdoc'*/]);
 };
