@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "grunt": "~0.4.2",
+    "grunt-babel": "~5.0.0",
     "grunt-contrib-connect": "~0.7.1",
     "grunt-contrib-jasmine": "~0.8.0",
     "grunt-contrib-jshint": "~0.8.0",

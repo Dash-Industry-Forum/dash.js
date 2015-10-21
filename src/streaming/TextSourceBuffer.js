@@ -47,7 +47,6 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                         if (self.isFragmented) {
                             if (!self.mediaController.isCurrentTrack(self.allTracks[i])) {
                                 self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
-                                self.fragmentModel.cancelPendingRequests();
                                 self.fragmentModel.abortRequests();
                                 self.buffered.clear();
                                 self.mediaController.setTrack(self.allTracks[i]);

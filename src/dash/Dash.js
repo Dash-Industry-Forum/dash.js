@@ -30,7 +30,7 @@
  */
 
 /*jshint -W020 */
-Dash = (function () {
+let Dash = (function () {
     "use strict";
 
     return {

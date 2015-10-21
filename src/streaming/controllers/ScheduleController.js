@@ -384,7 +384,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         initialize: function(typeValue, streamProcessor) {
             var self = this;
             type = typeValue;
-            self.setMediaType(type);
+            //self.setMediaType(type);
             self.streamProcessor = streamProcessor;
             self.fragmentController = streamProcessor.fragmentController;
             self.liveEdgeFinder = streamProcessor.liveEdgeFinder;

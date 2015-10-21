@@ -659,7 +659,7 @@ MediaPlayer.dependencies.BufferController = function () {
             var self = this;
 
             type = typeValue;
-            self.setMediaType(type);
+           // self.setMediaType(type);
             self.setMediaSource(source);
             self.streamProcessor = streamProcessor;
             self.fragmentController = streamProcessor.fragmentController;

@@ -115,6 +115,20 @@ module.exports = function(grunt) {
                 configure: "./build/jsdoc/jsdoc_conf.json"
             }
         }
+    },
+    babel: {
+      options: {
+        sourceMap: "inline",
+      },
+      dist: {
+        files: [{
+          expand: true,
+          cwd: 'src',
+          src: ['**/*.js'],
+          dest: 'dist/src',
+          ext:'.js'
+        }]
+      }
     }
   });
 
@@ -124,8 +138,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-babel');
   grunt.loadNpmTasks('grunt-jsdoc');
 
   // Define tasks
-  grunt.registerTask('default', ['jshint','connect:default_options','jasmine','uglify', 'jsdoc']);
+  grunt.registerTask('default', ['babel' /*,'jshint'  , 'connect:default_options','jasmine','uglify', 'jsdoc'*/]);
 };

@@ -941,7 +941,7 @@ Dash.dependencies.DashHandler = function () {
         initialize: function(streamProcessor) {
             this.subscribe(Dash.dependencies.DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, streamProcessor.representationController);
             type = streamProcessor.getType();
-            this.setMediaType(type);
+            //this.setMediaType(type);
             isDynamic = streamProcessor.isDynamic();
             this.streamProcessor = streamProcessor;
         },
