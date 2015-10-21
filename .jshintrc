@@ -1,4 +1,5 @@
 {
+    "esnext": true,
     "noarg": true,
     "noempty": true,
     "latedef": true,
