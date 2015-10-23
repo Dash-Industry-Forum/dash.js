@@ -37,6 +37,8 @@ import EventBus from "./utils/EventBus.js";
 import Debug from "./utils/Debug.js";
 import UTCTiming from '../dash/vo/UTCTiming.js';
 import PlaybackController from './controllers/PlaybackController.js';
+import StreamController from './controllers/StreamController.js';
+import ManifestLoader from './ManifestLoader.js';
 
 let MediaPlayer = function (context) {
 
@@ -271,7 +273,7 @@ let MediaPlayer = function (context) {
 
                     var teardownComplete = {},
                             self = this;
-                    teardownComplete[MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
+                    teardownComplete[StreamController.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
 
                         // Finish rest of shutdown process
                         abrController.reset();
@@ -286,7 +288,7 @@ let MediaPlayer = function (context) {
                             doAutoPlay.call(self);
                         }
                     };
-                    streamController.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
+                    streamController.subscribe(StreamController.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
                     streamController.reset();
                 }
             } else {
@@ -988,16 +990,16 @@ let MediaPlayer = function (context) {
                 var manifestLoader = system.getObject("manifestLoader"),
                     uriQueryFragModel = system.getObject("uriQueryFragModel"),
                     cbObj = {};
-                cbObj[MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = function(e) {
+                cbObj[ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = function(e) {
                     if (!e.error) {
                         callback(e.data.manifest);
                     } else {
                         callback(null, e.error);
                     }
-                    manifestLoader.unsubscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
+                    manifestLoader.unsubscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
                 };
 
-                manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, cbObj);
+                manifestLoader.subscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, cbObj);
                 manifestLoader.load(uriQueryFragModel.parseURI(manifestUrl));
             })(url);
         },

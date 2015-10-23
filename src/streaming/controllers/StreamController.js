@@ -633,7 +633,7 @@ let StreamController = function () {
 
                     self.notify(StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
                 };
-                //protectionController.protectionModel.subscribe(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
+                protectionController.protectionModel.subscribe(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
                 protectionController.teardown();
             } else {
                 protectionController.setMediaElement(null);

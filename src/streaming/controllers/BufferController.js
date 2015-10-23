@@ -39,6 +39,7 @@ import VirtualBuffer from '../utils/VirtualBuffer.js';
 import MediaPlayer from '../MediaPlayer.js';
 import MediaController from './MediaController.js';
 import CustomTimeRanges from '../utils/CustomTimeRanges.js';
+import EventBus from '../utils/EventBus.js';
 
 let BufferController = function () {
     "use strict";
