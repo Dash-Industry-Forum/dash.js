@@ -80,3 +80,5 @@ let ClearKeyKeySet = function(keyPairs, type) {
 ClearKeyKeySet.prototype = {
     constructor: ClearKeyKeySet
 };
+
+export default ClearKeyKeySet;
