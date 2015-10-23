@@ -1,59 +1,54 @@
 module.exports = function(grunt) {
+  require('time-grunt')(grunt);
+
+  // Project configuration.
   grunt.initConfig({
-    connect: {
-      default_options: {},
-      dev: {
+    clean: {
+      build: ['build/temp'],
+      dist: ['dist/*']
+    },
+    jshint: {
+      src: {
+        src: ['src/**/*.js', 'Gruntfile.js'],
         options: {
-          port: 9999,
-          keepalive: true
+          jshintrc: '.jshintrc'
         }
       }
     },
-    watch: {
-      scripts: {
-        files: ["./src/dash/**/*.js", 
-			      "./src/streaming/**/*.js"],
-        tasks: ['babel','uglify'],
+   concat: {
+      all: {
         options: {
-          interrupt: true,
-          reload: true
+          separator: '\n',
         },
+        src: ['./externals/*.js', 'build/temp/Dash.js'],
+        dest: 'build/temp/Dash.all.js',
       },
     },
-    jshint: {
-      all: ["./src/dash/**/*.js", 
-			      "./src/streaming/**/*.js"],
-      options: {
-        jshintrc: ".jshintrc"
-      }
-    },
     uglify: {
-      // TODO uncomment this after refactor is done
-      // min: {
-      //   files: {
-      //     "dist/dash.min.js": [
-      //       "./src/streaming/MediaPlayer.js",
-      //       "./src/streaming/Context.js",
-      //       "./src/dash/Dash.js",
-      //       "./src/dash/DashContext.js",
-      //       "./src/dash/**/*.js",
-      //       "./src/streaming/**/*.js"
-      //     ]
-      //   }
-      // },
-      // all: {
-      //   files: {
-      //     "dist/dash.all.js": [
-      //       "./externals/*.js",            
-      //       "./src/streaming/MediaPlayer.js",
-      //       "./src/streaming/Context.js",
-      //       "./src/dash/Dash.js",
-      //       "./src/dash/DashContext.js",
-      //       "./src/dash/**/*.js",
-      //       "./src/streaming/**/*.js"
-      //     ]
-      //   }
-      // },
+      options: {
+        //sourceMap: true,
+        //sourceMapIn: 'build/temp/Dash.js.map',
+        //sourceMapRoot: '../../src',
+        preserveComments: 'some',
+        mangle: true,
+        compress: {
+          sequences: true,
+          dead_code: true,
+          conditionals: true,
+          booleans: true,
+          unused: true,
+          if_return: true,
+          join_vars: true,
+          drop_console: true
+        }
+      },
+      build: {
+        files: {
+          'build/temp/Dash.min.js': 'build/temp/Dash.js',
+          'build/temp/Dash.all.min.js': 'build/temp/Dash.all.js'
+        }
+      },
+      
       debug: {
         options: {
           beautify: true,
@@ -61,98 +56,37 @@ module.exports = function(grunt) {
           mangle: false
         },
         files: {
-          // TODO path to src should be updated after refactor is done
-          "dist/dash.debug.js": [            
-			      "./externals/*.js",
-            "./dist/src/streaming/MediaPlayer.js",
-            "./dist/src/streaming/Context.js",
-            "./dist/src/dash/Dash.js",
-            "./dist/src/dash/DashContext.js",
-            "./dist/src/dash/**/*.js",
-            "./dist/src/streaming/**/*.js"
-          ]
+          'build/temp/dash.debug.js': 'build/temp/Dash.all.js'
         }
       }
     },
-    jasmine: {
-        tests: {        
-          src: [
-              "./src/streaming/MediaPlayer.js",
-              "./src/streaming/Context.js",
-              "./src/dash/Dash.js",
-              "./src/dash/DashContext.js",
-              "./src/dash/**/*.js",
-              "./src/streaming/**/*.js"
-          ],
-        options: {
-          host: 'http://127.0.0.1:8000',
-          outfile: "./test/_SpecRunner.html",
-          keepRunner: true,
-          helpers: [
-            "./test/js/utils/Helpers.js",
-            "./test/js/utils/SpecHelper.js",
-            "./test/js/utils/ObjectsHelper.js",
-            "./test/js/utils/MPDHelper.js",
-            "./test/js/utils/VOHelper.js"
-          ],
-          specs: [
-            './test/js/dash/TimelineConverterSpec.js',
-            './test/js/dash/DashHandlerSpec.js',
-            './test/js/dash/RepresentationControllerSpec.js',
-            './test/js/streaming/MediaPlayerSpec.js',
-            './test/js/streaming/FragmentControllerSpec.js',
-            './test/js/streaming/FragmentModelSpec.js',
-            './test/js/streaming/AbrControllerSpec.js'
-          ],
-          vendor: [
-            "./externals/*.js"
-          ],
-          template: require('grunt-template-jasmine-istanbul'),
-          templateOptions: {
-            coverage: './build/reports/coverage.json',
-            report: './build/reports/coverage',
-            files: './**/*'
-          },
-          junit: {
-            path: grunt.option('jsunit-path'),
-            consolidate: true
-          }
+    watch: {
+      default: {
+        files: ['src/**/*', 'Gruntfile.js'],
+        tasks: 'dev'
+      }
+    },
+    copy: {
+      dist: { expand: true, cwd: 'build/temp/', src: ['**/**'], dest: 'dist/', filter: 'isFile' }
+    },
+    exorcise: {
+      build: {
+        options: {},
+        files: {
+          'build/temp/Dash.js.map': ['build/temp/Dash.js'],
+          'build/temp/Dash.all.js.map': ['build/temp/Dash.all.js'],
         }
       }
     },
-    jsdoc: {
-        dist: {
-            options: {
-                destination: './docs/jsdocs',
-                configure: "./build/jsdoc/jsdoc_conf.json"
-            }
-        }
-    },
-    babel: {
-      options: {
-        sourceMap: "inline",
-      },
-      dist: {
-        files: [{
-          expand: true,
-          cwd: 'src',
-          src: ['**/*.js'],
-          dest: 'dist/src',
-          ext:'.js'
-        }]
-      }
-    },
-
     browserify: {
       build: {
         files: {
-          'dist/dash.debug.js': [
-            "./src/dash/**/*.js", 
-			      "./src/streaming/**/*.js"]
+          'build/temp/Dash.js': ['src/Dash.js']
         },
         options: {
           browserifyOptions: {
             debug: true,
+            //standalone: ['Dash','MediaPlayer']
           },
           plugin: [
             [ 'browserify-derequire' ]
@@ -163,20 +97,120 @@ module.exports = function(grunt) {
             })
           ]
         }
+      },
+      watch: {
+        files: {
+          'build/temp/Dash.js': ['src/js/Dash.js']
+        },
+        options: {
+          watch: true,
+          keepAlive: true,
+          browserifyOptions: {
+            //standalone: 'dash'
+          },
+          transform: ['babelify'],
+          plugin: [
+            [ 'browserify-derequire' ]
+          ]
+        }
       }
+    },
+    jasmine: {
+      tests: {
+        src: [
+            'build/temp/Dash.js',
+            './externals/*.js'
+        ],
+        options: {
+          host: 'http://127.0.0.1:8000',
+          keepRunner: true,
+          outfile: 'build/temp/_SpecRunner.html',
+          helpers: [
+            'test/js/utils/Helpers.js',
+            'test/js/utils/SpecHelper.js',
+            'test/js/utils/ObjectsHelper.js',
+            'test/js/utils/MPDHelper.js',
+            'test/js/utils/VOHelper.js'
+          ],
+          specs: [
+            'test/js/dash/TimelineConverterSpec.js',
+            'test/js/dash/DashHandlerSpec.js',
+            'test/js/dash/RepresentationControllerSpec.js',
+            'test/js/streaming/MediaPlayerSpec.js',
+            'test/js/streaming/FragmentControllerSpec.js',
+            'test/js/streaming/FragmentModelSpec.js',
+            'test/js/streaming/AbrControllerSpec.js'
+          ],
+          vendor: [
+            './externals/*.js'
+          ],
+          template: require('grunt-template-jasmine-istanbul'),
+          templateOptions: {
+            coverage: './reports/coverage.json',
+            report: './reports/coverage',
+            files: './build/temp/Dash.js'
+          },
+          junit: {
+            path: grunt.option('jsunit-path'),
+            consolidate: true
+          }
+        }
+      }
+    },
+    connect: {
+      default_options: {},
+      dev: {
+        options: {
+          port: 9999,
+          keepalive: true
+        }
+      }
+    },
+    jsdoc: {
+        dist: {
+            options: {
+                destination: 'docs/jsdocs',
+                configure: 'build/jsdoc/jsdoc_conf.json'
+            }
+        }
     }
   });
 
-  // Require needed grunt-modules
-  grunt.loadNpmTasks('grunt-contrib-connect');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-contrib-jasmine');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-browserify');
-  grunt.loadNpmTasks('grunt-babel');
-  grunt.loadNpmTasks('grunt-jsdoc');
+  // load all the npm grunt tasks
+  require('load-grunt-tasks')(grunt);
 
-  // Define tasks
-  grunt.registerTask('default', ['babel', 'uglify', 'watch'/*,'jshint'  , 'connect:default_options','jasmine', 'jsdoc'*/]);
+  grunt.registerTask('build', [
+    'clean:build',
+    //'jshint', //TODO: lots of failures heres
+    'browserify:build',
+    'concat:all'
+  ]);
+
+  grunt.registerTask('minimize', [
+    //'exorcise',
+    'uglify'
+  ]);
+
+  grunt.registerTask('dist', [
+    'clean:dist',
+    'build',
+    'minimize',
+    'copy:dist'
+  ]);
+
+  grunt.registerTask('test', [
+    'connect:default_options',
+    'jasmine'
+  ]);
+
+  // Default task.
+  grunt.registerTask('default', [
+    'dist',
+    'test',
+    'jsdoc'
+  ]);
+
+  grunt.registerTask('watch', [
+    'browserify:watch'
+  ]);
 };
