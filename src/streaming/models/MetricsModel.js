@@ -39,6 +39,8 @@ import DroppedFrames from '../vo/metrics/DroppedFrames.js';
 import ManifestUpdate from '../vo/metrics/ManifestUpdate.js';
 import SchedulingInfo from '../vo/metrics/SchedulingInfo.js';
 import PlayList from '../vo/metrics/PlayList.js';
+import EventBus from '../utils/EventBus.js';
+import RequestsQueue from '../vo/metrics/RequestsQueue.js';
 
 let MetricsModel = function () {
     "use strict";
@@ -193,7 +195,7 @@ let MetricsModel = function () {
         },
 
         addRepresentationSwitch: function (mediaType, t, mt, to, lto) {
-            var vo = new RepresentationSwitch();
+            var vo = new TrackSwitch();
 
             vo.t = t;
             vo.mt = mt;

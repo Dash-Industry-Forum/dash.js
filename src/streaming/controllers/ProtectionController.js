@@ -45,6 +45,7 @@
 import KeySystem from '../protection/drm/KeySystem.js';
 import ProtectionModel from '../models/ProtectionModel.js';
 import CommonEncryption from '../protection/CommonEncryption.js';
+import EventBus from '../utils/EventBus.js';
 
 let ProtectionController = function () {
     "use strict";

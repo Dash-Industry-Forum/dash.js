@@ -31,6 +31,7 @@
 
 import DashAdapter from "../dash/DashAdapter.js";
 import MediaPlayer from './MediaPlayer.js';
+import TextTrackInfo from './vo/TextTrackInfo.js';
 
 let TextSourceBuffer = function () {
     var allTracksAreDisabled = false,

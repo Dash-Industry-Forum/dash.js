@@ -31,6 +31,8 @@
 import ABRRulesCollection from '../rules/ABRRules/ABRRulesCollection';
 import SwitchRequest from '../rules/SwitchRequest';
 import BitrateInfo from '../vo/BitrateInfo.js';
+import FragmentLoader from '../FragmentLoader.js';
+import ScheduleController from './ScheduleController.js';
 
 let AbrController = function () {
     "use strict";

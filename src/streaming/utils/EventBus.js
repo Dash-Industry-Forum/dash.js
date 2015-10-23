@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let EventBus = function () {
+let EventBus = (function () {
     "use strict";
 
     var registrations,
@@ -74,6 +74,6 @@ let EventBus = function () {
             return !evt.defaultPrevented;
         }
     };
-};
+}());
 
 export default EventBus;

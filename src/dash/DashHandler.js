@@ -32,6 +32,7 @@ import Segment from './vo/Segment.js';
 import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import Error from '../streaming/vo/Error.js';
 import HTTPRequest from '../streaming/vo/metrics/HTTPRequest.js';
+import BaseURLExtensions from './extensions/BaseURLExtensions.js';
 
 let DashHandler = function () {
     "use strict";
@@ -231,7 +232,7 @@ let DashHandler = function () {
             presentationStartTime = representation.adaptation.period.start + (index * duration);
             presentationEndTime = presentationStartTime + duration;
 
-            seg = new Dash.vo.Segment();
+            seg = new Segment();
 
             seg.representation = representation;
             seg.duration = duration;

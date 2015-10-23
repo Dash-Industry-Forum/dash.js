@@ -33,6 +33,8 @@ import MediaPlayer from './MediaPlayer.js';
 import BufferController from './controllers/BufferController.js';
 import RepresentationController from '../dash/controllers/RepresentationController.js';
 import ProtectionController from './controllers/ProtectionController.js';
+import MediaController from './controllers/MediaController.js';
+import EventBus from './utils/EventBus.js';
 
 let Stream = function () {
     "use strict";
@@ -227,7 +229,7 @@ let Stream = function () {
             isInitialized = true;
 
             EventBus.dispatchEvent({
-                type: STREAM_INITIALIZED,
+                type: MediaPlayer.events.STREAM_INITIALIZED,
                 data: {streamInfo: streamInfo}
             });
 

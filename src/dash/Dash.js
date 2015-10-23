@@ -30,7 +30,7 @@
  */
 
 /*jshint -W020 */
-import Context from './DashContext.js';
+import DashContext from './DashContext.js';
 import MediaPlayer from '../streaming/MediaPlayer.js';
 
 'use strict';
@@ -39,7 +39,9 @@ let Dash = {
     modules: {},
     dependencies: {},
     vo: {},
-    di: {},
+    di: {
+        DashContext: DashContext,
+    },
     /**
      *  A new MediaPlayer is instantiated for the supplied videoElement and optional source and context.  If no context is provided,
      *  a default DashContext is used. If no source is provided, the videoElement is interrogated to extract the first source whose
@@ -54,7 +56,7 @@ let Dash = {
         if (typeof video === "undefined" || video.nodeName != "VIDEO") return null;
 
         var player, videoID = (video.id || video.name || "video element");
-        context = context || new Context();
+        context = context || new DashContext();
         source = source || [].slice.call(video.querySelectorAll("source")).filter(function(s){return s.type == Dash.supportedManifestMimeTypes.mimeType;})[0];
 
         player = new MediaPlayer(context);
@@ -81,7 +83,7 @@ let Dash = {
         var aPlayers = [];
         className = className || ".dashjs-player";
         scope = scope || document;
-        context = context || new Context();
+        context = context || new DashContext();
         var videos = scope.querySelectorAll(className);
         for (var i = 0; i < videos.length; i++) {
             var player = Dash.create(videos[i], undefined , context);

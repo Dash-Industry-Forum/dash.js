@@ -37,6 +37,8 @@ import AbrController from './AbrController.js';
 import PlaybackController from './PlaybackController.js';
 import VirtualBuffer from '../utils/VirtualBuffer.js';
 import MediaPlayer from '../MediaPlayer.js';
+import MediaController from './MediaController.js';
+import CustomTimeRanges from '../utils/CustomTimeRanges.js';
 
 let BufferController = function () {
     "use strict";

@@ -33,6 +33,9 @@ import ManifestUpdater from '../ManifestUpdater.js';
 import PlaybackController from './PlaybackController.js';
 import TimeSyncController from '../TimeSyncController.js';
 import MediaPlayer from '../MediaPlayer.js';
+import EventBus from '../utils/EventBus.js';
+import ProtectionModel from '../models/ProtectionModel.js';
+import MediaController from './MediaController.js';
 
 let StreamController = function () {
     "use strict";

@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import HTTPRequest from '../../streaming/vo/metrics/HTTPRequest.js';
+
 let DashMetricsExtensions = function () {
     "use strict";
     var findRepresentationIndex = function (period, representationId) {
@@ -345,7 +347,7 @@ let DashMetricsExtensions = function () {
             for (i = httpRequestList.length - 1; i >= 0; i -= 1) {
                 httpRequest = httpRequestList[i];
 
-                if (httpRequest.type === MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE) {
+                if (httpRequest.type === HTTPRequest.MPD_TYPE) {
                     headers = parseResponseHeaders(httpRequest.responseHeaders);
                     break;
                 }

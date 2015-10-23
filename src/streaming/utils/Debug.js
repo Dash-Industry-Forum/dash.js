@@ -40,7 +40,6 @@ let Debug = function () {
 
     return {
         system: undefined,
-        eventBus: undefined,
 
         setup: function() {
             this.system.mapValue('log', this.log);

@@ -271,3 +271,4 @@ ProtectionExtensions.prototype = {
     }
 };
 
+export default ProtectionExtensions;

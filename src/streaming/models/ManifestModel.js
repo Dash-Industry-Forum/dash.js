@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import MediaPlayer from '../MediaPlayer.js';
+import EventBus from '../utils/EventBus.js';
 
 let ManifestModel = function () {
     "use strict";

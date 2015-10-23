@@ -41,6 +41,7 @@ import FragmentLoader from './FragmentLoader.js';
 
 import RepresentationController from '../dash/controllers/RepresentationController.js';
 import BaseURLExtensions from '../dash/extensions/BaseURLExtensions.js';
+import MediaController from './controllers/MediaController.js';
 
 
 let StreamProcessor = function () {

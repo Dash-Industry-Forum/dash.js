@@ -30,6 +30,7 @@
  */
 
 import BufferController from '../controllers/BufferController.js';
+import PlaybackController from '../controllers/PlaybackController.js';
 import FragmentLoader from '../FragmentLoader.js';
 
 let FragmentModel = function () {

@@ -53,3 +53,5 @@ let VideoModelExtensions = function () {
 VideoModelExtensions.prototype = {
     constructor: VideoModelExtensions
 };
+
+export default VideoModelExtensions;
