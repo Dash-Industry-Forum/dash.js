@@ -28,7 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.MediaController = function () {
+import DOMStorage from '../utils/DOMStorage.js'
+
+let MediaController = function () {
 
      var tracks = {},
          initialSettings,
@@ -36,8 +38,8 @@ MediaPlayer.dependencies.MediaController = function () {
          switchMode,
 
          storeLastSettings = function(type, value) {
-             if (this.DOMStorage.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
-                 localStorage.setItem(MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_SETTINGS_KEY"], JSON.stringify({settings: value, timestamp:new Date().getTime()}));
+             if (this.DOMStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
+                 localStorage.setItem(DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_SETTINGS_KEY"], JSON.stringify({settings: value, timestamp:new Date().getTime()}));
              }
          },
 
@@ -73,8 +75,8 @@ MediaPlayer.dependencies.MediaController = function () {
 
          resetSwitchMode = function() {
              switchMode = {
-                 audio: MediaPlayer.dependencies.MediaController.trackSwitchModes.ALWAYS_REPLACE,
-                 video: MediaPlayer.dependencies.MediaController.trackSwitchModes.NEVER_REPLACE
+                 audio: MediaController.trackSwitchModes.ALWAYS_REPLACE,
+                 video: MediaController.trackSwitchModes.NEVER_REPLACE
              };
          },
 
@@ -126,14 +128,14 @@ MediaPlayer.dependencies.MediaController = function () {
                  };
 
              switch (mode) {
-                case MediaPlayer.dependencies.MediaController.trackSelectionModes.HIGHEST_BITRATE:
+                case MediaController.trackSelectionModes.HIGHEST_BITRATE:
                     tmpArr = getTracksWithHighestBitrate(tracks);
 
                     if (tmpArr.length > 1) {
                         tmpArr = getTracksWithWidestRange(tmpArr);
                     }
                     break;
-                case MediaPlayer.dependencies.MediaController.trackSelectionModes.WIDEST_RANGE:
+                case MediaController.trackSelectionModes.WIDEST_RANGE:
                     tmpArr = getTracksWithWidestRange(tracks);
 
                     if (tmpArr.length > 1) {
@@ -303,7 +305,7 @@ MediaPlayer.dependencies.MediaController = function () {
             tracks[id][type].current = track;
 
             if (current) {
-                this.notify(MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED, {oldMediaInfo: current, newMediaInfo: track, switchMode: switchMode[type]});
+                this.notify(MediaController.eventList.CURRENT_TRACK_CHANGED, {oldMediaInfo: current, newMediaInfo: track, switchMode: switchMode[type]});
             }
 
             var settings = extractSettings.call(this, track);
@@ -354,7 +356,7 @@ MediaPlayer.dependencies.MediaController = function () {
          * @memberof MediaController#
          */
         setSwitchMode: function(type, mode) {
-            var isModeSupported = !!MediaPlayer.dependencies.MediaController.trackSwitchModes[mode];
+            var isModeSupported = !!MediaController.trackSwitchModes[mode];
 
             if (!isModeSupported) {
                 this.log("track switch mode is not supported: " + mode);
@@ -378,7 +380,7 @@ MediaPlayer.dependencies.MediaController = function () {
          * @memberof MediaController#
          */
         setSelectionModeForInitialTrack: function(mode) {
-            var isModeSupported = !!MediaPlayer.dependencies.MediaController.trackSelectionModes[mode];
+            var isModeSupported = !!MediaController.trackSelectionModes[mode];
 
             if (!isModeSupported) {
                 this.log("track selection mode is not supported: " + mode);
@@ -392,7 +394,7 @@ MediaPlayer.dependencies.MediaController = function () {
          * @memberof MediaController#
          */
         getSelectionModeForInitialTrack: function() {
-            return selectionMode || MediaPlayer.dependencies.MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE;
+            return selectionMode || MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE;
         },
 
         /**
@@ -435,22 +437,24 @@ MediaPlayer.dependencies.MediaController = function () {
     };
 };
 
-MediaPlayer.dependencies.MediaController.prototype = {
-    constructor: MediaPlayer.dependencies.MediaController
+MediaController.prototype = {
+    constructor: MediaController
 };
 
-MediaPlayer.dependencies.MediaController.eventList = {
+MediaController.eventList = {
     CURRENT_TRACK_CHANGED: "currenttrackchanged"
 };
 
-MediaPlayer.dependencies.MediaController.trackSwitchModes = {
+MediaController.trackSwitchModes = {
     NEVER_REPLACE: "NEVER_REPLACE",
     ALWAYS_REPLACE: "ALWAYS_REPLACE"
 };
 
-MediaPlayer.dependencies.MediaController.trackSelectionModes = {
+MediaController.trackSelectionModes = {
     HIGHEST_BITRATE: "HIGHEST_BITRATE",
     WIDEST_RANGE: "WIDEST_RANGE"
 };
 
-MediaPlayer.dependencies.MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE = MediaPlayer.dependencies.MediaController.trackSelectionModes.HIGHEST_BITRATE;
+MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE = MediaController.trackSelectionModes.HIGHEST_BITRATE;
+
+export default MediaController;

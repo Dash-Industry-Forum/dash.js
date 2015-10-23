@@ -29,13 +29,22 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-Dash.dependencies.DashManifestExtensions = function () {
+import Representation from '../vo/Representation.js';
+import AdaptationSet from '../vo/AdaptationSet.js';
+import Period from '../vo/Period.js';
+import Mpd from '../vo/Mpd.js';
+import UTCTiming from '../vo/UTCTiming.js';
+import Event from '../vo/Event.js';
+import EventStream from '../vo/EventStream.js';
+
+let DashManifestExtensions = function () {
     "use strict";
     this.timelineConverter = undefined;
 };
 
-Dash.dependencies.DashManifestExtensions.prototype = {
-    constructor: Dash.dependencies.DashManifestExtensions,
+
+DashManifestExtensions.prototype = {
+    constructor: DashManifestExtensions,
 
     getIsTypeOf: function(adaptation, type) {
         "use strict";
@@ -375,7 +384,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
         for (var i = 0; i < a.Representation_asArray.length; i += 1) {
             r = a.Representation_asArray[i];
-            representation = new Dash.vo.Representation();
+            representation = new Representation();
             representation.index = i;
             representation.adaptation = adaptation;
 
@@ -469,7 +478,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
         for (var i = 0; i < p.AdaptationSet_asArray.length; i += 1) {
             a = p.AdaptationSet_asArray[i];
-            adaptationSet = new Dash.vo.AdaptationSet();
+            adaptationSet = new AdaptationSet();
 
             if (a.hasOwnProperty("id")) {
                 adaptationSet.id = a.id;
@@ -514,7 +523,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             // Period is a regular Period and the PeriodStart is equal
             // to the value of this attribute.
             if (p.hasOwnProperty("start")){
-                vo = new Dash.vo.Period();
+                vo = new Period();
                 vo.start = p.start;
             }
             // If the @start attribute is absent, but the previous Period
@@ -524,7 +533,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             // Period PeriodStart and the value of the attribute @duration
             // of the previous Period.
             else if (p1 !== null && p.hasOwnProperty("duration") && vo1 !== null){
-                vo = new Dash.vo.Period();
+                vo = new Period();
                 vo.start = vo1.start + vo1.duration;
                 vo.duration = p.duration;
             }
@@ -532,7 +541,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             // is the first in the MPD, and (iii) the MPD@type is 'static',
             // then the PeriodStart time shall be set to zero.
             else if (i === 0 && !isDynamic) {
-                vo = new Dash.vo.Period();
+                vo = new Period();
                 vo.start = 0;
             }
 
@@ -583,7 +592,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
             throw new Error("Period cannot be null or undefined");
         }
 
-        var id = Dash.vo.Period.DEFAULT_ID;
+        var id = Period.DEFAULT_ID;
 
         if (p.hasOwnProperty("id") && p.id !== "__proto__") {
             id = p.id;
@@ -593,7 +602,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
     },
 
     getMpd: function(manifest) {
-        var mpd = new Dash.vo.Mpd();
+        var mpd = new Mpd();
 
         mpd.manifest = manifest;
 
@@ -676,7 +685,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
 
         if(eventStreams) {
             for(var i = 0; i < eventStreams.length; i += 1) {
-                var eventStream = new Dash.vo.EventStream();
+                var eventStream = new EventStream();
                 eventStream.period = period;
                 eventStream.timescale = 1;
 
@@ -692,7 +701,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                     eventStream.value = eventStreams[i].value;
                 }
                 for(var j = 0; j < eventStreams[i].Event_asArray.length; j += 1) {
-                    var event = new Dash.vo.Event();
+                    var event = new Event();
                     event.presentationTime = 0;
                     event.eventStream = eventStream;
 
@@ -719,7 +728,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         if(!inbandStreams) return eventStreams;
 
         for(var i = 0; i < inbandStreams.length ; i++ ) {
-            var eventStream = new Dash.vo.EventStream();
+            var eventStream = new EventStream();
             eventStream.timescale = 1;
             eventStream.representation =  representation;
 
@@ -771,7 +780,7 @@ Dash.dependencies.DashManifestExtensions.prototype = {
                 // in the manifest "indicates relative preference, first having
                 // the highest, and the last the lowest priority".
                 utcTimingsArray.forEach(function (utcTiming) {
-                    var entry = new Dash.vo.UTCTiming();
+                    var entry = new UTCTiming();
 
                     if (utcTiming.hasOwnProperty("schemeIdUri")) {
                         entry.schemeIdUri = utcTiming.schemeIdUri;
@@ -803,3 +812,5 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         return utcTimingEntries;
     }
 };
+
+export default DashManifestExtensions;

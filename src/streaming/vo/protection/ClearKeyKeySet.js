@@ -33,12 +33,12 @@
  * A collection of ClearKey encryption keys with an (optional) associated
  * type
  *
- * @param keyPairs {MediaPlayer.vo.protection.KeyPair[]} array of key pairs
+ * @param keyPairs {KeyPair[]} array of key pairs
  * @param type the type of keys in this set.  One of either 'persistent'
  * or 'temporary'.  Can also be null or undefined.
  * @class
  */
-MediaPlayer.vo.protection.ClearKeyKeySet = function(keyPairs, type) {
+let ClearKeyKeySet = function(keyPairs, type) {
     if (type && type !== "persistent" && type !== "temporary")
         throw new Error("Invalid ClearKey key set type!  Must be one of 'persistent' or 'temporary'");
     this.keyPairs = keyPairs;
@@ -77,6 +77,6 @@ MediaPlayer.vo.protection.ClearKeyKeySet = function(keyPairs, type) {
     };
 };
 
-MediaPlayer.vo.protection.ClearKeyKeySet.prototype = {
-    constructor: MediaPlayer.vo.protection.ClearKeyKeySet
+ClearKeyKeySet.prototype = {
+    constructor: ClearKeyKeySet
 };

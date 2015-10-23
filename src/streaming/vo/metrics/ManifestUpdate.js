@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.ManifestUpdate = function () {
+let ManifestUpdate = function () {
     "use strict";
 
     this.mediaType = null;
@@ -45,7 +45,7 @@ MediaPlayer.vo.metrics.ManifestUpdate = function () {
     this.trackInfo = [];
 };
 
-MediaPlayer.vo.metrics.ManifestUpdate.StreamInfo = function () {
+ManifestUpdate.StreamInfo = function () {
     "use strict";
 
     this.id = null;         // Stream@id
@@ -54,7 +54,7 @@ MediaPlayer.vo.metrics.ManifestUpdate.StreamInfo = function () {
     this.duration = null;   // Stream@duration
 };
 
-MediaPlayer.vo.metrics.ManifestUpdate.TrackInfo = function () {
+ManifestUpdate.TrackInfo = function () {
     "use strict";
 
     this.id = null;                         // Track@id
@@ -66,14 +66,17 @@ MediaPlayer.vo.metrics.ManifestUpdate.TrackInfo = function () {
     this.fragmentInfoType = null;            // list|template|timeline
 };
 
-MediaPlayer.vo.metrics.ManifestUpdate.prototype = {
-    constructor: MediaPlayer.vo.metrics.ManifestUpdate
+ManifestUpdate.prototype = {
+    constructor: ManifestUpdate
 };
 
-MediaPlayer.vo.metrics.ManifestUpdate.StreamInfo.prototype = {
-    constructor: MediaPlayer.vo.metrics.ManifestUpdate.StreamInfo
+ManifestUpdate.StreamInfo.prototype = {
+    constructor: ManifestUpdate.StreamInfo
 };
 
-MediaPlayer.vo.metrics.ManifestUpdate.TrackInfo.prototype = {
-    constructor: MediaPlayer.vo.metrics.ManifestUpdate.TrackInfo
+ManifestUpdate.TrackInfo.prototype = {
+    constructor: ManifestUpdate.TrackInfo
 };
+
+export default ManifestUpdate;
+//TODo we need exports for all the sub objects.  These should all be class VO

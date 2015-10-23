@@ -34,10 +34,19 @@
  *
  * Implemented by Internet Explorer 11 (Windows 8.1)
  *
- * @implements MediaPlayer.models.ProtectionModel
+ * @implements ProtectionModel
  * @class
  */
-MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
+
+import ProtectionModel from './ProtectionModel.js';
+import NeedKey from '../vo/protection/NeedKey.js';
+import KeyError from '../vo/protection/KeyError.js';
+import KeyMessage from '../vo/protection/KeyMessage.js';
+import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
+import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
+import SessionToken from '../vo/protection/SessionToken.js';
+
+let ProtectionModel_3Feb2014 = function () {
 
     var videoElement = null,
         mediaKeys = null,
@@ -61,8 +70,8 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
                         case api.needkey:
                             if (event.initData) {
                                 var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY,
-                                        new MediaPlayer.vo.protection.NeedKey(initData, "cenc"));
+                                self.notify(ProtectionModel.eventList.ENAME_NEED_KEY,
+                                        new NeedKey(initData, "cenc"));
                             }
                             break;
                     }
@@ -79,7 +88,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
             var doSetKeys = function() {
                 videoElement.removeEventListener("loadedmetadata", boundDoSetKeys);
                 videoElement[api.setMediaKeys](mediaKeys);
-                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
+                this.notify(ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
             };
             if (videoElement.readyState >= 1) {
                 doSetKeys.call(this);
@@ -94,7 +103,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
         // MediaKeySession and session-specific event handler
         createSessionToken = function(keySession, initData) {
             var self = this;
-            return { // Implements MediaPlayer.vo.protection.SessionToken
+            return { // Implements SessionToken
                 session: keySession,
                 initData: initData,
 
@@ -106,23 +115,23 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
                         case api.error:
                             var errorStr = "KeyError"; // TODO: Make better string from event
-                            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR,
-                                    new MediaPlayer.vo.protection.KeyError(this, errorStr));
+                            self.notify(ProtectionModel.eventList.ENAME_KEY_ERROR,
+                                    new KeyError(this, errorStr));
                             break;
 
                         case api.message:
                             var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE,
-                                    new MediaPlayer.vo.protection.KeyMessage(this, message, event.destinationURL));
+                            self.notify(ProtectionModel.eventList.ENAME_KEY_MESSAGE,
+                                    new KeyMessage(this, message, event.destinationURL));
                             break;
 
                         case api.ready:
-                            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED,
+                            self.notify(ProtectionModel.eventList.ENAME_KEY_ADDED,
                                     this);
                             break;
 
                         case api.close:
-                            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED,
+                            self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED,
                                     this.getSessionID());
                             break;
                     }
@@ -159,7 +168,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
          */
         init: function() {
             var tmpVideoElement = document.createElement("video");
-            api = MediaPlayer.models.ProtectionModel_3Feb2014.detect(tmpVideoElement);
+            api = ProtectionModel_3Feb2014.detect(tmpVideoElement);
         },
 
         teardown: function() {
@@ -170,9 +179,9 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
                 if (videoElement) {
                     videoElement.removeEventListener(api.needkey, eventHandler);
                 }
-                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
+                this.notify(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
             } catch (error) {
-                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE,
+                this.notify(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE,
                         null, "Error tearing down key sessions and MediaKeys! -- " + error.message);
             }
         },
@@ -232,16 +241,16 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 
                     // This configuration is supported
                     found = true;
-                    var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(supportedAudio, supportedVideo);
+                    var ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
                     var ks = this.protectionExt.getKeySystemBySystemString(systemString);
-                    var ksAccess = new MediaPlayer.vo.protection.KeySystemAccess(ks, ksConfig);
-                    this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
+                    var ksAccess = new KeySystemAccess(ks, ksConfig);
+                    this.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
                             ksAccess);
                     break;
                 }
             }
             if (!found) {
-                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
+                this.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
                         null, "Key system access denied! -- No valid audio/video content configurations detected!");
             }
         },
@@ -254,10 +263,10 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
                 if (videoElement) {
                     setMediaKeys.call(this);
                 }
-                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
+                this.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
 
             } catch (error) {
-                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED,
+                this.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED,
                         null, "Error selecting keys system (" + this.keySystem.systemString + ")! Could not create MediaKeys -- TODO");
             }
         },
@@ -303,7 +312,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
             // Add to our session list
             sessions.push(sessionToken);
 
-            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, sessionToken);
+            this.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, sessionToken);
         },
 
         updateKeySession: function(sessionToken, message) {
@@ -314,7 +323,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
                 // Send our request to the key session
                 session.update(new Uint8Array(message));
             } else {
-                // For clearkey, message is a MediaPlayer.vo.protection.ClearKeyKeySet
+                // For clearkey, message is a ClearKeyKeySet
                 session.update(new Uint8Array(message.toJWK()));
             }
         },
@@ -356,7 +365,7 @@ MediaPlayer.models.ProtectionModel_3Feb2014 = function () {
 };
 
 // Defines the supported 3Feb2014 API variations
-MediaPlayer.models.ProtectionModel_3Feb2014.APIs = [
+ProtectionModel_3Feb2014.APIs = [
     // Un-prefixed as per spec
     // Chrome 38-39 (and some earlier versions) with chrome://flags -- Enable Encrypted Media Extensions
     {
@@ -404,8 +413,8 @@ MediaPlayer.models.ProtectionModel_3Feb2014.APIs = [
  * @returns {Object} an API object that is used when initializing the
  * ProtectionModel instance or null if this EME version is not supported
  */
-MediaPlayer.models.ProtectionModel_3Feb2014.detect = function(videoElement) {
-    var apis = MediaPlayer.models.ProtectionModel_3Feb2014.APIs;
+ProtectionModel_3Feb2014.detect = function(videoElement) {
+    var apis = ProtectionModel_3Feb2014.APIs;
     for (var i = 0; i < apis.length; i++) {
         var api = apis[i];
         if (typeof videoElement[api.setMediaKeys] !== 'function') {
@@ -420,7 +429,8 @@ MediaPlayer.models.ProtectionModel_3Feb2014.detect = function(videoElement) {
     return null;
 };
 
-MediaPlayer.models.ProtectionModel_3Feb2014.prototype = {
-    constructor: MediaPlayer.models.ProtectionModel_3Feb2014
+ProtectionModel_3Feb2014.prototype = {
+    constructor: ProtectionModel_3Feb2014
 };
 
+export default ProtectionModel_3Feb2014;

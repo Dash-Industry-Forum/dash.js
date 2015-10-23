@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.HTTPRequest = function () {
+let HTTPRequest = function () {
     "use strict";
 
     this.stream = null;         // type of stream ("audio" | "video" etc..)
@@ -55,11 +55,11 @@ MediaPlayer.vo.metrics.HTTPRequest = function () {
     this.trace = [];            // Throughput traces, for successful requests only.
 };
 
-MediaPlayer.vo.metrics.HTTPRequest.prototype = {
-    constructor: MediaPlayer.vo.metrics.HTTPRequest
+HTTPRequest.prototype = {
+    constructor: HTTPRequest
 };
 
-MediaPlayer.vo.metrics.HTTPRequest.Trace = function () {
+HTTPRequest.Trace = function () {
     "use strict";
 
     /*
@@ -72,17 +72,19 @@ MediaPlayer.vo.metrics.HTTPRequest.Trace = function () {
     this.b = [];
 };
 
-MediaPlayer.vo.metrics.HTTPRequest.Trace.prototype = {
-    constructor : MediaPlayer.vo.metrics.HTTPRequest.Trace
+HTTPRequest.Trace.prototype = {
+    constructor : HTTPRequest.Trace
 };
 
 // these should possibly be MPD, XLinkExpansion, InitializationSegment,
 // MediaSegment, IndexSegment, BitstreamSwitchingSegment, other. See
 // ISO 23009-1 D.4.3
-MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE = 'MPD';
-MediaPlayer.vo.metrics.HTTPRequest.XLINK_EXPANSION_TYPE = 'XLink Expansion';
-MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE = 'Initialization Segment';
-MediaPlayer.vo.metrics.HTTPRequest.INDEX_SEGMENT_TYPE = 'Index Segment';
-MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE = 'Media Segment';
-MediaPlayer.vo.metrics.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'Bitstream Switching Segment';
-MediaPlayer.vo.metrics.HTTPRequest.OTHER_TYPE = 'other';
+HTTPRequest.MPD_TYPE = 'MPD';
+HTTPRequest.XLINK_EXPANSION_TYPE = 'XLink Expansion';
+HTTPRequest.INIT_SEGMENT_TYPE = 'Initialization Segment';
+HTTPRequest.INDEX_SEGMENT_TYPE = 'Index Segment';
+HTTPRequest.MEDIA_SEGMENT_TYPE = 'Media Segment';
+HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'Bitstream Switching Segment';
+HTTPRequest.OTHER_TYPE = 'other';
+
+export default HTTPRequest;

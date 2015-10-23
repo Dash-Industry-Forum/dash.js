@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.EventController = function(){
+let EventController = function(){
     "use strict";
 
 
@@ -183,6 +183,9 @@ MediaPlayer.dependencies.EventController = function(){
 
 };
 
-MediaPlayer.dependencies.EventController.prototype = {
-    constructor: MediaPlayer.dependencies.EventController
+EventController.prototype = {
+    constructor: EventController
 };
+
+
+export default EventController;

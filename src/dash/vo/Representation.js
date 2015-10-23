@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.vo.Representation = function () {
+let Representation = function () {
     "use strict";
     this.id = null;
     this.index = -1;
@@ -49,6 +49,8 @@ Dash.vo.Representation = function () {
     this.maxPlayoutRate = NaN;
 };
 
-Dash.vo.Representation.prototype = {
-    constructor: Dash.vo.Representation
+Representation.prototype = {
+    constructor: Representation
 };
+
+export default Representation;

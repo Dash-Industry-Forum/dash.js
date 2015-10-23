@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.TCPConnection = function () {
+let TCPConnection = function () {
     "use strict";
 
     this.tcpid = null;      // Identifier of the TCP connection on which the HTTP request was sent.
@@ -38,6 +38,8 @@ MediaPlayer.vo.metrics.TCPConnection = function () {
     this.tconnect = null;   // Connect time in ms (time from sending the initial SYN to receiving the ACK or completion of the connect socket operation).
 };
 
-MediaPlayer.vo.metrics.TCPConnection.prototype = {
-    constructor: MediaPlayer.vo.metrics.TCPConnection
+TCPConnection.prototype = {
+    constructor: TCPConnection
 };
+
+export default TCPConnection;

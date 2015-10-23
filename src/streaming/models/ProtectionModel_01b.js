@@ -34,10 +34,18 @@
  *
  * Implemented by Google Chrome prior to v36
  *
- * @implements MediaPlayer.models.ProtectionModel
+ * @implements ProtectionModel
  * @class
  */
-MediaPlayer.models.ProtectionModel_01b = function () {
+import ProtectionModel from './ProtectionModel.js';
+import NeedKey from '../vo/protection/NeedKey.js';
+import KeyError from '../vo/protection/KeyError.js';
+import KeyMessage from '../vo/protection/KeyMessage.js';
+import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
+import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
+import SessionToken from '../vo/protection/SessionToken.js';
+
+let ProtectionModel_01b = function () {
 
     var videoElement = null,
 
@@ -75,8 +83,8 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
                         case api.needkey:
                             var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_NEED_KEY,
-                                new MediaPlayer.vo.protection.NeedKey(initData, "cenc"));
+                            self.notify(ProtectionModel.eventList.ENAME_NEED_KEY,
+                                new NeedKey(initData, "cenc"));
                             break;
 
                         case api.keyerror:
@@ -109,8 +117,8 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                                 }
                                 msg += "  System Code = " + event.systemCode;
                                 // TODO: Build error string based on key error
-                                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR,
-                                    new MediaPlayer.vo.protection.KeyError(sessionToken, msg));
+                                self.notify(ProtectionModel.eventList.ENAME_KEY_ERROR,
+                                    new KeyError(sessionToken, msg));
                             } else {
                                 self.log("No session token found for key error");
                             }
@@ -123,7 +131,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                             }
 
                             if (sessionToken) {
-                                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED,
+                                self.notify(ProtectionModel.eventList.ENAME_KEY_ADDED,
                                     sessionToken);
                             } else {
                                 self.log("No session token found for key added");
@@ -167,8 +175,8 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                                 // way to tell which key system is in use
                                 sessionToken.keyMessage = message;
 
-                                self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE,
-                                    new MediaPlayer.vo.protection.KeyMessage(sessionToken, message, event.defaultURL));
+                                self.notify(ProtectionModel.eventList.ENAME_KEY_MESSAGE,
+                                    new KeyMessage(sessionToken, message, event.defaultURL));
                             } else {
                                 self.log("No session token found for key message");
                             }
@@ -228,7 +236,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
          */
         init: function() {
             var tmpVideoElement = document.createElement("video");
-            api = MediaPlayer.models.ProtectionModel_01b.detect(tmpVideoElement);
+            api = ProtectionModel_01b.detect(tmpVideoElement);
         },
 
         teardown: function() {
@@ -238,7 +246,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
             for (var i = 0; i < sessions.length; i++) {
                 this.closeKeySession(sessions[i]);
             }
-            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
+            this.notify(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
         },
 
         getAllInitData: function() {
@@ -305,23 +313,23 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
                     // This configuration is supported
                     found = true;
-                    var ksConfig = new MediaPlayer.vo.protection.KeySystemConfiguration(supportedAudio, supportedVideo);
+                    var ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
                     var ks = this.protectionExt.getKeySystemBySystemString(systemString);
-                    var ksAccess = new MediaPlayer.vo.protection.KeySystemAccess(ks, ksConfig);
-                    this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
+                    var ksAccess = new KeySystemAccess(ks, ksConfig);
+                    this.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
                             ksAccess);
                     break;
                 }
             }
             if (!found) {
-                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
+                this.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
                         null, "Key system access denied! -- No valid audio/video content configurations detected!");
             }
         },
 
         selectKeySystem: function(keySystemAccess) {
             this.keySystem = keySystemAccess.keySystem;
-            this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
+            this.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
         },
 
         setMediaElement: function(mediaElement) {
@@ -342,7 +350,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                 videoElement.addEventListener(api.needkey, eventHandler);
                 videoElement.addEventListener(api.keymessage, eventHandler);
                 videoElement.addEventListener(api.keyadded, eventHandler);
-                this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
+                this.notify(ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
             }
         },
 
@@ -355,7 +363,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
             // Determine if creating a new session is allowed
             if (moreSessionsAllowed || sessions.length === 0) {
 
-                var newSession = { // Implements MediaPlayer.vo.protection.SessionToken
+                var newSession = { // Implements SessionToken
                     sessionID: null,
                     initData: initData,
 
@@ -391,7 +399,7 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                 videoElement[api.addKey](this.keySystem.systemString,
                         new Uint8Array(message), sessionToken.initData, sessionID);
             } else {
-                // For clearkey, message is a MediaPlayer.vo.protection.ClearKeyKeySet
+                // For clearkey, message is a ClearKeyKeySet
                 for (var i = 0; i < message.keyPairs.length; i++) {
                     videoElement[api.addKey](this.keySystem.systemString,
                             message.keyPairs[i].key, message.keyPairs[i].keyID, sessionID);
@@ -412,12 +420,12 @@ MediaPlayer.models.ProtectionModel_01b = function () {
     };
 };
 
-MediaPlayer.models.ProtectionModel_01b.prototype = {
-    constructor: MediaPlayer.models.ProtectionModel_01b
+ProtectionModel_01b.prototype = {
+    constructor: ProtectionModel_01b
 };
 
 // Defines the supported 0.1b API variations
-MediaPlayer.models.ProtectionModel_01b.APIs = [
+ProtectionModel_01b.APIs = [
     // Un-prefixed as per spec
     {
         // Video Element
@@ -454,8 +462,8 @@ MediaPlayer.models.ProtectionModel_01b.APIs = [
  * @returns an API object that is used when initializing the ProtectionModel
  * instance, or null if this EME version is not supported
  */
-MediaPlayer.models.ProtectionModel_01b.detect = function(videoElement) {
-    var apis = MediaPlayer.models.ProtectionModel_01b.APIs;
+ProtectionModel_01b.detect = function(videoElement) {
+    var apis = ProtectionModel_01b.APIs;
     for (var i = 0; i < apis.length; i++) {
         var api = apis[i];
         if (typeof videoElement[api.generateKeyRequest] !== 'function') {
@@ -474,3 +482,4 @@ MediaPlayer.models.ProtectionModel_01b.detect = function(videoElement) {
 };
 
 
+export default ProtectionModel_01b;

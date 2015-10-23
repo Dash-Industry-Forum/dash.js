@@ -35,12 +35,13 @@
  * @param {String} [initDataType] initialization data type
  * @constructor
  */
-MediaPlayer.vo.protection.NeedKey = function(initData, initDataType) {
+let NeedKey = function(initData, initDataType) {
     this.initData = initData;
     this.initDataType = initDataType;
 };
 
-MediaPlayer.vo.protection.NeedKey.prototype = {
-    constructor: MediaPlayer.vo.protection.NeedKey
+NeedKey.prototype = {
+    constructor: NeedKey
 };
 
+export default NeedKey;

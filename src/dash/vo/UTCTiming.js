@@ -30,7 +30,7 @@
  */
 /*globals Dash */
 
-Dash.vo.UTCTiming = function () {
+let UTCTiming = function () {
     "use strict";
 
     // UTCTiming is a DescriptorType and doesn't have any additional fields
@@ -38,6 +38,8 @@ Dash.vo.UTCTiming = function () {
     this.value = "";
 };
 
-Dash.vo.UTCTiming.prototype = {
-    constructor: Dash.vo.UTCTiming
+UTCTiming.prototype = {
+    constructor: UTCTiming
 };
+
+export default UTCTiming;

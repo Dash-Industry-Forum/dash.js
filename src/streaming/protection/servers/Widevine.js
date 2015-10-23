@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.dependencies.protection.servers.Widevine = function() {
+let Widevine = function() {
     "use strict";
 
     return {
@@ -50,6 +50,8 @@ MediaPlayer.dependencies.protection.servers.Widevine = function() {
     };
 };
 
-MediaPlayer.dependencies.protection.servers.Widevine.prototype = {
-    constructor: MediaPlayer.dependencies.protection.servers.Widevine
+Widevine.prototype = {
+    constructor: Widevine
 };
+
+export default Widevine;

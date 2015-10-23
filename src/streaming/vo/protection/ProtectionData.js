@@ -45,7 +45,7 @@
  * Corresponding property values are keys, base64-encoded (no padding).
  * @class
  */
-MediaPlayer.vo.protection.ProtectionData = function(serverURL, httpRequestHeaders, clearkeys) {
+let ProtectionData = function(serverURL, httpRequestHeaders, clearkeys) {
     this.serverURL = serverURL;
     this.httpRequestHeaders = httpRequestHeaders;
     this.clearkeys = clearkeys;
@@ -56,9 +56,9 @@ MediaPlayer.vo.protection.ProtectionData = function(serverURL, httpRequestHeader
  *
  * @instance
  * @type string|object
- * @name MediaPlayer.vo.protection.ProtectionData.serverURL
+ * @name ProtectionData.serverURL
  * @readonly
- * @memberof MediaPlayer.vo.protection.ProtectionData
+ * @memberof ProtectionData
  */
 
 /**
@@ -68,9 +68,9 @@ MediaPlayer.vo.protection.ProtectionData = function(serverURL, httpRequestHeader
  *
  * @instance
  * @type Object
- * @name MediaPlayer.vo.protection.ProtectionData.httpRequestsHeaders
+ * @name ProtectionData.httpRequestsHeaders
  * @readonly
- * @memberof MediaPlayer.vo.protection.ProtectionData
+ * @memberof ProtectionData
  */
 
 /**
@@ -78,11 +78,13 @@ MediaPlayer.vo.protection.ProtectionData = function(serverURL, httpRequestHeader
  *
  * @instance
  * @type Object
- * @name MediaPlayer.vo.protection.ProtectionData.clearkeys
+ * @name ProtectionData.clearkeys
  * @readonly
- * @memberof MediaPlayer.vo.protection.ProtectionData
+ * @memberof ProtectionData
  */
 
-MediaPlayer.vo.protection.ProtectionData.prototype = {
-    constructor: MediaPlayer.vo.protection.ProtectionData
+ProtectionData.prototype = {
+    constructor: ProtectionData
 };
+
+export default ProtectionData

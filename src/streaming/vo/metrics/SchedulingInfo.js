@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.SchedulingInfo = function () {
+let SchedulingInfo = function () {
     "use strict";
 
     this.mediaType = null;                 // Type of stream ("audio" | "video" etc..)
@@ -44,6 +44,8 @@ MediaPlayer.vo.metrics.SchedulingInfo = function () {
     this.state = null;                  // Current state of fragment
 };
 
-MediaPlayer.vo.metrics.SchedulingInfo.prototype = {
-    constructor: MediaPlayer.vo.metrics.SchedulingInfo
+SchedulingInfo.prototype = {
+    constructor: SchedulingInfo
 };
+
+export default SchedulingInfo;

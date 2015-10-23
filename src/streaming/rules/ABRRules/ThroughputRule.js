@@ -28,7 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.ThroughputRule = function () {
+import SwitchRequest from '../SwitchRequest.js';
+import BufferController from '../../controllers/BufferController.js';
+import AbrController from '../../controllers/AbrController.js';
+import HTTPRequest from '../../vo/metrics/HTTPRequest.js';
+
+let ThroughputRule = function () {
     "use strict";
 
 
@@ -67,7 +72,7 @@ MediaPlayer.rules.ThroughputRule = function () {
                 arr.shift();
             }
 
-            return (averageThroughput * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY) / 1000;
+            return (averageThroughput * AbrController.BANDWIDTH_SAFETY) / 1000;
         };
 
 
@@ -96,11 +101,11 @@ MediaPlayer.rules.ThroughputRule = function () {
                 lastRequestThroughput,
                 bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
                 bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
-                switchRequest =  new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
+                switchRequest =  new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
 
             if (now - lastSwitchTime < waitToSwitchTime ||
                 !metrics || lastRequest === null ||
-                lastRequest.type !== MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE ||
+                lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE ||
                 bufferStateVO === null || bufferLevelVO === null) {
                 callback(switchRequest);
                 return;
@@ -116,18 +121,18 @@ MediaPlayer.rules.ThroughputRule = function () {
             averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic));
             abrController.setAverageThroughput(mediaType, averageThroughput);
 
-            if (abrController.getAbandonmentStateFor(mediaType) !== MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
+            if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
 
-                if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED || isDynamic) {
+                if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
                     var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
                     streamProcessor.getScheduleController().setTimeToLoadDelay(0); // TODO Watch out for seek event - no delay when seeking.!!
-                    switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
+                    switchRequest = new SwitchRequest(newQuality, SwitchRequest.prototype.DEFAULT);
                 }
 
-                if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
+                if (switchRequest.value !== SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
                     self.log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
-                            switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak", "Average throughput", Math.round(averageThroughput), "kbps");
+                        switchRequest.priority === SwitchRequest.prototype.DEFAULT ? "Default" :
+                            switchRequest.priority === SwitchRequest.prototype.STRONG ? "Strong" : "Weak", "Average throughput", Math.round(averageThroughput), "kbps");
                 }
             }
 
@@ -141,6 +146,9 @@ MediaPlayer.rules.ThroughputRule = function () {
     };
 };
 
-MediaPlayer.rules.ThroughputRule.prototype = {
-    constructor: MediaPlayer.rules.ThroughputRule
+ThroughputRule.prototype = {
+    constructor: ThroughputRule
 };
+
+
+export default ThroughputRule;

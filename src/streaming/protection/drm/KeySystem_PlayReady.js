@@ -33,9 +33,16 @@
  * Microsoft PlayReady DRM
  *
  * @class
- * @implements MediaPlayer.dependencies.protection.KeySystem
+ * @implements KeySystem
  */
-MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
+import KeySystem from './KeySystem.js';
+import KeyPair from '../../vo/protection/KeyPair.js';
+import LicenseRequestComplete from '../../vo/protection/LicenseRequestComplete.js';
+import ClearKeyKeySet from '../../vo/protection/ClearKeyKeySet.js';
+import CommonEncryption from '../CommonEncryption.js';
+import Error from '../../vo/Error.js';
+
+let KeySystem_PlayReady = function() {
     "use strict";
 
     var keySystemStr = "com.microsoft.playready",
@@ -151,7 +158,7 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
 
             // Handle common encryption PSSH
             if ("pssh" in cpData) {
-                return MediaPlayer.dependencies.protection.CommonEncryption.parseInitDataFromContentProtection(cpData);
+                return CommonEncryption.parseInitDataFromContentProtection(cpData);
             }
             // Handle native MS PlayReady ContentProtection elements
             if ("pro" in cpData) {
@@ -221,7 +228,8 @@ MediaPlayer.dependencies.protection.KeySystem_PlayReady = function() {
     };
 };
 
-MediaPlayer.dependencies.protection.KeySystem_PlayReady.prototype = {
-    constructor: MediaPlayer.dependencies.protection.KeySystem_PlayReady
+KeySystem_PlayReady.prototype = {
+    constructor: KeySystem_PlayReady
 };
 
+export default KeySystem_PlayReady;

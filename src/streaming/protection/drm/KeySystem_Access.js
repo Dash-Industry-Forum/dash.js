@@ -33,13 +33,15 @@
  * Adobe Access DRM
  *
  * @class
- * @implements MediaPlayer.dependencies.protection.KeySystem
+ * @implements KeySystem
  */
-MediaPlayer.dependencies.protection.KeySystem_Access = function() {
+let KeySystem_Access = function() {
     "use strict";
 };
 
-MediaPlayer.dependencies.protection.KeySystem_Access.prototype = {
-    constructor: MediaPlayer.dependencies.protection.KeySystem_Access
+KeySystem_Access.prototype = {
+    constructor: KeySystem_Access
 };
+
+export default KeySystem_Access;
 

@@ -34,10 +34,10 @@
  *
  * For testing content that uses the PlayReady test server at
  *
- * @implements MediaPlayer.dependencies.protection.servers.LicenseServer
+ * @implements LicenseServer
  * @class
  */
-MediaPlayer.dependencies.protection.servers.PlayReady = function() {
+let PlayReady = function() {
     "use strict";
 
     return {
@@ -58,6 +58,8 @@ MediaPlayer.dependencies.protection.servers.PlayReady = function() {
     };
 };
 
-MediaPlayer.dependencies.protection.servers.PlayReady.prototype = {
-    constructor: MediaPlayer.dependencies.protection.servers.PlayReady
+PlayReady.prototype = {
+    constructor: PlayReady
 };
+
+export default PlayReady;

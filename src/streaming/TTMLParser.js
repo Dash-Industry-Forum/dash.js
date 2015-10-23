@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.TTMLParser = function() {
+let TTMLParser = function () {
     "use strict";
 
     /*
@@ -1131,3 +1131,6 @@ MediaPlayer.utils.TTMLParser = function() {
         videoModel: undefined
     };
 };
+
+
+export default TTMLParser;

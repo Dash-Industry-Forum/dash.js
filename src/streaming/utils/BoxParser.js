@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.BoxParser = function () {
+let BoxParser = function () {
     "use strict";
 
     var parse = function(data) {
@@ -52,13 +52,15 @@ MediaPlayer.utils.BoxParser = function () {
 
         /**
          * @param {ArrayBuffer} data
-         * @returns {@link MediaPlayer.utils.IsoFile}
+         * @returns {@link IsoFile}
          * @memberof BoxParser#
          */
         parse: parse
     };
 };
 
-MediaPlayer.utils.BoxParser.prototype = {
-    constructor: MediaPlayer.utils.BoxParser
+BoxParser.prototype = {
+    constructor: BoxParser
 };
+
+export default BoxParser;

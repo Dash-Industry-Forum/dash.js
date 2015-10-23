@@ -28,7 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.DOMStorage = function () {
+import AbrController from '../controllers/AbrController.js';
+
+let DOMStorage = function () {
 
     var isSupported,
         enableLastBitrateCaching = true,
@@ -36,17 +38,17 @@ MediaPlayer.utils.DOMStorage = function () {
 
         setExpiration = function(expType, ttl) {
             if (ttl !== undefined && !isNaN(ttl) && typeof(ttl) === "number"){
-                MediaPlayer.utils.DOMStorage[expType] = ttl;
+                DOMStorage[expType] = ttl;
             }
         },
 
         getSavedMediaSettings = function(type) {
             //Checks local storage to see if there is valid, non-expired media settings
-            if (!this.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) || !enableLastMediaSettingsCaching) return null;
+            if (!this.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) || !enableLastMediaSettingsCaching) return null;
 
-            var key = MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_SETTINGS_KEY"],
+            var key = DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_SETTINGS_KEY"],
                 obj = JSON.parse(localStorage.getItem(key)) || {},
-                isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION || false,
+                isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= DOMStorage.LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION || false,
                 settings = obj.settings;
 
             if (isExpired){
@@ -63,11 +65,11 @@ MediaPlayer.utils.DOMStorage = function () {
                 if (this.abrController.getInitialBitrateFor(value) === undefined) {
                     //Checks local storage to see if there is valid, non-expired bit rate
                     //hinting from the last play session to use as a starting bit rate. if not,
-                    // it uses the default video and audio value in MediaPlayer.dependencies.AbrController
-                    if (this.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) && enableLastBitrateCaching) {
-                        var key = MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+value.toUpperCase()+"_BITRATE_KEY"],
+                    // it uses the default video and audio value in AbrController
+                    if (this.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && enableLastBitrateCaching) {
+                        var key = DOMStorage["LOCAL_STORAGE_"+value.toUpperCase()+"_BITRATE_KEY"],
                             obj = JSON.parse(localStorage.getItem(key)) || {},
-                            isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_BITRATE_EXPIRATION || false,
+                            isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= DOMStorage.LOCAL_STORAGE_BITRATE_EXPIRATION || false,
                             bitrate = parseInt(obj.bitrate);
 
                         if (!isNaN(bitrate) && !isExpired) {
@@ -79,7 +81,7 @@ MediaPlayer.utils.DOMStorage = function () {
                     }
                     //check again to see if local storage value was set, if not set default value for startup.
                     if (this.abrController.getInitialBitrateFor(value) === undefined) {
-                        this.abrController.setInitialBitrateFor(value, MediaPlayer.dependencies.AbrController["DEFAULT_"+value.toUpperCase()+"_BITRATE"]);
+                        this.abrController.setInitialBitrateFor(value, AbrController["DEFAULT_"+value.toUpperCase()+"_BITRATE"]);
                     }
                 }
 
@@ -120,7 +122,7 @@ MediaPlayer.utils.DOMStorage = function () {
                 return isSupported;
             }
 
-            if (!storage || (type !== MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL && type !== MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION)) {
+            if (!storage || (type !== DOMStorage.STORAGE_TYPE_LOCAL && type !== DOMStorage.STORAGE_TYPE_SESSION)) {
                 return isSupported;
             }
 
@@ -142,15 +144,17 @@ MediaPlayer.utils.DOMStorage = function () {
     };
 };
 
-MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_VIDEO_BITRATE_KEY = "dashjs_vbitrate";
-MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_AUDIO_BITRATE_KEY = "dashjs_abitrate";
-MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_AUDIO_SETTINGS_KEY = "dashjs_asettings";
-MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_VIDEO_SETTINGS_KEY = "dashjs_vsettings";
-MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
-MediaPlayer.utils.DOMStorage.LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
-MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL = "localStorage";
-MediaPlayer.utils.DOMStorage.STORAGE_TYPE_SESSION = "sessionStorage";
+DOMStorage.LOCAL_STORAGE_VIDEO_BITRATE_KEY = "dashjs_vbitrate";
+DOMStorage.LOCAL_STORAGE_AUDIO_BITRATE_KEY = "dashjs_abitrate";
+DOMStorage.LOCAL_STORAGE_AUDIO_SETTINGS_KEY = "dashjs_asettings";
+DOMStorage.LOCAL_STORAGE_VIDEO_SETTINGS_KEY = "dashjs_vsettings";
+DOMStorage.LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
+DOMStorage.LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION = 360000;
+DOMStorage.STORAGE_TYPE_LOCAL = "localStorage";
+DOMStorage.STORAGE_TYPE_SESSION = "sessionStorage";
 
-MediaPlayer.utils.DOMStorage.prototype = {
-    constructor: MediaPlayer.utils.DOMStorage
+DOMStorage.prototype = {
+    constructor: DOMStorage
 };
+
+export default DOMStorage;

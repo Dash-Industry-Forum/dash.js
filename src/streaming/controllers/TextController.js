@@ -28,7 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.TextController = function () {
+import RepresentationController from '../../dash/controllers/RepresentationController.js';
+import FragmentController from './FragmentController.js';
+
+let TextController = function () {
 
      var initialized = false,
          mediaSource = null,
@@ -36,7 +39,7 @@ MediaPlayer.dependencies.TextController = function () {
          type = null,
 
          onDataUpdateCompleted = function(/*e*/) {
-             this.notify(MediaPlayer.dependencies.TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, {CCIndex: 0});
+             this.notify(TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, {CCIndex: 0});
          },
 
          onInitFragmentLoaded = function (e) {
@@ -58,8 +61,8 @@ MediaPlayer.dependencies.TextController = function () {
         unsubscribe: undefined,
 
         setup: function() {
-            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
-            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitFragmentLoaded;
+            this[RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            this[FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitFragmentLoaded;
         },
 
         initialize: function (typeValue, source, streamProcessor) {
@@ -114,10 +117,12 @@ MediaPlayer.dependencies.TextController = function () {
     };
 };
 
-MediaPlayer.dependencies.TextController.prototype = {
-    constructor: MediaPlayer.dependencies.TextController
+TextController.prototype = {
+    constructor: TextController
 };
 
-MediaPlayer.dependencies.TextController.eventList = {
+TextController.eventList = {
     ENAME_CLOSED_CAPTIONING_REQUESTED: "closedCaptioningRequested"
 };
+
+export default TextController;

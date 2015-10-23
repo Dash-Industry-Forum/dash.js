@@ -28,9 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from "../utils/EventBus.js";
+import RepresentationController from '../../dash/controllers/RepresentationController.js';
+import FragmentModel from '../models/FragmentModel.js';
+import FragmentController from './FragmentController.js';
+import HTTPRequest from '../vo/metrics/HTTPRequest.js';
+import SourceBufferExtensions from '../extensions/SourceBufferExtensions.js';
+import AbrController from './AbrController.js';
+import PlaybackController from './PlaybackController.js';
+import VirtualBuffer from '../utils/VirtualBuffer.js';
+import MediaPlayer from '../MediaPlayer.js';
 
-MediaPlayer.dependencies.BufferController = function () {
+let BufferController = function () {
     "use strict";
     var STALL_THRESHOLD = 0.5,
         requiredQuality = -1,
@@ -112,7 +120,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 bytes = chunk.bytes,
                 quality = chunk.quality,
                 index = chunk.index,
-                request = this.streamProcessor.getFragmentModel().getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, quality: quality, index: index})[0],
+                request = this.streamProcessor.getFragmentModel().getRequests({state: FragmentModel.states.EXECUTED, quality: quality, index: index})[0],
                 currentRepresentation = this.streamProcessor.getRepresentationInfoForQuality(quality),
                 manifest = this.manifestModel.getValue(),
                 eventStreamMedia = this.adapter.getEventsFor(manifest, currentRepresentation.mediaInfo, this.streamProcessor),
@@ -147,7 +155,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 chunk = appendingMediaChunk;
             } else {
 
-                chunk = this.virtualBuffer.extract({streamId: streamId, mediaType: type, segmentType: MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE, limit: 1})[0];
+                chunk = this.virtualBuffer.extract({streamId: streamId, mediaType: type, segmentType: HTTPRequest.MEDIA_SEGMENT_TYPE, limit: 1})[0];
                 if (!chunk) {
                     return;
                 }
@@ -172,7 +180,7 @@ MediaPlayer.dependencies.BufferController = function () {
         switchInitData = function(streamId, quality) {
 
             var self = this,
-                filter = {streamId: streamId, mediaType: type, segmentType: MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE,
+                filter = {streamId: streamId, mediaType: type, segmentType: HTTPRequest.INIT_SEGMENT_TYPE,
                     quality: quality},
                 chunk = self.virtualBuffer.getChunks(filter)[0];
 
@@ -182,7 +190,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 appendToBuffer.call(self, chunk);
             } else {
                 // if we have not loaded the init fragment for the current quality, do it
-                self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_INIT_REQUESTED, {requiredQuality: quality});
+                self.notify(BufferController.eventList.ENAME_INIT_REQUESTED, {requiredQuality: quality});
             }
         },
 
@@ -209,10 +217,10 @@ MediaPlayer.dependencies.BufferController = function () {
                 // that has not been appended and stop request scheduling. We also need to store
                 // the promise for this append because the next data can be appended only after
                 // this promise is resolved.
-                if (e.error.code === MediaPlayer.dependencies.SourceBufferExtensions.QUOTA_EXCEEDED_ERROR_CODE) {
+                if (e.error.code === SourceBufferExtensions.QUOTA_EXCEEDED_ERROR_CODE) {
                     self.virtualBuffer.append(appendedBytesInfo);
                     criticalBufferLevel = self.sourceBufferExt.getTotalBufferedTime(buffer) * 0.8;
-                    self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel});
+                    self.notify(BufferController.eventList.ENAME_QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel});
                     clearBuffer.call(self, getClearRange.call(self));
                 }
                 isAppendingInProgress = false;
@@ -220,7 +228,7 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             if (!hasEnoughSpaceToAppend.call(self)) {
-                self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel});
+                self.notify(BufferController.eventList.ENAME_QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel});
                 clearBuffer.call(self, getClearRange.call(self));
             }
 
@@ -252,7 +260,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 }
             }
 
-            self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED, {quality: appendedBytesInfo.quality, startTime: appendedBytesInfo.start, index: appendedBytesInfo.index, bufferedRanges: ranges});
+            self.notify(BufferController.eventList.ENAME_BYTES_APPENDED, {quality: appendedBytesInfo.quality, startTime: appendedBytesInfo.start, index: appendedBytesInfo.index, bufferedRanges: ranges});
         },
 
         onQualityChanged = function(e) {
@@ -289,7 +297,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             bufferLevel = self.sourceBufferExt.getBufferLength(buffer, currentTime);
 
-            self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, {bufferLevel: bufferLevel});
+            self.notify(BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, {bufferLevel: bufferLevel});
 
             if (!this.streamProcessor.getStreamInfo().isLast){
                 checkIfSufficientBuffer.call(self);
@@ -320,7 +328,7 @@ MediaPlayer.dependencies.BufferController = function () {
             if (!isLastIdxAppended || isBufferingCompleted) return;
 
             isBufferingCompleted = true;
-            this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFERING_COMPLETED);
+            this.notify(BufferController.eventList.ENAME_BUFFERING_COMPLETED);
         },
 
         checkIfSufficientBuffer = function () {
@@ -332,7 +340,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         getBufferState = function() {
-            return hasSufficientBuffer ? MediaPlayer.dependencies.BufferController.BUFFER_LOADED : MediaPlayer.dependencies.BufferController.BUFFER_EMPTY;
+            return hasSufficientBuffer ? BufferController.BUFFER_LOADED : BufferController.BUFFER_EMPTY;
         },
 
         notifyIfSufficientBufferStateChanged = function(state) {
@@ -341,7 +349,7 @@ MediaPlayer.dependencies.BufferController = function () {
             hasSufficientBuffer = state;
 
             var bufferState = getBufferState(),
-                eventName = (bufferState === MediaPlayer.dependencies.BufferController.BUFFER_LOADED) ? MediaPlayer.events.BUFFER_LOADED : MediaPlayer.events.BUFFER_EMPTY;
+                eventName = (bufferState === BufferController.BUFFER_LOADED) ? MediaPlayer.events.BUFFER_LOADED : MediaPlayer.events.BUFFER_EMPTY;
             addBufferMetrics.call(this);
 
             EventBus.dispatchEvent({
@@ -350,7 +358,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     bufferType: type
                 }
             });
-            this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, {hasSufficientBuffer: state});
+            this.notify(BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, {hasSufficientBuffer: state});
             this.log(hasSufficientBuffer ? ("Got enough buffer to start.") : ("Waiting for more buffer before starting playback."));
         },
 
@@ -436,7 +444,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             // we want to get rid off buffer that is more than x seconds behind current time
             if (currentRange !== null) {
-                bufferToPrune = currentTime - currentRange.start - MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP;
+                bufferToPrune = currentTime - currentRange.start - BufferController.BUFFER_TO_KEEP;
                 if (bufferToPrune > 0) {
                     isPruningInProgress = true;
                     this.sourceBufferExt.remove(buffer, 0, Math.round(currentRange.start + bufferToPrune), mediaSource);
@@ -457,7 +465,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             currentTime = self.playbackController.getTime();
             // we need to remove data that is more than one fragment before the video currentTime
-            req = self.streamProcessor.getFragmentModel().getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, time: currentTime})[0];
+            req = self.streamProcessor.getFragmentModel().getRequests({state: FragmentModel.states.EXECUTED, time: currentTime})[0];
             removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
 
             range = self.sourceBufferExt.getBufferRange(buffer, currentTime);
@@ -491,7 +499,7 @@ MediaPlayer.dependencies.BufferController = function () {
             }
             this.virtualBuffer.updateBufferedRanges({streamId: getStreamId.call(this), mediaType: type}, this.sourceBufferExt.getAllRanges(buffer));
             updateBufferLevel.call(this);
-            this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_CLEARED, {from: e.data.from, to: e.data.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend.call(this)});
+            this.notify(BufferController.eventList.ENAME_BUFFER_CLEARED, {from: e.data.from, to: e.data.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend.call(this)});
             if (hasEnoughSpaceToAppend.call(this)) return;
 
             setTimeout(clearBuffer.bind(this, getClearRange.call(this)), minBufferTime * 1000);
@@ -511,9 +519,9 @@ MediaPlayer.dependencies.BufferController = function () {
 
         removeOldTrackData = function() {
             var self = this,
-                allAppendedChunks = this.virtualBuffer.getChunks({streamId: getStreamId.call(this), mediaType: type, segmentType: MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE, appended: true}),
-                rangesToClear = new MediaPlayer.utils.CustomTimeRanges(),
-                rangesToLeave = new MediaPlayer.utils.CustomTimeRanges(),
+                allAppendedChunks = this.virtualBuffer.getChunks({streamId: getStreamId.call(this), mediaType: type, segmentType: HTTPRequest.MEDIA_SEGMENT_TYPE, appended: true}),
+                rangesToClear = new CustomTimeRanges(),
+                rangesToLeave = new CustomTimeRanges(),
                 currentTime = this.playbackController.getTime(),
                 safeBufferLength = this.streamProcessor.getCurrentRepresentationInfo().fragmentDuration * 2,
                 currentTrackBufferLength,
@@ -533,7 +541,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             for (var i = 0, ln = rangesToClear.length; i < ln; i +=1) {
                 range = {start: rangesToClear.start(i), end: rangesToClear.end(i)};
-                if (self.mediaController.getSwitchMode(type) === MediaPlayer.dependencies.MediaController.trackSwitchModes.ALWAYS_REPLACE || range.start > currentTime) {
+                if (self.mediaController.getSwitchMode(type) === MediaController.trackSwitchModes.ALWAYS_REPLACE || range.start > currentTime) {
                     clearBuffer.call(self, range);
                 }
             }
@@ -552,7 +560,7 @@ MediaPlayer.dependencies.BufferController = function () {
             //self.log("Min Buffer time: " + bufferLength);
             if (minBufferTime !== bufferLength) {
                 self.setMinBufferTime(bufferLength);
-                self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, {minBufferTime: bufferLength});
+                self.notify(BufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, {minBufferTime: bufferLength});
             }
         },
 
@@ -584,10 +592,10 @@ MediaPlayer.dependencies.BufferController = function () {
             if (type !== mediaType) return;
 
             switch (switchMode) {
-                case MediaPlayer.dependencies.MediaController.trackSwitchModes.ALWAYS_REPLACE:
+                case MediaController.trackSwitchModes.ALWAYS_REPLACE:
                     clearBuffer.call(self, range);
                     break;
-                case MediaPlayer.dependencies.MediaController.trackSwitchModes.NEVER_REPLACE:
+                case MediaController.trackSwitchModes.NEVER_REPLACE:
                     break;
                 default:
                     this.log("track switch mode is not supported: " + switchMode);
@@ -598,7 +606,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
              //constantly prune buffer every x seconds
             wallclockTicked += 1;
-            if ((wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
+            if ((wallclockTicked % BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
                 pruneBuffer.call(this);
             }
 
@@ -631,29 +639,29 @@ MediaPlayer.dependencies.BufferController = function () {
         textSourceBuffer:undefined,
 
         setup: function() {
-            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            this[RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
 
-            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitializationLoaded;
-            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED] =  onMediaLoaded;
-            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
+            this[FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitializationLoaded;
+            this[FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED] =  onMediaLoaded;
+            this[FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
 
-            this[MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
+            this[AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
 
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS] = onPlaybackProgression;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onPlaybackProgression;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED] = onPlaybackRateChanged;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS] = onPlaybackProgression;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onPlaybackProgression;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED] = onPlaybackRateChanged;
+            this[PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
 
-            this[MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED] = onCurrentTrackChanged;
+            this[MediaController.eventList.CURRENT_TRACK_CHANGED] = onCurrentTrackChanged;
 
             onAppended = onAppended.bind(this);
             onRemoved = onRemoved.bind(this);
             onChunkAppended = onChunkAppended.bind(this);
-            this.sourceBufferExt.subscribe(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);
-            this.sourceBufferExt.subscribe(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, this, onRemoved);
+            this.sourceBufferExt.subscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);
+            this.sourceBufferExt.subscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, this, onRemoved);
 
-            this.virtualBuffer.subscribe(MediaPlayer.utils.VirtualBuffer.eventList.CHUNK_APPENDED, this, onChunkAppended);
+            this.virtualBuffer.subscribe(VirtualBuffer.eventList.CHUNK_APPENDED, this, onChunkAppended);
         },
 
         initialize: function (typeValue, source, streamProcessor) {
@@ -733,10 +741,10 @@ MediaPlayer.dependencies.BufferController = function () {
             lastIndex = -1;
             maxAppendedIndex = -1;
             requiredQuality = 0;
-            self.sourceBufferExt.unsubscribe(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, onAppended);
-            self.sourceBufferExt.unsubscribe(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, self, onRemoved);
+            self.sourceBufferExt.unsubscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, onAppended);
+            self.sourceBufferExt.unsubscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, self, onRemoved);
             appendedBytesInfo = null;
-            this.virtualBuffer.unsubscribe(MediaPlayer.utils.VirtualBuffer.eventList.CHUNK_APPENDED, self, onChunkAppended);
+            this.virtualBuffer.unsubscribe(VirtualBuffer.eventList.CHUNK_APPENDED, self, onChunkAppended);
             appendingMediaChunk = false;
             isBufferingCompleted = false;
             isAppendingInProgress = false;
@@ -752,30 +760,30 @@ MediaPlayer.dependencies.BufferController = function () {
     };
 };
 
-//MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED = "required";
-//MediaPlayer.dependencies.BufferController.BUFFER_SIZE_MIN = "min";
-//MediaPlayer.dependencies.BufferController.BUFFER_SIZE_INFINITY = "infinity";
+//BufferController.BUFFER_SIZE_REQUIRED = "required";
+//BufferController.BUFFER_SIZE_MIN = "min";
+//BufferController.BUFFER_SIZE_INFINITY = "infinity";
 
-MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD = 4;
-MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME = 12;
-MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY = 30;
-MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
-MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+BufferController.LOW_BUFFER_THRESHOLD = 4;
+BufferController.DEFAULT_MIN_BUFFER_TIME = 12;
+BufferController.BUFFER_TIME_AT_TOP_QUALITY = 30;
+BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
+BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
 
-MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD = 20;
-MediaPlayer.dependencies.BufferController.BUFFER_LOADED = "bufferLoaded";
-MediaPlayer.dependencies.BufferController.BUFFER_EMPTY = "bufferStalled";
-MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP = 30;
-MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL = 30;
-
-
+BufferController.RICH_BUFFER_THRESHOLD = 20;
+BufferController.BUFFER_LOADED = "bufferLoaded";
+BufferController.BUFFER_EMPTY = "bufferStalled";
+BufferController.BUFFER_TO_KEEP = 30;
+BufferController.BUFFER_PRUNING_INTERVAL = 30;
 
 
-MediaPlayer.dependencies.BufferController.prototype = {
-    constructor: MediaPlayer.dependencies.BufferController
+
+
+BufferController.prototype = {
+    constructor: BufferController
 };
 
-MediaPlayer.dependencies.BufferController.eventList = {
+BufferController.eventList = {
     ENAME_BUFFER_LEVEL_STATE_CHANGED: "bufferLevelStateChanged",
     ENAME_BUFFER_LEVEL_UPDATED: "bufferLevelUpdated",
     ENAME_QUOTA_EXCEEDED: "quotaExceeded",
@@ -788,3 +796,5 @@ MediaPlayer.dependencies.BufferController.eventList = {
     ENAME_BUFFER_LEVEL_BALANCED: "bufferLevelBalanced",
     ENAME_MIN_BUFFER_TIME_UPDATED: "minBufferTimeUpdated"
 };
+
+export default BufferController;

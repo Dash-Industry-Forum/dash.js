@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.IsoBox = function () {
+let IsoBox = function () {
     "use strict";
 
     this.offset = NaN;
@@ -37,6 +37,8 @@ MediaPlayer.vo.IsoBox = function () {
     this.isComplete = true;
 };
 
-MediaPlayer.vo.IsoBox.prototype = {
-    constructor: MediaPlayer.vo.IsoBox
+IsoBox.prototype = {
+    constructor: IsoBox
 };
+
+export default IsoBox;

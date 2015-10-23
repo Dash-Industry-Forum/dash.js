@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.vo.Segment = function () {
+let Segment = function () {
     "use strict";
     this.indexRange = null;
     this.index = null;
@@ -56,6 +56,8 @@ Dash.vo.Segment = function () {
     this.representation = null;
 };
 
-Dash.vo.Segment.prototype = {
-    constructor: Dash.vo.Segment
+Segment.prototype = {
+    constructor: Segment
 };
+
+export default Segment;

@@ -32,9 +32,14 @@
 /**
  * Media protection functionality that can be modified/overridden by applications
  *
- * @class MediaPlayer.dependencies.ProtectionExtensions
+ * @class ProtectionExtensions
  */
-MediaPlayer.dependencies.ProtectionExtensions = function () {
+import MediaCapability from '../vo/protection/MediaCapability.js';
+import CommonEncryption from '../protection/CommonEncryption.js';
+import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
+import ProtectionModel from '../models/ProtectionModel.js';
+
+let ProtectionExtensions = function () {
     "use strict";
 
     this.system = undefined;
@@ -47,8 +52,8 @@ MediaPlayer.dependencies.ProtectionExtensions = function () {
     this.clearkeyKeySystem = undefined;
 };
 
-MediaPlayer.dependencies.ProtectionExtensions.prototype = {
-    constructor: MediaPlayer.dependencies.ProtectionExtensions,
+ProtectionExtensions.prototype = {
+    constructor: ProtectionExtensions,
 
     /**
      * Setup the key systems available in the player
@@ -75,7 +80,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      * by this player (not necessarily those supported by the
      * user agent)
      *
-     * @returns {MediaPlayer.dependencies.protection.KeySystem[]} a prioritized
+     * @returns {KeySystem[]} a prioritized
      * list of key systems
      */
     getKeySystems: function() {
@@ -87,7 +92,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      * name (i.e. 'org.w3.clearkey')
      *
      * @param {string} systemString the system string
-     * @returns {MediaPlayer.dependencies.protection.KeySystem} the key system
+     * @returns {KeySystem} the key system
      * or null if no supported key system is associated with the given key
      * system string
      */
@@ -149,7 +154,7 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      * @returns {Object[]} array of objects indicating which supported key
      * systems were found.  Empty array is returned if no
      * supported key systems were found
-     * @returns {MediaPlayer.dependencies.protection.KeySystem} Object.ks the key
+     * @returns {KeySystem} Object.ks the key
      * system identified by the ContentProtection element
      * @returns {ArrayBuffer} Object.initData the initialization data parsed
      * from the ContentProtection element
@@ -190,14 +195,14 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      * @returns {Object[]} array of objects indicating which supported key
      * systems were found.  Empty array is returned if no
      * supported key systems were found
-     * @returns {MediaPlayer.dependencies.protection.KeySystem} Object.ks the key
+     * @returns {KeySystem} Object.ks the key
      * system
      * @returns {ArrayBuffer} Object.initData the initialization data
      * associated with the key system
      */
     getSupportedKeySystems: function(initData) {
         var ksIdx, supportedKS = [],
-                pssh = MediaPlayer.dependencies.protection.CommonEncryption.parsePSSHList(initData);
+                pssh = CommonEncryption.parsePSSHList(initData);
 
         for (ksIdx = 0; ksIdx < this.keySystems.length; ++ksIdx) {
             if (this.keySystems[ksIdx].uuid in pssh) {
@@ -213,14 +218,14 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
     /**
      * Returns the license server implementation data that should be used for this request.
      *
-     * @param {MediaPlayer.dependencies.protection.KeySystem} keySystem the key system
+     * @param {KeySystem} keySystem the key system
      * associated with this license request
-     * @param {MediaPlayer.vo.protection.ProtectionData} protData protection data to use for the
+     * @param {ProtectionData} protData protection data to use for the
      * request
      * @param {String} [messageType="license-request"] the message type associated with this
      * request.  Supported message types can be found
      * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
-     * @return {MediaPlayer.dependencies.protection.servers.LicenseServer} the license server
+     * @return {LicenseServer} the license server
      * implementation that should be used for this request or null if the player should not
      * pass messages of the given type to a license server
      *
@@ -250,15 +255,15 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
     /**
      * Allows application-specific retrieval of ClearKey keys.
      *
-     * @param {MediaPlayer.vo.protection.ProtectionData} protData protection data to use for the
+     * @param {ProtectionData} protData protection data to use for the
      * request
      * @param {ArrayBuffer} message the key message from the CDM
-     * @return {MediaPlayer.vo.protection.ClearKeyKeySet} the clear keys associated with
+     * @return {ClearKeyKeySet} the clear keys associated with
      * the request or null if no keys can be returned by this function
      */
     processClearKeyLicenseRequest: function(protData, message) {
         try {
-            return MediaPlayer.dependencies.protection.KeySystem_ClearKey.getClearKeysFromProtectionData(protData, message);
+            return KeySystem_ClearKey.getClearKeysFromProtectionData(protData, message);
         } catch (error) {
             this.log("Failed to retrieve clearkeys from ProtectionData");
             return null;

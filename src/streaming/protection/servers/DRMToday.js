@@ -32,10 +32,10 @@
 /**
  * CastLabs DRMToday License Server implementation
  *
- * @implements MediaPlayer.dependencies.protection.servers.LicenseServer
+ * @implements LicenseServer
  * @class
  */
-MediaPlayer.dependencies.protection.servers.DRMToday = function() {
+let DRMToday = function() {
     "use strict";
 
     var keySystems = {
@@ -79,6 +79,8 @@ MediaPlayer.dependencies.protection.servers.DRMToday = function() {
     };
 };
 
-MediaPlayer.dependencies.protection.servers.DRMToday.prototype = {
-    constructor: MediaPlayer.dependencies.protection.servers.DRMToday
+DRMToday.prototype = {
+    constructor: DRMToday
 };
+
+export default DRMToday;

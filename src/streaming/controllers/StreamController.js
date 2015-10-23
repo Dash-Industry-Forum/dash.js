@@ -28,9 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from "../utils/EventBus.js";
+import Stream from '../Stream.js';
+import ManifestUpdater from '../ManifestUpdater.js';
+import PlaybackController from './PlaybackController.js';
+import TimeSyncController from '../TimeSyncController.js';
+import MediaPlayer from '../MediaPlayer.js';
 
- MediaPlayer.dependencies.StreamController = function () {
+let StreamController = function () {
     "use strict";
 
     /*
@@ -56,14 +60,14 @@ import EventBus from "../utils/EventBus.js";
         attachEvents = function (stream) {
             var mediaController = this.system.getObject("mediaController");
 
-            mediaController.subscribe(MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED, stream);
-            stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
-            stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
+            mediaController.subscribe(MediaController.eventList.CURRENT_TRACK_CHANGED, stream);
+            stream.subscribe(Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
+            stream.subscribe(Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
         },
 
         detachEvents = function (stream) {
-            stream.unsubscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
-            stream.unsubscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
+            stream.unsubscribe(Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
+            stream.unsubscribe(Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
         },
 
         fireSwitchEvent = function(stage, fromStream, toStream) {
@@ -360,7 +364,7 @@ import EventBus from "../utils/EventBus.js";
                     if (!stream) {
                         stream = self.system.getObject("stream");
                         stream.initialize(streamInfo, protectionController, protectionData);
-                        stream.subscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, self);
+                        stream.subscribe(Stream.eventList.ENAME_STREAM_UPDATED, self);
                         remainingStreams.push(stream);
 
                         if (activeStream) {
@@ -407,7 +411,7 @@ import EventBus from "../utils/EventBus.js";
                 if (!streams[i].isInitialized()) return;
             }
 
-            self.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED);
+            self.notify(StreamController.eventList.ENAME_STREAMS_COMPOSED);
         },
 
         onStreamUpdated = function(/*e*/) {
@@ -487,18 +491,18 @@ import EventBus from "../utils/EventBus.js";
         uriQueryFragModel:undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED] = onManifestUpdated;
-            this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
-            this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED] = onStreamBufferingEnd;
+            this[ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED] = onManifestUpdated;
+            this[Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
+            this[Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED] = onStreamBufferingEnd;
 
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onSeeking;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onTimeupdate;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ENDED] = onEnded;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onSeeking;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onTimeupdate;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_ENDED] = onEnded;
 
-            this[MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncAttemptCompleted;
+            this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncAttemptCompleted;
 
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY] = onCanPlay;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR] = onError;
+            this[PlaybackController.eventList.ENAME_CAN_PLAY] = onCanPlay;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_ERROR] = onError;
 
         },
 
@@ -534,15 +538,15 @@ import EventBus from "../utils/EventBus.js";
             autoPlay = autoPl;
             protectionController = protCtrl;
             protectionData = protData;
-            this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
-            this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
-            this.timeSyncController.subscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
+            this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
+            this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
+            this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
 
-            this.playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
-            this.playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
-            this.playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
-            this.subscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
-            this.manifestUpdater.subscribe(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
+            this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
+            this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
+            this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
+            this.subscribe(StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
+            this.manifestUpdater.subscribe(ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
             this.manifestUpdater.initialize(this.manifestLoader);
         },
 
@@ -563,24 +567,24 @@ import EventBus from "../utils/EventBus.js";
             var mediaController = this.system.getObject("mediaController"),
                 stream;
 
-            this.timeSyncController.unsubscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
-            this.timeSyncController.unsubscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
-            this.timeSyncController.unsubscribe(MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
+            this.timeSyncController.unsubscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
+            this.timeSyncController.unsubscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
+            this.timeSyncController.unsubscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
             this.timeSyncController.reset();
 
             for (var i = 0, ln = streams.length; i < ln; i++) {
                 stream = streams[i];
-                stream.unsubscribe(MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED, this);
-                mediaController.unsubscribe(MediaPlayer.dependencies.MediaController.eventList.CURRENT_TRACK_CHANGED, stream);
+                stream.unsubscribe(Stream.eventList.ENAME_STREAM_UPDATED, this);
+                mediaController.unsubscribe(MediaController.eventList.CURRENT_TRACK_CHANGED, stream);
                 stream.reset(hasMediaError);
             }
 
             streams = [];
-            this.unsubscribe(MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
-            this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
-            this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
-            this.playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
-            this.manifestUpdater.unsubscribe(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
+            this.unsubscribe(StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
+            this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
+            this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
+            this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
+            this.manifestUpdater.unsubscribe(ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
             this.manifestUpdater.reset();
             this.metricsModel.clearAllCurrentMetrics();
 
@@ -605,12 +609,12 @@ import EventBus from "../utils/EventBus.js";
 
             // Teardown the protection system, if necessary
             if (!protectionController) {
-                this.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+                this.notify(StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
             }
             else if (ownProtectionController) {
                 var teardownComplete = {},
                         self = this;
-                teardownComplete[MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
+                teardownComplete[ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
 
                     // Complete teardown process
                     ownProtectionController = false;
@@ -624,25 +628,28 @@ import EventBus from "../utils/EventBus.js";
                         });
                     }
 
-                    self.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+                    self.notify(StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
                 };
-                //protectionController.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
+                //protectionController.protectionModel.subscribe(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
                 protectionController.teardown();
             } else {
                 protectionController.setMediaElement(null);
                 protectionController = null;
                 protectionData = null;
-                this.notify(MediaPlayer.dependencies.StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+                this.notify(StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
             }
         }
     };
 };
 
-MediaPlayer.dependencies.StreamController.prototype = {
-    constructor: MediaPlayer.dependencies.StreamController
+StreamController.prototype = {
+    constructor: StreamController
 };
 
-MediaPlayer.dependencies.StreamController.eventList = {
+StreamController.eventList = {
     ENAME_STREAMS_COMPOSED: "streamsComposed",
     ENAME_TEARDOWN_COMPLETE: "streamTeardownComplete"
 };
+
+
+export default StreamController;

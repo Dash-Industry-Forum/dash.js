@@ -28,7 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.dependencies.BaseURLExtensions = function () {
+import Segment from '../vo/Segment.js';
+import Error from '../../streaming/vo/Error.js';
+
+let BaseURLExtensions = function () {
     "use strict";
 
     var getSegmentsForSidx = function (sidx, info) {
@@ -47,7 +50,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 duration = refs[i].subsegment_duration;
                 size = refs[i].referenced_size;
 
-                segment = new Dash.vo.Segment();
+                segment = new Segment();
                 segment.duration = duration;
                 segment.media = info.url;
                 segment.startTime = time;
@@ -114,7 +117,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 if (initRange) {
                     representation.range = initRange;
                     representation.initialization = media;
-                    self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {representation: representation});
+                    self.notify(BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {representation: representation});
                 } else {
                     info.range.end = info.bytesLoaded + info.bytesToLoad;
                     loadInit.call(self, representation, info);
@@ -127,7 +130,7 @@ Dash.dependencies.BaseURLExtensions = function () {
                 needFailureReport = false;
 
                 self.errHandler.downloadError("initialization", info.url, request);
-                self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {representation: representation});
+                self.notify(BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {representation: representation});
             };
 
             sendRequest.call(self, request, info);
@@ -251,9 +254,9 @@ Dash.dependencies.BaseURLExtensions = function () {
             var self = this;
 
             if( segments) {
-                self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
+                self.notify(BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
             } else {
-                self.notify(Dash.dependencies.BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type}, new MediaPlayer.vo.Error(null, "error loading segments", null));
+                self.notify(BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type}, new Error(null, "error loading segments", null));
             }
         };
 
@@ -277,11 +280,13 @@ Dash.dependencies.BaseURLExtensions = function () {
     };
 };
 
-Dash.dependencies.BaseURLExtensions.prototype = {
-    constructor: Dash.dependencies.BaseURLExtensions
+BaseURLExtensions.prototype = {
+    constructor: BaseURLExtensions
 };
 
-Dash.dependencies.BaseURLExtensions.eventList = {
+BaseURLExtensions.eventList = {
     ENAME_INITIALIZATION_LOADED: "initializationLoaded",
     ENAME_SEGMENTS_LOADED: "segmentsLoaded"
 };
+
+export default BaseURLExtensions;

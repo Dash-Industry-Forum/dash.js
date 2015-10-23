@@ -46,7 +46,7 @@
  * @interface MediaPlayer.models.ProtectionModel
  */
 
-MediaPlayer.models.ProtectionModel = function() { };
+let ProtectionModel = function() { };
 
 /**
  * Returns an array of all initialization data currently used by
@@ -177,7 +177,7 @@ MediaPlayer.models.ProtectionModel = function() { };
  *
  * @enum {String}
  */
-MediaPlayer.models.ProtectionModel.eventList = {
+ProtectionModel.eventList = {
     /**
      * Event ID for needkey/encrypted events
      *
@@ -275,3 +275,5 @@ MediaPlayer.models.ProtectionModel.eventList = {
 /**
  * needkey/encrypted event
  */
+
+export default ProtectionModel;

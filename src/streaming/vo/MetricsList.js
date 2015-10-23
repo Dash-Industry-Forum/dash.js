@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.models.MetricsList = function () {
+let MetricsList = function () {
     "use strict";
 
     return {
@@ -46,6 +46,8 @@ MediaPlayer.models.MetricsList = function () {
     };
 };
 
-MediaPlayer.models.MetricsList.prototype = {
-    constructor: MediaPlayer.models.MetricsList
+MetricsList.prototype = {
+    constructor: MetricsList
 };
+
+export default MetricsList;

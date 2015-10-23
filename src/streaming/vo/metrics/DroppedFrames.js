@@ -28,13 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.DroppedFrames = function () {
+let DroppedFrames = function () {
     "use strict";
 
     this.time = null;      // Real-Time | Time of the measurement of the dropped frames.
     this.droppedFrames = null;  // Number of dropped frames.
 };
 
-MediaPlayer.vo.metrics.DroppedFrames.prototype = {
-    constructor: MediaPlayer.vo.metrics.DroppedFrames
+DroppedFrames.prototype = {
+    constructor: DroppedFrames
 };
+
+export default DroppedFrames;

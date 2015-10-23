@@ -28,7 +28,22 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.ScheduleController = function () {
+
+import FragmentModel from '../models/FragmentModel.js';
+import FragmentController from './FragmentController.js';
+import RepresentationController from '../../dash/controllers/RepresentationController.js';
+import PlayList from '../vo/metrics/PlayList.js';
+import ScheduleRulesCollection from '../rules/SchedulingRules/ScheduleRulesCollection.js';
+import SwitchRequest from '../rules/SwitchRequest.js';
+import FragmentRequest from '../vo/FragmentRequest.js';
+import PlaybackController from './PlaybackController.js';
+import AbrController from './AbrController.js';
+import BufferController from './BufferController.js';
+import TextController from './TextController.js';
+import Stream from '../Stream.js';
+import LiveEdgeFinder from '../LiveEdgeFinder.js';
+
+let ScheduleController = function () {
     "use strict";
 
     var fragmentsToLoad = 0,
@@ -78,7 +93,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         startOnReady = function() {
             if (initialPlayback) {
                 getInitRequest.call(this, currentRepresentationInfo.quality);
-                addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.INITIAL_PLAY_START_REASON);
+                addPlaylistMetrics.call(this, PlayList.INITIAL_PLAY_START_REASON);
             }
 
             doStart.call(this);
@@ -89,7 +104,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             isStopped = true;
             this.log("stop");
             clearInterval(validateTimeout);
-            clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
+            clearPlayListTraceMetrics(new Date(), PlayList.Trace.USER_REQUEST_STOP_REASON);
         },
 
 
@@ -140,10 +155,10 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         getRequiredFragmentCount = function(callback) {
             var self =this,
-                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES);
+                rules = self.scheduleRulesCollection.getRules(ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES);
 
             self.rulesController.applyRules(rules, self.streamProcessor, callback, fragmentsToLoad, function(currentValue, newValue) {
-                currentValue = currentValue === MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
+                currentValue = currentValue === SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
                 return Math.max(currentValue, newValue);
             });
         },
@@ -164,7 +179,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
         getNextFragment = function (callback) {
             var self =this,
-                rules = self.scheduleRulesCollection.getRules(MediaPlayer.rules.ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES);
+                rules = self.scheduleRulesCollection.getRules(ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES);
 
             self.rulesController.applyRules(rules, self.streamProcessor, callback, null, function(currentValue, newValue) {
                 return newValue;
@@ -185,7 +200,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 throw "Unexpected error! - currentRepresentationInfo is null or undefined";
             }
 
-            clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
+            clearPlayListTraceMetrics(new Date(), PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
         },
 
         onDataUpdateCompleted = function(e) {
@@ -212,7 +227,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             if (e.data.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
 
             this.log("Stream is complete");
-            clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON);
+            clearPlayListTraceMetrics(new Date(), PlayList.Trace.END_OF_CONTENT_STOP_REASON);
         },
 
         onFragmentLoadingCompleted = function (e) {
@@ -251,7 +266,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             if (!e.data.hasSufficientBuffer && !self.playbackController.isSeeking()) {
                 self.log("Stalling Buffer");
-                clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
+                clearPlayListTraceMetrics(new Date(), PlayList.Trace.REBUFFERING_REASON);
             }
         },
 
@@ -262,7 +277,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         addPlaylistMetrics = function(stopReason) {
             var currentTime = new Date(),
                 presentationTime = this.playbackController.getTime();
-            clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
+            clearPlayListTraceMetrics(currentTime, PlayList.Trace.USER_REQUEST_STOP_REASON);
             playListMetrics = this.metricsModel.addPlayList(type, currentTime, presentationTime, stopReason);
         },
 
@@ -297,7 +312,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             seekTarget = e.data.seekTime;
             this.log("seek: " + seekTarget);
-            addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
+            addPlaylistMetrics.call(this, PlayList.SEEK_START_REASON);
 
             this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentationInfo.DVRWindow.end - this.playbackController.getTime()});
 
@@ -357,28 +372,28 @@ MediaPlayer.dependencies.ScheduleController = function () {
         indexHandler:undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
+            this[LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
 
-            this[MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
+            this[AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
 
-            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED] = onDataUpdateStarted;
-            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
-            this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
+            this[RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED] = onDataUpdateStarted;
+            this[RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            this[Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
 
-            this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
-            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
+            this[FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
+            this[FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
 
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_CLEARED] = onBufferCleared;
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED] = onBufferLevelStateChanged;
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_INIT_REQUESTED] = onInitRequested;
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_QUOTA_EXCEEDED] = onQuotaExceeded;
+            this[BufferController.eventList.ENAME_BUFFER_CLEARED] = onBufferCleared;
+            this[BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
+            this[BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED] = onBufferLevelStateChanged;
+            this[BufferController.eventList.ENAME_INIT_REQUESTED] = onInitRequested;
+            this[BufferController.eventList.ENAME_QUOTA_EXCEEDED] = onQuotaExceeded;
 
-            this[MediaPlayer.dependencies.TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED] = onClosedCaptioningRequested;
+            this[TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED] = onClosedCaptioningRequested;
 
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED] = onPlaybackStarted;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED] = onPlaybackRateChanged;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_STARTED] = onPlaybackStarted;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED] = onPlaybackRateChanged;
         },
 
         initialize: function(typeValue, streamProcessor) {
@@ -391,7 +406,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
             self.bufferController = streamProcessor.bufferController;
             isDynamic = streamProcessor.isDynamic();
             fragmentModel = this.fragmentController.getModel(this);
-            MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD = self.numOfParallelRequestAllowed;
+            ScheduleController.LOADING_REQUEST_THRESHOLD = self.numOfParallelRequestAllowed;
         },
 
         getSeekTarget: function() {
@@ -432,8 +447,11 @@ MediaPlayer.dependencies.ScheduleController = function () {
     };
 };
 
-MediaPlayer.dependencies.ScheduleController.prototype = {
-    constructor: MediaPlayer.dependencies.ScheduleController
+ScheduleController.prototype = {
+    constructor: ScheduleController
 };
 
-MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD = 0;
+ScheduleController.LOADING_REQUEST_THRESHOLD = 0;
+
+
+export default ScheduleController;

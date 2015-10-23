@@ -28,7 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.SourceBufferExtensions = function () {
+import Error from '../vo/Error.js';
+
+let SourceBufferExtensions = function () {
     "use strict";
     this.system = undefined;
     this.notify = undefined;
@@ -37,9 +39,9 @@ MediaPlayer.dependencies.SourceBufferExtensions = function () {
     this.manifestExt = undefined;
 };
 
-MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
+SourceBufferExtensions.prototype = {
 
-    constructor: MediaPlayer.dependencies.SourceBufferExtensions,
+    constructor: SourceBufferExtensions,
 
     createSourceBuffer: function (mediaSource, mediaInfo) {
         "use strict";
@@ -308,11 +310,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 self.waitForUpdateEnd(buffer, function() {
-                    self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
+                    self.notify(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
                 });
             });
         } catch (err) {
-            self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes}, new MediaPlayer.vo.Error(err.code, err.message, null));
+            self.notify(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes}, new Error(err.code, err.message, null));
         }
     },
 
@@ -327,11 +329,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 self.waitForUpdateEnd(buffer, function() {
-                    self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
+                    self.notify(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
                 });
             });
         } catch (err) {
-            self.notify(MediaPlayer.dependencies.SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end}, new MediaPlayer.vo.Error(err.code, err.message, null));
+            self.notify(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end}, new Error(err.code, err.message, null));
         }
     },
 
@@ -346,9 +348,11 @@ MediaPlayer.dependencies.SourceBufferExtensions.prototype = {
     }
 };
 
-MediaPlayer.dependencies.SourceBufferExtensions.QUOTA_EXCEEDED_ERROR_CODE = 22;
+SourceBufferExtensions.QUOTA_EXCEEDED_ERROR_CODE = 22;
 
-MediaPlayer.dependencies.SourceBufferExtensions.eventList = {
+SourceBufferExtensions.eventList = {
     ENAME_SOURCEBUFFER_REMOVE_COMPLETED: "sourceBufferRemoveCompleted",
     ENAME_SOURCEBUFFER_APPEND_COMPLETED: "sourceBufferAppendCompleted"
 };
+
+export default SourceBufferExtensions;

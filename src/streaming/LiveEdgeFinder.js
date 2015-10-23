@@ -28,22 +28,28 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.LiveEdgeFinder = function () {
+import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
+import Error from './vo/Error.js';
+import Stream from './Stream.js';
+import TimeSyncController from './TimeSyncController.js';
+
+let LiveEdgeFinder = function () {
+
     "use strict";
 
     var isSearchStarted = false,
         searchStartTime = NaN,
         rules,
         liveEdge = null,
-        ruleSet = MediaPlayer.rules.SynchronizationRulesCollection.prototype.BEST_GUESS_RULES,
+        ruleSet = SynchronizationRulesCollection.prototype.BEST_GUESS_RULES,
 
         onSearchCompleted = function(req) {
             var searchTime = (new Date().getTime() - searchStartTime) / 1000;
 
             liveEdge = req.value;
 
-            this.notify(MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime},
-                liveEdge === null ? new MediaPlayer.vo.Error(MediaPlayer.dependencies.LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null);
+            this.notify(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime},
+                liveEdge === null ? new Error(LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null);
         },
 
         onStreamUpdated = function(e) {
@@ -64,9 +70,9 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
 
         onTimeSyncComplete = function (e) {
             if (e.error) {
-                ruleSet = MediaPlayer.rules.SynchronizationRulesCollection.prototype.BEST_GUESS_RULES;
+                ruleSet = SynchronizationRulesCollection.prototype.BEST_GUESS_RULES;
             } else {
-                ruleSet = MediaPlayer.rules.SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES;
+                ruleSet = SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES;
             }
         };
 
@@ -79,8 +85,8 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
         unsubscribe: undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
-            this[MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncComplete;
+            this[Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
+            this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncComplete;
         },
 
         initialize: function(streamProcessor) {
@@ -104,12 +110,14 @@ MediaPlayer.dependencies.LiveEdgeFinder = function () {
     };
 };
 
-MediaPlayer.dependencies.LiveEdgeFinder.prototype = {
-    constructor: MediaPlayer.dependencies.LiveEdgeFinder
+LiveEdgeFinder.prototype = {
+    constructor: LiveEdgeFinder
 };
 
-MediaPlayer.dependencies.LiveEdgeFinder.eventList = {
+LiveEdgeFinder.eventList = {
     ENAME_LIVE_EDGE_SEARCH_COMPLETED: "liveEdgeFound"
 };
 
-MediaPlayer.dependencies.LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE = 1;
+LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE = 1;
+
+export default LiveEdgeFinder;

@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.ManifestInfo = function () {
+let ManifestInfo = function () {
     "use strict";
     this.DVRWindowSize = NaN;
     this.loadedTime = null;
@@ -39,6 +39,8 @@ MediaPlayer.vo.ManifestInfo = function () {
     this.maxFragmentDuration = null;
 };
 
-MediaPlayer.vo.ManifestInfo.prototype = {
-    constructor: MediaPlayer.vo.ManifestInfo
+ManifestInfo.prototype = {
+    constructor: ManifestInfo
 };
+
+export default ManifestInfo;

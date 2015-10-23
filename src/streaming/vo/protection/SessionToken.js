@@ -35,17 +35,17 @@
  * This interface defines the common APIs for session tokens available for
  * applications to access.
  *
- * @interface MediaPlayer.vo.protection.SessionToken
+ * @interface SessionToken
  */
 
-MediaPlayer.vo.protection.SessionToken = function () { };
+let SessionToken = function () { };
 
 /**
  * The initialization data used to create this session
  *
  * @instance
  * @name initData
- * @memberof MediaPlayer.vo.protection.SessionToken
+ * @memberof SessionToken
  * @type ArrayBuffer
  * @readonly
  */
@@ -54,7 +54,7 @@ MediaPlayer.vo.protection.SessionToken = function () { };
  * Returns the unique session ID designated to this session
  *
  * @function
- * @name MediaPlayer.vo.protection.SessionToken#getSessionID
+ * @name SessionToken#getSessionID
  * @return {string} the session ID or the empty string if the implementation
  * does not support session IDs or the sessionID has not yet been established
  */
@@ -65,7 +65,7 @@ MediaPlayer.vo.protection.SessionToken = function () { };
  * media data, or NaN if no such time exists
  *
  * @function
- * @name MediaPlayer.vo.protection.SessionToken#getExpirationTime
+ * @name SessionToken#getExpirationTime
  * @returns {Number} the expiration time or NaN if no expiration time exists
  * for this session
  */
@@ -75,7 +75,7 @@ MediaPlayer.vo.protection.SessionToken = function () { };
  * current status of the associated key.
  *
  * @function
- * @name MediaPlayer.vo.protection.SessionToken#getKeyStatuses
+ * @name SessionToken#getKeyStatuses
  * @returns {"maplike<BufferSource,MediaKeyStatus>"} the map of keys
  * in this session and their associated status
  */
@@ -85,9 +85,9 @@ MediaPlayer.vo.protection.SessionToken = function () { };
  * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeySessionType|here}
  *
  * @function
- * @name MediaPlayer.vo.protection.SessionToken#getSessionType
+ * @name SessionToken#getSessionType
  * @returns {String} The session type
  */
 
-
+export default SessionToken;
 

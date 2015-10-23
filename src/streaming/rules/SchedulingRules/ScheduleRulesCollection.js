@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.ScheduleRulesCollection = function () {
+let ScheduleRulesCollection = function () {
     "use strict";
 
     var fragmentsToScheduleRules = [],
@@ -41,9 +41,9 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
 
         getRules: function (type) {
             switch (type) {
-                case MediaPlayer.rules.ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES:
+                case ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES:
                     return fragmentsToScheduleRules;
-                case MediaPlayer.rules.ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES:
+                case ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES:
                     return nextFragmentRules;
                 default:
                     return null;
@@ -57,8 +57,10 @@ MediaPlayer.rules.ScheduleRulesCollection = function () {
     };
 };
 
-MediaPlayer.rules.ScheduleRulesCollection.prototype = {
-    constructor: MediaPlayer.rules.ScheduleRulesCollection,
+ScheduleRulesCollection.prototype = {
+    constructor: ScheduleRulesCollection,
     FRAGMENTS_TO_SCHEDULE_RULES: "fragmentsToScheduleRules",
     NEXT_FRAGMENT_RULES: "nextFragmentRules",
 };
+
+export default ScheduleRulesCollection;

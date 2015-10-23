@@ -35,7 +35,10 @@
  * @class
  * @implements MediaPlayer.dependencies.protection.KeySystem
  */
-MediaPlayer.dependencies.protection.KeySystem_Widevine = function() {
+
+import CommonEncryption from '../CommonEncryption.js';
+
+let KeySystem_Widevine = function() {
     "use strict";
 
     var keySystemStr = "com.widevine.alpha",
@@ -47,7 +50,7 @@ MediaPlayer.dependencies.protection.KeySystem_Widevine = function() {
         systemString: keySystemStr,
         uuid: keySystemUUID,
 
-        getInitData: MediaPlayer.dependencies.protection.CommonEncryption.parseInitDataFromContentProtection,
+        getInitData: CommonEncryption.parseInitDataFromContentProtection,
 
         getRequestHeadersFromMessage: function(/*message*/) { return null; },
 
@@ -57,7 +60,8 @@ MediaPlayer.dependencies.protection.KeySystem_Widevine = function() {
     };
 };
 
-MediaPlayer.dependencies.protection.KeySystem_Widevine.prototype = {
-    constructor: MediaPlayer.dependencies.protection.KeySystem_Widevine
+KeySystem_Widevine.prototype = {
+    constructor: KeySystem_Widevine
 };
 
+export default KeySystem_Widevine;

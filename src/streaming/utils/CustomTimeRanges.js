@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
   
-MediaPlayer.utils.CustomTimeRanges = function () {
+let CustomTimeRanges = function () {
     return {
         
         customTimeRangeArray:[],
@@ -136,8 +136,8 @@ MediaPlayer.utils.CustomTimeRanges = function () {
 
 };
  
-MediaPlayer.utils.CustomTimeRanges.prototype = {
-    constructor: MediaPlayer.utils.CustomTimeRanges
+CustomTimeRanges.prototype = {
+    constructor: CustomTimeRanges
 };
  
- 
+export default CustomTimeRanges;

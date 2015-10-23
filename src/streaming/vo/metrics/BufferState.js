@@ -28,12 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.metrics.BufferState = function () {
+let BufferState = function () {
     "use strict";
     this.target = null; // Required Buffer Level determined by the BufferLevelRule.
     this.state = MediaPlayer.dependencies.BufferController.BUFFER_EMPTY;
 };
 
-MediaPlayer.vo.metrics.BufferState.prototype = {
-    constructor: MediaPlayer.vo.metrics.BufferState
+BufferState.prototype = {
+    constructor: BufferState
 };
+
+export default BufferState;

@@ -31,7 +31,9 @@
 
 /*global MediaPlayer*/
 
-MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule = function () {
+import SwitchRequest from '../SwitchRequest.js';
+
+let LiveEdgeWithTimeSynchronizationRule = function () {
     "use strict";
 
     return {
@@ -44,7 +46,7 @@ MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule = function () {
         execute: function (context, callback) {
             var representationInfo = context.getTrackInfo(),
                 liveEdgeInitialSearchPosition = representationInfo.DVRWindow.end,
-                p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+                p = SwitchRequest.prototype.DEFAULT;
 
             if (representationInfo.useCalculatedLiveEdgeTime) {
                 //By default an expected live edge is the end of the last segment.
@@ -55,14 +57,16 @@ MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule = function () {
                 // Thus, we need to switch an expected live edge and actual live edge for SegmentTimelne streams.
                 var actualLiveEdge = this.timelineConverter.getExpectedLiveEdge();
                 this.timelineConverter.setExpectedLiveEdge(liveEdgeInitialSearchPosition);
-                callback(new MediaPlayer.rules.SwitchRequest(actualLiveEdge, p));
+                callback(new SwitchRequest(actualLiveEdge, p));
             } else {
-                callback(new MediaPlayer.rules.SwitchRequest(liveEdgeInitialSearchPosition, p));
+                callback(new SwitchRequest(liveEdgeInitialSearchPosition, p));
             }
         }
     };
 };
 
-MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule.prototype = {
-    constructor: MediaPlayer.rules.LiveEdgeWithTimeSynchronizationRule
+LiveEdgeWithTimeSynchronizationRule.prototype = {
+    constructor: LiveEdgeWithTimeSynchronizationRule
 };
+
+export default LiveEdgeWithTimeSynchronizationRule;

@@ -29,7 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
+import KeySystem from './KeySystem.js';
+import KeyPair from '../../vo/protection/KeyPair.js';
+import LicenseRequestComplete from '../../vo/protection/LicenseRequestComplete.js';
+import ClearKeyKeySet from '../../vo/protection/ClearKeyKeySet.js';
+import CommonEncryption from '../CommonEncryption.js';
+
+let KeySystem_ClearKey = function() {
     "use strict";
 
     var keySystemStr = "org.w3.clearkey",
@@ -42,7 +48,7 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
         systemString: keySystemStr,
         uuid: keySystemUUID,
 
-        getInitData: MediaPlayer.dependencies.protection.CommonEncryption.parseInitDataFromContentProtection,
+        getInitData: CommonEncryption.parseInitDataFromContentProtection,
 
         getRequestHeadersFromMessage: function(/*message*/) { return null; },
 
@@ -52,21 +58,21 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey = function() {
     };
 };
 
-MediaPlayer.dependencies.protection.KeySystem_ClearKey.prototype = {
-    constructor: MediaPlayer.dependencies.protection.KeySystem_ClearKey
+KeySystem_ClearKey.prototype = {
+    constructor: KeySystem_ClearKey
 };
 
 /**
  * Returns desired clearkeys (as specified in the CDM message) from protection data
  *
- * @param {MediaPlayer.vo.protection.ProtectionData} protData the protection data
+ * @param {ProtectionData} protData the protection data
  * @param {ArrayBuffer} message the ClearKey CDM message
- * @returns {MediaPlayer.vo.protection.ClearKeyKeySet} the key set or null if none found
+ * @returns {ClearKeyKeySet} the key set or null if none found
  * @throws {Error} if a keyID specified in the CDM message was not found in the
  * protection data
- * @memberof MediaPlayer.dependencies.protection.KeySystem_ClearKey
+ * @memberof KeySystem_ClearKey
  */
-MediaPlayer.dependencies.protection.KeySystem_ClearKey.getClearKeysFromProtectionData = function(protData, message) {
+KeySystem_ClearKey.getClearKeysFromProtectionData = function(protData, message) {
     var clearkeySet = null;
     if (protData) {
         // ClearKey is the only system that does not require a license server URL, so we
@@ -80,11 +86,12 @@ MediaPlayer.dependencies.protection.KeySystem_ClearKey.getClearKeysFromProtectio
                 throw new Error("DRM: ClearKey keyID (" + clearkeyID + ") is not known!");
             }
             // KeyIDs from CDM are not base64 padded.  Keys may or may not be padded
-            keyPairs.push(new MediaPlayer.vo.protection.KeyPair(clearkeyID, clearkey));
+            keyPairs.push(new KeyPair(clearkeyID, clearkey));
         }
-        clearkeySet = new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs);
+        clearkeySet = new ClearKeyKeySet(keyPairs);
     }
     return clearkeySet;
 };
 
 
+export default KeySystem_ClearKey;

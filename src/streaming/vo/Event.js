@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.Event = function () {
+let Event = function () {
     "use strict";
     this.type = null; // event type/name. mandatory
     this.sender = null; // object that fires an event. mandatory
@@ -37,6 +37,7 @@ MediaPlayer.vo.Event = function () {
     this.timestamp = NaN; // timestamp. mandatory
 };
 
-MediaPlayer.vo.Event.prototype = {
-    constructor: MediaPlayer.vo.Event
+Event.prototype = {
+    constructor: Event
 };
+export default Event;

@@ -28,7 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.ManifestUpdater = function () {
+import ManifestLoader from './ManifestLoader.js';
+import StreamController from './controllers/StreamController.js';
+import PlaybackController from './controllers/PlaybackController.js';
+
+let ManifestUpdater = function () {
+
     "use strict";
 
     var refreshDelay = NaN,
@@ -66,7 +71,7 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;
             refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
 
-            this.notify(MediaPlayer.dependencies.ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, {manifest:manifest});
+            this.notify(ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, {manifest:manifest});
 
             if (!isStopped) {
                 start.call(this);
@@ -125,17 +130,17 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
 
         setup: function () {
             // Listen to streamsComposed event to be aware that the streams have been composed
-            this[MediaPlayer.dependencies.StreamController.eventList.ENAME_STREAMS_COMPOSED] = onStreamsComposed;
-            this[MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = onManifestLoaded;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED] = onPlaybackStarted;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED] = onPlaybackPaused;
+            this[StreamController.eventList.ENAME_STREAMS_COMPOSED] = onStreamsComposed;
+            this[ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = onManifestLoaded;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_STARTED] = onPlaybackStarted;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_PAUSED] = onPlaybackPaused;
         },
 
         initialize: function (loader) {
             isUpdating = false;
             isStopped = true;
             manifestLoader = loader;
-            manifestLoader.subscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
+            manifestLoader.subscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
         },
 
         setManifest: function (m) {
@@ -150,16 +155,18 @@ MediaPlayer.dependencies.ManifestUpdater = function () {
             isStopped = true;
             isUpdating = false;
             clear.call(this);
-            manifestLoader.unsubscribe(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
+            manifestLoader.unsubscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
             refreshDelay = NaN;
         }
     };
 };
 
-MediaPlayer.dependencies.ManifestUpdater.prototype = {
-    constructor: MediaPlayer.dependencies.ManifestUpdater
+ManifestUpdater.prototype = {
+    constructor: ManifestUpdater
 };
 
-MediaPlayer.dependencies.ManifestUpdater.eventList = {
+ManifestUpdater.eventList = {
     ENAME_MANIFEST_UPDATED: "manifestUpdated"
 };
+
+export default ManifestUpdater;

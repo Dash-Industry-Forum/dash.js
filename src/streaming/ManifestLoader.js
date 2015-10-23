@@ -28,7 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.ManifestLoader = function () {
+import XlinkController from './controllers/XlinkController.js';
+import Error from './vo/Error.js';
+import HTTPRequest from './vo/metrics/HTTPRequest.js';
+
+let ManifestLoader = function () {
     "use strict";
 
     var RETRY_ATTEMPTS = 3,
@@ -79,7 +83,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
 
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
-                                                 MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE,
+                                                 HTTPRequest.MPD_TYPE,
                                                  url,
                                                  actualUrl,
                                                  null,
@@ -101,12 +105,12 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                     errorMsg = "Failed loading manifest: " + url + ", parsing failed";
 
                     self.notify(
-                        MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED,
+                        ManifestLoader.eventList.ENAME_MANIFEST_LOADED,
                         {
                             manifest: null
                         },
-                        new MediaPlayer.vo.Error(
-                            MediaPlayer.dependencies.ManifestLoader.PARSERERROR_ERROR_CODE,
+                        new Error(
+                            ManifestLoader.PARSERERROR_ERROR_CODE,
                             errorMsg,
                             null
                         )
@@ -125,7 +129,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
 
                 self.metricsModel.addHttpRequest("stream",
                                                  null,
-                                                 MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE,
+                                                 HTTPRequest.MPD_TYPE,
                                                  url,
                                                  request.responseURL || null,
                                                  null,
@@ -144,7 +148,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                 } else {
                     self.log("Failed loading manifest: " + url + " no retry attempts left");
                     self.errHandler.downloadError("manifest", url, request);
-                    self.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url + " no retry attempts left"));
+                    self.notify(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, null, new Error("Failed loading manifest: " + url + " no retry attempts left"));
                 }
             };
 
@@ -170,7 +174,7 @@ MediaPlayer.dependencies.ManifestLoader = function () {
             }
         },
         onXlinkReady = function(event) {
-            this.notify(MediaPlayer.dependencies.ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: event.data.manifest});
+            this.notify(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: event.data.manifest});
         };
 
     return {
@@ -190,17 +194,19 @@ MediaPlayer.dependencies.ManifestLoader = function () {
         setup: function() {
             onXlinkReady = onXlinkReady.bind(this);
             this.xlinkController = this.system.getObject("xlinkController");
-            this.xlinkController.subscribe(MediaPlayer.dependencies.XlinkController.eventList.ENAME_XLINK_READY,this,onXlinkReady);
+            this.xlinkController.subscribe(XlinkController.eventList.ENAME_XLINK_READY,this,onXlinkReady);
         }
     };
 };
 
-MediaPlayer.dependencies.ManifestLoader.prototype = {
-    constructor: MediaPlayer.dependencies.ManifestLoader
+ManifestLoader.prototype = {
+    constructor: ManifestLoader
 };
 
-MediaPlayer.dependencies.ManifestLoader.PARSERERROR_ERROR_CODE = 1;
+ManifestLoader.PARSERERROR_ERROR_CODE = 1;
 
-MediaPlayer.dependencies.ManifestLoader.eventList = {
+ManifestLoader.eventList = {
     ENAME_MANIFEST_LOADED: "manifestLoaded"
 };
+
+export default ManifestLoader;

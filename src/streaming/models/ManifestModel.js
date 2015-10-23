@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from "../utils/EventBus.js";
+import MediaPlayer from '../MediaPlayer.js';
 
-MediaPlayer.models.ManifestModel = function () {
+let ManifestModel = function () {
     "use strict";
 
     var manifest;
@@ -53,17 +53,18 @@ MediaPlayer.models.ManifestModel = function () {
                 data: value
             });
 
-            this.notify(MediaPlayer.models.ManifestModel.eventList.ENAME_MANIFEST_UPDATED, {manifest: value});
+            this.notify(ManifestModel.eventList.ENAME_MANIFEST_UPDATED, {manifest: value});
         }
     };
 };
 
-MediaPlayer.models.ManifestModel.prototype = {
-    constructor: MediaPlayer.models.ManifestModel
+ManifestModel.prototype = {
+    constructor: ManifestModel
 };
 
-MediaPlayer.models.ManifestModel.eventList = {
+ManifestModel.eventList = {
     ENAME_MANIFEST_UPDATED: "manifestUpdated"
 };
 
 
+export default ManifestModel;

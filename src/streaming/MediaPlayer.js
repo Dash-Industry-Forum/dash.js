@@ -33,7 +33,8 @@
  * @param context - New instance of a dijon.js context (i.e. new Dash.di.DashContext()).  You can pass a custom context that extends Dash.di.DashContext to override item(s) in the DashContext.
  */
 
-//import EventBus from "./utils/EventBus.js";
+import EventBus from "./utils/EventBus.js";
+import DashAdapter from "../dash/DashAdapter.js";
 
 class MediaPlayer{
 

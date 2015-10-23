@@ -28,7 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.BufferLevelRule = function () {
+import SwitchRequest from '../SwitchRequest.js';
+import BufferController from '../../controllers/BufferController.js';
+import FragmentController from '../../controllers/FragmentController.js';
+
+let BufferLevelRule = function () {
     "use strict";
 
     var getBufferTarget = function (context) {
@@ -36,14 +40,14 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 streamInfo = context.getStreamInfo(),
                 duration = streamInfo.manifestInfo.duration,
                 isDynamic = streamProcessor.isDynamic(), //TODO make is dynamic false if live stream is playing more than X seconds from live edge in DVR window. So it will act like VOD.
-                isLongFormContent = (duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
+                isLongFormContent = (duration >= BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
                 bufferTarget = NaN;
 
             if (!isDynamic && this.abrController.isPlayingAtTopQuality(streamInfo)) {//TODO || allow larger buffer targets if we stabilize on a non top quality for more than 30 seconds.
-                bufferTarget = isLongFormContent ? MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM : MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY;
+                bufferTarget = isLongFormContent ? BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM : BufferController.BUFFER_TIME_AT_TOP_QUALITY;
             }else if (!isDynamic) {
                 //General VOD target non top quality and not stabilized on a given quality.
-                bufferTarget = MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME;
+                bufferTarget = BufferController.DEFAULT_MIN_BUFFER_TIME;
             } else {
                 bufferTarget = this.playbackController.getLiveDelay();
             }
@@ -67,13 +71,15 @@ MediaPlayer.rules.BufferLevelRule = function () {
 
             fragmentCount = bufferLevel < getBufferTarget.call(this, context) ? 1 : 0;
 
-            callback(new MediaPlayer.rules.SwitchRequest(fragmentCount, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
+            callback(new SwitchRequest(fragmentCount, SwitchRequest.prototype.DEFAULT));
         },
 
         reset: function() {}
     };
 };
 
-MediaPlayer.rules.BufferLevelRule.prototype = {
-    constructor: MediaPlayer.rules.BufferLevelRule
+BufferLevelRule.prototype = {
+    constructor: BufferLevelRule
 };
+
+export default BufferLevelRule;

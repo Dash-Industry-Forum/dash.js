@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.ABRRulesCollection = function () {
+let ABRRulesCollection = function () {
     "use strict";
 
     var qualitySwitchRules = [],
@@ -42,9 +42,9 @@ MediaPlayer.rules.ABRRulesCollection = function () {
 
         getRules: function (type) {
             switch (type) {
-                case MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES:
+                case ABRRulesCollection.prototype.QUALITY_SWITCH_RULES:
                     return qualitySwitchRules;
-                case MediaPlayer.rules.ABRRulesCollection.prototype.ABANDON_FRAGMENT_RULES:
+                case ABRRulesCollection.prototype.ABANDON_FRAGMENT_RULES:
                     return adandonFragmentRules;
                 default:
                     return null;
@@ -60,8 +60,10 @@ MediaPlayer.rules.ABRRulesCollection = function () {
     };
 };
 
-MediaPlayer.rules.ABRRulesCollection.prototype = {
-    constructor: MediaPlayer.rules.ABRRulesCollection,
+ABRRulesCollection.prototype = {
+    constructor: ABRRulesCollection,
     QUALITY_SWITCH_RULES: "qualitySwitchRules",
     ABANDON_FRAGMENT_RULES: "abandonFragmentRules"
 };
+
+export default ABRRulesCollection;

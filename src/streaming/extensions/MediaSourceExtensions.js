@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.MediaSourceExtensions = function () {
+let MediaSourceExtensions = function () {
     "use strict";
 };
 
-MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
-    constructor: MediaPlayer.dependencies.MediaSourceExtensions,
+MediaSourceExtensions.prototype = {
+    constructor: MediaSourceExtensions,
 
     createMediaSource: function () {
         "use strict";
@@ -92,3 +92,5 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
         source.endOfStream();
     }
 };
+
+export default MediaSourceExtensions;

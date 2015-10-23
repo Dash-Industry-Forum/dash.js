@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.StreamInfo = function () {
+let StreamInfo = function () {
     "use strict";
     this.id = null;
     this.index = null;
@@ -38,6 +38,8 @@ MediaPlayer.vo.StreamInfo = function () {
     this.isLast = true;
 };
 
-MediaPlayer.vo.StreamInfo.prototype = {
-    constructor: MediaPlayer.vo.StreamInfo
+StreamInfo.prototype = {
+    constructor: StreamInfo
 };
+
+export default StreamInfo;

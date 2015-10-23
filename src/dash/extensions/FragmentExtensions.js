@@ -29,7 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-Dash.dependencies.FragmentExtensions = function () {
+import Error from '../../streaming/vo/Error.js';
+
+let FragmentExtensions = function () {
     "use strict";
 
     var getSamplesInfo = function (ab) {
@@ -88,10 +90,12 @@ Dash.dependencies.FragmentExtensions = function () {
     };
 };
 
-Dash.dependencies.FragmentExtensions.prototype = {
-    constructor: Dash.dependencies.FragmentExtensions
+FragmentExtensions.prototype = {
+    constructor: FragmentExtensions
 };
 
-Dash.dependencies.FragmentExtensions.eventList = {
+FragmentExtensions.eventList = {
     ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
 };
+
+export default FragmentExtensions;

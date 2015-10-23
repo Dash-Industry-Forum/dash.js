@@ -28,7 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.PlaybackTimeRule = function () {
+
+import SwitchRequest from '../SwitchRequest.js';
+import PlaybackController from '../../controllers/PlaybackController.js';
+import FragmentModel from '../../models/FragmentModel.js';
+
+let PlaybackTimeRule = function () {
     "use strict";
 
     return {
@@ -48,7 +53,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                     representationInfo = streamProcessor.getCurrentRepresentationInfo(),
                     seekTarget = streamController.getSeekTarget(),//seekTarget ? seekTarget[mediaType] : null,
                     hasSeekTarget = !isNaN(seekTarget),
-                    p = hasSeekTarget ? MediaPlayer.rules.SwitchRequest.prototype.STRONG  : MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
+                    p = hasSeekTarget ? SwitchRequest.prototype.STRONG  : SwitchRequest.prototype.DEFAULT,
                     keepIdx = !hasSeekTarget,
                     time = hasSeekTarget ? seekTarget : this.adapter.getIndexHandlerTime(streamProcessor),
                     buffer = streamProcessor.bufferController.getBuffer(),
@@ -58,7 +63,7 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
 
 
             if (isNaN(time) || (mediaType === "fragmentedText" && this.textSourceBuffer.getAllTracksAreDisabled())) {
-                callback(new MediaPlayer.rules.SwitchRequest(null, p));
+                callback(new SwitchRequest(null, p));
                 return;
             }
 
@@ -93,11 +98,13 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 request.delayLoadingTime = new Date().getTime() + streamController.getTimeToLoadDelay();
             }
 
-            callback(new MediaPlayer.rules.SwitchRequest(request, p));
+            callback(new SwitchRequest(request, p));
         },
     };
 };
 
-MediaPlayer.rules.PlaybackTimeRule.prototype = {
-    constructor: MediaPlayer.rules.PlaybackTimeRule
+PlaybackTimeRule.prototype = {
+    constructor: PlaybackTimeRule
 };
+
+export default PlaybackTimeRule;

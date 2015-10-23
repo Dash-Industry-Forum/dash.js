@@ -28,7 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.utils.IsoFile = function () {
+
+import IsoBox from '../vo/IsoBox.js';
+
+let IsoFile = function () {
     "use strict";
 
     var parsedIsoFile,
@@ -104,7 +107,7 @@ MediaPlayer.utils.IsoFile = function () {
         convertToDashIsoBox = function(boxData) {
             if (!boxData) return null;
 
-            var box = new MediaPlayer.vo.IsoBox(),
+            var box = new IsoBox(),
                 i,
                 ln;
 
@@ -173,14 +176,14 @@ MediaPlayer.utils.IsoFile = function () {
     return {
         /**
          * @param {string} type
-         * @returns {@link MediaPlayer.vo.IsoBox}
+         * @returns {@link IsoBox}
          * @memberof IsoFile#
          */
         getBox: getBox,
 
         /**
          * @param {string} type
-         * @returns {Array} array of {@link MediaPlayer.vo.IsoBox}
+         * @returns {Array} array of {@link IsoBox}
          * @memberof IsoFile#
          */
         getBoxes: getBoxes,
@@ -194,7 +197,7 @@ MediaPlayer.utils.IsoFile = function () {
         },
 
         /**
-         * @returns {@link MediaPlayer.vo.IsoBox}
+         * @returns {@link IsoBox}
          * @memberof IsoFile#
          */
         getLastBox: function() {
@@ -216,6 +219,8 @@ MediaPlayer.utils.IsoFile = function () {
     };
 };
 
-MediaPlayer.utils.IsoFile.prototype = {
-    constructor: MediaPlayer.utils.IsoFile
+IsoFile.prototype = {
+    constructor: IsoFile
 };
+
+export default IsoFile;

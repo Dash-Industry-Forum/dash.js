@@ -29,7 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.dependencies.FragmentModel = function () {
+import BufferController from '../controllers/BufferController.js';
+import FragmentLoader from '../FragmentLoader.js';
+
+let FragmentModel = function () {
+
     "use strict";
 
     var context = null,
@@ -41,7 +45,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             var self = this;
 
             // We are about to start loading the fragment, so execute the corresponding callback
-            self.notify(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, {request: request});
+            self.notify(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, {request: request});
             self.fragmentLoader.load(request);
         },
 
@@ -97,10 +101,10 @@ MediaPlayer.dependencies.FragmentModel = function () {
             var requests;
 
             switch (state) {
-                case MediaPlayer.dependencies.FragmentModel.states.LOADING:
+                case FragmentModel.states.LOADING:
                     requests = loadingRequests;
                     break;
-                case MediaPlayer.dependencies.FragmentModel.states.EXECUTED:
+                case FragmentModel.states.EXECUTED:
                     requests = executedRequests;
                     break;
                 default:
@@ -137,8 +141,8 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 executedRequests.push(request);
             }
 
-            addSchedulingInfoMetrics.call(this, request, error ? MediaPlayer.dependencies.FragmentModel.states.FAILED : MediaPlayer.dependencies.FragmentModel.states.EXECUTED);
-            this.notify(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {request: request, response: response}, error);
+            addSchedulingInfoMetrics.call(this, request, error ? FragmentModel.states.FAILED : FragmentModel.states.EXECUTED);
+            this.notify(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {request: request, response: response}, error);
         },
 
         onPlaybackSeeking = function(){
@@ -158,8 +162,8 @@ MediaPlayer.dependencies.FragmentModel = function () {
         manifestExt:undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED] = onLoadingCompleted;
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
+            this[FragmentLoader.eventList.ENAME_LOADING_COMPLETED] = onLoadingCompleted;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
         },
 
         setLoader: function(value) {
@@ -211,12 +215,12 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         /**
          *
-         * Gets an array of {@link MediaPlayer.vo.FragmentRequest} objects
+         * Gets an array of {@link FragmentRequest} objects
          *
          * @param {object} filter The object with properties by which the method filters the requests to be returned.
-         *  the only mandatory property is state, which must be a value from {@link MediaPlayer.dependencies.FragmentModel.states}
-         *  other properties should match the properties of {@link MediaPlayer.vo.FragmentRequest}. E.g.:
-         *  getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, quality: 0}) - returns
+         *  the only mandatory property is state, which must be a value from {@link FragmentModel.states}
+         *  other properties should match the properties of {@link FragmentRequest}. E.g.:
+         *  getRequests({state: FragmentModel.states.EXECUTED, quality: 0}) - returns
          *  all the requests from executedRequests array where requests.quality = filter.quality
          *
          * @returns {Array}
@@ -293,12 +297,12 @@ MediaPlayer.dependencies.FragmentModel = function () {
                 case "complete":
                     // Stream has completed, execute the corresponding callback
                     executedRequests.push(request);
-                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.EXECUTED);
-                    self.notify(MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED, {request: request});
+                    addSchedulingInfoMetrics.call(self, request, FragmentModel.states.EXECUTED);
+                    self.notify(FragmentModel.eventList.ENAME_STREAM_COMPLETED, {request: request});
                     break;
                 case "download":
                     loadingRequests.push(request);
-                    addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.LOADING);
+                    addSchedulingInfoMetrics.call(self, request, FragmentModel.states.LOADING);
                     loadCurrentFragment.call(self, request);
                     break;
                 default:
@@ -315,18 +319,18 @@ MediaPlayer.dependencies.FragmentModel = function () {
     };
 };
 
-MediaPlayer.dependencies.FragmentModel.prototype = {
-    constructor: MediaPlayer.dependencies.FragmentModel
+FragmentModel.prototype = {
+    constructor: FragmentModel
 };
 
-MediaPlayer.dependencies.FragmentModel.eventList = {
+FragmentModel.eventList = {
     ENAME_STREAM_COMPLETED: "streamCompleted",
     ENAME_FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted",
     ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
 };
 
 /* Public Static Constants */
-MediaPlayer.dependencies.FragmentModel.states = {
+FragmentModel.states = {
     PENDING: "pending",
     LOADING: "loading",
     EXECUTED: "executed",
@@ -334,3 +338,5 @@ MediaPlayer.dependencies.FragmentModel.states = {
     CANCELED: "canceled",
     FAILED: "failed"
 };
+
+export default FragmentModel;

@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.vo.TextTrackInfo = function () {
+let TextTrackInfo = function () {
     "use strict";
     this.video = null;
     this.captionData= null;
@@ -39,6 +39,8 @@ MediaPlayer.vo.TextTrackInfo = function () {
     this.isFragmented = false;
 };
 
-MediaPlayer.vo.TextTrackInfo.prototype = {
-    constructor: MediaPlayer.vo.TextTrackInfo
+TextTrackInfo.prototype = {
+    constructor: TextTrackInfo
 };
+
+export default TextTrackInfo;

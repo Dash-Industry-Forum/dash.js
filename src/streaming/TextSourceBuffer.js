@@ -28,7 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.TextSourceBuffer = function () {
+
+import DashAdapter from "../dash/DashAdapter.js";
+import MediaPlayer from './MediaPlayer.js';
+
+let TextSourceBuffer = function () {
     var allTracksAreDisabled = false,
         parser = null,
 
@@ -96,7 +100,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                 mimeType = mediaInfo.mimeType;
 
             function createTextTrackFromMediaInfo(captionData, mediaInfo) {
-                var textTrackInfo = new MediaPlayer.vo.TextTrackInfo(),
+                var textTrackInfo = new TextTrackInfo(),
                     trackKindMap = {subtitle:"subtitles", caption:"captions"},//Dash Spec has no "s" on end of KIND but HTML needs plural.
                     getKind = function () {
                         var kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
@@ -196,6 +200,8 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
     };
 };
 
-MediaPlayer.dependencies.TextSourceBuffer.prototype = {
-    constructor: MediaPlayer.dependencies.TextSourceBuffer
+TextSourceBuffer.prototype = {
+    constructor: TextSourceBuffer
 };
+
+export default TextSourceBuffer;

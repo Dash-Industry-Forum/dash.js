@@ -30,7 +30,7 @@
  */
 import EventBus from "./EventBus.js";
 
-MediaPlayer.utils.Debug = function () {
+let Debug = function () {
     "use strict";
 
     var logToBrowserConsole = true,
@@ -50,7 +50,7 @@ MediaPlayer.utils.Debug = function () {
          * Prepends a timestamp in milliseconds to each log message.
          * @param {boolean} value Set to true if you want to see a timestamp in each log message.
          * @default false
-         * @memberof MediaPlayer.utils.Debug#
+         * @memberof Debug#
          */
         setLogTimestampVisible: function(value) {
             showLogTimestamp = value;
@@ -59,7 +59,7 @@ MediaPlayer.utils.Debug = function () {
          * Prepends the callee object name, and media type if available, to each log message.
          * @param {boolean} value Set to true if you want to see a object name and media type in each log message.
          * @default false
-         * @memberof MediaPlayer.utils.Debug#
+         * @memberof Debug#
          */
         showCalleeName: function(value) {
             showCalleeName = value;
@@ -68,7 +68,7 @@ MediaPlayer.utils.Debug = function () {
          * Toggles logging to the browser's javascript console.  If you set to false you will still receive a log event with the same message.
          * @param {boolean} value Set to false if you want to turn off logging to the browser's console.
          * @default true
-         * @memberof MediaPlayer.utils.Debug#
+         * @memberof Debug#
          */
         setLogToBrowserConsole: function(value) {
             logToBrowserConsole = value;
@@ -76,7 +76,7 @@ MediaPlayer.utils.Debug = function () {
         /**
          * Use this method to get the state of logToBrowserConsole.
          * @returns {boolean} The current value of logToBrowserConsole
-         * @memberof MediaPlayer.utils.Debug#
+         * @memberof Debug#
          */
         getLogToBrowserConsole: function() {
             return logToBrowserConsole;
@@ -84,7 +84,7 @@ MediaPlayer.utils.Debug = function () {
         /**
          * This method will allow you send log messages to either the browser's console and/or dispatch an event to capture at the media player level.
          * @param arguments The message you want to log. The Arguments object is supported for this method so you can send in comma separated logging items.
-         * @memberof MediaPlayer.utils.Debug#
+         * @memberof Debug#
          */
         log: function () {
 
@@ -123,3 +123,5 @@ MediaPlayer.utils.Debug = function () {
         }
     };
 };
+
+export default Debug;

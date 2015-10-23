@@ -33,10 +33,10 @@
  * Represents a set of configurations that describe the capabilities desired for
  * support by a given CDM
  *
- * @param {MediaPlayer.vo.protection.MediaCapability[]} audioCapabilities array of
+ * @param {MediaCapability[]} audioCapabilities array of
  * desired audio capabilities.  Higher preference capabilities should be placed earlier
  * in the array.
- * @param {MediaPlayer.vo.protection.MediaCapability[]} videoCapabilities array of
+ * @param {MediaCapability[]} videoCapabilities array of
  * desired video capabilities.  Higher preference capabilities should be placed earlier
  * in the array.
  * @param {string} [distinctiveIdentifier="optional"] desired use of distinctive identifiers.
@@ -47,7 +47,7 @@
  * be supported by the key system
  * @class
  */
-MediaPlayer.vo.protection.KeySystemConfiguration = function(audioCapabilities, videoCapabilities,
+let KeySystemConfiguration = function(audioCapabilities, videoCapabilities,
                                                             distinctiveIdentifier, persistentState,
                                                             sessionTypes) {
     this.initDataTypes = [ "cenc" ];
@@ -58,6 +58,8 @@ MediaPlayer.vo.protection.KeySystemConfiguration = function(audioCapabilities, v
     this.sessionTypes = sessionTypes;
 };
 
-MediaPlayer.vo.protection.KeySystemConfiguration.prototype = {
-    constructor: MediaPlayer.vo.protection.KeySystemConfiguration
+KeySystemConfiguration.prototype = {
+    constructor: KeySystemConfiguration
 };
+
+export default KeySystemConfiguration

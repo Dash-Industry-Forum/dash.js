@@ -35,10 +35,13 @@
  * For testing purposes and evaluating potential uses for ClearKey, we have developed
  * a dirt-simple API for requesting ClearKey licenses from a remote server.
  *
- * @implements MediaPlayer.dependencies.protection.servers.LicenseServer
+ * @implements LicenseServer
  * @class
  */
-MediaPlayer.dependencies.protection.servers.ClearKey = function() {
+import KeyPair from '../../vo/protection/KeyPair.js';
+import ClearKeyKeySet from '../../vo/protection/ClearKeyKeySet.js';
+
+let ClearKey = function() {
     "use strict";
 
     return {
@@ -67,9 +70,9 @@ MediaPlayer.dependencies.protection.servers.ClearKey = function() {
                 var keypair = serverResponse.keys[i],
                     keyid = keypair.kid.replace(/=/g, ""),
                     key = keypair.k.replace(/=/g, "");
-                keyPairs.push(new MediaPlayer.vo.protection.KeyPair(keyid, key));
+                keyPairs.push(new KeyPair(keyid, key));
             }
-            return new MediaPlayer.vo.protection.ClearKeyKeySet(keyPairs);
+            return new ClearKeyKeySet(keyPairs);
         },
 
         getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
@@ -78,6 +81,8 @@ MediaPlayer.dependencies.protection.servers.ClearKey = function() {
     };
 };
 
-MediaPlayer.dependencies.protection.servers.ClearKey.prototype = {
-    constructor: MediaPlayer.dependencies.protection.servers.ClearKey
+ClearKey.prototype = {
+    constructor: ClearKey
 };
+
+export default ClearKey;

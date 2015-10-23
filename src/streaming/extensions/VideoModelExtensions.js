@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.dependencies.VideoModelExtensions = function () {
+let VideoModelExtensions = function () {
     "use strict";
 
     return {
@@ -50,6 +50,6 @@ MediaPlayer.dependencies.VideoModelExtensions = function () {
     };
 };
 
-MediaPlayer.dependencies.VideoModelExtensions.prototype = {
-    constructor: MediaPlayer.dependencies.VideoModelExtensions
+VideoModelExtensions.prototype = {
+    constructor: VideoModelExtensions
 };

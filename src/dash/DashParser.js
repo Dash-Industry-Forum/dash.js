@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.dependencies.DashParser = function () {
+let DashParser = function () {
     "use strict";
 
     var SECONDS_IN_YEAR = 365 * 24 * 60 * 60,
@@ -406,6 +406,8 @@ Dash.dependencies.DashParser = function () {
     };
 };
 
-Dash.dependencies.DashParser.prototype = {
-    constructor: Dash.dependencies.DashParser
+DashParser.prototype = {
+    constructor: DashParser
 };
+
+export default DashParser;

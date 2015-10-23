@@ -28,7 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.AbandonRequestsRule = function () {
+import SwitchRequest from '../SwitchRequest.js';
+import AbrController from '../../controllers/AbrController.js';
+
+let AbandonRequestsRule = function () {
     "use strict";
 
     var GRACE_TIME_THRESHOLD = 500,
@@ -71,7 +74,7 @@ MediaPlayer.rules.AbandonRequestsRule = function () {
                 req = progressEvent.data.request,
                 abrController = context.getStreamProcessor().getABRController(),
                 fragmentInfo,
-                switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
+                switchRequest = new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
 
             if (!isNaN(req.index)) {
                 setFragmentRequestDict(mediaType, req.index);
@@ -106,8 +109,8 @@ MediaPlayer.rules.AbandonRequestsRule = function () {
                         callback(switchRequest);
                         return;
                     }else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
-                        var newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY);
-                        switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
+                        var newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * AbrController.BANDWIDTH_SAFETY);
+                        switchRequest = new SwitchRequest(newQuality, SwitchRequest.prototype.STRONG);
                         abandonDict[fragmentInfo.id] = fragmentInfo;
                         this.log("AbandonRequestsRule ( ", mediaType, "frag id",fragmentInfo.id,") is asking to abandon and switch to quality to ", newQuality, " measured bandwidth was", fragmentInfo.measuredBandwidthInKbps);
                         delete fragmentDict[mediaType][fragmentInfo.id];
@@ -127,9 +130,11 @@ MediaPlayer.rules.AbandonRequestsRule = function () {
     };
 };
 
-MediaPlayer.rules.AbandonRequestsRule.prototype = {
-    constructor: MediaPlayer.rules.AbandonRequestsRule
+AbandonRequestsRule.prototype = {
+    constructor: AbandonRequestsRule
 };
+
+export default AbandonRequestsRule;
 
 
 

@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.SwitchRequest = function (v, p) {
+let SwitchRequest = function (v, p) {
     "use strict";
     this.value = v;
     this.priority = p;
@@ -42,10 +42,12 @@ MediaPlayer.rules.SwitchRequest = function (v, p) {
     }
 };
 
-MediaPlayer.rules.SwitchRequest.prototype = {
-    constructor: MediaPlayer.rules.SwitchRequest,
+SwitchRequest.prototype = {
+    constructor: SwitchRequest,
     NO_CHANGE: 999,
     DEFAULT: 0.5,
     STRONG: 1,
     WEAK: 0
 };
+
+export default SwitchRequest;

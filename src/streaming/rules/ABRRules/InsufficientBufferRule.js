@@ -28,7 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.InsufficientBufferRule = function () {
+import SwitchRequest from '../SwitchRequest.js';
+import BufferController from '../../controllers/BufferController.js';
+import PlaybackController from '../../controllers/PlaybackController.js';
+
+let InsufficientBufferRule = function () {
     "use strict";
     /*
      * This rule is intended to be sure that our buffer doesn't run dry.
@@ -46,7 +50,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
         setBufferInfo = function (type, state) {
             bufferStateDict[type] = bufferStateDict[type] || {};
             bufferStateDict[type].state = state;
-            if (state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED && !bufferStateDict[type].firstBufferLoadedEvent) {
+            if (state === BufferController.BUFFER_LOADED && !bufferStateDict[type].firstBufferLoadedEvent) {
                 bufferStateDict[type].firstBufferLoadedEvent = true;
             }
         },
@@ -61,7 +65,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
         playbackController: undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
+            this[PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
         },
 
         execute: function (context, callback) {
@@ -71,7 +75,7 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
                 current = context.getCurrentValue(),
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
-                switchRequest = new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
+                switchRequest = new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
 
             if (now - lastSwitchTime < waitToSwitchTime ||
                 lastBufferStateVO === null) {
@@ -81,14 +85,14 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
 
             setBufferInfo(mediaType, lastBufferStateVO.state);
             // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
-            if (lastBufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
-                switchRequest = new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG);
+            if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
+                switchRequest = new SwitchRequest(0, SwitchRequest.prototype.STRONG);
             }
 
-            if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
+            if (switchRequest.value !== SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
                 self.log("InsufficientBufferRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                    switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
-                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
+                    switchRequest.priority === SwitchRequest.prototype.DEFAULT ? "Default" :
+                        switchRequest.priority === SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
             }
 
             lastSwitchTime = now;
@@ -102,6 +106,8 @@ MediaPlayer.rules.InsufficientBufferRule = function () {
     };
 };
 
-MediaPlayer.rules.InsufficientBufferRule.prototype = {
-    constructor: MediaPlayer.rules.InsufficientBufferRule
+InsufficientBufferRule.prototype = {
+    constructor: InsufficientBufferRule
 };
+
+export default InsufficientBufferRule;

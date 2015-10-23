@@ -28,7 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-Dash.dependencies.TimelineConverter = function () {
+import LiveEdgeFinder from '../streaming/LiveEdgeFinder.js';
+import TimeSyncController from '../streaming/TimeSyncController.js';
+
+let TimelineConverter = function () {
     "use strict";
 
     var clientServerTimeShift = 0,
@@ -175,8 +178,8 @@ Dash.dependencies.TimelineConverter = function () {
     return {
 
         setup: function() {
-            this[MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
-            this[MediaPlayer.dependencies.TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncComplete;
+            this[LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
+            this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncComplete;
         },
 
         calcAvailabilityStartTimeFromPresentationTime: calcAvailabilityStartTimeFromPresentationTime,
@@ -213,6 +216,8 @@ Dash.dependencies.TimelineConverter = function () {
     };
 };
 
-Dash.dependencies.TimelineConverter.prototype = {
-    constructor: Dash.dependencies.TimelineConverter
+TimelineConverter.prototype = {
+    constructor: TimelineConverter
 };
+
+export default TimelineConverter;

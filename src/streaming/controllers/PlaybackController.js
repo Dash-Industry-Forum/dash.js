@@ -28,7 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.dependencies.PlaybackController = function () {
+import RepresentationController from '../../dash/controllers/RepresentationController.js';
+import BufferController from './BufferController.js';
+import LiveEdgeFinder from '../LiveEdgeFinder.js';
+
+let PlaybackController = function () {
     "use strict";
 
     var WALLCLOCK_TIME_UPDATE_INTERVAL = 50, //This value influences the startup time for live.
@@ -109,7 +113,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
         initialStart = function() {
             if (firstAppended[streamInfo.id] || this.isSeeking()) return;
             var initialSeekTime = getStreamStartTime.call(this, streamInfo);
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime: initialSeekTime});
+            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime: initialSeekTime});
             this.log("Starting playback at offset: " + initialSeekTime);
         },
 
@@ -161,34 +165,34 @@ MediaPlayer.dependencies.PlaybackController = function () {
         },
 
         onCanPlay = function(/*e*/) {
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY);
+            this.notify(PlaybackController.eventList.ENAME_CAN_PLAY);
         },
 
         onPlaybackStart = function() {
             this.log("Native video element event: play");
             updateCurrentTime.call(this);
             startUpdatingWallclockTime.call(this);
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, {startTime: this.getTime()});
+            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, {startTime: this.getTime()});
         },
 
         onPlaybackPlaying = function() {
             this.log("Native video element event: playing");
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PLAYING, {playingTime: this.getTime()});
+            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_PLAYING, {playingTime: this.getTime()});
         },
 
         onPlaybackPaused = function() {
             this.log("Native video element event: pause");
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED);
+            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED);
         },
 
         onPlaybackSeeking = function() {
             startUpdatingWallclockTime.call(this);
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime:this.getTime() });
+            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime:this.getTime() });
         },
 
         onPlaybackSeeked = function() {
             this.log("Native video element event: seeked");
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_SEEKED);
+            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_SEEKED);
         },
 
         onPlaybackTimeUpdated = function() {
@@ -198,7 +202,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (time === currentTime) return;
 
             currentTime = time;
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, {timeToEnd: this.getTimeToStreamEnd()});
+            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, {timeToEnd: this.getTimeToStreamEnd()});
         },
 
         onPlaybackProgress = function() {
@@ -214,12 +218,12 @@ MediaPlayer.dependencies.PlaybackController = function () {
                 remainingUnbufferedDuration = getStreamStartTime.call(this, streamInfo) + streamInfo.duration - bufferEndTime;
             }
 
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, {bufferedRanges: videoModel.getElement().buffered, remainingUnbufferedDuration: remainingUnbufferedDuration});
+            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, {bufferedRanges: videoModel.getElement().buffered, remainingUnbufferedDuration: remainingUnbufferedDuration});
         },
 
         onPlaybackRateChanged = function() {
             this.log("Native video element event: ratechange: ", this.getPlaybackRate());
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED);
+            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED);
         },
 
         onPlaybackMetaDataLoaded = function() {
@@ -227,24 +231,24 @@ MediaPlayer.dependencies.PlaybackController = function () {
             if (!isDynamic || this.timelineConverter.isTimeSyncCompleted()) {
                 initialStart.call(this);
             }
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED);
+            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED);
             startUpdatingWallclockTime.call(this);
         },
 
         onPlaybackEnded = function() {
             this.log("Native video element event: ended");
             stopUpdatingWallclockTime.call(this);
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ENDED);
+            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_ENDED);
         },
 
         onPlaybackError = function(event) {
             var target = event.target || event.srcElement;
 
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, {error: target.error});
+            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_ERROR, {error: target.error});
         },
 
         onWallclockTime = function() {
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, {isDynamic: isDynamic, time: new Date()});
+            this.notify(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, {isDynamic: isDynamic, time: new Date()});
         },
 
         onBytesAppended = function(e) {
@@ -328,10 +332,10 @@ MediaPlayer.dependencies.PlaybackController = function () {
         adapter: undefined,
 
         setup: function() {
-            this[Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
-            this[MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED] = onBufferLevelStateChanged;
+            this[RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            this[LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
+            this[BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
+            this[BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED] = onBufferLevelStateChanged;
 
             onCanPlay = onCanPlay.bind(this);
             onPlaybackStart = onPlaybackStart.bind(this);
@@ -471,12 +475,12 @@ MediaPlayer.dependencies.PlaybackController = function () {
     };
 };
 
-MediaPlayer.dependencies.PlaybackController.prototype = {
-    constructor: MediaPlayer.dependencies.PlaybackController
+PlaybackController.prototype = {
+    constructor: PlaybackController
 };
 
 
-MediaPlayer.dependencies.PlaybackController.eventList = {
+PlaybackController.eventList = {
     ENAME_CAN_PLAY: "canPlay",
     ENAME_PLAYBACK_STARTED: "playbackStarted",
     ENAME_PLAYBACK_PLAYING: "playbackPlaying",
@@ -492,3 +496,5 @@ MediaPlayer.dependencies.PlaybackController.eventList = {
     ENAME_PLAYBACK_ERROR: "playbackError",
     ENAME_WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated"
 };
+
+export default PlaybackController;
