@@ -32,6 +32,7 @@ let EventBus = (function () {
     "use strict";
 
     var registrations,
+        handlers = {},
 
         getListeners = function (type, useCapture) {
             var captype = (useCapture? '1' : '0') + type;
@@ -72,6 +73,52 @@ let EventBus = (function () {
                 listeners[i].call(this, evt);
             }
             return !evt.defaultPrevented;
+        },
+
+        on: function(type, listener, scope) {
+            if (!type) {
+                throw new Error("event type cannot be null or undefined");
+            }
+
+            if (!listener || typeof(listener) !== "function") {
+                throw new Error("listener must be a function: " + listener);
+            }
+
+            var handler = {
+                callback: listener,
+                scope: scope
+            };
+
+            handlers[type] = handlers[type] || [];
+            handlers[type].push(handler);
+        },
+
+        off: function(type, listener, scope) {
+            if (!type || !listener || !handlers[type]) return;
+
+            handlers[type] = handlers[type].filter(function(handler) {
+                return (handler.callback !== listener || handler.scope !== scope);
+            });
+        },
+
+        trigger: function(type, args) {
+            if (!type || !handlers[type]) return;
+
+            args = args || {};
+
+            if (args.hasOwnProperty("type")) {
+                throw new Error("'type' is a reserved word for event dispatching");
+            }
+
+            args.type = type;
+
+            handlers[type].forEach(function(handler) {
+                handler.callback.call(handler.scope, args);
+            });
+        },
+
+        reset: function() {
+            handlers = {};
         }
     };
 }());
