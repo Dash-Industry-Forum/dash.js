@@ -167,7 +167,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
         checkMaxBitrate = function(idx, type){
             var maxBitrate = getMaxBitrate(type);
-            if (isNaN(maxBitrate)) {
+            if (isNaN(maxBitrate) || !streamProcessorDict[type]) {
                 return idx;
             }
             var maxIdx = this.getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
