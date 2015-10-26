@@ -111,3 +111,14 @@ MediaPlayer.dependencies.protection.servers.LicenseServer = function() {};
  * message types can be found {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @returns {string} an error message that indicates the reason for the failure
  */
+
+/**
+ * Some CDM systems don't support or have not yet implemented "license-release" and "individualization-request"
+ * message types.
+ *
+ * @function
+ * @name MediaPlayer.dependencies.protection.KeySystem#isMessageTypeSupported
+ * @param {String} messageType the message type associated with this request.  Supported
+ * message types can be found {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}. 
+ * @returns {boolean} true if message type is supported else false
+ */

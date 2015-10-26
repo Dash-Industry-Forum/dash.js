@@ -51,6 +51,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
         videoInfo,
         protDataSet,
         initialized = false,
+        pendingPsshData = false,
 
         getProtData = function(keySystem) {
             var protData = null,
@@ -190,6 +191,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 return;
             }
 
+
             // Dispatch event to applications indicating we received a key message
             var keyMessage = e.data;
             this.eventBus.dispatchEvent({
@@ -207,7 +209,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 eventData = { sessionToken: sessionToken, messageType: messageType };
 
             // Message not destined for license server
-            if (!licenseServerData) {
+            if (!licenseServerData || !licenseServerData.isMessageTypeSupported(messageType)) {
                 this.log("DRM: License server request not required for this message (type = " + e.data.messageType + ").  Session ID = " + sessionToken.getSessionID());
                 sendEvent(eventData);
                 return;
@@ -247,6 +249,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                     url = e.data.laURL;
                 }
             }
+
             // Possibly update or override the URL based on the message
             url = licenseServerData.getServerURLFromMessage(url, message, messageType);
 
@@ -418,7 +421,61 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 data:event.data,
                 error:null
             });
+        },
+        
+        // Resolve all init data, for Adobe Access the init may need to be downloaded from
+        // a given URL in the mpd.
+        getPsshForSupportedKeySystems = function(supportedKS) {
+
+            var self = this,
+                supportedKSInit = {};
+            supportedKSInit[MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_PSSH_REQUEST_COMPLETE] = function(event) {
+                var ksIdx = 0,
+                    pending = false;
+                while( ksIdx < supportedKS.length) {
+                    if (event.data.requestData.schemeIdUri.toLowerCase() === supportedKS[ksIdx].ks.schemeIdURI) {
+                        if (!event.error) {
+                            supportedKS[ksIdx].initData = event.data.message;
+                        }
+                        else {
+                            self.log("DRM: Could not download PSSH data for keysystem : " + supportedKS[ksIdx].ks.schemeIdURI);
+                            supportedKS.splice(ksIdx);
+                            continue;
+                        }
+                        supportedKS[ksIdx].ks.unsubscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_PSSH_REQUEST_COMPLETE, supportedKSInit);
+                    }
+                    else if (supportedKS[ksIdx].initData === "pending") {
+                        pending = true;
+                    }
+                    
+                    ksIdx++;
+                }
+                
+                if (!pending) {
+                    pendingPsshData = false;
+
+                    selectKeySystem.call(self, supportedKS, true);
+                }
+                
+            };
+            
+            if (supportedKS && supportedKS.length > 0) {
+                var ksIdx = 0;
+                
+                for(ksIdx = 0; ksIdx < supportedKS.length; ++ksIdx) {
+                    if (supportedKS[ksIdx].initData === "pending") {
+                        supportedKS[ksIdx].ks.subscribe(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_PSSH_REQUEST_COMPLETE, supportedKSInit);
+                        pendingPsshData = true;
+                    }
+                }
+            }
+            
+            if (!pendingPsshData) {
+                selectKeySystem.call(self, supportedKS, true);
+            }
+
         };
+
 
     return {
         system : undefined,
@@ -439,20 +496,26 @@ MediaPlayer.dependencies.ProtectionController = function () {
             this[MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED] = onKeyStatusesChanged.bind(this);
 
             keySystems = this.protectionExt.getKeySystems();
-            this.protectionModel = this.system.getObject("protectionModel");
-            this.protectionModel.init();
+
+            // For browsers that don't support any version of EME, the app crashes without this check
+            if (this.system.hasMapping("protectionModel")) {
+                this.protectionModel = this.system.getObject("protectionModel");
+                this.protectionModel.init();
+            }
 
             this.eventBus = this.system.getObject("eventBusCl");
 
             // Subscribe to events
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
-            this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED, this);
+            if (this.protectionModel) {
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ADDED, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
+                this.protectionModel.subscribe(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED, this);
+            }
         },
 
         /**
@@ -496,7 +559,7 @@ MediaPlayer.dependencies.ProtectionController = function () {
                 // and video will be the same.  Just use one valid MediaInfo object
                 var supportedKS = this.protectionExt.getSupportedKeySystemsFromContentProtection(mediaInfo.contentProtection);
                 if (supportedKS && supportedKS.length > 0) {
-                    selectKeySystem.call(this, supportedKS, true);
+                    getPsshForSupportedKeySystems.call(this, supportedKS);
                 }
 
                 initialized = true;
@@ -862,5 +925,3 @@ MediaPlayer.dependencies.ProtectionController.events = {
 MediaPlayer.dependencies.ProtectionController.prototype = {
     constructor: MediaPlayer.dependencies.ProtectionController
 };
-
-

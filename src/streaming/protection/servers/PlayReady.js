@@ -54,10 +54,19 @@ MediaPlayer.dependencies.protection.servers.PlayReady = function() {
 
         getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
             return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
+        },
+
+        isMessageTypeSupported: function(messageType) {
+            if (messageType === "license-request") {
+                return true;
+            }
+
+            return false;
         }
+
     };
 };
 
 MediaPlayer.dependencies.protection.servers.PlayReady.prototype = {
-    constructor: MediaPlayer.dependencies.protection.servers.PlayReady
+        constructor: MediaPlayer.dependencies.protection.servers.PlayReady
 };

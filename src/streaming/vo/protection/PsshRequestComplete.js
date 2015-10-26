@@ -29,36 +29,20 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-MediaPlayer.dependencies.protection.servers.Widevine = function() {
+/**
+ * Event indicating the receipt of a response from a license server
+ *
+ * @param message {Uint8Array} license response message
+ * @param requestData a request-specific data object
+ * @constructor
+ */
+MediaPlayer.vo.protection.PsshRequestComplete = function(message, requestData) {
     "use strict";
-
-    return {
-
-        getServerURLFromMessage: function(url /*, message, messageType*/) { return url; },
-
-        getHTTPMethod: function(/*messageType*/) { return 'POST'; },
-
-        getResponseType: function(/*keySystemStr, messageType*/) { return 'arraybuffer'; },
-
-        getLicenseMessage: function(serverResponse/*, keySystemStr, messageType*/) {
-            return serverResponse;
-        },
-
-        getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
-            return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
-        },
-
-        isMessageTypeSupported: function(messageType) {
-            if (messageType === "license-request") {
-                return true;
-            }
-
-            return false;
-        }
-
-    };
+    this.message = message;
+    this.requestData = requestData;
 };
 
-MediaPlayer.dependencies.protection.servers.Widevine.prototype = {
-        constructor: MediaPlayer.dependencies.protection.servers.Widevine
+MediaPlayer.vo.protection.PsshRequestComplete.prototype = {
+    constructor: MediaPlayer.vo.protection.PsshRequestComplete
 };
+

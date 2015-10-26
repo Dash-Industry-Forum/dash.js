@@ -37,9 +37,83 @@
  */
 MediaPlayer.dependencies.protection.KeySystem_Access = function() {
     "use strict";
+
+    var keySystemStr = "com.adobe.primetime",
+    keySystemUUID = "f239e769-efa3-4850-9c16-a903c6932efb",
+
+    getPsshUrl = function(cpData) {
+        var absUrl = new RegExp('^(?:(?:[a-z]+:)?\/)?\/', 'i'),
+        url;
+
+        if (typeof(cpData) !== "undefined" && cpData.pssh && cpData.pssh.uri) {
+            url = cpData.pssh.uri;
+            if (!absUrl.test(cpData.pssh.uri) && cpData.BaseURL) {
+                url = cpData.BaseURL + cpData.pssh.uri;
+            }
+        }
+
+        return url;
+    },
+
+    parseInitDataFromContentProtection = function(cpData) {
+        if ("pssh" in cpData && cpData.pssh.uri && cpData.pssh.uri !== "") {
+
+            var xhr = new XMLHttpRequest(),
+            url = getPsshUrl(cpData),
+            self = this;
+
+            xhr.open('GET', url, true);
+            xhr.responseType = 'arraybuffer';
+            xhr.onload = function() {
+                if (this.status == 200) {
+                    var event = new MediaPlayer.vo.protection.PsshRequestComplete(this.response, cpData);
+                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_PSSH_REQUEST_COMPLETE,
+                            event);
+                } else {
+                    self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_PSSH_REQUEST_COMPLETE,
+                            {requestData:cpData}, new Error('DRM: Access update, XHR status is "' + xhr.statusText + '" (' + xhr.status +
+                                    '), expected to be 200. readyState is ' + xhr.readyState) +
+                                    ".  Response is " + ((this.response) ? String.fromCharCode.apply(null, new Uint8Array(this.response)) : "NONE"));
+                }
+            };
+            xhr.onabort = function () {
+                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_PSSH_REQUEST_COMPLETE,
+                        {requestData:cpData}, new Error('DRM: Access update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
+            };
+            xhr.onerror = function () {
+                self.notify(MediaPlayer.dependencies.protection.KeySystem.eventList.ENAME_PSSH_REQUEST_COMPLETE,
+                        {requestData:cpData}, new Error('DRM: Access update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
+            };
+
+            xhr.send();
+            return "pending";
+        }
+        else {
+            return MediaPlayer.dependencies.protection.CommonEncryption.parseInitDataFromContentProtection.call(this, cpData);
+        }
+
+    };
+
+    return {
+        schemeIdURI: "urn:uuid:" + keySystemUUID,
+        systemString: keySystemStr,
+        uuid: keySystemUUID,
+        notify: undefined,
+        subscribe: undefined,
+        unsubscribe: undefined,
+
+        getInitData: parseInitDataFromContentProtection,
+
+        getRequestHeadersFromMessage: function(/*message*/) { return null; },
+
+        getLicenseRequestFromMessage: function(message) { return new Uint8Array(message); },
+
+        getLicenseServerURLFromInitData: function(/*initData*/) { return null; },
+    };
+
 };
 
 MediaPlayer.dependencies.protection.KeySystem_Access.prototype = {
-    constructor: MediaPlayer.dependencies.protection.KeySystem_Access
+        constructor: MediaPlayer.dependencies.protection.KeySystem_Access
 };
 

@@ -50,6 +50,10 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
             (function(i) {
                 var keySystem = ksConfigurations[i].ks;
                 var configs = ksConfigurations[i].configs;
+
+                // Fix Required for Firefox
+                configs[0].initDataType = "cenc";
+                
                 navigator.requestMediaKeySystemAccess(keySystem.systemString, configs).then(function(mediaKeySystemAccess) {
 
                     // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
@@ -138,6 +142,11 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
                             self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_MESSAGE,
                                     new MediaPlayer.vo.protection.KeyMessage(this, message, undefined, event.messageType));
                             break;
+                        //Added Handler for Access CDM in FF, seems to be needed based on the spec profile implemented.
+                        case "error":
+                            self.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_ERROR,
+                                    new MediaPlayer.vo.protection.KeyError(this, "DRM Session Error! " + event.systemCode));
+                            break;
                     }
                 },
 
@@ -161,6 +170,7 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
             // Add all event listeners
             session.addEventListener("keystatuseschange", token);
             session.addEventListener("message", token);
+            session.addEventListener("error", token);
 
             // Register callback for session closed Promise
             session.closed.then(function () {
@@ -357,7 +367,6 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
         },
 
         removeKeySession: function(sessionToken) {
-
             var session = sessionToken.session;
 
             var self = this;
@@ -371,7 +380,6 @@ MediaPlayer.models.ProtectionModel_21Jan2015 = function () {
         },
 
         closeKeySession: function(sessionToken) {
-
             // Send our request to the key session
             var self = this;
             closeKeySessionInternal(sessionToken).catch(function(error) {
