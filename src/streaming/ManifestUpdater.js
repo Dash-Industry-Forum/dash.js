@@ -31,6 +31,7 @@
 import ManifestLoader from './ManifestLoader.js';
 import StreamController from './controllers/StreamController.js';
 import PlaybackController from './controllers/PlaybackController.js';
+import EventBus from './utils/EventBus.js';
 
 let ManifestUpdater = function () {
 
@@ -71,7 +72,7 @@ let ManifestUpdater = function () {
             timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;
             refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
 
-            this.notify(ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, {manifest:manifest});
+            EventBus.trigger(ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, {manifest: manifest});
 
             if (!isStopped) {
                 start.call(this);
@@ -122,9 +123,6 @@ let ManifestUpdater = function () {
     return {
         log: undefined,
         system: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
-        notify: undefined,
         manifestModel: undefined,
         manifestExt: undefined,
 

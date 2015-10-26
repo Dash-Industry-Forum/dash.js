@@ -99,7 +99,6 @@ let StreamProcessor = function () {
             self.fragmentController = fragmentController;
             self.fragmentLoader = fragmentLoader;
 
-            representationController.subscribe(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, bufferController);
             fragmentController.subscribe(FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED, bufferController);
 
             if (type === "video" || type === "audio" || type === "fragmentedText") {
@@ -111,12 +110,7 @@ let StreamProcessor = function () {
                 liveEdgeFinder.subscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, representationController);
                 liveEdgeFinder.subscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, scheduleController);
 
-                representationController.subscribe(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED, scheduleController);
-
-                representationController.subscribe(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, scheduleController);
                 stream.subscribe(Stream.eventList.ENAME_STREAM_UPDATED, scheduleController);
-
-                representationController.subscribe(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, playbackController);
 
                 fragmentController.subscribe(FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED, bufferController);
                 fragmentController.subscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController);
@@ -155,8 +149,6 @@ let StreamProcessor = function () {
             } else {
                 bufferController.subscribe(TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
             }
-
-            representationController.subscribe(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, stream);
 
             indexHandler.initialize(this);
             indexHandler.setCurrentTime(playbackController.getStreamStartTime(this.getStreamInfo()));
@@ -300,12 +292,6 @@ let StreamProcessor = function () {
             liveEdgeFinder.unsubscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.timelineConverter);
             liveEdgeFinder.unsubscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, scheduleController);
             liveEdgeFinder.unsubscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, representationController);
-
-            representationController.unsubscribe(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED, scheduleController);
-            representationController.unsubscribe(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, bufferController);
-            representationController.unsubscribe(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, scheduleController);
-            representationController.unsubscribe(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, stream);
-            representationController.unsubscribe(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, playbackController);
 
             stream.unsubscribe(Stream.eventList.ENAME_STREAM_UPDATED, scheduleController);
 

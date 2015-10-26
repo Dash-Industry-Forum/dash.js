@@ -362,7 +362,7 @@ let Stream = function () {
 
         setup: function () {
             this[BufferController.eventList.ENAME_BUFFERING_COMPLETED] = onBufferingCompleted;
-            this[RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             this[MediaController.eventList.CURRENT_TRACK_CHANGED] = onCurrentTrackChanged;
         },
 
@@ -438,6 +438,8 @@ let Stream = function () {
             this.fragmentController = undefined;
             this.liveEdgeFinder.abortSearch();
             this.liveEdgeFinder.unsubscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.playbackController);
+
+            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
 
             protectionController.removeEventListener(ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
             protectionController.removeEventListener(ProtectionController.events.SERVER_CERTIFICATE_UPDATED, boundProtectionErrorHandler);

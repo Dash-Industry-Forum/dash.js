@@ -430,7 +430,7 @@ let StreamController = function () {
             if (!e.error) {
                 //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
                 //is SegmentTimeline to avoid using time source
-                var manifest = e.data.manifest,
+                var manifest = e.manifest,
                     streamInfo = self.adapter.getStreamsInfo(manifest)[0],
                     mediaInfo = (
                         self.adapter.getMediaInfoForType(manifest, streamInfo, "video") ||
@@ -449,7 +449,7 @@ let StreamController = function () {
                     }
                 }
 
-                var manifestUTCTimingSources = self.manifestExt.getUTCTimingSources(e.data.manifest),
+                var manifestUTCTimingSources = self.manifestExt.getUTCTimingSources(e.manifest),
                     allUTCTimingSources = (!self.manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ) ?  manifestUTCTimingSources :  manifestUTCTimingSources.concat(UTCTimingSources),
                     isHTTPS = self.uriQueryFragModel.isManifestHTTPS();
                     //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
@@ -494,7 +494,6 @@ let StreamController = function () {
         uriQueryFragModel:undefined,
 
         setup: function() {
-            this[ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED] = onManifestUpdated;
             this[Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
             this[Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED] = onStreamBufferingEnd;
 
@@ -549,7 +548,7 @@ let StreamController = function () {
             this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
             this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
             this.subscribe(StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
-            this.manifestUpdater.subscribe(ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
+            EventBus.on(ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, onManifestUpdated, this);
             this.manifestUpdater.initialize(this.manifestLoader);
         },
 
@@ -587,7 +586,7 @@ let StreamController = function () {
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
-            this.manifestUpdater.unsubscribe(ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, this);
+            EventBus.off(ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, onManifestUpdated, this);
             this.manifestUpdater.reset();
             this.metricsModel.clearAllCurrentMetrics();
 

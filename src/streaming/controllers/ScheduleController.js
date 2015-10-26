@@ -42,6 +42,7 @@ import BufferController from './BufferController.js';
 import TextController from './TextController.js';
 import Stream from '../Stream.js';
 import LiveEdgeFinder from '../LiveEdgeFinder.js';
+import EventBus from '../utils/EventBus.js';
 
 let ScheduleController = function () {
     "use strict";
@@ -206,7 +207,7 @@ let ScheduleController = function () {
         onDataUpdateCompleted = function(e) {
             if (e.error) return;
 
-            currentRepresentationInfo = this.adapter.convertDataToTrack(this.manifestModel.getValue(), e.data.currentRepresentation);
+            currentRepresentationInfo = this.adapter.convertDataToTrack(this.manifestModel.getValue(), e.currentRepresentation);
         },
 
         onStreamUpdated = function(e) {
@@ -376,8 +377,9 @@ let ScheduleController = function () {
 
             this[AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
 
-            this[RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED] = onDataUpdateStarted;
-            this[RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED, onDataUpdateStarted, this);
+            EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+
             this[Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
 
             this[FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
@@ -433,6 +435,8 @@ let ScheduleController = function () {
 
         reset: function() {
             var self = this;
+            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED, onDataUpdateStarted, self);
+            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, self);
             doStop.call(self);
             fragmentModel.abortRequests();
             self.fragmentController.detachModel(fragmentModel);

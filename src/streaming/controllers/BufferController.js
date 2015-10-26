@@ -557,7 +557,7 @@ let BufferController = function () {
             var self = this,
                 bufferLength;
 
-            updateBufferTimestampOffset.call(self, e.data.currentRepresentation.MSETimeOffset);
+            updateBufferTimestampOffset.call(self, e.currentRepresentation.MSETimeOffset);
 
             bufferLength = self.streamProcessor.getStreamInfo().manifestInfo.minBufferTime;
             //self.log("Min Buffer time: " + bufferLength);
@@ -642,7 +642,7 @@ let BufferController = function () {
         textSourceBuffer:undefined,
 
         setup: function() {
-            this[RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
 
             this[FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitializationLoaded;
             this[FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED] =  onMediaLoaded;
@@ -737,6 +737,7 @@ let BufferController = function () {
         reset: function(errored) {
             var self = this;
 
+            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             criticalBufferLevel = Number.POSITIVE_INFINITY;
             hasSufficientBuffer = null;
             minBufferTime = null;

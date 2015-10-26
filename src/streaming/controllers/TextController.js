@@ -30,6 +30,7 @@
  */
 import RepresentationController from '../../dash/controllers/RepresentationController.js';
 import FragmentController from './FragmentController.js';
+import EventBus from '../utils/EventBus.js';
 
 let TextController = function () {
 
@@ -61,7 +62,7 @@ let TextController = function () {
         unsubscribe: undefined,
 
         setup: function() {
-            this[RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             this[FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitFragmentLoaded;
         },
 
@@ -109,6 +110,8 @@ let TextController = function () {
         },
 
         reset: function (errored) {
+            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+
             if (!errored) {
                 this.sourceBufferExt.abort(mediaSource, buffer);
                 this.sourceBufferExt.removeSourceBuffer(mediaSource, buffer);

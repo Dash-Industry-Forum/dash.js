@@ -31,6 +31,7 @@
 import RepresentationController from '../../dash/controllers/RepresentationController.js';
 import BufferController from './BufferController.js';
 import LiveEdgeFinder from '../LiveEdgeFinder.js';
+import EventBus from '../utils/EventBus.js';
 
 let PlaybackController = function () {
     "use strict";
@@ -132,7 +133,7 @@ let PlaybackController = function () {
         onDataUpdateCompleted = function(e) {
             if (e.error) return;
 
-            var representationInfo = this.adapter.convertDataToTrack(this.manifestModel.getValue(), e.data.currentRepresentation),
+            var representationInfo = this.adapter.convertDataToTrack(this.manifestModel.getValue(), e.currentRepresentation),
                 info = representationInfo.mediaInfo.streamInfo;
 
             if (streamInfo.id !== info.id) return;
@@ -332,7 +333,7 @@ let PlaybackController = function () {
         adapter: undefined,
 
         setup: function() {
-            this[RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED] = onDataUpdateCompleted;
+            EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             this[LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
             this[BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
             this[BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED] = onBufferLevelStateChanged;
@@ -460,6 +461,7 @@ let PlaybackController = function () {
         },
 
         reset: function() {
+            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             stopUpdatingWallclockTime.call(this);
             removeAllListeners.call(this);
             videoModel = null;

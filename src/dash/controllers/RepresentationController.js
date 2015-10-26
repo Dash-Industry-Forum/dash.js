@@ -35,6 +35,7 @@ import LiveEdgeFinder from '../../streaming/LiveEdgeFinder.js';
 import BufferController from '../../streaming/controllers/BufferController.js';
 import DOMStorage from '../../streaming/utils/DOMStorage.js';
 import Error from '../../streaming/vo/Error.js';
+import EventBus from '../../streaming/utils/EventBus.js';
 
 let RepresentationController = function () {
     "use strict";
@@ -54,7 +55,7 @@ let RepresentationController = function () {
                 averageThroughput;
 
             updating = true;
-            self.notify(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
+            EventBus.trigger(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
 
             availableRepresentations = updateRepresentations.call(self, adaptation);
 
@@ -75,7 +76,7 @@ let RepresentationController = function () {
 
             if (type !== "video" && type !== "audio" && type !== "fragmentedText") {
                 updating = false;
-                self.notify(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {data: data, currentRepresentation: currentRepresentation});
+                EventBus.trigger(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {sender: self, data: data, currentRepresentation: currentRepresentation});
                 return;
             }
 
@@ -148,7 +149,7 @@ let RepresentationController = function () {
                     if (this.isUpdating()) return;
 
                     updating = true;
-                    self.notify(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
+                    EventBus.trigger(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
                     for (var i = 0; i < availableRepresentations.length; i += 1) {
                         self.indexHandler.updateRepresentation(availableRepresentations[i], true);
                     }
@@ -175,7 +176,7 @@ let RepresentationController = function () {
                 addDVRMetric.call(this);
                 postponeUpdate.call(this, e.error.data.availabilityDelay);
                 err = new Error(RepresentationController.SEGMENTS_UPDATE_FAILED_ERROR_CODE, "Segments update failed", null);
-                this.notify(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {data: data, currentRepresentation: currentRepresentation}, err);
+                EventBus.trigger(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {sender: self, data: data, currentRepresentation: currentRepresentation, error: err});
 
                 return;
             }
@@ -206,7 +207,7 @@ let RepresentationController = function () {
                     addRepresentationSwitch.call(self);
                 }
 
-                this.notify(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {data: data, currentRepresentation: currentRepresentation});
+                EventBus.trigger(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {sender: self, data: data, currentRepresentation: currentRepresentation});
             }
         },
 
@@ -266,9 +267,6 @@ let RepresentationController = function () {
         abrController: undefined,
         streamController: undefined,
         timelineConverter: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
         DOMStorage:undefined,
         liveDelayFragmentCount:undefined,
 

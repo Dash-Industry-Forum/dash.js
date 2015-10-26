@@ -38,9 +38,6 @@ let ManifestModel = function () {
 
     return {
         system: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
 
         getValue:  function () {
             return manifest;
@@ -53,8 +50,6 @@ let ManifestModel = function () {
                 type: MediaPlayer.events.MANIFEST_LOADED,
                 data: value
             });
-
-            this.notify(ManifestModel.eventList.ENAME_MANIFEST_UPDATED, {manifest: value});
         }
     };
 };
@@ -62,10 +57,5 @@ let ManifestModel = function () {
 ManifestModel.prototype = {
     constructor: ManifestModel
 };
-
-ManifestModel.eventList = {
-    ENAME_MANIFEST_UPDATED: "manifestUpdated"
-};
-
 
 export default ManifestModel;
