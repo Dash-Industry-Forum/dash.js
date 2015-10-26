@@ -38,6 +38,10 @@
 
 MediaPlayer.dependencies.protection.KeySystem = function() {};
 
+MediaPlayer.dependencies.protection.KeySystem.eventList = {
+        ENAME_PSSH_REQUEST_COMPLETE: "psshRequestComplete"
+};
+
 /**
  * Key system name string (e.g. 'org.w3.clearkey')
  *

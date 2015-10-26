@@ -103,6 +103,7 @@ Dash.dependencies.DashAdapter = function () {
             if (mediaInfo.contentProtection) {
                 mediaInfo.contentProtection.forEach(function(item){
                     item.KID = self.manifestExt.getKID(item);
+                    item.BaseURL = a.BaseURL;
                 });
             }
 

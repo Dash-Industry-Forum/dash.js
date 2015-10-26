@@ -29,35 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * CastLabs DRMToday License Server implementation
- *
- * @implements MediaPlayer.dependencies.protection.servers.LicenseServer
- * @class
- */
-MediaPlayer.dependencies.protection.servers.DRMToday = function() {
+MediaPlayer.dependencies.protection.servers.Access = function() {
     "use strict";
-
-    var keySystems = {
-        "com.widevine.alpha": {
-            responseType: "json",
-            getLicenseMessage: function(response) {
-                return BASE64.decodeArray(response.license);
-            },
-            getErrorResponse: function(response) {
-                return response;
-            }
-        },
-        "com.microsoft.playready": {
-            responseType: "arraybuffer",
-            getLicenseMessage: function(response) {
-                return response;
-            },
-            getErrorResponse: function(response) {
-                return String.fromCharCode.apply(null, new Uint8Array(response));
-            }
-        }
-    };
 
     return {
 
@@ -65,29 +38,26 @@ MediaPlayer.dependencies.protection.servers.DRMToday = function() {
 
         getHTTPMethod: function(/*messageType*/) { return 'POST'; },
 
-        getResponseType: function(keySystemStr/*, messageType*/) {
-            return keySystems[keySystemStr].responseType;
+        getResponseType: function(/*keySystemStr, messageType*/) { return 'arraybuffer'; },
+
+        getLicenseMessage: function(serverResponse/*, keySystemStr, messageType*/) {
+            return serverResponse;
         },
 
-        getLicenseMessage: function(serverResponse, keySystemStr/*, messageType*/) {
-            return keySystems[keySystemStr].getLicenseMessage(serverResponse);
+        getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
+            return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
         },
 
-        getErrorResponse: function(serverResponse, keySystemStr/*, messageType*/) {
-            return keySystems[keySystemStr].getErrorResponse(serverResponse);
-        },
-        
         isMessageTypeSupported: function(messageType) {
-            if (messageType === "license-request") {
+            if (messageType === "license-request" || messageType === "individualization-request") {
                 return true;
             }
-            
+
             return false;
         }
-
     };
 };
 
-MediaPlayer.dependencies.protection.servers.DRMToday.prototype = {
-    constructor: MediaPlayer.dependencies.protection.servers.DRMToday
+MediaPlayer.dependencies.protection.servers.Access.prototype = {
+        constructor: MediaPlayer.dependencies.protection.servers.Access
 };

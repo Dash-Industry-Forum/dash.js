@@ -74,7 +74,16 @@ MediaPlayer.dependencies.protection.servers.ClearKey = function() {
 
         getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
             return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
+        },
+        
+        isMessageTypeSupported: function(messageType) {
+            if (messageType === "license-request") {
+                return true;
+            }
+            
+            return false;
         }
+
     };
 };
 

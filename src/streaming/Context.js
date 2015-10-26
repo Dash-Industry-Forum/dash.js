@@ -78,11 +78,13 @@ MediaPlayer.di.Context = function () {
             this.system.mapSingleton('ksPlayReady', MediaPlayer.dependencies.protection.KeySystem_PlayReady);
             this.system.mapSingleton('ksWidevine', MediaPlayer.dependencies.protection.KeySystem_Widevine);
             this.system.mapSingleton('ksClearKey', MediaPlayer.dependencies.protection.KeySystem_ClearKey);
+            this.system.mapSingleton('ksAccess', MediaPlayer.dependencies.protection.KeySystem_Access);
 
             this.system.mapSingleton('serverPlayReady', MediaPlayer.dependencies.protection.servers.PlayReady);
             this.system.mapSingleton('serverWidevine', MediaPlayer.dependencies.protection.servers.Widevine);
             this.system.mapSingleton('serverClearKey', MediaPlayer.dependencies.protection.servers.ClearKey);
             this.system.mapSingleton('serverDRMToday', MediaPlayer.dependencies.protection.servers.DRMToday);
+            this.system.mapSingleton('serverAccess', MediaPlayer.dependencies.protection.servers.Access);
 
             this.system.mapSingleton('requestModifierExt', MediaPlayer.dependencies.RequestModifierExtensions);
             this.system.mapSingleton('textSourceBuffer', MediaPlayer.dependencies.TextSourceBuffer);
