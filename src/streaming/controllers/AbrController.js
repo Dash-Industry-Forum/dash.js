@@ -31,7 +31,7 @@
 MediaPlayer.dependencies.AbrController = function () {
     "use strict";
 
-    var autoSwitchBitrate = true,
+    var autoSwitchBitrate = {video: true, audio: true},
         topQualities = {},
         qualityDict = {},
         confidenceDict = {},
@@ -271,12 +271,12 @@ MediaPlayer.dependencies.AbrController = function () {
             abandonmentStateDict[type].state = MediaPlayer.dependencies.AbrController.ALLOW_LOAD;
         },
 
-        getAutoSwitchBitrate: function () {
-            return autoSwitchBitrate;
+        getAutoSwitchBitrate: function (type) {
+            return autoSwitchBitrate[type];
         },
 
-        setAutoSwitchBitrate: function (value) {
-            autoSwitchBitrate = value;
+        setAutoSwitchBitrate: function (type, value) {
+            autoSwitchBitrate[type] = value;
         },
 
         getPlaybackQuality: function (streamProcessor) {
@@ -502,7 +502,7 @@ MediaPlayer.dependencies.AbrController = function () {
         getTopQualityIndexFor:getTopQualityIndex,
 
         reset: function() {
-            autoSwitchBitrate = true;
+            autoSwitchBitrate = {video: true, audio: true};
             topQualities = {};
             qualityDict = {};
             confidenceDict = {};
