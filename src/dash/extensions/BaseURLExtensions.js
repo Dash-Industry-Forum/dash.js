@@ -30,6 +30,8 @@
  */
 import Segment from '../vo/Segment.js';
 import Error from '../../streaming/vo/Error.js';
+import Events from '../../streaming/Events.js'
+import EventBus from '../../streaming/utils/EventBus.js'
 
 let BaseURLExtensions = function () {
     "use strict";
@@ -117,7 +119,7 @@ let BaseURLExtensions = function () {
                 if (initRange) {
                     representation.range = initRange;
                     representation.initialization = media;
-                    self.notify(BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {representation: representation});
+                    EventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
                 } else {
                     info.range.end = info.bytesLoaded + info.bytesToLoad;
                     loadInit.call(self, representation, info);
@@ -130,7 +132,7 @@ let BaseURLExtensions = function () {
                 needFailureReport = false;
 
                 self.errHandler.downloadError("initialization", info.url, request);
-                self.notify(BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, {representation: representation});
+                EventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
             };
 
             sendRequest.call(self, request, info);
@@ -251,12 +253,10 @@ let BaseURLExtensions = function () {
         },
 
         onLoaded = function(segments, representation, type) {
-            var self = this;
-
-            if( segments) {
-                self.notify(BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
+            if(segments) {
+                EventBus.trigger(Events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
             } else {
-                self.notify(BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type}, new Error(null, "error loading segments", null));
+                EventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new Error(null, "error loading segments", null)});
             }
         };
 
@@ -265,9 +265,6 @@ let BaseURLExtensions = function () {
         errHandler: undefined,
         requestModifierExt:undefined,
         boxParser: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
 
         loadSegments: function(representation, type, range) {
             var parts = range ? range.split("-") : null;
@@ -282,11 +279,6 @@ let BaseURLExtensions = function () {
 
 BaseURLExtensions.prototype = {
     constructor: BaseURLExtensions
-};
-
-BaseURLExtensions.eventList = {
-    ENAME_INITIALIZATION_LOADED: "initializationLoaded",
-    ENAME_SEGMENTS_LOADED: "segmentsLoaded"
 };
 
 export default BaseURLExtensions;

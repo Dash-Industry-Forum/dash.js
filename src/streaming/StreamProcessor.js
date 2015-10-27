@@ -135,9 +135,6 @@ let StreamProcessor = function () {
                 }
                 playbackController.subscribe(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, bufferController);
 
-                baseUrlExt.subscribe(BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
-                baseUrlExt.subscribe(BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, indexHandler);
-
                 if (type === "video" || type === "audio") {
                     mediaController.subscribe(MediaController.eventList.CURRENT_TRACK_CHANGED, bufferController);
                 }
@@ -313,9 +310,6 @@ let StreamProcessor = function () {
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, representationController);
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, bufferController);
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, abrController.abrRulesCollection.insufficientBufferRule);
-
-            baseUrlExt.unsubscribe(BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED, indexHandler);
-            baseUrlExt.unsubscribe(BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED, indexHandler);
 
             fragmentModel.unsubscribe(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, fragmentController);
             fragmentModel.unsubscribe(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, fragmentController);

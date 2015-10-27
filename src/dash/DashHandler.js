@@ -33,6 +33,8 @@ import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import Error from '../streaming/vo/Error.js';
 import HTTPRequest from '../streaming/vo/metrics/HTTPRequest.js';
 import BaseURLExtensions from './extensions/BaseURLExtensions.js';
+import Events from '../streaming/Events.js';
+import EventBus from '../streaming/utils/EventBus.js';
 
 let DashHandler = function () {
     "use strict";
@@ -881,7 +883,7 @@ let DashHandler = function () {
         },
 
         onInitializationLoaded = function(e) {
-            var representation = e.data.representation;
+            var representation = e.representation;
             //self.log("Got an initialization.");
             if (!representation.segments) return;
 
@@ -889,11 +891,11 @@ let DashHandler = function () {
         },
 
         onSegmentsLoaded = function(e) {
-            if (e.error || (type !== e.data.mediaType)) return;
+            if (e.error || (type !== e.mediaType)) return;
 
             var self = this,
-                fragments = e.data.segments,
-                representation = e.data.representation,
+                fragments = e.segments,
+                representation = e.representation,
                 i,
                 len,
                 s,
@@ -940,8 +942,8 @@ let DashHandler = function () {
         unsubscribe: undefined,
 
         setup: function() {
-            this[BaseURLExtensions.eventList.ENAME_INITIALIZATION_LOADED] = onInitializationLoaded;
-            this[BaseURLExtensions.eventList.ENAME_SEGMENTS_LOADED] = onSegmentsLoaded;
+            EventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, this);
+            EventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, this);
         },
 
         initialize: function(streamProcessor) {
@@ -981,6 +983,8 @@ let DashHandler = function () {
             index = -1;
             isDynamic = undefined;
             this.unsubscribe(DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.representationController);
+            EventBus.off(Events.INITIALIZATION_LOADED, onInitializationLoaded, this);
+            EventBus.off(Events.SEGMENTS_LOADED, onSegmentsLoaded, this);
         },
 
         getCurrentIndex : function(){

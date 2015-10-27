@@ -33,6 +33,8 @@ let Events = (function() {
         MANIFEST_UPDATED: "manifestUpdated",
         DATA_UPDATE_COMPLETED: "dataUpdateCompleted",
         DATA_UPDATE_STARTED: "dataUpdateStarted",
+        INITIALIZATION_LOADED: "initializationLoaded",
+        SEGMENTS_LOADED: "segmentsLoaded",
         BUFFER_LEVEL_STATE_CHANGED : "bufferStateChanged",
         QUALITY_CHANGED : "qualityChanged"
 
