@@ -32,6 +32,7 @@ import RepresentationController from '../../dash/controllers/RepresentationContr
 import BufferController from './BufferController.js';
 import LiveEdgeFinder from '../LiveEdgeFinder.js';
 import EventBus from '../utils/EventBus.js';
+import Events from "../Events.js";
 
 let PlaybackController = function () {
     "use strict";
@@ -293,13 +294,9 @@ let PlaybackController = function () {
         },
 
         onBufferLevelStateChanged = function(e) {
-            var type = e.sender.streamProcessor.getType(),
-                senderStreamInfo = e.sender.streamProcessor.getStreamInfo();
-
             // do not stall playback when get an event from Stream that is not active
-            if (senderStreamInfo.id !== streamInfo.id) return;
-
-            videoModel.setStallState(type, !e.data.hasSufficientBuffer);
+            if (e.streamInfo.id !== streamInfo.id) return;
+            videoModel.setStallState(e.mediaType, e.state === BufferController.BUFFER_EMPTY);
         },
 
         setupVideoModel = function() {
@@ -336,7 +333,7 @@ let PlaybackController = function () {
             EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             this[LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
             this[BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
-            this[BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED] = onBufferLevelStateChanged;
+            EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
 
             onCanPlay = onCanPlay.bind(this);
             onPlaybackStart = onPlaybackStart.bind(this);
@@ -462,6 +459,7 @@ let PlaybackController = function () {
 
         reset: function() {
             EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             stopUpdatingWallclockTime.call(this);
             removeAllListeners.call(this);
             videoModel = null;

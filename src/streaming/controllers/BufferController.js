@@ -40,6 +40,7 @@ import MediaPlayer from '../MediaPlayer.js';
 import MediaController from './MediaController.js';
 import CustomTimeRanges from '../utils/CustomTimeRanges.js';
 import EventBus from '../utils/EventBus.js';
+import Events from "../Events.js";
 
 let BufferController = function () {
     "use strict";
@@ -56,7 +57,7 @@ let BufferController = function () {
         type,
         buffer = null,
         minBufferTime,
-        hasSufficientBuffer = null,
+        bufferState = BufferController.BUFFER_EMPTY,
         appendedBytesInfo,
         wallclockTicked = 0,
         appendingMediaChunk = false, // false or chunk
@@ -288,10 +289,8 @@ let BufferController = function () {
         },
 
         onPlaybackProgression = function() {
-
-                updateBufferLevel.call(this);
-                addBufferMetrics.call(this);
-
+            updateBufferLevel.call(this);
+            addBufferMetrics.call(this);
         },
 
         updateBufferLevel = function() {
@@ -299,12 +298,8 @@ let BufferController = function () {
                 currentTime = self.playbackController.getTime();
 
             bufferLevel = self.sourceBufferExt.getBufferLength(buffer, currentTime);
-
             self.notify(BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, {bufferLevel: bufferLevel});
-
-            if (!this.streamProcessor.getStreamInfo().isLast){
-                checkIfSufficientBuffer.call(self);
-            }
+            checkIfSufficientBuffer.call(self);
         },
 
         addBufferMetrics = function() {
@@ -312,7 +307,7 @@ let BufferController = function () {
 
             //TODO will need to fix how we get bufferTarget... since we ony load one at a time. but do it in the addBufferMetrics call not here
             //bufferTarget = fragmentsToLoad > 0 ? (fragmentsToLoad * fragmentDuration) + bufferLevel : bufferTarget;
-            this.metricsModel.addBufferState(type, getBufferState(), bufferTarget);
+            this.metricsModel.addBufferState(type, bufferState, bufferTarget);
 
             //TODO may be needed for MULTIPERIOD PLEASE CHECK Turning this off for now... not really needed since we load sync...
             //var level = bufferLevel,
@@ -336,33 +331,19 @@ let BufferController = function () {
 
         checkIfSufficientBuffer = function () {
             if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
-                notifyIfSufficientBufferStateChanged.call(this, false);
+                notifyBufferStateChanged.call(this, BufferController.BUFFER_EMPTY);
             } else {
-                notifyIfSufficientBufferStateChanged.call(this, true);
+                notifyBufferStateChanged.call(this,  BufferController.BUFFER_LOADED);
             }
         },
 
-        getBufferState = function() {
-            return hasSufficientBuffer ? BufferController.BUFFER_LOADED : BufferController.BUFFER_EMPTY;
-        },
+        notifyBufferStateChanged = function(state) {
+            if (bufferState === state || (type === "fragmentedText" && this.textSourceBuffer.getAllTracksAreDisabled())) return;
 
-        notifyIfSufficientBufferStateChanged = function(state) {
-            if (hasSufficientBuffer === state || (type === "fragmentedText" && this.textSourceBuffer.getAllTracksAreDisabled())) return;
-
-            hasSufficientBuffer = state;
-
-            var bufferState = getBufferState(),
-                eventName = (bufferState === BufferController.BUFFER_LOADED) ? MediaPlayer.events.BUFFER_LOADED : MediaPlayer.events.BUFFER_EMPTY;
+            bufferState = state;
             addBufferMetrics.call(this);
-
-            EventBus.dispatchEvent({
-                type: eventName,
-                data: {
-                    bufferType: type
-                }
-            });
-            this.notify(BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, {hasSufficientBuffer: state});
-            this.log(hasSufficientBuffer ? ("Got enough buffer to start.") : ("Waiting for more buffer before starting playback."));
+            EventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {state:state, mediaType:type, streamInfo:this.streamProcessor.getStreamInfo()});
+            this.log(state === BufferController.BUFFER_LOADED ? ("Got enough buffer to start.") : ("Waiting for more buffer before starting playback."));
         },
 
         //**********************************************************************
@@ -441,6 +422,8 @@ let BufferController = function () {
 
         /* prune buffer on our own in background to avoid browsers pruning buffer silently */
         pruneBuffer = function() {
+            if (type === "fragmentedText") return;
+
             var bufferToPrune = 0,
                 currentTime = this.playbackController.getTime(),
                 currentRange = this.sourceBufferExt.getBufferRange(buffer, currentTime);
@@ -739,7 +722,7 @@ let BufferController = function () {
 
             EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             criticalBufferLevel = Number.POSITIVE_INFINITY;
-            hasSufficientBuffer = null;
+            bufferState = BufferController.BUFFER_EMPTY;
             minBufferTime = null;
             currentQuality = -1;
             lastIndex = -1;

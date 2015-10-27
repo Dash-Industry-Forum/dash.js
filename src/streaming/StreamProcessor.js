@@ -116,11 +116,9 @@ let StreamProcessor = function () {
                 fragmentController.subscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController);
                 fragmentController.subscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, bufferController);
 
-                bufferController.subscribe(BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, playbackController);
                 bufferController.subscribe(BufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
                 bufferController.subscribe(BufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
                 bufferController.subscribe(BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, representationController);
-                bufferController.subscribe(BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, scheduleController);
                 bufferController.subscribe(BufferController.eventList.ENAME_INIT_REQUESTED, scheduleController);
                 bufferController.subscribe(BufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
                 bufferController.subscribe(BufferController.eventList.ENAME_QUOTA_EXCEEDED, scheduleController);
@@ -302,12 +300,11 @@ let StreamProcessor = function () {
             fragmentController.unsubscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, bufferController);
             fragmentController.unsubscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController.scheduleRulesCollection.bufferLevelRule);
 
-            bufferController.unsubscribe(BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, playbackController);
+
             bufferController.unsubscribe(BufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
             bufferController.unsubscribe(BufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
             bufferController.unsubscribe(BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, scheduleController);
             bufferController.unsubscribe(BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, representationController);
-            bufferController.unsubscribe(BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED, scheduleController);
             bufferController.unsubscribe(BufferController.eventList.ENAME_INIT_REQUESTED, scheduleController);
             bufferController.unsubscribe(BufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
             bufferController.unsubscribe(BufferController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);

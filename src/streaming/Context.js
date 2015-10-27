@@ -36,6 +36,7 @@
  */
 import Debug from './utils/Debug.js';
 import EventBus from './utils/EventBus.js';
+import Events from './Events.js';
 import Capabilities from './utils/Capabilities.js';
 import DOMStorage from './utils/DOMStorage.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
@@ -141,6 +142,7 @@ let Context = function () {
 
             this.system.mapSingleton('capabilities', Capabilities);
             this.system.mapSingleton('eventBus', EventBus);
+            this.system.mapSingleton('events', Events);
             this.system.mapSingleton('DOMStorage', DOMStorage);
             this.system.mapClass('customTimeRanges', CustomTimeRanges);
             this.system.mapSingleton('virtualBuffer', VirtualBuffer);

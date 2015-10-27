@@ -43,6 +43,7 @@ import TextController from './TextController.js';
 import Stream from '../Stream.js';
 import LiveEdgeFinder from '../LiveEdgeFinder.js';
 import EventBus from '../utils/EventBus.js';
+import Events from "../Events.js";
 
 let ScheduleController = function () {
     "use strict";
@@ -263,10 +264,8 @@ let ScheduleController = function () {
         },
 
         onBufferLevelStateChanged = function(e) {
-            var self = this;
-
-            if (!e.data.hasSufficientBuffer && !self.playbackController.isSeeking()) {
-                self.log("Stalling Buffer");
+            if (e.state === BufferController.BUFFER_EMPTY && !this.playbackController.isSeeking()) {
+                this.log("Stalling Buffer");
                 clearPlayListTraceMetrics(new Date(), PlayList.Trace.REBUFFERING_REASON);
             }
         },
@@ -387,9 +386,9 @@ let ScheduleController = function () {
 
             this[BufferController.eventList.ENAME_BUFFER_CLEARED] = onBufferCleared;
             this[BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
-            this[BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED] = onBufferLevelStateChanged;
             this[BufferController.eventList.ENAME_INIT_REQUESTED] = onInitRequested;
             this[BufferController.eventList.ENAME_QUOTA_EXCEEDED] = onQuotaExceeded;
+            EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
 
             this[TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED] = onClosedCaptioningRequested;
 
@@ -437,6 +436,7 @@ let ScheduleController = function () {
             var self = this;
             EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED, onDataUpdateStarted, self);
             EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, self);
+            EventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, self);
             doStop.call(self);
             fragmentModel.abortRequests();
             self.fragmentController.detachModel(fragmentModel);
