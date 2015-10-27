@@ -35,6 +35,7 @@ let Events = (function() {
         DATA_UPDATE_STARTED: "dataUpdateStarted",
         INITIALIZATION_LOADED: "initializationLoaded",
         SEGMENTS_LOADED: "segmentsLoaded",
+        REPRESENTATION_UPDATED: "representationUpdated",
         BUFFER_LEVEL_STATE_CHANGED : "bufferStateChanged",
         QUALITY_CHANGED : "qualityChanged"
 

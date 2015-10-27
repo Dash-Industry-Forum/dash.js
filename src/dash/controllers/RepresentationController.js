@@ -164,7 +164,7 @@ let RepresentationController = function () {
             if (!this.isUpdating()) return;
 
             var self = this,
-                r = e.data.representation,
+                r = e.representation,
                 streamMetrics = self.metricsModel.getMetricsFor("stream"),
                 metrics = self.metricsModel.getMetricsFor(this.getCurrentRepresentation().adaptation.type),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(streamMetrics),
@@ -274,7 +274,7 @@ let RepresentationController = function () {
         setup: function() {
 
             EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
-            this[DashHandler.eventList.ENAME_REPRESENTATION_UPDATED] = onRepresentationUpdated;
+            EventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, this);
             this[PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
             this[LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
             this[BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED] = onBufferLevelUpdated;
@@ -306,6 +306,7 @@ let RepresentationController = function () {
 
         reset: function() {
             EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
+            EventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, this);
         }
     };
 };

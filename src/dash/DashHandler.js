@@ -673,7 +673,7 @@ let DashHandler = function () {
 
             if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
                 error = new Error(DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE, "no segments are available yet", {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
-                self.notify(DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation}, error);
+                EventBus.trigger(Events.REPRESENTATION_UPDATED, {representation: representation, error: error});
                 return;
             }
 
@@ -692,7 +692,7 @@ let DashHandler = function () {
             }
 
             if (hasInitialization && hasSegments) {
-                self.notify(DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation});
+                EventBus.trigger(Events.REPRESENTATION_UPDATED, {representation: representation});
             }
         },
 
@@ -887,7 +887,7 @@ let DashHandler = function () {
             //self.log("Got an initialization.");
             if (!representation.segments) return;
 
-            this.notify(DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation});
+            EventBus.trigger(Events.REPRESENTATION_UPDATED, {representation: representation});
         },
 
         onSegmentsLoaded = function(e) {
@@ -928,7 +928,7 @@ let DashHandler = function () {
 
             if (!representation.initialization) return;
 
-            this.notify(DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, {representation: representation});
+            EventBus.trigger(Events.REPRESENTATION_UPDATED, {representation: representation});
         };
 
     return {
@@ -937,9 +937,6 @@ let DashHandler = function () {
         timelineConverter: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
 
         setup: function() {
             EventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, this);
@@ -947,7 +944,6 @@ let DashHandler = function () {
         },
 
         initialize: function(streamProcessor) {
-            this.subscribe(DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, streamProcessor.representationController);
             type = streamProcessor.getType();
             //this.setMediaType(type);
             isDynamic = streamProcessor.isDynamic();
@@ -982,7 +978,6 @@ let DashHandler = function () {
             requestedTime = undefined;
             index = -1;
             isDynamic = undefined;
-            this.unsubscribe(DashHandler.eventList.ENAME_REPRESENTATION_UPDATED, this.streamProcessor.representationController);
             EventBus.off(Events.INITIALIZATION_LOADED, onInitializationLoaded, this);
             EventBus.off(Events.SEGMENTS_LOADED, onSegmentsLoaded, this);
         },
@@ -1004,9 +999,5 @@ DashHandler.prototype = {
 };
 
 DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
-
-DashHandler.eventList = {
-    ENAME_REPRESENTATION_UPDATED: "representationUpdated"
-};
 
 export default DashHandler;
