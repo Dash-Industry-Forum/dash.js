@@ -275,8 +275,9 @@ let RepresentationController = function () {
 
             EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
             EventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, this);
+            EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+
             this[PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
-            this[LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
             this[BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED] = onBufferLevelUpdated;
         },
 
@@ -307,6 +308,7 @@ let RepresentationController = function () {
         reset: function() {
             EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
             EventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, this);
+            EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         }
     };
 };

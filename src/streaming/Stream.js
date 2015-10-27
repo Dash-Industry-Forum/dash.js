@@ -210,7 +210,6 @@ let Stream = function () {
                 self.log(msg);
             } else {
                 self.liveEdgeFinder.initialize(streamProcessors[0]);
-                self.liveEdgeFinder.subscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, self.playbackController);
                 //self.log("Playback initialized!");
                 checkIfInitializationCompleted.call(this);
             }
@@ -438,7 +437,6 @@ let Stream = function () {
             }
             this.fragmentController = undefined;
             this.liveEdgeFinder.abortSearch();
-            this.liveEdgeFinder.unsubscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.playbackController);
 
             EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
 

@@ -103,10 +103,6 @@ let StreamProcessor = function () {
 
             if (type === "video" || type === "audio" || type === "fragmentedText") {
 
-                liveEdgeFinder.subscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.timelineConverter);
-                liveEdgeFinder.subscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, representationController);
-                liveEdgeFinder.subscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, scheduleController);
-
                 stream.subscribe(Stream.eventList.ENAME_STREAM_UPDATED, scheduleController);
 
                 fragmentController.subscribe(FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED, bufferController);
@@ -277,9 +273,6 @@ let StreamProcessor = function () {
                 fragmentModel = this.getFragmentModel(),
                 fragmentLoader = this.fragmentLoader;
 
-            liveEdgeFinder.unsubscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.timelineConverter);
-            liveEdgeFinder.unsubscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, scheduleController);
-            liveEdgeFinder.unsubscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, representationController);
 
             stream.unsubscribe(Stream.eventList.ENAME_STREAM_UPDATED, scheduleController);
 

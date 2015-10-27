@@ -330,7 +330,7 @@ let ScheduleController = function () {
 
             // step back from a found live edge time to be able to buffer some data
             var self = this,
-                liveEdgeTime = e.data.liveEdge,
+                liveEdgeTime = e.liveEdge,
                 manifestInfo = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo,
                 startTime = liveEdgeTime - Math.min((self.playbackController.getLiveDelay(currentRepresentationInfo.fragmentDuration)), manifestInfo.DVRWindowSize / 2),
                 request,
@@ -372,8 +372,8 @@ let ScheduleController = function () {
         indexHandler:undefined,
 
         setup: function() {
-            this[LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
 
+            EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
             EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
             EventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
             EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
@@ -432,6 +432,7 @@ let ScheduleController = function () {
         replaceCanceledRequests:replaceCanceledRequests,
 
         reset: function() {
+            EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
             EventBus.off(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
             EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             EventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);

@@ -30,6 +30,8 @@
  */
 import LiveEdgeFinder from '../streaming/LiveEdgeFinder.js';
 import TimeSyncController from '../streaming/TimeSyncController.js';
+import EventBus from '../streaming/utils/EventBus.js';
+import Events from "../streaming/Events.js";
 
 let TimelineConverter = function () {
     "use strict";
@@ -148,7 +150,7 @@ let TimelineConverter = function () {
 
             // the difference between expected and actual live edge time is supposed to be a difference between client
             // and server time as well
-            clientServerTimeShift += e.data.liveEdge - (expectedLiveEdge + e.data.searchTime);
+            clientServerTimeShift += e.liveEdge - (expectedLiveEdge + e.searchTime);
             isClientServerTimeSyncCompleted = true;
         },
 
@@ -167,18 +169,14 @@ let TimelineConverter = function () {
             var presentationOffset = representation.presentationTimeOffset;
             var periodStart = representation.adaptation.period.start;
             return (periodStart - presentationOffset);
-        },
-
-        reset = function() {
-            clientServerTimeShift = 0;
-            isClientServerTimeSyncCompleted = false;
-            expectedLiveEdge = NaN;
         };
+
+
 
     return {
 
         setup: function() {
-            this[LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
+            EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
             this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncComplete;
         },
 
@@ -192,7 +190,6 @@ let TimelineConverter = function () {
         calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
         calcWallTimeForSegment: calcWallTimeForSegment,
         calcMSETimeOffset: calcMSETimeOffset,
-        reset: reset,
 
         isTimeSyncCompleted: function() {
             return isClientServerTimeSyncCompleted;
@@ -212,6 +209,14 @@ let TimelineConverter = function () {
 
         setExpectedLiveEdge: function(value) {
             expectedLiveEdge = value;
+        },
+
+        reset: function() {
+            EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+
+            clientServerTimeShift = 0;
+            isClientServerTimeSyncCompleted = false;
+            expectedLiveEdge = NaN;
         }
     };
 };

@@ -32,6 +32,8 @@ import SynchronizationRulesCollection from './rules/SynchronizationRules/Synchro
 import Error from './vo/Error.js';
 import Stream from './Stream.js';
 import TimeSyncController from './TimeSyncController.js';
+import EventBus from './utils/EventBus.js';
+import Events from "./Events.js";
 
 let LiveEdgeFinder = function () {
 
@@ -45,11 +47,8 @@ let LiveEdgeFinder = function () {
 
         onSearchCompleted = function(req) {
             var searchTime = (new Date().getTime() - searchStartTime) / 1000;
-
             liveEdge = req.value;
-
-            this.notify(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime},
-                liveEdge === null ? new Error(LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null);
+            EventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime, error:liveEdge === null ? new Error(LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null});
         },
 
         onStreamUpdated = function(e) {
@@ -112,10 +111,6 @@ let LiveEdgeFinder = function () {
 
 LiveEdgeFinder.prototype = {
     constructor: LiveEdgeFinder
-};
-
-LiveEdgeFinder.eventList = {
-    ENAME_LIVE_EDGE_SEARCH_COMPLETED: "liveEdgeFound"
 };
 
 LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE = 1;

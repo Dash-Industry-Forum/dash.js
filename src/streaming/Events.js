@@ -36,8 +36,10 @@ let Events = (function() {
         INITIALIZATION_LOADED: "initializationLoaded",
         SEGMENTS_LOADED: "segmentsLoaded",
         REPRESENTATION_UPDATED: "representationUpdated",
-        BUFFER_LEVEL_STATE_CHANGED : "bufferStateChanged",
-        QUALITY_CHANGED : "qualityChanged"
+        BUFFER_LEVEL_STATE_CHANGED : "bufferLevelStateChanged",
+        QUALITY_CHANGED : "qualityChanged",
+        LIVE_EDGE_SEARCH_COMPLETED : "liveEdgeSearchCompleted"
+
 
     };
 }());
