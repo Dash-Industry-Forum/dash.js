@@ -47,9 +47,9 @@ let TextController = function () {
          onInitFragmentLoaded = function (e) {
              var self = this;
 
-             if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel() || (!e.data.chunk.bytes)) return;
+             if (e.fragmentModel !== self.streamProcessor.getFragmentModel() || (!e.chunk.bytes)) return;
 
-             self.sourceBufferExt.append(buffer, e.data.chunk);
+             self.sourceBufferExt.append(buffer, e.chunk);
          };
 
     return {
@@ -64,7 +64,7 @@ let TextController = function () {
 
         setup: function() {
             EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-            this[FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitFragmentLoaded;
+            EventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
         },
 
         initialize: function (typeValue, source, streamProcessor) {
@@ -112,7 +112,7 @@ let TextController = function () {
 
         reset: function (errored) {
             EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-
+            EventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
             if (!errored) {
                 this.sourceBufferExt.abort(mediaSource, buffer);
                 this.sourceBufferExt.removeSourceBuffer(mediaSource, buffer);

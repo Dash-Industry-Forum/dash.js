@@ -35,6 +35,8 @@ import SourceBufferExtensions from '../extensions/SourceBufferExtensions.js';
 import ScheduleRulesCollection from '../rules/SchedulingRules/ScheduleRulesCollection.js';
 import DataChunk from '../vo/DataChunk.js';
 import BufferController from './BufferController.js';
+import EventBus from '../utils/EventBus.js';
+import Events from "../Events.js";
 
 let FragmentController = function () {
     "use strict";
@@ -82,23 +84,19 @@ let FragmentController = function () {
         },
 
         onFragmentLoadingCompleted = function(e) {
-            var self = this,
-                request = e.data.request,
-                bytes = e.data.response,
-                streamId = e.sender.getContext().streamProcessor.getStreamInfo().id,
+            var request = e.request,
+                bytes = e.response,
+                streamId = e.sender.getContext().streamProcessor.getStreamInfo().id,//TODO seem like a bit much object envy... pass streamInfo in payload?
                 isInit = this.isInitializationRequest(request),
-                eventName = isInit ? FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED :
-                    FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED,
                 chunk;
 
             if (!bytes) {
-                self.log("No " + request.mediaType + " bytes to push.");
+                this.log("No " + request.mediaType + " bytes to push.");
                 return;
             }
 
             chunk = createDataChunk.call(this, bytes, request, streamId);
-
-            self.notify(eventName, {chunk: chunk, fragmentModel: e.sender});
+            EventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {chunk: chunk, fragmentModel: e.sender})
         },
 
         onStreamCompleted = function(e) {
@@ -116,8 +114,8 @@ let FragmentController = function () {
         unsubscribe: undefined,
 
         setup: function() {
+            EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
             this[FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = onFragmentLoadingStart;
-            this[FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
             this[FragmentModel.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
         },
 
@@ -158,6 +156,7 @@ let FragmentController = function () {
 		},
 
         reset: function() {
+            EventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
             fragmentModels = [];
         }
     };
@@ -170,9 +169,7 @@ FragmentController.prototype = {
 FragmentController.eventList = {
     ENAME_STREAM_COMPLETED: "streamCompleted",
     ENAME_INIT_FRAGMENT_LOADING_START: "initFragmentLoadingStart",
-    ENAME_MEDIA_FRAGMENT_LOADING_START: "mediaFragmentLoadingStart",
-    ENAME_INIT_FRAGMENT_LOADED: "initFragmentLoaded",
-    ENAME_MEDIA_FRAGMENT_LOADED: "mediaFragmentLoaded"
+    ENAME_MEDIA_FRAGMENT_LOADING_START: "mediaFragmentLoadingStart"
 };
 
 

@@ -99,7 +99,7 @@ let BufferController = function () {
         //  Start
         //******************************************************************************************
 
-        onInitializationLoaded = function(e) {
+        onInitFragmentLoaded = function(e) {
             // We received a new init chunk.
             // We just want to cache it in the virtual buffer here.
             // Then pass control to appendNext() to handle any other logic.
@@ -107,20 +107,20 @@ let BufferController = function () {
             var self = this,
                 chunk;
 
-            if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel()) return;
+            if (e.fragmentModel !== self.streamProcessor.getFragmentModel()) return;
 
             self.log("Initialization finished loading");
-            chunk = e.data.chunk;
+            chunk = e.chunk;
             // cache the initialization data to use it next time the quality has changed
             this.virtualBuffer.append(chunk);
             switchInitData.call(this, getStreamId.call(this),  requiredQuality);
         },
 
-		onMediaLoaded = function (e) {
-            if (e.data.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
+		onMediaFragmentLoaded = function (e) {
+            if (e.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
 
             var events,
-                chunk = e.data.chunk,
+                chunk = e.chunk,
                 bytes = chunk.bytes,
                 quality = chunk.quality,
                 index = chunk.index,
@@ -622,11 +622,11 @@ let BufferController = function () {
 
         setup: function() {
             EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-
-            this[FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitializationLoaded;
-            this[FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED] =  onMediaLoaded;
-            this[FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
+            EventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+            EventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
             EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
+
+            this[FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
 
             this[PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS] = onPlaybackProgression;
             this[PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onPlaybackProgression;
@@ -716,6 +716,8 @@ let BufferController = function () {
 
             EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
+            EventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+            EventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
 
             criticalBufferLevel = Number.POSITIVE_INFINITY;
             bufferState = BufferController.BUFFER_EMPTY;

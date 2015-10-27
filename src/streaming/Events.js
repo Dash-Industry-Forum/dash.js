@@ -38,7 +38,10 @@ let Events = (function() {
         REPRESENTATION_UPDATED: "representationUpdated",
         BUFFER_LEVEL_STATE_CHANGED : "bufferLevelStateChanged",
         QUALITY_CHANGED : "qualityChanged",
-        LIVE_EDGE_SEARCH_COMPLETED : "liveEdgeSearchCompleted"
+        LIVE_EDGE_SEARCH_COMPLETED : "liveEdgeSearchCompleted",
+        INIT_FRAGMENT_LOADED: "initFragmentLoaded",
+        MEDIA_FRAGMENT_LOADED: "mediaFragmentLoaded",
+        FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
 
 
     };

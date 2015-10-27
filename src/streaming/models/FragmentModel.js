@@ -32,6 +32,8 @@
 import BufferController from '../controllers/BufferController.js';
 import PlaybackController from '../controllers/PlaybackController.js';
 import FragmentLoader from '../FragmentLoader.js';
+import EventBus from '../utils/EventBus.js';
+import Events from "../Events.js";
 
 let FragmentModel = function () {
 
@@ -141,9 +143,9 @@ let FragmentModel = function () {
             if (response && !error) {
                 executedRequests.push(request);
             }
-
+            
             addSchedulingInfoMetrics.call(this, request, error ? FragmentModel.states.FAILED : FragmentModel.states.EXECUTED);
-            this.notify(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, {request: request, response: response}, error);
+            EventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {request: request, response: response, error:error, sender:this})
         },
 
         onPlaybackSeeking = function(){
@@ -327,15 +329,12 @@ FragmentModel.prototype = {
 FragmentModel.eventList = {
     ENAME_STREAM_COMPLETED: "streamCompleted",
     ENAME_FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted",
-    ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
 };
 
 /* Public Static Constants */
 FragmentModel.states = {
-    PENDING: "pending",
     LOADING: "loading",
     EXECUTED: "executed",
-    REJECTED: "rejected",
     CANCELED: "canceled",
     FAILED: "failed"
 };

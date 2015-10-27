@@ -233,7 +233,7 @@ let ScheduleController = function () {
         },
 
         onFragmentLoadingCompleted = function (e) {
-            if (!isNaN(e.data.request.index)){
+            if (!isNaN(e.request.index)){
                 isFragmentLoading = false;
             }
             if (!e.error) return;
@@ -377,10 +377,9 @@ let ScheduleController = function () {
             EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
             EventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
             EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
 
             this[Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
-
-            this[FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
             this[FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
 
             this[BufferController.eventList.ENAME_BUFFER_CLEARED] = onBufferCleared;
@@ -437,6 +436,7 @@ let ScheduleController = function () {
             EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             EventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
+            EventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
             doStop.call(this);
             fragmentModel.abortRequests();
             this.fragmentController.detachModel(fragmentModel);

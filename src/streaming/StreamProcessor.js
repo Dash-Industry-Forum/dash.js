@@ -99,13 +99,12 @@ let StreamProcessor = function () {
             self.fragmentController = fragmentController;
             self.fragmentLoader = fragmentLoader;
 
-            fragmentController.subscribe(FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED, bufferController);
 
             if (type === "video" || type === "audio" || type === "fragmentedText") {
 
                 stream.subscribe(Stream.eventList.ENAME_STREAM_UPDATED, scheduleController);
 
-                fragmentController.subscribe(FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED, bufferController);
+
                 fragmentController.subscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController);
                 fragmentController.subscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, bufferController);
 
@@ -147,9 +146,7 @@ let StreamProcessor = function () {
             fragmentModel = this.getFragmentModel();
             fragmentModel.setLoader(fragmentLoader);
             fragmentModel.subscribe(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, fragmentController);
-            fragmentModel.subscribe(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, fragmentController);
             fragmentModel.subscribe(FragmentModel.eventList.ENAME_STREAM_COMPLETED, fragmentController);
-            fragmentModel.subscribe(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, scheduleController);
             fragmentLoader.subscribe(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
             fragmentLoader.subscribe(FragmentLoader.eventList.ENAME_LOADING_PROGRESS, abrController);
 
@@ -276,8 +273,7 @@ let StreamProcessor = function () {
 
             stream.unsubscribe(Stream.eventList.ENAME_STREAM_UPDATED, scheduleController);
 
-            fragmentController.unsubscribe(FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED, bufferController);
-            fragmentController.unsubscribe(FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED, bufferController);
+
             fragmentController.unsubscribe(FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START, scheduleController);
             fragmentController.unsubscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController);
             fragmentController.unsubscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, bufferController);
@@ -305,9 +301,7 @@ let StreamProcessor = function () {
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, abrController.abrRulesCollection.insufficientBufferRule);
 
             fragmentModel.unsubscribe(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, fragmentController);
-            fragmentModel.unsubscribe(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, fragmentController);
             fragmentModel.unsubscribe(FragmentModel.eventList.ENAME_STREAM_COMPLETED, fragmentController);
-            fragmentModel.unsubscribe(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED, scheduleController);
             fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
             fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_PROGRESS, abrController);
 
