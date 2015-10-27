@@ -36,6 +36,7 @@ import BufferController from '../../streaming/controllers/BufferController.js';
 import DOMStorage from '../../streaming/utils/DOMStorage.js';
 import Error from '../../streaming/vo/Error.js';
 import EventBus from '../../streaming/utils/EventBus.js';
+import Events from "../../streaming/Events.js";
 
 let RepresentationController = function () {
     "use strict";
@@ -241,11 +242,11 @@ let RepresentationController = function () {
         onQualityChanged = function(e) {
             var self = this;
 
-            if (e.data.mediaType !== self.streamProcessor.getType() || self.streamProcessor.getStreamInfo().id !== e.data.streamInfo.id) return;
+            if (e.mediaType !== self.streamProcessor.getType() || self.streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
 
-            if (e.data.oldQuality !== e.data.newQuality){
-                currentRepresentation = self.getRepresentationForQuality(e.data.newQuality);
-                setLocalStorage.call(self, e.data.mediaType, currentRepresentation.bandwidth);
+            if (e.oldQuality !== e.newQuality){
+                currentRepresentation = self.getRepresentationForQuality(e.newQuality);
+                setLocalStorage.call(self, e.mediaType, currentRepresentation.bandwidth);
                 addRepresentationSwitch.call(self);
             }
 
@@ -271,7 +272,8 @@ let RepresentationController = function () {
         liveDelayFragmentCount:undefined,
 
         setup: function() {
-            this[AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
+
+            EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
             this[DashHandler.eventList.ENAME_REPRESENTATION_UPDATED] = onRepresentationUpdated;
             this[PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
             this[LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
@@ -300,6 +302,10 @@ let RepresentationController = function () {
 
         getCurrentRepresentation: function() {
             return currentRepresentation;
+        },
+
+        reset: function() {
+            EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
         }
     };
 };

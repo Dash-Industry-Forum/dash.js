@@ -30,7 +30,9 @@
  */
 let Events = (function() {
     return {
-        BUFFER_LEVEL_STATE_CHANGED : "bufferStateChanged"
+        BUFFER_LEVEL_STATE_CHANGED : "bufferStateChanged",
+        QUALITY_CHANGED : "qualityChanged"
+
     };
 }());
 

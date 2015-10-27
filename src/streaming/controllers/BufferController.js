@@ -268,14 +268,10 @@ let BufferController = function () {
         },
 
         onQualityChanged = function(e) {
-            if (type !== e.data.mediaType || this.streamProcessor.getStreamInfo().id !== e.data.streamInfo.id) return;
+            var newQuality = e.newQuality;
+            if (requiredQuality === newQuality || type !== e.mediaType || this.streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
 
-            var self = this,
-                newQuality = e.data.newQuality;
-
-            if (requiredQuality === newQuality) return;
-
-            updateBufferTimestampOffset.call(self, self.streamProcessor.getRepresentationInfoForQuality(newQuality).MSETimeOffset);
+            updateBufferTimestampOffset.call(this, this.streamProcessor.getRepresentationInfoForQuality(newQuality).MSETimeOffset);
             requiredQuality = newQuality;
         },
 
@@ -630,8 +626,7 @@ let BufferController = function () {
             this[FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitializationLoaded;
             this[FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED] =  onMediaLoaded;
             this[FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
-
-            this[AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
+            EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
 
             this[PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS] = onPlaybackProgression;
             this[PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onPlaybackProgression;
@@ -718,9 +713,10 @@ let BufferController = function () {
         },
 
         reset: function(errored) {
-            var self = this;
 
             EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
+
             criticalBufferLevel = Number.POSITIVE_INFINITY;
             bufferState = BufferController.BUFFER_EMPTY;
             minBufferTime = null;
@@ -728,18 +724,18 @@ let BufferController = function () {
             lastIndex = -1;
             maxAppendedIndex = -1;
             requiredQuality = 0;
-            self.sourceBufferExt.unsubscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, self, onAppended);
-            self.sourceBufferExt.unsubscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, self, onRemoved);
+            this.sourceBufferExt.unsubscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);
+            this.sourceBufferExt.unsubscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, this, onRemoved);
             appendedBytesInfo = null;
-            this.virtualBuffer.unsubscribe(VirtualBuffer.eventList.CHUNK_APPENDED, self, onChunkAppended);
+            this.virtualBuffer.unsubscribe(VirtualBuffer.eventList.CHUNK_APPENDED, this, onChunkAppended);
             appendingMediaChunk = false;
             isBufferingCompleted = false;
             isAppendingInProgress = false;
             isPruningInProgress = false;
 
             if (!errored) {
-                self.sourceBufferExt.abort(mediaSource, buffer);
-                self.sourceBufferExt.removeSourceBuffer(mediaSource, buffer);
+                this.sourceBufferExt.abort(mediaSource, buffer);
+                this.sourceBufferExt.removeSourceBuffer(mediaSource, buffer);
             }
 
             buffer = null;
@@ -771,7 +767,6 @@ BufferController.prototype = {
 };
 
 BufferController.eventList = {
-    ENAME_BUFFER_LEVEL_STATE_CHANGED: "bufferLevelStateChanged",
     ENAME_BUFFER_LEVEL_UPDATED: "bufferLevelUpdated",
     ENAME_QUOTA_EXCEEDED: "quotaExceeded",
     ENAME_BYTES_APPENDED: "bytesAppended",

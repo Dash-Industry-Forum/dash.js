@@ -33,6 +33,8 @@ import SwitchRequest from '../rules/SwitchRequest';
 import BitrateInfo from '../vo/BitrateInfo.js';
 import FragmentLoader from '../FragmentLoader.js';
 import ScheduleController from './ScheduleController.js';
+import EventBus from '../utils/EventBus.js';
+import Events from '../Events.js';
 
 let AbrController = function () {
     "use strict";
@@ -225,8 +227,7 @@ let AbrController = function () {
                         quality = topQualityIdx;
                     }
 
-                    //oldQuality = getInternalQuality(type, streamId);
-                    //
+                    oldQuality = getInternalQuality(type, streamId);
                     //if (quality === oldQuality || (abandonmentStateDict[type].state === AbrController.ABANDON_LOAD &&  quality > oldQuality)) return;
                     if (quality !== oldQuality) {
 
@@ -234,7 +235,8 @@ let AbrController = function () {
                         //self.log("New quality of " + quality);
                         setInternalConfidence(type, streamId, confidence);
                         //self.log("New confidence of " + confidence);
-                        self.notify(AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
+                        EventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
+
                     }
 
                     if (completedCallback !== undefined) {
@@ -268,7 +270,7 @@ let AbrController = function () {
 
             if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && newPlaybackQuality <= getTopQualityIndex.call(this, type, id)) {
                 setInternalQuality(type, streamInfo.id, newPlaybackQuality);
-                this.notify(AbrController.eventList.ENAME_QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality});
+                EventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality});
             }
         },
 
@@ -412,9 +414,6 @@ AbrController.prototype = {
     constructor: AbrController
 };
 
-AbrController.eventList = {
-    ENAME_QUALITY_CHANGED: "qualityChanged"
-};
 
 // Default initial video bitrate, kbps
 AbrController.DEFAULT_VIDEO_BITRATE = 1000;

@@ -195,9 +195,9 @@ let ScheduleController = function () {
         },
 
         onQualityChanged = function(e) {
-            if (type !== e.data.mediaType || this.streamProcessor.getStreamInfo().id !== e.data.streamInfo.id) return;
+            if (type !== e.mediaType || this.streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
 
-            currentRepresentationInfo = this.streamProcessor.getRepresentationInfoForQuality(e.data.newQuality);
+            currentRepresentationInfo = this.streamProcessor.getRepresentationInfoForQuality(e.newQuality);
             if (currentRepresentationInfo === null || currentRepresentationInfo === undefined) {
                 throw "Unexpected error! - currentRepresentationInfo is null or undefined";
             }
@@ -374,8 +374,7 @@ let ScheduleController = function () {
         setup: function() {
             this[LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
 
-            this[AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;
-
+            EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
             EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED, onDataUpdateStarted, this);
             EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
 
@@ -433,13 +432,13 @@ let ScheduleController = function () {
         replaceCanceledRequests:replaceCanceledRequests,
 
         reset: function() {
-            var self = this;
-            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED, onDataUpdateStarted, self);
-            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, self);
-            EventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, self);
-            doStop.call(self);
+            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED, onDataUpdateStarted, this);
+            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
+            EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
+            doStop.call(this);
             fragmentModel.abortRequests();
-            self.fragmentController.detachModel(fragmentModel);
+            this.fragmentController.detachModel(fragmentModel);
             isFragmentLoading = false;
             fragmentsToLoad = 0;
             timeToloadDelay = 0;

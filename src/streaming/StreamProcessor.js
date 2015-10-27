@@ -102,9 +102,6 @@ let StreamProcessor = function () {
             fragmentController.subscribe(FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED, bufferController);
 
             if (type === "video" || type === "audio" || type === "fragmentedText") {
-                abrController.subscribe(AbrController.eventList.ENAME_QUALITY_CHANGED, bufferController);
-                abrController.subscribe(AbrController.eventList.ENAME_QUALITY_CHANGED, representationController);
-                abrController.subscribe(AbrController.eventList.ENAME_QUALITY_CHANGED, scheduleController);
 
                 liveEdgeFinder.subscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.timelineConverter);
                 liveEdgeFinder.subscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, representationController);
@@ -282,10 +279,6 @@ let StreamProcessor = function () {
                 baseUrlExt = this.baseURLExt,
                 fragmentModel = this.getFragmentModel(),
                 fragmentLoader = this.fragmentLoader;
-
-            abrController.unsubscribe(AbrController.eventList.ENAME_QUALITY_CHANGED, bufferController);
-            abrController.unsubscribe(AbrController.eventList.ENAME_QUALITY_CHANGED, representationController);
-            abrController.unsubscribe(AbrController.eventList.ENAME_QUALITY_CHANGED, scheduleController);
 
             liveEdgeFinder.unsubscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.timelineConverter);
             liveEdgeFinder.unsubscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, scheduleController);
