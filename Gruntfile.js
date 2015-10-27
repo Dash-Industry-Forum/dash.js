@@ -17,10 +17,7 @@ module.exports = function(grunt) {
     },
    concat: {
       all: {
-        options: {
-          separator: '\n',
-        },
-        src: ['./externals/*.js', 'build/temp/Dash.js'],
+        src: ['build/temp/Dash.js','./externals/*.js'],
         dest: 'build/temp/Dash.all.js',
       },
     },
@@ -53,7 +50,10 @@ module.exports = function(grunt) {
         options: {
           beautify: true,
           compress: false,
-          mangle: false
+          mangle: false,
+          sourceMap: true,
+          sourceMapIn: 'build/temp/Dash.all.js.map',
+          sourceMapRoot: '../../src',
         },
         files: {
           'build/temp/dash.debug.js': 'build/temp/Dash.all.js'
