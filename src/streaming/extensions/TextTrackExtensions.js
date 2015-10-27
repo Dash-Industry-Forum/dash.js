@@ -258,13 +258,29 @@ MediaPlayer.utils.TextTrackExtensions = function () {
 
         addCaptions: function(timeOffset, captionData) {
             var track = this.getCurrentTextTrack();
-            if(!track) return;
+            if(!track || !captionData || captionData.length <= 0) return;
 
             track.mode = "showing";//make sure tracks are showing to be able to add the cue...
-
-            for(var item in captionData) {
+            
+            if(isIE11orEdge) {
+                captionData.sort(function(a, b){
+                    if(a.start < b.start) return -1;
+                    if(a.start > b.start) return 1;
+                    if(a.end < b.end) return -1;
+                    if(a.end > b.end) return 1;
+                    return 0;
+                });
+                // check if older data is present
+                if(track.cues.length > 0) {
+                    var lastCue = track.cues[track.cues.length - 1];
+                    if(lastCue.startTime > captionData[0].start-timeOffset) {
+                        this.deleteTrackCues(track);
+                    }
+                }
+            }
+            for(var i = 0; i < captionData.length; i++) {
                 var cue,
-                    currentItem = captionData[item];
+                    currentItem = captionData[i];
 
                 if (!videoSizeCheckInterval && currentItem.type=="html") {
                     videoSizeCheckInterval = setInterval(this.checkVideoSize.bind(this), 500);
@@ -357,6 +373,7 @@ MediaPlayer.utils.TextTrackExtensions = function () {
                         }
                     }
                 }
+
 
                 track.addCue(cue);
             }
