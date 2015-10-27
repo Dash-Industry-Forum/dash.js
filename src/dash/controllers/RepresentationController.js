@@ -56,7 +56,7 @@ let RepresentationController = function () {
                 averageThroughput;
 
             updating = true;
-            EventBus.trigger(Events.DATA_UPDATE_STARTED);
+            EventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: self});
 
             availableRepresentations = updateRepresentations.call(self, adaptation);
 
@@ -150,7 +150,7 @@ let RepresentationController = function () {
                     if (this.isUpdating()) return;
 
                     updating = true;
-                    EventBus.trigger(Events.DATA_UPDATE_STARTED);
+                    EventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: self});
                     for (var i = 0; i < availableRepresentations.length; i += 1) {
                         self.indexHandler.updateRepresentation(availableRepresentations[i], true);
                     }
@@ -161,6 +161,7 @@ let RepresentationController = function () {
         },
 
         onRepresentationUpdated = function(e) {
+            if (e.sender.streamProcessor !== this.streamProcessor) return;
             if (!this.isUpdating()) return;
 
             var self = this,
@@ -235,7 +236,9 @@ let RepresentationController = function () {
             }
         },
 
-        onBufferLevelUpdated = function(/*e*/) {
+        onBufferLevelUpdated = function(e) {
+            if (e.sender.streamProcessor !== this.streamProcessor) return;
+
             addDVRMetric.call(this);
         },
 
@@ -278,7 +281,7 @@ let RepresentationController = function () {
             EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
 
             this[PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
-            this[BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED] = onBufferLevelUpdated;
+            EventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, this);
         },
 
         initialize: function(streamProcessor) {
@@ -308,6 +311,7 @@ let RepresentationController = function () {
         reset: function() {
             EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
             EventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, this);
+            EventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, this);
             EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         }
     };

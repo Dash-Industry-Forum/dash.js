@@ -354,7 +354,7 @@ let Stream = function () {
         unsubscribe: undefined,
 
         setup: function () {
-            this[BufferController.eventList.ENAME_BUFFERING_COMPLETED] = onBufferingCompleted;
+            EventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
             EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             this[MediaController.eventList.CURRENT_TRACK_CHANGED] = onCurrentTrackChanged;
         },
@@ -432,6 +432,7 @@ let Stream = function () {
             this.liveEdgeFinder.abortSearch();
 
             EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
 
             protectionController.removeEventListener(ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
             protectionController.removeEventListener(ProtectionController.events.SERVER_CERTIFICATE_UPDATED, boundProtectionErrorHandler);

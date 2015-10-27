@@ -239,37 +239,46 @@ let ScheduleController = function () {
             doStop.call(this);
         },
 
-        onBytesAppended = function() {
+        onBytesAppended = function(e) {
+            if (e.sender.streamProcessor !== this.streamProcessor) return;
+
             addPlaylistTraceMetrics.call(this);
             validate.call(this);
         },
 
-        onDataUpdateStarted = function() {
+        onDataUpdateStarted = function(e) {
+            if (e.sender.streamProcessor !== this.streamProcessor) return;
+
             doStop.call(this);
         },
 
         onInitRequested = function(e) {
-            getInitRequest.call(this, e.data.requiredQuality);
+            if (e.sender.streamProcessor !== this.streamProcessor) return;
+
+            getInitRequest.call(this, e.requiredQuality);
         },
 
         onBufferCleared = function(e) {
+            if (e.sender.streamProcessor !== this.streamProcessor) return;
             // after the data has been removed from the buffer we should remove the requests from the list of
             // the executed requests for which playback time is inside the time interval that has been removed from the buffer
-            fragmentModel.removeExecutedRequestsBeforeTime(e.data.to);
+            fragmentModel.removeExecutedRequestsBeforeTime(e.to);
 
-            if (e.data.hasEnoughSpaceToAppend && !this.bufferController.isBufferingCompleted()) {
+            if (e.hasEnoughSpaceToAppend && !this.bufferController.isBufferingCompleted()) {
                 doStart.call(this);
             }
         },
 
         onBufferLevelStateChanged = function(e) {
-            if (e.state === BufferController.BUFFER_EMPTY && !this.playbackController.isSeeking()) {
+            if ((e.sender.streamProcessor === this.streamProcessor) && e.state === BufferController.BUFFER_EMPTY && !this.playbackController.isSeeking()) {
                 this.log("Stalling Buffer");
                 clearPlayListTraceMetrics(new Date(), PlayList.Trace.REBUFFERING_REASON);
             }
         },
 
-        onQuotaExceeded = function() {
+        onQuotaExceeded = function(e) {
+            if (e.sender.streamProcessor !== this.streamProcessor) return;
+
             doStop.call(this);
         },
 
@@ -381,10 +390,10 @@ let ScheduleController = function () {
             EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
 
 
-            this[BufferController.eventList.ENAME_BUFFER_CLEARED] = onBufferCleared;
-            this[BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
-            this[BufferController.eventList.ENAME_INIT_REQUESTED] = onInitRequested;
-            this[BufferController.eventList.ENAME_QUOTA_EXCEEDED] = onQuotaExceeded;
+            EventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
+            EventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
+            EventBus.on(Events.INIT_REQUESTED, onInitRequested, this);
+            EventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
             EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
 
             this[TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED] = onClosedCaptioningRequested;
@@ -438,6 +447,10 @@ let ScheduleController = function () {
             EventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
             EventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
             EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
+            EventBus.off(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
+            EventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
+            EventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
+            EventBus.off(Events.INIT_REQUESTED, onInitRequested, this);
             doStop.call(this);
             fragmentModel.abortRequests();
             this.fragmentController.detachModel(fragmentModel);

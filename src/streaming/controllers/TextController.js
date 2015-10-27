@@ -40,7 +40,9 @@ let TextController = function () {
          buffer = null,
          type = null,
 
-         onDataUpdateCompleted = function(/*e*/) {
+         onDataUpdateCompleted = function(e) {
+             if (e.sender.streamProcessor !== this.streamProcessor) return;
+
              this.notify(TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, {CCIndex: 0});
          },
 

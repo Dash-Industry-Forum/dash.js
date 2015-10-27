@@ -148,7 +148,7 @@ let BufferController = function () {
             // If the media chunk we have matches currentQuality, append the media chunk to the source buffer.
             // Otherwise, leave the media chunk in appendingMediaChunk and check the init chunk corresponding to the media chunk.
             // If we have the corresponding init chunk, append the init chunk to the source buffer; appendingMediaChunk will be processed shortly through onAppended().
-            // Otherwise, fire the ENAME_INIT_REQUESTED event.
+            // Otherwise, fire the Events.INIT_REQUESTED event.
 			if (!buffer || isAppendingInProgress || !hasEnoughSpaceToAppend.call(this)) return;
 
             var self = this,
@@ -194,7 +194,7 @@ let BufferController = function () {
                 appendToBuffer.call(self, chunk);
             } else {
                 // if we have not loaded the init fragment for the current quality, do it
-                self.notify(BufferController.eventList.ENAME_INIT_REQUESTED, {requiredQuality: quality});
+                EventBus.trigger(Events.INIT_REQUESTED, {sender: self, requiredQuality: quality});
             }
         },
 
@@ -224,7 +224,7 @@ let BufferController = function () {
                 if (e.error.code === SourceBufferExtensions.QUOTA_EXCEEDED_ERROR_CODE) {
                     self.virtualBuffer.append(appendedBytesInfo);
                     criticalBufferLevel = self.sourceBufferExt.getTotalBufferedTime(buffer) * 0.8;
-                    self.notify(BufferController.eventList.ENAME_QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel});
+                    EventBus.trigger(Events.QUOTA_EXCEEDED, {sender: self, criticalBufferLevel: criticalBufferLevel});
                     clearBuffer.call(self, getClearRange.call(self));
                 }
                 isAppendingInProgress = false;
@@ -232,7 +232,7 @@ let BufferController = function () {
             }
 
             if (!hasEnoughSpaceToAppend.call(self)) {
-                self.notify(BufferController.eventList.ENAME_QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel});
+                EventBus.trigger(Events.QUOTA_EXCEEDED, {sender: self, criticalBufferLevel: criticalBufferLevel});
                 clearBuffer.call(self, getClearRange.call(self));
             }
 
@@ -264,7 +264,7 @@ let BufferController = function () {
                 }
             }
 
-            self.notify(BufferController.eventList.ENAME_BYTES_APPENDED, {quality: appendedBytesInfo.quality, startTime: appendedBytesInfo.start, index: appendedBytesInfo.index, bufferedRanges: ranges});
+            EventBus.trigger(Events.BYTES_APPENDED, {sender: self, quality: appendedBytesInfo.quality, startTime: appendedBytesInfo.start, index: appendedBytesInfo.index, bufferedRanges: ranges});
         },
 
         onQualityChanged = function(e) {
@@ -294,7 +294,7 @@ let BufferController = function () {
                 currentTime = self.playbackController.getTime();
 
             bufferLevel = self.sourceBufferExt.getBufferLength(buffer, currentTime);
-            self.notify(BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, {bufferLevel: bufferLevel});
+            EventBus.trigger(Events.BUFFER_LEVEL_UPDATED, {sender: self, bufferLevel: bufferLevel});
             checkIfSufficientBuffer.call(self);
         },
 
@@ -322,7 +322,7 @@ let BufferController = function () {
             if (!isLastIdxAppended || isBufferingCompleted) return;
 
             isBufferingCompleted = true;
-            this.notify(BufferController.eventList.ENAME_BUFFERING_COMPLETED);
+            EventBus.trigger(Events.BUFFERING_COMPLETED, {sender: self});
         },
 
         checkIfSufficientBuffer = function () {
@@ -338,7 +338,7 @@ let BufferController = function () {
 
             bufferState = state;
             addBufferMetrics.call(this);
-            EventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {state:state, mediaType:type, streamInfo:this.streamProcessor.getStreamInfo()});
+            EventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {sender: self, state:state, mediaType:type, streamInfo:this.streamProcessor.getStreamInfo()});
             this.log(state === BufferController.BUFFER_LOADED ? ("Got enough buffer to start.") : ("Waiting for more buffer before starting playback."));
         },
 
@@ -481,7 +481,7 @@ let BufferController = function () {
             }
             this.virtualBuffer.updateBufferedRanges({streamId: getStreamId.call(this), mediaType: type}, this.sourceBufferExt.getAllRanges(buffer));
             updateBufferLevel.call(this);
-            this.notify(BufferController.eventList.ENAME_BUFFER_CLEARED, {from: e.data.from, to: e.data.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend.call(this)});
+            EventBus.trigger(Events.BUFFER_CLEARED, {sender: self, from: e.data.from, to: e.data.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend.call(this)});
             if (hasEnoughSpaceToAppend.call(this)) return;
 
             setTimeout(clearBuffer.bind(this, getClearRange.call(this)), minBufferTime * 1000);
@@ -529,8 +529,8 @@ let BufferController = function () {
             }
         },
 
-
         onDataUpdateCompleted = function(e) {
+            if (e.sender.streamProcessor !== this.streamProcessor) return;
             if (e.error) return;
 
             var self = this,
@@ -542,7 +542,6 @@ let BufferController = function () {
             //self.log("Min Buffer time: " + bufferLength);
             if (minBufferTime !== bufferLength) {
                 self.setMinBufferTime(bufferLength);
-                self.notify(BufferController.eventList.ENAME_MIN_BUFFER_TIME_UPDATED, {minBufferTime: bufferLength});
             }
         },
 
@@ -611,9 +610,6 @@ let BufferController = function () {
         abrController: undefined,
         boxParser: undefined,
         system: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
         virtualBuffer: undefined,
         textSourceBuffer:undefined,
 
@@ -660,6 +656,10 @@ let BufferController = function () {
          * @memberof BufferController#
          */
         createBuffer: createBuffer,
+
+        getType: function() {
+            return type;  
+        },
 
         getStreamProcessor: function() {
             return this.streamProcessor;
@@ -764,19 +764,6 @@ BufferController.BUFFER_PRUNING_INTERVAL = 30;
 
 BufferController.prototype = {
     constructor: BufferController
-};
-
-BufferController.eventList = {
-    ENAME_BUFFER_LEVEL_UPDATED: "bufferLevelUpdated",
-    ENAME_QUOTA_EXCEEDED: "quotaExceeded",
-    ENAME_BYTES_APPENDED: "bytesAppended",
-    ENAME_BYTES_REJECTED: "bytesRejected",
-    ENAME_BUFFERING_COMPLETED: "bufferingCompleted",
-    ENAME_BUFFER_CLEARED: "bufferCleared",
-    ENAME_INIT_REQUESTED: "initRequested",
-    ENAME_BUFFER_LEVEL_OUTRUN: "bufferLevelOutrun",
-    ENAME_BUFFER_LEVEL_BALANCED: "bufferLevelBalanced",
-    ENAME_MIN_BUFFER_TIME_UPDATED: "minBufferTimeUpdated"
 };
 
 export default BufferController;

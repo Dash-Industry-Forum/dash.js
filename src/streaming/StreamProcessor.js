@@ -77,11 +77,9 @@ let StreamProcessor = function () {
 
             var self = this,
                 representationController = self.system.getObject("representationController"),
-                scheduleController = self.system.getObject("scheduleController"),
-                liveEdgeFinder = self.liveEdgeFinder,
+                scheduleController = self.system.getObject("scheduleController"),               
                 abrController = self.abrController,
                 indexHandler = self.indexHandler,
-                baseUrlExt = self.baseURLExt,
                 playbackController = self.playbackController,
                 mediaController = self.system.getObject("mediaController"),
                 fragmentModel,
@@ -101,14 +99,6 @@ let StreamProcessor = function () {
 
 
             if (type === "video" || type === "audio" || type === "fragmentedText") {
-
-                bufferController.subscribe(BufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
-                bufferController.subscribe(BufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
-                bufferController.subscribe(BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, representationController);
-                bufferController.subscribe(BufferController.eventList.ENAME_INIT_REQUESTED, scheduleController);
-                bufferController.subscribe(BufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
-                bufferController.subscribe(BufferController.eventList.ENAME_QUOTA_EXCEEDED, scheduleController);
-                bufferController.subscribe(BufferController.eventList.ENAME_BYTES_APPENDED, playbackController);
 
                 playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
                 playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);
@@ -253,13 +243,11 @@ let StreamProcessor = function () {
                 bufferController = self.bufferController,
                 representationController = self.representationController,
                 scheduleController = self.scheduleController,
-                liveEdgeFinder = self.liveEdgeFinder,
                 fragmentController = self.fragmentController,
                 abrController = self.abrController,
                 playbackController = self.playbackController,
                 mediaController = this.system.getObject("mediaController"),
                 indexHandler = this.indexHandler,
-                baseUrlExt = this.baseURLExt,
                 fragmentModel = this.getFragmentModel(),
                 fragmentLoader = this.fragmentLoader;
 
@@ -267,15 +255,9 @@ let StreamProcessor = function () {
 
             fragmentController.unsubscribe(FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START, scheduleController);
 
-
-            bufferController.unsubscribe(BufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
-            bufferController.unsubscribe(BufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
-            bufferController.unsubscribe(BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, scheduleController);
-            bufferController.unsubscribe(BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, representationController);
-            bufferController.unsubscribe(BufferController.eventList.ENAME_INIT_REQUESTED, scheduleController);
-            bufferController.unsubscribe(BufferController.eventList.ENAME_BUFFERING_COMPLETED, stream);
-            bufferController.unsubscribe(BufferController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
-            bufferController.unsubscribe(BufferController.eventList.ENAME_BYTES_APPENDED, playbackController);
+            if (bufferController.unsubscribe) {
+                bufferController.unsubscribe(TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);    
+            }            
 
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);
@@ -303,6 +285,7 @@ let StreamProcessor = function () {
             this.scheduleController.reset();
             this.bufferController = null;
             this.scheduleController = null;
+            this.representationController.reset();
             this.representationController = null;
             this.videoModel = null;
             this.fragmentController = null;

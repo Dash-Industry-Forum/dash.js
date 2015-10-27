@@ -30,21 +30,35 @@
  */
 let Events = (function() {
     return {
+        // ManifestUpdater events
         MANIFEST_UPDATED: "manifestUpdated",
+        // RepresentationController events
         DATA_UPDATE_COMPLETED: "dataUpdateCompleted",
         DATA_UPDATE_STARTED: "dataUpdateStarted",
+        // BaseURLExtensions events
         INITIALIZATION_LOADED: "initializationLoaded",
         SEGMENTS_LOADED: "segmentsLoaded",
+        // DashHandler events
         REPRESENTATION_UPDATED: "representationUpdated",
-        BUFFER_LEVEL_STATE_CHANGED : "bufferLevelStateChanged",
+        // BufferController events
+        BUFFER_LEVEL_STATE_CHANGED : "bufferStateChanged",
+        BUFFER_LEVEL_UPDATED: "bufferLevelUpdated",
+        QUOTA_EXCEEDED: "quotaExceeded",
+        BYTES_APPENDED: "bytesAppended",
+        BUFFERING_COMPLETED: "bufferingCompleted",
+        BUFFER_CLEARED: "bufferCleared",
+        INIT_REQUESTED: "initRequested",
+        // ABRController events
         QUALITY_CHANGED : "qualityChanged",
+        // LiveEdgeFinder events
         LIVE_EDGE_SEARCH_COMPLETED : "liveEdgeSearchCompleted",
+        // FragmentController events
         INIT_FRAGMENT_LOADED: "initFragmentLoaded",
         MEDIA_FRAGMENT_LOADED: "mediaFragmentLoaded",
         FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted",
+        // Stream events
         STREAM_COMPLETED: "streamCompleted",
         STREAM_INITIALIZED: "streaminitialized"
-
 
     };
 }());

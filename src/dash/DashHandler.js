@@ -673,7 +673,7 @@ let DashHandler = function () {
 
             if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
                 error = new Error(DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE, "no segments are available yet", {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
-                EventBus.trigger(Events.REPRESENTATION_UPDATED, {representation: representation, error: error});
+                EventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: self, representation: representation, error: error});
                 return;
             }
 
@@ -692,7 +692,7 @@ let DashHandler = function () {
             }
 
             if (hasInitialization && hasSegments) {
-                EventBus.trigger(Events.REPRESENTATION_UPDATED, {representation: representation});
+                EventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: self, representation: representation});
             }
         },
 
@@ -887,7 +887,7 @@ let DashHandler = function () {
             //self.log("Got an initialization.");
             if (!representation.segments) return;
 
-            EventBus.trigger(Events.REPRESENTATION_UPDATED, {representation: representation});
+            EventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: self, representation: representation});
         },
 
         onSegmentsLoaded = function(e) {
@@ -928,7 +928,7 @@ let DashHandler = function () {
 
             if (!representation.initialization) return;
 
-            EventBus.trigger(Events.REPRESENTATION_UPDATED, {representation: representation});
+            EventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: self, representation: representation});
         };
 
     return {

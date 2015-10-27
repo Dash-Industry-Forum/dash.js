@@ -255,14 +255,14 @@ let PlaybackController = function () {
 
         onBytesAppended = function(e) {
             var bufferedStart,
-                ranges = e.data.bufferedRanges,
+                ranges = e.bufferedRanges,
                 id = streamInfo.id,
                 time = this.getTime(),
                 sp = e.sender.streamProcessor,
                 type = sp.getType(),
                 stream = this.system.getObject("streamController").getStreamById(streamInfo.id),
                 streamStart = getStreamStartTime.call(this, streamInfo),
-                segStart = e.data.startTime,
+                segStart = e.startTime,
                 currentEarliestTime = commonEarliestTime[id];
 
             // if index is zero it means that the first segment of the Period has been appended
@@ -332,8 +332,7 @@ let PlaybackController = function () {
         setup: function() {
             EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-
-            this[BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
+            EventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
             EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
 
             onCanPlay = onCanPlay.bind(this);
@@ -462,6 +461,7 @@ let PlaybackController = function () {
             EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             EventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+            EventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
             stopUpdatingWallclockTime.call(this);
             removeAllListeners.call(this);
             videoModel = null;
