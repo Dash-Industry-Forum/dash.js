@@ -26,9 +26,9 @@ module.exports = function(grunt) {
     },
     uglify: {
       options: {
-        //sourceMap: true,
-        //sourceMapIn: 'build/temp/Dash.js.map',
-        //sourceMapRoot: '../../src',
+        sourceMap: true,
+        sourceMapIn: 'build/temp/Dash.all.js.map',
+        sourceMapRoot: '../../src',
         preserveComments: 'some',
         mangle: true,
         compress: {
@@ -44,8 +44,8 @@ module.exports = function(grunt) {
       },
       build: {
         files: {
-          'build/temp/Dash.min.js': 'build/temp/Dash.js',
-          'build/temp/Dash.all.min.js': 'build/temp/Dash.all.js'
+          'build/temp/dash.min.js': 'build/temp/Dash.js',
+          'build/temp/dash.all.min.js': 'build/temp/Dash.all.js'
         }
       },
       
@@ -67,14 +67,20 @@ module.exports = function(grunt) {
       }
     },
     copy: {
-      dist: { expand: true, cwd: 'build/temp/', src: ['**/**'], dest: 'dist/', filter: 'isFile' }
+      dist: { expand: true,
+              cwd: 'build/temp/',
+              src: ['dash.min.js', 'dash.min.js.map',
+                    'dash.all.min.js', 'dash.all.min.js.map',
+                    'dash.debug.js', 'dash.debug.js.map'],
+              dest: 'dist/',
+              filter: 'isFile' }
     },
     exorcise: {
       build: {
         options: {},
         files: {
           'build/temp/Dash.js.map': ['build/temp/Dash.js'],
-          'build/temp/Dash.all.js.map': ['build/temp/Dash.all.js'],
+          'build/temp/Dash.all.js.map': ['build/temp/Dash.all.js']
         }
       }
     },
@@ -187,7 +193,7 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('minimize', [
-    //'exorcise',
+    'exorcise',
     'uglify'
   ]);
 
