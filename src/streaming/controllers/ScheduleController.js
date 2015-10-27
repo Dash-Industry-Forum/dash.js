@@ -226,8 +226,7 @@ let ScheduleController = function () {
         },
 
         onStreamCompleted = function(e) {
-            if (e.data.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
-
+            if (e.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
             this.log("Stream is complete");
             clearPlayListTraceMetrics(new Date(), PlayList.Trace.END_OF_CONTENT_STOP_REASON);
         },
@@ -378,9 +377,10 @@ let ScheduleController = function () {
             EventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
             EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
+            EventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
 
             this[Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
-            this[FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
+
 
             this[BufferController.eventList.ENAME_BUFFER_CLEARED] = onBufferCleared;
             this[BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
@@ -437,6 +437,7 @@ let ScheduleController = function () {
             EventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
             EventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
+            EventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
             doStop.call(this);
             fragmentModel.abortRequests();
             this.fragmentController.detachModel(fragmentModel);

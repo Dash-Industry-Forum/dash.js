@@ -301,7 +301,7 @@ let FragmentModel = function () {
                     // Stream has completed, execute the corresponding callback
                     executedRequests.push(request);
                     addSchedulingInfoMetrics.call(self, request, FragmentModel.states.EXECUTED);
-                    self.notify(FragmentModel.eventList.ENAME_STREAM_COMPLETED, {request: request});
+                    EventBus.trigger(Events.STREAM_COMPLETED, {request: request, fragmentModel:this});
                     break;
                 case "download":
                     loadingRequests.push(request);
@@ -327,8 +327,7 @@ FragmentModel.prototype = {
 };
 
 FragmentModel.eventList = {
-    ENAME_STREAM_COMPLETED: "streamCompleted",
-    ENAME_FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted",
+    ENAME_FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted"
 };
 
 /* Public Static Constants */

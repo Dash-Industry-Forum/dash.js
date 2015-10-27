@@ -41,7 +41,8 @@ let Events = (function() {
         LIVE_EDGE_SEARCH_COMPLETED : "liveEdgeSearchCompleted",
         INIT_FRAGMENT_LOADED: "initFragmentLoaded",
         MEDIA_FRAGMENT_LOADED: "mediaFragmentLoaded",
-        FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
+        FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted",
+        STREAM_COMPLETED: "streamCompleted",
 
 
     };

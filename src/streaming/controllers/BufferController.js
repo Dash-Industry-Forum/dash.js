@@ -547,12 +547,9 @@ let BufferController = function () {
         },
 
         onStreamCompleted = function (e) {
-            var self = this;
-
-            if (e.data.fragmentModel !== self.streamProcessor.getFragmentModel()) return;
-
-            lastIndex = e.data.request.index;
-            checkIfBufferingCompleted.call(self);
+            if (e.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
+            lastIndex = e.request.index;
+            checkIfBufferingCompleted.call(this);
         },
 
         onChunkAppended = function(/*e*/) {
@@ -625,8 +622,8 @@ let BufferController = function () {
             EventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
             EventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
             EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
+            EventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
 
-            this[FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
 
             this[PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS] = onPlaybackProgression;
             this[PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onPlaybackProgression;
@@ -718,6 +715,7 @@ let BufferController = function () {
             EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
             EventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
             EventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
+            EventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
 
             criticalBufferLevel = Number.POSITIVE_INFINITY;
             bufferState = BufferController.BUFFER_EMPTY;

@@ -105,8 +105,7 @@ let StreamProcessor = function () {
                 stream.subscribe(Stream.eventList.ENAME_STREAM_UPDATED, scheduleController);
 
 
-                fragmentController.subscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController);
-                fragmentController.subscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, bufferController);
+
 
                 bufferController.subscribe(BufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
                 bufferController.subscribe(BufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
@@ -146,7 +145,6 @@ let StreamProcessor = function () {
             fragmentModel = this.getFragmentModel();
             fragmentModel.setLoader(fragmentLoader);
             fragmentModel.subscribe(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, fragmentController);
-            fragmentModel.subscribe(FragmentModel.eventList.ENAME_STREAM_COMPLETED, fragmentController);
             fragmentLoader.subscribe(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
             fragmentLoader.subscribe(FragmentLoader.eventList.ENAME_LOADING_PROGRESS, abrController);
 
@@ -275,9 +273,9 @@ let StreamProcessor = function () {
 
 
             fragmentController.unsubscribe(FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START, scheduleController);
-            fragmentController.unsubscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController);
-            fragmentController.unsubscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, bufferController);
-            fragmentController.unsubscribe(FragmentController.eventList.ENAME_STREAM_COMPLETED, scheduleController.scheduleRulesCollection.bufferLevelRule);
+
+
+
 
 
             bufferController.unsubscribe(BufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
@@ -301,7 +299,6 @@ let StreamProcessor = function () {
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, abrController.abrRulesCollection.insufficientBufferRule);
 
             fragmentModel.unsubscribe(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, fragmentController);
-            fragmentModel.unsubscribe(FragmentModel.eventList.ENAME_STREAM_COMPLETED, fragmentController);
             fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
             fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_PROGRESS, abrController);
 

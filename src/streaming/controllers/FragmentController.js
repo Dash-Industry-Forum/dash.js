@@ -96,12 +96,9 @@ let FragmentController = function () {
             }
 
             chunk = createDataChunk.call(this, bytes, request, streamId);
-            EventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {chunk: chunk, fragmentModel: e.sender})
-        },
-
-        onStreamCompleted = function(e) {
-            this.notify(FragmentController.eventList.ENAME_STREAM_COMPLETED, {request: e.data.request, fragmentModel: e.sender});
+            EventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {chunk: chunk, fragmentModel: e.sender});
         };
+
 
 
     return {
@@ -116,7 +113,6 @@ let FragmentController = function () {
         setup: function() {
             EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
             this[FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = onFragmentLoadingStart;
-            this[FragmentModel.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
         },
 
         process: function (bytes) {
