@@ -30,6 +30,9 @@
  */
 let Events = (function() {
     return {
+        MANIFEST_UPDATED: "manifestUpdated",
+        DATA_UPDATE_COMPLETED: "dataUpdateCompleted",
+        DATA_UPDATE_STARTED: "dataUpdateStarted",
         BUFFER_LEVEL_STATE_CHANGED : "bufferStateChanged",
         QUALITY_CHANGED : "qualityChanged"
 

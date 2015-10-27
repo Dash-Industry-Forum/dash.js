@@ -35,6 +35,7 @@ import RepresentationController from '../dash/controllers/RepresentationControll
 import ProtectionController from './controllers/ProtectionController.js';
 import MediaController from './controllers/MediaController.js';
 import EventBus from './utils/EventBus.js';
+import Events from './Events.js';
 
 let Stream = function () {
     "use strict";
@@ -362,7 +363,7 @@ let Stream = function () {
 
         setup: function () {
             this[BufferController.eventList.ENAME_BUFFERING_COMPLETED] = onBufferingCompleted;
-            EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             this[MediaController.eventList.CURRENT_TRACK_CHANGED] = onCurrentTrackChanged;
         },
 
@@ -439,7 +440,7 @@ let Stream = function () {
             this.liveEdgeFinder.abortSearch();
             this.liveEdgeFinder.unsubscribe(LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED, this.playbackController);
 
-            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
 
             protectionController.removeEventListener(ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
             protectionController.removeEventListener(ProtectionController.events.SERVER_CERTIFICATE_UPDATED, boundProtectionErrorHandler);

@@ -56,7 +56,7 @@ let RepresentationController = function () {
                 averageThroughput;
 
             updating = true;
-            EventBus.trigger(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
+            EventBus.trigger(Events.DATA_UPDATE_STARTED);
 
             availableRepresentations = updateRepresentations.call(self, adaptation);
 
@@ -77,7 +77,7 @@ let RepresentationController = function () {
 
             if (type !== "video" && type !== "audio" && type !== "fragmentedText") {
                 updating = false;
-                EventBus.trigger(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {sender: self, data: data, currentRepresentation: currentRepresentation});
+                EventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: self, data: data, currentRepresentation: currentRepresentation});
                 return;
             }
 
@@ -150,7 +150,7 @@ let RepresentationController = function () {
                     if (this.isUpdating()) return;
 
                     updating = true;
-                    EventBus.trigger(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
+                    EventBus.trigger(Events.DATA_UPDATE_STARTED);
                     for (var i = 0; i < availableRepresentations.length; i += 1) {
                         self.indexHandler.updateRepresentation(availableRepresentations[i], true);
                     }
@@ -177,7 +177,7 @@ let RepresentationController = function () {
                 addDVRMetric.call(this);
                 postponeUpdate.call(this, e.error.data.availabilityDelay);
                 err = new Error(RepresentationController.SEGMENTS_UPDATE_FAILED_ERROR_CODE, "Segments update failed", null);
-                EventBus.trigger(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {sender: self, data: data, currentRepresentation: currentRepresentation, error: err});
+                EventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: self, data: data, currentRepresentation: currentRepresentation, error: err});
 
                 return;
             }
@@ -208,7 +208,7 @@ let RepresentationController = function () {
                     addRepresentationSwitch.call(self);
                 }
 
-                EventBus.trigger(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, {sender: self, data: data, currentRepresentation: currentRepresentation});
+                EventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: self, data: data, currentRepresentation: currentRepresentation});
             }
         },
 
@@ -315,11 +315,5 @@ RepresentationController.prototype = {
 };
 
 RepresentationController.SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
-
-RepresentationController.eventList = {
-    ENAME_DATA_UPDATE_COMPLETED: "dataUpdateCompleted",
-    ENAME_DATA_UPDATE_STARTED: "dataUpdateStarted"
-};
-
 
 export default RepresentationController;

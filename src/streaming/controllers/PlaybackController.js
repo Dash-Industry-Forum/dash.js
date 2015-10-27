@@ -330,7 +330,7 @@ let PlaybackController = function () {
         adapter: undefined,
 
         setup: function() {
-            EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             this[LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
             this[BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
             EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
@@ -458,7 +458,7 @@ let PlaybackController = function () {
         },
 
         reset: function() {
-            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             EventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             stopUpdatingWallclockTime.call(this);
             removeAllListeners.call(this);

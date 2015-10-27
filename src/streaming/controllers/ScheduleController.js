@@ -375,8 +375,8 @@ let ScheduleController = function () {
             this[LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
 
             EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
-            EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED, onDataUpdateStarted, this);
-            EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
+            EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
 
             this[Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
 
@@ -432,8 +432,8 @@ let ScheduleController = function () {
         replaceCanceledRequests:replaceCanceledRequests,
 
         reset: function() {
-            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED, onDataUpdateStarted, this);
-            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.off(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
+            EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             EventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
             doStop.call(this);

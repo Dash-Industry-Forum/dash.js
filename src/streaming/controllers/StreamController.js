@@ -36,6 +36,7 @@ import MediaPlayer from '../MediaPlayer.js';
 import EventBus from '../utils/EventBus.js';
 import ProtectionModel from '../models/ProtectionModel.js';
 import MediaController from './MediaController.js';
+import Events from '../Events.js';
 
 let StreamController = function () {
     "use strict";
@@ -548,7 +549,7 @@ let StreamController = function () {
             this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
             this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
             this.subscribe(StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
-            EventBus.on(ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, onManifestUpdated, this);
+            EventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
             this.manifestUpdater.initialize(this.manifestLoader);
         },
 
@@ -586,7 +587,7 @@ let StreamController = function () {
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
-            EventBus.off(ManifestUpdater.eventList.ENAME_MANIFEST_UPDATED, onManifestUpdated, this);
+            EventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
             this.manifestUpdater.reset();
             this.metricsModel.clearAllCurrentMetrics();
 

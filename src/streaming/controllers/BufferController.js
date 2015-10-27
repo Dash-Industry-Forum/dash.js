@@ -621,7 +621,7 @@ let BufferController = function () {
         textSourceBuffer:undefined,
 
         setup: function() {
-            EventBus.on(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
 
             this[FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADED] = onInitializationLoaded;
             this[FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADED] =  onMediaLoaded;
@@ -714,7 +714,7 @@ let BufferController = function () {
 
         reset: function(errored) {
 
-            EventBus.off(RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
 
             criticalBufferLevel = Number.POSITIVE_INFINITY;
