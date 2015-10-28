@@ -45,11 +45,8 @@ let FragmentModel = function () {
         delayLoadingTimeout,
 
         loadCurrentFragment = function(request) {
-            var self = this;
-
-            // We are about to start loading the fragment, so execute the corresponding callback
-            self.notify(FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED, {request: request});
-            self.fragmentLoader.load(request);
+            EventBus.trigger(Events.FRAGMENT_LOADING_STARTED, {self: this, request: request});
+            this.fragmentLoader.load(request);
         },
 
         removeRequest = function(arr, request) {
@@ -324,10 +321,6 @@ let FragmentModel = function () {
 
 FragmentModel.prototype = {
     constructor: FragmentModel
-};
-
-FragmentModel.eventList = {
-    ENAME_FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted"
 };
 
 /* Public Static Constants */

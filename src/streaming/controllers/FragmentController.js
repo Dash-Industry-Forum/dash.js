@@ -72,17 +72,6 @@ let FragmentController = function () {
             return chunk;
         },
 
-        onFragmentLoadingStart = function(e) {
-            var self = this,
-                request = e.data.request;
-
-            if (self.isInitializationRequest(request)) {
-                self.notify(FragmentController.eventList.ENAME_INIT_FRAGMENT_LOADING_START, {request: request, fragmentModel: e.sender});
-            }else {
-                self.notify(FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START, {request: request, fragmentModel: e.sender});
-            }
-        },
-
         onFragmentLoadingCompleted = function(e) {
             if (!findModel.call(this, e.sender.getContext())) return;
 
@@ -114,7 +103,6 @@ let FragmentController = function () {
 
         setup: function() {
             EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
-            this[FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = onFragmentLoadingStart;
         },
 
         process: function (bytes) {
@@ -163,12 +151,5 @@ let FragmentController = function () {
 FragmentController.prototype = {
     constructor: FragmentController
 };
-
-FragmentController.eventList = {
-    ENAME_STREAM_COMPLETED: "streamCompleted",
-    ENAME_INIT_FRAGMENT_LOADING_START: "initFragmentLoadingStart",
-    ENAME_MEDIA_FRAGMENT_LOADING_START: "mediaFragmentLoadingStart"
-};
-
 
 export default FragmentController;

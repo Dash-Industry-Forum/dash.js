@@ -56,6 +56,8 @@ let Events = (function() {
         INIT_FRAGMENT_LOADED: "initFragmentLoaded",
         MEDIA_FRAGMENT_LOADED: "mediaFragmentLoaded",
         FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted",
+        // FramentModel events
+        FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted",
         // Stream events
         STREAM_COMPLETED: "streamCompleted",
         STREAM_INITIALIZED: "streaminitialized"
