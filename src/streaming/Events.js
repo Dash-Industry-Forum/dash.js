@@ -60,8 +60,9 @@ let Events = (function() {
         FRAGMENT_LOADING_STARTED: "fragmentLoadingStarted",
         // Stream events
         STREAM_COMPLETED: "streamCompleted",
-        STREAM_INITIALIZED: "streaminitialized"
-
+        STREAM_INITIALIZED: "streaminitialized",
+        // MediaController events
+        CURRENT_TRACK_CHANGED: "currenttrackchanged"
     };
 }());
 

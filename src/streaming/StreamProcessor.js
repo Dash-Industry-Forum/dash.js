@@ -81,7 +81,6 @@ let StreamProcessor = function () {
                 abrController = self.abrController,
                 indexHandler = self.indexHandler,
                 playbackController = self.playbackController,
-                mediaController = self.system.getObject("mediaController"),
                 fragmentModel,
                 fragmentLoader = this.system.getObject("fragmentLoader"),
                 bufferController = createBufferControllerForType.call(self, typeValue);
@@ -113,10 +112,6 @@ let StreamProcessor = function () {
                     playbackController.subscribe(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, representationController);
                 }
                 playbackController.subscribe(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, bufferController);
-
-                if (type === "video" || type === "audio") {
-                    mediaController.subscribe(MediaController.eventList.CURRENT_TRACK_CHANGED, bufferController);
-                }
             } else {
                 bufferController.subscribe(TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
             }
@@ -242,17 +237,15 @@ let StreamProcessor = function () {
                 bufferController = self.bufferController,
                 representationController = self.representationController,
                 scheduleController = self.scheduleController,
-                fragmentController = self.fragmentController,
                 abrController = self.abrController,
                 playbackController = self.playbackController,
-                mediaController = this.system.getObject("mediaController"),
                 indexHandler = this.indexHandler,
                 fragmentModel = this.getFragmentModel(),
                 fragmentLoader = this.fragmentLoader;
 
             if (bufferController.unsubscribe) {
                 bufferController.unsubscribe(TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);    
-            }            
+            }
 
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);
@@ -269,10 +262,6 @@ let StreamProcessor = function () {
             fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_PROGRESS, abrController);
 
             fragmentModel.reset();
-
-            if (type === "video" || type === "audio") {
-                mediaController.unsubscribe(MediaController.eventList.CURRENT_TRACK_CHANGED, bufferController);
-            }
 
             indexHandler.reset();
             this.bufferController.reset(errored);

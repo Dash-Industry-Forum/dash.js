@@ -558,12 +558,12 @@ let BufferController = function () {
 
 
         onCurrentTrackChanged = function(e) {
-            if (!buffer) return;
+            if (!buffer || e.newMediaInfo.streamInfo !== this.streamProcessor.getStreamInfo()) return;
 
             var self = this,
-                newMediaInfo = e.data.newMediaInfo,
+                newMediaInfo = e.newMediaInfo,
                 mediaType = newMediaInfo.type,
-                switchMode = e.data.switchMode,
+                switchMode = e.switchMode,
                 currentTime = this.playbackController.getTime(),
                 range = {start: 0, end: currentTime};
 
@@ -627,7 +627,7 @@ let BufferController = function () {
             this[PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED] = onPlaybackRateChanged;
             this[PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
 
-            this[MediaController.eventList.CURRENT_TRACK_CHANGED] = onCurrentTrackChanged;
+            EventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
 
             onAppended = onAppended.bind(this);
             onRemoved = onRemoved.bind(this);
@@ -716,6 +716,7 @@ let BufferController = function () {
             EventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
             EventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
             EventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
+            EventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
 
             criticalBufferLevel = Number.POSITIVE_INFINITY;
             bufferState = BufferController.BUFFER_EMPTY;

@@ -96,12 +96,12 @@ let Stream = function () {
         },
 
         onCurrentTrackChanged = function(e) {
-            var processor = getProcessorForMediaInfo.call(this, e.data.oldMediaInfo);
+            var processor = getProcessorForMediaInfo.call(this, e.oldMediaInfo);
             if (!processor) return;
 
             var currentTime = this.playbackController.getTime(),
                 buffer = processor.getBuffer(),
-                mediaInfo = e.data.newMediaInfo,
+                mediaInfo = e.newMediaInfo,
                 manifest = this.manifestModel.getValue(),
                 idx = streamProcessors.indexOf(processor),
                 mediaSource = processor.getMediaSource();
@@ -284,7 +284,7 @@ let Stream = function () {
             var processors = getProcessors.call(this);
 
             return processors.filter(function(processor){
-                return (processor.getType() === mediaInfo.type);
+                return (processor.getMediaInfo() === mediaInfo);
             })[0];
         },
 
@@ -360,7 +360,6 @@ let Stream = function () {
         setup: function () {
             EventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
             EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-            this[MediaController.eventList.CURRENT_TRACK_CHANGED] = onCurrentTrackChanged;
         },
 
         initialize: function(strmInfo, protectionCtrl) {
@@ -385,6 +384,7 @@ let Stream = function () {
          */
         activate: function(mediaSource){
             if (!isStreamActivated) {
+                EventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
                 initializeMedia.call(this, mediaSource);
             } else {
                 createBuffers.call(this);
@@ -407,25 +407,13 @@ let Stream = function () {
             isStreamActivated = false;
             isMediaInitialized = false;
             this.resetEventController();
+            EventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         },
 
         reset: function (errored) {
             this.playbackController.pause();
+            this.deactivate();
 
-            var ln = streamProcessors.length,
-                i = 0,
-                processors;
-
-            for (i; i < ln; i += 1) {
-                processors = streamProcessors[i];
-                processors.reset(errored);
-                processors = null;
-            }
-            if(!!eventController) {
-                eventController.reset();
-            }
-
-            streamProcessors = [];
             isUpdating = false;
             isInitialized = false;
 
@@ -445,9 +433,6 @@ let Stream = function () {
             protectionController.removeEventListener(ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
             protectionController.removeEventListener(ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
             protectionController.removeEventListener(ProtectionController.events.LICENSE_REQUEST_COMPLETE, boundProtectionErrorHandler);
-
-            isMediaInitialized = false;
-            isStreamActivated = false;
             updateError = {};
         },
 
@@ -491,7 +476,9 @@ let Stream = function () {
         },
 
         resetEventController: function() {
-            eventController.reset();
+            if (eventController) {
+                eventController.reset();
+            }
         },
 
         /**

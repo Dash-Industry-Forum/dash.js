@@ -63,7 +63,6 @@ let StreamController = function () {
 
         attachEvents = function (stream) {
             var mediaController = this.system.getObject("mediaController");
-            mediaController.subscribe(MediaController.eventList.CURRENT_TRACK_CHANGED, stream);
             stream.subscribe(Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
         },
 
@@ -570,7 +569,6 @@ let StreamController = function () {
             for (var i = 0, ln = streams.length; i < ln; i++) {
                 stream = streams[i];
                 EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
-                mediaController.unsubscribe(MediaController.eventList.CURRENT_TRACK_CHANGED, stream);
                 stream.reset(hasMediaError);
             }
 

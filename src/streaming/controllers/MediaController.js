@@ -28,7 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DOMStorage from '../utils/DOMStorage.js'
+import DOMStorage from '../utils/DOMStorage.js';
+import Events from '../Events.js';
+import EventBus from '../utils/EventBus.js';
 
 let MediaController = function () {
 
@@ -305,7 +307,7 @@ let MediaController = function () {
             tracks[id][type].current = track;
 
             if (current) {
-                this.notify(MediaController.eventList.CURRENT_TRACK_CHANGED, {oldMediaInfo: current, newMediaInfo: track, switchMode: switchMode[type]});
+                EventBus.trigger(Events.CURRENT_TRACK_CHANGED, {oldMediaInfo: current, newMediaInfo: track, switchMode: switchMode[type]});
             }
 
             var settings = extractSettings.call(this, track);
@@ -439,10 +441,6 @@ let MediaController = function () {
 
 MediaController.prototype = {
     constructor: MediaController
-};
-
-MediaController.eventList = {
-    CURRENT_TRACK_CHANGED: "currenttrackchanged"
 };
 
 MediaController.trackSwitchModes = {
