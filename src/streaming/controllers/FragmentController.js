@@ -84,6 +84,8 @@ let FragmentController = function () {
         },
 
         onFragmentLoadingCompleted = function(e) {
+            if (!findModel.call(this, e.sender.getContext())) return;
+
             var request = e.request,
                 bytes = e.response,
                 streamId = e.sender.getContext().streamProcessor.getStreamInfo().id,//TODO seem like a bit much object envy... pass streamInfo in payload?

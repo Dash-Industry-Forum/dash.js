@@ -226,12 +226,14 @@ let ScheduleController = function () {
         },
 
         onStreamCompleted = function(e) {
-            if (e.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
+            if (e.fragmentModel !== fragmentModel) return;
             this.log("Stream is complete");
             clearPlayListTraceMetrics(new Date(), PlayList.Trace.END_OF_CONTENT_STOP_REASON);
         },
 
         onFragmentLoadingCompleted = function (e) {
+            if (e.sender !== fragmentModel) return;
+
             if (!isNaN(e.request.index)){
                 isFragmentLoading = false;
             }
