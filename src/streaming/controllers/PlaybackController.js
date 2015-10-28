@@ -115,7 +115,7 @@ let PlaybackController = function () {
         initialStart = function() {
             if (firstAppended[streamInfo.id] || this.isSeeking()) return;
             var initialSeekTime = getStreamStartTime.call(this, streamInfo);
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime: initialSeekTime});
+            EventBus.trigger(Events.PLAYBACK_SEEKING, {seekTime: initialSeekTime});
             this.log("Starting playback at offset: " + initialSeekTime);
         },
 
@@ -189,7 +189,7 @@ let PlaybackController = function () {
 
         onPlaybackSeeking = function() {
             startUpdatingWallclockTime.call(this);
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, {seekTime:this.getTime() });
+            EventBus.trigger(Events.PLAYBACK_SEEKING, {seekTime:this.getTime()});
         },
 
         onPlaybackSeeked = function() {
@@ -222,7 +222,7 @@ let PlaybackController = function () {
 
         onPlaybackRateChanged = function() {
             this.log("Native video element event: ratechange: ", this.getPlaybackRate());
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED);
+            EventBus.trigger(Events.PLAYBACK_RATE_CHANGED);
         },
 
         onPlaybackMetaDataLoaded = function() {
@@ -486,9 +486,7 @@ PlaybackController.eventList = {
     ENAME_PLAYBACK_STOPPED: "playbackStopped",
     ENAME_PLAYBACK_PAUSED: "playbackPaused",
     ENAME_PLAYBACK_ENDED: "playbackEnded",
-    ENAME_PLAYBACK_SEEKING: "playbackSeeking",
     ENAME_PLAYBACK_SEEKED: "playbackSeeked",
-    ENAME_PLAYBACK_RATE_CHANGED: "playbackRateChanged",
     ENAME_PLAYBACK_METADATA_LOADED: "playbackMetaDataLoaded",
     ENAME_PLAYBACK_ERROR: "playbackError",
     ENAME_WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated"

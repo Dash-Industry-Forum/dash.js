@@ -621,9 +621,10 @@ let BufferController = function () {
             EventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
             EventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
             EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
+            EventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
+            EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
 
-            this[PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
-            this[PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED] = onPlaybackRateChanged;
+
             this[PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
 
             EventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
@@ -718,6 +719,8 @@ let BufferController = function () {
             EventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
             EventBus.off(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
             EventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
+            EventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
+            EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
 
             criticalBufferLevel = Number.POSITIVE_INFINITY;
             bufferState = BufferController.BUFFER_EMPTY;

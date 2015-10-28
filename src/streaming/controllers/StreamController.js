@@ -168,11 +168,11 @@ let StreamController = function () {
          * Called when Seeking event is occurred.
          * TODO move to ???Extensions class
          */
-        onSeeking = function(e) {
-            var seekingStream = getStreamForTime(e.data.seekTime);
+        onPlaybackSeeking = function(e) {
+            var seekingStream = getStreamForTime(e.seekTime);
 
             if (seekingStream && seekingStream !== activeStream) {
-                switchStream.call(this, activeStream, seekingStream, e.data.seekTime);
+                switchStream.call(this, activeStream, seekingStream, e.seekTime);
             }
         },
 
@@ -491,8 +491,10 @@ let StreamController = function () {
         uriQueryFragModel:undefined,
 
         setup: function() {
+            EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+            EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
+
             this[Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED] = onStreamBufferingEnd;
-            this[PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onSeeking;
             this[PlaybackController.eventList.ENAME_PLAYBACK_ENDED] = onEnded;
             this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncAttemptCompleted;
             this[PlaybackController.eventList.ENAME_CAN_PLAY] = onCanPlay;
@@ -534,7 +536,6 @@ let StreamController = function () {
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
-            EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
             this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
             this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
             this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
@@ -585,6 +586,7 @@ let StreamController = function () {
             this.unsubscribe(StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
 
             EventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
+            EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);

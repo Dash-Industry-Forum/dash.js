@@ -65,7 +65,9 @@ let Events = (function() {
         CURRENT_TRACK_CHANGED: "currenttrackchanged",
         //Playback events.
         PLAYBACK_PROGRESS: "playbackProgress",
-        PLAYBACK_TIME_UPDATED: "playbackTimeUpdated"
+        PLAYBACK_TIME_UPDATED: "playbackTimeUpdated",
+        PLAYBACK_RATE_CHANGED: "playbackRateChanged",
+        PLAYBACK_SEEKING: "playbackSeeking"
     };
 }());
 

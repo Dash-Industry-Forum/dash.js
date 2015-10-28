@@ -163,7 +163,8 @@ let FragmentModel = function () {
 
         setup: function() {
             this[FragmentLoader.eventList.ENAME_LOADING_COMPLETED] = onLoadingCompleted;
-            this[PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
+
+            EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         },
 
         setLoader: function(value) {
@@ -311,6 +312,7 @@ let FragmentModel = function () {
         },
 
         reset: function() {
+            EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             this.abortRequests();
             context = null;
             executedRequests = [];

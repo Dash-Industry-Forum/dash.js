@@ -31,6 +31,8 @@
 import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
 import PlaybackController from '../../controllers/PlaybackController.js';
+import EventBus from '../../utils/EventBus.js';
+import Events from "../../Events.js";
 
 let InsufficientBufferRule = function () {
     "use strict";
@@ -65,7 +67,7 @@ let InsufficientBufferRule = function () {
         playbackController: undefined,
 
         setup: function() {
-            this[PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onPlaybackSeeking;
+            EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         },
 
         execute: function (context, callback) {
@@ -100,6 +102,7 @@ let InsufficientBufferRule = function () {
         },
 
         reset: function() {
+            EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             bufferStateDict = {};
             lastSwitchTime = 0;
         }

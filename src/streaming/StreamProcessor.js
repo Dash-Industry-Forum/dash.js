@@ -99,12 +99,9 @@ let StreamProcessor = function () {
 
             if (type === "video" || type === "audio" || type === "fragmentedText") {
 
-                playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, bufferController);
-                playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, scheduleController);
-                playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, bufferController);
-                playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController);
+
+
                 playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
-                playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, abrController.abrRulesCollection.insufficientBufferRule);
 
                 if (isDynamic) {
                     playbackController.subscribe(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, representationController);
@@ -245,14 +242,11 @@ let StreamProcessor = function () {
                 bufferController.unsubscribe(TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);    
             }
 
-            playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, bufferController);
-            playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, scheduleController);
-            playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, bufferController);
-            playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, scheduleController);
+
+
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, representationController);
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, bufferController);
-            playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, abrController.abrRulesCollection.insufficientBufferRule);
 
             fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
             fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_PROGRESS, abrController);
