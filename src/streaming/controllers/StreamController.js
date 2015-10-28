@@ -65,11 +65,9 @@ let StreamController = function () {
             var mediaController = this.system.getObject("mediaController");
             mediaController.subscribe(MediaController.eventList.CURRENT_TRACK_CHANGED, stream);
             stream.subscribe(Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
-            //EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this.liveEdgeFinder);
         },
 
         detachEvents = function (stream) {
-            //EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this.liveEdgeFinder);
             stream.unsubscribe(Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
         },
 
