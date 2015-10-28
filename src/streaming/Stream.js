@@ -253,7 +253,9 @@ let Stream = function () {
             }
         },
 
-        onBufferingCompleted = function(/*e*/) {
+        onBufferingCompleted = function(e) {
+            if (e.sender.streamProcessor.getStreamInfo() !== streamInfo) return;
+
             var processors = getProcessors(),
                 ln = processors.length,
                 i = 0;
@@ -267,6 +269,8 @@ let Stream = function () {
         },
 
         onDataUpdateCompleted = function(e) {
+            if (e.sender.streamProcessor.getStreamInfo() !== streamInfo) return;
+
             var type = e.sender.streamProcessor.getType();
 
             updateError[type] = e.error;
