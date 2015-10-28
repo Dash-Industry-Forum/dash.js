@@ -69,7 +69,9 @@ let Events = (function() {
         PLAYBACK_RATE_CHANGED: "playbackRateChanged",
         PLAYBACK_SEEKING: "playbackSeeking",
         PLAYBACK_STARTED: "playbackStarted",
-        WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated"
+        WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated",
+        //Timed Text events
+        TIMED_TEXT_REQUESTED: "timedTextRequested"
     };
 }());
 

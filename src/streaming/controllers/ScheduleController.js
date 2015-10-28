@@ -303,8 +303,8 @@ let ScheduleController = function () {
             }
         },
 
-        onClosedCaptioningRequested = function(e) {
-            getInitRequest.call(this, e.data.CCIndex);
+        onTimedTextRequested = function(e) {
+            getInitRequest.call(this, e.index);
         },
 
         onPlaybackStarted = function() {
@@ -370,6 +370,7 @@ let ScheduleController = function () {
         metricsModel: undefined,
         manifestModel: undefined,
         metricsExt: undefined,
+        manifestExt:undefined,
         scheduleWhilePaused: undefined,
         timelineConverter: undefined,
         abrController: undefined,
@@ -381,7 +382,6 @@ let ScheduleController = function () {
         indexHandler:undefined,
 
         setup: function() {
-
             EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
             EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
             EventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
@@ -389,15 +389,11 @@ let ScheduleController = function () {
             EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
             EventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
             EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
-
-
+            EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             EventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
             EventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
             EventBus.on(Events.INIT_REQUESTED, onInitRequested, this);
             EventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
-            EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-
-            this[TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED] = onClosedCaptioningRequested;
             EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
             EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
@@ -414,6 +410,10 @@ let ScheduleController = function () {
             isDynamic = streamProcessor.isDynamic();
             fragmentModel = this.fragmentController.getModel(this);
             ScheduleController.LOADING_REQUEST_THRESHOLD = self.numOfParallelRequestAllowed;
+
+            if (this.manifestExt.getIsTextTrack(type)){
+                EventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
+            }
         },
 
         getSeekTarget: function() {
@@ -454,6 +454,10 @@ let ScheduleController = function () {
             EventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
             EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+
+            if (this.manifestExt.getIsTextTrack(type)){
+                EventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
+            }
 
             doStop.call(this);
             fragmentModel.abortRequests();

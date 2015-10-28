@@ -80,11 +80,7 @@ let FragmentExtensions = function () {
 
     return {
         log : undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
         boxParser: undefined,
-
         getSamplesInfo:getSamplesInfo,
         getMediaTimescaleFromMoov: getMediaTimescaleFromMoov
     };
@@ -92,10 +88,6 @@ let FragmentExtensions = function () {
 
 FragmentExtensions.prototype = {
     constructor: FragmentExtensions
-};
-
-FragmentExtensions.eventList = {
-    ENAME_FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted"
 };
 
 export default FragmentExtensions;
