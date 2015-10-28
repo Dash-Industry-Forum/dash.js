@@ -51,7 +51,7 @@ let LiveEdgeFinder = function () {
             EventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime, error:liveEdge === null ? new Error(LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null});
         },
 
-        onStreamUpdated = function(e) {
+        onStreamInitialized = function(e) {
             var self = this;
 
             if (!self.streamProcessor.isDynamic() || isSearchStarted || e.error) {
@@ -84,13 +84,13 @@ let LiveEdgeFinder = function () {
         unsubscribe: undefined,
 
         setup: function() {
-            this[Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
             this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncComplete;
         },
 
         initialize: function(streamProcessor) {
             this.streamProcessor = streamProcessor;
             this.fragmentLoader = streamProcessor.fragmentLoader;
+            EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
         },
 
         abortSearch: function() {
@@ -103,6 +103,7 @@ let LiveEdgeFinder = function () {
         },
 
         reset: function(){
+            EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
             this.abortSearch();
             liveEdge = null;
         }

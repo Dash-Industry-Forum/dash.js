@@ -211,7 +211,7 @@ let ScheduleController = function () {
             currentRepresentationInfo = this.adapter.convertDataToTrack(this.manifestModel.getValue(), e.currentRepresentation);
         },
 
-        onStreamUpdated = function(e) {
+        onStreamInitialized = function(e) {
             if (e.error) return;
 
             currentRepresentationInfo = this.streamProcessor.getCurrentRepresentationInfo();
@@ -378,8 +378,7 @@ let ScheduleController = function () {
             EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
             EventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
-
-            this[Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
+            EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
 
 
             this[BufferController.eventList.ENAME_BUFFER_CLEARED] = onBufferCleared;
@@ -438,6 +437,7 @@ let ScheduleController = function () {
             EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
             EventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
             EventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
+            EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
             doStop.call(this);
             fragmentModel.abortRequests();
             this.fragmentController.detachModel(fragmentModel);

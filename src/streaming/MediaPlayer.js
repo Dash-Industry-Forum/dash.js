@@ -1331,66 +1331,66 @@ let MediaPlayer = function (context) {
 MediaPlayer.prototype = {
     constructor: MediaPlayer
 };
-
-/**
- * Namespace for {@MediaPlayer} dependencies
- * @namespace
- */
-MediaPlayer.dependencies = {};
-
-/**
- * Namespace for {@MediaPlayer} protection-related objects
- * @namespace
- */
-MediaPlayer.dependencies.protection = {};
-
-/**
- * Namespace for {@MediaPlayer} license server implementations
- * @namespace
- */
-MediaPlayer.dependencies.protection.servers = {};
-
-/**
- * Namespace for {@MediaPlayer} utility classes
- * @namespace
- */
-MediaPlayer.utils = {};
-
-/**
- * Namespace for {@MediaPlayer} model classes
- * @namespace
- */
-MediaPlayer.models = {};
-
-/**
- * Namespace for {@MediaPlayer} data objects
- * @namespace
- */
-MediaPlayer.vo = {};
-
-/**
- * Namespace for {@MediaPlayer} metrics-related data objects
- * @@namespace
- */
-MediaPlayer.vo.metrics = {};
-
-/**
- * Namespace for {@MediaPlayer} protection-related data objects
- * @namespace
- */
-MediaPlayer.vo.protection = {};
-
-/**
- * Namespace for {@MediaPlayer} rules classes
- * @namespace
- */
-MediaPlayer.rules = {};
-
-/**
- * Namespace for {@MediaPlayer} dependency-injection helper classes
- * @namespace
- */
-MediaPlayer.di = {};
+//
+///**
+// * Namespace for {@MediaPlayer} dependencies
+// * @namespace
+// */
+//MediaPlayer.dependencies = {};
+//
+///**
+// * Namespace for {@MediaPlayer} protection-related objects
+// * @namespace
+// */
+//MediaPlayer.dependencies.protection = {};
+//
+///**
+// * Namespace for {@MediaPlayer} license server implementations
+// * @namespace
+// */
+//MediaPlayer.dependencies.protection.servers = {};
+//
+///**
+// * Namespace for {@MediaPlayer} utility classes
+// * @namespace
+// */
+//MediaPlayer.utils = {};
+//
+///**
+// * Namespace for {@MediaPlayer} model classes
+// * @namespace
+// */
+//MediaPlayer.models = {};
+//
+///**
+// * Namespace for {@MediaPlayer} data objects
+// * @namespace
+// */
+//MediaPlayer.vo = {};
+//
+///**
+// * Namespace for {@MediaPlayer} metrics-related data objects
+// * @@namespace
+// */
+//MediaPlayer.vo.metrics = {};
+//
+///**
+// * Namespace for {@MediaPlayer} protection-related data objects
+// * @namespace
+// */
+//MediaPlayer.vo.protection = {};
+//
+///**
+// * Namespace for {@MediaPlayer} rules classes
+// * @namespace
+// */
+//MediaPlayer.rules = {};
+//
+///**
+// * Namespace for {@MediaPlayer} dependency-injection helper classes
+// * @namespace
+// */
+//MediaPlayer.di = {};
 
 
 /**
@@ -1403,6 +1403,7 @@ MediaPlayer.UTCTimingSources = {
 /**
  * The list of events supported by MediaPlayer
  */
+//TODO we need to map the Events.js to allow players in es5 to have event list.
 MediaPlayer.events = {
     RESET_COMPLETE: "resetComplete",
     METRICS_CHANGED: "metricschanged",

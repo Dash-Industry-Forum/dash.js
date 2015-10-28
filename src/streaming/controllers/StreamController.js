@@ -63,14 +63,13 @@ let StreamController = function () {
 
         attachEvents = function (stream) {
             var mediaController = this.system.getObject("mediaController");
-
             mediaController.subscribe(MediaController.eventList.CURRENT_TRACK_CHANGED, stream);
-            stream.subscribe(Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
             stream.subscribe(Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
+            //EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this.liveEdgeFinder);
         },
 
         detachEvents = function (stream) {
-            stream.unsubscribe(Stream.eventList.ENAME_STREAM_UPDATED, this.liveEdgeFinder);
+            //EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this.liveEdgeFinder);
             stream.unsubscribe(Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
         },
 
@@ -368,7 +367,7 @@ let StreamController = function () {
                     if (!stream) {
                         stream = self.system.getObject("stream");
                         stream.initialize(streamInfo, protectionController, protectionData);
-                        stream.subscribe(Stream.eventList.ENAME_STREAM_UPDATED, self);
+                        EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
                         remainingStreams.push(stream);
 
                         if (activeStream) {
@@ -418,7 +417,7 @@ let StreamController = function () {
             self.notify(StreamController.eventList.ENAME_STREAMS_COMPOSED);
         },
 
-        onStreamUpdated = function(/*e*/) {
+        onStreamInitialized = function(/*e*/) {
             checkIfUpdateCompleted.call(this);
         },
 
@@ -495,18 +494,13 @@ let StreamController = function () {
         uriQueryFragModel:undefined,
 
         setup: function() {
-            this[Stream.eventList.ENAME_STREAM_UPDATED] = onStreamUpdated;
             this[Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED] = onStreamBufferingEnd;
-
             this[PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onSeeking;
             this[PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onTimeupdate;
             this[PlaybackController.eventList.ENAME_PLAYBACK_ENDED] = onEnded;
-
             this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncAttemptCompleted;
-
             this[PlaybackController.eventList.ENAME_CAN_PLAY] = onCanPlay;
             this[PlaybackController.eventList.ENAME_PLAYBACK_ERROR] = onError;
-
         },
 
         getAutoPlay: function () {
@@ -577,7 +571,7 @@ let StreamController = function () {
 
             for (var i = 0, ln = streams.length; i < ln; i++) {
                 stream = streams[i];
-                stream.unsubscribe(Stream.eventList.ENAME_STREAM_UPDATED, this);
+                EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
                 mediaController.unsubscribe(MediaController.eventList.CURRENT_TRACK_CHANGED, stream);
                 stream.reset(hasMediaError);
             }

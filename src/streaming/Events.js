@@ -43,6 +43,7 @@ let Events = (function() {
         MEDIA_FRAGMENT_LOADED: "mediaFragmentLoaded",
         FRAGMENT_LOADING_COMPLETED: "fragmentLoadingCompleted",
         STREAM_COMPLETED: "streamCompleted",
+        STREAM_INITIALIZED: "streaminitialized"
 
 
     };

@@ -227,16 +227,9 @@ let Stream = function () {
             }
 
             isInitialized = true;
-
-            EventBus.dispatchEvent({
-                type: MediaPlayer.events.STREAM_INITIALIZED,
-                data: {streamInfo: streamInfo}
-            });
-
-            self.notify(Stream.eventList.ENAME_STREAM_UPDATED, {streamInfo: streamInfo}, error);
+            EventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error:error});
 
             if (!isMediaInitialized || isStreamActivated) return;
-
             protectionController.init(self.manifestModel.getValue(), getMediaInfo.call(this, "audio"), getMediaInfo.call(this, "video"));
             isStreamActivated = true;
         },
@@ -520,7 +513,6 @@ Stream.prototype = {
 Stream.DATA_UPDATE_FAILED_ERROR_CODE = 1;
 
 Stream.eventList = {
-    ENAME_STREAM_UPDATED: "streamUpdated",
     ENAME_STREAM_BUFFERING_COMPLETED: "streamBufferingCompleted"
 };
 

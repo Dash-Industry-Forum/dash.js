@@ -102,11 +102,6 @@ let StreamProcessor = function () {
 
             if (type === "video" || type === "audio" || type === "fragmentedText") {
 
-                stream.subscribe(Stream.eventList.ENAME_STREAM_UPDATED, scheduleController);
-
-
-
-
                 bufferController.subscribe(BufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
                 bufferController.subscribe(BufferController.eventList.ENAME_BYTES_APPENDED, scheduleController);
                 bufferController.subscribe(BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, representationController);
@@ -269,13 +264,8 @@ let StreamProcessor = function () {
                 fragmentLoader = this.fragmentLoader;
 
 
-            stream.unsubscribe(Stream.eventList.ENAME_STREAM_UPDATED, scheduleController);
-
 
             fragmentController.unsubscribe(FragmentController.eventList.ENAME_MEDIA_FRAGMENT_LOADING_START, scheduleController);
-
-
-
 
 
             bufferController.unsubscribe(BufferController.eventList.ENAME_BUFFER_CLEARED, scheduleController);
