@@ -200,11 +200,9 @@ let PlaybackController = function () {
         onPlaybackTimeUpdated = function() {
             //this.log("Native video element event: timeupdate");
             var time = this.getTime();
-
             if (time === currentTime) return;
-
             currentTime = time;
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, {timeToEnd: this.getTimeToStreamEnd()});
+            EventBus.trigger(Events.PLAYBACK_TIME_UPDATED, {timeToEnd: this.getTimeToStreamEnd()});
         },
 
         onPlaybackProgress = function() {
@@ -219,8 +217,7 @@ let PlaybackController = function () {
                 bufferEndTime = ranges.end(lastRange);
                 remainingUnbufferedDuration = getStreamStartTime.call(this, streamInfo) + streamInfo.duration - bufferEndTime;
             }
-
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, {bufferedRanges: videoModel.getElement().buffered, remainingUnbufferedDuration: remainingUnbufferedDuration});
+            EventBus.trigger(Events.PLAYBACK_PROGRESS, {bufferedRanges: videoModel.getElement().buffered, remainingUnbufferedDuration: remainingUnbufferedDuration})
         },
 
         onPlaybackRateChanged = function() {
@@ -491,8 +488,6 @@ PlaybackController.eventList = {
     ENAME_PLAYBACK_ENDED: "playbackEnded",
     ENAME_PLAYBACK_SEEKING: "playbackSeeking",
     ENAME_PLAYBACK_SEEKED: "playbackSeeked",
-    ENAME_PLAYBACK_TIME_UPDATED: "playbackTimeUpdated",
-    ENAME_PLAYBACK_PROGRESS: "playbackProgress",
     ENAME_PLAYBACK_RATE_CHANGED: "playbackRateChanged",
     ENAME_PLAYBACK_METADATA_LOADED: "playbackMetaDataLoaded",
     ENAME_PLAYBACK_ERROR: "playbackError",

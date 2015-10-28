@@ -69,7 +69,7 @@ let MediaPlayer = function (context) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    var VERSION = "1.5.1",
+    var VERSION = "2.0.0",
         numOfParallelRequestAllowed = 0,
         system,
         abrController,
@@ -119,7 +119,6 @@ let MediaPlayer = function (context) {
             this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
             playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, streamController);
-            playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
             playbackController.subscribe(PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
             playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
             playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
@@ -267,7 +266,6 @@ let MediaPlayer = function (context) {
                 if (!resetting) {
                     resetting = true;
                     playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, streamController);
-                    playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
                     playbackController.unsubscribe(PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
                     playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
 

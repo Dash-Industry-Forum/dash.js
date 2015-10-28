@@ -254,7 +254,7 @@ let Stream = function () {
         },
 
         onBufferingCompleted = function(e) {
-            if (e.sender.streamProcessor.getStreamInfo() !== streamInfo) return;
+            if (e.streamInfo !== streamInfo) return;
 
             var processors = getProcessors(),
                 ln = processors.length,

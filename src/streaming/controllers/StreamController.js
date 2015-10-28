@@ -142,7 +142,7 @@ let StreamController = function () {
          * Used to determine the time current stream is finished and we should switch to the next stream.
          * TODO move to ???Extensions class
          */
-        onTimeupdate = function(e) {
+        onPlaybackTimeUpdated = function(e) {
             var self = this,
                 playbackQuality = self.videoExt.getPlaybackQuality(self.videoModel.getElement());
 
@@ -155,7 +155,7 @@ let StreamController = function () {
             if (self.playbackController.isSeeking()) return;
 
             // check if stream end is reached
-            if (e.data.timeToEnd < STREAM_END_THRESHOLD) {
+            if (e.timeToEnd < STREAM_END_THRESHOLD) {
                 this.mediaSourceExt.signalEndOfStream(mediaSource);
             }
         },
@@ -493,7 +493,6 @@ let StreamController = function () {
         setup: function() {
             this[Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED] = onStreamBufferingEnd;
             this[PlaybackController.eventList.ENAME_PLAYBACK_SEEKING] = onSeeking;
-            this[PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED] = onTimeupdate;
             this[PlaybackController.eventList.ENAME_PLAYBACK_ENDED] = onEnded;
             this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncAttemptCompleted;
             this[PlaybackController.eventList.ENAME_CAN_PLAY] = onCanPlay;
@@ -535,7 +534,7 @@ let StreamController = function () {
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
-
+            EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
             this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
             this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
             this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
@@ -552,11 +551,21 @@ let StreamController = function () {
             this.manifestUpdater.setManifest(manifest);
         },
 
+        setupEvents:function(add){
+          if(add){
+
+          }  else {
+
+          }
+        },
+
         reset: function () {
 
             if (!!activeStream) {
                 detachEvents.call(this, activeStream);
             }
+
+
 
             var mediaController = this.system.getObject("mediaController"),
                 stream;
@@ -574,9 +583,13 @@ let StreamController = function () {
 
             streams = [];
             this.unsubscribe(StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
+
+            EventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, this.manifestUpdater);
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
+
+
             EventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
             this.manifestUpdater.reset();
             this.metricsModel.clearAllCurrentMetrics();

@@ -62,7 +62,10 @@ let Events = (function() {
         STREAM_COMPLETED: "streamCompleted",
         STREAM_INITIALIZED: "streaminitialized",
         // MediaController events
-        CURRENT_TRACK_CHANGED: "currenttrackchanged"
+        CURRENT_TRACK_CHANGED: "currenttrackchanged",
+        //Playback events.
+        PLAYBACK_PROGRESS: "playbackProgress",
+        PLAYBACK_TIME_UPDATED: "playbackTimeUpdated"
     };
 }());
 

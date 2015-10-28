@@ -99,8 +99,6 @@ let StreamProcessor = function () {
 
             if (type === "video" || type === "audio" || type === "fragmentedText") {
 
-                playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
-                playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);
                 playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, bufferController);
                 playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, scheduleController);
                 playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, bufferController);
@@ -247,8 +245,6 @@ let StreamProcessor = function () {
                 bufferController.unsubscribe(TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);    
             }
 
-            playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, bufferController);
-            playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, bufferController);
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, bufferController);
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_RATE_CHANGED, scheduleController);
             playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_SEEKING, bufferController);
