@@ -169,7 +169,7 @@ let FragmentLoader = function () {
                     } else {
                         self.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
                         self.errHandler.downloadError("content", request.url, req);
-                        self.notify(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: request, bytes: null}, new MediaPlayer.vo.Error(null, "failed loading fragment", null));
+                        self.notify(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: request, bytes: null}, new Error(null, "failed loading fragment", null));
                     }
                 };
 
@@ -212,7 +212,7 @@ let FragmentLoader = function () {
         load: function (req) {
 
             if (!req) {
-                this.notify(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: req, bytes: null}, new MediaPlayer.vo.Error(null, "request is null", null));
+                this.notify(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: req, bytes: null}, new Error(null, "request is null", null));
             } else {
                 doLoad.call(this, req, RETRY_ATTEMPTS);
             }
