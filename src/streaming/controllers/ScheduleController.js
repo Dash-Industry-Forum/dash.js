@@ -356,9 +356,8 @@ let ScheduleController = function () {
 
             self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: self.timelineConverter.getClientTimeOffset()});
 
-            // ready will checked in onStreamUpdated and scheduling started
-            // based on its value
             ready = true;
+            startOnReady.call(self);
         };
 
 
