@@ -31,6 +31,7 @@
 import DashParser from './DashParser.js';
 import DashHandler from './DashHandler.js';
 import BaseURLExtensions from './extensions/BaseURLExtensions.js';
+import FragmentExtensions from './extensions/FragmentExtensions.js';
 import RepresentationController from './controllers/RepresentationController.js';
 import DashManifestExtensions from './extensions/DashManifestExtensions.js';
 import DashMetricsExtensions from './extensions/DashMetricsExtensions.js';
@@ -48,6 +49,7 @@ let DashContext = function () {
             this.system.mapClass('parser', DashParser);
             this.system.mapClass('indexHandler', DashHandler);
             this.system.mapSingleton('baseURLExt', BaseURLExtensions);
+            this.system.mapClass('fragmentExt', FragmentExtensions);
             this.system.mapClass('representationController', RepresentationController);
             this.system.mapSingleton('manifestExt', DashManifestExtensions);
             this.system.mapSingleton('metricsExt', DashMetricsExtensions);
