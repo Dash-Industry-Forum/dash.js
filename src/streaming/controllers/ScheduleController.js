@@ -398,7 +398,7 @@ let ScheduleController = function () {
             EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
 
             this[TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED] = onClosedCaptioningRequested;
-            this[PlaybackController.eventList.ENAME_PLAYBACK_STARTED] = onPlaybackStarted;
+            EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
             EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         },
@@ -453,7 +453,7 @@ let ScheduleController = function () {
             EventBus.off(Events.INIT_REQUESTED, onInitRequested, this);
             EventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
             EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-
+            EventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
 
             doStop.call(this);
             fragmentModel.abortRequests();

@@ -174,7 +174,7 @@ let PlaybackController = function () {
             this.log("Native video element event: play");
             updateCurrentTime.call(this);
             startUpdatingWallclockTime.call(this);
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, {startTime: this.getTime()});
+            EventBus.trigger(Events.PLAYBACK_STARTED, {startTime: this.getTime()});
         },
 
         onPlaybackPlaying = function() {
@@ -247,7 +247,7 @@ let PlaybackController = function () {
         },
 
         onWallclockTime = function() {
-            this.notify(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, {isDynamic: isDynamic, time: new Date()});
+            EventBus.trigger(Events.WALLCLOCK_TIME_UPDATED, {isDynamic: isDynamic, time: new Date()});
         },
 
         onBytesAppended = function(e) {
@@ -481,15 +481,13 @@ PlaybackController.prototype = {
 
 PlaybackController.eventList = {
     ENAME_CAN_PLAY: "canPlay",
-    ENAME_PLAYBACK_STARTED: "playbackStarted",
     ENAME_PLAYBACK_PLAYING: "playbackPlaying",
     ENAME_PLAYBACK_STOPPED: "playbackStopped",
     ENAME_PLAYBACK_PAUSED: "playbackPaused",
     ENAME_PLAYBACK_ENDED: "playbackEnded",
     ENAME_PLAYBACK_SEEKED: "playbackSeeked",
     ENAME_PLAYBACK_METADATA_LOADED: "playbackMetaDataLoaded",
-    ENAME_PLAYBACK_ERROR: "playbackError",
-    ENAME_WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated"
+    ENAME_PLAYBACK_ERROR: "playbackError"
 };
 
 export default PlaybackController;

@@ -214,7 +214,9 @@ let RepresentationController = function () {
         },
 
         onWallclockTimeUpdated = function(e) {
-            updateAvailabilityWindow.call(this, e.data.isDynamic);
+            if (e.isDynamic){
+                updateAvailabilityWindow.call(this, e.isDynamic);
+            }
         },
 
         onLiveEdgeSearchCompleted = function(e) {
@@ -279,8 +281,7 @@ let RepresentationController = function () {
             EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
             EventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, this);
             EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-
-            this[PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
+            EventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
             EventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, this);
         },
 

@@ -581,13 +581,11 @@ let BufferController = function () {
         },
 
         onWallclockTimeUpdated = function(/*e*/) {
-
              //constantly prune buffer every x seconds
             wallclockTicked += 1;
             if ((wallclockTicked % BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
                 pruneBuffer.call(this);
             }
-
         },
 
         onPlaybackRateChanged = function(/*e*/) {
@@ -623,9 +621,7 @@ let BufferController = function () {
             EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
             EventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
             EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-
-
-            this[PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED] = onWallclockTimeUpdated;
+            EventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
 
             EventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
 
@@ -721,6 +717,7 @@ let BufferController = function () {
             EventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
             EventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
             EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+            EventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
 
             criticalBufferLevel = Number.POSITIVE_INFINITY;
             bufferState = BufferController.BUFFER_EMPTY;

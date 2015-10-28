@@ -67,7 +67,9 @@ let Events = (function() {
         PLAYBACK_PROGRESS: "playbackProgress",
         PLAYBACK_TIME_UPDATED: "playbackTimeUpdated",
         PLAYBACK_RATE_CHANGED: "playbackRateChanged",
-        PLAYBACK_SEEKING: "playbackSeeking"
+        PLAYBACK_SEEKING: "playbackSeeking",
+        PLAYBACK_STARTED: "playbackStarted",
+        WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated"
     };
 }());
 

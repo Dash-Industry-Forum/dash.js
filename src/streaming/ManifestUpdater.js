@@ -131,7 +131,7 @@ let ManifestUpdater = function () {
             // Listen to streamsComposed event to be aware that the streams have been composed
             this[StreamController.eventList.ENAME_STREAMS_COMPOSED] = onStreamsComposed;
             this[ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = onManifestLoaded;
-            this[PlaybackController.eventList.ENAME_PLAYBACK_STARTED] = onPlaybackStarted;
+            EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
             this[PlaybackController.eventList.ENAME_PLAYBACK_PAUSED] = onPlaybackPaused;
         },
 
@@ -151,6 +151,7 @@ let ManifestUpdater = function () {
         },
 
         reset: function() {
+            EventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
             isStopped = true;
             isUpdating = false;
             clear.call(this);

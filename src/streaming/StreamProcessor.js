@@ -43,7 +43,6 @@ import RepresentationController from '../dash/controllers/RepresentationControll
 import BaseURLExtensions from '../dash/extensions/BaseURLExtensions.js';
 import MediaController from './controllers/MediaController.js';
 
-
 let StreamProcessor = function () {
     "use strict";
 
@@ -98,15 +97,7 @@ let StreamProcessor = function () {
 
 
             if (type === "video" || type === "audio" || type === "fragmentedText") {
-
-
-
-                playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
-
-                if (isDynamic) {
-                    playbackController.subscribe(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, representationController);
-                }
-                playbackController.subscribe(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, bufferController);
+                //done with this if statement.
             } else {
                 bufferController.subscribe(TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
             }
@@ -230,10 +221,8 @@ let StreamProcessor = function () {
         reset: function(errored) {
             var self = this,
                 bufferController = self.bufferController,
-                representationController = self.representationController,
                 scheduleController = self.scheduleController,
                 abrController = self.abrController,
-                playbackController = self.playbackController,
                 indexHandler = this.indexHandler,
                 fragmentModel = this.getFragmentModel(),
                 fragmentLoader = this.fragmentLoader;
@@ -241,12 +230,6 @@ let StreamProcessor = function () {
             if (bufferController.unsubscribe) {
                 bufferController.unsubscribe(TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);    
             }
-
-
-
-            playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_STARTED, scheduleController);
-            playbackController.unsubscribe(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, representationController);
-            playbackController.unsubscribe(PlaybackController.eventList.ENAME_WALLCLOCK_TIME_UPDATED, bufferController);
 
             fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
             fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_PROGRESS, abrController);
