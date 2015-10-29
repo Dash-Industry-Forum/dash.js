@@ -45,6 +45,8 @@ import LiveEdgeFinder from '../LiveEdgeFinder.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 
+
+
 let ScheduleController = function () {
     "use strict";
 
@@ -303,7 +305,9 @@ let ScheduleController = function () {
             }
         },
 
+
         onTimedTextRequested = function(e) {
+            if (e.sender.streamProcessor !== this.streamProcessor) return;
             getInitRequest.call(this, e.index);
         },
 
@@ -365,6 +369,7 @@ let ScheduleController = function () {
 
 
     return {
+
         log: undefined,
         system: undefined,
         metricsModel: undefined,
@@ -394,6 +399,7 @@ let ScheduleController = function () {
             EventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
             EventBus.on(Events.INIT_REQUESTED, onInitRequested, this);
             EventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
+            EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
             EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
@@ -454,6 +460,7 @@ let ScheduleController = function () {
             EventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
             EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+
 
             if (this.manifestExt.getIsTextTrack(type)){
                 EventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);

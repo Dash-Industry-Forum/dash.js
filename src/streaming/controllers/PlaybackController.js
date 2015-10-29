@@ -167,7 +167,7 @@ let PlaybackController = function () {
         },
 
         onCanPlay = function(/*e*/) {
-            this.notify(PlaybackController.eventList.ENAME_CAN_PLAY);
+            EventBus.trigger(Events.CAN_PLAY);
         },
 
         onPlaybackStart = function() {
@@ -179,12 +179,12 @@ let PlaybackController = function () {
 
         onPlaybackPlaying = function() {
             this.log("Native video element event: playing");
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_PLAYING, {playingTime: this.getTime()});
+            EventBus.trigger(Events.PLAYBACK_PLAYING, {playingTime: this.getTime()});
         },
 
         onPlaybackPaused = function() {
             this.log("Native video element event: pause");
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED);
+            EventBus.trigger(Events.PLAYBACK_PAUSED);
         },
 
         onPlaybackSeeking = function() {
@@ -194,7 +194,7 @@ let PlaybackController = function () {
 
         onPlaybackSeeked = function() {
             this.log("Native video element event: seeked");
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_SEEKED);
+            EventBus.trigger(Events.PLAYBACK_SEEKED);
         },
 
         onPlaybackTimeUpdated = function() {
@@ -230,20 +230,20 @@ let PlaybackController = function () {
             if (!isDynamic || this.timelineConverter.isTimeSyncCompleted()) {
                 initialStart.call(this);
             }
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED);
+            EventBus.trigger(Events.PLAYBACK_METADATA_LOADED);
             startUpdatingWallclockTime.call(this);
         },
 
         onPlaybackEnded = function() {
             this.log("Native video element event: ended");
             stopUpdatingWallclockTime.call(this);
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_ENDED);
+            EventBus.trigger(Events.PLAYBACK_ENDED);
         },
 
         onPlaybackError = function(event) {
             var target = event.target || event.srcElement;
 
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_ERROR, {error: target.error});
+            EventBus.trigger(Events.PLAYBACK_ERROR, {error: target.error});
         },
 
         onWallclockTime = function() {
@@ -476,18 +476,6 @@ let PlaybackController = function () {
 
 PlaybackController.prototype = {
     constructor: PlaybackController
-};
-
-
-PlaybackController.eventList = {
-    ENAME_CAN_PLAY: "canPlay",
-    ENAME_PLAYBACK_PLAYING: "playbackPlaying",
-    ENAME_PLAYBACK_STOPPED: "playbackStopped",
-    ENAME_PLAYBACK_PAUSED: "playbackPaused",
-    ENAME_PLAYBACK_ENDED: "playbackEnded",
-    ENAME_PLAYBACK_SEEKED: "playbackSeeked",
-    ENAME_PLAYBACK_METADATA_LOADED: "playbackMetaDataLoaded",
-    ENAME_PLAYBACK_ERROR: "playbackError"
 };
 
 export default PlaybackController;

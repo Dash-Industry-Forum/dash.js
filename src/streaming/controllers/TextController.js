@@ -42,7 +42,7 @@ let TextController = function () {
 
          onDataUpdateCompleted = function(e) {
              if (e.sender.streamProcessor !== this.streamProcessor) return;
-             EventBus.trigger(Events.TIMED_TEXT_REQUESTED, {index: 0}) //TODO make index dynamic if referring to MP?
+             EventBus.trigger(Events.TIMED_TEXT_REQUESTED, {index: 0, sender:e.sender}) //TODO make index dynamic if referring to MP?
          },
 
          onInitFragmentLoaded = function (e) {

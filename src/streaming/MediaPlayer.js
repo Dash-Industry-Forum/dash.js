@@ -39,6 +39,7 @@ import UTCTiming from '../dash/vo/UTCTiming.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
 import ManifestLoader from './ManifestLoader.js';
+import Events from './Events.js';
 
 let MediaPlayer = function (context) {
 
@@ -118,8 +119,6 @@ let MediaPlayer = function (context) {
             playing = true;
             this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
-            playbackController.subscribe(PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
-            playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
             playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
 
             system.mapValue("liveDelayFragmentCount", liveDelayFragmentCount);
@@ -259,32 +258,28 @@ let MediaPlayer = function (context) {
             return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
         },
 
+        onStreamTeardownComplete = function(/* e */) {
+            // Finish rest of shutdown process
+            abrController.reset();
+            rulesController.reset();
+            playbackController.reset();
+            mediaController.reset();
+            streamController = null;
+            playing = false;
+            EventBus.off(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
+
+            resetting = false;
+            if (isReady.call(this)) {
+                doAutoPlay.call(this);
+            }
+        },
+
         resetAndPlay = function() {
             this.adapter.reset();
             if (playing && streamController) {
                 if (!resetting) {
                     resetting = true;
-                    playbackController.unsubscribe(PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
-                    playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
-
-                    var teardownComplete = {},
-                            self = this;
-                    teardownComplete[StreamController.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
-
-                        // Finish rest of shutdown process
-                        abrController.reset();
-                        rulesController.reset();
-                        playbackController.reset();
-                        mediaController.reset();
-                        streamController = null;
-                        playing = false;
-
-                        resetting = false;
-                        if (isReady.call(self)) {
-                            doAutoPlay.call(self);
-                        }
-                    };
-                    streamController.subscribe(StreamController.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
+                    EventBus.on(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
                     streamController.reset();
                 }
             } else {
@@ -986,6 +981,7 @@ let MediaPlayer = function (context) {
                 var manifestLoader = system.getObject("manifestLoader"),
                     uriQueryFragModel = system.getObject("uriQueryFragModel"),
                     cbObj = {};
+                manifestLoader.initialize();    
                 cbObj[ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = function(e) {
                     if (!e.error) {
                         callback(e.data.manifest);
@@ -993,6 +989,7 @@ let MediaPlayer = function (context) {
                         callback(null, e.error);
                     }
                     manifestLoader.unsubscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
+                    manifestLoader.reset();
                 };
 
                 manifestLoader.subscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, cbObj);

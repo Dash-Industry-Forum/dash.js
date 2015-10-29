@@ -62,7 +62,6 @@ let StreamController = function () {
         useManifestDateHeaderTimeSource,
 
         attachEvents = function (stream) {
-            var mediaController = this.system.getObject("mediaController");
             stream.subscribe(Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
         },
 
@@ -97,8 +96,8 @@ let StreamController = function () {
             startAutoPlay.call(this);
         },
 
-        onError = function (e) {
-            var code = e.data.error ? e.data.error.code : 0,
+        onPlaybackError = function (e) {
+            var code = e.error ? e.error.code : 0,
                 msg = "";
 
             if (code === -1) {
@@ -411,7 +410,7 @@ let StreamController = function () {
                 if (!streams[i].isInitialized()) return;
             }
 
-            self.notify(StreamController.eventList.ENAME_STREAMS_COMPOSED);
+            EventBus.trigger(Events.STREAMS_COMPOSED);
         },
 
         onStreamInitialized = function(/*e*/) {
@@ -491,14 +490,8 @@ let StreamController = function () {
         uriQueryFragModel:undefined,
 
         setup: function() {
-            EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-            EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
-
             this[Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED] = onStreamBufferingEnd;
-            this[PlaybackController.eventList.ENAME_PLAYBACK_ENDED] = onEnded;
             this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncAttemptCompleted;
-            this[PlaybackController.eventList.ENAME_CAN_PLAY] = onCanPlay;
-            this[PlaybackController.eventList.ENAME_PLAYBACK_ERROR] = onError;
         },
 
         getAutoPlay: function () {
@@ -536,10 +529,13 @@ let StreamController = function () {
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
-            this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
-            this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
-            this.subscribe(StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
+            EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+            EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
+            EventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
+            EventBus.on(Events.CAN_PLAY, onCanPlay, this);
+            EventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
             EventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
+            this.manifestLoader.initialize();
             this.manifestUpdater.initialize(this.manifestLoader);
         },
 
@@ -567,8 +563,7 @@ let StreamController = function () {
 
 
 
-            var mediaController = this.system.getObject("mediaController"),
-                stream;
+            var stream;
 
             this.timeSyncController.unsubscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.unsubscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
@@ -582,12 +577,12 @@ let StreamController = function () {
             }
 
             streams = [];
-            this.unsubscribe(StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
 
             EventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
             EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-            this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
-            this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
+            EventBus.off(Events.CAN_PLAY, onCanPlay, this);
+            EventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
+            EventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
 
 
             EventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
@@ -597,6 +592,7 @@ let StreamController = function () {
             // We need this later to notify users of protection system teardown
             var manifestUrl = (this.manifestModel.getValue()) ? this.manifestModel.getValue().url : null;
             this.manifestModel.setValue(null);
+            this.manifestLoader.reset();
 
             this.timelineConverter.reset();
             this.liveEdgeFinder.reset();
@@ -615,7 +611,7 @@ let StreamController = function () {
 
             // Teardown the protection system, if necessary
             if (!protectionController) {
-                this.notify(StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+                EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
             }
             else if (ownProtectionController) {
                 var teardownComplete = {},
@@ -634,7 +630,7 @@ let StreamController = function () {
                         });
                     }
 
-                    self.notify(StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+                    EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
                 };
                 protectionController.protectionModel.subscribe(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
                 protectionController.teardown();
@@ -642,7 +638,7 @@ let StreamController = function () {
                 protectionController.setMediaElement(null);
                 protectionController = null;
                 protectionData = null;
-                this.notify(StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+                EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
             }
         }
     };
@@ -651,11 +647,5 @@ let StreamController = function () {
 StreamController.prototype = {
     constructor: StreamController
 };
-
-StreamController.eventList = {
-    ENAME_STREAMS_COMPOSED: "streamsComposed",
-    ENAME_TEARDOWN_COMPLETE: "streamTeardownComplete"
-};
-
 
 export default StreamController;
