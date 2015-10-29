@@ -59,9 +59,6 @@ let TextController = function () {
         system: undefined,
         errHandler: undefined,
         videoModel: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
 
         setup: function() {
             EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);

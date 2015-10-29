@@ -204,9 +204,6 @@ let FragmentLoader = function () {
         errHandler: undefined,
         log: undefined,
         requestModifierExt:undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
 
         load: function (req) {
 

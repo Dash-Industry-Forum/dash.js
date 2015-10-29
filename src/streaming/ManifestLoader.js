@@ -173,9 +173,6 @@ let ManifestLoader = function () {
         errHandler: undefined,
         metricsModel: undefined,
         requestModifierExt:undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
         system: undefined,
 
         load: function(url) {

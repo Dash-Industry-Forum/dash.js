@@ -158,9 +158,6 @@ let FragmentModel = function () {
         system: undefined,
         log: undefined,
         metricsModel: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
         manifestExt:undefined,
 
         setup: function() {

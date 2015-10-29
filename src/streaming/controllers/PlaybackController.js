@@ -321,9 +321,6 @@ let PlaybackController = function () {
         manifestModel: undefined,
         manifestExt: undefined,
         videoModel: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
         adapter: undefined,
 
         setup: function() {

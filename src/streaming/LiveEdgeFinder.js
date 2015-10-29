@@ -79,9 +79,6 @@ let LiveEdgeFinder = function () {
         system: undefined,
         synchronizationRulesCollection: undefined,
         rulesController: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
 
         setup: function() {
             this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncComplete;

@@ -97,9 +97,6 @@ let FragmentController = function () {
         log: undefined,
         scheduleRulesCollection: undefined,
         rulesController: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
 
         setup: function() {
             EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);

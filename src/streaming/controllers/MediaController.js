@@ -181,9 +181,6 @@ let MediaController = function () {
         log: undefined,
         system: undefined,
         errHandler: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
         DOMStorage:undefined,
 
         setup: function() {

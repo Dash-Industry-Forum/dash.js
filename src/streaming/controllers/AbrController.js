@@ -181,9 +181,6 @@ let AbrController = function () {
         log: undefined,
         abrRulesCollection: undefined,
         rulesController: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
         streamController:undefined,
 
         setup: function() {

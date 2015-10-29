@@ -484,7 +484,6 @@ let StreamController = function () {
         timeSyncController: undefined,
         virtualBuffer: undefined,
         errHandler: undefined,
-        notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
         uriQueryFragModel:undefined,
@@ -589,7 +588,7 @@ let StreamController = function () {
             this.manifestUpdater.reset();
             this.metricsModel.clearAllCurrentMetrics();
 
-            // We need this later to notify users of protection system teardown
+
             var manifestUrl = (this.manifestModel.getValue()) ? this.manifestModel.getValue().url : null;
             this.manifestModel.setValue(null);
             this.manifestLoader.reset();
