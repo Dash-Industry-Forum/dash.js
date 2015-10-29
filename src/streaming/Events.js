@@ -83,6 +83,8 @@ let Events = (function() {
         // StreamController events
         STREAMS_COMPOSED: "streamsComposed",
         STREAM_TEARDOWN_COMPLETE: "streamTeardownComplete",
+        STREAM_BUFFERING_COMPLETED: "streamBufferingCompleted",
+
         // XLinkController events,
         XLINK_ALLELEMENTSLOADED: "xlinkAllElementsLoaded",
         XLINK_READY: "xlinkReady",

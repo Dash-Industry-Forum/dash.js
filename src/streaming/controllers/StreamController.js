@@ -61,13 +61,13 @@ let StreamController = function () {
         UTCTimingSources,
         useManifestDateHeaderTimeSource,
 
-        attachEvents = function (stream) {
-            stream.subscribe(Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
-        },
-
-        detachEvents = function (stream) {
-            stream.unsubscribe(Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
-        },
+        //attachEvents = function (stream) {
+        //
+        //},
+        //
+        //detachEvents = function (stream) {
+        //
+        //},
 
         fireSwitchEvent = function(stage, fromStream, toStream) {
             EventBus.dispatchEvent({
@@ -178,7 +178,7 @@ let StreamController = function () {
         /*
          * Handles the current stream buffering end moment to start the next stream buffering
          */
-        onStreamBufferingEnd = function(e) {
+        onStreamBufferingCompleted = function(e) {
             var nextStream = getNextStream(),
                 isLast = e.data.streamInfo.isLast;
 
@@ -246,10 +246,10 @@ let StreamController = function () {
             // synchronously an attempt to remove listener from itself leads to an exception in dijon lib. setTimeout is
             // used to workaround this issue.
             setTimeout(function() {
-                detachEvents.call(self, from);
+                //detachEvents.call(self, from);
                 from.deactivate();
                 activeStream = to;
-                attachEvents.call(self, to);
+                //attachEvents.call(self, to);
                 self.playbackController.initialize(activeStream.getStreamInfo());
                 setupMediaSource.call(self, onMediaSourceReady);
             }, 0);
@@ -381,7 +381,7 @@ let StreamController = function () {
                     activeStream = streams[0];
                     fireSwitchEvent.call(self, MediaPlayer.events.STREAM_SWITCH_STARTED, null, activeStream);
                     self.playbackController.initialize(activeStream.getStreamInfo());
-                    attachEvents.call(self, activeStream);
+                    //attachEvents.call(self, activeStream);
                     fireSwitchEvent.call(self, MediaPlayer.events.STREAM_SWITCH_COMPLETED, null, activeStream);
                 }
 
@@ -489,7 +489,6 @@ let StreamController = function () {
         uriQueryFragModel:undefined,
 
         setup: function() {
-            this[Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED] = onStreamBufferingEnd;
             this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncAttemptCompleted;
         },
 
@@ -534,6 +533,7 @@ let StreamController = function () {
             EventBus.on(Events.CAN_PLAY, onCanPlay, this);
             EventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
             EventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
+            EventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
             this.manifestLoader.initialize();
             this.manifestUpdater.initialize(this.manifestLoader);
         },
@@ -546,21 +546,11 @@ let StreamController = function () {
             this.manifestUpdater.setManifest(manifest);
         },
 
-        setupEvents:function(add){
-          if(add){
-
-          }  else {
-
-          }
-        },
-
         reset: function () {
 
-            if (!!activeStream) {
-                detachEvents.call(this, activeStream);
-            }
-
-
+            //if (!!activeStream) {
+            //    detachEvents.call(this, activeStream);
+            //}
 
             var stream;
 
@@ -582,8 +572,7 @@ let StreamController = function () {
             EventBus.off(Events.CAN_PLAY, onCanPlay, this);
             EventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
             EventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
-
-
+            EventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
             EventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
             this.manifestUpdater.reset();
             this.metricsModel.clearAllCurrentMetrics();

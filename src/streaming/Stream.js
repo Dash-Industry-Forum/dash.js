@@ -265,7 +265,7 @@ let Stream = function () {
                 if (!processors[i].isBufferingCompleted()) return;
             }
 
-            this.notify(Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, {streamInfo: streamInfo});
+            EventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {streamInfo: streamInfo});
         },
 
         onDataUpdateCompleted = function(e) {
@@ -504,8 +504,5 @@ Stream.prototype = {
 
 Stream.DATA_UPDATE_FAILED_ERROR_CODE = 1;
 
-Stream.eventList = {
-    ENAME_STREAM_BUFFERING_COMPLETED: "streamBufferingCompleted"
-};
 
 export default Stream;
