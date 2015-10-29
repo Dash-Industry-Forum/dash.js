@@ -144,8 +144,8 @@ let AbrController = function () {
                 var self = this,
                     type = evt.data.request.mediaType,
                     rules = self.abrRulesCollection.getRules(ABRRulesCollection.prototype.ABANDON_FRAGMENT_RULES),
-                    schduleController = streamProcessorDict[type].getScheduleController(),
-                    fragmentModel = schduleController.getFragmentModel(),
+                    scheduleController = streamProcessorDict[type].getScheduleController(),
+                    fragmentModel = scheduleController.getFragmentModel(),
                     callback = function (switchRequest) {
 
                         function setupTimeout(type){
@@ -165,7 +165,7 @@ let AbrController = function () {
                                 fragmentModel.abortRequests();
                                 self.setAbandonmentStateFor(type, AbrController.ABANDON_LOAD);
                                 self.setPlaybackQuality(type, self.streamController.getActiveStreamInfo() , newQuality);
-                                schduleController.replaceCanceledRequests(requests);
+                                scheduleController.replaceCanceledRequests(requests);
                                 setupTimeout(type);
                             }
                         }
@@ -187,7 +187,7 @@ let AbrController = function () {
         streamController:undefined,
 
         setup: function() {
-            this[FragmentLoader.eventList.ENAME_LOADING_PROGRESS] = onFragmentLoadProgress;
+            EventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this)
         },
 
         initialize: function(type, streamProcessor) {
@@ -397,6 +397,8 @@ let AbrController = function () {
         getTopQualityIndexFor:getTopQualityIndex,
 
         reset: function() {
+            EventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
+
             autoSwitchBitrate = true;
             topQualities = {};
             qualityDict = {};

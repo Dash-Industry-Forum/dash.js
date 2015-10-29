@@ -103,10 +103,6 @@ let StreamProcessor = function () {
 
             fragmentModel = this.getFragmentModel();
             fragmentModel.setLoader(fragmentLoader);
-
-
-            fragmentLoader.subscribe(FragmentLoader.eventList.ENAME_LOADING_PROGRESS, abrController);
-
             representationController.initialize(this);
         },
 
@@ -213,17 +209,10 @@ let StreamProcessor = function () {
         },
 
         reset: function(errored) {
-            var self = this,
-                abrController = self.abrController,
-                indexHandler = this.indexHandler,
-                fragmentModel = this.getFragmentModel(),
-                fragmentLoader = this.fragmentLoader;
-
-
-            fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_PROGRESS, abrController);
+            var indexHandler = this.indexHandler,
+                fragmentModel = this.getFragmentModel()
 
             fragmentModel.reset();
-
             indexHandler.reset();
             this.bufferController.reset(errored);
             this.scheduleController.reset();

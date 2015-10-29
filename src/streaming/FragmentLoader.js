@@ -141,7 +141,7 @@ let FragmentLoader = function () {
                     });
 
                     lastTraceTime = currentTime;
-                    self.notify(FragmentLoader.eventList.ENAME_LOADING_PROGRESS, {request: request});
+                    EventBus.trigger(Events.LOADING_PROGRESS, {request: request});
                 };
 
                 req.onload = function () {
@@ -253,7 +253,6 @@ FragmentLoader.prototype = {
 };
 
 FragmentLoader.eventList = {
-    ENAME_LOADING_PROGRESS: "loadingProgress",
     ENAME_CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted"
 };
 
