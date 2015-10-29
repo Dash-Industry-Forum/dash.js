@@ -132,7 +132,7 @@ let ManifestUpdater = function () {
             this[StreamController.eventList.ENAME_STREAMS_COMPOSED] = onStreamsComposed;
             this[ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = onManifestLoaded;
             EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-            this[PlaybackController.eventList.ENAME_PLAYBACK_PAUSED] = onPlaybackPaused;
+            EventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         },
 
         initialize: function (loader) {
@@ -152,6 +152,7 @@ let ManifestUpdater = function () {
 
         reset: function() {
             EventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+            EventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
             isStopped = true;
             isUpdating = false;
             clear.call(this);

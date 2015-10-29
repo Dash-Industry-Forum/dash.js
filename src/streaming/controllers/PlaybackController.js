@@ -179,12 +179,12 @@ let PlaybackController = function () {
 
         onPlaybackPlaying = function() {
             this.log("Native video element event: playing");
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_PLAYING, {playingTime: this.getTime()});
+            EventBus.trigger(Events.PLAYBACK_PLAYING, {playingTime: this.getTime()});
         },
 
         onPlaybackPaused = function() {
             this.log("Native video element event: pause");
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED);
+            EventBus.trigger(Events.PLAYBACK_PAUSED);
         },
 
         onPlaybackSeeking = function() {
@@ -237,7 +237,7 @@ let PlaybackController = function () {
         onPlaybackEnded = function() {
             this.log("Native video element event: ended");
             stopUpdatingWallclockTime.call(this);
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_ENDED);
+            EventBus.trigger(Events.PLAYBACK_ENDED);
         },
 
         onPlaybackError = function(event) {
@@ -480,10 +480,6 @@ PlaybackController.prototype = {
 
 
 PlaybackController.eventList = {
-    ENAME_PLAYBACK_PLAYING: "playbackPlaying",
-    ENAME_PLAYBACK_STOPPED: "playbackStopped",
-    ENAME_PLAYBACK_PAUSED: "playbackPaused",
-    ENAME_PLAYBACK_ENDED: "playbackEnded",
     ENAME_PLAYBACK_SEEKED: "playbackSeeked",
     ENAME_PLAYBACK_METADATA_LOADED: "playbackMetaDataLoaded",
     

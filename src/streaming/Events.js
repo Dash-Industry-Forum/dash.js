@@ -70,7 +70,10 @@ let Events = (function() {
         PLAYBACK_SEEKING: "playbackSeeking",
         PLAYBACK_STARTED: "playbackStarted",
         CAN_PLAY: "canPlay",
-        PLAYBACK_ERROR: "playbackError",
+        PLAYBACK_PLAYING: "playbackPlaying",
+        PLAYBACK_PAUSED: "playbackPaused",
+        PLAYBACK_ENDED: "playbackEnded",
+        PLAYBACK_ERROR: "playbackError",        
         WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated"
     };
 }());

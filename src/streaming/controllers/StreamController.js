@@ -495,7 +495,7 @@ let StreamController = function () {
             EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
 
             this[Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED] = onStreamBufferingEnd;
-            this[PlaybackController.eventList.ENAME_PLAYBACK_ENDED] = onEnded;
+            EventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
             this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncAttemptCompleted;
 
             EventBus.on(Events.CAN_PLAY, onCanPlay, this);
@@ -537,8 +537,6 @@ let StreamController = function () {
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
-            this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
-            this.playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
             this.subscribe(StreamController.eventList.ENAME_STREAMS_COMPOSED, this.manifestUpdater);
             EventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
             this.manifestUpdater.initialize(this.manifestLoader);
@@ -568,8 +566,7 @@ let StreamController = function () {
 
 
 
-            var mediaController = this.system.getObject("mediaController"),
-                stream;
+            var stream;
 
             this.timeSyncController.unsubscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.unsubscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
@@ -589,8 +586,7 @@ let StreamController = function () {
             EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.off(Events.CAN_PLAY, onCanPlay, this);
             EventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
-            this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
-            this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
+            EventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
 
 
             EventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
