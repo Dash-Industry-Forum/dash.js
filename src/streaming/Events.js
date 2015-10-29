@@ -79,7 +79,9 @@ let Events = (function() {
         WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated",
         // StreamController events
         STREAMS_COMPOSED: "streamsComposed",
-        STREAM_TEARDOWN_COMPLETE: "streamTeardownComplete"
+        STREAM_TEARDOWN_COMPLETE: "streamTeardownComplete",
+        // TextController events
+        CLOSED_CAPTIONING_REQUESTED: "closedCaptioningRequested"
     };
 }());
 

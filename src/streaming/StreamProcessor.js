@@ -95,13 +95,6 @@ let StreamProcessor = function () {
             self.fragmentController = fragmentController;
             self.fragmentLoader = fragmentLoader;
 
-
-            if (type === "video" || type === "audio" || type === "fragmentedText") {
-                //done with this if statement.
-            } else {
-                bufferController.subscribe(TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);
-            }
-
             indexHandler.initialize(this);
             indexHandler.setCurrentTime(playbackController.getStreamStartTime(this.getStreamInfo()));
             bufferController.initialize(type, mediaSource, self);
@@ -226,10 +219,6 @@ let StreamProcessor = function () {
                 indexHandler = this.indexHandler,
                 fragmentModel = this.getFragmentModel(),
                 fragmentLoader = this.fragmentLoader;
-
-            if (bufferController.unsubscribe) {
-                bufferController.unsubscribe(TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, scheduleController);    
-            }
 
             fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
             fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_PROGRESS, abrController);

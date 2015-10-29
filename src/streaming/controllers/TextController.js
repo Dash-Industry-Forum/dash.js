@@ -43,7 +43,7 @@ let TextController = function () {
          onDataUpdateCompleted = function(e) {
              if (e.sender.streamProcessor !== this.streamProcessor) return;
 
-             this.notify(TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED, {CCIndex: 0});
+             EventBus.trigger(Events.CLOSED_CAPTIONING_REQUESTED, {sender: this, CCIndex: 0});
          },
 
          onInitFragmentLoaded = function (e) {
@@ -125,10 +125,6 @@ let TextController = function () {
 
 TextController.prototype = {
     constructor: TextController
-};
-
-TextController.eventList = {
-    ENAME_CLOSED_CAPTIONING_REQUESTED: "closedCaptioningRequested"
 };
 
 export default TextController;

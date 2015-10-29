@@ -304,7 +304,9 @@ let ScheduleController = function () {
         },
 
         onClosedCaptioningRequested = function(e) {
-            getInitRequest.call(this, e.data.CCIndex);
+            if (e.sender.streamProcessor !== this.streamProcessor) return;
+
+            getInitRequest.call(this, e.CCIndex);
         },
 
         onPlaybackStarted = function() {
@@ -397,7 +399,7 @@ let ScheduleController = function () {
             EventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
             EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
 
-            this[TextController.eventList.ENAME_CLOSED_CAPTIONING_REQUESTED] = onClosedCaptioningRequested;
+            EventBus.on(Events.CLOSED_CAPTIONING_REQUESTED, onClosedCaptioningRequested, this);
             EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
             EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
@@ -454,6 +456,7 @@ let ScheduleController = function () {
             EventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
             EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+            EventBus.off(Events.CLOSED_CAPTIONING_REQUESTED, onClosedCaptioningRequested, this);
 
             doStop.call(this);
             fragmentModel.abortRequests();
