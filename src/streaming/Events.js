@@ -94,7 +94,10 @@ let Events = (function() {
         CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted",
         //SourceBuffer
         SOURCEBUFFER_APPEND_COMPLETED: "sourceBufferAppendCompleted",
-        SOURCEBUFFER_REMOVE_COMPLETED: "sourceBufferRemoveCompleted"
+        SOURCEBUFFER_REMOVE_COMPLETED: "sourceBufferRemoveCompleted",
+
+        //TimeSync
+        TIME_SYNCHRONIZATION_COMPLETED: "timeSynchronizationComplete"
 
     };
 }());

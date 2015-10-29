@@ -159,7 +159,7 @@ let TimelineConverter = function () {
                 return;
             }
 
-            clientServerTimeShift = e.data.offset / 1000;
+            clientServerTimeShift = e.offset / 1000;
 
             isClientServerTimeSyncCompleted = true;
         },
@@ -177,7 +177,7 @@ let TimelineConverter = function () {
 
         setup: function() {
             EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-            this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncComplete;
+            EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
         },
 
         calcAvailabilityStartTimeFromPresentationTime: calcAvailabilityStartTimeFromPresentationTime,
@@ -213,7 +213,7 @@ let TimelineConverter = function () {
 
         reset: function() {
             EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-
+            EventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
             clientServerTimeShift = 0;
             isClientServerTimeSyncCompleted = false;
             expectedLiveEdge = NaN;

@@ -31,6 +31,8 @@
 /*globals MediaPlayer*/
 
 import Error from './vo/Error.js';
+import EventBus from './utils/EventBus.js';
+import Events from './Events.js';
 
 let TimeSyncController = function () {
     "use strict";
@@ -236,16 +238,8 @@ let TimeSyncController = function () {
         },
 
         completeTimeSyncSequence = function (failed, time, offset){
-
             setIsSynchronizing(false);
-            this.notify(
-                TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED,
-                {
-                    time: time,
-                    offset: offset
-                },
-                failed ? new Error(TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE) : null
-            );
+            EventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, {time: time, offset: offset, error: failed ? new Error(TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE) : null})
         },
 
         attemptSync = function (sources, sourceIndex) {
@@ -313,9 +307,6 @@ let TimeSyncController = function () {
 
     return {
         log: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
         metricsModel:undefined,
         metricsExt:undefined,
 
@@ -342,9 +333,7 @@ TimeSyncController.prototype = {
     constructor: TimeSyncController
 };
 
-TimeSyncController.eventList = {
-    ENAME_TIME_SYNCHRONIZATION_COMPLETED: "timeSynchronizationComplete"
-};
+
 
 TimeSyncController.TIME_SYNC_FAILED_ERROR_CODE = 1;
 

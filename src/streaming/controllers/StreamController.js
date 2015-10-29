@@ -417,7 +417,7 @@ let StreamController = function () {
             checkIfUpdateCompleted.call(this);
         },
 
-        onTimeSyncAttemptCompleted = function (/*e*/) {
+        onTimeSyncCompleted = function (/*e*/) {
             composeStreams.call(this);
         },
 
@@ -489,7 +489,7 @@ let StreamController = function () {
         uriQueryFragModel:undefined,
 
         setup: function() {
-            this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncAttemptCompleted;
+            EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
         },
 
         getAutoPlay: function () {
@@ -524,9 +524,6 @@ let StreamController = function () {
             autoPlay = autoPl;
             protectionController = protCtrl;
             protectionData = protData;
-            this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
-            this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
-            this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
             EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
             EventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
@@ -553,10 +550,6 @@ let StreamController = function () {
             //}
 
             var stream;
-
-            this.timeSyncController.unsubscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
-            this.timeSyncController.unsubscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
-            this.timeSyncController.unsubscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
             this.timeSyncController.reset();
 
             for (var i = 0, ln = streams.length; i < ln; i++) {

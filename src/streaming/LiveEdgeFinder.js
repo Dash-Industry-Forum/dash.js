@@ -81,7 +81,7 @@ let LiveEdgeFinder = function () {
         rulesController: undefined,
 
         setup: function() {
-            this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncComplete;
+            EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
         },
 
         initialize: function(streamProcessor) {
@@ -101,6 +101,7 @@ let LiveEdgeFinder = function () {
 
         reset: function(){
             EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
+            EventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
             this.abortSearch();
             liveEdge = null;
         }

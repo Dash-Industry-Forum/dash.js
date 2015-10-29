@@ -353,9 +353,6 @@ let Stream = function () {
         errHandler: undefined,
         liveEdgeFinder: undefined,
         abrController: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
 
         setup: function () {
             EventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
