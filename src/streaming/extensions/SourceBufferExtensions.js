@@ -29,13 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Error from '../vo/Error.js';
+import EventBus from '../utils/EventBus.js';
+import Events from "../Events.js";
 
 let SourceBufferExtensions = function () {
     "use strict";
     this.system = undefined;
-    this.notify = undefined;
-    this.subscribe = undefined;
-    this.unsubscribe = undefined;
     this.manifestExt = undefined;
 };
 
@@ -310,11 +309,11 @@ SourceBufferExtensions.prototype = {
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 self.waitForUpdateEnd(buffer, function() {
-                    self.notify(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
+                    EventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
                 });
             });
         } catch (err) {
-            self.notify(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes}, new Error(err.code, err.message, null));
+            EventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes, error:new Error(err.code, err.message, null)});
         }
     },
 
@@ -329,11 +328,11 @@ SourceBufferExtensions.prototype = {
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 self.waitForUpdateEnd(buffer, function() {
-                    self.notify(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
+                    EventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
                 });
             });
         } catch (err) {
-            self.notify(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end}, new Error(err.code, err.message, null));
+            EventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end, error:new Error(err.code, err.message, null)});
         }
     },
 
@@ -350,9 +349,5 @@ SourceBufferExtensions.prototype = {
 
 SourceBufferExtensions.QUOTA_EXCEEDED_ERROR_CODE = 22;
 
-SourceBufferExtensions.eventList = {
-    ENAME_SOURCEBUFFER_REMOVE_COMPLETED: "sourceBufferRemoveCompleted",
-    ENAME_SOURCEBUFFER_APPEND_COMPLETED: "sourceBufferAppendCompleted"
-};
 
 export default SourceBufferExtensions;

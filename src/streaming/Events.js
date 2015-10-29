@@ -89,7 +89,10 @@ let Events = (function() {
         //FragmentLoader
         LOADING_COMPLETED: "loadingCompleted",
         LOADING_PROGRESS: "loadingProgress",
-        CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted"
+        CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted",
+        //SourceBuffer
+        SOURCEBUFFER_APPEND_COMPLETED: "sourceBufferAppendCompleted",
+        SOURCEBUFFER_REMOVE_COMPLETED: "sourceBufferRemoveCompleted"
 
     };
 }());

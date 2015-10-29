@@ -205,7 +205,7 @@ let BufferController = function () {
         },
 
         onAppended = function(e) {
-            if (buffer !== e.data.buffer) return;
+            if (buffer !== e.buffer) return;
 
             onPlaybackProgression.call(this);
 
@@ -472,7 +472,7 @@ let BufferController = function () {
         },
 
         onRemoved = function(e) {
-            if (buffer !== e.data.buffer) return;
+            if (buffer !== e.buffer) return;
 
             // After the buffer has been cleared we need to update the virtual range that reflects the actual ranges
             // of SourceBuffer. We also need to update the list of appended chunks
@@ -481,7 +481,7 @@ let BufferController = function () {
             }
             this.virtualBuffer.updateBufferedRanges({streamId: getStreamId.call(this), mediaType: type}, this.sourceBufferExt.getAllRanges(buffer));
             updateBufferLevel.call(this);
-            EventBus.trigger(Events.BUFFER_CLEARED, {sender: self, from: e.data.from, to: e.data.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend.call(this)});
+            EventBus.trigger(Events.BUFFER_CLEARED, {sender: self, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend.call(this)});
             if (hasEnoughSpaceToAppend.call(this)) return;
 
             setTimeout(clearBuffer.bind(this, getClearRange.call(this)), minBufferTime * 1000);
@@ -622,14 +622,17 @@ let BufferController = function () {
             EventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
             EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-
             EventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
 
-            onAppended = onAppended.bind(this);
-            onRemoved = onRemoved.bind(this);
+            //onAppended = onAppended.bind(this);
+            //onRemoved = onRemoved.bind(this);
             onChunkAppended = onChunkAppended.bind(this);
-            this.sourceBufferExt.subscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);
-            this.sourceBufferExt.subscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, this, onRemoved);
+
+            EventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
+            EventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+
+            //this.sourceBufferExt.subscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);
+            //this.sourceBufferExt.subscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, this, onRemoved);
 
             this.virtualBuffer.subscribe(VirtualBuffer.eventList.CHUNK_APPENDED, this, onChunkAppended);
         },
@@ -718,6 +721,8 @@ let BufferController = function () {
             EventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
             EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+            EventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
+            EventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
 
             criticalBufferLevel = Number.POSITIVE_INFINITY;
             bufferState = BufferController.BUFFER_EMPTY;
@@ -726,8 +731,8 @@ let BufferController = function () {
             lastIndex = -1;
             maxAppendedIndex = -1;
             requiredQuality = 0;
-            this.sourceBufferExt.unsubscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);
-            this.sourceBufferExt.unsubscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, this, onRemoved);
+            //this.sourceBufferExt.unsubscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);
+            //this.sourceBufferExt.unsubscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, this, onRemoved);
             appendedBytesInfo = null;
             this.virtualBuffer.unsubscribe(VirtualBuffer.eventList.CHUNK_APPENDED, this, onChunkAppended);
             appendingMediaChunk = false;
