@@ -64,10 +64,12 @@ let Events = (function() {
         // MediaController events
         CURRENT_TRACK_CHANGED: "currenttrackchanged",
         //Playback events.
+        PLAYBACK_METADATA_LOADED: "playbackMetaDataLoaded",
         PLAYBACK_PROGRESS: "playbackProgress",
         PLAYBACK_TIME_UPDATED: "playbackTimeUpdated",
         PLAYBACK_RATE_CHANGED: "playbackRateChanged",
         PLAYBACK_SEEKING: "playbackSeeking",
+        PLAYBACK_SEEKED: "playbackSeeked",
         PLAYBACK_STARTED: "playbackStarted",
         CAN_PLAY: "canPlay",
         PLAYBACK_PLAYING: "playbackPlaying",

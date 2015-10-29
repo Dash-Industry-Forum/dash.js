@@ -194,7 +194,7 @@ let PlaybackController = function () {
 
         onPlaybackSeeked = function() {
             this.log("Native video element event: seeked");
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_SEEKED);
+            EventBus.trigger(Events.PLAYBACK_SEEKED);
         },
 
         onPlaybackTimeUpdated = function() {
@@ -230,7 +230,7 @@ let PlaybackController = function () {
             if (!isDynamic || this.timelineConverter.isTimeSyncCompleted()) {
                 initialStart.call(this);
             }
-            this.notify(PlaybackController.eventList.ENAME_PLAYBACK_METADATA_LOADED);
+            EventBus.trigger(Events.PLAYBACK_METADATA_LOADED);
             startUpdatingWallclockTime.call(this);
         },
 
@@ -476,13 +476,6 @@ let PlaybackController = function () {
 
 PlaybackController.prototype = {
     constructor: PlaybackController
-};
-
-
-PlaybackController.eventList = {
-    ENAME_PLAYBACK_SEEKED: "playbackSeeked",
-    ENAME_PLAYBACK_METADATA_LOADED: "playbackMetaDataLoaded",
-    
 };
 
 export default PlaybackController;
