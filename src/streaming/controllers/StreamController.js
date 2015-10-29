@@ -62,7 +62,6 @@ let StreamController = function () {
         useManifestDateHeaderTimeSource,
 
         attachEvents = function (stream) {
-            var mediaController = this.system.getObject("mediaController");
             stream.subscribe(Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED, this);
         },
 
@@ -491,15 +490,8 @@ let StreamController = function () {
         uriQueryFragModel:undefined,
 
         setup: function() {
-            EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-            EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
-
             this[Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED] = onStreamBufferingEnd;
-            EventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
             this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncAttemptCompleted;
-
-            EventBus.on(Events.CAN_PLAY, onCanPlay, this);
-            EventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
         },
 
         getAutoPlay: function () {
@@ -537,6 +529,11 @@ let StreamController = function () {
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.timelineConverter);
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this.liveEdgeFinder);
             this.timeSyncController.subscribe(TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED, this);
+            EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+            EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
+            EventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
+            EventBus.on(Events.CAN_PLAY, onCanPlay, this);
+            EventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
             EventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
             this.manifestUpdater.initialize(this.manifestLoader);
         },
