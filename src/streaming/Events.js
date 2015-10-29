@@ -76,7 +76,9 @@ let Events = (function() {
         PLAYBACK_PAUSED: "playbackPaused",
         PLAYBACK_ENDED: "playbackEnded",
         PLAYBACK_ERROR: "playbackError",        
-        WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated"
+        WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated",
+        // StreamController events
+        STREAMS_COMPOSED: "streamsComposed"
     };
 }());
 
