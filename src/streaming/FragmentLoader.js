@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Error from './vo/Error.js';
+import EventBus from './utils/EventBus.js';
+import Events from "./Events.js";
 
 let FragmentLoader = function () {
     "use strict";
@@ -144,9 +146,8 @@ let FragmentLoader = function () {
 
                 req.onload = function () {
                     if (req.status < 200 || req.status > 299) return;
-
                     handleLoaded(request, true);
-                    self.notify(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: request, response: req.response});
+                    EventBus.trigger(Events.LOADING_COMPLETED, {request: request, response: req.response, sender:self});
                 };
 
                 req.onloadend = req.onerror = function () {
@@ -169,7 +170,7 @@ let FragmentLoader = function () {
                     } else {
                         self.log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
                         self.errHandler.downloadError("content", request.url, req);
-                        self.notify(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: request, bytes: null}, new Error(null, "failed loading fragment", null));
+                        EventBus.trigger(Events.LOADING_COMPLETED, {request: request, bytes: null, error:new Error(null, "failed loading fragment", null), sender:self});
                     }
                 };
 
@@ -212,7 +213,7 @@ let FragmentLoader = function () {
         load: function (req) {
 
             if (!req) {
-                this.notify(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, {request: req, bytes: null}, new Error(null, "request is null", null));
+                EventBus.trigger(Events.LOADING_COMPLETED, {request: req, bytes: null, error:new Error(null, "request is null", null), sender:this});
             } else {
                 doLoad.call(this, req, RETRY_ATTEMPTS);
             }
@@ -252,7 +253,6 @@ FragmentLoader.prototype = {
 };
 
 FragmentLoader.eventList = {
-    ENAME_LOADING_COMPLETED: "loadingCompleted",
     ENAME_LOADING_PROGRESS: "loadingProgress",
     ENAME_CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted"
 };

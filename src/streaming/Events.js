@@ -71,21 +71,22 @@ let Events = (function() {
         PLAYBACK_SEEKING: "playbackSeeking",
         PLAYBACK_SEEKED: "playbackSeeked",
         PLAYBACK_STARTED: "playbackStarted",
-        WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated",
-        //Timed Text events
-        TIMED_TEXT_REQUESTED: "timedTextRequested",
         CAN_PLAY: "canPlay",
         PLAYBACK_PLAYING: "playbackPlaying",
         PLAYBACK_PAUSED: "playbackPaused",
         PLAYBACK_ENDED: "playbackEnded",
         PLAYBACK_ERROR: "playbackError",
+        TIMED_TEXT_REQUESTED: "timedTextRequested",
         WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated",
         // StreamController events
         STREAMS_COMPOSED: "streamsComposed",
         STREAM_TEARDOWN_COMPLETE: "streamTeardownComplete",
         // XLinkController events,
         XLINK_ALLELEMENTSLOADED: "xlinkAllElementsLoaded",
-        XLINK_READY: "xlinkReady"
+        XLINK_READY: "xlinkReady",
+        //FragmentLoader
+        LOADING_COMPLETED: "loadingCompleted"
+
     };
 }());
 

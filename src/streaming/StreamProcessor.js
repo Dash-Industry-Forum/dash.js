@@ -104,7 +104,7 @@ let StreamProcessor = function () {
             fragmentModel = this.getFragmentModel();
             fragmentModel.setLoader(fragmentLoader);
 
-            fragmentLoader.subscribe(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
+
             fragmentLoader.subscribe(FragmentLoader.eventList.ENAME_LOADING_PROGRESS, abrController);
 
             representationController.initialize(this);
@@ -220,7 +220,6 @@ let StreamProcessor = function () {
                 fragmentLoader = this.fragmentLoader;
 
 
-            fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_COMPLETED, fragmentModel);
             fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_LOADING_PROGRESS, abrController);
 
             fragmentModel.reset();

@@ -131,8 +131,10 @@ let FragmentModel = function () {
         },
 
         onLoadingCompleted = function(e) {
-            var request = e.data.request,
-                response = e.data.response,
+            if (e.sender !== this.fragmentLoader) return;
+
+            var request = e.request,
+                response = e.response,
                 error = e.error;
 
             loadingRequests.splice(loadingRequests.indexOf(request), 1);
@@ -162,8 +164,7 @@ let FragmentModel = function () {
         manifestExt:undefined,
 
         setup: function() {
-            this[FragmentLoader.eventList.ENAME_LOADING_COMPLETED] = onLoadingCompleted;
-
+            EventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, this);
             EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         },
 
@@ -312,6 +313,7 @@ let FragmentModel = function () {
         },
 
         reset: function() {
+            EventBus.off(Events.LOADING_COMPLETED, onLoadingCompleted, this);
             EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             this.abortRequests();
             context = null;
