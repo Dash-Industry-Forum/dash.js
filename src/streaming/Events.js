@@ -78,7 +78,8 @@ let Events = (function() {
         PLAYBACK_ERROR: "playbackError",        
         WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated",
         // StreamController events
-        STREAMS_COMPOSED: "streamsComposed"
+        STREAMS_COMPOSED: "streamsComposed",
+        STREAM_TEARDOWN_COMPLETE: "streamTeardownComplete"
     };
 }());
 

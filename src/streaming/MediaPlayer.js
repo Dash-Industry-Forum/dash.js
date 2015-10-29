@@ -39,6 +39,7 @@ import UTCTiming from '../dash/vo/UTCTiming.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
 import ManifestLoader from './ManifestLoader.js';
+import Events from './Events.js';
 
 let MediaPlayer = function (context) {
 
@@ -257,30 +258,28 @@ let MediaPlayer = function (context) {
             return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
         },
 
+        onStreamTeardownComplete = function(/* e */) {
+            // Finish rest of shutdown process
+            abrController.reset();
+            rulesController.reset();
+            playbackController.reset();
+            mediaController.reset();
+            streamController = null;
+            playing = false;
+            EventBus.off(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
+
+            resetting = false;
+            if (isReady.call(this)) {
+                doAutoPlay.call(this);
+            }
+        },
+
         resetAndPlay = function() {
             this.adapter.reset();
             if (playing && streamController) {
                 if (!resetting) {
                     resetting = true;
-
-                    var teardownComplete = {},
-                            self = this;
-                    teardownComplete[StreamController.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
-
-                        // Finish rest of shutdown process
-                        abrController.reset();
-                        rulesController.reset();
-                        playbackController.reset();
-                        mediaController.reset();
-                        streamController = null;
-                        playing = false;
-
-                        resetting = false;
-                        if (isReady.call(self)) {
-                            doAutoPlay.call(self);
-                        }
-                    };
-                    streamController.subscribe(StreamController.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
+                    EventBus.on(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
                     streamController.reset();
                 }
             } else {

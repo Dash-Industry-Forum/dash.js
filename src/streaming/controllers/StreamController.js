@@ -612,7 +612,7 @@ let StreamController = function () {
 
             // Teardown the protection system, if necessary
             if (!protectionController) {
-                this.notify(StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+                EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
             }
             else if (ownProtectionController) {
                 var teardownComplete = {},
@@ -631,7 +631,7 @@ let StreamController = function () {
                         });
                     }
 
-                    self.notify(StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+                    EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
                 };
                 protectionController.protectionModel.subscribe(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
                 protectionController.teardown();
@@ -639,7 +639,7 @@ let StreamController = function () {
                 protectionController.setMediaElement(null);
                 protectionController = null;
                 protectionData = null;
-                this.notify(StreamController.eventList.ENAME_TEARDOWN_COMPLETE);
+                EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
             }
         }
     };
@@ -648,10 +648,5 @@ let StreamController = function () {
 StreamController.prototype = {
     constructor: StreamController
 };
-
-StreamController.eventList = {    
-    ENAME_TEARDOWN_COMPLETE: "streamTeardownComplete"
-};
-
 
 export default StreamController;
