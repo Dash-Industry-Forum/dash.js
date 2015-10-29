@@ -69,6 +69,8 @@ let Events = (function() {
         PLAYBACK_RATE_CHANGED: "playbackRateChanged",
         PLAYBACK_SEEKING: "playbackSeeking",
         PLAYBACK_STARTED: "playbackStarted",
+        CAN_PLAY: "canPlay",
+        PLAYBACK_ERROR: "playbackError",
         WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated"
     };
 }());

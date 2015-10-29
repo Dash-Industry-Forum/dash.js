@@ -118,8 +118,6 @@ let MediaPlayer = function (context) {
             playing = true;
             this.debug.log("Playback initiated!");
             streamController = system.getObject("streamController");
-            playbackController.subscribe(PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
-            playbackController.subscribe(PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
             playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
 
             system.mapValue("liveDelayFragmentCount", liveDelayFragmentCount);
@@ -264,8 +262,6 @@ let MediaPlayer = function (context) {
             if (playing && streamController) {
                 if (!resetting) {
                     resetting = true;
-                    playbackController.unsubscribe(PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
-                    playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
 
                     var teardownComplete = {},
                             self = this;

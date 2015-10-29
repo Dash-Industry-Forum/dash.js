@@ -97,8 +97,8 @@ let StreamController = function () {
             startAutoPlay.call(this);
         },
 
-        onError = function (e) {
-            var code = e.data.error ? e.data.error.code : 0,
+        onPlaybackError = function (e) {
+            var code = e.error ? e.error.code : 0,
                 msg = "";
 
             if (code === -1) {
@@ -497,8 +497,9 @@ let StreamController = function () {
             this[Stream.eventList.ENAME_STREAM_BUFFERING_COMPLETED] = onStreamBufferingEnd;
             this[PlaybackController.eventList.ENAME_PLAYBACK_ENDED] = onEnded;
             this[TimeSyncController.eventList.ENAME_TIME_SYNCHRONIZATION_COMPLETED] = onTimeSyncAttemptCompleted;
-            this[PlaybackController.eventList.ENAME_CAN_PLAY] = onCanPlay;
-            this[PlaybackController.eventList.ENAME_PLAYBACK_ERROR] = onError;
+
+            EventBus.on(Events.CAN_PLAY, onCanPlay, this);
+            EventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
         },
 
         getAutoPlay: function () {
@@ -586,6 +587,8 @@ let StreamController = function () {
 
             EventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
             EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+            EventBus.off(Events.CAN_PLAY, onCanPlay, this);
+            EventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, this.manifestUpdater);
             this.playbackController.unsubscribe(PlaybackController.eventList.ENAME_PLAYBACK_ENDED, this);
 
