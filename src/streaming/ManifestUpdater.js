@@ -102,7 +102,7 @@ let ManifestUpdater = function () {
 
         onManifestLoaded = function(e) {
             if (!e.error) {
-                update.call(this, e.data.manifest);
+                update.call(this, e.manifest);
             }
         },
 
@@ -130,16 +130,15 @@ let ManifestUpdater = function () {
         setup: function () {
             // Listen to streamsComposed event to be aware that the streams have been composed
             EventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
-            this[ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = onManifestLoaded;
             EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
             EventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
+            EventBus.on(Events.MANIFEST_LOADED, onManifestLoaded, this);
         },
 
         initialize: function (loader) {
             isUpdating = false;
             isStopped = true;
             manifestLoader = loader;
-            manifestLoader.subscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
         },
 
         setManifest: function (m) {
@@ -154,10 +153,10 @@ let ManifestUpdater = function () {
             EventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
             EventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
             EventBus.off(Events.STREAMS_COMPOSED, onStreamsComposed, this);
+            EventBus.off(Events.MANIFEST_LOADED, onManifestLoaded, this);
             isStopped = true;
             isUpdating = false;
             clear.call(this);
-            manifestLoader.unsubscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
             refreshDelay = NaN;
         }
     };

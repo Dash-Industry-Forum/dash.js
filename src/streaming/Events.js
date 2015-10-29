@@ -30,8 +30,10 @@
  */
 let Events = (function() {
     return {
-        // ManifestUpdater events
+        // Manifest events
         MANIFEST_UPDATED: "manifestUpdated",
+        MANIFEST_LOADED: "manifestLoaded",
+
         // RepresentationController events
         DATA_UPDATE_COMPLETED: "dataUpdateCompleted",
         DATA_UPDATE_STARTED: "dataUpdateStarted",

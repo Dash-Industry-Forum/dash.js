@@ -980,19 +980,21 @@ let MediaPlayer = function (context) {
             (function(manifestUrl) {
                 var manifestLoader = system.getObject("manifestLoader"),
                     uriQueryFragModel = system.getObject("uriQueryFragModel"),
-                    cbObj = {};
-                manifestLoader.initialize();    
-                cbObj[ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = function(e) {
+                    self = this;
+
+                manifestLoader.initialize();
+
+                var handler = function(e) {
                     if (!e.error) {
-                        callback(e.data.manifest);
+                        callback(e.manifest);
                     } else {
                         callback(null, e.error);
                     }
-                    manifestLoader.unsubscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
+                    EventBus.off(Events.MANIFEST_LOADED, handler, self);
                     manifestLoader.reset();
                 };
 
-                manifestLoader.subscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, cbObj);
+                EventBus.on(Events.MANIFEST_LOADED, handler, self);
                 manifestLoader.load(uriQueryFragModel.parseURI(manifestUrl));
             })(url);
         },
