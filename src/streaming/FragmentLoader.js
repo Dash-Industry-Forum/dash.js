@@ -186,16 +186,14 @@ let FragmentLoader = function () {
 
             req.onload = function () {
                 if (req.status < 200 || req.status > 299) return;
-
                 isSuccessful = true;
+                EventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, {request: request, exists: true})
 
-                self.notify(FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, {request: request, exists: true});
             };
 
             req.onloadend = req.onerror = function () {
                 if (isSuccessful) return;
-
-                self.notify(FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, {request: request, exists: false});
+                EventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, {request: request, exists: false})
             };
 
             req.send();
@@ -221,7 +219,7 @@ let FragmentLoader = function () {
 
         checkForExistence: function(req) {
             if (!req) {
-                this.notify(FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, {request: req, exists: false});
+                EventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, {request: request, exists: false})
                 return;
             }
 
@@ -252,8 +250,5 @@ FragmentLoader.prototype = {
     constructor: FragmentLoader
 };
 
-FragmentLoader.eventList = {
-    ENAME_CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted"
-};
 
 export default FragmentLoader;

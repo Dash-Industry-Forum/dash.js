@@ -137,12 +137,12 @@ let AbrController = function () {
             return Math.min (idx , maxIdx);
         },
 
-        onFragmentLoadProgress = function(evt) {
+        onFragmentLoadProgress = function(e) {
 
             if (ScheduleController.LOADING_REQUEST_THRESHOLD === 0 && autoSwitchBitrate) { //check to see if there are parallel request or just one at a time.
 
                 var self = this,
-                    type = evt.data.request.mediaType,
+                    type = e.request.mediaType,
                     rules = self.abrRulesCollection.getRules(ABRRulesCollection.prototype.ABANDON_FRAGMENT_RULES),
                     scheduleController = streamProcessorDict[type].getScheduleController(),
                     fragmentModel = scheduleController.getFragmentModel(),
@@ -171,7 +171,7 @@ let AbrController = function () {
                         }
                     };
 
-                self.rulesController.applyRules(rules, streamProcessorDict[type], callback, evt, function(currentValue, newValue) {
+                self.rulesController.applyRules(rules, streamProcessorDict[type], callback, e, function(currentValue, newValue) {
                     return newValue;
                 });
             }

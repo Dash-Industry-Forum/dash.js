@@ -30,6 +30,8 @@
  */
 import SwitchRequest from '../SwitchRequest.js';
 import FragmentLoader from '../../FragmentLoader.js';
+import EventBus from '../../utils/EventBus.js';
+import Events from '../../Events.js';
 
 let LiveEdgeBinarySearchRule = function () {
     "use strict";
@@ -57,15 +59,15 @@ let LiveEdgeBinarySearchRule = function () {
                 findLiveEdge.call(self, searchTime, onSuccess, onError, req);
             } else {
                 var handler = function(e) {
-                    fragmentLoader.unsubscribe(FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
-                    if (e.data.exists) {
-                        onSuccess.call(self, e.data.request, searchTime);
+                    EventBus.off(Events.CHECK_FOR_EXISTENCE_COMPLETED, handler, self);
+                    if (e.exists) {
+                        onSuccess.call(self, e.request, searchTime);
                     } else {
-                        onError.call(self, e.data.request, searchTime);
+                        onError.call(self, e.request, searchTime);
                     }
                 };
 
-                fragmentLoader.subscribe(FragmentLoader.eventList.ENAME_CHECK_FOR_EXISTENCE_COMPLETED, self, handler);
+                EventBus.on(Events.CHECK_FOR_EXISTENCE_COMPLETED, handler, self);
                 fragmentLoader.checkForExistence(request);
             }
         },

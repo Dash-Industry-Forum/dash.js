@@ -86,7 +86,8 @@ let Events = (function() {
         XLINK_READY: "xlinkReady",
         //FragmentLoader
         LOADING_COMPLETED: "loadingCompleted",
-        LOADING_PROGRESS: "loadingProgress"
+        LOADING_PROGRESS: "loadingProgress",
+        CHECK_FOR_EXISTENCE_COMPLETED: "checkForExistenceCompleted"
 
     };
 }());
