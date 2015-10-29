@@ -132,13 +132,13 @@ let ManifestUpdater = function () {
             EventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
             EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
             EventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-            EventBus.on(Events.MANIFEST_LOADED, onManifestLoaded, this);
         },
 
         initialize: function (loader) {
             isUpdating = false;
             isStopped = true;
             manifestLoader = loader;
+            EventBus.on(Events.MANIFEST_LOADED, onManifestLoaded, this);
         },
 
         setManifest: function (m) {
