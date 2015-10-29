@@ -31,6 +31,8 @@
 import XlinkController from './controllers/XlinkController.js';
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
+import EventBus from './utils/EventBus.js';
+import Events from './Events.js';
 
 let ManifestLoader = function () {
     "use strict";
@@ -174,7 +176,7 @@ let ManifestLoader = function () {
             }
         },
         onXlinkReady = function(event) {
-            this.notify(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: event.data.manifest});
+            this.notify(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, {manifest: event.manifest});
         };
 
     return {
@@ -192,9 +194,15 @@ let ManifestLoader = function () {
             doLoad.call(this, url, RETRY_ATTEMPTS);
         },
         setup: function() {
-            onXlinkReady = onXlinkReady.bind(this);
             this.xlinkController = this.system.getObject("xlinkController");
-            this.xlinkController.subscribe(XlinkController.eventList.ENAME_XLINK_READY,this,onXlinkReady);
+        },
+
+        initialize: function() {
+            EventBus.on(Events.XLINK_READY, onXlinkReady, this);
+        },
+
+        reset: function() {
+            EventBus.off(Events.XLINK_READY, onXlinkReady, this);
         }
     };
 };

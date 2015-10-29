@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import XlinkLoader from '../XLinkLoader.js';
+import EventBus from '../utils/EventBus.js';
+import Events from '../Events.js';
 
 let XlinkController = function () {
     "use strict";
@@ -108,7 +110,7 @@ let XlinkController = function () {
 
             mergeElementsBack.call(this, resolveObject);
             if (resolveObject.resolveType === RESOLVE_TYPE_ONACTUATE) {
-                this.notify(XlinkController.eventList.ENAME_XLINK_READY, {manifest: manifest});
+                EventBus.trigger(Events.XLINK_READY, {manifest: manifest});
             }
             if (resolveObject.resolveType === RESOLVE_TYPE_ONLOAD) {
                 switch (resolveObject.type) {
@@ -127,7 +129,7 @@ let XlinkController = function () {
                         break;
                     case ELEMENT_TYPE_ADAPTATIONSET:
                         // TODO: Resolve SegmentList here
-                        this.notify(XlinkController.eventList.ENAME_XLINK_READY, {manifest: manifest});
+                        EventBus.trigger(Events.XLINK_READY, {manifest: manifest});
                         break;
                 }
             }
@@ -261,11 +263,6 @@ let XlinkController = function () {
 
 XlinkController.prototype = {
     constructor: XlinkController
-};
-
-XlinkController.eventList = {
-    ENAME_XLINK_ALLELEMENTSLOADED: "xlinkAllElementsLoaded",
-    ENAME_XLINK_READY: "xlinkReady"
 };
 
 export default XlinkController;

@@ -535,6 +535,7 @@ let StreamController = function () {
             EventBus.on(Events.CAN_PLAY, onCanPlay, this);
             EventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
             EventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
+            this.manifestLoader.initialize();
             this.manifestUpdater.initialize(this.manifestLoader);
         },
 
@@ -591,6 +592,7 @@ let StreamController = function () {
             // We need this later to notify users of protection system teardown
             var manifestUrl = (this.manifestModel.getValue()) ? this.manifestModel.getValue().url : null;
             this.manifestModel.setValue(null);
+            this.manifestLoader.reset();
 
             this.timelineConverter.reset();
             this.liveEdgeFinder.reset();

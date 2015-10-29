@@ -981,6 +981,7 @@ let MediaPlayer = function (context) {
                 var manifestLoader = system.getObject("manifestLoader"),
                     uriQueryFragModel = system.getObject("uriQueryFragModel"),
                     cbObj = {};
+                manifestLoader.initialize();    
                 cbObj[ManifestLoader.eventList.ENAME_MANIFEST_LOADED] = function(e) {
                     if (!e.error) {
                         callback(e.data.manifest);
@@ -988,6 +989,7 @@ let MediaPlayer = function (context) {
                         callback(null, e.error);
                     }
                     manifestLoader.unsubscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, this);
+                    manifestLoader.reset();
                 };
 
                 manifestLoader.subscribe(ManifestLoader.eventList.ENAME_MANIFEST_LOADED, cbObj);

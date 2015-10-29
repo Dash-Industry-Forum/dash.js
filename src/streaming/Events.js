@@ -81,7 +81,10 @@ let Events = (function() {
         STREAMS_COMPOSED: "streamsComposed",
         STREAM_TEARDOWN_COMPLETE: "streamTeardownComplete",
         // TextController events
-        CLOSED_CAPTIONING_REQUESTED: "closedCaptioningRequested"
+        CLOSED_CAPTIONING_REQUESTED: "closedCaptioningRequested",
+        // XLinkController events,
+        XLINK_ALLELEMENTSLOADED: "xlinkAllElementsLoaded",
+        XLINK_READY: "xlinkReady"
     };
 }());
 
