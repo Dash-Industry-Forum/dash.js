@@ -49,7 +49,6 @@ class ProtectionEvents extends EventsBase {
          */
         this.KEY_SYSTEM_ACCESS_COMPLETE = "keySystemAccessComplete";
 
-
         /**
          * Event ID for events delivered when a key system selection procedure
          * completes
@@ -57,7 +56,6 @@ class ProtectionEvents extends EventsBase {
          * @constant
          */
         this.KEY_SYSTEM_SELECTED = "keySystemSelected";
-
 
         /**
          * Event ID for events delivered when a HTMLMediaElement has been
@@ -82,12 +80,13 @@ class ProtectionEvents extends EventsBase {
          * @constant
          */
         this.KEY_MESSAGE = "keyMessage";
+
         /**
          * Event ID for events delivered when a new key has been added
          *
          * @constant
          * @deprecated The latest versions of the EME specification no longer
-         * use this event.  {@MediaPlayer.models.protectionModel.eventList.ENAME_KEY_STATUSES_CHANGED}
+         * use this event.  {@MediaPlayer.models.protectionModel.eventList.KEY_STATUSES_CHANGED}
          * is preferred.
          */
         this.KEY_ADDED = "keyAdded";
@@ -100,7 +99,6 @@ class ProtectionEvents extends EventsBase {
          */
         this.KEY_ERROR = "keyError";
 
-
         /**
          * Event ID for events delivered when a new key sessions creation
          * process has completed
@@ -108,6 +106,7 @@ class ProtectionEvents extends EventsBase {
          * @constant
          */
         this.KEY_SESSION_CREATED = "keySessionCreated";
+
         /**
          * Event ID for events delivered when a key session removal
          * process has completed
@@ -115,6 +114,7 @@ class ProtectionEvents extends EventsBase {
          * @constant
          */
         this.KEY_SESSION_REMOVED = "keySessionRemoved";
+
         /**
          * Event ID for events delivered when a key session close
          * process has completed
@@ -123,9 +123,21 @@ class ProtectionEvents extends EventsBase {
          */
         this.KEY_SESSION_CLOSED = "keySessionClosed";
 
+        /**
+         * Event ID for events delivered when the status of one or more
+         * decryption keys has changed
+         *
+         * @constant
+         */
+        this.KEY_STATUSES_CHANGED = "keyStatusesChanged";
 
-
-
+        /**
+         * Event ID for events delivered when the process of shutting down
+         * a protection set has completed
+         *
+         * @constant
+         */
+        this.TEARDOWN_COMPLETE =  "protectionTeardownComplete";
     }
 }
 

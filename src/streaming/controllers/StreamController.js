@@ -595,10 +595,9 @@ let StreamController = function () {
                 EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
             }
             else if (ownProtectionController) {
-                var teardownComplete = {},
-                        self = this;
-                teardownComplete[ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE] = function () {
-
+                var self = this;
+                var onTeardownComplete = function () {
+                    EventBus.off(Events.TEARDOWN_COMPLETE, onTeardownComplete, self);
                     // Complete teardown process
                     ownProtectionController = false;
                     protectionController = null;
@@ -613,7 +612,7 @@ let StreamController = function () {
 
                     EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
                 };
-                protectionController.protectionModel.subscribe(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE, teardownComplete, undefined, true);
+                EventBus.on(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
                 protectionController.teardown();
             } else {
                 protectionController.setMediaElement(null);

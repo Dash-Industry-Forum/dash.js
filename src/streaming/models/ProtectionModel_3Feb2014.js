@@ -174,10 +174,9 @@ let ProtectionModel_3Feb2014 = function () {
                 if (videoElement) {
                     videoElement.removeEventListener(api.needkey, eventHandler);
                 }
-                this.notify(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
+                EventBus.trigger(Events.TEARDOWN_COMPLETE);
             } catch (error) {
-                this.notify(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE,
-                        null, "Error tearing down key sessions and MediaKeys! -- " + error.message);
+                EventBus.trigger(Events.TEARDOWN_COMPLETE, {error:"Error tearing down key sessions and MediaKeys! -- " + error.message});
             }
         },
 

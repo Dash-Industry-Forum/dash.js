@@ -446,14 +446,11 @@ let ProtectionController = function () {
             EventBus.on(Events.KEY_SESSION_CREATED, onKeySessionCreated, this);
             EventBus.on(Events.KEY_SESSION_CLOSED, onKeySessionClosed, this);
             EventBus.on(Events.KEY_SESSION_REMOVED, onKeySessionRemoved, this);
-
-            this[ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED] = onKeyStatusesChanged.bind(this);
+            EventBus.on(Events.KEY_STATUSES_CHANGED, onKeyStatusesChanged, this);
 
             keySystems = this.protectionExt.getKeySystems();
             this.protectionModel = this.system.getObject("protectionModel");
             this.protectionModel.init();
-
-            this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED, this);
         },
 
         /**
@@ -557,8 +554,8 @@ let ProtectionController = function () {
             EventBus.off(Events.KEY_SESSION_CREATED, onKeySessionCreated, this);
             EventBus.off(Events.KEY_SESSION_CLOSED, onKeySessionClosed, this);
             EventBus.off(Events.KEY_SESSION_REMOVED, onKeySessionRemoved, this);
+            EventBus.off(Events.KEY_STATUSES_CHANGED, onKeyStatusesChanged, this);
 
-            this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED, this);
             this.keySystem = undefined;
 
             this.protectionModel.teardown();

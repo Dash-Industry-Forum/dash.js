@@ -136,8 +136,7 @@ let ProtectionModel_21Jan2015 = function () {
                 handleEvent: function(event) {
                     switch (event.type) {
                         case "keystatuseschange":
-                            self.notify(ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED,
-                                    this);
+                            EventBus.trigger(Events.KEY_STATUSES_CHANGED, {data:this});
                             break;
 
                         case "message":
@@ -210,10 +209,10 @@ let ProtectionModel_21Jan2015 = function () {
                         if (videoElement) {
                             videoElement.removeEventListener("encrypted", eventHandler);
                             videoElement.setMediaKeys(null).then(function () {
-                                self.notify(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
+                                EventBus.trigger(Events.TEARDOWN_COMPLETE);
                             });
                         } else {
-                            self.notify(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
+                            EventBus.trigger(Events.TEARDOWN_COMPLETE);
                         }
                     }
                 };
@@ -233,7 +232,7 @@ let ProtectionModel_21Jan2015 = function () {
                     })(session);
                 }
             } else {
-                this.notify(ProtectionModel.eventList.ENAME_TEARDOWN_COMPLETE);
+                EventBus.trigger(Events.TEARDOWN_COMPLETE);
             }
         },
 

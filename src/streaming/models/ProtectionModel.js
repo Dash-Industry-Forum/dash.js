@@ -172,35 +172,6 @@ let ProtectionModel = function() { };
 
 
 /**
- * Event IDs for events sent by ProtectionModel implementations. Use these
- * event names when subscribing or unsubscribing from ProtectionModel events.
- *
- * @enum {String}
- */
-ProtectionModel.eventList = {
-
-
-
-
-
-
-    /**
-     * Event ID for events delivered when the status of one or more
-     * decryption keys has changed
-     *
-     * @constant
-     */
-    ENAME_KEY_STATUSES_CHANGED: "keyStatusesChanged",
-    /**
-     * Event ID for events delivered when the process of shutting down
-     * a protection set has completed
-     *
-     * @constant
-     */
-    ENAME_TEARDOWN_COMPLETE: "protectionTeardownComplete",
-};
-
-/**
  * needkey/encrypted event
  */
 
