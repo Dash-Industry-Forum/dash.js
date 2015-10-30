@@ -30,6 +30,8 @@
  */
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
+import EventBus from '../streaming/utils/EventBus.js';
+import Events from '../streaming/Events.js';
 
 let XlinkLoader = function () {
     "use strict";
@@ -72,16 +74,15 @@ let XlinkLoader = function () {
 
                 if (content) {
                     element.resolvedContent = content;
-                    self.notify(XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
-                        element: element,
-                        resolveObject: resolveObject
-                    });
+                    EventBus.trigger(Events.XLINK_ELEMENT_LOADED, {element: element, resolveObject: resolveObject});
                 } else {
                     element.resolvedContent = null;
-                    self.notify(XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
-                        element: element,
-                        resolveObject: resolveObject
-                    }, new Error(null, "Failed loading Xlink element: " + url, null));
+                    EventBus.trigger(Events.XLINK_ELEMENT_LOADED,
+                        {
+                            element: element,
+                            resolveObject: resolveObject,
+                            error:new Error(null, "Failed loading Xlink element: " + url, null)
+                        });
                 }
             };
 
@@ -115,10 +116,12 @@ let XlinkLoader = function () {
                     self.errHandler.downloadError("xlink", url, request);
                     element.resolved = true;
                     element.resolvedContent = null;
-                    self.notify(XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
-                        element: element,
-                        resolveObject: resolveObject
-                    }, new Error("Failed loading xlink Element: " + url + " no retry attempts left"));
+                    EventBus.trigger(Events.XLINK_ELEMENT_LOADED,
+                        {
+                            element: element,
+                            resolveObject: resolveObject,
+                            error:new Error("Failed loading xlink Element: " + url + " no retry attempts left")
+                        });
                 }
             };
 
@@ -149,19 +152,13 @@ let XlinkLoader = function () {
         errHandler: undefined,
         metricsModel: undefined,
         requestModifierExt: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
 
         load: function (url, element, resolveObject) {
             // Error handling: resolveToZero, no valid url
             if (url === RESOLVE_TO_ZERO) {
                 element.resolvedContent = null;
                 element.resolved = true;
-                this.notify(XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, {
-                    element: element,
-                    resolveObject: resolveObject
-                });
+                EventBus.trigger(Events.XLINK_ELEMENT_LOADED, {element: element, resolveObject: resolveObject});
             } else {
                 doLoad.call(this, url, element, resolveObject, RETRY_ATTEMPTS);
             }
@@ -173,9 +170,6 @@ XlinkLoader.prototype = {
     constructor: XlinkLoader
 };
 
-XlinkLoader.eventList = {
-    ENAME_XLINKELEMENT_LOADED: "xlinkElementLoaded"
-};
 
 
 export default XlinkLoader;

@@ -89,8 +89,8 @@ let XlinkController = function () {
                 closingTag = '</response>',
                 mergedContent = '';
 
-            element = event.data.element;
-            resolveObject = event.data.resolveObject;
+            element = event.element;
+            resolveObject = event.resolveObject;
             // if the element resolved into content parse the content
             if (element.resolvedContent) {
                 // we add a parent elements so the converter is able to parse multiple elements of the same type which are not wrapped inside a container
@@ -229,13 +229,9 @@ let XlinkController = function () {
 
     return {
         xlinkLoader: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
 
         setup: function () {
-            onXlinkElementLoaded = onXlinkElementLoaded.bind(this);
-            this.xlinkLoader.subscribe(XlinkLoader.eventList.ENAME_XLINKELEMENT_LOADED, this, onXlinkElementLoaded);
+            EventBus.on(Events.XLINK_ELEMENT_LOADED, onXlinkElementLoaded, this);
         },
         /**
          * <p>Triggers the resolution of the xlink.onLoad attributes in the manifest file </p>

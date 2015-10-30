@@ -84,8 +84,9 @@ let Events = (function() {
         STREAMS_COMPOSED: "streamsComposed",
         STREAM_TEARDOWN_COMPLETE: "streamTeardownComplete",
         STREAM_BUFFERING_COMPLETED: "streamBufferingCompleted",
-        // XLinkController events,
-        XLINK_ALLELEMENTSLOADED: "xlinkAllElementsLoaded",
+        // XLink events,
+        XLINK_ALL_ELEMENTS_LOADED: "xlinkAllElementsLoaded",
+        XLINK_ELEMENT_LOADED: "xlinkElementLoaded",
         XLINK_READY: "xlinkReady",
         //FragmentLoader
         LOADING_COMPLETED: "loadingCompleted",
