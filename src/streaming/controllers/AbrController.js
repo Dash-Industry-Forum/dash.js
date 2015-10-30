@@ -183,10 +183,10 @@ MediaPlayer.dependencies.AbrController = function () {
         },
 
         onFragmentLoadProgress = function(evt) {
-            if (MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD === 0 && autoSwitchBitrate) { //check to see if there are parallel request or just one at a time.
-                var self = this,
-                    type = evt.data.request.mediaType,
-                    rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.ABANDON_FRAGMENT_RULES),
+            var self = this,
+                type = evt.data.request.mediaType;
+            if (MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD === 0 && autoSwitchBitrate[type] && streamProcessorDict[type]) { //check to see if there are parallel request or just one at a time.
+                    var rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.ABANDON_FRAGMENT_RULES),
                     schduleController = streamProcessorDict[type].getScheduleController(),
                     fragmentModel = schduleController.getFragmentModel(),
                     callback = function (switchRequest) {
@@ -320,7 +320,7 @@ MediaPlayer.dependencies.AbrController = function () {
 
 
             //self.log("ABR enabled? (" + autoSwitchBitrate + ")");
-            if (!autoSwitchBitrate) return;
+            if (!autoSwitchBitrate[type]) return;
 
             //self.log("Check ABR rules.");
             rules = self.abrRulesCollection.getRules(MediaPlayer.rules.ABRRulesCollection.prototype.QUALITY_SWITCH_RULES);
