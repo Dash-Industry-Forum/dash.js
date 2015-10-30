@@ -127,8 +127,7 @@ let ProtectionModel_3Feb2014 = function () {
                             break;
 
                         case api.close:
-                            self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED,
-                                    this.getSessionID());
+                            EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:this.getSessionID()});
                             break;
                     }
                 },
@@ -302,8 +301,7 @@ let ProtectionModel_3Feb2014 = function () {
 
             // Add to our session list
             sessions.push(sessionToken);
-
-            this.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, sessionToken);
+            EventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
         },
 
         updateKeySession: function(sessionToken, message) {

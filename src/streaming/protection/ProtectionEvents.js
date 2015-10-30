@@ -100,6 +100,32 @@ class ProtectionEvents extends EventsBase {
          */
         this.KEY_ERROR = "keyError";
 
+
+        /**
+         * Event ID for events delivered when a new key sessions creation
+         * process has completed
+         *
+         * @constant
+         */
+        this.KEY_SESSION_CREATED = "keySessionCreated";
+        /**
+         * Event ID for events delivered when a key session removal
+         * process has completed
+         *
+         * @constant
+         */
+        this.KEY_SESSION_REMOVED = "keySessionRemoved";
+        /**
+         * Event ID for events delivered when a key session close
+         * process has completed
+         *
+         * @constant
+         */
+        this.KEY_SESSION_CLOSED = "keySessionClosed";
+
+
+
+
     }
 }
 

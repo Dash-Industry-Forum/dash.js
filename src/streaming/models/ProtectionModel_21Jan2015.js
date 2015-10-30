@@ -171,8 +171,7 @@ let ProtectionModel_21Jan2015 = function () {
             // Register callback for session closed Promise
             session.closed.then(function () {
                 removeSession(token);
-                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED,
-                        token.getSessionID());
+                EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:token.getSessionID()});
             });
 
             // Add to our session list
@@ -309,12 +308,11 @@ let ProtectionModel_21Jan2015 = function () {
             // Generate initial key request
             var self = this;
             session.generateRequest("cenc", initData).then(function() {
-                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, sessionToken);
+                EventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
             }).catch(function(error) {
                 // TODO: Better error string
                 removeSession(sessionToken);
-                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED,
-                        null, "Error generating key request -- " + error.name);
+                EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Error generating key request -- " + error.name});
             });
         },
 
@@ -338,35 +336,26 @@ let ProtectionModel_21Jan2015 = function () {
             }
 
             var session = mediaKeys.createSession();
-
             // Load persisted session data into our newly created session object
-            var self = this;
             session.load(sessionID).then(function (success) {
                 if (success) {
                     var sessionToken = createSessionToken.call(this, session);
-                    self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED,
-                        sessionToken);
+                    EventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
                 } else {
-                    self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED,
-                        null, "Could not load session! Invalid Session ID (" + sessionID + ")");
+                    EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Could not load session! Invalid Session ID (" + sessionID + ")"});
                 }
             }).catch(function (error) {
-                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED,
-                        null, "Could not load session (" + sessionID + ")! " + error.name);
+                EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Could not load session (" + sessionID + ")! " + error.name});
             });
         },
 
         removeKeySession: function(sessionToken) {
-
             var session = sessionToken.session;
-
-            var self = this;
             session.remove().then(function () {
-                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED,
-                        sessionToken.getSessionID());
+                EventBus.trigger(Events.KEY_SESSION_REMOVED, {data:sessionToken.getSessionID()});
             }, function (error) {
-                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED,
-                        null, "Error removing session (" + sessionToken.getSessionID() + "). " + error.name);
+                EventBus.trigger(Events.KEY_SESSION_REMOVED, {data:null, error:"Error removing session (" + sessionToken.getSessionID() + "). " + error.name});
+
             });
         },
 
@@ -376,8 +365,7 @@ let ProtectionModel_21Jan2015 = function () {
             var self = this;
             closeKeySessionInternal(sessionToken).catch(function(error) {
                 removeSession(sessionToken);
-                self.notify(ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED,
-                        null, "Error closing session (" + sessionToken.getSessionID() + ") " + error.name);
+                EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:null, error:"Error closing session (" + sessionToken.getSessionID() + ") " + error.name});
             });
         }
     };

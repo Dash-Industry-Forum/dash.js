@@ -95,7 +95,7 @@ let ProtectionModel = function() { };
 
 /**
  * Creates a new key session using the given initData and type. Sends
- * ENAME_KEY_SESSION_CREATED event with MediaPlayer.vo.protection.SessionToken
+ * KEY_SESSION_CREATED event with MediaPlayer.vo.protection.SessionToken
  * as data.
  *
  * @function
@@ -121,7 +121,7 @@ let ProtectionModel = function() { };
 
 /**
  * Loads the persisted key session data associated with the given sessionID
- * into a new session.  Sends ENAME_KEY_SESSION_CREATED event with
+ * into a new session.  Sends KEY_SESSION_CREATED event with
  * {@MediaPlayer.vo.protection.SessionToken} as data.
  *
  * @function
@@ -132,7 +132,7 @@ let ProtectionModel = function() { };
 
 /**
  * Removes any persisted key session data associated with the given session.
- * Also closes the session.  Sends ENAME_KEY_SESSION_REMOVED and
+ * Also closes the session.  Sends KEY_SESSION_REMOVED and
  * ENAME_KEY_SESSION_CLOSED with sessionID as data
  *
  * @function
@@ -143,7 +143,7 @@ let ProtectionModel = function() { };
 
 /**
  * Close the given session and release all associated keys.  Following
- * this call, the sessionToken becomes invalid.  Sends ENAME_KEY_SESSION_CLOSED
+ * this call, the sessionToken becomes invalid.  Sends KEY_SESSION_CLOSED
  * with sessionID as data
  *
  * @function
@@ -183,27 +183,7 @@ ProtectionModel.eventList = {
 
 
 
-    /**
-     * Event ID for events delivered when a new key sessions creation
-     * process has completed
-     *
-     * @constant
-     */
-    ENAME_KEY_SESSION_CREATED: "keySessionCreated",
-    /**
-     * Event ID for events delivered when a key session removal
-     * process has completed
-     *
-     * @constant
-     */
-    ENAME_KEY_SESSION_REMOVED: "keySessionRemoved",
-    /**
-     * Event ID for events delivered when a key session close
-     * process has completed
-     *
-     * @constant
-     */
-    ENAME_KEY_SESSION_CLOSED: "keySessionClosed",
+
     /**
      * Event ID for events delivered when the status of one or more
      * decryption keys has changed
