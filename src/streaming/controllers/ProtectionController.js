@@ -97,8 +97,8 @@ let ProtectionController = function () {
 
                         // Ensure that we would be granted key system access using the key
                         // system and codec information
-                        var ksAccess = {};
-                        ksAccess[ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
+                        let onKeySystemAccessComplete = function(event) {
+                            EventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                             if (event.error) {
                                 if (!fromManifest) {
                                     EventBus.dispatchEvent({
@@ -115,7 +115,7 @@ let ProtectionController = function () {
                                 self.createKeySession(supportedKS[ksIdx].initData);
                             }
                         };
-                        this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, ksAccess, undefined, true);
+                        EventBus.on(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                         this.protectionModel.requestKeySystemAccess(requestedKeySystems);
                         break;
                     }
@@ -131,12 +131,12 @@ let ProtectionController = function () {
                     requestedKeySystems.push({ks: supportedKS[i].ks, configs: [ksConfig]});
                 }
 
-                var ksSelected = {},
-                    keySystemAccess;
-                ksSelected[ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE] = function(event) {
+                var keySystemAccess;
+                var onKeySystemAccessComplete = function(event) {
+                    EventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                     if (event.error) {
                         self.keySystem = undefined;
-                        self.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected);
+                        EventBus.off(Events.KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
                         if (!fromManifest) {
                             EventBus.dispatchEvent({
                                 type: ProtectionController.events.KEY_SYSTEM_SELECTED,
@@ -149,7 +149,9 @@ let ProtectionController = function () {
                         self.protectionModel.selectKeySystem(keySystemAccess);
                     }
                 };
-                ksSelected[ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED] = function(event) {
+                var onKeySystemSelected = function(event) {
+                    EventBus.off(Events.KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+                    EventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                     if (!event.error) {
                         self.keySystem = self.protectionModel.keySystem;
                         EventBus.dispatchEvent({
@@ -174,9 +176,8 @@ let ProtectionController = function () {
                         }
                     }
                 };
-                this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED, ksSelected, undefined, true);
-                this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE, ksSelected, undefined, true);
-
+                EventBus.on(Events.KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+                EventBus.on(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                 this.protectionModel.requestKeySystemAccess(requestedKeySystems);
             } else {
                 // We are in the process of selecting a key system, so just save the data
@@ -803,13 +804,7 @@ let ProtectionController = function () {
  * @see ProtectionController#addEventListener
  */
 ProtectionController.events = {
-    /**
-     * Event ID for events delivered when a key system selection procedure
-     * has completed
-     *
-     * @constant
-     */
-    KEY_SYSTEM_SELECTED: "keySystemSelected",
+
     /**
      * Event ID for events delivered when the protection set receives
      * a key message from the CDM

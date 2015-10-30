@@ -40,6 +40,23 @@ class ProtectionEvents extends EventsBase {
          * @constant
          */
         this.NEED_KEY = "needkey";
+
+        /**
+         * Event ID for events delivered when a key system access procedure
+         * has completed
+         *
+         * @constant
+         */
+        this.KEY_SYSTEM_ACCESS_COMPLETE = "keySystemAccessComplete";
+
+
+        /**
+         * Event ID for events delivered when a key system selection procedure
+         * completes
+         *
+         * @constant
+         */
+        this.KEY_SYSTEM_SELECTED = "keySystemSelected";
     }
 }
 

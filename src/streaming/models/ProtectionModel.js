@@ -180,20 +180,6 @@ let ProtectionModel = function() { };
 ProtectionModel.eventList = {
 
     /**
-     * Event ID for events delivered when a key system access procedure
-     * has completed
-     *
-     * @constant
-     */
-    ENAME_KEY_SYSTEM_ACCESS_COMPLETE: "keySystemAccessComplete",
-    /**
-     * Event ID for events delivered when a key system selection procedure
-     * completes
-     *
-     * @constant
-     */
-    ENAME_KEY_SYSTEM_SELECTED: "keySystemSelected",
-    /**
      * Event ID for events delivered when a HTMLMediaElement has been
      * associated with the protection set
      *

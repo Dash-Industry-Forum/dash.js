@@ -67,14 +67,13 @@ let ProtectionModel_21Jan2015 = function () {
                             mediaKeySystemAccess.getConfiguration() : null;
                     var keySystemAccess = new KeySystemAccess(keySystem, configuration);
                     keySystemAccess.mksa = mediaKeySystemAccess;
-                    self.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
-                            keySystemAccess);
+                    EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data:keySystemAccess});
+
                 }).catch(function() {
                     if (++i < ksConfigurations.length) {
                         requestKeySystemAccessInternal.call(self, ksConfigurations, i);
                     } else {
-                        self.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
-                                null, "Key system access denied!");
+                        EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:"Key system access denied!"});
                     }
                 });
             })(idx);
@@ -261,12 +260,10 @@ let ProtectionModel_21Jan2015 = function () {
                 if (videoElement) {
                     videoElement.setMediaKeys(mediaKeys);
                 }
-                self.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
+                EventBus.trigger(Events.KEY_SYSTEM_SELECTED);
 
             }).catch(function() {
-                self.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED,
-                        null, "Error selecting keys system (" + keySystemAccess.keySystem.systemString + ")! Could not create MediaKeys -- TODO");
-
+                EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {error:"Error selecting keys system (" + keySystemAccess.keySystem.systemString + ")! Could not create MediaKeys -- TODO"});
             });
         },
 

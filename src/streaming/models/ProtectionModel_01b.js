@@ -316,21 +316,18 @@ let ProtectionModel_01b = function () {
                     found = true;
                     var ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
                     var ks = this.protectionExt.getKeySystemBySystemString(systemString);
-                    var ksAccess = new KeySystemAccess(ks, ksConfig);
-                    this.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
-                            ksAccess);
+                    EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data:new KeySystemAccess(ks, ksConfig)})
                     break;
                 }
             }
             if (!found) {
-                this.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_ACCESS_COMPLETE,
-                        null, "Key system access denied! -- No valid audio/video content configurations detected!");
+                EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:"Key system access denied! -- No valid audio/video content configurations detected!"});
             }
         },
 
         selectKeySystem: function(keySystemAccess) {
             this.keySystem = keySystemAccess.keySystem;
-            this.notify(ProtectionModel.eventList.ENAME_KEY_SYSTEM_SELECTED);
+            EventBus.trigger(Events.KEY_SYSTEM_SELECTED);
         },
 
         setMediaElement: function(mediaElement) {
