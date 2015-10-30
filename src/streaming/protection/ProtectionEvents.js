@@ -28,11 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventsBase from '../core/events/EventsBase.js';
+import EventsBase from '../../core/events/EventsBase.js';
 
-class AllEvents extends EventsBase {
+class ProtectionEvents extends EventsBase {
+    constructor () {
+        super();
+        //protection model
+        /**
+         * Event ID for needkey/encrypted events
+         *
+         * @constant
+         */
+        this.NEED_KEY = "needkey";
+    }
 }
 
-let Events = new AllEvents();
-
-export default Events;
+export default ProtectionEvents;

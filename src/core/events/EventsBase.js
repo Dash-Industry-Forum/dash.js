@@ -28,11 +28,18 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventsBase from '../core/events/EventsBase.js';
+class EventsBase {
+    extend (extraEvents, config) {
+            if (!extraEvents) return;
 
-class AllEvents extends EventsBase {
+            var override = config ? config.override : false;
+
+            for (var evt in extraEvents) { 
+                if (!extraEvents.hasOwnProperty(evt) || (this[evt] && !override)) continue;
+    
+                this[evt] = extraEvents[evt];
+            }
+        }
 }
 
-let Events = new AllEvents();
-
-export default Events;
+export default EventsBase;
