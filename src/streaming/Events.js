@@ -30,9 +30,9 @@
  */
 import EventsBase from '../core/events/EventsBase.js';
 
-class AllEvents extends EventsBase {
+class Events extends EventsBase {
 }
 
-let Events = new AllEvents();
+let events = new Events();
 
-export default Events;
+export default events;
