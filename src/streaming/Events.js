@@ -84,7 +84,6 @@ let Events = (function() {
         STREAMS_COMPOSED: "streamsComposed",
         STREAM_TEARDOWN_COMPLETE: "streamTeardownComplete",
         STREAM_BUFFERING_COMPLETED: "streamBufferingCompleted",
-
         // XLinkController events,
         XLINK_ALLELEMENTSLOADED: "xlinkAllElementsLoaded",
         XLINK_READY: "xlinkReady",
@@ -95,10 +94,10 @@ let Events = (function() {
         //SourceBuffer
         SOURCEBUFFER_APPEND_COMPLETED: "sourceBufferAppendCompleted",
         SOURCEBUFFER_REMOVE_COMPLETED: "sourceBufferRemoveCompleted",
-
         //TimeSync
-        TIME_SYNCHRONIZATION_COMPLETED: "timeSynchronizationComplete"
-
+        TIME_SYNCHRONIZATION_COMPLETED: "timeSynchronizationComplete",
+        //VirtualBuffer
+        CHUNK_APPENDED: "chunkAppended"
     };
 }());
 

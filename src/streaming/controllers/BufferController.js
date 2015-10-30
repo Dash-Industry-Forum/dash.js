@@ -551,11 +551,10 @@ let BufferController = function () {
             checkIfBufferingCompleted.call(this);
         },
 
-        onChunkAppended = function(/*e*/) {
+        onChunkAppended = function(e) {
+            if(e.sender !== this.virtualBuffer) return;
             addBufferMetrics.call(this);
         },
-
-
 
         onCurrentTrackChanged = function(e) {
             if (!buffer || e.newMediaInfo.streamInfo !== this.streamProcessor.getStreamInfo()) return;
@@ -623,18 +622,10 @@ let BufferController = function () {
             EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
             EventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
-
-            //onAppended = onAppended.bind(this);
-            //onRemoved = onRemoved.bind(this);
-            onChunkAppended = onChunkAppended.bind(this);
-
             EventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
             EventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+            EventBus.on(Events.CHUNK_APPENDED, onChunkAppended, this);
 
-            //this.sourceBufferExt.subscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);
-            //this.sourceBufferExt.subscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, this, onRemoved);
-
-            this.virtualBuffer.subscribe(VirtualBuffer.eventList.CHUNK_APPENDED, this, onChunkAppended);
         },
 
         initialize: function (typeValue, source, streamProcessor) {
@@ -723,6 +714,7 @@ let BufferController = function () {
             EventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
             EventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
             EventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+            EventBus.off(Events.CHUNK_APPENDED, onChunkAppended, this);
 
             criticalBufferLevel = Number.POSITIVE_INFINITY;
             bufferState = BufferController.BUFFER_EMPTY;
@@ -731,10 +723,7 @@ let BufferController = function () {
             lastIndex = -1;
             maxAppendedIndex = -1;
             requiredQuality = 0;
-            //this.sourceBufferExt.unsubscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_APPEND_COMPLETED, this, onAppended);
-            //this.sourceBufferExt.unsubscribe(SourceBufferExtensions.eventList.ENAME_SOURCEBUFFER_REMOVE_COMPLETED, this, onRemoved);
             appendedBytesInfo = null;
-            this.virtualBuffer.unsubscribe(VirtualBuffer.eventList.CHUNK_APPENDED, this, onChunkAppended);
             appendingMediaChunk = false;
             isBufferingCompleted = false;
             isAppendingInProgress = false;

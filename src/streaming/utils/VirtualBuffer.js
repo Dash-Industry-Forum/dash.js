@@ -34,6 +34,8 @@
  */
 import CustomTimeRanges from './CustomTimeRanges.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
+import EventBus from './EventBus.js';
+import Events from "../Events.js";
 
 let VirtualBuffer = function () {
     var data = {},
@@ -126,9 +128,6 @@ let VirtualBuffer = function () {
     return {
         system:undefined,
         sourceBufferExt: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
 
         /**
          * Adds DataChunk to array of chunks
@@ -148,7 +147,7 @@ let VirtualBuffer = function () {
 
             if (!isNaN(start) && !isNaN(end)) {
                 data[streamId][mediaType].calculatedBufferedRanges.add(start, end);
-                this.notify(VirtualBuffer.eventList.CHUNK_APPENDED, {chunk: chunk});
+                EventBus.trigger(Events.CHUNK_APPENDED, {chunk: chunk, sender:this});
             }
         },
 
@@ -360,8 +359,5 @@ VirtualBuffer.prototype = {
     constructor: VirtualBuffer
 };
 
-VirtualBuffer.eventList = {
-    CHUNK_APPENDED: "chunkAppended"
-};
 
 export default VirtualBuffer;
