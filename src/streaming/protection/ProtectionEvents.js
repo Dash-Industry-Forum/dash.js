@@ -82,6 +82,23 @@ class ProtectionEvents extends EventsBase {
          * @constant
          */
         this.KEY_MESSAGE = "keyMessage";
+        /**
+         * Event ID for events delivered when a new key has been added
+         *
+         * @constant
+         * @deprecated The latest versions of the EME specification no longer
+         * use this event.  {@MediaPlayer.models.protectionModel.eventList.ENAME_KEY_STATUSES_CHANGED}
+         * is preferred.
+         */
+        this.KEY_ADDED = "keyAdded";
+
+        /**
+         * Event ID for events delivered when an error is encountered by the CDM
+         * while processing a license server response message
+         *
+         * @constant
+         */
+        this.KEY_ERROR = "keyError";
 
     }
 }

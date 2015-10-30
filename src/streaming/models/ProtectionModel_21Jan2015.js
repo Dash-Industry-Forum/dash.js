@@ -328,8 +328,7 @@ let ProtectionModel_21Jan2015 = function () {
                 message = message.toJWK();
             }
             session.update(message).catch(function (error) {
-                self.notify(ProtectionModel.eventList.ENAME_KEY_ERROR,
-                    new KeyError(sessionToken, "Error sending update() message! " + error.name));
+                EventBus.trigger(Events.KEY_ERROR, {data:new KeyError(sessionToken, "Error sending update() message! " + error.name)});
             });
         },
 

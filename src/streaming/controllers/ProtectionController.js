@@ -441,10 +441,10 @@ let ProtectionController = function () {
             EventBus.on(Events.SERVER_CERTIFICATE_UPDATED, onServerCertificateUpdated, this);
             EventBus.on(Events.NEED_KEY, onNeedKey, this);
             EventBus.on(Events.KEY_MESSAGE, onKeyMessage, this);
+            EventBus.on(Events.KEY_ADDED, onKeyAdded, this);
+            EventBus.on(Events.KEY_ERROR, onKeyError, this);
 
 
-            this[ProtectionModel.eventList.ENAME_KEY_ADDED] = onKeyAdded.bind(this);
-            this[ProtectionModel.eventList.ENAME_KEY_ERROR] = onKeyError.bind(this);
             this[ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED] = onKeySessionCreated.bind(this);
             this[ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED] = onKeySessionClosed.bind(this);
             this[ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED] = onKeySessionRemoved.bind(this);
@@ -454,9 +454,7 @@ let ProtectionController = function () {
             this.protectionModel = this.system.getObject("protectionModel");
             this.protectionModel.init();
 
-             //Subscribe to events
-            this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_ADDED, this);
-            this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_ERROR, this);
+
             this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
             this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
             this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
@@ -559,10 +557,9 @@ let ProtectionController = function () {
             this.setMediaElement(null);
             EventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onServerCertificateUpdated, this);
             EventBus.off(Events.KEY_MESSAGE, onKeyMessage, this);
+            EventBus.off(Events.KEY_ADDED, onKeyAdded, this);
+            EventBus.off(Events.KEY_ERROR, onKeyError, this);
 
-
-            this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_ADDED, this);
-            this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_ERROR, this);
             this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
             this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
             this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);

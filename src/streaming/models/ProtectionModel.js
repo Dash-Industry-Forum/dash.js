@@ -181,22 +181,8 @@ ProtectionModel.eventList = {
 
 
 
-    /**
-     * Event ID for events delivered when a new key has been added
-     *
-     * @constant
-     * @deprecated The latest versions of the EME specification no longer
-     * use this event.  {@MediaPlayer.models.protectionModel.eventList.ENAME_KEY_STATUSES_CHANGED}
-     * is preferred.
-     */
-    ENAME_KEY_ADDED: "keyAdded",
-    /**
-     * Event ID for events delivered when an error is encountered by the CDM
-     * while processing a license server response message
-     *
-     * @constant
-     */
-    ENAME_KEY_ERROR: "keyError",
+
+
     /**
      * Event ID for events delivered when a new key sessions creation
      * process has completed

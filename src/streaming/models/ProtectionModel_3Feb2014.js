@@ -116,16 +116,14 @@ let ProtectionModel_3Feb2014 = function () {
 
                         case api.error:
                             var errorStr = "KeyError"; // TODO: Make better string from event
-                            self.notify(ProtectionModel.eventList.ENAME_KEY_ERROR,
-                                    new KeyError(this, errorStr));
+                            EventBus.trigger(Events.KEY_ERROR, {data:new KeyError(this, errorStr)});
                             break;
                         case api.message:
                             var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
                             EventBus.trigger(Events.KEY_MESSAGE, {data:new KeyMessage(this, message, event.destinationURL)});
                             break;
                         case api.ready:
-                            self.notify(ProtectionModel.eventList.ENAME_KEY_ADDED,
-                                    this);
+                            EventBus.trigger(Events.KEY_ADDED);
                             break;
 
                         case api.close:

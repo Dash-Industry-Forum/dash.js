@@ -118,8 +118,7 @@ let ProtectionModel_01b = function () {
                                 }
                                 msg += "  System Code = " + event.systemCode;
                                 // TODO: Build error string based on key error
-                                self.notify(ProtectionModel.eventList.ENAME_KEY_ERROR,
-                                    new KeyError(sessionToken, msg));
+                                EventBus.trigger(Events.KEY_ERROR, {data:new KeyError(sessionToken, msg)});
                             } else {
                                 self.log("No session token found for key error");
                             }
@@ -132,8 +131,7 @@ let ProtectionModel_01b = function () {
                             }
 
                             if (sessionToken) {
-                                self.notify(ProtectionModel.eventList.ENAME_KEY_ADDED,
-                                    sessionToken);
+                                EventBus.trigger(Events.KEY_ADDED, {data:sessionToken});//TODO not sure anything is using sessionToken? why there?
                             } else {
                                 self.log("No session token found for key added");
                             }
