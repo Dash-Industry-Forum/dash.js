@@ -40,6 +40,7 @@ import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
 import ManifestLoader from './ManifestLoader.js';
 import Events from './Events.js';
+import PublicEvents from './PublicEvents.js';
 
 let MediaPlayer = function (context) {
 
@@ -1399,24 +1400,6 @@ MediaPlayer.UTCTimingSources = {
  * The list of events supported by MediaPlayer
  */
 //TODO we need to map the Events.js to allow players in es5 to have event list.
-MediaPlayer.events = {
-    RESET_COMPLETE: "resetComplete",
-    METRICS_CHANGED: "metricschanged",
-    METRIC_CHANGED: "metricchanged",
-    METRIC_UPDATED: "metricupdated",
-    METRIC_ADDED: "metricadded",
-    MANIFEST_LOADED: "manifestloaded",
-    PROTECTION_CREATED: "protectioncreated",
-    PROTECTION_DESTROYED: "protectiondestroyed",
-    STREAM_SWITCH_STARTED: "streamswitchstarted",
-    STREAM_SWITCH_COMPLETED: "streamswitchcompleted",
-    STREAM_INITIALIZED: "streaminitialized",
-    TEXT_TRACK_ADDED: "texttrackadded",
-    TEXT_TRACKS_ADDED: "alltexttracksadded",
-    BUFFER_LOADED: "bufferloaded",
-    BUFFER_EMPTY: "bufferstalled",
-    ERROR: "error",
-    LOG: "log"
-};
+MediaPlayer.events = PublicEvents;
 
 export default MediaPlayer;

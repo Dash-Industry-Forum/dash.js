@@ -38,6 +38,7 @@ import Debug from './utils/Debug.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import CoreEvents from '../core/events/CoreEvents.js';
+import PublicEvents from './PublicEvents';
 import ProtectionEvents from './protection/ProtectionEvents.js';
 import Capabilities from './utils/Capabilities.js';
 import DOMStorage from './utils/DOMStorage.js';
@@ -153,6 +154,10 @@ let Context = function () {
             if (ProtectionEvents) {
                 protectionEvents = new ProtectionEvents();
                 Events.extend(protectionEvents);
+            }
+
+            if (PublicEvents) {
+                Events.extend(PublicEvents);
             }
 
             this.system.autoMapOutlets = true;
