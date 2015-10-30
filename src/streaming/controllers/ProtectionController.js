@@ -46,6 +46,7 @@ import KeySystem from '../protection/drm/KeySystem.js';
 import ProtectionModel from '../models/ProtectionModel.js';
 import CommonEncryption from '../protection/CommonEncryption.js';
 import EventBus from '../utils/EventBus.js';
+import Events from '../Events.js';
 import MediaCapability from '../vo/protection/MediaCapability.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 
@@ -313,14 +314,14 @@ let ProtectionController = function () {
 
         onNeedKey = function (event) {
             // Ignore non-cenc initData
-            if (event.data.initDataType !== "cenc") {
-                this.log("DRM:  Only 'cenc' initData is supported!  Ignoring initData of type: " + event.data.initDataType);
+            if (event.key.initDataType !== "cenc") {
+                this.log("DRM:  Only 'cenc' initData is supported!  Ignoring initData of type: " + event.key.initDataType);
                 return;
             }
 
             // Some browsers return initData as Uint8Array (IE), some as ArrayBuffer (Chrome).
             // Convert to ArrayBuffer
-            var abInitData = event.data.initData;
+            var abInitData = event.key.initData;
             if (ArrayBuffer.isView(abInitData)) {
                 abInitData = abInitData.buffer;
             }
@@ -435,8 +436,11 @@ let ProtectionController = function () {
         sessionType: "temporary",
 
         setup : function () {
+
+            EventBus.on(Events.NEED_KEY, onNeedKey, this);
+
             this[ProtectionModel.eventList.ENAME_KEY_MESSAGE] = onKeyMessage.bind(this);
-            this[ProtectionModel.eventList.ENAME_NEED_KEY] = onNeedKey.bind(this);
+            //this[ProtectionModel.eventList.ENAME_NEED_KEY] = onNeedKey.bind(this);
             this[ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED] = onServerCertificateUpdated.bind(this);
             this[ProtectionModel.eventList.ENAME_KEY_ADDED] = onKeyAdded.bind(this);
             this[ProtectionModel.eventList.ENAME_KEY_ERROR] = onKeyError.bind(this);
@@ -683,10 +687,12 @@ let ProtectionController = function () {
         setMediaElement: function(element) {
             if (element) {
                 this.protectionModel.setMediaElement(element);
-                this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_NEED_KEY, this);
+                EventBus.on(Events.NEED_KEY, onNeedKey, this);
+                //this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_NEED_KEY, this);
             } else if (element === null) {
                 this.protectionModel.setMediaElement(element);
-                this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_NEED_KEY, this);
+                EventBus.off(Events.NEED_KEY, onNeedKey, this);
+                //this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_NEED_KEY, this);
             }
         },
 

@@ -178,12 +178,7 @@ let ProtectionModel = function() { };
  * @enum {String}
  */
 ProtectionModel.eventList = {
-    /**
-     * Event ID for needkey/encrypted events
-     *
-     * @constant
-     */
-    ENAME_NEED_KEY: "needkey",
+
     /**
      * Event ID for events delivered when a key system access procedure
      * has completed

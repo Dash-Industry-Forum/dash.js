@@ -44,6 +44,8 @@ import KeyMessage from '../vo/protection/KeyMessage.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
 import SessionToken from '../vo/protection/SessionToken.js';
+import EventBus from '../utils/EventBus.js';
+import Events from '../Events.js';
 
 let ProtectionModel_01b = function () {
 
@@ -83,8 +85,7 @@ let ProtectionModel_01b = function () {
 
                         case api.needkey:
                             var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                            self.notify(ProtectionModel.eventList.ENAME_NEED_KEY,
-                                new NeedKey(initData, "cenc"));
+                            EventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, "cenc")});
                             break;
 
                         case api.keyerror:

@@ -33,7 +33,6 @@ let Events = (function() {
         // Manifest events
         MANIFEST_UPDATED: "manifestUpdated",
         MANIFEST_LOADED: "manifestLoaded",
-
         // RepresentationController events
         DATA_UPDATE_COMPLETED: "dataUpdateCompleted",
         DATA_UPDATE_STARTED: "dataUpdateStarted",
@@ -98,7 +97,18 @@ let Events = (function() {
         //TimeSync
         TIME_SYNCHRONIZATION_COMPLETED: "timeSynchronizationComplete",
         //VirtualBuffer
-        CHUNK_APPENDED: "chunkAppended"
+        CHUNK_APPENDED: "chunkAppended",
+
+
+        //protection model
+        /**
+         * Event ID for needkey/encrypted events
+         *
+         * @constant
+         */
+        NEED_KEY: "needkey",
+
+
     };
 }());
 
