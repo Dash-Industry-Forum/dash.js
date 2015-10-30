@@ -175,9 +175,8 @@ let ProtectionModel_01b = function () {
                                 // addKey method, so we always save it to the token since there is no
                                 // way to tell which key system is in use
                                 sessionToken.keyMessage = message;
+                                EventBus.trigger(Events.KEY_MESSAGE, {data:new KeyMessage(sessionToken, message, event.defaultURL)});
 
-                                self.notify(ProtectionModel.eventList.ENAME_KEY_MESSAGE,
-                                    new KeyMessage(sessionToken, message, event.defaultURL));
                             } else {
                                 self.log("No session token found for key message");
                             }

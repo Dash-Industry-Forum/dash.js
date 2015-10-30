@@ -180,13 +180,7 @@ let ProtectionModel = function() { };
 ProtectionModel.eventList = {
 
 
-    /**
-     * Event ID for events delivered when the protection set receives
-     * a key message from the CDM
-     *
-     * @constant
-     */
-    ENAME_KEY_MESSAGE: "keyMessage",
+
     /**
      * Event ID for events delivered when a new key has been added
      *

@@ -75,6 +75,14 @@ class ProtectionEvents extends EventsBase {
          */
         this.SERVER_CERTIFICATE_UPDATED = "serverCertificateUpdated";
 
+        /**
+         * Event ID for events delivered when the protection set receives
+         * a key message from the CDM
+         *
+         * @constant
+         */
+        this.KEY_MESSAGE = "keyMessage";
+
     }
 }
 

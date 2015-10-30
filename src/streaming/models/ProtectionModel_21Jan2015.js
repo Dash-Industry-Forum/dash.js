@@ -135,7 +135,6 @@ let ProtectionModel_21Jan2015 = function () {
                 // same events
                 handleEvent: function(event) {
                     switch (event.type) {
-
                         case "keystatuseschange":
                             self.notify(ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED,
                                     this);
@@ -143,8 +142,7 @@ let ProtectionModel_21Jan2015 = function () {
 
                         case "message":
                             var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                            self.notify(ProtectionModel.eventList.ENAME_KEY_MESSAGE,
-                                    new KeyMessage(this, message, undefined, event.messageType));
+                            EventBus.trigger(Events.KEY_MESSAGE, {data:new KeyMessage(this, message, undefined, event.messageType)});
                             break;
                     }
                 },

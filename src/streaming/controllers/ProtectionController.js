@@ -438,10 +438,11 @@ let ProtectionController = function () {
 
         setup : function () {
 
-            EventBus.on(Events.NEED_KEY, onNeedKey, this);
             EventBus.on(Events.SERVER_CERTIFICATE_UPDATED, onServerCertificateUpdated, this);
+            EventBus.on(Events.NEED_KEY, onNeedKey, this);
+            EventBus.on(Events.KEY_MESSAGE, onKeyMessage, this);
 
-            this[ProtectionModel.eventList.ENAME_KEY_MESSAGE] = onKeyMessage.bind(this);
+
             this[ProtectionModel.eventList.ENAME_KEY_ADDED] = onKeyAdded.bind(this);
             this[ProtectionModel.eventList.ENAME_KEY_ERROR] = onKeyError.bind(this);
             this[ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED] = onKeySessionCreated.bind(this);
@@ -459,7 +460,6 @@ let ProtectionController = function () {
             this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
             this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
             this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
-            this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
             this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED, this);
         },
 
@@ -558,14 +558,14 @@ let ProtectionController = function () {
         teardown: function() {
             this.setMediaElement(null);
             EventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onServerCertificateUpdated, this);
+            EventBus.off(Events.KEY_MESSAGE, onKeyMessage, this);
 
-            this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
+
             this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_ADDED, this);
             this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_ERROR, this);
             this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
             this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_CLOSED, this);
             this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_REMOVED, this);
-            this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
             this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_STATUSES_CHANGED, this);
             this.keySystem = undefined;
 

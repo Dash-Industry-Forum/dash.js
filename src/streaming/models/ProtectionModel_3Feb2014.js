@@ -119,13 +119,10 @@ let ProtectionModel_3Feb2014 = function () {
                             self.notify(ProtectionModel.eventList.ENAME_KEY_ERROR,
                                     new KeyError(this, errorStr));
                             break;
-
                         case api.message:
                             var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                            self.notify(ProtectionModel.eventList.ENAME_KEY_MESSAGE,
-                                    new KeyMessage(this, message, event.destinationURL));
+                            EventBus.trigger(Events.KEY_MESSAGE, {data:new KeyMessage(this, message, event.destinationURL)});
                             break;
-
                         case api.ready:
                             self.notify(ProtectionModel.eventList.ENAME_KEY_ADDED,
                                     this);
