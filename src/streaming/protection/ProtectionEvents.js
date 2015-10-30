@@ -57,6 +57,24 @@ class ProtectionEvents extends EventsBase {
          * @constant
          */
         this.KEY_SYSTEM_SELECTED = "keySystemSelected";
+
+
+        /**
+         * Event ID for events delivered when a HTMLMediaElement has been
+         * associated with the protection set
+         *
+         * @constant
+         */
+        this.VIDEO_ELEMENT_SELECTED = "videoElementSelected";
+
+        /**
+         * Event ID for events delivered when a new server certificate has
+         * been delivered to the CDM
+         *
+         * @constant
+         */
+        this.SERVER_CERTIFICATE_UPDATED = "serverCertificateUpdated";
+
     }
 }
 

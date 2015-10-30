@@ -292,13 +292,10 @@ let ProtectionModel_21Jan2015 = function () {
             if (!this.keySystem || !mediaKeys) {
                 throw new Error("Can not set server certificate until you have selected a key system");
             }
-
-            var self = this;
             mediaKeys.setServerCertificate(serverCertificate).then(function() {
-                self.notify(ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED);
+                EventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED);
             }).catch(function(error) {
-                self.notify(ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED,
-                        null, "Error updating server certificate -- " + error.name);
+                EventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED, {error:"Error updating server certificate -- " + error.name});
             });
         },
 

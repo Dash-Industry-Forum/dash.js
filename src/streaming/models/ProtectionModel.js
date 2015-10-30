@@ -179,20 +179,7 @@ let ProtectionModel = function() { };
  */
 ProtectionModel.eventList = {
 
-    /**
-     * Event ID for events delivered when a HTMLMediaElement has been
-     * associated with the protection set
-     *
-     * @constant
-     */
-    ENAME_VIDEO_ELEMENT_SELECTED: "videoElementSelected",
-    /**
-     * Event ID for events delivered when a new server certificate has
-     * been delivered to the CDM
-     *
-     * @constant
-     */
-    ENAME_SERVER_CERTIFICATE_UPDATED: "serverCertificateUpdated",
+
     /**
      * Event ID for events delivered when the protection set receives
      * a key message from the CDM

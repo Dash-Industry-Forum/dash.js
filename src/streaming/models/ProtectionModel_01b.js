@@ -348,7 +348,7 @@ let ProtectionModel_01b = function () {
                 videoElement.addEventListener(api.needkey, eventHandler);
                 videoElement.addEventListener(api.keymessage, eventHandler);
                 videoElement.addEventListener(api.keyadded, eventHandler);
-                this.notify(ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
+                EventBus.trigger(Events.VIDEO_ELEMENT_SELECTED);
             }
         },
 

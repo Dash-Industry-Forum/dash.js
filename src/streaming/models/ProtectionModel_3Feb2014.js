@@ -89,7 +89,7 @@ let ProtectionModel_3Feb2014 = function () {
             var doSetKeys = function() {
                 videoElement.removeEventListener("loadedmetadata", boundDoSetKeys);
                 videoElement[api.setMediaKeys](mediaKeys);
-                this.notify(ProtectionModel.eventList.ENAME_VIDEO_ELEMENT_SELECTED);
+                EventBus.trigger(Events.VIDEO_ELEMENT_SELECTED);
             };
             if (videoElement.readyState >= 1) {
                 doSetKeys.call(this);

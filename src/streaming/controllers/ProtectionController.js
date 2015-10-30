@@ -439,10 +439,9 @@ let ProtectionController = function () {
         setup : function () {
 
             EventBus.on(Events.NEED_KEY, onNeedKey, this);
+            EventBus.on(Events.SERVER_CERTIFICATE_UPDATED, onServerCertificateUpdated, this);
 
             this[ProtectionModel.eventList.ENAME_KEY_MESSAGE] = onKeyMessage.bind(this);
-            //this[ProtectionModel.eventList.ENAME_NEED_KEY] = onNeedKey.bind(this);
-            this[ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED] = onServerCertificateUpdated.bind(this);
             this[ProtectionModel.eventList.ENAME_KEY_ADDED] = onKeyAdded.bind(this);
             this[ProtectionModel.eventList.ENAME_KEY_ERROR] = onKeyError.bind(this);
             this[ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED] = onKeySessionCreated.bind(this);
@@ -455,7 +454,6 @@ let ProtectionController = function () {
             this.protectionModel.init();
 
              //Subscribe to events
-            this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
             this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_ADDED, this);
             this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_ERROR, this);
             this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
@@ -559,8 +557,9 @@ let ProtectionController = function () {
          */
         teardown: function() {
             this.setMediaElement(null);
+            EventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onServerCertificateUpdated, this);
+
             this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_MESSAGE, this);
-            this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_SERVER_CERTIFICATE_UPDATED, this);
             this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_ADDED, this);
             this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_ERROR, this);
             this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, this);
@@ -689,11 +688,9 @@ let ProtectionController = function () {
             if (element) {
                 this.protectionModel.setMediaElement(element);
                 EventBus.on(Events.NEED_KEY, onNeedKey, this);
-                //this.protectionModel.subscribe(ProtectionModel.eventList.ENAME_NEED_KEY, this);
             } else if (element === null) {
                 this.protectionModel.setMediaElement(element);
                 EventBus.off(Events.NEED_KEY, onNeedKey, this);
-                //this.protectionModel.unsubscribe(ProtectionModel.eventList.ENAME_NEED_KEY, this);
             }
         },
 
