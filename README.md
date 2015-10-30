@@ -11,6 +11,9 @@ If your goal is to improve or extend the code and contribute back to this projec
 
 All new work should be in the development branch. Master is now reserved for tagged builds.
 
+_**Note: Oct 30 2105 - dash.js is in the middle of a significant refactor to the 2.0 version.** This will bring a host of new features and a more scalable and modular architecture, with significant changes coming to scheduling, events and dependency injection. While this transition is happening, new PR’s issued against Dev branch will most likely not be pulled in. We encourage you to hold off your PR's until the new architecture has been merged with /dev/ and then to rebase your PRs against that branch before re-submitting them. The /dev/ branch should be ready again by mid to late November. We'll notify everyone via the list server and this readme when it's time._
+
+
 ## Quick Start for Users
 If you just want a DASH player to use and don't need to see the code or commit to this project, then follow the instructions below. If you are a developer and want to work with this code base, then skip down to the "Quick Start for Developers" section.
 
