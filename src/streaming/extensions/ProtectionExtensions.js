@@ -46,10 +46,6 @@ let ProtectionExtensions = function () {
     this.system = undefined;
     this.log = undefined;
     this.keySystems = [];
-    this.notify = undefined;
-    this.subscribe = undefined;
-    this.unsubscribe = undefined;
-
     this.clearkeyKeySystem = undefined;
 };
 

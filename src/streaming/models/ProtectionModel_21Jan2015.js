@@ -181,9 +181,6 @@ let ProtectionModel_21Jan2015 = function () {
 
     return {
         system: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
         protectionExt: undefined,
         keySystem: null,
 

@@ -148,9 +148,6 @@ let ProtectionModel_3Feb2014 = function () {
 
     return {
         system: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
         protectionExt: undefined,
         keySystem: null,
 

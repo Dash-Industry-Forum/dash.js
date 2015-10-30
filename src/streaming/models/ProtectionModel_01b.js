@@ -219,9 +219,6 @@ let ProtectionModel_01b = function () {
         system: undefined,
         log: undefined,
         errHandler: undefined,
-        notify: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
         protectionExt: undefined,
         keySystem: null,
 
