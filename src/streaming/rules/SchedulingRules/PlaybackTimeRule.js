@@ -128,7 +128,6 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             while (request && streamProcessor.getFragmentModel().isFragmentLoadedOrPending(request)) {
                 if (request.action === "complete") {
                     request = null;
-                    streamProcessor.setIndexHandlerTime(NaN);
                     break;
                 }
 
