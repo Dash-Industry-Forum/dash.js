@@ -367,7 +367,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
             var length = pendingRequests.length;
             for (var i=0;i<length;i++) {
                 var request=pendingRequests[i];
-                if (quality===undefined || request.quality==quality) {
+                if (quality!==undefined && request.quality==quality) {
                     newPendingRequests.push(request);
                 } else {
                     canceled.push(request);
