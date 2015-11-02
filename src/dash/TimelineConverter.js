@@ -171,11 +171,8 @@ let TimelineConverter = function () {
             return (periodStart - presentationOffset);
         };
 
-
-
     return {
-
-        setup: function() {
+        initialize: function() {
             EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
             EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
         },

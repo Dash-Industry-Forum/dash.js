@@ -529,6 +529,7 @@ let StreamController = function () {
             EventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
             EventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
             EventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
+            this.timelineConverter.initialize();
             this.manifestLoader.initialize();
             this.manifestUpdater.initialize(this.manifestLoader);
         },
