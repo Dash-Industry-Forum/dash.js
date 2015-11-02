@@ -484,8 +484,6 @@ let StreamController = function () {
         timeSyncController: undefined,
         virtualBuffer: undefined,
         errHandler: undefined,
-        subscribe: undefined,
-        unsubscribe: undefined,
         uriQueryFragModel:undefined,
 
         setup: function() {

@@ -112,8 +112,6 @@ import ScheduleController from './controllers/ScheduleController.js';
 import MediaController from './controllers/MediaController.js';
 import TimeSyncController from './TimeSyncController.js';
 
-import Notifier from './Notifier.js';
-
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
 import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
 import ProtectionModel_01b from './models/ProtectionModel_01b.js';
@@ -238,8 +236,6 @@ let Context = function () {
             this.system.mapClass('stream', Stream);
             this.system.mapClass('scheduleController', ScheduleController);
             this.system.mapSingleton('timeSyncController', TimeSyncController);
-
-            this.system.mapSingleton('notifier', Notifier);
         }
     };
 };
