@@ -429,7 +429,7 @@ MediaPlayer.dependencies.AbrController = function () {
          */
         getQualityForBitrate: function(mediaInfo, bitrate) {
             var bitrateList = this.getBitrateList(mediaInfo),
-                ln = bitrateList.length,
+                ln = bitrateList ? bitrateList.length : 0,
                 bitrateInfo;
 
             for (var i = 0; i < ln; i +=1) {

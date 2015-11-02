@@ -1486,5 +1486,6 @@ MediaPlayer.events = {
     BUFFER_EMPTY: "bufferstalled",
     ERROR: "error",
     LOG: "log",
-    AST_IN_FUTURE: "astinfuture"
+    AST_IN_FUTURE: "astinfuture",
+    FRAGMENT_DISCARDED: "fragmentdiscarded"
 };
