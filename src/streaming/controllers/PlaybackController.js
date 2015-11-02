@@ -324,11 +324,6 @@ let PlaybackController = function () {
         adapter: undefined,
 
         setup: function() {
-            EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-            EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-            EventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
-            EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-
             onCanPlay = onCanPlay.bind(this);
             onPlaybackStart = onPlaybackStart.bind(this);
             onPlaybackPlaying = onPlaybackPlaying.bind(this);
@@ -351,6 +346,10 @@ let PlaybackController = function () {
             setupVideoModel.call(this);
             isDynamic = streamInfo.manifestInfo.isDynamic;
             liveStartTime = streamInfoValue.start;
+            EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+            EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+            EventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
+            EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         },
 
         /**
