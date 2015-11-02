@@ -105,10 +105,6 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
                 return;
             }
 
-            if (hasSeekTarget) {
-                seekTarget[mediaType] = null;
-            }
-
             if (buffer) {
                 range = this.sourceBufferExt.getBufferRange(streamProcessor.bufferController.getBuffer(), time);
                 if (range !== null) {
@@ -136,6 +132,10 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
 
             if (request && !useRejected) {
                 streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
+            }
+
+            if (request && hasSeekTarget) {
+                seekTarget[mediaType] = null;
             }
 
             callback(new MediaPlayer.rules.SwitchRequest(request, p));

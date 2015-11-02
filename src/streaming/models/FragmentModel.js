@@ -361,21 +361,19 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         cancelPendingRequests: function(quality) {
             var self = this,
-                reqs = pendingRequests,
-                canceled = reqs;
+                newPendingRequests = [],
+                canceled = [];
 
-            pendingRequests = [];
-
-            if (quality !== undefined) {
-                pendingRequests = reqs.filter(function(request) {
-                    if (request.quality === quality) {
-                        return false;
-                    }
-
-                    canceled.splice(canceled.indexOf(request), 1);
-                    return true;
-                });
+            var length = pendingRequests.length;
+            for (var i=0;i<length;i++) {
+                var request=pendingRequests[i];
+                if (quality===undefined || request.quality==quality) {
+                    newPendingRequests.push(request);
+                } else {
+                    canceled.push(request);
+                }
             }
+            pendingRequests = newPendingRequests;
 
             canceled.forEach(function(request) {
                 addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.CANCELED);
