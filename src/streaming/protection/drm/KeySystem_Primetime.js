@@ -35,11 +35,37 @@
  * @class
  * @implements MediaPlayer.dependencies.protection.KeySystem
  */
-MediaPlayer.dependencies.protection.KeySystem_Access = function() {
+MediaPlayer.dependencies.protection.KeySystem_Primetime = function() {
     "use strict";
+
+    var keySystemStr = "com.adobe.primetime",
+        keySystemUUID = "f239e769-efa3-4850-9c16-a903c6932efb";
+
+    return {
+
+        schemeIdURI: "urn:uuid:" + keySystemUUID,
+        systemString: keySystemStr,
+        uuid: keySystemUUID,
+
+        getInitData: MediaPlayer.dependencies.protection.CommonEncryption.parseInitDataFromContentProtection,
+
+        getKeySystemConfigurations: function(videoInfo, audioInfo, sessionType) {
+            var configs = MediaPlayer.dependencies.protection.CommonEncryption.getKeySystemConfigurations(videoInfo, audioInfo, sessionType);
+            // Adobe Primetime CDM is not w3c EME conform and needs this outside of the array initDataTypes
+            configs[0].initDataType = "cenc";
+            return configs;
+        },
+
+        getRequestHeadersFromMessage: function(/*message*/) { return null; },
+
+        getLicenseRequestFromMessage: function(message) { return new Uint8Array(message); },
+
+        getLicenseServerURLFromInitData: function(/*initData*/) { return null; }
+    };
+
 };
 
-MediaPlayer.dependencies.protection.KeySystem_Access.prototype = {
-    constructor: MediaPlayer.dependencies.protection.KeySystem_Access
+MediaPlayer.dependencies.protection.KeySystem_Primetime.prototype = {
+    constructor: MediaPlayer.dependencies.protection.KeySystem_Primetime
 };
 

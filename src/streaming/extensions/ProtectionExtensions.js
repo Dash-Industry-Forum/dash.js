@@ -64,6 +64,10 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
         keySystem = this.system.getObject("ksWidevine");
         this.keySystems.push(keySystem);
 
+        // Primetime
+        keySystem = this.system.getObject("ksPrimetime");
+        this.keySystems.push(keySystem);
+
         // ClearKey
         keySystem = this.system.getObject("ksClearKey");
         this.keySystems.push(keySystem);
@@ -227,9 +231,9 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
      */
     getLicenseServer: function(keySystem, protData, messageType) {
 
-        // Our default server implementations do not do anything with "license-release" or
-        // "individualization-request" messages, so we just send a success event
-        if (messageType === "license-release" || messageType == "individualization-request") {
+        // Our default server implementations do not do anything with "license-release"
+        // messages, so we just send a success event
+        if (messageType === "license-release") {
             return null;
         }
 
@@ -238,6 +242,8 @@ MediaPlayer.dependencies.ProtectionExtensions.prototype = {
             licenseServerData = this.system.getObject("serverDRMToday");
         } else if (keySystem.systemString === "com.widevine.alpha") {
             licenseServerData = this.system.getObject("serverWidevine");
+        } else if (keySystem.systemString === "com.adobe.primetime") {
+            licenseServerData = this.system.getObject("serverPrimetime");
         } else if (keySystem.systemString === "com.microsoft.playready") {
             licenseServerData = this.system.getObject("serverPlayReady");
         } else if (keySystem.systemString === "org.w3.clearkey") {

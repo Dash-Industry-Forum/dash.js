@@ -200,5 +200,28 @@ MediaPlayer.dependencies.protection.CommonEncryption = {
         }
 
         return pssh;
+    },
+
+    /**
+     * Returns list of {MediaPlayer.vo.protection.KeySystemConfiguration}
+     * (see: https://w3c.github.io/encrypted-media/#idl-def-MediaKeySystemConfiguration)
+     *
+     * @param {object} videoInfo contains relevant info about video (mimeType, codec)
+     * @param {object} audioInfo contains relevant info about audio (mimeType, codec)
+     * @param {String} sessionType the session type like "temporary" or "persistent-license"
+     * @returns {Array} list of {MediaPlayer.vo.protection.KeySystemConfiguration}
+     */
+    getKeySystemConfigurations: function(videoInfo, audioInfo, sessionType) {
+        var audioCapabilities = [], videoCapabilities = [];
+        if (videoInfo) {
+            videoCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(videoInfo.codec));
+        }
+        if (audioInfo) {
+            audioCapabilities.push(new MediaPlayer.vo.protection.MediaCapability(audioInfo.codec));
+        }
+        return [new MediaPlayer.vo.protection.KeySystemConfiguration(
+         audioCapabilities, videoCapabilities, "optional",
+         (sessionType === "temporary") ? "optional" : "required",
+         [sessionType])];
     }
 };
