@@ -96,9 +96,13 @@ let EventBus = (function () {
         off: function(type, listener, scope) {
             if (!type || !listener || !handlers[type]) return;
 
-            handlers[type] = handlers[type].filter(function(handler) {
-                return (handler.callback !== listener || handler.scope !== scope);
-            });
+            var handlersForType = handlers[type];
+
+            for (var i = 0; i < handlersForType.length; i += 1) {
+                if (handlersForType[i].callback !== listener || (scope && scope !== handlersForType[i].scope)) continue;
+
+                handlersForType.splice(i, 1);
+            }
         },
 
         trigger: function(type, args) {
