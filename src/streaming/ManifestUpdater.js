@@ -127,17 +127,14 @@ let ManifestUpdater = function () {
         manifestModel: undefined,
         manifestExt: undefined,
 
-        setup: function () {
-            // Listen to streamsComposed event to be aware that the streams have been composed
-            EventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
-            EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-            EventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-        },
-
         initialize: function (loader) {
             isUpdating = false;
             isStopped = true;
             manifestLoader = loader;
+            // Listen to streamsComposed event to be aware that the streams have been composed
+            EventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
+            EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+            EventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
             EventBus.on(Events.MANIFEST_LOADED, onManifestLoaded, this);
         },
 

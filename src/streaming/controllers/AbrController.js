@@ -183,11 +183,8 @@ let AbrController = function () {
         rulesController: undefined,
         streamController:undefined,
 
-        setup: function() {
-            EventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this)
-        },
-
         initialize: function(type, streamProcessor) {
+            EventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this)
             streamProcessorDict[type] = streamProcessor;
             abandonmentStateDict[type] = abandonmentStateDict[type] || {};
             abandonmentStateDict[type].state = AbrController.ALLOW_LOAD;

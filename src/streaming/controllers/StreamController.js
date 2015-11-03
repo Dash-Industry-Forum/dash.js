@@ -486,10 +486,6 @@ let StreamController = function () {
         errHandler: undefined,
         uriQueryFragModel:undefined,
 
-        setup: function() {
-            EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
-        },
-
         getAutoPlay: function () {
             return autoPlay;
         },
@@ -522,6 +518,7 @@ let StreamController = function () {
             autoPlay = autoPl;
             protectionController = protCtrl;
             protectionData = protData;
+            EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
             EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
             EventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
