@@ -165,7 +165,7 @@ let TextSourceBuffer = function () {
                     result = self.getParser(mimeType).parse(ccContent);
                     createTextTrackFromMediaInfo(result, mediaInfo);
                 } catch(e) {
-                    self.errHandler.closedCaptionsError(e, "parse", ccContent);
+                    self.errHandler.timedTextError(e, "parse", ccContent);
                 }
             }
         },

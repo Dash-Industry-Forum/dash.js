@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import EventBus from "./EventBus.js";
+import Events from '../Events.js'
 
 let Debug = function () {
     "use strict";
@@ -115,10 +116,7 @@ let Debug = function () {
                 console.log(message);
             }
 
-            EventBus.dispatchEvent({
-                type: "log",
-                message: message
-            });
+            EventBus.trigger(Events.LOG, {message: message});
         }
     };
 };

@@ -30,77 +30,41 @@
  */
 import MediaPlayer from './MediaPlayer.js';
 import EventBus from './utils/EventBus.js';
+import Events from './Events.js';
 
 let ErrorHandler = function () {
     "use strict";
-    var errorEvent = MediaPlayer.events.ERROR;
 
     return {
         // "mediasource"|"mediakeys"
         capabilityError: function (err) {
-            EventBus.dispatchEvent({
-                type: errorEvent,
-                error: "capability",
-                event: err
-            });
+            EventBus.trigger(Events.ERROR, {error: "capability", event: err});
         },
 
         // {id: "manifest"|"SIDX"|"content"|"initialization", url: "", request: {XMLHttpRequest instance}}
         downloadError: function (id, url, request) {
-            EventBus.dispatchEvent({
-                type: errorEvent,
-                error: "download",
-                event: {id: id, url: url, request: request}
-            });
+            EventBus.trigger(Events.ERROR, {error: "download", event: {id: id, url: url, request: request}});
         },
 
         // {message: "", id: "codec"|"parse"|"nostreams", manifest: {parsed manifest}}
         manifestError: function (message, id, manifest) {
-            EventBus.dispatchEvent({
-                type: errorEvent,
-                error: "manifestError",
-                event: {message: message, id: id, manifest: manifest}
-            });
+            EventBus.trigger(Events.ERROR, {error: "manifestError", event: {message: message, id: id, manifest: manifest}});
         },
 
-        closedCaptionsError: function (message, id, ccContent) {
-            EventBus.dispatchEvent({
-                type: errorEvent,
-                error: "cc",
-                event: {message: message, id: id, cc: ccContent}
-            });
+        timedTextError: function (message, id, ccContent) {
+            EventBus.trigger(Events.ERROR, {error: "cc", event: {message: message, id: id, cc: ccContent}});
         },
 
         mediaSourceError: function (err) {
-            EventBus.dispatchEvent({
-                type: errorEvent,
-                error: "mediasource",
-                event: err
-            });
+            EventBus.trigger(Events.ERROR, {error: "mediasource", event: err});
         },
 
         mediaKeySessionError: function (err) {
-            EventBus.dispatchEvent({
-                type: errorEvent,
-                error: "key_session",
-                event: err
-            });
+            EventBus.trigger(Events.ERROR, {error: "key_session", event: err});
         },
 
         mediaKeyMessageError: function (err) {
-            EventBus.dispatchEvent({
-                type: errorEvent,
-                error: "key_message",
-                event: err
-            });
-        },
-
-        mediaKeySystemSelectionError: function (err) {
-            EventBus.dispatchEvent({
-                type: errorEvent,
-                error: "key_system_selection",
-                event: err
-            });
+            EventBus.trigger(Events.ERROR, {error: "key_message", event: err});
         }
     };
 };
