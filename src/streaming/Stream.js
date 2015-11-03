@@ -96,6 +96,8 @@ let Stream = function () {
         },
 
         onCurrentTrackChanged = function(e) {
+            if (e.newMediaInfo.streamInfo.id !== streamInfo.id) return;
+
             var processor = getProcessorForMediaInfo.call(this, e.oldMediaInfo);
             if (!processor) return;
 
@@ -284,7 +286,7 @@ let Stream = function () {
             var processors = getProcessors.call(this);
 
             return processors.filter(function(processor){
-                return (processor.getMediaInfo() === mediaInfo);
+                return (processor.getType() === mediaInfo.type);
             })[0];
         },
 
