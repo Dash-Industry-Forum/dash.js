@@ -41,6 +41,7 @@ import SchedulingInfo from '../vo/metrics/SchedulingInfo.js';
 import PlayList from '../vo/metrics/PlayList.js';
 import EventBus from '../utils/EventBus.js';
 import RequestsQueue from '../vo/metrics/RequestsQueue.js';
+import Events from '../Events.js'
 
 let MetricsModel = function () {
     "use strict";
@@ -50,33 +51,21 @@ let MetricsModel = function () {
         adapter: undefined,
         streamMetrics: {},
         metricsChanged: function () {
-            EventBus.dispatchEvent({
-                type: MediaPlayer.events.METRICS_CHANGED,
-                data: {}
-            });
+            EventBus.trigger(Events.METRICS_CHANGED);
         },
 
         metricChanged: function (mediaType) {
-            EventBus.dispatchEvent({
-                type: MediaPlayer.events.METRIC_CHANGED,
-                data: {stream: mediaType}
-            });
+            EventBus.trigger(Events.METRIC_CHANGED, {mediaType: mediaType});
             this.metricsChanged();
         },
 
         metricUpdated: function (mediaType, metricType, vo) {
-            EventBus.dispatchEvent({
-                type: MediaPlayer.events.METRIC_UPDATED,
-                data: {stream: mediaType, metric: metricType, value: vo}
-            });
+            EventBus.trigger(Events.METRIC_UPDATED, {mediaType: mediaType, metric: metricType, value: vo});
             this.metricChanged(mediaType);
         },
 
         metricAdded: function (mediaType, metricType, vo) {
-            EventBus.dispatchEvent({
-                type: MediaPlayer.events.METRIC_ADDED,
-                data: {stream: mediaType, metric: metricType, value: vo}
-            });
+            EventBus.trigger(Events.METRIC_ADDED, {mediaType: mediaType, metric: metricType, value: vo});
             this.metricChanged(mediaType);
         },
 

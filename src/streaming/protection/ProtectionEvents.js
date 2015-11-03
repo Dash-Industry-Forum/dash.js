@@ -101,6 +101,10 @@ class ProtectionEvents extends EventsBase {
         this.INTERNAL_KEY_MESSAGE = "internalKeyMessage";
 
         //EXTERNAL FACING EVENTS
+        this.PROTECTION_CREATED = "public_protectioncreated";
+        this.PROTECTION_DESTROYED = "public_protectiondestroyed";
+
+
         /**
          * Event ID for events delivered when a key system selection procedure
          * completes

@@ -135,7 +135,7 @@ let ManifestUpdater = function () {
             EventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
             EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
             EventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-            EventBus.on(Events.MANIFEST_LOADED, onManifestLoaded, this);
+            EventBus.on(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
         },
 
         setManifest: function (m) {
@@ -150,7 +150,7 @@ let ManifestUpdater = function () {
             EventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
             EventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
             EventBus.off(Events.STREAMS_COMPOSED, onStreamsComposed, this);
-            EventBus.off(Events.MANIFEST_LOADED, onManifestLoaded, this);
+            EventBus.off(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
             isStopped = true;
             isUpdating = false;
             clear.call(this);

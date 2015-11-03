@@ -81,7 +81,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     $scope.version = player.getVersion();
 
     player.startup();
-    player.addEventListener(MediaPlayer.events.ERROR, onError.bind(this));
+    player.on(MediaPlayer.events.ERROR, onError.bind(this));
     player.attachView(video);
     player.attachVideoContainer(document.getElementById("videoContainer"));
     player.setAutoPlay(true);
@@ -303,8 +303,8 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     // Listen for protection system creation/destruction by the player itself.  This will
     // only happen in the case where we do not not provide a ProtectionController
     // to the player via MediaPlayer.attachSource()
-    player.addEventListener(MediaPlayer.events.PROTECTION_CREATED, function (e) {
-        var data = addDRMData(e.data.manifest, e.data.controller);
+    player.on(MediaPlayer.events.PROTECTION_CREATED, function (e) {
+        var data = addDRMData(e.manifest, e.controller);
         data.isPlaying = true;
         for (var i = 0; i < $scope.drmData.length; i++) {
             if ($scope.drmData[i] !== data) {
@@ -312,8 +312,8 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             }
         }
         $scope.safeApply();
-    });
-    player.addEventListener(MediaPlayer.events.PROTECTION_DESTROYED, function (e) {
+    }, $scope);
+    player.on(MediaPlayer.events.PROTECTION_DESTROYED, function (e) {
         for (var i = 0; i < $scope.drmData.length; i++) {
             if ($scope.drmData[i].manifest.url === e.data) {
                 $scope.drmData.splice(i, 1);
@@ -321,7 +321,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             }
         }
         $scope.safeApply();
-    });
+    }, $scope);
 
     var manifestLoaded = function (manifest/*, error*/) {
         if (manifest) {

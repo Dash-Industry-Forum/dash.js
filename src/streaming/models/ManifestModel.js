@@ -30,6 +30,7 @@
  */
 import MediaPlayer from '../MediaPlayer.js';
 import EventBus from '../utils/EventBus.js';
+import Events from '../Events.js';
 
 let ManifestModel = function () {
     "use strict";
@@ -45,11 +46,7 @@ let ManifestModel = function () {
 
         setValue: function (value) {
             manifest = value;
-
-            EventBus.dispatchEvent({
-                type: MediaPlayer.events.MANIFEST_LOADED,
-                data: value
-            });
+            EventBus.trigger(Events.MANIFEST_LOADED,  {data: value});
         }
     };
 };

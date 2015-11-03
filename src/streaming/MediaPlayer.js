@@ -348,38 +348,53 @@ let MediaPlayer /**
         },
 
 
+        /**
+         * @param type
+         * @param listener
+         * @param scope
+         * @memberof MediaPlayer#
+         */
         on: function (type, listener, scope) {
             EventBus.on(type, listener, scope);
         },
 
+        /**
+         * @param type
+         * @param listener
+         * @param scope
+         * @memberof MediaPlayer#
+         */
         off: function (type, listener, scope) {
             EventBus.off(type, listener, scope);
         },
 
         /**
-         *
+         * @deprecated
          *
          * @param type
          * @param listener
          * @param useCapture
-         * @memberof MediaPlayer#
          *
+         * @memberof MediaPlayer#
          */
-        addEventListener: function (type, listener, useCapture) {
-            type = type.toLowerCase();
-            EventBus.addEventListener(type, listener, useCapture);
-        },
+        //addEventListener: function (type, listener, useCapture) {
+        //    type = type.toLowerCase();
+        //    EventBus.addEventListener(type, listener, useCapture);
+        //},
 
         /**
+         * @deprecated
          * @param type
          * @param listener
          * @param useCapture
          * @memberof MediaPlayer#
          */
-        removeEventListener: function (type, listener, useCapture) {
-            type = type.toLowerCase();
-            EventBus.removeEventListener(type, listener, useCapture);
-        },
+        //removeEventListener: function (type, listener, useCapture) {
+        //    type = type.toLowerCase();
+        //    EventBus.removeEventListener(type, listener, useCapture);
+        //},
+
+
 
         /**
          * @returns {string} the current dash.js version string.

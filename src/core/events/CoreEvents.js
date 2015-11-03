@@ -35,7 +35,7 @@ class CoreEvents extends EventsBase {
         super();
         // Manifest events
         this.MANIFEST_UPDATED = "manifestUpdated";
-        this.MANIFEST_LOADED = "manifestLoaded";
+        this.INTERNAL_MANIFEST_LOADED = "manifestLoaded";
         // RepresentationController events
         this.DATA_UPDATE_COMPLETED = "dataUpdateCompleted";
         this.DATA_UPDATE_STARTED = "dataUpdateStarted";

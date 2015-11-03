@@ -101,17 +101,11 @@ let ProtectionController = function () {
                             EventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                             if (event.error) {
                                 if (!fromManifest) {
-                                    EventBus.dispatchEvent({
-                                        type: Events.KEY_SYSTEM_SELECTED,
-                                        error: "DRM: KeySystem Access Denied! -- " + event.error
-                                    });
+                                    EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {error: "DRM: KeySystem Access Denied! -- " + event.error});
                                 }
                             } else {
                                 self.log("KeySystem Access Granted");
-                                EventBus.dispatchEvent({
-                                    type: Events.KEY_SYSTEM_SELECTED,
-                                    data: event.data
-                                });
+                                EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: event.data});
                                 self.createKeySession(supportedKS[ksIdx].initData);
                             }
                         };
@@ -389,41 +383,6 @@ let ProtectionController = function () {
         },
 
         /**
-         * ProtectionController Event Listener
-         *
-         * @callback ProtectionController~eventListener
-         * @param {Object} event The event.  See the documentation for ProtectionController
-         * APIs to see what events are fired by each API call
-         */
-
-        /**
-         * Add a listener for ProtectionController events
-         *
-         * @param type the event ID
-         * @param {ProtectionController~eventListener} listener
-         * the event listener to add
-         * @see ProtectionController.events
-         * @memberof ProtectionController
-         * @instance
-         */
-        addEventListener: function(type, listener) {
-            EventBus.addEventListener(type, listener);
-        },
-
-        /**
-         * Remove a listener for ProtectionController events
-         *
-         * @param type the event ID associated with the listener to rmove
-         * @param {ProtectionController~eventListener} listener
-         * the event listener to remove
-         * @memberof ProtectionController
-         * @instance
-         */
-        removeEventListener: function(type, listener) {
-            EventBus.removeEventListener(type, listener);
-        },
-
-        /**
          * Destroys all protection data associated with this protection set.  This includes
          * deleting all key sessions.  In the case of persistent key sessions, the sessions
          * will simply be unloaded and not deleted.  Additionally, if this protection set is
@@ -470,18 +429,10 @@ let ProtectionController = function () {
                 try {
                     this.protectionModel.createKeySession(initDataForKS, this.sessionType);
                 } catch (error) {
-                    EventBus.dispatchEvent({
-                        type: ProtectionController.events.KEY_SESSION_CREATED,
-                        data:null,
-                        error:"Error creating key session! " + error.message
-                    });
+                    EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Error creating key session! " + error.message});
                 }
             } else {
-                EventBus.dispatchEvent({
-                    type: ProtectionController.events.KEY_SESSION_CREATED,
-                    data:null,
-                    error:"Selected key system is " + this.keySystem.systemString + ".  needkey/encrypted event contains no initData corresponding to that key system!"
-                });
+                EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Selected key system is " + this.keySystem.systemString + ".  needkey/encrypted event contains no initData corresponding to that key system!"});
             }
         },
 

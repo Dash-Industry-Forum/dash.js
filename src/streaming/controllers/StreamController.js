@@ -61,22 +61,8 @@ let StreamController = function () {
         UTCTimingSources,
         useManifestDateHeaderTimeSource,
 
-        //attachEvents = function (stream) {
-        //
-        //},
-        //
-        //detachEvents = function (stream) {
-        //
-        //},
-
-        fireSwitchEvent = function(stage, fromStream, toStream) {
-            EventBus.dispatchEvent({
-                type: stage,
-                data: {
-                    fromStreamInfo: fromStream ? fromStream.getStreamInfo() : null,
-                    toStreamInfo: toStream.getStreamInfo()
-                }
-            });
+        fireSwitchEvent = function(eventType, fromStream, toStream) {
+            EventBus.trigger(eventType, {fromStreamInfo: fromStream ? fromStream.getStreamInfo() : null, toStreamInfo: toStream.getStreamInfo()})
         },
 
         startAutoPlay = function() {
@@ -226,7 +212,7 @@ let StreamController = function () {
 
             if(isStreamSwitchingInProgress || !from || !to || from === to) return;
 
-            fireSwitchEvent.call(this, MediaPlayer.events.STREAM_SWITCH_STARTED, from, to);
+            fireSwitchEvent.call(this, Events.PERIOD_SWITCH_STARTED, from, to);
             isStreamSwitchingInProgress = true;
 
             var self = this,
@@ -238,7 +224,7 @@ let StreamController = function () {
                     self.playbackController.start();
                     activeStream.startEventController();
                     isStreamSwitchingInProgress = false;
-                    fireSwitchEvent.call(self, MediaPlayer.events.STREAM_SWITCH_COMPLETED, from, to);
+                    fireSwitchEvent.call(self, Events.PERIOD_SWITCH_COMPLETED, from, to);
                 };
 
             // TODO switchStream could be called from a handler of seeking event. from.deactivate() contains logic for
@@ -246,10 +232,8 @@ let StreamController = function () {
             // synchronously an attempt to remove listener from itself leads to an exception in dijon lib. setTimeout is
             // used to workaround this issue.
             setTimeout(function() {
-                //detachEvents.call(self, from);
                 from.deactivate();
                 activeStream = to;
-                //attachEvents.call(self, to);
                 self.playbackController.initialize(activeStream.getStreamInfo());
                 setupMediaSource.call(self, onMediaSourceReady);
             }, 0);
@@ -322,13 +306,7 @@ let StreamController = function () {
             if (this.capabilities.supportsEncryptedMedia()) {
                 if (!protectionController) {
                     protectionController = this.system.getObject("protectionController");
-                    EventBus.dispatchEvent({
-                        type: MediaPlayer.events.PROTECTION_CREATED,
-                        data: {
-                            controller: protectionController,
-                            manifest: manifest
-                        }
-                    });
+                    EventBus.trigger(Events.PROTECTION_CREATED, {controller: protectionController, manifest: manifest});
                     ownProtectionController = true;
                 }
                 protectionController.setMediaElement(this.videoModel.getElement());
@@ -379,10 +357,9 @@ let StreamController = function () {
                 // If the active stream has not been set up yet, let it be the first Stream in the list
                 if (!activeStream) {
                     activeStream = streams[0];
-                    fireSwitchEvent.call(self, MediaPlayer.events.STREAM_SWITCH_STARTED, null, activeStream);
+                    fireSwitchEvent.call(self, Events.PERIOD_SWITCH_STARTED, null, activeStream);
                     self.playbackController.initialize(activeStream.getStreamInfo());
-                    //attachEvents.call(self, activeStream);
-                    fireSwitchEvent.call(self, MediaPlayer.events.STREAM_SWITCH_COMPLETED, null, activeStream);
+                    fireSwitchEvent.call(self, Events.PERIOD_SWITCH_COMPLETED, null, activeStream);
                 }
 
                 if (!mediaSource) {
@@ -541,10 +518,6 @@ let StreamController = function () {
 
         reset: function () {
 
-            //if (!!activeStream) {
-            //    detachEvents.call(this, activeStream);
-            //}
-
             var stream;
             this.timeSyncController.reset();
 
@@ -598,14 +571,9 @@ let StreamController = function () {
                     ownProtectionController = false;
                     protectionController = null;
                     protectionData = null;
-
                     if (manifestUrl) {
-                        EventBus.dispatchEvent({
-                            type: MediaPlayer.events.PROTECTION_DESTROYED,
-                            data: manifestUrl
-                        });
+                        EventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestUrl});
                     }
-
                     EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
                 };
                 EventBus.on(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);

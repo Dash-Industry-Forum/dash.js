@@ -39,10 +39,8 @@ class PublicEvents extends EventsBase {
 		this.METRIC_UPDATED = "metricupdated";
 		this.METRIC_ADDED = "metricadded";
 		this.MANIFEST_LOADED = "manifestloaded";
-		this.PROTECTION_CREATED = "protectioncreated";
-		this.PROTECTION_DESTROYED = "protectiondestroyed";
-		this.STREAM_SWITCH_STARTED = "streamswitchstarted";
-		this.STREAM_SWITCH_COMPLETED = "streamswitchcompleted";
+		this.PERIOD_SWITCH_STARTED = "streamswitchstarted";
+		this.PERIOD_SWITCH_COMPLETED = "streamswitchcompleted";
 		this.STREAM_INITIALIZED = "streaminitialized";
 		this.TEXT_TRACK_ADDED = "texttrackadded";
 		this.TEXT_TRACKS_ADDED = "alltexttracksadded";

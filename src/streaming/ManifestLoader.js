@@ -105,7 +105,7 @@ let ManifestLoader = function () {
                     self.xlinkController.resolveManifestOnLoad(manifest);
                 } else {
                     errorMsg = "Failed loading manifest: " + url + ", parsing failed";
-                    EventBus.trigger(Events.MANIFEST_LOADED, {manifest: null, error:new Error(ManifestLoader.PARSERERROR_ERROR_CODE, errorMsg, null)});
+                    EventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: null, error:new Error(ManifestLoader.PARSERERROR_ERROR_CODE, errorMsg, null)});
                     self.log(errorMsg);
                 }
             };
@@ -138,7 +138,7 @@ let ManifestLoader = function () {
                 } else {
                     self.log("Failed loading manifest: " + url + " no retry attempts left");
                     self.errHandler.downloadError("manifest", url, request);
-                    EventBus.trigger(Events.MANIFEST_LOADED, {error:new Error("Failed loading manifest: " + url + " no retry attempts left")});
+                    EventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {error:new Error("Failed loading manifest: " + url + " no retry attempts left")});
                 }
             };
 
@@ -164,7 +164,7 @@ let ManifestLoader = function () {
             }
         },
         onXlinkReady = function(event) {
-            EventBus.trigger(Events.MANIFEST_LOADED, {manifest: event.manifest})
+            EventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: event.manifest})
         };
 
     return {

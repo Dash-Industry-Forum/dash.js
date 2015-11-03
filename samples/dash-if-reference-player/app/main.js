@@ -405,7 +405,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         }
         $scope.bufferedRanges = bufferedRanges;
 
-        if (e.data.stream == "video") {
+        if (e.mediaType == "video") {
             metrics = getCribbedMetricsFor("video");
             if (metrics) {
                 $scope.videoBitrate = metrics.bandwidthValue;
@@ -437,7 +437,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             }
         }
 
-        if (e.data.stream == "audio") {
+        if (e.mediaType == "audio") {
             metrics = getCribbedMetricsFor("audio");
             if (metrics) {
                 $scope.audioBitrate = metrics.bandwidthValue;
@@ -477,7 +477,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         var metrics = player.getMetricsFor("stream"),
             data;
 
-        if (!e.data.metric || e.data.metric.indexOf("ManifestUpdate") === -1 || !metrics) return;
+        if (!e.metric || e.metric.indexOf("ManifestUpdate") === -1 || !metrics) return;
 
         data = processManifestUpdateMetrics(metrics);
 
@@ -489,7 +489,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     }
 
     function streamSwitch(e) {
-        $scope.streamInfo = e.data.toStreamInfo;
+        $scope.streamInfo = e.toStreamInfo;
     }
 
     function streamInitialized(e) {
@@ -561,11 +561,11 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     $scope.version = player.getVersion();
 
     player.startup();
-    player.addEventListener(MediaPlayer.events.ERROR, onError.bind(this));
-    player.addEventListener(MediaPlayer.events.METRIC_CHANGED, metricChanged.bind(this));
-    player.addEventListener(MediaPlayer.events.METRIC_UPDATED, metricUpdated.bind(this));
-    player.addEventListener(MediaPlayer.events.STREAM_SWITCH_COMPLETED, streamSwitch.bind(this));
-    player.addEventListener(MediaPlayer.events.STREAM_INITIALIZED, streamInitialized.bind(this));
+    player.on(MediaPlayer.events.ERROR, onError.bind(this));
+    player.on(MediaPlayer.events.METRIC_CHANGED, metricChanged.bind(this));
+    player.on(MediaPlayer.events.METRIC_UPDATED, metricUpdated.bind(this));
+    player.on(MediaPlayer.events.PERIOD_SWITCH_COMPLETED, streamSwitch.bind(this));
+    player.on(MediaPlayer.events.STREAM_INITIALIZED, streamInitialized.bind(this));
     player.attachView(video);
     player.attachVideoContainer(document.getElementById("videoContainer"));
 

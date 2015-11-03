@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import EventBus from '../utils/EventBus.js';
+import Events from '../Events.js';
 
 let TextTrackExtensions = function () {
     "use strict";
@@ -130,10 +131,10 @@ let TextTrackExtensions = function () {
                         textTrack.renderingType = "default";
                     }
                     this.addCaptions(0, textTrackQueue[i].captionData);
-                    EventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACK_ADDED});
+                    EventBus.trigger(Events.TEXT_TRACK_ADDED);
                 }
                 this.setCurrentTrackIdx(defaultIndex);
-                EventBus.dispatchEvent({type:MediaPlayer.events.TEXT_TRACKS_ADDED, data:{index:currentTrackIdx, tracks:textTrackQueue}});//send default idx.
+                EventBus.trigger(Events.TEXT_TRACKS_ADDED, {index:currentTrackIdx, tracks:textTrackQueue});//send default idx.
             }
         },
 
