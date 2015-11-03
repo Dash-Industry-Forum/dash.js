@@ -29,15 +29,18 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 class EventsBase {
-    extend (extraEvents, config) {
-            if (!extraEvents) return;
+    extend (events, config) {
+            if (!events) return;
 
-            var override = config ? config.override : false;
+            let override = config ? config.override : false,
+                publicOnly = config ? config.publicOnly : false;
 
-            for (var evt in extraEvents) { 
-                if (!extraEvents.hasOwnProperty(evt) || (this[evt] && !override)) continue;
-    
-                this[evt] = extraEvents[evt];
+
+            for (const evt in events) {
+                if (!events.hasOwnProperty(evt) || (this[evt] && !override)) continue;
+                if(publicOnly && events[evt].indexOf("public_") === -1) continue;
+                this[evt] = events[evt];
+
             }
         }
 }

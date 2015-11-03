@@ -42,35 +42,38 @@ import ManifestLoader from './ManifestLoader.js';
 import Events from './Events.js';
 import PublicEvents from './PublicEvents.js';
 
-let MediaPlayer = function (context) {
+let MediaPlayer /**
+*
+*/
+= function (context) {
 
     "use strict";
 
-/*
- * Initialization:
- *
- * 1) Check if MediaSource is available.
- * 2) Load manifest.
- * 3) Parse manifest.
- * 4) Check if Video Element can play codecs.
- * 5) Register MediaSource with Video Element.
- * 6) Create SourceBuffers.
- * 7) Do live stuff.
- *      a. Start manifest refresh.
- *      b. Calculate live point.
- *      c. Calculate offset between availabilityStartTime and initial video timestamp.
- * 8) Start buffer managers.
- *
- * Buffer Management:
- *
- * 1) Generate metrics.
- * 2) Check if fragments should be loaded.
- * 3) Check ABR for change in quality.
- * 4) Figure out which fragments to load.
- * 5) Load fragments.
- * 6) Transform fragments.
- * 7) Push fragmemt bytes into SourceBuffer.
- */
+    /*
+     * Initialization:
+     *
+     * 1) Check if MediaSource is available.
+     * 2) Load manifest.
+     * 3) Parse manifest.
+     * 4) Check if Video Element can play codecs.
+     * 5) Register MediaSource with Video Element.
+     * 6) Create SourceBuffers.
+     * 7) Do live stuff.
+     *      a. Start manifest refresh.
+     *      b. Calculate live point.
+     *      c. Calculate offset between availabilityStartTime and initial video timestamp.
+     * 8) Start buffer managers.
+     *
+     * Buffer Management:
+     *
+     * 1) Generate metrics.
+     * 2) Check if fragments should be loaded.
+     * 3) Check ABR for change in quality.
+     * 4) Figure out which fragments to load.
+     * 5) Load fragments.
+     * 6) Transform fragments.
+     * 7) Push fragmemt bytes into SourceBuffer.
+     */
     var VERSION = "2.0.0",
         numOfParallelRequestAllowed = 0,
         system,
@@ -93,7 +96,7 @@ let MediaPlayer = function (context) {
         playing = false,
         autoPlay = true,
         scheduleWhilePaused = false,
-        //bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
+    //bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
         useManifestDateHeaderTimeSource = true,
         UTCTimingSources = [],
         liveDelayFragmentCount = 4,
@@ -150,18 +153,18 @@ let MediaPlayer = function (context) {
             }
         },
 
-        getDVRInfoMetric = function() {
+        getDVRInfoMetric = function () {
             var metric = metricsModel.getReadOnlyMetricsFor('video') || metricsModel.getReadOnlyMetricsFor('audio');
             return metricsExt.getCurrentDVRInfo(metric);
         },
 
-        getDVRWindowSize = function() {
+        getDVRWindowSize = function () {
             return getDVRInfoMetric.call(this).manifestInfo.DVRWindowSize;
         },
 
         getDVRSeekOffset = function (value) {
             var metric = getDVRInfoMetric.call(this),
-                val  = metric.range.start + value;
+                val = metric.range.start + value;
 
             if (val > metric.range.end) {
                 val = metric.range.end;
@@ -170,7 +173,7 @@ let MediaPlayer = function (context) {
             return val;
         },
 
-        seek = function(value) {
+        seek = function (value) {
             var s = playbackController.getIsDynamic() ? this.getDVRSeekOffset(value) : value;
             this.getVideoModel().setCurrentTime(s);
         },
@@ -185,7 +188,7 @@ let MediaPlayer = function (context) {
             return t;
         },
 
-        duration  = function () {
+        duration = function () {
             var d = videoModel.getElement().duration;
 
             if (playbackController.getIsDynamic()) {
@@ -203,7 +206,7 @@ let MediaPlayer = function (context) {
             return d;
         },
 
-        getAsUTC = function(valToConvert) {
+        getAsUTC = function (valToConvert) {
             var metric = getDVRInfoMetric.call(this),
                 availableFrom,
                 utcValue;
@@ -228,22 +231,22 @@ let MediaPlayer = function (context) {
         },
 
         formatUTC = function (time, locales, hour12) {
-            var dt = new Date(time*1000);
+            var dt = new Date(time * 1000);
             var d = dt.toLocaleDateString(locales);
-            var t = dt.toLocaleTimeString(locales, {hour12:hour12});
-            return t +' '+d;
+            var t = dt.toLocaleTimeString(locales, {hour12: hour12});
+            return t + ' ' + d;
         },
 
         convertToTimeCode = function (value) {
             value = Math.max(value, 0);
 
-            var h = Math.floor(value/3600);
-            var m = Math.floor((value%3600)/60);
-            var s = Math.floor((value%3600)%60);
-            return (h === 0 ? "":(h<10 ? "0"+h.toString()+":" : h.toString()+":"))+(m<10 ? "0"+m.toString() : m.toString())+":"+(s<10 ? "0"+s.toString() : s.toString());
+            var h = Math.floor(value / 3600);
+            var m = Math.floor((value % 3600) / 60);
+            var s = Math.floor((value % 3600) % 60);
+            return (h === 0 ? "" : (h < 10 ? "0" + h.toString() + ":" : h.toString() + ":")) + (m < 10 ? "0" + m.toString() : m.toString()) + ":" + (s < 10 ? "0" + s.toString() : s.toString());
         },
 
-        updateRules = function(type, rules, override) {
+        updateRules = function (type, rules, override) {
             if (!rules || (type === undefined) || type === null) return;
 
             if (override) {
@@ -253,13 +256,13 @@ let MediaPlayer = function (context) {
             }
         },
 
-        getActiveStream = function() {
+        getActiveStream = function () {
             var streamInfo = streamController.getActiveStreamInfo();
 
             return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
         },
 
-        onStreamTeardownComplete = function(/* e */) {
+        onStreamTeardownComplete = function (/* e */) {
             // Finish rest of shutdown process
             abrController.reset();
             rulesController.reset();
@@ -275,7 +278,7 @@ let MediaPlayer = function (context) {
             }
         },
 
-        resetAndPlay = function() {
+        resetAndPlay = function () {
             this.adapter.reset();
             if (playing && streamController) {
                 if (!resetting) {
@@ -293,12 +296,18 @@ let MediaPlayer = function (context) {
 
     // Overload dijon getObject function
     var _getObject = dijon.System.prototype.getObject;
-    dijon.System.prototype.getObject = function(name) {
+    dijon.System.prototype.getObject = function (name) {
         var obj = _getObject.call(this, name);
         if (typeof obj === "object" && !obj.getName) {
-            obj.getName = function () {return name;};
-            obj.setMediaType = function (mediaType) {obj.mediaType = mediaType;};
-            obj.getMediaType = function () {return obj.mediaType;};
+            obj.getName = function () {
+                return name;
+            };
+            obj.setMediaType = function (mediaType) {
+                obj.mediaType = mediaType;
+            };
+            obj.getMediaType = function () {
+                return obj.mediaType;
+            };
         }
         return obj;
     };
@@ -323,10 +332,10 @@ let MediaPlayer = function (context) {
         capabilities: undefined,
         adapter: undefined,
         errHandler: undefined,
-        uriQueryFragModel:undefined,
-        videoElementExt:undefined,
+        uriQueryFragModel: undefined,
+        videoElementExt: undefined,
 
-        setup: function() {
+        setup: function () {
             metricsExt = system.getObject("metricsExt");
             abrController = system.getObject("abrController");
             rulesController = system.getObject("rulesController");
@@ -335,7 +344,16 @@ let MediaPlayer = function (context) {
             playbackController = system.getObject("playbackController");
             mediaController = system.getObject("mediaController");
             this.restoreDefaultUTCTimingSources();
-            this.debug.log("[dash.js "+ VERSION +"] " + "new MediaPlayer instance has been created");
+            this.debug.log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
+        },
+
+
+        on: function (type, listener, scope) {
+            EventBus.on(type, listener, scope);
+        },
+
+        off: function (type, listener, scope) {
+            EventBus.off(type, listener, scope);
         },
 
         /**
@@ -425,7 +443,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
          */
-        setLiveDelayFragmentCount: function(value) {
+        setLiveDelayFragmentCount: function (value) {
             liveDelayFragmentCount = value;
         },
 
@@ -436,7 +454,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#setLiveDelayFragmentCount setLiveDelayFragmentCount()}
          */
-        useSuggestedPresentationDelay: function(value) {
+        useSuggestedPresentationDelay: function (value) {
             usePresentationDelay = value;
         },
 
@@ -486,7 +504,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          *
          */
-        setNumOfParallelRequestAllowed: function (value){
+        setNumOfParallelRequestAllowed: function (value) {
             numOfParallelRequestAllowed = value;
         },
 
@@ -505,7 +523,7 @@ let MediaPlayer = function (context) {
          * @param value {int} Value in kbps representing the maximum bitrate allowed.
          * @memberof MediaPlayer#
          */
-        setMaxAllowedBitrateFor:function(type, value) {
+        setMaxAllowedBitrateFor: function (type, value) {
             abrController.setMaxAllowedBitrateFor(type, value);
         },
 
@@ -514,7 +532,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
          */
-        getMaxAllowedBitrateFor:function(type) {
+        getMaxAllowedBitrateFor: function (type) {
             return abrController.getMaxAllowedBitrateFor(type);
         },
 
@@ -543,7 +561,7 @@ let MediaPlayer = function (context) {
          * @param value
          * @memberof MediaPlayer#
          */
-        setScheduleWhilePaused: function(value) {
+        setScheduleWhilePaused: function (value) {
             scheduleWhilePaused = value;
         },
 
@@ -551,7 +569,7 @@ let MediaPlayer = function (context) {
          * @returns {boolean}
          * @memberof MediaPlayer#
          */
-        getScheduleWhilePaused: function() {
+        getScheduleWhilePaused: function () {
             return scheduleWhilePaused;
         },
 
@@ -620,18 +638,18 @@ let MediaPlayer = function (context) {
         setTextTrack: function (idx) {
             //For external time text file,  the only action needed to change a track is marking the track mode to showing.
             // Fragmented text tracks need the additional step of calling textSourceBuffer.setTextTrack();
-            if (textSourceBuffer === undefined){
+            if (textSourceBuffer === undefined) {
                 textSourceBuffer = system.getObject("textSourceBuffer");
             }
 
             var tracks = element.textTracks,
                 ln = tracks.length;
 
-            for(var i=0; i < ln; i++ ){
+            for (var i = 0; i < ln; i++) {
                 var track = tracks[i],
                     mode = idx === i ? "showing" : "hidden";
 
-                if (track.mode !== mode){ //checking that mode is not already set by 3rd Party player frameworks that set mode to prevent event retrigger.
+                if (track.mode !== mode) { //checking that mode is not already set by 3rd Party player frameworks that set mode to prevent event retrigger.
                     track.mode = mode;
                 }
             }
@@ -644,7 +662,7 @@ let MediaPlayer = function (context) {
          * @returns {Array}
          * @memberof MediaPlayer#
          */
-        getBitrateInfoListFor: function(type) {
+        getBitrateInfoListFor: function (type) {
             var stream = getActiveStream.call(this);
 
             return stream ? stream.getBitrateListFor(type) : [];
@@ -655,7 +673,7 @@ let MediaPlayer = function (context) {
          * @param {number} value A value of the initial bitrate, kbps
          * @memberof MediaPlayer#
          */
-        setInitialBitrateFor: function(type, value) {
+        setInitialBitrateFor: function (type, value) {
             abrController.setInitialBitrateFor(type, value);
         },
 
@@ -664,7 +682,7 @@ let MediaPlayer = function (context) {
          * @returns {number} A value of the initial bitrate, kbps
          * @memberof MediaPlayer#
          */
-        getInitialBitrateFor: function(type) {
+        getInitialBitrateFor: function (type) {
             return abrController.getInitialBitrateFor(type);
         },
 
@@ -674,7 +692,7 @@ let MediaPlayer = function (context) {
          * @returns {Array} list of {@link MediaPlayer.vo.StreamInfo}
          * @memberof MediaPlayer#
          */
-        getStreamsFromManifest: function(manifest) {
+        getStreamsFromManifest: function (manifest) {
             return this.adapter.getStreamsInfo(manifest);
         },
 
@@ -684,7 +702,7 @@ let MediaPlayer = function (context) {
          * @returns {Array} list of {@link MediaPlayer.vo.MediaInfo}
          * @memberof MediaPlayer#
          */
-        getTracksFor: function(type) {
+        getTracksFor: function (type) {
             var streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
 
             if (!streamInfo) return [];
@@ -700,7 +718,7 @@ let MediaPlayer = function (context) {
          * @returns {Array} list of {@link MediaPlayer.vo.MediaInfo}
          * @memberof MediaPlayer#
          */
-        getTracksForTypeFromManifest: function(type, manifest, streamInfo) {
+        getTracksForTypeFromManifest: function (type, manifest, streamInfo) {
             streamInfo = streamInfo || this.adapter.getStreamsInfo(manifest)[0];
 
             return streamInfo ? this.adapter.getAllMediaInfoForType(manifest, streamInfo, type) : [];
@@ -711,7 +729,7 @@ let MediaPlayer = function (context) {
          * @returns {Object} {@link MediaPlayer.vo.MediaInfo}
          * @memberof MediaPlayer#
          */
-        getCurrentTrackFor: function(type) {
+        getCurrentTrackFor: function (type) {
             var streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
 
             if (!streamInfo) return null;
@@ -733,7 +751,7 @@ let MediaPlayer = function (context) {
          * @param value {Object}
          * @memberof MediaPlayer#
          */
-        setInitialMediaSettingsFor: function(type, value) {
+        setInitialMediaSettingsFor: function (type, value) {
             mediaController.setInitialSettings(type, value);
         },
 
@@ -749,7 +767,7 @@ let MediaPlayer = function (context) {
          * @returns {Object}
          * @memberof MediaPlayer#
          */
-        getInitialMediaSettingsFor: function(type) {
+        getInitialMediaSettingsFor: function (type) {
             return mediaController.getInitialSettings(type);
         },
 
@@ -757,7 +775,7 @@ let MediaPlayer = function (context) {
          * @param track instance of {@link MediaPlayer.vo.MediaInfo}
          * @memberof MediaPlayer#
          */
-        setCurrentTrack: function(track) {
+        setCurrentTrack: function (track) {
             mediaController.setTrack(track);
         },
 
@@ -768,7 +786,7 @@ let MediaPlayer = function (context) {
          * @returns mode
          * @memberof MediaPlayer#
          */
-        getTrackSwitchModeFor: function(type) {
+        getTrackSwitchModeFor: function (type) {
             return mediaController.getSwitchMode(type);
         },
 
@@ -785,7 +803,7 @@ let MediaPlayer = function (context) {
          * @param mode
          * @memberof MediaPlayer#
          */
-        setTrackSwitchModeFor: function(type, mode) {
+        setTrackSwitchModeFor: function (type, mode) {
             mediaController.setSwitchMode(type, mode);
         },
 
@@ -802,7 +820,7 @@ let MediaPlayer = function (context) {
          * @param mode
          * @memberof MediaPlayer#
          */
-        setSelectionModeForInitialTrack: function(mode) {
+        setSelectionModeForInitialTrack: function (mode) {
             mediaController.setSelectionModeForInitialTrack(mode);
         },
 
@@ -812,7 +830,7 @@ let MediaPlayer = function (context) {
          * @returns mode
          * @memberof MediaPlayer#
          */
-        getSelectionModeForInitialTrack: function() {
+        getSelectionModeForInitialTrack: function () {
             return mediaController.getSelectionModeForInitialTrack();
         },
 
@@ -821,7 +839,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          *
          */
-        getAutoSwitchQuality : function () {
+        getAutoSwitchQuality: function () {
             return abrController.getAutoSwitchBitrate();
         },
 
@@ -832,7 +850,7 @@ let MediaPlayer = function (context) {
          * @default {boolean} true
          * @memberof MediaPlayer#
          */
-        setAutoSwitchQuality : function (value) {
+        setAutoSwitchQuality: function (value) {
             abrController.setAutoSwitchBitrate(value);
         },
 
@@ -860,7 +878,7 @@ let MediaPlayer = function (context) {
          * @param newRulesCollection
          * @memberof MediaPlayer#
          */
-        setSchedulingRules: function(newRulesCollection) {
+        setSchedulingRules: function (newRulesCollection) {
             updateRules.call(this, rulesController.SCHEDULING_RULE, newRulesCollection, true);
         },
 
@@ -888,7 +906,7 @@ let MediaPlayer = function (context) {
          * @param newRulesCollection
          * @memberof MediaPlayer#
          */
-        addSchedulingRules: function(newRulesCollection) {
+        addSchedulingRules: function (newRulesCollection) {
             updateRules.call(this, rulesController.SCHEDULING_RULE, newRulesCollection, false);
         },
 
@@ -916,7 +934,7 @@ let MediaPlayer = function (context) {
          * @param newRulesCollection
          * @memberof MediaPlayer#
          */
-        setABRRules: function(newRulesCollection) {
+        setABRRules: function (newRulesCollection) {
             updateRules.call(this, rulesController.ABR_RULE, newRulesCollection, true);
         },
 
@@ -944,7 +962,7 @@ let MediaPlayer = function (context) {
          * @param newRulesCollection
          * @memberof MediaPlayer#
          */
-        addABRRules: function(newRulesCollection) {
+        addABRRules: function (newRulesCollection) {
             updateRules.call(this, rulesController.ABR_RULE, newRulesCollection, false);
         },
 
@@ -955,7 +973,7 @@ let MediaPlayer = function (context) {
          * @return {MediaPlayer.dependencies.ProtectionController} protection controller
          * @memberof MediaPlayer#
          */
-        createProtection: function() {
+        createProtection: function () {
             return system.getObject("protectionController");
         },
 
@@ -976,15 +994,15 @@ let MediaPlayer = function (context) {
          * @param {MediaPlayer~retrieveManifestCallback} callback manifest retrieval callback
          * @memberof MediaPlayer#
          */
-        retrieveManifest: function(url, callback) {
-            (function(manifestUrl) {
+        retrieveManifest: function (url, callback) {
+            (function (manifestUrl) {
                 var manifestLoader = system.getObject("manifestLoader"),
                     uriQueryFragModel = system.getObject("uriQueryFragModel"),
                     self = this;
 
                 manifestLoader.initialize();
 
-                var handler = function(e) {
+                var handler = function (e) {
                     if (!e.error) {
                         callback(e.manifest);
                     } else {
@@ -1028,7 +1046,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#removeUTCTimingSource removeUTCTimingSource()}
          */
-        addUTCTimingSource: function (schemeIdUri, value){
+        addUTCTimingSource: function (schemeIdUri, value) {
             this.removeUTCTimingSource(schemeIdUri, value);//check if it already exists and remove if so.
             var vo = new UTCTiming();
             vo.schemeIdUri = schemeIdUri;
@@ -1045,11 +1063,11 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}
          */
-        removeUTCTimingSource: function(schemeIdUri, value) {
-            UTCTimingSources.forEach(function(obj, idx){
-               if (obj.schemeIdUri === schemeIdUri && obj.value === value){
+        removeUTCTimingSource: function (schemeIdUri, value) {
+            UTCTimingSources.forEach(function (obj, idx) {
+                if (obj.schemeIdUri === schemeIdUri && obj.value === value) {
                     UTCTimingSources.splice(idx, 1);
-               }
+                }
             });
         },
 
@@ -1063,7 +1081,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#restoreDefaultUTCTimingSources restoreDefaultUTCTimingSources()}
          */
-        clearDefaultUTCTimingSources: function() {
+        clearDefaultUTCTimingSources: function () {
             UTCTimingSources = [];
         },
 
@@ -1079,7 +1097,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
          */
-        restoreDefaultUTCTimingSources: function() {
+        restoreDefaultUTCTimingSources: function () {
             this.addUTCTimingSource(MediaPlayer.UTCTimingSources.default.scheme, MediaPlayer.UTCTimingSources.default.value);
         },
 
@@ -1093,7 +1111,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
          */
-        enableManifestDateHeaderTimeSource: function(value) {
+        enableManifestDateHeaderTimeSource: function (value) {
             useManifestDateHeaderTimeSource = value;
         },
 
@@ -1102,7 +1120,7 @@ let MediaPlayer = function (context) {
          * displayed on top of other html elements. Default value is 'false' (z-index is not set).
          * @param value {Boolean}
          */
-        displayCaptionsOnTop: function(value) {
+        displayCaptionsOnTop: function (value) {
             var textTrackExt = system.getObject("textTrackExtensions");
 
             textTrackExt.displayCConTop(value);
@@ -1114,7 +1132,7 @@ let MediaPlayer = function (context) {
          * @param container The HTML5 element containing the video element.
          * @memberof MediaPlayer#
          */
-        attachVideoContainer: function(container) {
+        attachVideoContainer: function (container) {
             if (!videoModel) {
                 throw "Must call attachView with video element before you attach container element";
             }
@@ -1200,7 +1218,7 @@ let MediaPlayer = function (context) {
          *
          * @memberof MediaPlayer#
          */
-        reset: function() {
+        reset: function () {
             this.attachSource(null);
             this.attachView(null);
             protectionController = null;
@@ -1236,7 +1254,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @method
          */
-        seek : seek,
+        seek: seek,
 
         /**
          * Current time of the playhead, in seconds.
@@ -1245,7 +1263,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @method
          */
-        time : time,
+        time: time,
 
         /**
          * Duration of the media's playback, in seconds.
@@ -1254,7 +1272,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @method
          */
-        duration : duration,
+        duration: duration,
 
         /**
          * Use this method to get the current playhead time as an absolute value, the time in seconds since midnight UTC, Jan 1 1970.
@@ -1264,7 +1282,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @method
          */
-        timeAsUTC : timeAsUTC,
+        timeAsUTC: timeAsUTC,
 
         /**
          * Use this method to get the current duration as an absolute value, the time in seconds since midnight UTC, Jan 1 1970.
@@ -1274,7 +1292,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @method
          */
-        durationAsUTC : durationAsUTC,
+        durationAsUTC: durationAsUTC,
 
         /**
          * The timeShiftBufferLength (DVR Window), in seconds.
@@ -1283,7 +1301,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @method
          */
-        getDVRWindowSize : getDVRWindowSize,
+        getDVRWindowSize: getDVRWindowSize,
 
         /**
          * This method should only be used with a live stream that has a valid timeShiftBufferLength (DVR Window).
@@ -1296,7 +1314,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @method
          */
-        getDVRSeekOffset : getDVRSeekOffset,
+        getDVRSeekOffset: getDVRSeekOffset,
 
         /**
          * A utility methods which converts UTC timestamp value into a valid time and date string.
@@ -1308,7 +1326,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @method
          */
-        formatUTC : formatUTC,
+        formatUTC: formatUTC,
 
         /**
          * A utility method which converts seconds into TimeCode (i.e. 300 --> 05:00).
@@ -1318,7 +1336,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          * @method
          */
-        convertToTimeCode : convertToTimeCode
+        convertToTimeCode: convertToTimeCode
 
     };
 };
@@ -1392,7 +1410,7 @@ MediaPlayer.prototype = {
  * The default timing source used for live edge time sync.
  */
 MediaPlayer.UTCTimingSources = {
-    default:{scheme:"urn:mpeg:dash:utc:http-xsdate:2014", value:"http://time.akamai.com/?iso"}
+    default: {scheme: "urn:mpeg:dash:utc:http-xsdate:2014", value: "http://time.akamai.com/?iso"}
 };
 
 /**

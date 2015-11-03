@@ -141,7 +141,7 @@ let ProtectionModel_21Jan2015 = function () {
 
                         case "message":
                             var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                            EventBus.trigger(Events.KEY_MESSAGE, {data:new KeyMessage(this, message, undefined, event.messageType)});
+                            EventBus.trigger(Events.INTERNAL_KEY_MESSAGE, {data:new KeyMessage(this, message, undefined, event.messageType)});
                             break;
                     }
                 },
@@ -170,6 +170,7 @@ let ProtectionModel_21Jan2015 = function () {
             // Register callback for session closed Promise
             session.closed.then(function () {
                 removeSession(token);
+                self.log("DRM: Session closed.  SessionID = " + token.getSessionID());
                 EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:token.getSessionID()});
             });
 
@@ -183,6 +184,7 @@ let ProtectionModel_21Jan2015 = function () {
         system: undefined,
         protectionExt: undefined,
         keySystem: null,
+        log:undefined,
 
         setup: function() {
             eventHandler = createEventHandler.call(this);
@@ -253,10 +255,10 @@ let ProtectionModel_21Jan2015 = function () {
                 if (videoElement) {
                     videoElement.setMediaKeys(mediaKeys);
                 }
-                EventBus.trigger(Events.KEY_SYSTEM_SELECTED);
+                EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
 
             }).catch(function() {
-                EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {error:"Error selecting keys system (" + keySystemAccess.keySystem.systemString + ")! Could not create MediaKeys -- TODO"});
+                EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED, {error:"Error selecting keys system (" + keySystemAccess.keySystem.systemString + ")! Could not create MediaKeys -- TODO"});
             });
         },
 
@@ -282,10 +284,12 @@ let ProtectionModel_21Jan2015 = function () {
         },
 
         setServerCertificate: function(serverCertificate) {
+            var self = this;
             if (!this.keySystem || !mediaKeys) {
                 throw new Error("Can not set server certificate until you have selected a key system");
             }
             mediaKeys.setServerCertificate(serverCertificate).then(function() {
+                self.log("DRM: License server certificate successfully updated.");
                 EventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED);
             }).catch(function(error) {
                 EventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED, {error:"Error updating server certificate -- " + error.name});
@@ -304,6 +308,7 @@ let ProtectionModel_21Jan2015 = function () {
             // Generate initial key request
             var self = this;
             session.generateRequest("cenc", initData).then(function() {
+                self.log("DRM: Session created.  SessionID = " + sessionToken.getSessionID());
                 EventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
             }).catch(function(error) {
                 // TODO: Better error string
@@ -331,11 +336,13 @@ let ProtectionModel_21Jan2015 = function () {
                 throw new Error("Can not load sessions until you have selected a key system");
             }
 
-            var session = mediaKeys.createSession();
+            var session = mediaKeys.createSession(),
+                self = this;
             // Load persisted session data into our newly created session object
             session.load(sessionID).then(function (success) {
                 if (success) {
                     var sessionToken = createSessionToken.call(this, session);
+                    self.log("DRM: Session created.  SessionID = " + sessionToken.getSessionID());
                     EventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
                 } else {
                     EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Could not load session! Invalid Session ID (" + sessionID + ")"});
@@ -346,8 +353,11 @@ let ProtectionModel_21Jan2015 = function () {
         },
 
         removeKeySession: function(sessionToken) {
-            var session = sessionToken.session;
+            var session = sessionToken.session,
+                self = this;
+
             session.remove().then(function () {
+                self.log("DRM: Session removed.  SessionID = " + sessionToken.getSessionID());
                 EventBus.trigger(Events.KEY_SESSION_REMOVED, {data:sessionToken.getSessionID()});
             }, function (error) {
                 EventBus.trigger(Events.KEY_SESSION_REMOVED, {data:null, error:"Error removing session (" + sessionToken.getSessionID() + "). " + error.name});
@@ -356,9 +366,7 @@ let ProtectionModel_21Jan2015 = function () {
         },
 
         closeKeySession: function(sessionToken) {
-
             // Send our request to the key session
-            var self = this;
             closeKeySessionInternal(sessionToken).catch(function(error) {
                 removeSession(sessionToken);
                 EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:null, error:"Error closing session (" + sessionToken.getSessionID() + ") " + error.name});

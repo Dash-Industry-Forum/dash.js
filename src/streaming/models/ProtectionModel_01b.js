@@ -131,6 +131,7 @@ let ProtectionModel_01b = function () {
                             }
 
                             if (sessionToken) {
+                                self.log("DRM: Key added.");
                                 EventBus.trigger(Events.KEY_ADDED, {data:sessionToken});//TODO not sure anything is using sessionToken? why there?
                             } else {
                                 self.log("No session token found for key added");
@@ -321,7 +322,7 @@ let ProtectionModel_01b = function () {
 
         selectKeySystem: function(keySystemAccess) {
             this.keySystem = keySystemAccess.keySystem;
-            EventBus.trigger(Events.KEY_SYSTEM_SELECTED);
+            EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
         },
 
         setMediaElement: function(mediaElement) {

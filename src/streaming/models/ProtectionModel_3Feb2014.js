@@ -120,13 +120,15 @@ let ProtectionModel_3Feb2014 = function () {
                             break;
                         case api.message:
                             var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                            EventBus.trigger(Events.KEY_MESSAGE, {data:new KeyMessage(this, message, event.destinationURL)});
+                            EventBus.trigger(Events.INTERNAL_KEY_MESSAGE, {data:new KeyMessage(this, message, event.destinationURL)});
                             break;
                         case api.ready:
+                            self.log("DRM: Key added.");
                             EventBus.trigger(Events.KEY_ADDED);
                             break;
 
                         case api.close:
+                            self.log("DRM: Session closed.  SessionID = " + this.getSessionID());
                             EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:this.getSessionID()});
                             break;
                     }
@@ -150,6 +152,7 @@ let ProtectionModel_3Feb2014 = function () {
         system: undefined,
         protectionExt: undefined,
         keySystem: null,
+        log:undefined,
 
         setup: function() {
             eventHandler = createEventHandler.call(this);
@@ -251,9 +254,9 @@ let ProtectionModel_3Feb2014 = function () {
                 if (videoElement) {
                     setMediaKeys.call(this);
                 }
-                EventBus.trigger(Events.KEY_SYSTEM_SELECTED);
+                EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
             } catch (error) {
-                EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {error:"Error selecting keys system (" + this.keySystem.systemString + ")! Could not create MediaKeys -- TODO"});
+                EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED, {error:"Error selecting keys system (" + this.keySystem.systemString + ")! Could not create MediaKeys -- TODO"});
             }
         },
 
@@ -297,6 +300,7 @@ let ProtectionModel_3Feb2014 = function () {
 
             // Add to our session list
             sessions.push(sessionToken);
+            this.log("DRM: Session created.  SessionID = " + sessionToken.getSessionID());
             EventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
         },
 

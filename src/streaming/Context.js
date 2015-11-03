@@ -152,6 +152,7 @@ let Context = function () {
             if (ProtectionEvents) {
                 protectionEvents = new ProtectionEvents();
                 Events.extend(protectionEvents);
+                PublicEvents.extend(protectionEvents, {publicOnly:true})
             }
 
             if (PublicEvents) {

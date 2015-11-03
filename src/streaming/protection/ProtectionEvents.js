@@ -49,13 +49,6 @@ class ProtectionEvents extends EventsBase {
          */
         this.KEY_SYSTEM_ACCESS_COMPLETE = "keySystemAccessComplete";
 
-        /**
-         * Event ID for events delivered when a key system selection procedure
-         * completes
-         *
-         * @constant
-         */
-        this.KEY_SYSTEM_SELECTED = "keySystemSelected";
 
         /**
          * Event ID for events delivered when a HTMLMediaElement has been
@@ -74,24 +67,6 @@ class ProtectionEvents extends EventsBase {
         this.SERVER_CERTIFICATE_UPDATED = "serverCertificateUpdated";
 
         /**
-         * Event ID for events delivered when the protection set receives
-         * a key message from the CDM
-         *
-         * @constant
-         */
-        this.KEY_MESSAGE = "keyMessage";
-
-        /**
-         * Event ID for events delivered when a new key has been added
-         *
-         * @constant
-         * @deprecated The latest versions of the EME specification no longer
-         * use this event.  {@MediaPlayer.models.protectionModel.eventList.KEY_STATUSES_CHANGED}
-         * is preferred.
-         */
-        this.KEY_ADDED = "keyAdded";
-
-        /**
          * Event ID for events delivered when an error is encountered by the CDM
          * while processing a license server response message
          *
@@ -100,44 +75,108 @@ class ProtectionEvents extends EventsBase {
         this.KEY_ERROR = "keyError";
 
         /**
-         * Event ID for events delivered when a new key sessions creation
-         * process has completed
-         *
-         * @constant
-         */
-        this.KEY_SESSION_CREATED = "keySessionCreated";
-
-        /**
-         * Event ID for events delivered when a key session removal
-         * process has completed
-         *
-         * @constant
-         */
-        this.KEY_SESSION_REMOVED = "keySessionRemoved";
-
-        /**
-         * Event ID for events delivered when a key session close
-         * process has completed
-         *
-         * @constant
-         */
-        this.KEY_SESSION_CLOSED = "keySessionClosed";
-
-        /**
-         * Event ID for events delivered when the status of one or more
-         * decryption keys has changed
-         *
-         * @constant
-         */
-        this.KEY_STATUSES_CHANGED = "keyStatusesChanged";
-
-        /**
          * Event ID for events delivered when the process of shutting down
          * a protection set has completed
          *
          * @constant
          */
         this.TEARDOWN_COMPLETE =  "protectionTeardownComplete";
+
+
+        /**
+         * Event ID for events delivered when a key system selection procedure
+         * completes
+         *
+         * @constant
+         * @public
+         */
+        this.INTERNAL_KEY_SYSTEM_SELECTED = "internalKeySystemSelected";
+
+        /**
+         * Event ID for events delivered when the protection set receives
+         * a key message from the CDM
+         *
+         * @constant
+         */
+        this.INTERNAL_KEY_MESSAGE = "internalKeyMessage";
+
+        //EXTERNAL FACING EVENTS
+        /**
+         * Event ID for events delivered when a key system selection procedure
+         * completes
+         *
+         * @constant
+         * @public
+         */
+        this.KEY_SYSTEM_SELECTED = "public_keySystemSelected";
+
+
+        /**
+         * Event ID for events delivered when the protection set receives
+         * a key message from the CDM
+         *
+         * @constant
+         * @public
+         */
+        this.KEY_MESSAGE = "public_keyMessage";
+
+        /**
+         * Event ID for events delivered when a new key has been added
+         *
+         * @constant
+         * @deprecated The latest versions of the EME specification no longer
+         * use this event.  {@MediaPlayer.models.protectionModel.eventList.KEY_STATUSES_CHANGED}
+         * is preferred.
+         *
+         * @public
+         */
+        this.KEY_ADDED = "public_keyAdded";
+
+
+        /**
+         * Event ID for events delivered when a new key sessions creation
+         * process has completed
+         *
+         * @constant
+         * @public
+         */
+        this.KEY_SESSION_CREATED = "public_keySessionCreated";
+
+        /**
+         * Event ID for events delivered when a key session removal
+         * process has completed
+         *
+         * @constant
+         * @public
+         */
+        this.KEY_SESSION_REMOVED = "public_keySessionRemoved";
+
+        /**
+         * Event ID for events delivered when a key session close
+         * process has completed
+         *
+         * @constant
+         * @public
+         */
+        this.KEY_SESSION_CLOSED = "public_keySessionClosed";
+
+        /**
+         * Event ID for events delivered when the status of one or more
+         * decryption keys has changed
+         *
+         * @constant
+         * @public
+         */
+        this.KEY_STATUSES_CHANGED = "public_keyStatusesChanged";
+
+        /**
+         * Event ID for events delivered when a license request procedure
+         * has completed
+         *
+         * @constant
+         * @public
+         */
+        this.LICENSE_REQUEST_COMPLETE = "public_licenseRequestComplete";
     }
 }
 

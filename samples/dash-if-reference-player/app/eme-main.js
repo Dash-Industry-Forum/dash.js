@@ -177,15 +177,17 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         $scope.drmData.push(data);
         $scope.safeApply();
 
-        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SYSTEM_SELECTED, function(e) {
+        player.on(MediaPlayer.events.KEY_SYSTEM_SELECTED, function(e) {
             if (!e.error) {
                 data.ksconfig = e.data.ksConfiguration;
             } else {
                 data.error = e.error;
             }
             $scope.safeApply();
-        });
-        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SESSION_CREATED, function(e) {
+        }, $scope);
+
+
+        player.on(MediaPlayer.events.KEY_SESSION_CREATED, function(e) {
             if (!e.error) {
                 var persistedSession = findSession(e.data.getSessionID());
                 if (persistedSession) {
@@ -203,8 +205,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 data.error = e.error;
             }
             $scope.safeApply();
-        });
-        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SESSION_REMOVED, function(e) {
+        }, $scope);
+
+
+        player.on(MediaPlayer.events.KEY_SESSION_REMOVED, function(e) {
             if (!e.error) {
                 var session = findSession(e.data);
                 if (session) {
@@ -215,8 +219,10 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 data.error = e.error;
             }
             $scope.safeApply();
-        });
-        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_SESSION_CLOSED, function(e) {
+        }, $scope);
+
+
+        player.on(MediaPlayer.events.KEY_SESSION_CLOSED, function(e) {
             if (!e.error) {
                 for (var i = 0; i < data.sessions.length; i++) {
                     if (data.sessions[i].sessionID === e.data) {
@@ -228,8 +234,9 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 data.error = e.error;
             }
             $scope.safeApply();
-        });
-        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_STATUSES_CHANGED, function(e) {
+        }, $scope);
+
+        player.on(MediaPlayer.events.KEY_STATUSES_CHANGED, function(e) {
             var session = findSession(e.data.getSessionID());
             if (session) {
                 var toGUID = function(uakey) {
@@ -261,8 +268,9 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 });
                 $scope.safeApply();
             }
-        });
-        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.KEY_MESSAGE, function(e) {
+        }, $scope);
+
+        player.on(MediaPlayer.events.KEY_MESSAGE, function(e) {
             var session = findSession(e.data.sessionToken.getSessionID());
             if (session) {
                 session.lastMessage = "Last Message: " + e.data.message.byteLength + " bytes";
@@ -274,8 +282,9 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 session.lastMessage += "Waiting for response from license server...";
                 $scope.safeApply();
             }
-        });
-        protCtrl.addEventListener(MediaPlayer.dependencies.ProtectionController.events.LICENSE_REQUEST_COMPLETE, function(e) {
+        }, $scope);
+
+        player.on(MediaPlayer.events.LICENSE_REQUEST_COMPLETE, function(e) {
             if (!e.error) {
                 var session = findSession(e.data.sessionToken.getSessionID());
                 if (session) {
@@ -286,7 +295,8 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                 data.error = "License request failed for message type '" + e.data.messageType + "'! " + e.error;
             }
             $scope.safeApply();
-        });
+        }, $scope);
+
         return data;
     };
 

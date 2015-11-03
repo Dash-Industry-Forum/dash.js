@@ -362,16 +362,11 @@ let Stream = function () {
         initialize: function(strmInfo, protectionCtrl) {
             streamInfo = strmInfo;
             protectionController = protectionCtrl;
-
-            // Protection error handler
-            boundProtectionErrorHandler = onProtectionError.bind(this);
-            protectionController.addEventListener(ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
-            protectionController.addEventListener(ProtectionController.events.SERVER_CERTIFICATE_UPDATED, boundProtectionErrorHandler);
-            protectionController.addEventListener(ProtectionController.events.KEY_ADDED, boundProtectionErrorHandler);
-            protectionController.addEventListener(ProtectionController.events.KEY_SESSION_CREATED, boundProtectionErrorHandler);
-            protectionController.addEventListener(ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
-            protectionController.addEventListener(ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
-            protectionController.addEventListener(ProtectionController.events.LICENSE_REQUEST_COMPLETE, boundProtectionErrorHandler);
+            EventBus.on(Events.KEY_ERROR, onProtectionError, this);
+            EventBus.on(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, this);
+            EventBus.on(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, this);
+            EventBus.on(Events.KEY_SYSTEM_SELECTED, onProtectionError, this);
+            EventBus.on(Events.KEY_SESSION_CREATED, onProtectionError, this);
         },
 
         /**
@@ -422,14 +417,12 @@ let Stream = function () {
 
             EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             EventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
+            EventBus.off(Events.KEY_ERROR, onProtectionError, this);
+            EventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, this);
+            EventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, this);
+            EventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, this);
+            EventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, this);
 
-            protectionController.removeEventListener(ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
-            protectionController.removeEventListener(ProtectionController.events.SERVER_CERTIFICATE_UPDATED, boundProtectionErrorHandler);
-            protectionController.removeEventListener(ProtectionController.events.KEY_ADDED, boundProtectionErrorHandler);
-            protectionController.removeEventListener(ProtectionController.events.KEY_SESSION_CREATED, boundProtectionErrorHandler);
-            protectionController.removeEventListener(ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
-            protectionController.removeEventListener(ProtectionController.events.KEY_SYSTEM_SELECTED, boundProtectionErrorHandler);
-            protectionController.removeEventListener(ProtectionController.events.LICENSE_REQUEST_COMPLETE, boundProtectionErrorHandler);
             updateError = {};
         },
 

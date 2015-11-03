@@ -102,14 +102,14 @@ let ProtectionController = function () {
                             if (event.error) {
                                 if (!fromManifest) {
                                     EventBus.dispatchEvent({
-                                        type: ProtectionController.events.KEY_SYSTEM_SELECTED,
+                                        type: Events.KEY_SYSTEM_SELECTED,
                                         error: "DRM: KeySystem Access Denied! -- " + event.error
                                     });
                                 }
                             } else {
                                 self.log("KeySystem Access Granted");
                                 EventBus.dispatchEvent({
-                                    type: ProtectionController.events.KEY_SYSTEM_SELECTED,
+                                    type: Events.KEY_SYSTEM_SELECTED,
                                     data: event.data
                                 });
                                 self.createKeySession(supportedKS[ksIdx].initData);
@@ -136,12 +136,10 @@ let ProtectionController = function () {
                     EventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                     if (event.error) {
                         self.keySystem = undefined;
-                        EventBus.off(Events.KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+                        EventBus.off(Events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+
                         if (!fromManifest) {
-                            EventBus.dispatchEvent({
-                                type: ProtectionController.events.KEY_SYSTEM_SELECTED,
-                                error: "DRM: KeySystem Access Denied! -- " + event.error
-                            });
+                            EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: null, error: "DRM: KeySystem Access Denied! -- " + event.error});
                         }
                     } else {
                         keySystemAccess = event.data;
@@ -150,14 +148,11 @@ let ProtectionController = function () {
                     }
                 };
                 var onKeySystemSelected = function(event) {
-                    EventBus.off(Events.KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+                    EventBus.off(Events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
                     EventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                     if (!event.error) {
                         self.keySystem = self.protectionModel.keySystem;
-                        EventBus.dispatchEvent({
-                            type: ProtectionController.events.KEY_SYSTEM_SELECTED,
-                            data: keySystemAccess
-                        });
+                        EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: keySystemAccess});
                         for (var i = 0; i < pendingNeedKeyData.length; i++) {
                             for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                                 if (self.keySystem === pendingNeedKeyData[i][ksIdx].ks) {
@@ -169,14 +164,11 @@ let ProtectionController = function () {
                     } else {
                         self.keySystem = undefined;
                         if (!fromManifest) {
-                            EventBus.dispatchEvent({
-                                type: ProtectionController.events.KEY_SYSTEM_SELECTED,
-                                error: "DRM: Error selecting key system! -- " + event.error
-                            });
+                            EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: null, error: "DRM: Error selecting key system! -- " + event.error});
                         }
                     }
                 };
-                EventBus.on(Events.KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+                EventBus.on(Events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
                 EventBus.on(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                 this.protectionModel.requestKeySystemAccess(requestedKeySystems);
             } else {
@@ -186,11 +178,7 @@ let ProtectionController = function () {
         },
 
         sendLicenseRequestCompleteEvent = function(data, error) {
-            EventBus.dispatchEvent({
-                type: ProtectionController.events.LICENSE_REQUEST_COMPLETE,
-                data: data,
-                error: error
-            });
+            EventBus.trigger(Events.LICENSE_REQUEST_COMPLETE, {data: data, error: error});
         },
 
         onKeyMessage = function(e) {
@@ -201,11 +189,7 @@ let ProtectionController = function () {
 
             // Dispatch event to applications indicating we received a key message
             var keyMessage = e.data;
-            EventBus.dispatchEvent({
-                type: ProtectionController.events.KEY_MESSAGE,
-                data: keyMessage
-            });
-
+            EventBus.trigger(Events.KEY_MESSAGE, {data: keyMessage});
             var messageType = (keyMessage.messageType) ? keyMessage.messageType : "license-request",
                 message = keyMessage.message,
                 sessionToken = keyMessage.sessionToken,
@@ -334,100 +318,10 @@ let ProtectionController = function () {
             }
 
             selectKeySystem.call(this, supportedKS, false);
-        },
-
-        onServerCertificateUpdated = function(event) {
-            if (!event.error) {
-                this.log("DRM: License server certificate successfully updated.");
-                EventBus.dispatchEvent({
-                    type: ProtectionController.events.SERVER_CERTIFICATE_UPDATED,
-                    data: null,
-                    error:null
-                });
-            } else {
-                EventBus.dispatchEvent({
-                    type: ProtectionController.events.SERVER_CERTIFICATE_UPDATED,
-                    data: null,
-                    error: "DRM: Failed to update license server certificate. -- " + event.error
-                });
-            }
-        },
-
-        onKeySessionCreated = function(event) {
-            if (!event.error) {
-                this.log("DRM: Session created.  SessionID = " + event.data.getSessionID());
-                EventBus.dispatchEvent({
-                    type: ProtectionController.events.KEY_SESSION_CREATED,
-                    data: event.data,
-                    error:null
-                });
-            } else {
-                EventBus.dispatchEvent({
-                    type: ProtectionController.events.KEY_SESSION_CREATED,
-                    data:null,
-                    error:"DRM: Failed to create key session. -- " + event.error
-                });
-            }
-        },
-
-        onKeyAdded = function (/*event*/) {
-            this.log("DRM: Key added.");
-            EventBus.dispatchEvent({
-                type: ProtectionController.events.KEY_ADDED,
-                data:null,
-                error:null
-            });
-        },
-
-        onKeyError = function (event) {
-            EventBus.dispatchEvent({
-                type: ProtectionController.events.KEY_ADDED,
-                data:null,
-                error:"DRM: MediaKeyError - sessionId: " + event.data.sessionToken.getSessionID() + ".  " + event.data.error
-            });
-        },
-
-        onKeySessionClosed = function(event) {
-            if (!event.error) {
-                this.log("DRM: Session closed.  SessionID = " + event.data);
-                EventBus.dispatchEvent({
-                    type: ProtectionController.events.KEY_SESSION_CLOSED,
-                    data:event.data,
-                    error:null
-                });
-            } else {
-                EventBus.dispatchEvent({
-                    type: ProtectionController.events.KEY_SESSION_CLOSED,
-                    data:null,
-                    error:"DRM Failed to close key session. -- " + event.error
-                });
-            }
-        },
-
-        onKeySessionRemoved = function(event) {
-            if (!event.error) {
-                this.log("DRM: Session removed.  SessionID = " + event.data);
-                EventBus.dispatchEvent({
-                    type: ProtectionController.events.KEY_SESSION_REMOVED,
-                    data:event.data,
-                    error:null
-                });
-            } else {
-                EventBus.dispatchEvent({
-                    type: ProtectionController.events.KEY_SESSION_REMOVED,
-                    data:null,
-                    error:"DRM Failed to remove key session. -- " + event.error
-                });
-            }
-        },
-
-        onKeyStatusesChanged = function(event) {
-            EventBus.dispatchEvent({
-                type: ProtectionController.events.KEY_STATUSES_CHANGED,
-                data:event.data,
-                error:null
-            });
         };
+
+
+
 
     return {
         system : undefined,
@@ -438,15 +332,8 @@ let ProtectionController = function () {
 
         setup : function () {
 
-            EventBus.on(Events.SERVER_CERTIFICATE_UPDATED, onServerCertificateUpdated, this);
             EventBus.on(Events.NEED_KEY, onNeedKey, this);
-            EventBus.on(Events.KEY_MESSAGE, onKeyMessage, this);
-            EventBus.on(Events.KEY_ADDED, onKeyAdded, this);
-            EventBus.on(Events.KEY_ERROR, onKeyError, this);
-            EventBus.on(Events.KEY_SESSION_CREATED, onKeySessionCreated, this);
-            EventBus.on(Events.KEY_SESSION_CLOSED, onKeySessionClosed, this);
-            EventBus.on(Events.KEY_SESSION_REMOVED, onKeySessionRemoved, this);
-            EventBus.on(Events.KEY_STATUSES_CHANGED, onKeyStatusesChanged, this);
+            EventBus.on(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
 
             keySystems = this.protectionExt.getKeySystems();
             this.protectionModel = this.system.getObject("protectionModel");
@@ -547,14 +434,7 @@ let ProtectionController = function () {
          */
         teardown: function() {
             this.setMediaElement(null);
-            EventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onServerCertificateUpdated, this);
-            EventBus.off(Events.KEY_MESSAGE, onKeyMessage, this);
-            EventBus.off(Events.KEY_ADDED, onKeyAdded, this);
-            EventBus.off(Events.KEY_ERROR, onKeyError, this);
-            EventBus.off(Events.KEY_SESSION_CREATED, onKeySessionCreated, this);
-            EventBus.off(Events.KEY_SESSION_CLOSED, onKeySessionClosed, this);
-            EventBus.off(Events.KEY_SESSION_REMOVED, onKeySessionRemoved, this);
-            EventBus.off(Events.KEY_STATUSES_CHANGED, onKeyStatusesChanged, this);
+            EventBus.off(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
 
             this.keySystem = undefined;
 
@@ -782,74 +662,6 @@ let ProtectionController = function () {
  * will contain an informative error string describing the failure
  */
 
-/**
- * Events names for events sent by ProtectionController.  Use these event
- * names when subscribing or unsubscribing from ProtectionController events
- *
- * @enum {String}
- * @see ProtectionController#addEventListener
- */
-ProtectionController.events = {
-
-    /**
-     * Event ID for events delivered when the protection set receives
-     * a key message from the CDM
-     *
-     * @constant
-     */
-    SERVER_CERTIFICATE_UPDATED: "serverCertificateUpdated",
-    /**
-     * Event ID for events delivered when a new key has been added
-     *
-     * @constant
-     * @deprecated The latest versions of the EME specification no longer
-     * use this event. {@ProtectionController.events.KEY_STATUSES_CHANGED}
-     * is preferred.
-     */
-    KEY_ADDED: "keyAdded",
-    /**
-     * Event ID for events delivered when a new key sessions creation
-     * process has completed
-     *
-     * @constant
-     */
-    KEY_SESSION_CREATED: "keySessionCreated",
-    /**
-     * Event ID for events delivered when a key session removal
-     * process has completed
-     *
-     * @constant
-     */
-    KEY_SESSION_REMOVED: "keySessionRemoved",
-    /**
-     * Event ID for events delivered when a key session close
-     * process has completed
-     *
-     * @constant
-     */
-    KEY_SESSION_CLOSED: "keySessionClosed",
-    /**
-     * Event ID for events delivered when the status of one or more
-     * decryption keys has changed
-     *
-     * @constant
-     */
-    KEY_STATUSES_CHANGED: "keyStatusesChanged",
-    /**
-     * Event ID for events delivered when the protection system receives
-     * a key message from the CDM
-     *
-     * @constant
-     */
-    KEY_MESSAGE: "keyMessage",
-    /**
-     * Event ID for events delivered when a license request procedure
-     * has completed
-     *
-     * @constant
-     */
-    LICENSE_REQUEST_COMPLETE: "licenseRequestComplete"
-};
 
 ProtectionController.prototype = {
     constructor: ProtectionController
