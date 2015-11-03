@@ -557,7 +557,7 @@ let BufferController = function () {
         },
 
         onCurrentTrackChanged = function(e) {
-            if (!buffer || e.newMediaInfo.streamInfo !== this.streamProcessor.getStreamInfo()) return;
+            if (!buffer || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== this.streamProcessor.getStreamInfo().id)) return;
 
             var self = this,
                 newMediaInfo = e.newMediaInfo,
