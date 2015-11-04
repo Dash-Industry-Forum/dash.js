@@ -30,12 +30,7 @@
  */
 MediaPlayer.dependencies.BufferController = function () {
     "use strict";
-    var WALLCLOCK_TIME_UPDATE_INTERVAL = 100, // every 100 wall clock
-                                              // ticks, this should
-                                              // probably be based on
-                                              // times rather wall
-                                              // clock ticks
-        MINIMUM_BUFFER_TO_PRUNE = 20,
+    var MINIMUM_BUFFER_TO_PRUNE = 20,
         STALL_THRESHOLD = 0.5,
         requiredQuality = 0,
         currentQuality = -1,
@@ -671,7 +666,7 @@ MediaPlayer.dependencies.BufferController = function () {
             appendNext.call(this);
             // constantly prune buffer every so often
             wallclockTicked += 1;
-            if ((wallclockTicked % (MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
+            if ((wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
                 pruneBuffer.call(this);
             }
         },
