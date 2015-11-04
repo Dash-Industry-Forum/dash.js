@@ -167,7 +167,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                     return;
                 }
 
-                time = time || ((req === reqForCurrentTime) ? currentTime : req.startTime);
+                time = time || req.startTime;
 
                 if (pendingReqs.indexOf(req) !== -1) {
                     reqsToExecute.push(req);
