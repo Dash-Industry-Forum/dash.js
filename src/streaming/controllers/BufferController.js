@@ -30,7 +30,13 @@
  */
 MediaPlayer.dependencies.BufferController = function () {
     "use strict";
-    var STALL_THRESHOLD = 0.5,
+    var WALLCLOCK_TIME_UPDATE_INTERVAL = 100, // every 100 wall clock
+                                              // ticks, this should
+                                              // probably be based on
+                                              // times rather wall
+                                              // clock ticks
+        MINIMUM_BUFFER_TO_PRUNE = 20,
+        STALL_THRESHOLD = 0.5,
         requiredQuality = 0,
         currentQuality = -1,
         isBufferingCompleted = false,
@@ -354,7 +360,8 @@ MediaPlayer.dependencies.BufferController = function () {
             // we want to get rid off buffer that is more than x seconds behind current time
             if (currentRange !== null) {
                 bufferToPrune = currentTime - currentRange.start - MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP;
-                if (bufferToPrune > 0) {
+                if (bufferToPrune > MINIMUM_BUFFER_TO_PRUNE) {
+                    this.log("need to prune:"+bufferToPrune);
                     isPruningInProgress = true;
                     this.sourceBufferExt.remove(buffer, 0, Math.round(currentRange.start + bufferToPrune), mediaSource);
                 }
@@ -662,9 +669,9 @@ MediaPlayer.dependencies.BufferController = function () {
 
         onWallclockTimeUpdated = function(/*e*/) {
             appendNext.call(this);
-            // constantly prune buffer every x seconds
+            // constantly prune buffer every so often
             wallclockTicked += 1;
-            if ((wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
+            if ((wallclockTicked % (MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
                 pruneBuffer.call(this);
             }
         },
