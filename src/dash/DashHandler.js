@@ -749,10 +749,16 @@ Dash.dependencies.DashHandler = function () {
                 seg,
                 i;
 
+            if (index<ln) {
+                seg=representation.segments[index];
+                if (seg && seg.availabilityIdx === index) {
+                    return seg;
+                }
+            }
+
             for (i = 0; i < ln; i += 1) {
                 seg = representation.segments[i];
-
-                if (seg.availabilityIdx === index) {
+                if (seg && seg.availabilityIdx === index) {
                     return seg;
                 }
             }
