@@ -31,9 +31,7 @@
 MediaPlayer.rules.SameTimeRequestRule = function () {
     "use strict";
 
-    var lastMediaRequestIdxs = {},
-
-        findClosestToTime = function(fragmentModels, time) {
+    var findClosestToTime = function(fragmentModels, time) {
             var req,
                 r,
                 pendingReqs,
@@ -89,27 +87,13 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
             requestsArray.sort(compare);
 
-        },
-
-        getLastMediaRequestIdx = function(streamId, type) {
-            return ((lastMediaRequestIdxs[streamId] && lastMediaRequestIdxs[streamId][type]) ? lastMediaRequestIdxs[streamId][type] : NaN);
-        },
-
-        onStreamCompleted = function(e) {
-            var model = e.data.fragmentModel,
-                req = e.data.request,
-                streamId = model.getContext().streamProcessor.getStreamInfo().id,
-                type = req.mediaType;
-
-            lastMediaRequestIdxs[streamId] = lastMediaRequestIdxs[streamId] || {};
-            lastMediaRequestIdxs[streamId][type] = req.index - 1;
         };
 
     return {
         playbackController: undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
+
         },
 
         setFragmentModels: function(fragmentModels, streamid) {
@@ -134,7 +118,6 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 time = null,
                 reqForCurrentTime,
                 mLength = fragmentModels ? fragmentModels.length : null,
-                shouldWait = false,
                 reqsToExecute = [],
                 pendingReqs,
                 loadingLength;
@@ -193,27 +176,13 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
                 sameTimeReq = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING, time: time})[0] ||
                     model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, time: time})[0];
-
-                if (!sameTimeReq && (req.index !== getLastMediaRequestIdx.call(this, streamId, req.mediaType)) && type !== "fragmentedText") {
-                    shouldWait = true;
-                    break;
-                }
             }
 
             reqsToExecute = reqsToExecute.filter( function(req) {
                 return (req.action === "complete") || (wallclockTime.getTime() >= req.availabilityStartTime.getTime());
             });
 
-            if (shouldWait) {
-                callback(new MediaPlayer.rules.SwitchRequest([], p));
-                return;
-            }
-
             callback(new MediaPlayer.rules.SwitchRequest(reqsToExecute, p));
-        },
-
-        reset: function() {
-            lastMediaRequestIdxs = {};
         }
     };
 };

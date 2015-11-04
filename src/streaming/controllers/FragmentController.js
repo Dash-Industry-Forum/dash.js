@@ -172,10 +172,6 @@ MediaPlayer.dependencies.FragmentController = function () {
             this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
 
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
-
-            if (this.scheduleRulesCollection.sameTimeRequestRule) {
-                this.subscribe(MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED, this.scheduleRulesCollection.sameTimeRequestRule);
-            }
         },
 
         process: function (bytes) {
