@@ -45,7 +45,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
 
         getStreamStartTime = function (streamInfo) {
             var presentationStartTime,
-                startTimeOffset = parseInt(this.uriQueryFragModel.getURIFragmentData().s);
+                startTimeOffset = parseInt(this.uriQueryFragModel.getURIFragmentData().s,10);
 
             if (isDynamic) {
 
@@ -216,7 +216,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
                 remainingUnbufferedDuration = getStreamStartTime.call(this, streamInfo) + streamInfo.duration - bufferEndTime;
             }
 
-            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, {bufferedRanges: videoModel.getElement().buffered, remainingUnbufferedDuration: remainingUnbufferedDuration});
+            this.notify(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PROGRESS, {bufferedRanges: ranges, remainingUnbufferedDuration: remainingUnbufferedDuration});
         },
 
         onPlaybackRateChanged = function() {
