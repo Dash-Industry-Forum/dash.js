@@ -49,9 +49,9 @@ let PlaybackTimeRule = function () {
                     mediaInfo = context.getMediaInfo(),
                     streamId = context.getStreamInfo().id,
                     streamProcessor = context.getStreamProcessor(),
-                    streamController = streamProcessor.getScheduleController(),
+                    scheduleController = streamProcessor.getScheduleController(),
                     representationInfo = streamProcessor.getCurrentRepresentationInfo(),
-                    seekTarget = streamController.getSeekTarget(),//seekTarget ? seekTarget[mediaType] : null,
+                    seekTarget = scheduleController.getSeekTarget(),//seekTarget ? seekTarget[mediaType] : null,
                     hasSeekTarget = !isNaN(seekTarget),
                     p = hasSeekTarget ? SwitchRequest.prototype.STRONG  : SwitchRequest.prototype.DEFAULT,
                     keepIdx = !hasSeekTarget,
@@ -68,7 +68,7 @@ let PlaybackTimeRule = function () {
             }
 
             if (hasSeekTarget) {
-                streamController.setSeekTarget(NaN);
+                scheduleController.setSeekTarget(NaN);
             }
 
             if (buffer) {
@@ -95,7 +95,7 @@ let PlaybackTimeRule = function () {
 
             if (request ) {
                 streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
-                request.delayLoadingTime = new Date().getTime() + streamController.getTimeToLoadDelay();
+                request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
             }
 
             callback(new SwitchRequest(request, p));

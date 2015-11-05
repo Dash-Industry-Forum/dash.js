@@ -35,10 +35,11 @@ import FragmentController from '../../controllers/FragmentController.js';
 let BufferLevelRule = function () {
     "use strict";
 
-    var getBufferTarget = function (context) {
+    var getBufferTarget = function (context, type) {
             var streamProcessor = context.getStreamProcessor(),
                 streamInfo = context.getStreamInfo(),
                 duration = streamInfo.manifestInfo.duration,
+                trackInfo = context.getTrackInfo(),
                 isDynamic = streamProcessor.isDynamic(), //TODO make is dynamic false if live stream is playing more than X seconds from live edge in DVR window. So it will act like VOD.
                 isLongFormContent = (duration >= BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
                 bufferTarget = NaN;
@@ -52,6 +53,10 @@ let BufferLevelRule = function () {
                 bufferTarget = this.playbackController.getLiveDelay();
             }
 
+            if (type === "fragmentedText"){
+                bufferTarget = this.textSourceBuffer.getAllTracksAreDisabled() ? 0 : trackInfo.fragmentDuration;
+            }
+
             return bufferTarget;
         };
 
@@ -60,6 +65,7 @@ let BufferLevelRule = function () {
         metricsModel: undefined,
         abrController: undefined,
         playbackController: undefined,
+        textSourceBuffer:undefined,
         log:undefined,
 
         execute: function(context, callback) {
@@ -69,7 +75,7 @@ let BufferLevelRule = function () {
                 bufferLevel = this.metricsExt.getCurrentBufferLevel(metrics) ? this.metricsExt.getCurrentBufferLevel(metrics).level : 0,
                 fragmentCount;
 
-            fragmentCount = bufferLevel < getBufferTarget.call(this, context) ? 1 : 0;
+            fragmentCount = bufferLevel < getBufferTarget.call(this, context, mediaType) ? 1 : 0;
 
             callback(new SwitchRequest(fragmentCount, SwitchRequest.prototype.DEFAULT));
         },

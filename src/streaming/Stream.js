@@ -113,7 +113,6 @@ let Stream = function () {
                 createStreamProcessor.call(this, mediaInfo, manifest, mediaSource, {buffer: buffer, replaceIdx: idx, currentTime: currentTime});
                 this.playbackController.seek(this.playbackController.getTime());
             }else {
-                processor.setIndexHandlerTime(currentTime);
                 processor.updateMediaInfo(manifest, mediaInfo);
             }
         },

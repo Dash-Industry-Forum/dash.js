@@ -51,9 +51,10 @@ let TextSourceBuffer = function () {
                         self.textTrackExtensions.setCurrentTrackIdx(i);
                         if (self.isFragmented) {
                             if (!self.mediaController.isCurrentTrack(self.allTracks[i])) {
-                                self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
                                 self.fragmentModel.abortRequests();
-                                self.buffered.clear();
+                                self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
+                                //self.buffered.clear();
+                                //self.buffered.remove(self.buffered.start(0), self.buffered.end(self.buffered.length-1))
                                 self.mediaController.setTrack(self.allTracks[i]);
                             }
                         }
