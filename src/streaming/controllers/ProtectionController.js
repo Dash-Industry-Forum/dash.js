@@ -394,6 +394,7 @@ let ProtectionController = function () {
         teardown: function() {
             this.setMediaElement(null);
             EventBus.off(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
+            EventBus.off(Events.NEED_KEY, onNeedKey, this);
 
             this.keySystem = undefined;
 
