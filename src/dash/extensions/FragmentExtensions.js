@@ -29,13 +29,32 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Error from '../../streaming/vo/Error.js';
-
-let FragmentExtensions = function () {
+let FragmentExtensions = (function () {
     "use strict";
 
-    var getSamplesInfo = function (ab) {
-            var isoFile = this.boxParser.parse(ab),
+    var boxParser = null,
+        instance = null,
+
+        create = function(parser) {
+            if (instance) return instance;
+
+            boxParser = parser;
+
+            instance = {
+                getSamplesInfo: getSamplesInfo,
+                getMediaTimescaleFromMoov: getMediaTimescaleFromMoov,
+                setParser: setParser
+            };
+
+            return instance;
+        },
+
+        setParser = function(parser) {
+            boxParser = parser;
+        },
+
+        getSamplesInfo = function (ab) {
+            var isoFile = boxParser.parse(ab),
                 tfhdBox = isoFile.getBox("tfhd"),
                 tfdtBox = isoFile.getBox("tfdt"),
                 trunBox = isoFile.getBox("trun"),
@@ -73,21 +92,14 @@ let FragmentExtensions = function () {
         },
 
         getMediaTimescaleFromMoov = function(ab) {
-            var isoFile = this.boxParser.parse(ab),
+            var isoFile = boxParser.parse(ab),
                 mdhdBox = isoFile.getBox("mdhd");
             return mdhdBox ? mdhdBox.timescale : NaN;
         };
 
     return {
-        log : undefined,
-        boxParser: undefined,
-        getSamplesInfo:getSamplesInfo,
-        getMediaTimescaleFromMoov: getMediaTimescaleFromMoov
+        create: create
     };
-};
-
-FragmentExtensions.prototype = {
-    constructor: FragmentExtensions
-};
+}());
 
 export default FragmentExtensions;

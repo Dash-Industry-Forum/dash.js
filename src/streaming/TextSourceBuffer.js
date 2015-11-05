@@ -32,6 +32,8 @@
 import DashAdapter from "../dash/DashAdapter.js";
 import MediaPlayer from './MediaPlayer.js';
 import TextTrackInfo from './vo/TextTrackInfo.js';
+import FragmentExtensions from '../dash/extensions/FragmentExtensions.js';
+import BoxParser from './utils/BoxParser.js';
 
 let TextSourceBuffer = function () {
     var allTracksAreDisabled = false,
@@ -134,7 +136,8 @@ let TextSourceBuffer = function () {
             }
 
             if(mediaType === "fragmentedText"){
-                var fragmentExt = self.system.getObject("fragmentExt");
+                var parser = new BoxParser(), 
+                    fragmentExt = FragmentExtensions.create(parser);
                 if(!this.initializationSegmentReceived){
                     this.initializationSegmentReceived=true;
                     for (i = 0; i < this.mediaInfos.length; i++){
