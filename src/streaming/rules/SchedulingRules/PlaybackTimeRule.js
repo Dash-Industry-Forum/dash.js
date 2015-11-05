@@ -122,11 +122,6 @@ MediaPlayer.rules.PlaybackTimeRule = function () {
             }
 
             while (request && streamProcessor.getFragmentModel().isFragmentLoadedOrPendingAndNotDiscarded(request)) {
-                if (request.action === "complete") {
-                    request = null;
-                    break;
-                }
-
                 request = this.adapter.getNextFragmentRequest(streamProcessor, representationInfo);
             }
 
