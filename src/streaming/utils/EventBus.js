@@ -44,6 +44,19 @@ let EventBus = (function () {
             return registrations[captype];
         },
 
+        getHandlerIdx = function(type, listener, scope) {
+            var handlersForType = handlers[type],
+                result = -1;
+
+            if (!handlersForType || handlersForType.length === 0) return result;
+
+            for (var i = 0; i < handlersForType.length; i += 1) {
+                if (handlersForType[i].callback === listener && (!scope || scope === handlersForType[i].scope)) return i;
+            }
+
+            return result;
+        },
+
         init = function () {
             registrations = {};
         };
@@ -84,6 +97,8 @@ let EventBus = (function () {
                 throw new Error("listener must be a function: " + listener);
             }
 
+            if (getHandlerIdx.call(this, type, listener, scope) >= 0) return;
+
             var handler = {
                 callback: listener,
                 scope: scope
@@ -96,13 +111,11 @@ let EventBus = (function () {
         off: function(type, listener, scope) {
             if (!type || !listener || !handlers[type]) return;
 
-            var handlersForType = handlers[type];
+            var idx = getHandlerIdx.call(this, type, listener, scope);
 
-            for (var i = 0; i < handlersForType.length; i += 1) {
-                if (handlersForType[i].callback !== listener || (scope && scope !== handlersForType[i].scope)) continue;
+            if (idx < 0) return;
 
-                handlersForType.splice(i, 1);
-            }
+            handlers[type].splice(idx, 1);
         },
 
         trigger: function(type, args) {
