@@ -60,7 +60,7 @@ MediaPlayer.rules.ThroughputRule = function () {
                 averageThroughput,
                 switchRequest =  new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
-            if ( (metrics.BufferState.length == 0) || (metrics.BufferLevel.length == 0) ) {
+            if ( (metrics.BufferState.length === 0) || (metrics.BufferLevel.length === 0) ) {
                 callback(switchRequest);
                 return;
             }
@@ -69,6 +69,12 @@ MediaPlayer.rules.ThroughputRule = function () {
                 bufferLevelVO = metrics.BufferLevel[metrics.BufferLevel.length - 1];
 
             averageThroughput = self.metricsExt.getRecentThroughput(metrics, (isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD));
+            // insufficent data don't recommend
+            if (averageThroughput<0) {
+                callback(switchRequest);
+                return;
+            }
+
             averageThroughput = Math.round((averageThroughput * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY) / 1000);
 
             abrController.setAverageThroughput(mediaType, averageThroughput);
