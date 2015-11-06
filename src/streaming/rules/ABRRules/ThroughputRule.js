@@ -37,7 +37,7 @@ MediaPlayer.rules.ThroughputRule = function () {
     // a problem if from the same connection, but what if we have
     // multiplexed audio/video with different distribution issues?
 
-    var throughputArray = [],
+    var throughputArray = {},
         AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2,
         AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3,
 
@@ -147,7 +147,7 @@ MediaPlayer.rules.ThroughputRule = function () {
         },
 
         reset: function() {
-            throughputArray = [];
+            throughputArray = {};
         }
     };
 };
