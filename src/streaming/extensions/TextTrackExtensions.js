@@ -31,7 +31,7 @@
 import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js'; //TODO static or dynamic.
 
-let TextTrackExtensions = function () {
+let TextTrackExtensions = (function () {
     "use strict";
     /**
      *
