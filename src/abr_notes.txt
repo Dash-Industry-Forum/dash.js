@@ -9,3 +9,7 @@ Previous 2/3 requests are used regardless of when they were.
 Historical Data is never removed.
 Latency is ignored in throughput
 Lots of things are recalculated every wall tick when they can only change when a new file is downloaded etc. pre-generate throughput etc.
+
+averageThroughput is calculated in the throughput model, and returned to the abrController model purely to provide a starting bitrate for the representationController - this is madness and doesn't work at all if you're playing 2 streams, perhaps a low bandwidth PIP live stream alongside a VOD - using the throughput from the live stream for loading another vod is crazy.
+
+RepresentationController gets the averageThroughput from the abrcontroller, but then does nothing with but initialBitrate, should be combined with the getInitialBitrate, but for now I'm just removing it, unnecessary optimasation for now.

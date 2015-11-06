@@ -36,7 +36,6 @@ MediaPlayer.dependencies.AbrController = function () {
         qualityDict = {},
         confidenceDict = {},
         bitrateDict = {},
-        averageThroughputDict = {},
         ratioDict = {},
         streamProcessorDict={},
         abandonmentStateDict = {},
@@ -87,6 +86,13 @@ MediaPlayer.dependencies.AbrController = function () {
 
         getInitialBitrate = function(type) {
             var initialBitrate;
+
+            // Get the previous average sustained bitrate here if we
+            // want to support using the current throughput rules, or
+            // we remove tieing of current throughput into something
+            // more system wide, which makes sense as pushing
+            // throughput knowledge out to the application layer can
+            // be useful for knowing how stressed the whole system is.
 
             if (!bitrateDict.hasOwnProperty(type)) {
                 if (!ratioDict.hasOwnProperty(type)) {
@@ -466,14 +472,6 @@ MediaPlayer.dependencies.AbrController = function () {
             return infoList;
         },
 
-        setAverageThroughput: function(type, value) {
-            averageThroughputDict[type] = value;
-        },
-
-        getAverageThroughput: function(type) {
-            return averageThroughputDict[type];
-        },
-
         updateTopQualityIndex: function(mediaInfo) {
             var type = mediaInfo.type,
                 streamId = mediaInfo.streamInfo.id,
@@ -507,7 +505,6 @@ MediaPlayer.dependencies.AbrController = function () {
             confidenceDict = {};
             streamProcessorDict = {};
             abandonmentStateDict = {};
-            averageThroughputDict = {};
             clearTimeout(abandonmentTimeout);
             abandonmentTimeout = null;
         }

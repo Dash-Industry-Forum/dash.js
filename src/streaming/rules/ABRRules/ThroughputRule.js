@@ -57,7 +57,6 @@ MediaPlayer.rules.ThroughputRule = function () {
                 streamProcessor = context.getStreamProcessor(),
                 abrController = streamProcessor.getABRController(),
                 isDynamic= streamProcessor.isDynamic(),
-                averageThroughput,
                 switchRequest =  new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
             if ( (metrics.BufferState.length === 0) || (metrics.BufferLevel.length === 0) ) {
@@ -68,7 +67,7 @@ MediaPlayer.rules.ThroughputRule = function () {
             var bufferStateVO = metrics.BufferState[metrics.BufferState.length - 1],
                 bufferLevelVO = metrics.BufferLevel[metrics.BufferLevel.length - 1];
 
-            averageThroughput = self.metricsExt.getRecentThroughput(metrics, (isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD));
+            var averageThroughput = self.metricsExt.getRecentThroughput(metrics, (isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD));
             // insufficent data don't recommend
             if (averageThroughput<0) {
                 callback(switchRequest);
@@ -76,9 +75,6 @@ MediaPlayer.rules.ThroughputRule = function () {
             }
 
             averageThroughput = Math.round((averageThroughput * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY) / 1000);
-
-            abrController.setAverageThroughput(mediaType, averageThroughput);
-
 
             if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
                 ((bufferLevelVO.level) >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD_MS*2) || isDynamic)) {
