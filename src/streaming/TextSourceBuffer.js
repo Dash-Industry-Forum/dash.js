@@ -38,26 +38,37 @@ import BoxParser from './utils/BoxParser.js';
 let TextSourceBuffer = function () {
     var allTracksAreDisabled = false,
         parser = null,
+        fragmentExt = null,
+        mediaInfos = null,
+        textTrackExtensions = null,
+        isFragmented = false,
+        fragmentModel = null,
+        initializationSegmentReceived= false,
+        timescale = NaN,
+        allTracks = null,
 
         setTextTrack = function() {
+
             var el = this.videoModel.getElement(),
                 tracks = el.textTracks,
                 ln = tracks.length,
                 self = this;
 
+            if (!allTracks) {
+                allTracks = self.mediaController.getTracksFor("fragmentedText", self.streamController.getActiveStreamInfo());
+            }
+
             for (var i = 0; i < ln; i++ ) {
                 var track = tracks[i];
                 allTracksAreDisabled = track.mode !== "showing";
                 if (track.mode === "showing") {
-                    if (self.textTrackExtensions.getCurrentTrackIdx() !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
-                        self.textTrackExtensions.setCurrentTrackIdx(i);
-                        if (self.isFragmented) {
-                            if (!self.mediaController.isCurrentTrack(self.allTracks[i])) {
-                                self.fragmentModel.abortRequests();
-                                self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
-                                //self.buffered.clear();
-                                //self.buffered.remove(self.buffered.start(0), self.buffered.end(self.buffered.length-1))
-                                self.mediaController.setTrack(self.allTracks[i]);
+                    if (textTrackExtensions.getCurrentTrackIdx() !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
+                        textTrackExtensions.setCurrentTrackIdx(i);
+                        if (isFragmented) {
+                            if (!self.mediaController.isCurrentTrack(allTracks[i])) {
+                                fragmentModel.abortRequests();
+                                textTrackExtensions.deleteTrackCues(textTrackExtensions.getCurrentTextTrack());
+                                self.mediaController.setTrack(allTracks[i]);
                             }
                         }
                     }
@@ -66,7 +77,7 @@ let TextSourceBuffer = function () {
             }
 
             if (allTracksAreDisabled){
-                self.textTrackExtensions.setCurrentTrackIdx(-1);
+                textTrackExtensions.setCurrentTrackIdx(-1);
             }
         };
 
@@ -80,16 +91,14 @@ let TextSourceBuffer = function () {
         streamController:undefined,
 
         initialize: function (type, bufferController) {
-            this.sp = bufferController.streamProcessor;
-            this.mediaInfos = this.sp.getMediaInfoArr();
-            this.textTrackExtensions = this.system.getObject("textTrackExtensions");
-            this.isFragmented = !this.manifestExt.getIsTextTrack(type);
-            if (this.isFragmented){
-                this.fragmentModel = this.sp.getFragmentModel();
+            let streamProcessor = bufferController.streamProcessor;
+            mediaInfos = streamProcessor.getMediaInfoArr();
+            textTrackExtensions = this.system.getObject("textTrackExtensions");
+            isFragmented = !this.manifestExt.getIsTextTrack(type);
+            if (isFragmented){
+                fragmentExt = FragmentExtensions.create(this.system.getObject("boxParser"));
+                fragmentModel = streamProcessor.getFragmentModel();
                 this.buffered =  this.system.getObject("customTimeRanges");
-                this.initializationSegmentReceived= false;
-                this.timescale= 90000;
-                this.allTracks = this.mediaController.getTracksFor("fragmentedText", this.streamController.getActiveStreamInfo());
             }
         },
 
@@ -130,33 +139,31 @@ let TextSourceBuffer = function () {
                 textTrackInfo.isTTML = checkTTML();
                 textTrackInfo.video = self.videoModel.getElement();
                 textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
-                textTrackInfo.isFragmented = self.isFragmented;
+                textTrackInfo.isFragmented = isFragmented;
                 textTrackInfo.kind = getKind();
-                self.textTrackExtensions.addTextTrack(textTrackInfo, self.mediaInfos.length);
+                textTrackExtensions.addTextTrack(textTrackInfo, mediaInfos.length);
             }
 
             if(mediaType === "fragmentedText"){
-                var parser = new BoxParser(), 
-                    fragmentExt = FragmentExtensions.create(parser);
-                if(!this.initializationSegmentReceived){
-                    this.initializationSegmentReceived=true;
-                    for (i = 0; i < this.mediaInfos.length; i++){
-                        createTextTrackFromMediaInfo(null, this.mediaInfos[i]);
+                if(!initializationSegmentReceived){
+                    initializationSegmentReceived=true;
+                    for (i = 0; i < mediaInfos.length; i++){
+                        createTextTrackFromMediaInfo(null, mediaInfos[i]);
                     }
-                    this.timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
+                    timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
                 }else {
                     samplesInfo = fragmentExt.getSamplesInfo(bytes);
                     for(i= 0 ; i < samplesInfo.length ; i++) {
                         if(!this.firstSubtitleStart){
-                            this.firstSubtitleStart = samplesInfo[0].cts-chunk.start*this.timescale;
+                            this.firstSubtitleStart = samplesInfo[0].cts - chunk.start * timescale;
                         }
                         samplesInfo[i].cts -= this.firstSubtitleStart;
-                        this.buffered.add(samplesInfo[i].cts/this.timescale,(samplesInfo[i].cts+samplesInfo[i].duration)/this.timescale);
-                        ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset,samplesInfo[i].offset+samplesInfo[i].size)));
+                        this.buffered.add(samplesInfo[i].cts / timescale,(samplesInfo[i].cts + samplesInfo[i].duration) / timescale);
+                        ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset, samplesInfo[i].offset+samplesInfo[i].size)));
                         parser = parser !== null ? parser : self.getParser(mimeType);
                         try{
                             result = parser.parse(ccContent);
-                            this.textTrackExtensions.addCaptions(this.firstSubtitleStart/this.timescale,result);
+                            textTrackExtensions.addCaptions(this.firstSubtitleStart / timescale,result);
                         } catch(e) {
                             //empty cue ?
                         }
@@ -178,11 +185,11 @@ let TextSourceBuffer = function () {
             //TODO How to tag default. currently same order as listed in manifest.
             // Is there a way to mark a text adaptation set as the default one? DASHIF meeting talk about using role which is being used for track KIND
             // Eg subtitles etc. You can have multiple role tags per adaptation Not defined in the spec yet.
-            return mediaInfo.index === this.mediaInfos[0].index;
+            return mediaInfo.index === mediaInfos[0].index;
         },
 
         abort:function() {
-            this.textTrackExtensions.deleteAllTextTracks();
+            textTrackExtensions.deleteAllTextTracks();
             allTracksAreDisabled = false;
             parser = null;
         },
