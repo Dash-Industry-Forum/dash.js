@@ -166,7 +166,6 @@ let Context = function () {
             this.system.mapSingleton('DOMStorage', DOMStorage);
             this.system.mapClass('customTimeRanges', CustomTimeRanges);
             this.system.mapSingleton('virtualBuffer', VirtualBuffer);
-            this.system.mapClass('isoFile', IsoFile);
 
             //this.system.mapSingleton('textTrackExtensions', TextTrackExtensions);
             this.system.mapSingleton('vttParser', VTTParser);

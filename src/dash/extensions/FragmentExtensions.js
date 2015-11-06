@@ -29,77 +29,80 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-let FragmentExtensions = (function () {
-    "use strict";
-
-    var boxParser = null,
-        instance = null,
-
-        create = function(parser) {
-            if (instance) return instance;
-
-            boxParser = parser;
-
-            instance = {
-                getSamplesInfo: getSamplesInfo,
-                getMediaTimescaleFromMoov: getMediaTimescaleFromMoov,
-                setParser: setParser
-            };
-
-            return instance;
-        },
-
-        setParser = function(parser) {
-            boxParser = parser;
-        },
-
-        getSamplesInfo = function (ab) {
-            var isoFile = boxParser.parse(ab),
-                tfhdBox = isoFile.getBox("tfhd"),
-                tfdtBox = isoFile.getBox("tfdt"),
-                trunBox = isoFile.getBox("trun"),
-                moofBox = isoFile.getBox("moof"),
-                sampleDuration,
-                sampleCompostionTimeOffset,
-                sampleCount,
-                sampleSize,
-                sampleDts,
-                sampleList,
-                sample,
-                i,
-                dataOffset;
-
-            sampleCount = trunBox.sample_count;
-            sampleDts= tfdtBox.baseMediaDecodeTime;
-            dataOffset = (tfhdBox.base_data_offset || 0) + (trunBox.data_offset || 0);
-
-            sampleList=[];
-            for (i = 0; i < sampleCount; i++) {
-                sample = trunBox.samples[i];
-                sampleDuration = (sample.sample_duration !== undefined) ? sample.sample_duration : tfhdBox.default_sample_duration;
-                sampleSize = (sample.sample_size !== undefined) ? sample.sample_size : tfhdBox.default_sample_size;
-                sampleCompostionTimeOffset = (sample.sample_composition_time_offset !== undefined) ? sample.sample_composition_time_offset : 0;
-
-                sampleList.push({'dts' : sampleDts,
-                                 'cts' : (sampleDts + sampleCompostionTimeOffset),
-                                 'duration' :sampleDuration,
-                                 'offset': moofBox.offset + dataOffset,
-                                 'size' :sampleSize});
-                dataOffset += sampleSize;
-                sampleDts += sampleDuration;
-            }
-            return sampleList;
-        },
-
-        getMediaTimescaleFromMoov = function(ab) {
-            var isoFile = boxParser.parse(ab),
-                mdhdBox = isoFile.getBox("mdhd");
-            return mdhdBox ? mdhdBox.timescale : NaN;
-        };
+var factory = (function() {
+    let instance;
 
     return {
-        create: create
-    };
+        getInstance: function(parser) {
+            if (instance) return instance;
+
+            instance = FragmentExtensions(parser);
+
+            return instance;
+        }
+    }
 }());
 
-export default FragmentExtensions;
+export default factory;
+
+var FragmentExtensions = function (parser) {
+    "use strict";
+
+    let boxParser = parser || null;
+
+    let instance = {
+        getSamplesInfo: getSamplesInfo,
+        getMediaTimescaleFromMoov: getMediaTimescaleFromMoov,
+        setParser: setParser
+    };
+
+    return instance;
+
+    function setParser(parser) {
+        boxParser = parser;
+    }
+
+    function getSamplesInfo(ab) {
+        var isoFile = boxParser.parse(ab),
+            tfhdBox = isoFile.getBox("tfhd"),
+            tfdtBox = isoFile.getBox("tfdt"),
+            trunBox = isoFile.getBox("trun"),
+            moofBox = isoFile.getBox("moof"),
+            sampleDuration,
+            sampleCompostionTimeOffset,
+            sampleCount,
+            sampleSize,
+            sampleDts,
+            sampleList,
+            sample,
+            i,
+            dataOffset;
+
+        sampleCount = trunBox.sample_count;
+        sampleDts= tfdtBox.baseMediaDecodeTime;
+        dataOffset = (tfhdBox.base_data_offset || 0) + (trunBox.data_offset || 0);
+
+        sampleList=[];
+        for (i = 0; i < sampleCount; i++) {
+            sample = trunBox.samples[i];
+            sampleDuration = (sample.sample_duration !== undefined) ? sample.sample_duration : tfhdBox.default_sample_duration;
+            sampleSize = (sample.sample_size !== undefined) ? sample.sample_size : tfhdBox.default_sample_size;
+            sampleCompostionTimeOffset = (sample.sample_composition_time_offset !== undefined) ? sample.sample_composition_time_offset : 0;
+
+            sampleList.push({'dts' : sampleDts,
+                                'cts' : (sampleDts + sampleCompostionTimeOffset),
+                                'duration' :sampleDuration,
+                                'offset': moofBox.offset + dataOffset,
+                                'size' :sampleSize});
+            dataOffset += sampleSize;
+            sampleDts += sampleDuration;
+        }
+        return sampleList;
+    }
+
+    function getMediaTimescaleFromMoov(ab) {
+        var isoFile = boxParser.parse(ab),
+            mdhdBox = isoFile.getBox("mdhd");
+        return mdhdBox ? mdhdBox.timescale : NaN;
+    };
+};

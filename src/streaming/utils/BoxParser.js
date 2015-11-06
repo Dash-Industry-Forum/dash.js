@@ -28,6 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+import IsoFile from './IsoFile.js';
+
 let BoxParser = function () {
     "use strict";
 
@@ -39,7 +42,7 @@ let BoxParser = function () {
         }
 
         var parsedFile = ISOBoxer.parseBuffer(data),
-            dashIsoFile = this.system.getObject("isoFile");
+            dashIsoFile = IsoFile.create();
 
         dashIsoFile.setData(parsedFile);
 
