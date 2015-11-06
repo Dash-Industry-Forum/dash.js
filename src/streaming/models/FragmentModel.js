@@ -233,7 +233,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
                 isDiscarded = function() {
                     var buffer = this.videoModel.getElement(),
-                        inBuffer = this.sourceBufferExt.getBufferRange(buffer, request.availabilityStartTime) !== null,
+                        inBuffer = this.sourceBufferExt.getBufferRange(buffer, request.startTime) !== null,
                         req,
                         d;
 
