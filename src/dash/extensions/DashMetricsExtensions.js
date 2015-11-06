@@ -301,7 +301,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
             for (i=0;i<interested.length;i++) {
                 total+=interested[i];
             }
-            return total/interested.length;
+            return (total*1000)/interested.length;
         },
         getHttpRequests = function (metrics) {
             if (metrics === null) {
