@@ -31,6 +31,11 @@
 MediaPlayer.rules.ThroughputRule = function () {
     "use strict";
 
+    // these numbers are way too small, particularly if coming from
+    // cache, they're also not by type, so it could well end up just
+    // using audio requests to choose video bitrates - which won't be
+    // a problem if from the same connection, but what if we have
+    // multiplexed audio/video with different distribution issues?
 
     var throughputArray = [],
         AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2,
@@ -38,6 +43,11 @@ MediaPlayer.rules.ThroughputRule = function () {
 
         storeLastRequestThroughputByType = function (type, lastRequestThroughput) {
             throughputArray[type] = throughputArray[type] || [];
+            // XXX silly way of doing this, why not just store
+            // throughput of actual unique requests and then sum?
+            // would also mean getAverageThroughput wouldn't need to
+            // be calculated each time the rule is run, but only when
+            // the throughput array changes.
             if (lastRequestThroughput !== Infinity &&
                 lastRequestThroughput !== throughputArray[type][throughputArray[type].length-1]) {
                 throughputArray[type].push(lastRequestThroughput);
@@ -61,7 +71,6 @@ MediaPlayer.rules.ThroughputRule = function () {
                 }
                 averageThroughput = totalSampledValue / sampleAmount;
             }
-
             if (arr.length > sampleAmount) {
                 arr.shift();
             }
@@ -117,6 +126,8 @@ MediaPlayer.rules.ThroughputRule = function () {
             averageThroughput = getAverageThroughput(mediaType, isDynamic);
             abrController.setAverageThroughput(mediaType, averageThroughput);
 
+            // Why don't we propose anyway, the controller blocks
+            // switches if abandoned?
             if (abrController.getAbandonmentStateFor(mediaType) !== MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
 
                 if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
