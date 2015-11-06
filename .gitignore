@@ -22,6 +22,7 @@ jsdocs
 .project
 .metadata
 bin/
+dist/
 tmp/
 .idea/
 *.tmp
