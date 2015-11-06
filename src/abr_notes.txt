@@ -13,3 +13,7 @@ Lots of things are recalculated every wall tick when they can only change when a
 averageThroughput is calculated in the throughput model, and returned to the abrController model purely to provide a starting bitrate for the representationController - this is madness and doesn't work at all if you're playing 2 streams, perhaps a low bandwidth PIP live stream alongside a VOD - using the throughput from the live stream for loading another vod is crazy.
 
 RepresentationController gets the averageThroughput from the abrcontroller, but then does nothing with but initialBitrate, should be combined with the getInitialBitrate, but for now I'm just removing it, unnecessary optimasation for now.
+
+Metrics model stores an ever increasing BufferLevelVO array and BufferStateVO array, but these are only ever used as a last index.
+
+BufferOccupancyRule proposes you a switch to max purely because you've got a long buffer, it doesn't check to see if your throughput is ever going to match the bandwidth and just downloading a few fragments of a higher bitrate only to switch back down again later is more likely to disappoint a user.  Also due to the different caching and potentially with packaging delays can make it much worse - think it's just a madness rule, going to delete it.
