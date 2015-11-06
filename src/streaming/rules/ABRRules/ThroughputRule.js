@@ -79,23 +79,18 @@ MediaPlayer.rules.ThroughputRule = function () {
 
             abrController.setAverageThroughput(mediaType, averageThroughput);
 
-            // Why don't we propose anyway, the controller blocks
-            // switches if abandoned?
-            if (abrController.getAbandonmentStateFor(mediaType) !== MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
 
-                if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
-                    ((bufferLevelVO.level) >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD_MS*2) || isDynamic)) {
-                    var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
-                    switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
-                }
-
-                if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
-                    self.log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
-                            switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak", "Average throughput", averageThroughput, "kbps");
-                }
+            if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
+                ((bufferLevelVO.level) >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD_MS*2) || isDynamic)) {
+                var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
+                switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
             }
 
+            if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
+                self.log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
+                   switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
+                   switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak", "Average throughput", averageThroughput, "kbps");
+            }
             callback(switchRequest);
         }
     };
