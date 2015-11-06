@@ -193,6 +193,14 @@ let TextSourceBuffer = function () {
             textTrackExtensions.deleteAllTextTracks();
             allTracksAreDisabled = false;
             parser = null;
+            fragmentExt = null;
+            mediaInfos = null;
+            textTrackExtensions = null;
+            isFragmented = false;
+            fragmentModel = null;
+            initializationSegmentReceived= false;
+            timescale = NaN;
+            allTracks = null;
         },
 
         getParser:function(mimeType) {
