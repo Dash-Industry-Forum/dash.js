@@ -257,7 +257,6 @@ Dash.dependencies.DashMetricsExtensions = function () {
                 i;
 
             if (httpList === null) {
-                this.log("throughput no http list yet");
                 return -1;
             }
             var segmentCount = 0;
@@ -296,14 +295,12 @@ Dash.dependencies.DashMetricsExtensions = function () {
                     this.log("throughput likely all cached is:"+throughput);
                     return throughput;
                 }
-                this.log("throughput not enough valid data");
                 return -1;
             }
             var total = 0;
             for (i=0;i<interested.length;i++) {
                 total+=interested[i];
             }
-            this.log("averageThroughput is:"+(total/interested.length));
             return total/interested.length;
         },
         getHttpRequests = function (metrics) {

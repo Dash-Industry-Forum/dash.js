@@ -17,3 +17,9 @@ RepresentationController gets the averageThroughput from the abrcontroller, but 
 Metrics model stores an ever increasing BufferLevelVO array and BufferStateVO array, but these are only ever used as a last index.
 
 BufferOccupancyRule proposes you a switch to max purely because you've got a long buffer, it doesn't check to see if your throughput is ever going to match the bandwidth and just downloading a few fragments of a higher bitrate only to switch back down again later is more likely to disappoint a user.  Also due to the different caching and potentially with packaging delays can make it much worse - think it's just a madness rule, going to delete it.
+
+InsufficientBufferRule - Switches all the way to "0" if empty having previously had some - no reason to go that low, possibly need to look why - a transient drop in wifi (as you walk between rooms say) is better handled to most users with a buffer spinner and then a resumption, especially as in this scenario the user already has a buffer spinner.   But sitting on a 5066k stream, short outage, returning to a 50k stream even for only a fragment would be very annoying to users.     
+
+The abandonment rule should have enough knowledge to know more about what is going on with insufficient bandwidth - is it still progressing or not, will it finish, will the lowest bandwidth one even succeed at the current throughput, if not there's probably no point switching.
+
+
