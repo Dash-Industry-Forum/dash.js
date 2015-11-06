@@ -29,23 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-var factory = (function() {
-    let instance;
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-    return {
-        getInstance: function(parser) {
-            if (instance) return instance;
+export default FactoryMaker.getSingletonFactory(FragmentExtensions);
 
-            instance = FragmentExtensions(parser);
-
-            return instance;
-        }
-    }
-}());
-
-export default factory;
-
-var FragmentExtensions = function (parser) {
+function FragmentExtensions(parser) {
     "use strict";
 
     let boxParser = parser || null;

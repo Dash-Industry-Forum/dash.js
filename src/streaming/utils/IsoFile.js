@@ -30,16 +30,11 @@
  */
 
 import IsoBox from '../vo/IsoBox.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-var factory = {
-    create: function() {
-        return IsoFile();
-    }
-};
+export default FactoryMaker.getClassFactory(IsoFile);
 
-export default factory;
-
-var IsoFile = function () {
+function IsoFile() {
     "use strict";
     let parsedIsoFile,
         commonProps,

@@ -42,7 +42,7 @@ let BoxParser = function () {
         }
 
         var parsedFile = ISOBoxer.parseBuffer(data),
-            dashIsoFile = IsoFile.create();
+            dashIsoFile = IsoFile.getInstance();
 
         dashIsoFile.setData(parsedFile);
 
