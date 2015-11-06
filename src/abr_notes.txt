@@ -1,0 +1,9 @@
+dash.js 1.5.1 notes.
+
+Throughput rule
+
+No attempt to deal with cached response data.
+Very few fragments used to decide how the throughput is.
+Previous 2/3 requests are used regardless of when they were.
+Historical Data is never removed.
+Latency is ignored in throughput

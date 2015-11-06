@@ -50,6 +50,9 @@ MediaPlayer.vo.metrics.HTTPRequest = function () {
     this.interval = null;           // The duration of the throughput trace intervals (ms), for successful requests only.
     this.trace = [];                // Throughput traces, for successful requests only.
 
+    this._latency = null;  // latency of the request
+    this._bytes = null;    // total bytes of successful request (ie trace summed)
+
     // Additional metrics used internally which we do not want to report to the outside world
     // Anything beginning with an _ will not be reported
     this._stream = null;            // type of stream ("audio" | "video" etc..)

@@ -175,16 +175,21 @@ MediaPlayer.models.MetricsModel = function () {
             vo.trequest = trequest;
             vo.tresponse = tresponse;
             vo.responsecode = responsecode;
-
             vo._tfinish = tfinish;
             vo._stream = mediaType;
             vo._mediaduration = mediaduration;
             vo._responseHeaders = responseHeaders;
 
+            vo._latency = tresponse - trequest;
+            vo._time = tfinish - tresponse;
+
             if (traces) {
+                var bytes = 0;
                 traces.forEach(function (trace) {
+                    bytes+=trace.b[0];
                     appendHttpTrace(vo, trace.s, trace.d, trace.b);
                 });
+                vo._bytes = bytes;
             } else {
                 // The interval and trace shall be absent for redirect and failure records.
                 delete vo.interval;
