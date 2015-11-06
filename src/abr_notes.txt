@@ -2,8 +2,10 @@ dash.js 1.5.1 notes.
 
 Throughput rule
 
+Uses type but the streamprocessor is already limited to a single type
 No attempt to deal with cached response data.
 Very few fragments used to decide how the throughput is.
 Previous 2/3 requests are used regardless of when they were.
 Historical Data is never removed.
 Latency is ignored in throughput
+Lots of things are recalculated every wall tick when they can only change when a new file is downloaded etc. pre-generate throughput etc.
