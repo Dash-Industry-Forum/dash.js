@@ -47,7 +47,6 @@ import VirtualBuffer from './utils/VirtualBuffer.js';
 import IsoFile from './utils/IsoFile.js';
 import BoxParser from './utils/BoxParser.js';
 
-import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 import VTTParser from './VTTParser.js';
 import TTMLParser from './TTMLParser.js';
 
@@ -169,7 +168,7 @@ let Context = function () {
             this.system.mapSingleton('virtualBuffer', VirtualBuffer);
             this.system.mapClass('isoFile', IsoFile);
 
-            this.system.mapSingleton('textTrackExtensions', TextTrackExtensions);
+            //this.system.mapSingleton('textTrackExtensions', TextTrackExtensions);
             this.system.mapSingleton('vttParser', VTTParser);
             this.system.mapSingleton('ttmlParser', TTMLParser);
             this.system.mapSingleton('boxParser', BoxParser);

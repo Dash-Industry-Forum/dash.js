@@ -29,10 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import EventBus from '../utils/EventBus.js';
-import Events from '../Events.js';
+import Events from '../Events.js'; //TODO static or dynamic.
 
 let TextTrackExtensions = function () {
     "use strict";
+    /**
+     *
+     */
     var Cue,
         video,
         textTrackQueue = [],
@@ -49,28 +52,33 @@ let TextTrackExtensions = function () {
         fullscreenAttribute = null,
         displayCCOnTop = false,
         topZIndex = 2147483647,
+        instance = null,
+        videoModel = null,
 
-        createTrackForUserAgent = function(i){
-            var kind = textTrackQueue[i].kind;
-            var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
-            var lang = textTrackQueue[i].lang;
-            var track = isIE11orEdge ? video.addTextTrack(kind, label, lang) : document.createElement('track');
+        create = function(config) {
+            if (instance) return instance;
 
-             if (!isIE11orEdge) {
-                 track.kind = kind;
-                 track.label = label;
-                 track.srclang = lang;
-             }
+            videoModel = config.videoModel;
 
-            return track;
-        };
+            instance = {
+                displayCConTop:displayCConTop,
+                addTextTrack:addTextTrack,
+                addCaptions:addCaptions,
+                getTextTrack:getTextTrack,
+                getCurrentTextTrack:getCurrentTextTrack,
+                getCurrentTrackIdx:getCurrentTrackIdx,
+                setCurrentTrackIdx:setCurrentTrackIdx,
+                deleteTrackCues:deleteTrackCues,
+                deleteAllTextTracks:deleteAllTextTracks,
+                deleteTextTrack:deleteTextTrack
+            };
 
+            setup();
 
-    return {
-        mediaController:undefined,
-        videoModel:undefined,
+            return instance;
+        },
 
-        setup: function() {
+        setup = function () {
             Cue = window.VTTCue || window.TextTrackCue;
             //TODO Check if IE has resolved issues: Then revert to not using the addTextTrack API for all browsers.
             // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
@@ -88,15 +96,28 @@ let TextTrackExtensions = function () {
             }
         },
 
-        displayCConTop: function(value) {
+        createTrackForUserAgent = function(i){
+            var kind = textTrackQueue[i].kind;
+            var label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
+            var lang = textTrackQueue[i].lang;
+            var track = isIE11orEdge ? video.addTextTrack(kind, label, lang) : document.createElement('track');
+
+             if (!isIE11orEdge) {
+                 track.kind = kind;
+                 track.label = label;
+                 track.srclang = lang;
+             }
+
+            return track;
+        },
+
+        displayCConTop =  function(value) {
             displayCCOnTop = value;
-
             if (!captionContainer || document[fullscreenAttribute]) return;
-
             captionContainer.style.zIndex = value ? topZIndex : null;
         },
 
-        addTextTrack: function(textTrackInfoVO, totalTextTracks) {
+        addTextTrack = function(textTrackInfoVO, totalTextTracks) {
 
             textTrackQueue.push(textTrackInfoVO);
             if (video === undefined) {
@@ -107,10 +128,10 @@ let TextTrackExtensions = function () {
                 textTrackQueue.sort(function(a, b) { //Sort in same order as in manifest
                     return a.index - b.index;
                 });
-                captionContainer = this.videoModel.getTTMLRenderingDiv();
+                captionContainer = videoModel.getTTMLRenderingDiv();
                 var defaultIndex = 0;
                 for(var i = 0 ; i < textTrackQueue.length; i++) {
-                    var track = createTrackForUserAgent(i);
+                    var track = createTrackForUserAgent.call(this, i);
                     currentTrackIdx = i;//set to i for external track setup. rest to default value at end of loop
                     trackElementArr.push(track); //used to remove tracks from video element when added manually
 
@@ -133,12 +154,12 @@ let TextTrackExtensions = function () {
                     this.addCaptions(0, textTrackQueue[i].captionData);
                     EventBus.trigger(Events.TEXT_TRACK_ADDED);
                 }
-                this.setCurrentTrackIdx(defaultIndex);
+                setCurrentTrackIdx.call(this, defaultIndex);
                 EventBus.trigger(Events.TEXT_TRACKS_ADDED, {index:currentTrackIdx, tracks:textTrackQueue});//send default idx.
             }
         },
 
-        getVideoVisibleVideoSize: function(viewWidth, viewHeight, videoWidth, videoHeight) {
+        getVideoVisibleVideoSize = function(viewWidth, viewHeight, videoWidth, videoHeight) {
             var viewAspectRatio = viewWidth / viewHeight;
             var videoAspectRatio = videoWidth / videoHeight;
 
@@ -160,18 +181,19 @@ let TextTrackExtensions = function () {
             }
 
             return { x:videoPictureX,
-                     y:videoPictureY,
-                     w:videoPictureWidth,
-                     h:videoPictureHeight }; /* Maximal picture size in videos aspect ratio */
-        },
+                y:videoPictureY,
+                w:videoPictureWidth,
+                h:videoPictureHeight }; /* Maximal picture size in videos aspect ratio */
+         },
 
-        checkVideoSize: function() {
+
+        checkVideoSize = function() {
             var track = this.getCurrentTextTrack();
             if (track && track.renderingType === "html") {
                 var newVideoWidth = video.clientWidth;
                 var newVideoHeight = video.clientHeight;
 
-                var realVideoSize = this.getVideoVisibleVideoSize(video.clientWidth, video.clientHeight, video.videoWidth, video.videoHeight);
+                var realVideoSize = getVideoVisibleVideoSize.call(this, video.clientWidth, video.clientHeight, video.videoWidth, video.videoHeight);
 
                 newVideoWidth = realVideoSize.w;
                 newVideoHeight = realVideoSize.h;
@@ -189,7 +211,7 @@ let TextTrackExtensions = function () {
                     // Video view has changed size, so resize all active cues
                     for (var i = 0; i < track.activeCues.length; ++i) {
                         var cue = track.activeCues[i];
-                            cue.scaleCue(cue);
+                        cue.scaleCue(cue);
                     }
 
                     if ((fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop) {
@@ -201,7 +223,7 @@ let TextTrackExtensions = function () {
             }
         },
 
-        scaleCue: function(activeCue) {
+        scaleCue = function(activeCue) {
             var videoWidth = actualVideoWidth;
             var videoHeight = actualVideoHeight;
             var key,
@@ -258,8 +280,11 @@ let TextTrackExtensions = function () {
             }
         },
 
-        addCaptions: function(timeOffset, captionData) {
-            var track = this.getCurrentTextTrack();
+
+        addCaptions = function(timeOffset, captionData) {
+            var track = getCurrentTextTrack.call(this),
+                self = this;
+
             if(!track) return;
 
             track.mode = "showing";//make sure tracks are showing to be able to add the cue...
@@ -269,7 +294,7 @@ let TextTrackExtensions = function () {
                     currentItem = captionData[item];
 
                 if (!videoSizeCheckInterval && currentItem.type=="html") {
-                    videoSizeCheckInterval = setInterval(this.checkVideoSize.bind(this), 500);
+                    videoSizeCheckInterval = setInterval(checkVideoSize.bind(this), 500);
                 }
 
                 //image subtitle extracted from TTML
@@ -320,7 +345,7 @@ let TextTrackExtensions = function () {
                     cue.fontSize = currentItem.fontSize;
                     cue.lineHeight = currentItem.lineHeight;
                     cue.linePadding = currentItem.linePadding;
-                    cue.scaleCue = this.scaleCue;
+                    cue.scaleCue = scaleCue.bind(self);
                     captionContainer.style.left = actualVideoLeft + "px";
                     captionContainer.style.top = actualVideoTop + "px";
                     captionContainer.style.width = actualVideoWidth + "px";
@@ -329,7 +354,7 @@ let TextTrackExtensions = function () {
                     cue.onenter =  function () {
                         if (track.mode == "showing") {
                             captionContainer.appendChild(this.cueHTMLElement);
-                            this.scaleCue(this);
+                            scaleCue.call(self, this);
                         }
                     };
 
@@ -368,34 +393,34 @@ let TextTrackExtensions = function () {
             }
         },
 
-        getCurrentTextTrack: function(){
+        getCurrentTextTrack = function(){
             return currentTrackIdx >= 0 ? video.textTracks[currentTrackIdx] : null;
         },
 
-        getCurrentTrackIdx: function(){
+        getCurrentTrackIdx = function(){
             return currentTrackIdx;
         },
 
-        setCurrentTrackIdx : function(idx){
+        setCurrentTrackIdx = function(idx){
             currentTrackIdx = idx;
-            this.clearCues();
+            clearCues.call(this);
             if (idx >= 0) {
                 var track = video.textTracks[idx];
                 if (track.renderingType === "html") {
-                    this.setNativeCueStyle();
+                    setNativeCueStyle.call(this);
                 } else {
-                    this.removeNativeCueStyle();
+                    removeNativeCueStyle.call(this);
                 }
             } else {
-                this.removeNativeCueStyle();
+                removeNativeCueStyle.call(this);
             }
         },
 
-        getTextTrack: function(idx) {
+        getTextTrack = function(idx) {
             return video.textTracks[idx];
         },
 
-        deleteTrackCues: function(track) {
+        deleteTrackCues = function(track) {
             if (track.cues){
                 var cues = track.cues,
                     lastIdx = cues.length - 1;
@@ -408,11 +433,11 @@ let TextTrackExtensions = function () {
             }
         },
 
-        deleteAllTextTracks:  function() {
+        deleteAllTextTracks = function() {
             var ln = trackElementArr.length;
             for(var i = 0; i < ln; i++){
                 if (isIE11orEdge) {
-                    this.deleteTrackCues(this.getTextTrack(i));
+                    deleteTrackCues.call(this, getTextTrack.call(this, i));
                 }else {
                     video.removeChild(trackElementArr[i]);
                 }
@@ -424,16 +449,16 @@ let TextTrackExtensions = function () {
                 clearInterval(videoSizeCheckInterval);
                 videoSizeCheckInterval = null;
             }
-            this.clearCues();
+            clearCues.call(this);
         },
 
-        deleteTextTrack: function(idx) {
+        deleteTextTrack = function(idx) {
             video.removeChild(trackElementArr[idx]);
             trackElementArr.splice(idx, 1);
         },
 
-        /* Set native cue style to transparent background to avoid it being displayed. */
-        setNativeCueStyle: function() {
+         /* Set native cue style to transparent background to avoid it being displayed. */
+        setNativeCueStyle = function() {
             if (!isChrome) return;
             var styleElement = document.getElementById('native-cue-style');
             if (styleElement) return; //Already set
@@ -452,7 +477,7 @@ let TextTrackExtensions = function () {
         },
 
         /* Remove the extra cue style with transparent background for native cues. */
-        removeNativeCueStyle: function() {
+        removeNativeCueStyle = function() {
             if (!isChrome) return;
             var styleElement = document.getElementById('native-cue-style');
             if (styleElement) {
@@ -460,14 +485,18 @@ let TextTrackExtensions = function () {
             }
         },
 
-        clearCues: function() {
+
+        clearCues = function() {
             if (captionContainer) {
                 while(captionContainer.firstChild) {
                     captionContainer.removeChild(captionContainer.firstChild);
                 }
             }
         }
+
+    return {
+        create:create
     };
-};
+}());
 
 export default TextTrackExtensions;

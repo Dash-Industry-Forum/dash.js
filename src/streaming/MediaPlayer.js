@@ -41,6 +41,7 @@ import StreamController from './controllers/StreamController.js';
 import ManifestLoader from './ManifestLoader.js';
 import Events from './Events.js';
 import PublicEvents from './PublicEvents.js';
+import TextTrackExtensions from './extensions/TextTrackExtensions.js'
 
 let MediaPlayer /**
 *
@@ -1136,7 +1137,7 @@ let MediaPlayer /**
          * @param value {Boolean}
          */
         displayCaptionsOnTop: function (value) {
-            var textTrackExt = system.getObject("textTrackExtensions");
+            var textTrackExt = TextTrackExtensions.create({videoModel:videoModel});
 
             textTrackExt.displayCConTop(value);
         },

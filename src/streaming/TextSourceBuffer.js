@@ -34,6 +34,7 @@ import MediaPlayer from './MediaPlayer.js';
 import TextTrackInfo from './vo/TextTrackInfo.js';
 import FragmentExtensions from '../dash/extensions/FragmentExtensions.js';
 import BoxParser from './utils/BoxParser.js';
+import TextTrackExtensions from './extensions/TextTrackExtensions.js'
 
 let TextSourceBuffer = function () {
     var allTracksAreDisabled = false,
@@ -93,7 +94,7 @@ let TextSourceBuffer = function () {
         initialize: function (type, bufferController) {
             let streamProcessor = bufferController.streamProcessor;
             mediaInfos = streamProcessor.getMediaInfoArr();
-            textTrackExtensions = this.system.getObject("textTrackExtensions");
+            textTrackExtensions = TextTrackExtensions.create({videoModel:this.videoModel});
             isFragmented = !this.manifestExt.getIsTextTrack(type);
             if (isFragmented){
                 fragmentExt = FragmentExtensions.create(this.system.getObject("boxParser"));
