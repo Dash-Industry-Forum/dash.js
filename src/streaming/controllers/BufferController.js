@@ -308,15 +308,20 @@ MediaPlayer.dependencies.BufferController = function () {
 
         checkGapBetweenBuffers= function() {
             var leastLevel = getLeastBufferLevel.call(this),
-                acceptableGap = minBufferTime * 2,
+                acceptableGap = minBufferTime * 3.5,
                 actualGap = bufferLevel - leastLevel;
 
             // if the gap betweeen buffers is too big we should create a promise that prevents appending data to the current
             // buffer and requesting new fragments until the gap will be reduced to the suitable size.
             if (actualGap >= acceptableGap && !isBufferLevelOutrun) {
                 isBufferLevelOutrun = true;
+
+                this.log("BUFFER CONTROLLER: notifying outrun:"+actualGap+","+acceptableGap);
+
                 this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN);
             } else if ((actualGap < (acceptableGap / 2) && isBufferLevelOutrun)) {
+                this.log("BUFFER CONTROLLER: notifying outrun over over:"+actualGap+","+acceptableGap);
+
                 this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED);
                 isBufferLevelOutrun = false;
                 appendNext.call(this);
