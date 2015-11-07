@@ -228,7 +228,9 @@ Dash.dependencies.RepresentationController = function () {
         },
 
         onBufferLevelUpdated = function(/*e*/) {
-            addDVRMetric.call(this);
+            if (this.streamProcessor.isDynamic()) {
+                addDVRMetric.call(this);
+            }
         },
 
         onQualityChanged = function(e) {

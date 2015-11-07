@@ -148,7 +148,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
 
             var metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
                 switchMode = this.mediaController.getSwitchMode(),
-                bufferLevel = (this.metricsExt.getCurrentBufferLevel(metrics) ? this.metricsExt.getCurrentBufferLevel(metrics).level : 0) / 1000,
+                bufferLevel = this.metricsExt.getCurrentBufferLevel(metrics),
                 currentTime = this.playbackController.getTime(),
                 appendedChunks = this.virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: {start: currentTime, end: (currentTime + bufferLevel)}}),
                 appendedLevel = (appendedChunks && appendedChunks.length > 0) ? (appendedChunks[appendedChunks.length-1].bufferedRange.end - currentTime) : null,

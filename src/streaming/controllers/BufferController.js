@@ -307,12 +307,18 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         checkGapBetweenBuffers= function() {
-            var leastLevel = getLeastBufferLevel.call(this),
-                acceptableGap = minBufferTime * 3.5,
-                actualGap = bufferLevel - leastLevel;
+            var videoMetrics = this.metricsModel.getReadOnlyMetricsFor("video"),
+                videoBufferLevel = this.metricsExt.getCurrentBufferLevel(videoMetrics),
+                audioMetrics = this.metricsModel.getReadOnlyMetricsFor("audio"),
+                audioBufferLevel = this.metricsExt.getCurrentBufferLevel(audioMetrics);
 
-            // if the gap betweeen buffers is too big we should create a promise that prevents appending data to the current
-            // buffer and requesting new fragments until the gap will be reduced to the suitable size.
+            var actualGap = Math.abs(videoBufferLevel - audioBufferLevel),
+                acceptableGap = minBufferTime * 3.5;
+
+            // if the gap betweeen buffers is too big we should create
+            // a promise that prevents appending data to the current
+            // buffer and requesting new fragments until the gap will
+            // be reduced to the suitable size.
             if (actualGap >= acceptableGap && !isBufferLevelOutrun) {
                 isBufferLevelOutrun = true;
 
@@ -327,23 +333,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 appendNext.call(this);
             }
         },
-
-        getLeastBufferLevel = function() {
-            var videoMetrics = this.metricsModel.getReadOnlyMetricsFor("video"),
-                videoBufferLevel = this.metricsExt.getCurrentBufferLevel(videoMetrics),
-                audioMetrics = this.metricsModel.getReadOnlyMetricsFor("audio"),
-                audioBufferLevel = this.metricsExt.getCurrentBufferLevel(audioMetrics),
-                leastLevel = null;
-
-            if (videoBufferLevel === null || audioBufferLevel === null) {
-                leastLevel = (audioBufferLevel !== null) ? audioBufferLevel.level : ((videoBufferLevel !== null) ? videoBufferLevel.level : null);
-            } else {
-                leastLevel = Math.min(audioBufferLevel.level, videoBufferLevel.level);
-            }
-
-            return leastLevel / 1000;
-        },
-
         hasEnoughSpaceToAppend = function() {
             var self = this,
                 totalBufferedTime = self.sourceBufferExt.getTotalBufferedTime(buffer);

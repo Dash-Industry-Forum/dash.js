@@ -172,23 +172,14 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
         getCurrentBufferLevel = function (metrics) {
             if (metrics === null) {
-                return null;
+                return 0;
             }
 
-            var bufferLevel = metrics.BufferLevel,
-                bufferLevelLength,
-                bufferLevelLastIndex,
-                currentBufferLevel;
-
+            var bufferLevel = metrics.BufferLevel;
             if (bufferLevel === null || bufferLevel.length <= 0) {
-                return null;
+                return 0;
             }
-
-            bufferLevelLength = bufferLevel.length;
-            bufferLevelLastIndex = bufferLevelLength - 1;
-
-            currentBufferLevel = bufferLevel[bufferLevelLastIndex];
-            return currentBufferLevel;
+            return bufferLevel[bufferLevel.length-1].level / 1000;
         },
 
         getRequestsQueue = function (metrics) {
