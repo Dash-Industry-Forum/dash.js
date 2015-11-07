@@ -30,6 +30,9 @@
  */
 Dash.dependencies.DashMetricsExtensions = function () {
     "use strict";
+
+    var PROBABLY_IN_CACHE_MS = 200;
+
     var findRepresentationIndex = function (period, representationId) {
             var adaptationSet,
                 adaptationSetArray,
@@ -249,6 +252,52 @@ Dash.dependencies.DashMetricsExtensions = function () {
             }
             return currentHttpList;
         },
+
+        getRecentLatency = function(metrics,length) {
+            // Should be merged with hte getRecentThroughput code as
+            // it's a copy really, also possibly could be calculated
+            // when new things arrive, rather than on request, could
+            // also then discard old requests, deal with known network
+            // changes etc.
+            var httpList = metrics.HttpList,
+                interested = [],
+                i;
+
+            if (httpList === null) {
+                return -1;
+            }
+            var segmentCount = 0;
+
+            for (i=httpList.length-1;(i>=0 && interested.length<length);i--)
+            {
+                var response = httpList[i];
+                // only care about MediaSegments
+                if (response.responsecode && response.type==MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                    segmentCount++;
+                    var downloadTime = response.interval;
+                    var latency = (response.tresponse - response.trequest);
+                    var probalyFromCache = latency<PROBABLY_IN_CACHE_MS &&  downloadTime<PROBABLY_IN_CACHE_MS;
+                    if (!probalyFromCache) {
+                        interested.push(latency);
+                    }
+                }
+            }
+
+            if (interested.length === 0 ) {
+                if (segmentCount>5) {
+                    // this implies all were thought of as in the cache,
+                    // just return the considered from cache time
+                    this.log("latency likely all cached:"+PROBABLY_IN_CACHE_MS);
+                    return PROBABLY_IN_CACHE_MS;
+                }
+                return -1;
+            }
+            var total = 0;
+            for (i=0;i<interested.length;i++) {
+                total+=interested[i];
+            }
+            return total/interested.length;
+        },
         getRecentThroughput = function(metrics,length) {
 
             var httpList = metrics.HttpList,
@@ -280,7 +329,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
                     // could also use logic about the progress events,
                     // on chrome for example first progress event is
                     // after exactly 32768 bytes
-                    var probalyFromCache = downloadTime<100 && latency<100;
+                    var probalyFromCache = downloadTime<200 && latency<200;
                     if (!probalyFromCache) {
                         interested.push(throughput);
                     }
@@ -483,6 +532,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getCurrentBufferLevel : getCurrentBufferLevel,
         getCurrentHttpRequest : getCurrentHttpRequest,
         getRecentThroughput : getRecentThroughput,
+        getRecentLatency : getRecentLatency,
         getHttpRequests : getHttpRequests,
         getCurrentDroppedFrames : getCurrentDroppedFrames,
         getCurrentSchedulingInfo: getCurrentSchedulingInfo,

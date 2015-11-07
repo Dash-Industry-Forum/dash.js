@@ -1,3 +1,6 @@
+Generally why is local clock used against UTC Timing - what if local clock drifts / changes after utc adjustment, why is manifest adjusted to local time meaning you can't read accurate info out of it?
+
+
 dash.js 1.5.1 notes.
 
 Throughput rule
@@ -35,6 +38,7 @@ SameTimeRequestRule, only finds a single request, why is loading request thresho
 Why is AST enforced here as well?
 findClosestToTime - why only a single thing still, how to make two?
 
+BufferLevelRule - gets latency of only the last request, useless if this one was from the cache, or just happened to be a faster request.   Latency isn't really that useful, other than for using it to pad yourself further from live in a high latency environment, in a VOD scenario you're going to wanting a buffer so much higher than the latency that a few hundred ms is not going to matter and the calculation is just not worth it, but leaving it in for now.
 
-Generally why is local clock used against UTC Timing - what if local clock drifts / changes after utc adjustment, why is manifest adjusted to local time meaning you can't read accurate info out of it?
+The SwitchRequest containing both numbers of fragments and fragmentrequests is odd.
 

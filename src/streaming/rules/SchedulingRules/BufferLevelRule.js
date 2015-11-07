@@ -34,14 +34,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
     var isBufferLevelOutran = {},
         isCompleted = {},
         scheduleController = {},
-
-        getCurrentHttpRequestLatency = function(metrics) {
-            var httpRequest = this.metricsExt.getCurrentHttpRequest(metrics);
-            if (httpRequest !== null) {
-                return (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) / 1000;
-            }
-            return 0;
-        },
+        MINIMUM_LATENCY_BUFFER = 500,
 
         decideBufferLength = function (minBufferTime, duration, isDynamic) {
             var minBufferTarget;
@@ -69,6 +62,7 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 currentBufferTarget = minBufferTarget,
                 bufferMax = scheduleController.bufferController.bufferMax,
                 //isLongFormContent = (duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
+                recentLatency,
                 requiredBufferLength = 0;
 
 
@@ -82,8 +76,9 @@ MediaPlayer.rules.BufferLevelRule = function () {
                         MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :*/
                         MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY;
                 }
-                requiredBufferLength = currentBufferTarget + Math.max(getCurrentHttpRequestLatency.call(self, vmetrics),
-                    getCurrentHttpRequestLatency.call(self, ametrics));
+
+                recentLatency = Math.max( Math.max(self.metricsExt.getRecentLatency(vmetrics, 4),self.metricsExt.getRecentLatency(ametrics, 4)),MINIMUM_LATENCY_BUFFER);
+                requiredBufferLength = currentBufferTarget + recentLatency;
             }
 
             requiredBufferLength = Math.min(requiredBufferLength, criticalBufferLevel) ;
@@ -118,6 +113,8 @@ MediaPlayer.rules.BufferLevelRule = function () {
         };
 
     return {
+        log: undefined,
+
         metricsExt: undefined,
         metricsModel: undefined,
         abrController: undefined,
