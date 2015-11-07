@@ -444,8 +444,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             doStop.call(self, true);
-            self.bufferController.unsubscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, self.scheduleRulesCollection.bufferLevelRule);
-            self.bufferController.unsubscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, self.scheduleRulesCollection.bufferLevelRule);
             fragmentModel.abortRequests();
             self.fragmentController.detachModel(fragmentModel);
             fragmentsToLoad = 0;

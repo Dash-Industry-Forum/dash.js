@@ -38,8 +38,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
         loadingRequests = [],
         rejectedRequests = [],
 
-        isLoadingPostponed = false,
-
         loadCurrentFragment = function(request) {
             var self = this;
 
@@ -163,14 +161,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     addSchedulingInfoMetrics.call(this, req, MediaPlayer.dependencies.FragmentModel.states.REJECTED);
                 }
             }
-        },
-
-        onBufferLevelOutrun = function(/*e*/) {
-            isLoadingPostponed = true;
-        },
-
-        onBufferLevelBalanced = function(/*e*/) {
-            isLoadingPostponed = false;
         };
 
     return {
@@ -186,8 +176,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
         manifestExt:undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_REJECTED] = onBytesRejected;
             this[MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED] = onLoadingCompleted;
         },
@@ -202,10 +190,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         getContext: function() {
             return context;
-        },
-
-        getIsPostponed: function() {
-            return isLoadingPostponed;
         },
 
         addRequest: function(value) {
@@ -429,7 +413,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
             pendingRequests = [];
             loadingRequests = [];
             rejectedRequests = [];
-            isLoadingPostponed = false;
         }
     };
 };

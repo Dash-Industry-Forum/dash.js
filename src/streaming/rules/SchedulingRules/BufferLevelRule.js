@@ -31,8 +31,7 @@
 MediaPlayer.rules.BufferLevelRule = function () {
     "use strict";
 
-    var isBufferLevelOutran = {},
-        isCompleted = {},
+    var isCompleted = {},
         scheduleController = {},
         MINIMUM_LATENCY_BUFFER = 500,
 
@@ -90,27 +89,11 @@ MediaPlayer.rules.BufferLevelRule = function () {
             return (isCompleted[streamId] && isCompleted[streamId][type]);
         },
 
-        isBufferLevelOutranT = function(streamId, type) {
-            return (isBufferLevelOutran[streamId] && isBufferLevelOutran[streamId][type]);
-        },
-
         onStreamCompleted = function(e) {
             var streamId = e.data.fragmentModel.getContext().streamProcessor.getStreamInfo().id;
             isCompleted[streamId] = isCompleted[streamId] || {};
             isCompleted[streamId][e.data.request.mediaType] = true;
-        },
-
-        onBufferLevelOutrun = function(e) {
-            var streamId = e.sender.streamProcessor.getStreamInfo().id;
-            isBufferLevelOutran[streamId] = { audio:false, video:false };
-            isBufferLevelOutran[streamId][e.sender.streamProcessor.getType()] = true;
-        },
-
-        onBufferLevelBalanced = function(e) {
-            var streamId = e.sender.streamProcessor.getStreamInfo().id;
-            isBufferLevelOutran[streamId] = { audio:false, video:false };
         };
-
     return {
         log: undefined,
 
@@ -123,8 +106,6 @@ MediaPlayer.rules.BufferLevelRule = function () {
         videoModel: undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
             this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
         },
 
@@ -139,11 +120,6 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 streamId = streamInfo.id,
                 mediaInfo = context.getMediaInfo(),
                 mediaType = mediaInfo.type;
-
-            if (isBufferLevelOutranT(streamId, mediaType)) {
-                callback(new MediaPlayer.rules.SwitchRequest(0, MediaPlayer.rules.SwitchRequest.prototype.STRONG));
-                return;
-            }
 
             var metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
                 switchMode = this.mediaController.getSwitchMode(),
@@ -174,7 +150,6 @@ MediaPlayer.rules.BufferLevelRule = function () {
         },
 
         reset: function() {
-            isBufferLevelOutran = {};
             isCompleted = {};
             scheduleController = {};
         }

@@ -48,7 +48,6 @@ MediaPlayer.dependencies.BufferController = function () {
         appendedBytesInfo,
         wallclockTicked = 0,
 
-        isBufferLevelOutrun = false,
         isAppendingInProgress = false,
         isPruningInProgress = false,
         inbandEventFound = false,
@@ -237,7 +236,6 @@ MediaPlayer.dependencies.BufferController = function () {
             bufferTarget = fragmentsToLoad > 0 ? (fragmentsToLoad * fragmentDuration) + bufferLevel : bufferTarget;
             addBufferMetrics.call(this);
             self.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED, {bufferLevel: bufferLevel});
-            checkGapBetweenBuffers.call(self);
             checkIfSufficientBuffer.call(self);
 
             return true;
@@ -304,34 +302,6 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             return modData.subarray(0,j);
-        },
-
-        checkGapBetweenBuffers= function() {
-            var videoMetrics = this.metricsModel.getReadOnlyMetricsFor("video"),
-                videoBufferLevel = this.metricsExt.getCurrentBufferLevel(videoMetrics),
-                audioMetrics = this.metricsModel.getReadOnlyMetricsFor("audio"),
-                audioBufferLevel = this.metricsExt.getCurrentBufferLevel(audioMetrics);
-
-            var actualGap = Math.abs(videoBufferLevel - audioBufferLevel),
-                acceptableGap = minBufferTime * 3.5;
-
-            // if the gap betweeen buffers is too big we should create
-            // a promise that prevents appending data to the current
-            // buffer and requesting new fragments until the gap will
-            // be reduced to the suitable size.
-            if (actualGap >= acceptableGap && !isBufferLevelOutrun) {
-                isBufferLevelOutrun = true;
-
-                this.log("BUFFER CONTROLLER: notifying outrun:"+actualGap+","+acceptableGap);
-
-                this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN);
-            } else if ((actualGap < (acceptableGap / 2) && isBufferLevelOutrun)) {
-                this.log("BUFFER CONTROLLER: notifying outrun over over:"+actualGap+","+acceptableGap);
-
-                this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED);
-                isBufferLevelOutrun = false;
-                appendNext.call(this);
-            }
         },
         hasEnoughSpaceToAppend = function() {
             var self = this,
@@ -457,7 +427,6 @@ MediaPlayer.dependencies.BufferController = function () {
                 buffer.timestampOffset = MSETimeOffset;
             }
         },
-
         updateBufferState = function() {
             if (!buffer) return;
 
@@ -560,7 +529,7 @@ MediaPlayer.dependencies.BufferController = function () {
             var streamId = getStreamId.call(this),
                 chunk;
 
-            if (!buffer || isPruningInProgress || isBufferLevelOutrun || isAppendingInProgress || waitingForInit.call(this) || !hasEnoughSpaceToAppend.call(this)) return;
+            if (!buffer || isPruningInProgress || isAppendingInProgress || waitingForInit.call(this) || !hasEnoughSpaceToAppend.call(this)) return;
 
             chunk = this.virtualBuffer.extract({streamId: streamId, mediaType: type, segmentType: MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE, limit: 1})[0];
 
@@ -798,7 +767,6 @@ MediaPlayer.dependencies.BufferController = function () {
 
             this.virtualBuffer.unsubscribe(MediaPlayer.utils.VirtualBuffer.eventList.CHUNK_APPENDED, self, onChunkAppended);
 
-            isBufferLevelOutrun = false;
             isAppendingInProgress = false;
             isPruningInProgress = false;
 
@@ -842,7 +810,5 @@ MediaPlayer.dependencies.BufferController.eventList = {
     ENAME_BUFFERING_COMPLETED: "bufferingCompleted",
     ENAME_BUFFER_CLEARED: "bufferCleared",
     ENAME_INIT_REQUESTED: "initRequested",
-    ENAME_BUFFER_LEVEL_OUTRUN: "bufferLevelOutrun",
-    ENAME_BUFFER_LEVEL_BALANCED: "bufferLevelBalanced",
     ENAME_MIN_BUFFER_TIME_UPDATED: "minBufferTimeUpdated"
 };
