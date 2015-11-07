@@ -44,5 +44,6 @@ The SwitchRequest containing both numbers of fragments and fragmentrequests is o
 
 BufferOutRun in the controller, goes odd with cached with rapid toggling of the outruns - due to the appending of the cached requests happening quicker for the audio than the video I think?
 
+Seeking appears to also trigger an outrun as the different models go out of sync.
 
 Metrics Model - arrays get ever bigger, even though we're only ever interested in the last thing really, need to be able to purge things on occasion

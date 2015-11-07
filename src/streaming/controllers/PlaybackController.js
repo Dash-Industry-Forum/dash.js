@@ -65,7 +65,12 @@ MediaPlayer.dependencies.PlaybackController = function () {
                 if (!isNaN(startTimeOffset) && startTimeOffset < streamInfo.duration && startTimeOffset >= 0) {
                     presentationStartTime = startTimeOffset;
                 }else{
-                    presentationStartTime = streamInfo.start;
+                    // if the video model already has a current time.
+                    if (videoModel.getElement().currentTime!=streamInfo.start) {
+                        return videoModel.getElement().currentTime;
+                    } else {
+                        presentationStartTime = streamInfo.start;
+                    }
                 }
             }
 
