@@ -23,3 +23,18 @@ InsufficientBufferRule - Switches all the way to "0" if empty having previously 
 The abandonment rule should have enough knowledge to know more about what is going on with insufficient bandwidth - is it still progressing or not, will it finish, will the lowest bandwidth one even succeed at the current throughput, if not there's probably no point switching.
 
 
+Loads MediaSegments before InitializationSegments:
+loaded video:InitializationSegment:NaN (200, 0ms, 75ms) 
+loaded audio:MediaSegment:0 (200, 32ms, 0ms) 
+loaded video:MediaSegment:0 (200, 42ms, 15ms) 
+loaded audio:InitializationSegment:NaN (200, 0ms, 33ms) 
+
+Always loads index 0, even though there's a start time - why?
+
+SameTimeRequestRule, only finds a single request, why is loading request threshold enforced here?
+Why is AST enforced here as well?
+findClosestToTime - why only a single thing still, how to make two?
+
+
+Generally why is local clock used against UTC Timing - what if local clock drifts / changes after utc adjustment, why is manifest adjusted to local time meaning you can't read accurate info out of it?
+

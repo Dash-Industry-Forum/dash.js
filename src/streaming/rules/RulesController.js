@@ -31,6 +31,20 @@
 MediaPlayer.rules.RulesController = function () {
     "use strict";
 
+    function formatValue(arr) {
+        var str="[";
+        if (arr && arr.length>0) {
+            for (var i=0;i<arr.length;i++) {
+                var el=arr[i];
+                str+="Fragment:"+el.action+","+el.index+","+el.type+","+el.quality+","+el.mediaType;
+            }
+        }
+        if (arr && arr.ACTION_DOWNLOAD) {
+            str+="Fragment:"+arr.action+","+arr.index+","+arr.type+","+arr.quality+arr.mediaType;
+        }
+        return str+"]";
+    }
+
     var rules = {},
 
         ruleMandatoryProperties = ["execute"],
@@ -135,6 +149,7 @@ MediaPlayer.rules.RulesController = function () {
         },
 
         applyRules: function(rulesArr, streamProcessor, callback, current, overrideFunc) {
+            var self = this;
             var rulesCount = rulesArr.length,
                 ln = rulesCount,
                 values = {},
@@ -148,6 +163,9 @@ MediaPlayer.rules.RulesController = function () {
 
                     if (result.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
                         values[result.priority] = overrideFunc(values[result.priority], result.value);
+                    }
+                    if (result.value && ((result.value && result.value.length>0) || result.value.ACTION_DOWNLOAD)) {
+                        self.log("[RULES]:",rule.getName(),formatValue(result.value), result.formatPriority());
                     }
 
                     if (--rulesCount) return;
@@ -180,6 +198,7 @@ MediaPlayer.rules.RulesController = function () {
             values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
             values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
 
+            //            self.log("[RULES]:Start");
             for (i = 0; i < ln; i += 1) {
                 rule = rulesArr[i];
 
@@ -187,9 +206,9 @@ MediaPlayer.rules.RulesController = function () {
                     rulesCount--;
                     continue;
                 }
-
                 rule.execute(rulesContext, callbackFunc);
             }
+            //            self.log("[RULES]:End");
         },
 
         reset: function() {
