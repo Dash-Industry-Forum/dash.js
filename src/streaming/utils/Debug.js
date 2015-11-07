@@ -100,9 +100,9 @@ let Debug = function () {
                 message += "[" + this.getName() + "]";
             }
 
-            if (this.getMediaType && this.getMediaType()) {
-                message += "[" + this.getMediaType() + "]";
-            }
+            //if (this.getMediaType && this.getMediaType()) {
+            //    message += "[" + this.getMediaType() + "]";
+            //}
 
             if (message.length > 0) {
                 message += " ";

@@ -103,7 +103,6 @@ import BufferController from './controllers/BufferController.js';
 import ManifestLoader from './ManifestLoader.js';
 import ManifestUpdater from './ManifestUpdater.js';
 import FragmentController from './controllers/FragmentController.js';
-import FragmentLoader from './FragmentLoader.js';
 import FragmentModel from './models/FragmentModel.js';
 import StreamController from './controllers/StreamController.js';
 import Stream from './Stream.js';
@@ -228,7 +227,6 @@ let Context = function () {
             this.system.mapClass('manifestLoader', ManifestLoader);
             this.system.mapSingleton('manifestUpdater', ManifestUpdater);
             this.system.mapClass('fragmentController', FragmentController);
-            this.system.mapClass('fragmentLoader', FragmentLoader);
             this.system.mapClass('fragmentModel', FragmentModel);
             this.system.mapSingleton('streamController', StreamController);
             this.system.mapSingleton('mediaController', MediaController);

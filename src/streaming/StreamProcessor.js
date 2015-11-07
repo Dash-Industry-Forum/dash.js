@@ -79,7 +79,14 @@ let StreamProcessor = function () {
                 indexHandler = self.indexHandler,
                 playbackController = self.playbackController,
                 fragmentModel,
-                fragmentLoader = this.system.getObject("fragmentLoader"),
+                fragmentLoader = FragmentLoader.create(
+                    {
+                        metricsModel:this.system.getObject("metricsModel"),
+                        errHandler:this.system.getObject("errHandler"),
+                        log: this.system.getObject("log"),
+                        requestModifierExt:this.system.getObject("requestModifierExt")
+                    }
+                ),
                 bufferController = createBufferControllerForType.call(self, typeValue);
 
             stream = streamValue;
