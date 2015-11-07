@@ -61,13 +61,12 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
         getForTime = function(fragmentModels, currentTime) {
             var ln = fragmentModels.length,
                 req,
-                r = null,
             i, initSegs = [],requestSegs = [];
 
             for (i = 0; i < ln; i += 1) {
                 var pendingReqs = fragmentModels[i].getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
                 for (var j=0;j<pendingReqs.length;j++) {
-                    var req=pendingReqs[j];
+                    req=pendingReqs[j];
                     if (req.type == MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE) {
                         initSegs.push(req);
                     }
@@ -76,7 +75,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 req = fragmentModels[i].getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING, time: currentTime})[0];
 
                 if (req) {
-                    requestSegs.push(req)
+                    requestSegs.push(req);
                 }
             }
             if (initSegs.length>0) {
@@ -118,18 +117,13 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
                 playbackController = this.playbackController,
                 fragmentModels = this.fragmentModels[streamId],
-                type,
                 model,
-                sameTimeReq,
-                mIdx,
                 req,
                 currentTime,
                 wallclockTime = new Date(),
-                time = null,
                 reqForCurrentTime,
                 mLength = fragmentModels ? fragmentModels.length : null,
                 reqsToExecute = [],
-                pendingReqs,
                 loadingLength;
 
             if (!fragmentModels || !mLength) {
@@ -141,7 +135,7 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
             reqForCurrentTime = getForTime(fragmentModels, currentTime);
             req = reqForCurrentTime || findClosestToTime(fragmentModels, currentTime) || current;
 
-            if (!req || req.length==0) {
+            if (!req || req.length===0) {
                 callback(new MediaPlayer.rules.SwitchRequest([], p));
                 return;
             }
