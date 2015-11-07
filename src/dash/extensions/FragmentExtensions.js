@@ -33,10 +33,10 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(FragmentExtensions);
 
-function FragmentExtensions(parser) {
+function FragmentExtensions(config) {
     "use strict";
 
-    let boxParser = parser || null;
+    let boxParser = config.parser;
 
     let instance = {
         getSamplesInfo: getSamplesInfo,

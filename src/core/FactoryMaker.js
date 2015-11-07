@@ -20,8 +20,8 @@ let FactoryMaker = (function() {
 
 		getClassFactory: function(classConstructor) {
 			return {
-				getInstance: function() {
-						return classConstructor.apply(this, arguments);
+				create: function() {
+					return classConstructor.apply(this, arguments);
 				}
 			}
 		}

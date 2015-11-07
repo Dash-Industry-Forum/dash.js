@@ -94,11 +94,10 @@ let TextSourceBuffer = function () {
         initialize: function (type, bufferController) {
             let streamProcessor = bufferController.streamProcessor;
             mediaInfos = streamProcessor.getMediaInfoArr();
-            textTrackExtensions = TextTrackExtensions.create({videoModel:this.videoModel});
+            textTrackExtensions = TextTrackExtensions.getInstance({videoModel:this.videoModel});
             isFragmented = !this.manifestExt.getIsTextTrack(type);
             if (isFragmented){
-                fragmentExt = FragmentExtensions.getInstance();
-                fragmentExt.setParser(this.system.getObject("boxParser"));
+                fragmentExt = FragmentExtensions.getInstance({parser:this.system.getObject("boxParser")});
                 fragmentModel = streamProcessor.getFragmentModel();
                 this.buffered =  this.system.getObject("customTimeRanges");
             }

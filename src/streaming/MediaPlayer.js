@@ -1137,7 +1137,7 @@ let MediaPlayer /**
          * @param value {Boolean}
          */
         displayCaptionsOnTop: function (value) {
-            var textTrackExt = TextTrackExtensions.create({videoModel:videoModel});
+            var textTrackExt = TextTrackExtensions.getInstance({videoModel:videoModel});
 
             textTrackExt.displayCConTop(value);
         },
