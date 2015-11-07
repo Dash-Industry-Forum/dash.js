@@ -102,14 +102,13 @@ MediaPlayer.rules.BufferLevelRule = function () {
 
         onBufferLevelOutrun = function(e) {
             var streamId = e.sender.streamProcessor.getStreamInfo().id;
-            isBufferLevelOutran[streamId] = isBufferLevelOutran[streamId] || {};
+            isBufferLevelOutran[streamId] = { audio:false, video:false };
             isBufferLevelOutran[streamId][e.sender.streamProcessor.getType()] = true;
         },
 
         onBufferLevelBalanced = function(e) {
             var streamId = e.sender.streamProcessor.getStreamInfo().id;
-            isBufferLevelOutran[streamId] = isBufferLevelOutran[streamId] || {};
-            isBufferLevelOutran[streamId][e.sender.streamProcessor.getType()] = false;
+            isBufferLevelOutran[streamId] = { audio:false, video:false };
         };
 
     return {
