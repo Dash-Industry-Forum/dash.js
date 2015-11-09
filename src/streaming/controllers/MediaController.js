@@ -197,7 +197,7 @@ MediaPlayer.dependencies.MediaController = function () {
             ["audio", "video", "text", "fragmentedText"].forEach(function(type){
                 var settings = self.getInitialSettings(type),
                     tracksForType = self.getTracksFor(type, streamInfo),
-                    isSet = false;
+                    tracks = [];
 
                 if (!settings) {
                     settings = self.DOMStorage.getSavedMediaSettings(type);
@@ -208,15 +208,20 @@ MediaPlayer.dependencies.MediaController = function () {
 
                 if (settings) {
                     tracksForType.forEach(function(track){
-                        if (!isSet && matchSettings.call(self, settings, track)) {
-                            self.setTrack(track);
-                            isSet = true;
+                        if (matchSettings.call(self, settings, track)) {
+                            tracks.push(track);
                         }
                     });
                 }
 
-                if (!isSet) {
+                if (tracks === 0) {
                     self.setTrack(selectInitialTrack.call(self, tracksForType));
+                } else {
+                    if (tracks.length > 1) {
+                        self.setTrack(selectInitialTrack.call(self, tracks));
+                    } else {
+                        self.setTrack(tracks[0]);
+                    }
                 }
             });
         },
@@ -411,14 +416,7 @@ MediaPlayer.dependencies.MediaController = function () {
          * @memberof MediaController#
          */
         isTracksEqual: function(t1, t2) {
-            var sameId = t1.id === t2.id,
-                sameViewpoint = t1.viewpoint === t2.viewpoint,
-                sameLang = t1.lang === t2.lang,
-                sameRoles = t1.roles.toString() == t2.roles.toString(),
-                sameAccessibility = t1.accessibility.toString() == t2.accessibility.toString(),
-                sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() == t2.audioChannelConfiguration.toString();
-
-            return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
+            return t1.index === t2.index;
         },
 
         /**
