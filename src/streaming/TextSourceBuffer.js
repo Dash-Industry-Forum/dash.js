@@ -35,7 +35,7 @@ import TextTrackInfo from './vo/TextTrackInfo.js';
 import FragmentExtensions from '../dash/extensions/FragmentExtensions.js';
 import BoxParser from './utils/BoxParser.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
-import VTTPapser from './VTTParser.js';
+import VTTParser from './VTTParser.js';
 import TTMLParser from './TTMLParser.js';
 
 let TextSourceBuffer = function () {
@@ -209,7 +209,7 @@ let TextSourceBuffer = function () {
         getParser:function(mimeType) {
             var parser;
             if (mimeType === "text/vtt") {
-                parser = VTTPapser.getInstance();
+                parser = VTTParser.getInstance();
                 parser.setConfig({logger: this.log});
             } else if (mimeType === "application/ttml+xml" || mimeType === "application/mp4") {
                 parser = TTMLParser.getInstance();
