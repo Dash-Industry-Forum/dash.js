@@ -28,36 +28,48 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-  
-let CustomTimeRanges = function () {
+import FactoryMaker from '../../core/FactoryMaker.js';
+
+export default FactoryMaker.getClassFactory(CustomTimeRanges);
+
+function CustomTimeRanges(/*config*/) {
+    let customTimeRangeArray = [],
+        length =0;
+
     return {
-        
-        customTimeRangeArray:[],
-        length :0,
+        customTimeRangeArray: customTimeRangeArray,
+        length: length,
+        add: add,
+        clear: clear,
+        remove: remove,
+        mergeRanges: mergeRanges,
+        start: start,
+        end: end
+    };
 
-        add: function(start,end){
-            var i=0;
-            
-            for(i=0;(i<this.customTimeRangeArray.length)&&(start>this.customTimeRangeArray[i].start);i++);
-            
-            this.customTimeRangeArray.splice(i, 0, {start:start,end:end});
-            
-            for(i=0;i<this.customTimeRangeArray.length-1;i++){
-                if(this.mergeRanges(i,i+1)){
-                    i--;
-                }
+    function add(start,end){
+        var i=0;
+
+        for(i=0;(i<this.customTimeRangeArray.length)&&(start>this.customTimeRangeArray[i].start);i++);
+
+        this.customTimeRangeArray.splice(i, 0, {start:start,end:end});
+
+        for(i=0;i<this.customTimeRangeArray.length-1;i++){
+            if(this.mergeRanges(i,i+1)){
+                i--;
             }
-            this.length=this.customTimeRangeArray.length;
-        },
+        }
+        this.length=this.customTimeRangeArray.length;
+    }
 
-        clear: function(){
-            this.customTimeRangeArray = [];
-            this.length = 0;
-        },
+    function clear(){
+        this.customTimeRangeArray = [];
+        this.length = 0;
+    }
 
-        remove: function(start,end){
-            for(var i=0;i<this.customTimeRangeArray.length;i++){
-                if(start<=this.customTimeRangeArray[i].start && end>=this.customTimeRangeArray[i].end) {
+    function remove(start,end){
+        for(var i=0;i<this.customTimeRangeArray.length;i++){
+            if(start<=this.customTimeRangeArray[i].start && end>=this.customTimeRangeArray[i].end) {
                 //      |--------------Range i-------|
                 //|---------------Range to remove ---------------|
                 //    or
@@ -66,78 +78,71 @@ let CustomTimeRanges = function () {
                 //    or
                 //                 |--------------Range i-------|
                 //|--------------Range to remove ---------------|
-                    this.customTimeRangeArray.splice(i,1);
-                    i--;
-                    
-                }else if(start>this.customTimeRangeArray[i].start && end<this.customTimeRangeArray[i].end) {
+                this.customTimeRangeArray.splice(i,1);
+                i--;
+
+            }else if(start>this.customTimeRangeArray[i].start && end<this.customTimeRangeArray[i].end) {
                 //|-----------------Range i----------------|
                 //        |-------Range to remove -----|
-                    this.customTimeRangeArray.splice(i+1, 0, {start:end,end:this.customTimeRangeArray[i].end});
-                    this.customTimeRangeArray[i].end=start;
-                    break;
-                }else if( start>this.customTimeRangeArray[i].start && start<this.customTimeRangeArray[i].end) {
+                this.customTimeRangeArray.splice(i+1, 0, {start:end,end:this.customTimeRangeArray[i].end});
+                this.customTimeRangeArray[i].end=start;
+                break;
+            }else if( start>this.customTimeRangeArray[i].start && start<this.customTimeRangeArray[i].end) {
                 //|-----------Range i----------|
                 //                    |---------Range to remove --------|
                 //    or
                 //|-----------------Range i----------------|
                 //            |-------Range to remove -----|
-                    this.customTimeRangeArray[i].end=start;
-                }else if( end>this.customTimeRangeArray[i].start && end<this.customTimeRangeArray[i].end) {
-                    //                     |-----------Range i----------|
-                    //|---------Range to remove --------|
-                    //            or
-                    //|-----------------Range i----------------|
-                    //|-------Range to remove -----|
-                    this.customTimeRangeArray[i].start=end;
-                }
+                this.customTimeRangeArray[i].end=start;
+            }else if( end>this.customTimeRangeArray[i].start && end<this.customTimeRangeArray[i].end) {
+                //                     |-----------Range i----------|
+                //|---------Range to remove --------|
+                //            or
+                //|-----------------Range i----------------|
+                //|-------Range to remove -----|
+                this.customTimeRangeArray[i].start=end;
             }
+        }
 
-            this.length = this.customTimeRangeArray.length;
-        },
+        this.length = this.customTimeRangeArray.length;
+    }
 
-        mergeRanges : function(rangeIndex1,rangeIndex2) {
-            var range1=this.customTimeRangeArray[rangeIndex1];
-            var range2=this.customTimeRangeArray[rangeIndex2];
-            
-            if (range1.start <=  range2.start && range2.start <= range1.end && range1.end <= range2.end) {
+    function mergeRanges(rangeIndex1,rangeIndex2) {
+        var range1=this.customTimeRangeArray[rangeIndex1];
+        var range2=this.customTimeRangeArray[rangeIndex2];
+
+        if (range1.start <=  range2.start && range2.start <= range1.end && range1.end <= range2.end) {
             //|-----------Range1----------|
             //                    |-----------Range2----------|
-                range1.end=range2.end;
-                this.customTimeRangeArray.splice(rangeIndex2,1);
-                return true;
-                
-            } else if (range2.start <= range1.start && range1.start <= range2.end && range2.end <= range1.end) {
+            range1.end=range2.end;
+            this.customTimeRangeArray.splice(rangeIndex2,1);
+            return true;
+
+        } else if (range2.start <= range1.start && range1.start <= range2.end && range2.end <= range1.end) {
             //                |-----------Range1----------|
             //|-----------Range2----------|
-                range1.start=range2.start;
-                this.customTimeRangeArray.splice(rangeIndex2,1);
-                return true;
-            } else if (range2.start <= range1.start && range1.start <= range2.end && range1.end <= range2.end) {
+            range1.start=range2.start;
+            this.customTimeRangeArray.splice(rangeIndex2,1);
+            return true;
+        } else if (range2.start <= range1.start && range1.start <= range2.end && range1.end <= range2.end) {
             //      |--------Range1-------|
             //|---------------Range2--------------|
-                this.customTimeRangeArray.splice(rangeIndex1,1);
-                return true;
-            } else if (range1.start <= range2.start && range2.start <= range1.end && range2.end <= range1.end) {
+            this.customTimeRangeArray.splice(rangeIndex1,1);
+            return true;
+        } else if (range1.start <= range2.start && range2.start <= range1.end && range2.end <= range1.end) {
             //|-----------------Range1--------------|
             //        |-----------Range2----------|
-                this.customTimeRangeArray.splice(rangeIndex2,1);
-                return true;
-            }
-            return false;
-        },
-        
-        start : function(index) {
-            return this.customTimeRangeArray[index].start;
-        },
-        end : function(index) {
-            return this.customTimeRangeArray[index].end;
+            this.customTimeRangeArray.splice(rangeIndex2,1);
+            return true;
         }
-    };
+        return false;
+    }
 
-};
- 
-CustomTimeRanges.prototype = {
-    constructor: CustomTimeRanges
-};
- 
-export default CustomTimeRanges;
+    function start(index) {
+        return this.customTimeRangeArray[index].start;
+    }
+
+    function end(index) {
+        return this.customTimeRangeArray[index].end;
+    }
+}

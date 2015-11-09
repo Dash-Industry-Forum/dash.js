@@ -106,18 +106,18 @@ let VirtualBuffer = function () {
         createDataStorage = function() {
             var data = {};
 
-            data.audio = {calculatedBufferedRanges: new CustomTimeRanges(),
-                          actualBufferedRanges: new CustomTimeRanges(),
+            data.audio = {calculatedBufferedRanges: CustomTimeRanges.create(),
+                          actualBufferedRanges: CustomTimeRanges.create(),
                           appended: []};
             data.audio[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
             data.audio[HTTPRequest.INIT_SEGMENT_TYPE] = [];
-            data.video = {calculatedBufferedRanges: new CustomTimeRanges(),
-                          actualBufferedRanges: new CustomTimeRanges(),
+            data.video = {calculatedBufferedRanges: CustomTimeRanges.create(),
+                          actualBufferedRanges: CustomTimeRanges.create(),
                           appended: []};
             data.video[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
             data.video[HTTPRequest.INIT_SEGMENT_TYPE] = [];
-            data.fragmentedText = {calculatedBufferedRanges: new CustomTimeRanges(),
-                                   actualBufferedRanges: new CustomTimeRanges(),
+            data.fragmentedText = {calculatedBufferedRanges: CustomTimeRanges.create(),
+                                   actualBufferedRanges: CustomTimeRanges.create(),
                                    appended: []};
             data.fragmentedText[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
             data.fragmentedText[HTTPRequest.INIT_SEGMENT_TYPE] = [];
@@ -240,7 +240,7 @@ let VirtualBuffer = function () {
                 start,
                 end;
 
-            data[streamId][mediaType].actualBufferedRanges = new CustomTimeRanges();
+            data[streamId][mediaType].actualBufferedRanges = CustomTimeRanges.create();
 
             if (!ranges || ranges.length === 0) {
                 data[streamId][mediaType].appended = [];

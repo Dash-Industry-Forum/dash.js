@@ -503,8 +503,8 @@ let BufferController = function () {
         removeOldTrackData = function() {
             var self = this,
                 allAppendedChunks = this.virtualBuffer.getChunks({streamId: getStreamId.call(this), mediaType: type, segmentType: HTTPRequest.MEDIA_SEGMENT_TYPE, appended: true}),
-                rangesToClear = new CustomTimeRanges(),
-                rangesToLeave = new CustomTimeRanges(),
+                rangesToClear = CustomTimeRanges.create(),
+                rangesToLeave = CustomTimeRanges.create(),
                 currentTime = this.playbackController.getTime(),
                 safeBufferLength = this.streamProcessor.getCurrentRepresentationInfo().fragmentDuration * 2,
                 currentTrackBufferLength,

@@ -37,6 +37,7 @@ import BoxParser from './utils/BoxParser.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 import VTTParser from './VTTParser.js';
 import TTMLParser from './TTMLParser.js';
+import CustomTimeRanges from './utils/CustomTimeRanges.js';
 
 let TextSourceBuffer = function () {
     var allTracksAreDisabled = false,
@@ -102,7 +103,7 @@ let TextSourceBuffer = function () {
             if (isFragmented){
                 fragmentExt = FragmentExtensions.getInstance({parser: BoxParser.getInstance()});
                 fragmentModel = streamProcessor.getFragmentModel();
-                this.buffered =  this.system.getObject("customTimeRanges");
+                this.buffered =  CustomTimeRanges.create();
             }
         },
 
