@@ -36,6 +36,7 @@ import FragmentExtensions from '../dash/extensions/FragmentExtensions.js';
 import BoxParser from './utils/BoxParser.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 import VTTPapser from './VTTParser.js';
+import TTMLParser from './TTMLParser.js';
 
 let TextSourceBuffer = function () {
     var allTracksAreDisabled = false,
@@ -123,7 +124,7 @@ let TextSourceBuffer = function () {
                         kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
                         return kind;
                     },
-                    
+
                     checkTTML = function () {
                         var ttml = false;
                         if (mediaInfo.codec && mediaInfo.codec.search("stpp") >= 0) {
@@ -211,7 +212,8 @@ let TextSourceBuffer = function () {
                 parser = VTTPapser.getInstance();
                 parser.setConfig({logger: this.log});
             } else if (mimeType === "application/ttml+xml" || mimeType === "application/mp4") {
-                parser = this.system.getObject("ttmlParser");
+                parser = TTMLParser.getInstance();
+                parser.setConfig({videoModel: this.videoModel});
             }
             return parser;
         },
