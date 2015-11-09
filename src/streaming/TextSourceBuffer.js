@@ -34,7 +34,8 @@ import MediaPlayer from './MediaPlayer.js';
 import TextTrackInfo from './vo/TextTrackInfo.js';
 import FragmentExtensions from '../dash/extensions/FragmentExtensions.js';
 import BoxParser from './utils/BoxParser.js';
-import TextTrackExtensions from './extensions/TextTrackExtensions.js'
+import TextTrackExtensions from './extensions/TextTrackExtensions.js';
+import VTTPapser from './VTTParser.js';
 
 let TextSourceBuffer = function () {
     var allTracksAreDisabled = false,
@@ -90,6 +91,7 @@ let TextSourceBuffer = function () {
         manifestExt:undefined,
         mediaController:undefined,
         streamController:undefined,
+        log: undefined,
 
         initialize: function (type, bufferController) {
             let streamProcessor = bufferController.streamProcessor;
@@ -206,7 +208,8 @@ let TextSourceBuffer = function () {
         getParser:function(mimeType) {
             var parser;
             if (mimeType === "text/vtt") {
-                parser = this.system.getObject("vttParser");
+                parser = VTTPapser.getInstance();
+                parser.setConfig({logger: this.log});
             } else if (mimeType === "application/ttml+xml" || mimeType === "application/mp4") {
                 parser = this.system.getObject("ttmlParser");
             }
@@ -217,7 +220,7 @@ let TextSourceBuffer = function () {
             return allTracksAreDisabled;
         },
 
-        setTextTrack: setTextTrack,
+        setTextTrack: setTextTrack
     };
 };
 
