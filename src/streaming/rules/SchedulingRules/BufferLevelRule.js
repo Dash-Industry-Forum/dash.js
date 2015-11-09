@@ -38,7 +38,8 @@ MediaPlayer.rules.BufferLevelRule = function () {
         decideBufferLength = function (minBufferTime, duration, isDynamic) {
             var minBufferTarget;
 
-            // For dynamic streams buffer length must not exceed a value of the live edge delay.
+            // For dynamic streams buffer length must not exceed a
+            // value of the live edge delay.
             if (isDynamic) {
                 minBufferTarget = this.playbackController.getLiveDelay();
             } else if (isNaN(duration) || MediaPlayer.dependencies.BufferController.DEFAULT_MIN_BUFFER_TIME < duration && minBufferTime < duration) {
@@ -61,7 +62,6 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 currentBufferTarget = minBufferTarget,
                 bufferMax = scheduleController.bufferController.bufferMax,
                 //isLongFormContent = (duration >= MediaPlayer.dependencies.BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
-                recentLatency,
                 requiredBufferLength = 0;
 
 
@@ -77,15 +77,13 @@ MediaPlayer.rules.BufferLevelRule = function () {
                 }
                 var vLatency = vmetrics ? self.metricsExt.getRecentLatency(vmetrics, 4) : 0;
                 var aLatency = ametrics ? self.metricsExt.getRecentLatency(ametrics, 4) : 0;
-                if (vmetrics) {
-                    recentLatency = Math.max( Math.max(vLatency,aLatency),MINIMUM_LATENCY_BUFFER);
-                }
+
+                var recentLatency = Math.max( Math.max(vLatency,aLatency),MINIMUM_LATENCY_BUFFER);
+
                 requiredBufferLength = currentBufferTarget + recentLatency;
             }
 
-            requiredBufferLength = Math.min(requiredBufferLength, criticalBufferLevel) ;
-
-            return requiredBufferLength;
+            return Math.min(requiredBufferLength, criticalBufferLevel);
         },
 
         isCompletedT = function(streamId, type) {
