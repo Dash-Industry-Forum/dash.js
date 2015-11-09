@@ -214,7 +214,7 @@ MediaPlayer.dependencies.MediaController = function () {
                     });
                 }
 
-                if (tracks === 0) {
+                if (tracks.length === 0) {
                     self.setTrack(selectInitialTrack.call(self, tracksForType));
                 } else {
                     if (tracks.length > 1) {
