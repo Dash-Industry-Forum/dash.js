@@ -45,7 +45,6 @@ import DOMStorage from './utils/DOMStorage.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
 import VirtualBuffer from './utils/VirtualBuffer.js';
 import IsoFile from './utils/IsoFile.js';
-import BoxParser from './utils/BoxParser.js';
 
 import VideoModel from './models/VideoModel.js';
 import ManifestModel from './models/ManifestModel.js';
@@ -164,7 +163,6 @@ let Context = function () {
             this.system.mapSingleton('virtualBuffer', VirtualBuffer);
 
             //this.system.mapSingleton('textTrackExtensions', TextTrackExtensions);
-            this.system.mapSingleton('boxParser', BoxParser);
 
             this.system.mapSingleton('videoModel', VideoModel);
             this.system.mapSingleton('manifestModel', ManifestModel);

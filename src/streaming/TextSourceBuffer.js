@@ -100,7 +100,7 @@ let TextSourceBuffer = function () {
             textTrackExtensions = TextTrackExtensions.getInstance({videoModel:this.videoModel});
             isFragmented = !this.manifestExt.getIsTextTrack(type);
             if (isFragmented){
-                fragmentExt = FragmentExtensions.getInstance({parser:this.system.getObject("boxParser")});
+                fragmentExt = FragmentExtensions.getInstance({parser: BoxParser.getInstance()});
                 fragmentModel = streamProcessor.getFragmentModel();
                 this.buffered =  this.system.getObject("customTimeRanges");
             }

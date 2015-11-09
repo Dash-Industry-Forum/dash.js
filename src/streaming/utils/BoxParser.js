@@ -30,11 +30,25 @@
  */
 
 import IsoFile from './IsoFile.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-let BoxParser = function () {
+export default FactoryMaker.getSingletonFactory(BoxParser);
+
+function BoxParser(/*config*/) {
     "use strict";
 
-    var parse = function(data) {
+    let instance = {
+        parse: parse
+    };
+
+    return instance;
+
+    /**
+     * @param {ArrayBuffer} data
+     * @returns {@link IsoFile}
+     * @memberof BoxParser#
+     */
+    function parse(data) {
         if (!data) return null;
 
         if (data.fileStart === undefined) {
@@ -47,23 +61,5 @@ let BoxParser = function () {
         dashIsoFile.setData(parsedFile);
 
         return dashIsoFile;
-    };
-
-    return {
-        system: undefined,
-        log: undefined,
-
-        /**
-         * @param {ArrayBuffer} data
-         * @returns {@link IsoFile}
-         * @memberof BoxParser#
-         */
-        parse: parse
-    };
-};
-
-BoxParser.prototype = {
-    constructor: BoxParser
-};
-
-export default BoxParser;
+    }
+}

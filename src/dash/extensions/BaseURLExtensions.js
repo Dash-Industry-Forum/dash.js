@@ -31,7 +31,8 @@
 import Segment from '../vo/Segment.js';
 import Error from '../../streaming/vo/Error.js';
 import Events from '../../streaming/Events.js'
-import EventBus from '../../streaming/utils/EventBus.js'
+import EventBus from '../../streaming/utils/EventBus.js';
+import BoxParser from '../../streaming/utils/BoxParser.js';
 
 let BaseURLExtensions = function () {
     "use strict";
@@ -113,7 +114,7 @@ let BaseURLExtensions = function () {
                 needFailureReport = false;
 
                 info.bytesLoaded = info.range.end;
-                isoFile = self.boxParser.parse(request.response);
+                isoFile = BoxParser.getInstance().parse(request.response);
                 initRange = findInitRange.call(self, isoFile);
 
                 if (initRange) {
@@ -165,7 +166,7 @@ let BaseURLExtensions = function () {
 
                 needFailureReport = false;
                 info.bytesLoaded = info.range.end - info.range.start;
-                isoFile = self.boxParser.parse(request.response);
+                isoFile = BoxParser.getInstance().parse(request.response);
                 sidx = isoFile.getBox("sidx");
 
                 if (!sidx || !sidx.isComplete) {
@@ -264,7 +265,6 @@ let BaseURLExtensions = function () {
         log: undefined,
         errHandler: undefined,
         requestModifierExt:undefined,
-        boxParser: undefined,
 
         loadSegments: function(representation, type, range) {
             var parts = range ? range.split("-") : null;

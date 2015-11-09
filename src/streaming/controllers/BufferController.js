@@ -41,6 +41,7 @@ import MediaController from './MediaController.js';
 import CustomTimeRanges from '../utils/CustomTimeRanges.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
+import BoxParser from '../utils/BoxParser.js';
 
 let BufferController = function () {
     "use strict";
@@ -362,7 +363,7 @@ let BufferController = function () {
                 eventStreams[inbandEvents[loop].schemeIdUri] = inbandEvents[loop];
             }
 
-            isoFile = this.boxParser.parse(data);
+            isoFile = BoxParser.getInstance().parse(data);
             eventBoxes = isoFile.getBoxes("emsg");
 
             for (var i = 0, ln = eventBoxes.length; i < ln; i += 1) {
@@ -605,7 +606,6 @@ let BufferController = function () {
         adapter: undefined,
         log: undefined,
         abrController: undefined,
-        boxParser: undefined,
         system: undefined,
         virtualBuffer: undefined,
         textSourceBuffer:undefined,
@@ -648,7 +648,7 @@ let BufferController = function () {
         createBuffer: createBuffer,
 
         getType: function() {
-            return type;  
+            return type;
         },
 
         getStreamProcessor: function() {
