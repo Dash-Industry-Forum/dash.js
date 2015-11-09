@@ -41,7 +41,8 @@ import StreamController from './controllers/StreamController.js';
 import ManifestLoader from './ManifestLoader.js';
 import Events from './Events.js';
 import PublicEvents from './PublicEvents.js';
-import TextTrackExtensions from './extensions/TextTrackExtensions.js'
+import TextTrackExtensions from './extensions/TextTrackExtensions.js';
+import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
 
 let MediaPlayer /**
 *
@@ -333,7 +334,6 @@ let MediaPlayer /**
         capabilities: undefined,
         adapter: undefined,
         errHandler: undefined,
-        uriQueryFragModel: undefined,
         videoElementExt: undefined,
 
         setup: function () {
@@ -1013,7 +1013,6 @@ let MediaPlayer /**
         retrieveManifest: function (url, callback) {
             (function (manifestUrl) {
                 var manifestLoader = system.getObject("manifestLoader"),
-                    uriQueryFragModel = system.getObject("uriQueryFragModel"),
                     self = this;
 
                 manifestLoader.initialize();
@@ -1029,7 +1028,7 @@ let MediaPlayer /**
                 };
 
                 EventBus.on(Events.MANIFEST_LOADED, handler, self);
-                manifestLoader.load(uriQueryFragModel.parseURI(manifestUrl));
+                manifestLoader.load(URIQueryAndFragmentModel.getInstance().parseURI(manifestUrl));
             })(url);
         },
 
@@ -1216,8 +1215,9 @@ let MediaPlayer /**
             }
 
             if (typeof urlOrManifest === "string") {
-                this.uriQueryFragModel.reset();
-                source = this.uriQueryFragModel.parseURI(urlOrManifest);
+                var uriQueryFragModel = URIQueryAndFragmentModel.getInstance();
+                uriQueryFragModel.reset();
+                source = uriQueryFragModel.parseURI(urlOrManifest);
             } else {
                 source = urlOrManifest;
             }

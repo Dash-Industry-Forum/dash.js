@@ -33,6 +33,7 @@ import BufferController from './BufferController.js';
 import LiveEdgeFinder from '../LiveEdgeFinder.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
+import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
 
 let PlaybackController = function () {
     "use strict";
@@ -51,7 +52,7 @@ let PlaybackController = function () {
 
         getStreamStartTime = function (streamInfo) {
             var presentationStartTime,
-                startTimeOffset = parseInt(this.uriQueryFragModel.getURIFragmentData().s);
+                startTimeOffset = parseInt(URIQueryAndFragmentModel.getInstance().getURIFragmentData().s);
 
             if (isDynamic) {
 
@@ -315,7 +316,6 @@ let PlaybackController = function () {
         system: undefined,
         log: undefined,
         timelineConverter: undefined,
-        uriQueryFragModel: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
         manifestModel: undefined,

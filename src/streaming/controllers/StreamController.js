@@ -37,6 +37,7 @@ import EventBus from '../utils/EventBus.js';
 import ProtectionModel from '../models/ProtectionModel.js';
 import MediaController from './MediaController.js';
 import Events from '../Events.js';
+import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
 
 let StreamController = function () {
     "use strict";
@@ -424,7 +425,7 @@ let StreamController = function () {
 
                 var manifestUTCTimingSources = self.manifestExt.getUTCTimingSources(e.manifest),
                     allUTCTimingSources = (!self.manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ) ?  manifestUTCTimingSources :  manifestUTCTimingSources.concat(UTCTimingSources),
-                    isHTTPS = self.uriQueryFragModel.isManifestHTTPS();
+                    isHTTPS = URIQueryAndFragmentModel.getInstance().isManifestHTTPS();
                     //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
                     allUTCTimingSources.forEach(function(item){
                         if (item.value.replace(/.*?:\/\//g, "") === MediaPlayer.UTCTimingSources.default.value.replace(/.*?:\/\//g, "")){
@@ -461,7 +462,6 @@ let StreamController = function () {
         timeSyncController: undefined,
         virtualBuffer: undefined,
         errHandler: undefined,
-        uriQueryFragModel:undefined,
 
         getAutoPlay: function () {
             return autoPlay;

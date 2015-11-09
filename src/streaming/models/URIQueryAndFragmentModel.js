@@ -30,87 +30,99 @@
  */
 
 import URIFragmentData from '../vo/URIFragmentData.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-let URIQueryAndFragmentModel = function () {
+export default FactoryMaker.getSingletonFactory(URIQueryAndFragmentModel);
+
+function URIQueryAndFragmentModel(/*config*/) {
     "use strict";
 
-    var URIFragmentDataVO = new URIFragmentData(),
-        URIQueryData = [],
-        isHTTPS = false,
-
-        parseURI = function (uri) {
-            if (!uri) return null;
-
-            var URIFragmentData = [],
-                testQuery = new RegExp(/[?]/),
-                testFragment = new RegExp(/[#]/),
-                testHTTPS = new RegExp(/^(https:)?\/\//i),
-                isQuery = testQuery.test(uri),
-                isFragment = testFragment.test(uri),
-                mappedArr;
-
-            isHTTPS = testHTTPS.test(uri);
-
-            function reduceArray(previousValue, currentValue, index, array) {
-                var arr =  array[0].split(/[=]/);
-                array.push({key:arr[0], value:arr[1]});
-                array.shift();
-                return array;
-            }
-
-            function mapArray(currentValue, index, array) {
-                if (index > 0)
-                {
-                    if (isQuery && URIQueryData.length === 0) {
-                        URIQueryData = array[index].split(/[&]/);
-                    } else if (isFragment) {
-                        URIFragmentData = array[index].split(/[&]/);
-                    }
-                }
-
-                return array;
-            }
-
-            mappedArr = uri.split(/[?#]/).map(mapArray);
-
-            if (URIQueryData.length > 0) {
-                URIQueryData = URIQueryData.reduce(reduceArray, null);
-            }
-
-            if (URIFragmentData.length > 0) {
-                URIFragmentData = URIFragmentData.reduce(reduceArray, null);
-                URIFragmentData.forEach(function (object) {
-                    URIFragmentDataVO[object.key] = object.value;
-                });
-            }
-
-            return uri;
-        };
-
-    return {
-        parseURI:parseURI,
-        getURIFragmentData:function(){
-            return URIFragmentDataVO;
-        },
-
-        getURIQueryData: function(){
-            return URIQueryData;
-        },
-
-        isManifestHTTPS:function(){
-            return isHTTPS;
-        },
-
-        reset: function() {
-            URIFragmentDataVO = new URIFragmentData();
-            URIQueryData = [];
-            isHTTPS = false;
-        }
+    let instance = {
+        parseURI: parseURI,
+        getURIFragmentData: getURIFragmentData,
+        getURIQueryData: getURIQueryData,
+        isManifestHTTPS: isManifestHTTPS,
+        reset: reset
     };
-};
 
-URIQueryAndFragmentModel.prototype = {
-    constructor: URIQueryAndFragmentModel
-};
+    initialize();
 
-export default URIQueryAndFragmentModel;
+    return instance;
+
+    let URIFragmentDataVO,
+        URIQueryData,
+        isHTTPS;
+
+    function getURIFragmentData(){
+        return URIFragmentDataVO;
+    }
+
+    function getURIQueryData(){
+        return URIQueryData;
+    }
+
+    function isManifestHTTPS(){
+        return isHTTPS;
+    }
+
+    function reset() {
+        URIFragmentDataVO = new URIFragmentData();
+        URIQueryData = [];
+        isHTTPS = false;
+    }
+
+    function initialize() {
+        URIFragmentDataVO = new URIFragmentData();
+        URIQueryData = [];
+        isHTTPS = false;
+    }
+
+    function parseURI(uri) {
+        if (!uri) return null;
+
+        var URIFragmentData = [],
+            testQuery = new RegExp(/[?]/),
+            testFragment = new RegExp(/[#]/),
+            testHTTPS = new RegExp(/^(https:)?\/\//i),
+            isQuery = testQuery.test(uri),
+            isFragment = testFragment.test(uri),
+            mappedArr;
+
+        isHTTPS = testHTTPS.test(uri);
+
+        function reduceArray(previousValue, currentValue, index, array) {
+            var arr =  array[0].split(/[=]/);
+            array.push({key:arr[0], value:arr[1]});
+            array.shift();
+            return array;
+        }
+
+        function mapArray(currentValue, index, array) {
+            if (index > 0)
+            {
+                if (isQuery && URIQueryData.length === 0) {
+                    URIQueryData = array[index].split(/[&]/);
+                } else if (isFragment) {
+                    URIFragmentData = array[index].split(/[&]/);
+                }
+            }
+
+            return array;
+        }
+
+        mappedArr = uri.split(/[?#]/).map(mapArray);
+
+        if (URIQueryData.length > 0) {
+            URIQueryData = URIQueryData.reduce(reduceArray, null);
+        }
+
+        if (URIFragmentData.length > 0) {
+            URIFragmentData = URIFragmentData.reduce(reduceArray, null);
+            URIFragmentData.forEach(function (object) {
+                URIFragmentDataVO[object.key] = object.value;
+            });
+        }
+
+        return uri;
+    }
+}

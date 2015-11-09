@@ -48,7 +48,6 @@ import IsoFile from './utils/IsoFile.js';
 import VideoModel from './models/VideoModel.js';
 import ManifestModel from './models/ManifestModel.js';
 import MetricsModel from './models/MetricsModel.js';
-import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
 
 import KeySystem_PlayReady from './protection/drm/KeySystem_PlayReady.js';
 import KeySystem_Widevine from './protection/drm/KeySystem_Widevine.js';
@@ -165,7 +164,6 @@ let Context = function () {
             this.system.mapSingleton('videoModel', VideoModel);
             this.system.mapSingleton('manifestModel', ManifestModel);
             this.system.mapSingleton('metricsModel', MetricsModel);
-            this.system.mapSingleton('uriQueryFragModel', URIQueryAndFragmentModel);
 
             this.system.mapSingleton('ksPlayReady', KeySystem_PlayReady);
             this.system.mapSingleton('ksWidevine', KeySystem_Widevine);
