@@ -315,9 +315,10 @@ MediaPlayer.dependencies.BufferController = function () {
             var bufferToPrune = 0,
                 currentTime = this.playbackController.getTime(),
                 currentRange = this.sourceBufferExt.getBufferRange(buffer, currentTime);
-
-            // we want to get rid off buffer that is more than x seconds behind current time
-            if (currentRange !== null) {
+                // we want to get rid off buffer that is more than x
+                // seconds behind current time, but no pruning once it's
+                // finished.
+            if (currentRange !== null && mediaSource.readyState !== "ended") {
                 bufferToPrune = currentTime - currentRange.start - MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP;
                 if (bufferToPrune > MINIMUM_BUFFER_TO_PRUNE) {
                     this.log("need to prune:"+bufferToPrune);
