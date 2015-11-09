@@ -75,8 +75,11 @@ MediaPlayer.rules.BufferLevelRule = function () {
                         MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM :*/
                         MediaPlayer.dependencies.BufferController.BUFFER_TIME_AT_TOP_QUALITY;
                 }
-
-                recentLatency = Math.max( Math.max(self.metricsExt.getRecentLatency(vmetrics, 4),self.metricsExt.getRecentLatency(ametrics, 4)),MINIMUM_LATENCY_BUFFER);
+                var vLatency = vmetrics ? self.metricsExt.getRecentLatency(vmetrics, 4) : 0;
+                var aLatency = ametrics ? self.metricsExt.getRecentLatency(ametrics, 4) : 0;
+                if (vmetrics) {
+                    recentLatency = Math.max( Math.max(vLatency,aLatency),MINIMUM_LATENCY_BUFFER);
+                }
                 requiredBufferLength = currentBufferTarget + recentLatency;
             }
 
