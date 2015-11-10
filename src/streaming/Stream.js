@@ -36,7 +36,8 @@ import ProtectionController from './controllers/ProtectionController.js';
 import MediaController from './controllers/MediaController.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
-import AbrController from './controllers/AbrController.js'
+import AbrController from './controllers/AbrController.js';
+import VideoModel from './models/VideoModel.js';
 
 let Stream = function () {
     "use strict";
@@ -86,7 +87,7 @@ let Stream = function () {
 
             if (!!mediaInfo.contentProtection && !self.capabilities.supportsEncryptedMedia()) {
                 self.errHandler.capabilityError("encryptedmedia");
-            } else if (!self.capabilities.supportsCodec(self.videoModel.getElement(), codec)) {
+            } else if (!self.capabilities.supportsCodec(VideoModel.getInstance().getElement(), codec)) {
                 msg = type + "Codec (" + codec + ") is not supported.";
                 self.errHandler.manifestError(msg, "codec", manifest);
                 self.log(msg);
@@ -346,7 +347,6 @@ let Stream = function () {
         manifestModel: undefined,
         sourceBufferExt: undefined,
         adapter: undefined,
-        videoModel: undefined,
         fragmentController: undefined,
         playbackController: undefined,
         mediaController: undefined,

@@ -61,7 +61,6 @@ let StreamProcessor = function () {
 
     return {
         system : undefined,
-        videoModel: undefined,
         indexHandler: undefined,
         liveEdgeFinder: undefined,
         timelineConverter: undefined,
@@ -224,7 +223,6 @@ let StreamProcessor = function () {
             this.scheduleController = null;
             this.representationController.reset();
             this.representationController = null;
-            this.videoModel = null;
             this.fragmentController = null;
             isDynamic = undefined;
             stream = null;

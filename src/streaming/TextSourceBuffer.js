@@ -38,6 +38,7 @@ import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 import VTTParser from './VTTParser.js';
 import TTMLParser from './TTMLParser.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
+import VideoModel from './models/VideoModel.js';
 
 let TextSourceBuffer = function () {
     var allTracksAreDisabled = false,
@@ -50,10 +51,11 @@ let TextSourceBuffer = function () {
         initializationSegmentReceived= false,
         timescale = NaN,
         allTracks = null,
+        videoModel = null,
 
         setTextTrack = function() {
 
-            var el = this.videoModel.getElement(),
+            var el = videoModel.getElement(),
                 tracks = el.textTracks,
                 ln = tracks.length,
                 self = this;
@@ -87,7 +89,6 @@ let TextSourceBuffer = function () {
 
     return {
         system:undefined,
-        videoModel: undefined,
         errHandler: undefined,
         adapter: undefined,
         manifestExt:undefined,
@@ -98,7 +99,8 @@ let TextSourceBuffer = function () {
         initialize: function (type, bufferController) {
             let streamProcessor = bufferController.streamProcessor;
             mediaInfos = streamProcessor.getMediaInfoArr();
-            textTrackExtensions = TextTrackExtensions.getInstance({videoModel:this.videoModel});
+            videoModel = VideoModel.getInstance();
+            textTrackExtensions = TextTrackExtensions.getInstance({videoModel: videoModel});
             isFragmented = !this.manifestExt.getIsTextTrack(type);
             if (isFragmented){
                 fragmentExt = FragmentExtensions.getInstance({parser: BoxParser.getInstance()});
@@ -142,7 +144,7 @@ let TextSourceBuffer = function () {
                 textTrackInfo.label = mediaInfo.id; // AdaptationSet id (an unsigned int)
                 textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
                 textTrackInfo.isTTML = checkTTML();
-                textTrackInfo.video = self.videoModel.getElement();
+                textTrackInfo.video = videoModel.getElement();
                 textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
                 textTrackInfo.isFragmented = isFragmented;
                 textTrackInfo.kind = getKind();
@@ -205,6 +207,7 @@ let TextSourceBuffer = function () {
             initializationSegmentReceived= false;
             timescale = NaN;
             allTracks = null;
+            videoModel = null;
         },
 
         getParser:function(mimeType) {
@@ -214,7 +217,7 @@ let TextSourceBuffer = function () {
                 parser.setConfig({logger: this.log});
             } else if (mimeType === "application/ttml+xml" || mimeType === "application/mp4") {
                 parser = TTMLParser.getInstance();
-                parser.setConfig({videoModel: this.videoModel});
+                parser.setConfig({videoModel: videoModel});
             }
             return parser;
         },

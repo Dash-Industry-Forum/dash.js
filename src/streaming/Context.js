@@ -45,7 +45,6 @@ import DOMStorage from './utils/DOMStorage.js';
 import VirtualBuffer from './utils/VirtualBuffer.js';
 import IsoFile from './utils/IsoFile.js';
 
-import VideoModel from './models/VideoModel.js';
 import ManifestModel from './models/ManifestModel.js';
 import MetricsModel from './models/MetricsModel.js';
 
@@ -157,7 +156,6 @@ let Context = function () {
 
             //this.system.mapSingleton('textTrackExtensions', TextTrackExtensions);
 
-            this.system.mapSingleton('videoModel', VideoModel);
             this.system.mapSingleton('manifestModel', ManifestModel);
             this.system.mapSingleton('metricsModel', MetricsModel);
 

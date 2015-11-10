@@ -34,6 +34,7 @@ import LiveEdgeFinder from '../LiveEdgeFinder.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
+import VideoModel from '../models/VideoModel.js';
 
 let PlaybackController = function () {
     "use strict";
@@ -320,7 +321,6 @@ let PlaybackController = function () {
         metricsExt: undefined,
         manifestModel: undefined,
         manifestExt: undefined,
-        videoModel: undefined,
         adapter: undefined,
 
         setup: function() {
@@ -339,7 +339,7 @@ let PlaybackController = function () {
         },
 
         initialize: function(streamInfoValue) {
-            videoModel = this.videoModel;
+            videoModel = VideoModel.getInstance();
             streamInfo = streamInfoValue;
             commonEarliestTime = {};
             removeAllListeners.call(this);

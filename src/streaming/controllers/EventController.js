@@ -28,6 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+import VideoModel from '../models/VideoModel.js';
+
 let EventController = function(){
     "use strict";
 
@@ -111,7 +114,7 @@ let EventController = function(){
 
         triggerEvents = function(events) {
             var self = this,
-                currentVideoTime = this.videoModel.getCurrentTime(),
+                currentVideoTime = VideoModel.getInstance().getCurrentTime(),
                 presentationTime;
 
             /* == Trigger events that are ready == */
@@ -141,7 +144,7 @@ let EventController = function(){
             var self = this;
 
             if(activeEvents) {
-                var currentVideoTime = this.videoModel.getCurrentTime();
+                var currentVideoTime = VideoModel.getInstance().getCurrentTime();
                 var eventIds = Object.keys(activeEvents);
 
                 for (var i = 0; i < eventIds.length; i++) {
@@ -173,7 +176,6 @@ let EventController = function(){
         manifestUpdater: undefined,
         log: undefined,
         system: undefined,
-        videoModel: undefined,
         addInlineEvents : addInlineEvents,
         addInbandEvents : addInbandEvents,
         reset : reset,

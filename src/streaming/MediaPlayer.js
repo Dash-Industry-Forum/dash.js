@@ -45,6 +45,7 @@ import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
 import AbrController from './controllers/AbrController.js'
 import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
+import VideoModel from './models/VideoModel.js';
 
 let MediaPlayer /**
 *
@@ -1182,7 +1183,7 @@ let MediaPlayer /**
 
             videoModel = null;
             if (element) {
-                videoModel = system.getObject("videoModel");
+                videoModel = VideoModel.getInstance();
                 videoModel.setElement(element);
                 // Workaround to force Firefox to fire the canplay event.
                 element.preload = "auto";

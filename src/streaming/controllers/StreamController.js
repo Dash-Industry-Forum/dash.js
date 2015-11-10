@@ -38,6 +38,7 @@ import ProtectionModel from '../models/ProtectionModel.js';
 import MediaController from './MediaController.js';
 import Events from '../Events.js';
 import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
+import VideoModel from '../models/VideoModel.js';
 
 let StreamController = function () {
     "use strict";
@@ -61,6 +62,7 @@ let StreamController = function () {
         mediaSource,
         UTCTimingSources,
         useManifestDateHeaderTimeSource,
+        videoModel = null,
 
         fireSwitchEvent = function(eventType, fromStream, toStream) {
             EventBus.trigger(eventType, {fromStreamInfo: fromStream ? fromStream.getStreamInfo() : null, toStreamInfo: toStream.getStreamInfo()})
@@ -130,7 +132,7 @@ let StreamController = function () {
          */
         onPlaybackTimeUpdated = function(e) {
             var self = this,
-                playbackQuality = self.videoExt.getPlaybackQuality(self.videoModel.getElement());
+                playbackQuality = self.videoExt.getPlaybackQuality(videoModel.getElement());
 
             if (playbackQuality) {
                 self.metricsModel.addDroppedFrames("video", playbackQuality);
@@ -267,12 +269,12 @@ let StreamController = function () {
                 //self.log("MediaSource created.");
                 //self.log("MediaSource should be closed. The actual readyState is: " + mediaSource.readyState);
             } else {
-                self.mediaSourceExt.detachMediaSource(self.videoModel);
+                self.mediaSourceExt.detachMediaSource(videoModel);
             }
 
             mediaSource.addEventListener("sourceopen", onMediaSourceOpen, false);
             mediaSource.addEventListener("webkitsourceopen", onMediaSourceOpen, false);
-            sourceUrl = self.mediaSourceExt.attachMediaSource(mediaSource, self.videoModel);
+            sourceUrl = self.mediaSourceExt.attachMediaSource(mediaSource, videoModel);
             //self.log("MediaSource attached to video.  Waiting on open...");
         },
 
@@ -310,7 +312,7 @@ let StreamController = function () {
                     EventBus.trigger(Events.PROTECTION_CREATED, {controller: protectionController, manifest: manifest});
                     ownProtectionController = true;
                 }
-                protectionController.setMediaElement(this.videoModel.getElement());
+                protectionController.setMediaElement(videoModel.getElement());
                 if (protectionData) {
                     protectionController.setProtectionData(protectionData);
                 }
@@ -321,8 +323,8 @@ let StreamController = function () {
                     throw new Error("There are no streams");
                 }
 
-                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: self.videoModel.getCurrentTime(),
-                    buffered: self.videoModel.getElement().buffered, presentationStartTime: streamsInfo[0].start,
+                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: videoModel.getCurrentTime(),
+                    buffered: videoModel.getElement().buffered, presentationStartTime: streamsInfo[0].start,
                     clientTimeOffset: self.timelineConverter.getClientTimeOffset()});
 
                 isUpdating = true;
@@ -444,7 +446,6 @@ let StreamController = function () {
     return {
         system: undefined,
         capabilities: undefined,
-        videoModel: undefined,
         manifestUpdater: undefined,
         manifestLoader: undefined,
         manifestModel: undefined,
@@ -495,6 +496,7 @@ let StreamController = function () {
             autoPlay = autoPl;
             protectionController = protCtrl;
             protectionData = protData;
+            videoModel = VideoModel.getInstance();
             EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
             EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
@@ -555,9 +557,11 @@ let StreamController = function () {
             hasMediaError = false;
 
             if (mediaSource) {
-                this.mediaSourceExt.detachMediaSource(this.videoModel);
+                this.mediaSourceExt.detachMediaSource(videoModel);
                 mediaSource = null;
             }
+
+            videoModel = null;
 
             // Teardown the protection system, if necessary
             if (!protectionController) {
