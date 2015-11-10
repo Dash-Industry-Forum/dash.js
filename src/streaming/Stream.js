@@ -38,6 +38,7 @@ import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import AbrController from './controllers/AbrController.js';
 import VideoModel from './models/VideoModel.js';
+import PlaybackController from './controllers/PlaybackController.js';
 
 let Stream = function () {
     "use strict";
@@ -50,6 +51,7 @@ let Stream = function () {
         isUpdating = false,
         isInitialized = false,
         protectionController,
+        playbackController = PlaybackController.getInstance(),
         boundProtectionErrorHandler,
 
         eventController = null,
@@ -103,7 +105,7 @@ let Stream = function () {
             var processor = getProcessorForMediaInfo.call(this, e.oldMediaInfo);
             if (!processor) return;
 
-            var currentTime = this.playbackController.getTime(),
+            var currentTime = playbackController.getTime(),
                 buffer = processor.getBuffer(),
                 mediaInfo = e.newMediaInfo,
                 manifest = this.manifestModel.getValue(),
@@ -113,7 +115,7 @@ let Stream = function () {
             if (mediaInfo.type !== "fragmentedText"){
                 processor.reset(true);
                 createStreamProcessor.call(this, mediaInfo, manifest, mediaSource, {buffer: buffer, replaceIdx: idx, currentTime: currentTime});
-                this.playbackController.seek(this.playbackController.getTime());
+                playbackController.seek(playbackController.getTime());
             }else {
                 processor.updateMediaInfo(manifest, mediaInfo);
             }
@@ -348,7 +350,6 @@ let Stream = function () {
         sourceBufferExt: undefined,
         adapter: undefined,
         fragmentController: undefined,
-        playbackController: undefined,
         mediaController: undefined,
         capabilities: undefined,
         log: undefined,
@@ -407,7 +408,8 @@ let Stream = function () {
         },
 
         reset: function (errored) {
-            this.playbackController.pause();
+            playbackController.pause();
+            playbackController = null;
             this.deactivate();
 
             isUpdating = false;

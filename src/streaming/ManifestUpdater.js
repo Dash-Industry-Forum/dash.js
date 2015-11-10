@@ -30,7 +30,6 @@
  */
 import ManifestLoader from './ManifestLoader.js';
 import StreamController from './controllers/StreamController.js';
-import PlaybackController from './controllers/PlaybackController.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 

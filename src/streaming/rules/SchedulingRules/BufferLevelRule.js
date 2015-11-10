@@ -32,6 +32,7 @@ import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
 import FragmentController from '../../controllers/FragmentController.js';
 import AbrController from '../../controllers/AbrController.js';
+import PlaybackController from '../../controllers/PlaybackController.js';
 
 let BufferLevelRule = function () {
     "use strict";
@@ -52,7 +53,7 @@ let BufferLevelRule = function () {
                 //General VOD target non top quality and not stabilized on a given quality.
                 bufferTarget = BufferController.DEFAULT_MIN_BUFFER_TIME;
             } else {
-                bufferTarget = this.playbackController.getLiveDelay();
+                bufferTarget = PlaybackController.getInstance().getLiveDelay();
             }
 
             if (type === "fragmentedText"){
@@ -66,7 +67,6 @@ let BufferLevelRule = function () {
         system:undefined,
         metricsExt: undefined,
         metricsModel: undefined,
-        playbackController: undefined,
         textSourceBuffer:undefined,
         log:undefined,
 

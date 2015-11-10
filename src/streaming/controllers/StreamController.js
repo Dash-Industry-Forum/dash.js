@@ -63,6 +63,7 @@ let StreamController = function () {
         UTCTimingSources,
         useManifestDateHeaderTimeSource,
         videoModel = null,
+        playbackController,
 
         fireSwitchEvent = function(eventType, fromStream, toStream) {
             EventBus.trigger(eventType, {fromStreamInfo: fromStream ? fromStream.getStreamInfo() : null, toStreamInfo: toStream.getStreamInfo()})
@@ -75,7 +76,7 @@ let StreamController = function () {
             if (activeStream.getStreamInfo().index === 0) {
                 activeStream.startEventController();
                 if (autoPlay) {
-                    this.playbackController.start();
+                    playbackController.start();
                 }
             }
         },
@@ -140,7 +141,7 @@ let StreamController = function () {
 
             // Sometimes after seeking timeUpdateHandler is called before seekingHandler and a new stream starts
             // from beginning instead of from a chosen position. So we do nothing if the player is in the seeking state
-            if (self.playbackController.isSeeking()) return;
+            if (playbackController.isSeeking()) return;
 
             // check if stream end is reached
             if (e.timeToEnd < STREAM_END_THRESHOLD) {
@@ -221,10 +222,10 @@ let StreamController = function () {
             var self = this,
                 onMediaSourceReady = function() {
                     if (seekTo !== undefined) {
-                        self.playbackController.seek(seekTo);
+                        playbackController.seek(seekTo);
                     }
 
-                    self.playbackController.start();
+                    playbackController.start();
                     activeStream.startEventController();
                     isStreamSwitchingInProgress = false;
                     fireSwitchEvent.call(self, Events.PERIOD_SWITCH_COMPLETED, from, to);
@@ -237,7 +238,7 @@ let StreamController = function () {
             setTimeout(function() {
                 from.deactivate();
                 activeStream = to;
-                self.playbackController.initialize(activeStream.getStreamInfo());
+                playbackController.initialize(activeStream.getStreamInfo());
                 setupMediaSource.call(self, onMediaSourceReady);
             }, 0);
         },
@@ -361,7 +362,7 @@ let StreamController = function () {
                 if (!activeStream) {
                     activeStream = streams[0];
                     fireSwitchEvent.call(self, Events.PERIOD_SWITCH_STARTED, null, activeStream);
-                    self.playbackController.initialize(activeStream.getStreamInfo());
+                    playbackController.initialize(activeStream.getStreamInfo());
                     fireSwitchEvent.call(self, Events.PERIOD_SWITCH_COMPLETED, null, activeStream);
                 }
 
@@ -451,7 +452,6 @@ let StreamController = function () {
         manifestModel: undefined,
         manifestExt: undefined,
         adapter: undefined,
-        playbackController: undefined,
         log: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
@@ -497,6 +497,18 @@ let StreamController = function () {
             protectionController = protCtrl;
             protectionData = protData;
             videoModel = VideoModel.getInstance();
+            playbackController = PlaybackController.getInstance();
+            playbackController.setConfig({
+                streamController: this,
+                log: this.log,
+                timelineConverter: this.timelineConverter,
+                metricsModel: this.metricsModel,
+                metricsExt: this.metricsExt,
+                manifestModel: this.manifestModel,
+                manifestExt: this.manifestExt,
+                adapter: this.adapter,
+                videoModel: videoModel
+            });
             EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
             EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
             EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);

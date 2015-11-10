@@ -65,6 +65,7 @@ let ScheduleController = function () {
         timeToloadDelay = 0,
         validateTimeout,
         seekTarget = NaN,
+        playbackController = PlaybackController.getInstance(),
 
         clearPlayListTraceMetrics = function (endTime, stopreason) {
             var duration = 0,
@@ -89,7 +90,7 @@ let ScheduleController = function () {
             }
             this.log("start");
             //if starting from a pause we want to call validate to kick off the cycle that was stopped by pausing stream.
-            if (this.playbackController.getPlayedRanges().length > 0) {
+            if (playbackController.getPlayedRanges().length > 0) {
                 validate.call(this);
             }
         },
@@ -152,7 +153,7 @@ let ScheduleController = function () {
         //*************************************************************************************
 
         validate = function () {
-            if (isStopped || (this.playbackController.isPaused() && (this.playbackController.getPlayedRanges().length > 0) && !this.scheduleWhilePaused)) return;
+            if (isStopped || (playbackController.isPaused() && (playbackController.getPlayedRanges().length > 0) && !this.scheduleWhilePaused)) return;
             getRequiredFragmentCount.call(this, onGetRequiredFragmentCount.bind(this));
             //this.log("validate", type);
         },
@@ -274,7 +275,7 @@ let ScheduleController = function () {
         },
 
         onBufferLevelStateChanged = function(e) {
-            if ((e.sender.streamProcessor === this.streamProcessor) && e.state === BufferController.BUFFER_EMPTY && !this.playbackController.isSeeking()) {
+            if ((e.sender.streamProcessor === this.streamProcessor) && e.state === BufferController.BUFFER_EMPTY && !playbackController.isSeeking()) {
                 this.log("Stalling Buffer");
                 clearPlayListTraceMetrics(new Date(), PlayList.Trace.REBUFFERING_REASON);
             }
@@ -288,15 +289,15 @@ let ScheduleController = function () {
 
         addPlaylistMetrics = function(stopReason) {
             var currentTime = new Date(),
-                presentationTime = this.playbackController.getTime();
+                presentationTime = playbackController.getTime();
             clearPlayListTraceMetrics(currentTime, PlayList.Trace.USER_REQUEST_STOP_REASON);
             playListMetrics = this.metricsModel.addPlayList(type, currentTime, presentationTime, stopReason);
         },
 
         addPlaylistTraceMetrics = function() {
             var self = this,
-                currentVideoTime = self.playbackController.getTime(),
-                rate = self.playbackController.getPlaybackRate(),
+                currentVideoTime = playbackController.getTime(),
+                rate = playbackController.getPlaybackRate(),
                 currentTime = new Date();
 
             if (playListTraceMetricsClosed === true && currentRepresentationInfo && playListMetrics) {
@@ -328,7 +329,7 @@ let ScheduleController = function () {
             this.log("seek: " + seekTarget);
             addPlaylistMetrics.call(this, PlayList.SEEK_START_REASON);
 
-            this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentationInfo.DVRWindow.end - this.playbackController.getTime()});
+            this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentationInfo.DVRWindow.end - playbackController.getTime()});
 
             if (isDynamic){ // need to validate again for dynamic after first seek
                 validate.call(this);
@@ -346,18 +347,18 @@ let ScheduleController = function () {
             var self = this,
                 liveEdgeTime = e.liveEdge,
                 manifestInfo = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo,
-                startTime = liveEdgeTime - Math.min((self.playbackController.getLiveDelay(currentRepresentationInfo.fragmentDuration)), manifestInfo.DVRWindowSize / 2),
+                startTime = liveEdgeTime - Math.min((playbackController.getLiveDelay(currentRepresentationInfo.fragmentDuration)), manifestInfo.DVRWindowSize / 2),
                 request,
                 metrics = self.metricsModel.getMetricsFor("stream"),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(metrics),
-                currentLiveStart = self.playbackController.getLiveStartTime(),
+                currentLiveStart = playbackController.getLiveStartTime(),
                 actualStartTime;
             // get a request for a start time
             request = self.adapter.getFragmentRequestForTime(self.streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true});
             actualStartTime = request.startTime;
 
             if (isNaN(currentLiveStart) || (actualStartTime > currentLiveStart)) {
-                self.playbackController.setLiveStartTime(actualStartTime);
+                playbackController.setLiveStartTime(actualStartTime);
             }
 
             self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {currentTime: actualStartTime, presentationStartTime: liveEdgeTime, latency: liveEdgeTime - actualStartTime, clientTimeOffset: self.timelineConverter.getClientTimeOffset()});
@@ -378,7 +379,6 @@ let ScheduleController = function () {
         manifestExt:undefined,
         scheduleWhilePaused: undefined,
         timelineConverter: undefined,
-        playbackController: undefined,
         adapter: undefined,
         scheduleRulesCollection: undefined,
         rulesController: undefined,
@@ -473,6 +473,7 @@ let ScheduleController = function () {
             fragmentsToLoad = 0;
             timeToloadDelay = 0;
             seekTarget = NaN;
+            playbackController = null;
         },
 
         start: doStart,

@@ -30,7 +30,6 @@
  */
 
 import SwitchRequest from '../SwitchRequest.js';
-import PlaybackController from '../../controllers/PlaybackController.js';
 import FragmentModel from '../../models/FragmentModel.js';
 
 let PlaybackTimeRule = function () {
@@ -40,7 +39,6 @@ let PlaybackTimeRule = function () {
         adapter: undefined,
         sourceBufferExt: undefined,
         virtualBuffer: undefined,
-        playbackController: undefined,
         textSourceBuffer:undefined,
         log:undefined,
 

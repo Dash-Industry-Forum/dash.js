@@ -64,7 +64,6 @@ let StreamProcessor = function () {
         indexHandler: undefined,
         liveEdgeFinder: undefined,
         timelineConverter: undefined,
-        playbackController: undefined,
         adapter: undefined,
         manifestModel: undefined,
 
@@ -74,7 +73,6 @@ let StreamProcessor = function () {
                 representationController = self.system.getObject("representationController"),
                 scheduleController = self.system.getObject("scheduleController"),
                 indexHandler = self.indexHandler,
-                playbackController = self.playbackController,
                 fragmentModel,
                 fragmentLoader = FragmentLoader.create({
                     metricsModel:this.system.getObject("metricsModel"),
@@ -100,7 +98,7 @@ let StreamProcessor = function () {
             self.fragmentLoader = fragmentLoader;
 
             indexHandler.initialize(this);
-            indexHandler.setCurrentTime(playbackController.getStreamStartTime(this.getStreamInfo()));
+            indexHandler.setCurrentTime(PlaybackController.getInstance().getStreamStartTime(this.getStreamInfo()));
             bufferController.initialize(type, mediaSource, self);
             scheduleController.initialize(type, this);
 

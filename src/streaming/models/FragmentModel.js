@@ -30,7 +30,6 @@
  */
 
 import BufferController from '../controllers/BufferController.js';
-import PlaybackController from '../controllers/PlaybackController.js';
 import FragmentLoader from '../FragmentLoader.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
@@ -142,7 +141,7 @@ let FragmentModel = function () {
             if (response && !error) {
                 executedRequests.push(request);
             }
-            
+
             addSchedulingInfoMetrics.call(this, request, error ? FragmentModel.states.FAILED : FragmentModel.states.EXECUTED);
             EventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {request: request, response: response, error:error, sender:this})
         },
@@ -274,7 +273,7 @@ let FragmentModel = function () {
             }
 
             loadingRequests = [];
-            
+
             return reqs;
         },
 

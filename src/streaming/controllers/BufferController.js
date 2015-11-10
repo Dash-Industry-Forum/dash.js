@@ -65,6 +65,7 @@ let BufferController = function () {
         isAppendingInProgress = false,
         isPruningInProgress = false,
         inbandEventFound = false,
+        playbackController = PlaybackController.getInstance(),
 
         createBuffer = function(mediaInfo) {
             if (!mediaInfo || !mediaSource || !this.streamProcessor) return null;
@@ -292,7 +293,7 @@ let BufferController = function () {
 
         updateBufferLevel = function() {
             var self = this,
-                currentTime = self.playbackController.getTime();
+                currentTime = playbackController.getTime();
 
             bufferLevel = self.sourceBufferExt.getBufferLength(buffer, currentTime);
             EventBus.trigger(Events.BUFFER_LEVEL_UPDATED, {sender: self, bufferLevel: bufferLevel});
@@ -422,7 +423,7 @@ let BufferController = function () {
             if (type === "fragmentedText") return;
 
             var bufferToPrune = 0,
-                currentTime = this.playbackController.getTime(),
+                currentTime = playbackController.getTime(),
                 currentRange = this.sourceBufferExt.getBufferRange(buffer, currentTime);
 
             // we want to get rid off buffer that is more than x seconds behind current time
@@ -446,7 +447,7 @@ let BufferController = function () {
 
             if (!buffer) return null;
 
-            currentTime = self.playbackController.getTime();
+            currentTime = playbackController.getTime();
             // we need to remove data that is more than one fragment before the video currentTime
             req = self.streamProcessor.getFragmentModel().getRequests({state: FragmentModel.states.EXECUTED, time: currentTime})[0];
             removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
@@ -505,7 +506,7 @@ let BufferController = function () {
                 allAppendedChunks = this.virtualBuffer.getChunks({streamId: getStreamId.call(this), mediaType: type, segmentType: HTTPRequest.MEDIA_SEGMENT_TYPE, appended: true}),
                 rangesToClear = CustomTimeRanges.create(),
                 rangesToLeave = CustomTimeRanges.create(),
-                currentTime = this.playbackController.getTime(),
+                currentTime = playbackController.getTime(),
                 safeBufferLength = this.streamProcessor.getCurrentRepresentationInfo().fragmentDuration * 2,
                 currentTrackBufferLength,
                 ranges,
@@ -564,7 +565,7 @@ let BufferController = function () {
                 newMediaInfo = e.newMediaInfo,
                 mediaType = newMediaInfo.type,
                 switchMode = e.switchMode,
-                currentTime = this.playbackController.getTime(),
+                currentTime = playbackController.getTime(),
                 range = {start: 0, end: currentTime};
 
             if (type !== mediaType) return;
@@ -601,7 +602,6 @@ let BufferController = function () {
         metricsModel: undefined,
         metricsExt: undefined,
         streamController: undefined,
-        playbackController: undefined,
         mediaController: undefined,
         adapter: undefined,
         log: undefined,
@@ -730,6 +730,7 @@ let BufferController = function () {
             isBufferingCompleted = false;
             isAppendingInProgress = false;
             isPruningInProgress = false;
+            playbackController = null;
 
             if (!errored) {
                 this.sourceBufferExt.abort(mediaSource, buffer);

@@ -46,6 +46,7 @@ let RepresentationController = function () {
         updating = true,
         availableRepresentations = [],
         currentRepresentation,
+        playbackController = PlaybackController.getInstance(),
 
         updateData = function(dataValue, adaptation, type) {
             var self = this,
@@ -89,7 +90,7 @@ let RepresentationController = function () {
         addRepresentationSwitch = function() {
             var now = new Date(),
                 currentRepresentation = this.getCurrentRepresentation(),
-                currentVideoTime = this.streamProcessor.playbackController.getTime();
+                currentVideoTime = playbackController.getTime();
 
             this.metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
         },
@@ -98,7 +99,7 @@ let RepresentationController = function () {
             var streamProcessor = this.streamProcessor,
                 range = this.timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, streamProcessor.isDynamic());
 
-            this.metricsModel.addDVRInfo(streamProcessor.getType(), streamProcessor.playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
+            this.metricsModel.addDVRInfo(streamProcessor.getType(), playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
         },
 
         getRepresentationForQuality = function(quality) {
@@ -201,7 +202,7 @@ let RepresentationController = function () {
             if (isAllRepresentationsUpdated()) {
                 updating = false;
                 self.abrController.setPlaybackQuality(self.streamProcessor.getType(), self.streamProcessor.getStreamInfo(), getQualityForRepresentation.call(this, currentRepresentation));
-                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - self.streamProcessor.playbackController.getTime()});
+                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - playbackController.getTime()});
 
                 repSwitch = self.metricsExt.getCurrentRepresentationSwitch(metrics);
 
@@ -314,6 +315,7 @@ let RepresentationController = function () {
             EventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, this);
             EventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, this);
             EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+            playbackController = null;
         }
     };
 };

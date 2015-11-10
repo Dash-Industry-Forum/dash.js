@@ -42,13 +42,14 @@ function ABRRulesCollection(config) {
     const ABANDON_FRAGMENT_RULES = "abandonFragmentRules";
 
     //TODO Temp until dijon is removed no setConfig due to being temp.
-    let system = config.system;
+    let system = config.system,
+        playbackController = config ? config.playbackController : null;
 
     let instance = {
         QUALITY_SWITCH_RULES    :QUALITY_SWITCH_RULES,
         ABANDON_FRAGMENT_RULES  :ABANDON_FRAGMENT_RULES,
         getRules                :getRules
-    }
+    };
 
     setup();
 
@@ -79,7 +80,7 @@ function ABRRulesCollection(config) {
         qualitySwitchRules.push(InsufficientBufferRule.create({
                 log:system.getObject("log"),
                 metricsModel:system.getObject("metricsModel"),
-                playbackController:system.getObject("playbackController")
+                playbackController: playbackController
             })
         );
 

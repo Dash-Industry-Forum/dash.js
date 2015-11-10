@@ -342,25 +342,21 @@ let MediaPlayer /**
 
         setup: function () {
             metricsExt = system.getObject("metricsExt");
-
-
+            playbackController = PlaybackController.getInstance();
             abrController = AbrController.getInstance({
-                abrRulesCollection:ABRRulesCollection.getInstance({system:system}),
+                abrRulesCollection:ABRRulesCollection.getInstance({system:system, playbackController: playbackController}),
                 rulesController:system.getObject("rulesController"),
                 streamController:system.getObject("streamController"),
-                log:system.getObject("log"),
-            }),
-
+                log:system.getObject("log")
+            });
 
             rulesController = system.getObject("rulesController");
             metricsModel = system.getObject("metricsModel");
             DOMStorage = system.getObject("DOMStorage");
-            playbackController = system.getObject("playbackController");
             mediaController = system.getObject("mediaController");
             this.restoreDefaultUTCTimingSources();
             this.debug.log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
         },
-
 
         /**
          * @param type
