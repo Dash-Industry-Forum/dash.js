@@ -41,13 +41,17 @@ function FragmentExtensions(config) {
     let instance = {
         getSamplesInfo: getSamplesInfo,
         getMediaTimescaleFromMoov: getMediaTimescaleFromMoov,
-        setParser: setParser
+        setParser: setConfig
     };
 
     return instance;
 
-    function setParser(parser) {
-        boxParser = parser;
+    function setConfig(config) {
+        if (config) return;
+
+        if (config.boxParser) {
+            boxParser = config.boxParser;
+        }
     }
 
     function getSamplesInfo(ab) {

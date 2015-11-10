@@ -44,7 +44,7 @@ function TTMLParser(config) {
         setConfig: setConfig
     };
 
-    initialize();
+    setup();
 
     return instance;
 
@@ -357,7 +357,7 @@ function TTMLParser(config) {
         return captionArray;
     }
 
-    function initialize() {
+    function setup() {
         /*
          * This TTML parser follows "EBU-TT-D SUBTITLING DISTRIBUTION FORMAT - tech3380" spec - https://tech.ebu.ch/docs/tech/tech3380.pdf.
          * */

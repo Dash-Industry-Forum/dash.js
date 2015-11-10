@@ -55,7 +55,7 @@ function IsoFile() {
             getOffset: getOffset
         };
 
-    initialize();
+    setup();
 
     return instance;
 
@@ -120,7 +120,7 @@ function IsoFile() {
         return parsedIsoFile._cursor.offset;
     }
 
-    function initialize() {
+    function setup() {
         commonProps = {
             offset: "_offset",
             size: "size",

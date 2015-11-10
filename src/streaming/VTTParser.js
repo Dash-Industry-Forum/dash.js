@@ -42,7 +42,7 @@ function VTTParser(config) {
         setConfig: setConfig
     };
 
-    initialize();
+    setup();
 
     return instance;
 
@@ -51,7 +51,7 @@ function VTTParser(config) {
         regExWhiteSpace,
         regExWhiteSpaceWordBoundry;
 
-    function initialize() {
+    function setup() {
         regExNewLine = /(?:\r\n|\r|\n)/gm;
         regExToken = /-->/;
         regExWhiteSpace = /(^[\s]+|[\s]+$)/g;

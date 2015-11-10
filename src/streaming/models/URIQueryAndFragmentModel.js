@@ -45,7 +45,7 @@ function URIQueryAndFragmentModel(/*config*/) {
         reset: reset
     };
 
-    initialize();
+    setup();
 
     return instance;
 
@@ -71,7 +71,7 @@ function URIQueryAndFragmentModel(/*config*/) {
         isHTTPS = false;
     }
 
-    function initialize() {
+    function setup() {
         URIFragmentDataVO = new URIFragmentData();
         URIQueryData = [];
         isHTTPS = false;
