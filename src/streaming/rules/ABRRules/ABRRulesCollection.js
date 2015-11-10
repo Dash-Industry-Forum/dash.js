@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import ThroughputRule from './ThroughputRule.js'
+import BufferOccupancyRule from './BufferOccupancyRule.js'
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(ABRRulesCollection);
@@ -56,7 +57,6 @@ function ABRRulesCollection(config) {
         abandonFragmentRules;
 
     function setup() {
-
         qualitySwitchRules = [];
         abandonFragmentRules = [];
 
@@ -69,8 +69,14 @@ function ABRRulesCollection(config) {
             })
         );
 
+        qualitySwitchRules.push(BufferOccupancyRule.create({
+                log:system.getObject("log"),
+                metricsModel:system.getObject("metricsModel")
+            })
+        );
+
         qualitySwitchRules.push(system.getObject("insufficientBufferRule"));
-        qualitySwitchRules.push(system.getObject("bufferOccupancyRule"));
+
         //adandonFragmentRules.push(this.abandonRequestRule);
     }
 

@@ -73,7 +73,6 @@ import LiveEdgeFinder from './LiveEdgeFinder.js';
 
 import MetricsList from './vo/MetricsList.js';
 import InsufficientBufferRule from './rules/ABRRules/InsufficientBufferRule.js';
-import BufferOccupancyRule from './rules/ABRRules/BufferOccupancyRule.js';
 import AbandonRequestsRule from './rules/ABRRules/AbandonRequestsRule.js';
 
 import RulesController from './rules/RulesController.js';
@@ -188,7 +187,6 @@ let Context = function () {
             this.system.mapClass('metrics', MetricsList);
 
             this.system.mapClass('insufficientBufferRule', InsufficientBufferRule);
-            this.system.mapClass('bufferOccupancyRule', BufferOccupancyRule);
             this.system.mapClass('abandonRequestRule', AbandonRequestsRule);
 
 

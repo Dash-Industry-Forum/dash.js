@@ -111,23 +111,6 @@ function AbrController(config) {
         EventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
     }
 
-    function setConfig(config){
-        if(!config) return
-
-        if(config.log){
-            log = config.log;
-        }
-        if(config.abrRulesCollection){
-            abrRulesCollection = config.abrRulesCollection;
-        }
-        if(config.rulesController){
-            rulesController = config.rulesController;
-        }
-        if(config.streamController){
-            streamController = config.streamController;
-        }
-    }
-
     function getQualityFor(type, streamInfo) {
         var id = streamInfo.id,
             quality;
@@ -438,5 +421,22 @@ function AbrController(config) {
         averageThroughputDict = {};
         clearTimeout(abandonmentTimeout);
         abandonmentTimeout = null;
+    }
+
+    function setConfig(config){
+        if (!config) return;
+
+        if (config.log){
+            log = config.log;
+        }
+        if (config.abrRulesCollection){
+            abrRulesCollection = config.abrRulesCollection;
+        }
+        if (config.rulesController){
+            rulesController = config.rulesController;
+        }
+        if (config.streamController){
+            streamController = config.streamController;
+        }
     }
 };

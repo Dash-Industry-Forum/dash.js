@@ -51,13 +51,13 @@ function FragmentLoader(config) {
         abort: abort
     };
 
-    initialize();
+    setup();
 
     return instance;
 
     let xhrs;
 
-    function initialize() {
+    function setup() {
         xhrs = [];
     }
 

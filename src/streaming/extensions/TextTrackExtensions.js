@@ -38,22 +38,24 @@ function TextTrackExtensions(config) {
     "use strict";
 
     //Injected Dependencies - if singleton also must have setter and should route through setter.
-    let videoModel = config.videoModel;
+    let videoModel = config ? config.videoModel : null;
 
     let instance = {
-            displayCConTop:displayCConTop,
-            addTextTrack:addTextTrack,
-            addCaptions:addCaptions,
-            getTextTrack:getTextTrack,
-            getCurrentTextTrack:getCurrentTextTrack,
-            getCurrentTrackIdx:getCurrentTrackIdx,
-            setCurrentTrackIdx:setCurrentTrackIdx,
-            deleteTrackCues:deleteTrackCues,
-            deleteAllTextTracks:deleteAllTextTracks,
-            deleteTextTrack:deleteTextTrack
+            displayCConTop      :displayCConTop,
+            addTextTrack        :addTextTrack,
+            addCaptions         :addCaptions,
+            getTextTrack        :getTextTrack,
+            getCurrentTextTrack :getCurrentTextTrack,
+            getCurrentTrackIdx  :getCurrentTrackIdx,
+            setCurrentTrackIdx  :setCurrentTrackIdx,
+            deleteTrackCues     :deleteTrackCues,
+            deleteAllTextTracks :deleteAllTextTracks,
+            deleteTextTrack     :deleteTextTrack,
+            setConfig           :setConfig
+
         };
 
-    initialize();
+    setup();
     return instance;
 
 
@@ -74,7 +76,7 @@ function TextTrackExtensions(config) {
         displayCCOnTop,
         topZIndex;
 
-    function initialize () {
+    function setup () {
         Cue = window.VTTCue || window.TextTrackCue;
         textTrackQueue = [];
         trackElementArr = [];
@@ -501,7 +503,12 @@ function TextTrackExtensions(config) {
         }
     }
 
-    function setVideoModel(value){
-        videoModel = value;
+    function setConfig(config){
+        if (!config) return;
+
+        if (config.videoModel){
+            videoModel = config.videoModel;
+        }
+
     }
 }

@@ -161,21 +161,21 @@ function ThroughputRule(config) {
     }
 
     function setConfig(config){
-        if(!config) return
+        if (!config) return;
 
-        if(config.log){
+        if (config.log){
             log = config.log;
         }
-        if(config.metricsExt){
+        if (config.metricsExt){
             metricsExt = config.metricsExt;
         }
-        if(config.metricsModel){
+        if (config.metricsModel){
             metricsModel = config.metricsModel;
         }
-        if(config.manifestExt){
+        if (config.manifestExt){
             manifestExt = config.manifestExt;
         }
-        if(config.manifestModel){
+        if (config.manifestModel){
             manifestModel = config.manifestModel;
         }
     }

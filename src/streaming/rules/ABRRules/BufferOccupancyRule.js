@@ -32,66 +32,77 @@ import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
 import AbrController from '../../controllers/AbrController.js';
 
-let BufferOccupancyRule = function () {
-    "use strict";
+import FactoryMaker from '../../../core/FactoryMaker.js';
+export default FactoryMaker.getClassFactory(BufferOccupancyRule);
 
-    var lastSwitchTime = 0;
+function BufferOccupancyRule(config) {
 
-    return {
-        log: undefined,
-        metricsModel: undefined,
+    let log = config ? config.log : null,
+        metricsModel = config ? config.metricsModel: null;
 
-        execute: function (context, callback) {
-            var self = this,
-                now = new Date().getTime()/1000,
-                mediaInfo = context.getMediaInfo(),
-                representationInfo = context.getTrackInfo(),
-                mediaType = mediaInfo.type,
-                waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2,
-                current = context.getCurrentValue(),
-                streamProcessor = context.getStreamProcessor(),
-                abrController = streamProcessor.getABRController(),
-                metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
-                lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
-                lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
-                isBufferRich = false,
-                maxIndex = mediaInfo.representationCount - 1,
-                switchRequest = new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
+    let instance = {
+        execute:execute,
+        setConfig:setConfig,
+        reset:reset
+    }
 
-            if (now - lastSwitchTime < waitToSwitchTime ||
-                abrController.getAbandonmentStateFor(mediaType) === abrController.ABANDON_LOAD) {
-                callback(switchRequest);
-                return;
-            }
+    let lastSwitchTime = 0;
 
-            if (lastBufferLevelVO !== null && lastBufferStateVO !== null) {
-                // This will happen when another rule tries to switch from top to any other.
-                // If there is enough buffer why not try to stay at high level.
-                if (lastBufferLevelVO.level > lastBufferStateVO.target) {
-                    isBufferRich = (lastBufferLevelVO.level - lastBufferStateVO.target) > BufferController.RICH_BUFFER_THRESHOLD;
-                    if (isBufferRich && mediaInfo.representationCount > 1) {
-                        switchRequest = new SwitchRequest(maxIndex, SwitchRequest.prototype.STRONG);
-                    }
+    return instance;
+
+    function execute (context, callback) {
+        var now = new Date().getTime()/1000,
+            mediaInfo = context.getMediaInfo(),
+            representationInfo = context.getTrackInfo(),
+            mediaType = mediaInfo.type,
+            waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2,
+            current = context.getCurrentValue(),
+            streamProcessor = context.getStreamProcessor(),
+            abrController = streamProcessor.getABRController(),
+            metrics = metricsModel.getReadOnlyMetricsFor(mediaType),
+            lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
+            lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
+            isBufferRich = false,
+            maxIndex = mediaInfo.representationCount - 1,
+            switchRequest = new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
+
+        if (now - lastSwitchTime < waitToSwitchTime ||
+            abrController.getAbandonmentStateFor(mediaType) === abrController.ABANDON_LOAD) {
+            callback(switchRequest);
+            return;
+        }
+
+        if (lastBufferLevelVO !== null && lastBufferStateVO !== null) {
+            // This will happen when another rule tries to switch from top to any other.
+            // If there is enough buffer why not try to stay at high level.
+            if (lastBufferLevelVO.level > lastBufferStateVO.target) {
+                isBufferRich = (lastBufferLevelVO.level - lastBufferStateVO.target) > BufferController.RICH_BUFFER_THRESHOLD;
+                if (isBufferRich && mediaInfo.representationCount > 1) {
+                    switchRequest = new SwitchRequest(maxIndex, SwitchRequest.prototype.STRONG);
                 }
             }
-
-            if (switchRequest.value !== SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
-                self.log("BufferOccupancyRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                    switchRequest.priority === SwitchRequest.prototype.DEFAULT ? "Default" :
-                        switchRequest.priority === SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
-            }
-
-            callback(switchRequest);
-        },
-
-        reset: function() {
-            lastSwitchTime = 0;
         }
-    };
-};
 
-BufferOccupancyRule.prototype = {
-    constructor: BufferOccupancyRule
-};
+        if (switchRequest.value !== SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
+            log("BufferOccupancyRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
+                switchRequest.priority === SwitchRequest.prototype.DEFAULT ? "Default" :
+                    switchRequest.priority === SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
+        }
 
-export default BufferOccupancyRule;
+        callback(switchRequest);
+    }
+
+    function reset() {
+        lastSwitchTime = 0;
+    }
+
+    function setConfig(config){
+        if (!config) return;
+        if (config.log){
+            log = config.log;
+        }
+        if (config.metricsModel){
+            metricsModel = config.metricsModel;
+        }
+    }
+};
