@@ -139,8 +139,6 @@ function AbrController(config) {
         }
 
         quality = qualityDict[id][type];
-
-        console.log("XXX quality ", quality, " for ", type);
         return quality;
     }
 
@@ -187,7 +185,7 @@ function AbrController(config) {
         if (ScheduleController.LOADING_REQUEST_THRESHOLD === 0 && autoSwitchBitrate) { //check to see if there are parallel request or just one at a time.
 
             var type = e.request.mediaType,
-                rules = abrRulesCollection.getRules(ABRRulesCollection.prototype.ABANDON_FRAGMENT_RULES),
+                rules = abrRulesCollection.getRules(abrRulesCollection.ABANDON_FRAGMENT_RULES),
                 scheduleController = streamProcessorDict[type].getScheduleController(),
                 fragmentModel = scheduleController.getFragmentModel(),
                 callback = function (switchRequest) {
@@ -323,7 +321,7 @@ function AbrController(config) {
                 completedCallback();
             }
         } else {
-            rules = abrRulesCollection.getRules(ABRRulesCollection.prototype.QUALITY_SWITCH_RULES);
+            rules = abrRulesCollection.getRules(abrRulesCollection.QUALITY_SWITCH_RULES);
             rulesController.applyRules(rules, streamProcessor, callback.bind(self), quality, function(currentValue, newValue) {
                 currentValue = currentValue === SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
                 return Math.max(currentValue, newValue);

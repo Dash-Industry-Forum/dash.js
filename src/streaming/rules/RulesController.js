@@ -123,7 +123,7 @@ let RulesController = function () {
         SYNC_RULE: 2,
 
         initialize: function() {
-            rules[this.ABR_RULE] = this.system.getObject("abrRulesCollection");
+            rules[this.ABR_RULE] = ABRRulesCollection.getInstance();
             rules[this.SCHEDULING_RULE] = this.system.getObject("scheduleRulesCollection");
             rules[this.SYNC_RULE] = this.system.getObject("synchronizationRulesCollection");
         },
@@ -205,10 +205,10 @@ let RulesController = function () {
             var abrRules = rules[this.ABR_RULE],
                 schedulingRules = rules[this.SCHEDULING_RULE],
                 synchronizationRules = rules[this.SYNC_RULE],
-                allRules = (abrRules.getRules(ABRRulesCollection.prototype.QUALITY_SWITCH_RULES)|| []).
+                allRules = (abrRules.getRules(abrRules.QUALITY_SWITCH_RULES) || []).
+                    concat(abrRules.getRules(abrRules.ABANDON_FRAGMENT_RULES) || []).
                     concat(schedulingRules.getRules(ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES) || []).
                     concat(schedulingRules.getRules(ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES) || []).
-                    concat(schedulingRules.getRules(ScheduleRulesCollection.prototype.FRAGMENTS_TO_EXECUTE_RULES) || []).
                     concat(synchronizationRules.getRules(SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES) || []).
                     concat(synchronizationRules.getRules(SynchronizationRulesCollection.prototype.BEST_GUESS_RULES) || []),
                 ln = allRules.length,

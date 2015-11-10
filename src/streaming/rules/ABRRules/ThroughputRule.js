@@ -33,122 +33,150 @@ import BufferController from '../../controllers/BufferController.js';
 import AbrController from '../../controllers/AbrController.js';
 import HTTPRequest from '../../vo/metrics/HTTPRequest.js';
 
-let ThroughputRule = function () {
+import FactoryMaker from '../../../core/FactoryMaker.js';
+export default FactoryMaker.getClassFactory(ThroughputRule);
+
+function ThroughputRule(config) {
     "use strict";
 
+    const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2;
+    const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3;
 
-    var throughputArray = [],
-        lastSwitchTime = 0,
-        AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2,
-        AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3,
+    let log = config ? config.log : null,
+        metricsExt = config ? config.metricsExt : null,
+        metricsModel = config ? config.metricsModel: null,
+        manifestExt = config ? config.manifestExt : null,
+        manifestModel = config ? config.manifestModel : null;
 
-        storeLastRequestThroughputByType = function (type, lastRequestThroughput) {
-            throughputArray[type] = throughputArray[type] || [];
-            if (lastRequestThroughput !== Infinity &&
-                lastRequestThroughput !== throughputArray[type][throughputArray[type].length-1]) {
-                throughputArray[type].push(lastRequestThroughput);
-            }
-        },
+    let instance = {
+        execute:execute,
+        setConfig:setConfig,
+        reset:reset
+    }
 
-        getAverageThroughput = function (type,  isDynamic) {
-            var averageThroughput = 0,
-                sampleAmount = isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE: AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD,
-                arr = throughputArray[type],
-                len = arr.length;
+    setup();
 
-            sampleAmount = len < sampleAmount ? len : sampleAmount;
-
-            if (len > 0) {
-                var startValue = len - sampleAmount,
-                    totalSampledValue = 0;
-
-                for (var i = startValue; i < len; i++) {
-                    totalSampledValue += arr[i];
-                }
-                averageThroughput = totalSampledValue / sampleAmount;
-            }
-
-            if (arr.length > sampleAmount) {
-                arr.shift();
-            }
-
-            return averageThroughput / 1000;
-        };
+    return instance;
 
 
-    return {
-        log: undefined,
-        metricsExt: undefined,
-        metricsModel: undefined,
-        manifestExt:undefined,
-        manifestModel:undefined,
+    let throughputArray,
+        lastSwitchTime;
 
-        execute: function (context, callback) {
-            var self = this,
-                now = new Date().getTime()/1000,
-                mediaInfo = context.getMediaInfo(),
-                mediaType = mediaInfo.type,
-                current = context.getCurrentValue(),
-                representationInfo = context.getTrackInfo(),
-                metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
-                streamProcessor = context.getStreamProcessor(),
-                abrController = streamProcessor.getABRController(),
-                isDynamic= streamProcessor.isDynamic(),
-                lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
-                waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2,
-                downloadTime,
-                averageThroughput,
-                lastRequestThroughput,
-                bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
-                bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
-                switchRequest =  new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
+    function setup(){
+        throughputArray = [];
+        lastSwitchTime = 0;
+    }
 
-            if (now - lastSwitchTime < waitToSwitchTime ||
-                !metrics || lastRequest === null ||
-                lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE ||
-                bufferStateVO === null || bufferLevelVO === null) {
-                callback(switchRequest);
-                return;
-            }
-
-            downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
-
-            if (lastRequest.trace.length) {
-                lastRequestThroughput = Math.round((lastRequest.trace[lastRequest.trace.length - 1].b * 8 ) / downloadTime);
-                storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
-            }
-
-            averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic) * abrController.BANDWIDTH_SAFETY );
-            abrController.setAverageThroughput(mediaType, averageThroughput);
-
-            if (abrController.getAbandonmentStateFor(mediaType) !== abrController.ABANDON_LOAD) {
-
-                if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
-                    var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
-                    streamProcessor.getScheduleController().setTimeToLoadDelay(0); // TODO Watch out for seek event - no delay when seeking.!!
-                    switchRequest = new SwitchRequest(newQuality, SwitchRequest.prototype.DEFAULT);
-                }
-
-                if (switchRequest.value !== SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
-                    self.log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                        switchRequest.priority === SwitchRequest.prototype.DEFAULT ? "Default" :
-                            switchRequest.priority === SwitchRequest.prototype.STRONG ? "Strong" : "Weak", "Average throughput", Math.round(averageThroughput), "kbps");
-                }
-            }
-
-            callback(switchRequest);
-        },
-
-        reset: function() {
-            throughputArray = [];
-            lastSwitchTime = 0;
+    function storeLastRequestThroughputByType(type, lastRequestThroughput) {
+        throughputArray[type] = throughputArray[type] || [];
+        if (lastRequestThroughput !== Infinity &&
+            lastRequestThroughput !== throughputArray[type][throughputArray[type].length-1]) {
+            throughputArray[type].push(lastRequestThroughput);
         }
-    };
+    }
+
+    function getAverageThroughput(type,  isDynamic) {
+        var averageThroughput = 0,
+            sampleAmount = isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE: AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD,
+            arr = throughputArray[type],
+            len = arr.length;
+
+        sampleAmount = len < sampleAmount ? len : sampleAmount;
+
+        if (len > 0) {
+            var startValue = len - sampleAmount,
+                totalSampledValue = 0;
+
+            for (var i = startValue; i < len; i++) {
+                totalSampledValue += arr[i];
+            }
+            averageThroughput = totalSampledValue / sampleAmount;
+        }
+
+        if (arr.length > sampleAmount) {
+            arr.shift();
+        }
+
+        return averageThroughput / 1000;
+    }
+
+    function execute (context, callback) {
+        var now = new Date().getTime()/1000,
+            mediaInfo = context.getMediaInfo(),
+            mediaType = mediaInfo.type,
+            current = context.getCurrentValue(),
+            representationInfo = context.getTrackInfo(),
+            metrics = metricsModel.getReadOnlyMetricsFor(mediaType),
+            streamProcessor = context.getStreamProcessor(),
+            abrController = streamProcessor.getABRController(),
+            isDynamic= streamProcessor.isDynamic(),
+            lastRequest = metricsExt.getCurrentHttpRequest(metrics),
+            waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2,
+            downloadTime,
+            averageThroughput,
+            lastRequestThroughput,
+            bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
+            bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
+            switchRequest =  new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
+
+        if (now - lastSwitchTime < waitToSwitchTime ||
+            !metrics || lastRequest === null ||
+            lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE ||
+            bufferStateVO === null || bufferLevelVO === null) {
+            callback(switchRequest);
+            return;
+        }
+
+        downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
+
+        if (lastRequest.trace.length) {
+            lastRequestThroughput = Math.round((lastRequest.trace[lastRequest.trace.length - 1].b * 8 ) / downloadTime);
+            storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
+        }
+
+        averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic) * abrController.BANDWIDTH_SAFETY );
+        abrController.setAverageThroughput(mediaType, averageThroughput);
+
+        if (abrController.getAbandonmentStateFor(mediaType) !== abrController.ABANDON_LOAD) {
+
+            if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
+                var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
+                streamProcessor.getScheduleController().setTimeToLoadDelay(0); // TODO Watch out for seek event - no delay when seeking.!!
+                switchRequest = new SwitchRequest(newQuality, SwitchRequest.prototype.DEFAULT);
+            }
+
+            if (switchRequest.value !== SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
+                log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
+                    switchRequest.priority === SwitchRequest.prototype.DEFAULT ? "Default" :
+                        switchRequest.priority === SwitchRequest.prototype.STRONG ? "Strong" : "Weak", "Average throughput", Math.round(averageThroughput), "kbps");
+            }
+        }
+
+        callback(switchRequest);
+    }
+
+    function reset() {
+        throughputArray = [];
+        lastSwitchTime = 0;
+    }
+
+    function setConfig(config){
+        if(!config) return
+
+        if(config.log){
+            log = config.log;
+        }
+        if(config.metricsExt){
+            metricsExt = config.metricsExt;
+        }
+        if(config.metricsModel){
+            metricsModel = config.metricsModel;
+        }
+        if(config.manifestExt){
+            manifestExt = config.manifestExt;
+        }
+        if(config.manifestModel){
+            manifestModel = config.manifestModel;
+        }
+    }
 };
-
-ThroughputRule.prototype = {
-    constructor: ThroughputRule
-};
-
-
-export default ThroughputRule;

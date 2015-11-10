@@ -28,42 +28,60 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let ABRRulesCollection = function () {
+import ThroughputRule from './ThroughputRule.js'
+import FactoryMaker from '../../../core/FactoryMaker.js';
+
+export default FactoryMaker.getSingletonFactory(ABRRulesCollection);
+
+function ABRRulesCollection(config) {
     "use strict";
 
-    var qualitySwitchRules = [],
-        adandonFragmentRules = [];
+    const QUALITY_SWITCH_RULES = "qualitySwitchRules";
+    const ABANDON_FRAGMENT_RULES = "abandonFragmentRules";
 
-    return {
-        insufficientBufferRule: undefined,
-        bufferOccupancyRule:undefined,
-        throughputRule:undefined,
-        abandonRequestRule:undefined,
+    //TODO Temp until dijon is removed
+    let system = config.system;
 
-        getRules: function (type) {
-            switch (type) {
-                case ABRRulesCollection.prototype.QUALITY_SWITCH_RULES:
-                    return qualitySwitchRules;
-                case ABRRulesCollection.prototype.ABANDON_FRAGMENT_RULES:
-                    return adandonFragmentRules;
-                default:
-                    return null;
-            }
-        },
+    let instance = {
+        QUALITY_SWITCH_RULES    :QUALITY_SWITCH_RULES,
+        ABANDON_FRAGMENT_RULES  :ABANDON_FRAGMENT_RULES,
+        getRules                :getRules
+    }
 
-        setup: function () {
-            //qualitySwitchRules.push(this.insufficientBufferRule);
-            qualitySwitchRules.push(this.throughputRule);
-            //qualitySwitchRules.push(this.bufferOccupancyRule);
-            //adandonFragmentRules.push(this.abandonRequestRule);
+    setup();
+
+    return instance;
+
+    let qualitySwitchRules,
+        abandonFragmentRules;
+
+    function setup() {
+
+        qualitySwitchRules = [];
+        abandonFragmentRules = [];
+
+        qualitySwitchRules.push(ThroughputRule.create({
+                log:system.getObject("log"),
+                metricsExt:system.getObject("metricsExt"),
+                metricsModel:system.getObject("metricsModel"),
+                manifestExt:system.getObject("manifestExt"),
+                manifestModel:system.getObject("manifestModel")
+            })
+        );
+
+        qualitySwitchRules.push(system.getObject("insufficientBufferRule"));
+        qualitySwitchRules.push(system.getObject("bufferOccupancyRule"));
+        //adandonFragmentRules.push(this.abandonRequestRule);
+    }
+
+    function getRules (type) {
+        switch (type) {
+            case QUALITY_SWITCH_RULES:
+                return qualitySwitchRules;
+            case ABANDON_FRAGMENT_RULES:
+                return abandonFragmentRules;
+            default:
+                return null;
         }
-    };
+    }
 };
-
-ABRRulesCollection.prototype = {
-    constructor: ABRRulesCollection,
-    QUALITY_SWITCH_RULES: "qualitySwitchRules",
-    ABANDON_FRAGMENT_RULES: "abandonFragmentRules"
-};
-
-export default ABRRulesCollection;

@@ -44,6 +44,7 @@ import PublicEvents from './PublicEvents.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
 import AbrController from './controllers/AbrController.js'
+import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
 
 let MediaPlayer /**
 *
@@ -341,8 +342,9 @@ let MediaPlayer /**
         setup: function () {
             metricsExt = system.getObject("metricsExt");
 
+
             abrController = AbrController.getInstance({
-                abrRulesCollection:system.getObject("abrRulesCollection"),
+                abrRulesCollection:ABRRulesCollection.getInstance({system:system}),
                 rulesController:system.getObject("rulesController"),
                 streamController:system.getObject("streamController"),
                 log:system.getObject("log"),
