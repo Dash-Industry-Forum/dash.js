@@ -1,3 +1,4 @@
+
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -31,8 +32,7 @@
 MediaPlayer.rules.BufferLevelRule = function () {
     "use strict";
 
-    var isCompleted = {},
-        scheduleController = {},
+    var scheduleController = {},
         MINIMUM_LATENCY_BUFFER = 500,
 
         decideBufferLength = function (minBufferTime, duration, isDynamic) {
@@ -84,17 +84,8 @@ MediaPlayer.rules.BufferLevelRule = function () {
             }
 
             return Math.min(requiredBufferLength, criticalBufferLevel);
-        },
-
-        isCompletedT = function(streamId, type) {
-            return (isCompleted[streamId] && isCompleted[streamId][type]);
-        },
-
-        onStreamCompleted = function(e) {
-            var streamId = e.data.fragmentModel.getContext().streamProcessor.getStreamInfo().id;
-            isCompleted[streamId] = isCompleted[streamId] || {};
-            isCompleted[streamId][e.data.request.mediaType] = true;
         };
+
     return {
         log: undefined,
 
@@ -105,10 +96,6 @@ MediaPlayer.rules.BufferLevelRule = function () {
         mediaController: undefined,
         virtualBuffer: undefined,
         videoModel: undefined,
-
-        setup: function() {
-            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
-        },
 
         setScheduleController: function(scheduleControllerValue) {
             var id = scheduleControllerValue.streamProcessor.getStreamInfo().id;
@@ -143,15 +130,10 @@ MediaPlayer.rules.BufferLevelRule = function () {
 
             fragmentCount = Math.ceil(remainingDuration/fragmentDuration);
 
-            if (bufferedDuration >= timeToEnd  && !isCompletedT(streamId,mediaType)) {
-                fragmentCount = fragmentCount || 1;
-            }
-
             callback(new MediaPlayer.rules.SwitchRequest(fragmentCount, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT));
         },
 
         reset: function() {
-            isCompleted = {};
             scheduleController = {};
         }
     };

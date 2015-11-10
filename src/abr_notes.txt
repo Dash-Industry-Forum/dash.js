@@ -49,3 +49,4 @@ Seeking appears to also trigger an outrun as the different models go out of sync
 BufferOutRun rule is in fact worthless as the same time request rule pretty much achieves the same because the behind one is preferred and won't have a corresponding other one, so deleted it.
 
 Metrics Model - arrays get ever bigger, even though we're only ever interested in the last thing really, need to be able to purge things on occasion
+
