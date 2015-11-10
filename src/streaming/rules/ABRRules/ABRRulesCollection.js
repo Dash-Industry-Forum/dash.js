@@ -30,6 +30,7 @@
  */
 import ThroughputRule from './ThroughputRule.js'
 import BufferOccupancyRule from './BufferOccupancyRule.js'
+import InsufficientBufferRule from './InsufficientBufferRule.js'
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(ABRRulesCollection);
@@ -40,7 +41,7 @@ function ABRRulesCollection(config) {
     const QUALITY_SWITCH_RULES = "qualitySwitchRules";
     const ABANDON_FRAGMENT_RULES = "abandonFragmentRules";
 
-    //TODO Temp until dijon is removed
+    //TODO Temp until dijon is removed no setConfig due to being temp.
     let system = config.system;
 
     let instance = {
@@ -75,7 +76,12 @@ function ABRRulesCollection(config) {
             })
         );
 
-        qualitySwitchRules.push(system.getObject("insufficientBufferRule"));
+        qualitySwitchRules.push(InsufficientBufferRule.create({
+                log:system.getObject("log"),
+                metricsModel:system.getObject("metricsModel"),
+                playbackController:system.getObject("playbackController")
+            })
+        );
 
         //adandonFragmentRules.push(this.abandonRequestRule);
     }

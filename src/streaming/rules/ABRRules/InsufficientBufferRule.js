@@ -34,83 +34,94 @@ import PlaybackController from '../../controllers/PlaybackController.js';
 import EventBus from '../../utils/EventBus.js';
 import Events from "../../Events.js";
 
-let InsufficientBufferRule = function () {
-    "use strict";
-    /*
-     * This rule is intended to be sure that our buffer doesn't run dry.
-     * If the buffer runs dry playback halts until more data is downloaded.
-     * The buffer will run dry when the fragments are taking too long to download.
-     * The player may have sufficient bandwidth to download a fragment is a reasonable time,
-     * but the play may not leave enough time in the buffer to allow for longer fragments.
-     * A dry buffer is a good indication of this use case, so we want to switch down to
-     * smaller fragments to decrease download time.
-     */
-    var bufferStateDict = {},
-        lastSwitchTime = 0,
-        waitToSwitchTime = 1000,
+import FactoryMaker from '../../../core/FactoryMaker.js';
+export default FactoryMaker.getClassFactory(InsufficientBufferRule);
 
-        setBufferInfo = function (type, state) {
-            bufferStateDict[type] = bufferStateDict[type] || {};
-            bufferStateDict[type].state = state;
-            if (state === BufferController.BUFFER_LOADED && !bufferStateDict[type].firstBufferLoadedEvent) {
-                bufferStateDict[type].firstBufferLoadedEvent = true;
-            }
-        },
+function InsufficientBufferRule(config) {
 
-        onPlaybackSeeking = function () {
-            bufferStateDict = {};
-        };
+    let log = config ? config.log : null,
+        metricsModel = config ? config.metricsModel : null,
+        playbackController = config ? config.playbackController : null;
 
-    return {
-        log: undefined,
-        metricsModel: undefined,
-        playbackController: undefined,
+    let instance = {
+        execute:execute,
+        setConfig:setConfig,
+        reset:reset
+    }
 
-        setup: function() {
-            EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        },
+    setup();
 
-        execute: function (context, callback) {
-            var self = this,
-                now = new Date().getTime(),
-                mediaType = context.getMediaInfo().type,
-                current = context.getCurrentValue(),
-                metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
-                lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
-                switchRequest = new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
+    return instance;
 
-            if (now - lastSwitchTime < waitToSwitchTime ||
-                lastBufferStateVO === null) {
-                callback(switchRequest);
-                return;
-            }
+    let bufferStateDict,
+        lastSwitchTime,
+        waitToSwitchTime;
 
-            setBufferInfo(mediaType, lastBufferStateVO.state);
-            // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
-            if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
-                switchRequest = new SwitchRequest(0, SwitchRequest.prototype.STRONG);
-            }
+    function setup() {
+        bufferStateDict = {};
+        lastSwitchTime = 0;
+        waitToSwitchTime = 1000;
+        EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+    }
 
-            if (switchRequest.value !== SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
-                self.log("InsufficientBufferRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                    switchRequest.priority === SwitchRequest.prototype.DEFAULT ? "Default" :
-                        switchRequest.priority === SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
-            }
+    function execute (context, callback) {
+        var now = new Date().getTime(),
+            mediaType = context.getMediaInfo().type,
+            current = context.getCurrentValue(),
+            metrics = metricsModel.getReadOnlyMetricsFor(mediaType),
+            lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
+            switchRequest = new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
 
-            lastSwitchTime = now;
+        if (now - lastSwitchTime < waitToSwitchTime ||
+            lastBufferStateVO === null) {
             callback(switchRequest);
-        },
-
-        reset: function() {
-            EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-            bufferStateDict = {};
-            lastSwitchTime = 0;
+            return;
         }
-    };
-};
 
-InsufficientBufferRule.prototype = {
-    constructor: InsufficientBufferRule
-};
+        setBufferInfo(mediaType, lastBufferStateVO.state);
+        // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
+        if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
+            switchRequest = new SwitchRequest(0, SwitchRequest.prototype.STRONG);
+        }
 
-export default InsufficientBufferRule;
+        if (switchRequest.value !== SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
+            log("InsufficientBufferRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
+                switchRequest.priority === SwitchRequest.prototype.DEFAULT ? "Default" :
+                    switchRequest.priority === SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
+        }
+
+        lastSwitchTime = now;
+        callback(switchRequest);
+    }
+
+    function setBufferInfo(type, state) {
+        bufferStateDict[type] = bufferStateDict[type] || {};
+        bufferStateDict[type].state = state;
+        if (state === BufferController.BUFFER_LOADED && !bufferStateDict[type].firstBufferLoadedEvent) {
+            bufferStateDict[type].firstBufferLoadedEvent = true;
+        }
+    }
+
+    function onPlaybackSeeking() {
+        bufferStateDict = {};
+    }
+
+    function setConfig(config){
+        if (!config) return;
+        if (config.log){
+            log = config.log;
+        }
+        if (config.metricsModel){
+            metricsModel = config.metricsModel;
+        }
+        if (config.playbackController){
+            playbackController = config.playbackController;
+        }
+    }
+
+    function reset() {
+        EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        bufferStateDict = {};
+        lastSwitchTime = 0;
+    }
+};

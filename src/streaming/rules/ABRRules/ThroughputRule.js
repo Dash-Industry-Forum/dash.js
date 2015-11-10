@@ -44,7 +44,7 @@ function ThroughputRule(config) {
 
     let log = config ? config.log : null,
         metricsExt = config ? config.metricsExt : null,
-        metricsModel = config ? config.metricsModel: null,
+        metricsModel = config ? config.metricsModel : null,
         manifestExt = config ? config.manifestExt : null,
         manifestModel = config ? config.manifestModel : null;
 

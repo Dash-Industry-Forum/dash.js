@@ -38,7 +38,7 @@ export default FactoryMaker.getClassFactory(BufferOccupancyRule);
 function BufferOccupancyRule(config) {
 
     let log = config ? config.log : null,
-        metricsModel = config ? config.metricsModel: null;
+        metricsModel = config ? config.metricsModel : null;
 
     let instance = {
         execute:execute,
