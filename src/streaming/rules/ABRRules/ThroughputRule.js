@@ -72,7 +72,7 @@ let ThroughputRule = function () {
                 arr.shift();
             }
 
-            return (averageThroughput * AbrController.BANDWIDTH_SAFETY) / 1000;
+            return averageThroughput / 1000;
         };
 
 
@@ -118,10 +118,10 @@ let ThroughputRule = function () {
                 storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
             }
 
-            averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic));
+            averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic) * abrController.BANDWIDTH_SAFETY );
             abrController.setAverageThroughput(mediaType, averageThroughput);
 
-            if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
+            if (abrController.getAbandonmentStateFor(mediaType) !== abrController.ABANDON_LOAD) {
 
                 if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
                     var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);

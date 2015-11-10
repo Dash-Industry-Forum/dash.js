@@ -109,7 +109,7 @@ let AbandonRequestsRule = function () {
                         callback(switchRequest);
                         return;
                     }else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
-                        var newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * AbrController.BANDWIDTH_SAFETY);
+                        var newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * abrController.BANDWIDTH_SAFETY);
                         switchRequest = new SwitchRequest(newQuality, SwitchRequest.prototype.STRONG);
                         abandonDict[fragmentInfo.id] = fragmentInfo;
                         this.log("AbandonRequestsRule ( ", mediaType, "frag id",fragmentInfo.id,") is asking to abandon and switch to quality to ", newQuality, " measured bandwidth was", fragmentInfo.measuredBandwidthInKbps);

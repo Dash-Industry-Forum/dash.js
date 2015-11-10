@@ -31,6 +31,7 @@
 import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
 import FragmentController from '../../controllers/FragmentController.js';
+import AbrController from '../../controllers/AbrController.js';
 
 let BufferLevelRule = function () {
     "use strict";
@@ -38,13 +39,14 @@ let BufferLevelRule = function () {
     var getBufferTarget = function (context, type) {
             var streamProcessor = context.getStreamProcessor(),
                 streamInfo = context.getStreamInfo(),
+                abrController = streamProcessor.getABRController(),
                 duration = streamInfo.manifestInfo.duration,
                 trackInfo = context.getTrackInfo(),
                 isDynamic = streamProcessor.isDynamic(), //TODO make is dynamic false if live stream is playing more than X seconds from live edge in DVR window. So it will act like VOD.
                 isLongFormContent = (duration >= BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
                 bufferTarget = NaN;
 
-            if (!isDynamic && this.abrController.isPlayingAtTopQuality(streamInfo)) {//TODO || allow larger buffer targets if we stabilize on a non top quality for more than 30 seconds.
+            if (!isDynamic && abrController.isPlayingAtTopQuality(streamInfo)) {//TODO || allow larger buffer targets if we stabilize on a non top quality for more than 30 seconds.
                 bufferTarget = isLongFormContent ? BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM : BufferController.BUFFER_TIME_AT_TOP_QUALITY;
             }else if (!isDynamic) {
                 //General VOD target non top quality and not stabilized on a given quality.
@@ -61,12 +63,16 @@ let BufferLevelRule = function () {
         };
 
     return {
+        system:undefined,
         metricsExt: undefined,
         metricsModel: undefined,
-        abrController: undefined,
         playbackController: undefined,
         textSourceBuffer:undefined,
         log:undefined,
+
+        setup: function(){
+            this.abrController = AbrController.getInstance();
+        },
 
         execute: function(context, callback) {
             var mediaInfo = context.getMediaInfo(),

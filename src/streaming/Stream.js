@@ -36,6 +36,7 @@ import ProtectionController from './controllers/ProtectionController.js';
 import MediaController from './controllers/MediaController.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
+import AbrController from './controllers/AbrController.js'
 
 let Stream = function () {
     "use strict";
@@ -353,7 +354,7 @@ let Stream = function () {
         log: undefined,
         errHandler: undefined,
         liveEdgeFinder: undefined,
-        abrController: undefined,
+
 
         setup: function () {
             EventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
@@ -361,6 +362,8 @@ let Stream = function () {
         },
 
         initialize: function(strmInfo, protectionCtrl) {
+            this.abrController = AbrController.getInstance();
+
             streamInfo = strmInfo;
             protectionController = protectionCtrl;
             EventBus.on(Events.KEY_ERROR, onProtectionError, this);

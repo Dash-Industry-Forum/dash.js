@@ -59,7 +59,7 @@ let BufferOccupancyRule = function () {
                 switchRequest = new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
 
             if (now - lastSwitchTime < waitToSwitchTime ||
-                abrController.getAbandonmentStateFor(mediaType) === AbrController.ABANDON_LOAD) {
+                abrController.getAbandonmentStateFor(mediaType) === abrController.ABANDON_LOAD) {
                 callback(switchRequest);
                 return;
             }

@@ -605,7 +605,7 @@ let BufferController = function () {
         mediaController: undefined,
         adapter: undefined,
         log: undefined,
-        abrController: undefined,
+
         system: undefined,
         virtualBuffer: undefined,
         textSourceBuffer:undefined,
@@ -630,6 +630,8 @@ let BufferController = function () {
 
         initialize: function (typeValue, source, streamProcessor) {
             var self = this;
+
+            self.abrController = AbrController.getInstance();
 
             type = typeValue;
            // self.setMediaType(type);

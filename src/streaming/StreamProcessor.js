@@ -65,7 +65,6 @@ let StreamProcessor = function () {
         indexHandler: undefined,
         liveEdgeFinder: undefined,
         timelineConverter: undefined,
-        abrController: undefined,
         playbackController: undefined,
         adapter: undefined,
         manifestModel: undefined,
@@ -74,26 +73,27 @@ let StreamProcessor = function () {
 
             var self = this,
                 representationController = self.system.getObject("representationController"),
-                scheduleController = self.system.getObject("scheduleController"),               
-                abrController = self.abrController,
+                scheduleController = self.system.getObject("scheduleController"),
                 indexHandler = self.indexHandler,
                 playbackController = self.playbackController,
                 fragmentModel,
-                fragmentLoader = FragmentLoader.create(
-                    {
-                        metricsModel:this.system.getObject("metricsModel"),
-                        errHandler:this.system.getObject("errHandler"),
-                        log: this.system.getObject("log"),
-                        requestModifierExt:this.system.getObject("requestModifierExt")
-                    }
-                ),
+                fragmentLoader = FragmentLoader.create({
+                    metricsModel:this.system.getObject("metricsModel"),
+                    errHandler:this.system.getObject("errHandler"),
+                    log: this.system.getObject("log"),
+                    requestModifierExt:this.system.getObject("requestModifierExt")
+                }),
+
                 bufferController = createBufferControllerForType.call(self, typeValue);
 
             stream = streamValue;
             type = typeValue;
             eventController = eventControllerValue;
-
             isDynamic = stream.getStreamInfo().manifestInfo.isDynamic;
+
+            //todo re-scope
+            self.abrController = AbrController.getInstance();
+            self.abrController.initialize(type, this);
             self.bufferController = bufferController;
             self.scheduleController = scheduleController;
             self.representationController = representationController;
@@ -104,7 +104,6 @@ let StreamProcessor = function () {
             indexHandler.setCurrentTime(playbackController.getStreamStartTime(this.getStreamInfo()));
             bufferController.initialize(type, mediaSource, self);
             scheduleController.initialize(type, this);
-            abrController.initialize(type, this);
 
             fragmentModel = this.getFragmentModel();
             fragmentModel.setLoader(fragmentLoader);

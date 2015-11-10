@@ -270,7 +270,6 @@ let RepresentationController = function () {
         manifestModel: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
-        abrController: undefined,
         streamController: undefined,
         timelineConverter: undefined,
         DOMStorage:undefined,
@@ -286,6 +285,7 @@ let RepresentationController = function () {
         },
 
         initialize: function(streamProcessor) {
+            this.abrController = AbrController.getInstance();
             this.streamProcessor = streamProcessor;
             this.indexHandler = streamProcessor.indexHandler;
         },

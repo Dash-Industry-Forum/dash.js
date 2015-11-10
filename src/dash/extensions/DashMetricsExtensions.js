@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import HTTPRequest from '../../streaming/vo/metrics/HTTPRequest.js';
+import AbrController from "../../streaming/controllers/AbrController.js";
 
 let DashMetricsExtensions = function () {
     "use strict";
@@ -138,7 +139,7 @@ let DashMetricsExtensions = function () {
         },
 
         getMaxAllowedIndexForBufferType = function (bufferType, periodId) {
-            var abrController = this.system.getObject("abrController"),
+            var abrController = AbrController.getInstance(),
                 idx=0;
 
             if (abrController) {

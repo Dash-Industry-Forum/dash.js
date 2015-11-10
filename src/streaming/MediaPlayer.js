@@ -43,6 +43,7 @@ import Events from './Events.js';
 import PublicEvents from './PublicEvents.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
+import AbrController from './controllers/AbrController.js'
 
 let MediaPlayer /**
 *
@@ -98,7 +99,7 @@ let MediaPlayer /**
         playing = false,
         autoPlay = true,
         scheduleWhilePaused = false,
-    //bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
+        //bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
         useManifestDateHeaderTimeSource = true,
         UTCTimingSources = [],
         liveDelayFragmentCount = 4,
@@ -330,6 +331,7 @@ let MediaPlayer /**
     system.injectInto(context);
 
     return {
+
         debug: undefined,
         capabilities: undefined,
         adapter: undefined,
@@ -338,7 +340,15 @@ let MediaPlayer /**
 
         setup: function () {
             metricsExt = system.getObject("metricsExt");
-            abrController = system.getObject("abrController");
+
+            abrController = AbrController.getInstance({
+                abrRulesCollection:system.getObject("abrRulesCollection"),
+                rulesController:system.getObject("rulesController"),
+                streamController:system.getObject("streamController"),
+                log:system.getObject("log"),
+            }),
+
+
             rulesController = system.getObject("rulesController");
             metricsModel = system.getObject("metricsModel");
             DOMStorage = system.getObject("DOMStorage");

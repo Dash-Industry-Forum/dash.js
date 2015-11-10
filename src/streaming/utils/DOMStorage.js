@@ -91,9 +91,12 @@ let DOMStorage = function () {
     return {
         system: undefined,
         log:undefined,
-        abrController: undefined,
         checkInitialBitrate:checkInitialBitrate,
         getSavedMediaSettings: getSavedMediaSettings,
+
+        setup: function () {
+            this.abrController = AbrController.getInstance();
+        },
 
         enableLastBitrateCaching: function(enable, ttl) {
             enableLastBitrateCaching = enable;

@@ -378,7 +378,6 @@ let ScheduleController = function () {
         manifestExt:undefined,
         scheduleWhilePaused: undefined,
         timelineConverter: undefined,
-        abrController: undefined,
         playbackController: undefined,
         adapter: undefined,
         scheduleRulesCollection: undefined,
@@ -409,6 +408,7 @@ let ScheduleController = function () {
             var self = this;
             type = typeValue;
             //self.setMediaType(type);
+            self.abrController = AbrController.getInstance();
             self.streamProcessor = streamProcessor;
             self.fragmentController = streamProcessor.fragmentController;
             self.liveEdgeFinder = streamProcessor.liveEdgeFinder;

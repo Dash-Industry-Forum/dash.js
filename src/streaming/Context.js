@@ -63,7 +63,6 @@ import RequestModifierExtensions from './extensions/RequestModifierExtensions.js
 import TextSourceBuffer from './TextSourceBuffer.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
-import AbrController from './controllers/AbrController.js';
 import ErrorHandler from './ErrorHandler.js';
 import VideoModelExtensions from './extensions/VideoModelExtensions.js';
 import ProtectionExtensions from './extensions/ProtectionExtensions.js';
@@ -178,7 +177,6 @@ let Context = function () {
             this.system.mapSingleton('textSourceBuffer', TextSourceBuffer);
             this.system.mapSingleton('mediaSourceExt', MediaSourceExtensions);
             this.system.mapSingleton('sourceBufferExt', SourceBufferExtensions);
-            this.system.mapSingleton('abrController', AbrController);
             this.system.mapSingleton('errHandler', ErrorHandler);
             this.system.mapSingleton('videoExt', VideoModelExtensions);
             this.system.mapSingleton('protectionExt', ProtectionExtensions);
