@@ -28,19 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FragmentController from './controllers/FragmentController.js';
+//import FragmentController from './controllers/FragmentController.js';
 import AbrController from './controllers/AbrController.js';
 import BufferController from './controllers/BufferController.js';
 import PlaybackController from './controllers/PlaybackController.js';
-import TextController from './controllers/TextController.js';
-
-import LiveEdgeFinder from './LiveEdgeFinder.js';
-import Stream from './Stream.js';
-import FragmentModel from './models/FragmentModel.js';
+//import TextController from './controllers/TextController.js';
+import ScheduleController from './controllers/ScheduleController.js';
+//import LiveEdgeFinder from './LiveEdgeFinder.js';
+//import Stream from './Stream.js';
+//import FragmentModel from './models/FragmentModel.js';
+import MediaPlayerModel from './models/MediaPlayerModel.js';
 import FragmentLoader from './FragmentLoader.js';
-
-import RepresentationController from '../dash/controllers/RepresentationController.js';
-import MediaController from './controllers/MediaController.js';
+//import RepresentationController from '../dash/controllers/RepresentationController.js';
+//import MediaController from './controllers/MediaController.js';
 
 let StreamProcessor = function () {
     "use strict";
@@ -69,7 +69,7 @@ let StreamProcessor = function () {
                     system:this.system
                 })
             }else {
-                return this.system.getObject("textController")
+                return this.system.getObject("textController");
             }
         };
 
@@ -85,9 +85,22 @@ let StreamProcessor = function () {
 
             var self = this,
                 representationController = self.system.getObject("representationController"),
-                scheduleController = self.system.getObject("scheduleController"),
                 indexHandler = self.indexHandler,
                 fragmentModel,
+                scheduleController = ScheduleController.create({
+                    log: this.system.getObject("log"),
+                    metricsModel:this.system.getObject("metricsModel"),
+                    manifestModel:this.system.getObject("manifestModel"),
+                    adapter:this.system.getObject("adapter"),
+                    metricsExt:this.system.getObject("metricsExt"),
+                    manifestExt:this.system.getObject("manifestExt"),
+                    timelineConverter:this.system.getObject("timelineConverter"),
+                    scheduleRulesCollection:this.system.getObject("scheduleRulesCollection"),
+                    rulesController:this.system.getObject("rulesController"),
+                    mediaPlayerModel:MediaPlayerModel.getInstance(),
+                    system:this.system
+                }),
+
                 fragmentLoader = FragmentLoader.create({
                     metricsModel:this.system.getObject("metricsModel"),
                     errHandler:this.system.getObject("errHandler"),

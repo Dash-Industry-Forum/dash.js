@@ -166,7 +166,7 @@ function AbrController(config) {
 
     function onFragmentLoadProgress(e) {
 
-        if (ScheduleController.LOADING_REQUEST_THRESHOLD === 0 && autoSwitchBitrate) { //check to see if there are parallel request or just one at a time.
+        if (autoSwitchBitrate) { //check to see if there are parallel request or just one at a time.
 
             var type = e.request.mediaType,
                 rules = abrRulesCollection.getRules(abrRulesCollection.ABANDON_FRAGMENT_RULES),

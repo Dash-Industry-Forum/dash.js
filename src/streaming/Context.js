@@ -93,7 +93,6 @@ import FragmentController from './controllers/FragmentController.js';
 import FragmentModel from './models/FragmentModel.js';
 import StreamController from './controllers/StreamController.js';
 import Stream from './Stream.js';
-import ScheduleController from './controllers/ScheduleController.js';
 import MediaController from './controllers/MediaController.js';
 import TimeSyncController from './TimeSyncController.js';
 
@@ -207,7 +206,6 @@ let Context = function () {
             this.system.mapSingleton('streamController', StreamController);
             this.system.mapSingleton('mediaController', MediaController);
             this.system.mapClass('stream', Stream);
-            this.system.mapClass('scheduleController', ScheduleController);
             this.system.mapSingleton('timeSyncController', TimeSyncController);
         }
     };

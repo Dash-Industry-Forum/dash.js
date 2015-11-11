@@ -48,7 +48,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 
 
-let factory = FactoryMaker.getClassFactory(BufferController)
+let factory = FactoryMaker.getClassFactory(BufferController);
 
 factory.DEFAULT_MIN_BUFFER_TIME = 12;
 factory.BUFFER_TIME_AT_TOP_QUALITY = 30;

@@ -77,9 +77,11 @@ let FragmentController = function () {
 
             var request = e.request,
                 bytes = e.response,
-                streamId = e.sender.getContext().streamProcessor.getStreamInfo().id,//TODO seem like a bit much object envy... pass streamInfo in payload?
                 isInit = this.isInitializationRequest(request),
                 chunk;
+
+            var streamId = e.sender.getContext().getStreamProcessor().getStreamInfo().id
+
 
             if (!bytes) {
                 this.log("No " + request.mediaType + " bytes to push.");

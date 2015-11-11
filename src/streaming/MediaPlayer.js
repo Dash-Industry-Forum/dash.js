@@ -46,6 +46,7 @@ import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
 import AbrController from './controllers/AbrController.js'
 import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
 import VideoModel from './models/VideoModel.js';
+import MediaPlayerModel from './models/MediaPlayerModel.js';
 
 let MediaPlayer /**
 *
@@ -100,12 +101,12 @@ let MediaPlayer /**
         resetting = false,
         playing = false,
         autoPlay = true,
-        scheduleWhilePaused = false,
         //bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
         useManifestDateHeaderTimeSource = true,
         UTCTimingSources = [],
         liveDelayFragmentCount = 4,
         usePresentationDelay = false,
+        mediaPlayerModel = MediaPlayerModel.getInstance(),
 
         isReady = function () {
             return (!!element && !!source && !resetting);
@@ -141,7 +142,9 @@ let MediaPlayer /**
                 streamController.loadWithManifest(source);
             }
             streamController.setUTCTimingSources(UTCTimingSources, useManifestDateHeaderTimeSource);
-            system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
+
+            //TODO Refactor need a way to inject to object fromhere?
+            system.mapValue("scheduleWhilePaused", mediaPlayerModel.getScheduleWhilePaused());
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
 
@@ -333,6 +336,8 @@ let MediaPlayer /**
     system.injectInto(debug);
     debug.setup();
     system.injectInto(context);
+
+
 
     return {
 
@@ -531,9 +536,9 @@ let MediaPlayer /**
          * @memberof MediaPlayer#
          *
          */
-        setNumOfParallelRequestAllowed: function (value) {
-            numOfParallelRequestAllowed = value;
-        },
+        //setNumOfParallelRequestAllowed: function (value) {
+        //    numOfParallelRequestAllowed = value;
+        //},
 
         /**
          * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum bitrate allowed.
@@ -589,7 +594,7 @@ let MediaPlayer /**
          * @memberof MediaPlayer#
          */
         setScheduleWhilePaused: function (value) {
-            scheduleWhilePaused = value;
+            mediaPlayerModel.setScheduleWhilePaused(value);
         },
 
         /**
@@ -597,7 +602,7 @@ let MediaPlayer /**
          * @memberof MediaPlayer#
          */
         getScheduleWhilePaused: function () {
-            return scheduleWhilePaused;
+            return mediaPlayerModel.getScheduleWhilePaused();
         },
 
         ///**
