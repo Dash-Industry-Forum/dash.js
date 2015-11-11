@@ -34,6 +34,7 @@ import Stream from './Stream.js';
 import TimeSyncController from './TimeSyncController.js';
 import EventBus from './utils/EventBus.js';
 import Events from "./Events.js";
+import RulesController from './rules/RulesController.js';
 
 let LiveEdgeFinder = function () {
 
@@ -62,7 +63,7 @@ let LiveEdgeFinder = function () {
             isSearchStarted = true;
             searchStartTime = new Date().getTime();
 
-            self.rulesController.applyRules(rules, self.streamProcessor, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
+            RulesController.getInstance().applyRules(rules, self.streamProcessor, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
                 return newValue;
             });
         },
@@ -78,7 +79,6 @@ let LiveEdgeFinder = function () {
     return {
         system: undefined,
         synchronizationRulesCollection: undefined,
-        rulesController: undefined,
 
         setup: function() {
             EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);

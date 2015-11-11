@@ -83,7 +83,7 @@ let BufferLevelRule = function () {
 
             fragmentCount = bufferLevel < getBufferTarget.call(this, context, mediaType) ? 1 : 0;
 
-            callback(new SwitchRequest(fragmentCount, SwitchRequest.prototype.DEFAULT));
+            callback(SwitchRequest.create(fragmentCount, SwitchRequest.DEFAULT));
         },
 
         reset: function() {}

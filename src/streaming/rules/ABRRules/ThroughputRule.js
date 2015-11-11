@@ -114,7 +114,7 @@ function ThroughputRule(config) {
             lastRequestThroughput,
             bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
             bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
-            switchRequest =  new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
+            switchRequest =  SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             !metrics || lastRequest === null ||
@@ -139,13 +139,13 @@ function ThroughputRule(config) {
             if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
                 var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
                 streamProcessor.getScheduleController().setTimeToLoadDelay(0); // TODO Watch out for seek event - no delay when seeking.!!
-                switchRequest = new SwitchRequest(newQuality, SwitchRequest.prototype.DEFAULT);
+                switchRequest = SwitchRequest.create(newQuality, SwitchRequest.DEFAULT);
             }
 
-            if (switchRequest.value !== SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
+            if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {
                 log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                    switchRequest.priority === SwitchRequest.prototype.DEFAULT ? "Default" :
-                        switchRequest.priority === SwitchRequest.prototype.STRONG ? "Strong" : "Weak", "Average throughput", Math.round(averageThroughput), "kbps");
+                    switchRequest.priority === SwitchRequest.DEFAULT ? "Default" :
+                        switchRequest.priority === SwitchRequest.STRONG ? "Strong" : "Weak", "Average throughput", Math.round(averageThroughput), "kbps");
             }
         }
 

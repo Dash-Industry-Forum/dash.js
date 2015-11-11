@@ -28,26 +28,32 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let SwitchRequest = function (v, p) {
+
+import FactoryMaker from '../../core/FactoryMaker.js';
+
+const NO_CHANGE = 999;
+const DEFAULT = 0.5;
+const STRONG = 1;
+const WEAK = 0;
+
+let factory = FactoryMaker.getClassFactory(SwitchRequest);
+
+factory.NO_CHANGE = NO_CHANGE;
+factory.DEFAULT = DEFAULT;
+factory.STRONG = STRONG;
+factory.WEAK = WEAK;
+
+export default factory;
+
+function SwitchRequest (v, p) {
     "use strict";
-    this.value = v;
-    this.priority = p;
+    let value = (v === undefined) ? NO_CHANGE : v,
+        priority = (p === undefined) ? DEFAULT : p;
 
-    if (this.value === undefined) {
-        this.value = 999;
-    }
+    let instance = {
+        value: value,
+        priority: priority
+    };
 
-    if (this.priority === undefined) {
-        this.priority = 0.5;
-    }
-};
-
-SwitchRequest.prototype = {
-    constructor: SwitchRequest,
-    NO_CHANGE: 999,
-    DEFAULT: 0.5,
-    STRONG: 1,
-    WEAK: 0
-};
-
-export default SwitchRequest;
+    return instance;
+}

@@ -180,7 +180,7 @@ function AbrController(config) {
                         }, ABANDON_TIMEOUT);
                     }
 
-                    if (switchRequest.confidence === SwitchRequest.prototype.STRONG) {
+                    if (switchRequest.confidence === SwitchRequest.STRONG) {
 
                         var requests = fragmentModel.getRequests({state:FragmentModel.states.LOADING, }),
                             newQuality = switchRequest.value,
@@ -307,7 +307,7 @@ function AbrController(config) {
         } else {
             rules = abrRulesCollection.getRules(abrRulesCollection.QUALITY_SWITCH_RULES);
             rulesController.applyRules(rules, streamProcessor, callback.bind(self), quality, function(currentValue, newValue) {
-                currentValue = currentValue === SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
+                currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
                 return Math.max(currentValue, newValue);
             });
         }

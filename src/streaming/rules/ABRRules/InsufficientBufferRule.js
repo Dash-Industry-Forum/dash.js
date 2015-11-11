@@ -68,7 +68,7 @@ function InsufficientBufferRule(config) {
             current = context.getCurrentValue(),
             metrics = metricsModel.getReadOnlyMetricsFor(mediaType),
             lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
-            switchRequest = new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
+            switchRequest = SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             lastBufferStateVO === null) {
@@ -79,13 +79,13 @@ function InsufficientBufferRule(config) {
         setBufferInfo(mediaType, lastBufferStateVO.state);
         // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
         if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
-            switchRequest = new SwitchRequest(0, SwitchRequest.prototype.STRONG);
+            switchRequest = SwitchRequest.create(0, SwitchRequest.STRONG);
         }
 
-        if (switchRequest.value !== SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
+        if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {
             log("InsufficientBufferRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                switchRequest.priority === SwitchRequest.prototype.DEFAULT ? "Default" :
-                    switchRequest.priority === SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
+                switchRequest.priority === SwitchRequest.DEFAULT ? "Default" :
+                    switchRequest.priority === SwitchRequest.STRONG ? "Strong" : "Weak");
         }
 
         lastSwitchTime = now;

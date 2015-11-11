@@ -74,7 +74,7 @@ let AbandonRequestsRule = function () {
                 req = progressEvent.data.request,
                 abrController = context.getStreamProcessor().getABRController(),
                 fragmentInfo,
-                switchRequest = new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
+                switchRequest = SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
             if (!isNaN(req.index)) {
                 setFragmentRequestDict(mediaType, req.index);
@@ -110,7 +110,7 @@ let AbandonRequestsRule = function () {
                         return;
                     }else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
                         var newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * AbrController.BANDWIDTH_SAFETY);
-                        switchRequest = new SwitchRequest(newQuality, SwitchRequest.prototype.STRONG);
+                        switchRequest = SwitchRequest.create(newQuality, SwitchRequest.STRONG);
                         abandonDict[fragmentInfo.id] = fragmentInfo;
                         this.log("AbandonRequestsRule ( ", mediaType, "frag id",fragmentInfo.id,") is asking to abandon and switch to quality to ", newQuality, " measured bandwidth was", fragmentInfo.measuredBandwidthInKbps);
                         delete fragmentDict[mediaType][fragmentInfo.id];

@@ -73,7 +73,6 @@ import MetricsList from './vo/MetricsList.js';
 import InsufficientBufferRule from './rules/ABRRules/InsufficientBufferRule.js';
 import AbandonRequestsRule from './rules/ABRRules/AbandonRequestsRule.js';
 
-import RulesController from './rules/RulesController.js';
 import BufferLevelRule from './rules/SchedulingRules/BufferLevelRule.js';
 import PlaybackTimeRule from './rules/SchedulingRules/PlaybackTimeRule.js';
 import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
@@ -182,9 +181,6 @@ let Context = function () {
 
             this.system.mapClass('insufficientBufferRule', InsufficientBufferRule);
             this.system.mapClass('abandonRequestRule', AbandonRequestsRule);
-
-
-            this.system.mapSingleton('rulesController', RulesController);
 
             this.system.mapClass('bufferLevelRule', BufferLevelRule);
             this.system.mapClass('playbackTimeRule', PlaybackTimeRule);

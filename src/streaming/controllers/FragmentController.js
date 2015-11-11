@@ -32,7 +32,6 @@ import FragmentModel from '../models/FragmentModel.js';
 import FragmentRequest from '../vo/FragmentRequest.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import SourceBufferExtensions from '../extensions/SourceBufferExtensions.js';
-import ScheduleRulesCollection from '../rules/SchedulingRules/ScheduleRulesCollection.js';
 import DataChunk from '../vo/DataChunk.js';
 import BufferController from './BufferController.js';
 import EventBus from '../utils/EventBus.js';
@@ -97,8 +96,6 @@ let FragmentController = function () {
     return {
         system: undefined,
         log: undefined,
-        scheduleRulesCollection: undefined,
-        rulesController: undefined,
 
         setup: function() {
             EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);

@@ -47,6 +47,7 @@ import AbrController from './controllers/AbrController.js'
 import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
 import VideoModel from './models/VideoModel.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
+import RulesController from './rules/RulesController.js';
 
 let MediaPlayer /**
 *
@@ -153,8 +154,6 @@ let MediaPlayer /**
             //system.mapOutlet("numOfParallelRequestAllowed", "scheduleController");
             //system.mapValue("bufferMax", bufferMax);
             //system.mapOutlet("bufferMax", "bufferController");
-
-            rulesController.initialize();
         },
 
         doAutoPlay = function () {
@@ -350,14 +349,23 @@ let MediaPlayer /**
         setup: function () {
             metricsExt = system.getObject("metricsExt");
             playbackController = PlaybackController.getInstance();
-            abrController = AbrController.getInstance({
+            rulesController = RulesController.getInstance();
+
+            rulesController.setConfig({
+                abrRulesCollection: ABRRulesCollection.getInstance({system:system, playbackController: playbackController}),
+                scheduleRulesCollection: system.getObject("scheduleRulesCollection"),
+                synchronizationRulesCollection: system.getObject("synchronizationRulesCollection")
+            });
+
+            abrController = AbrController.getInstance();
+
+            abrController.setConfig({
                 abrRulesCollection:ABRRulesCollection.getInstance({system:system, playbackController: playbackController}),
-                rulesController:system.getObject("rulesController"),
+                rulesController: rulesController,
                 streamController:system.getObject("streamController"),
                 log:system.getObject("log")
             });
 
-            rulesController = system.getObject("rulesController");
             metricsModel = system.getObject("metricsModel");
             DOMStorage = system.getObject("DOMStorage");
             mediaController = system.getObject("mediaController");
@@ -911,7 +919,7 @@ let MediaPlayer /**
          * @memberof MediaPlayer#
          */
         setSchedulingRules: function (newRulesCollection) {
-            updateRules.call(this, rulesController.SCHEDULING_RULE, newRulesCollection, true);
+            updateRules.call(this, RulesController.SCHEDULING_RULE, newRulesCollection, true);
         },
 
         /**
@@ -939,7 +947,7 @@ let MediaPlayer /**
          * @memberof MediaPlayer#
          */
         addSchedulingRules: function (newRulesCollection) {
-            updateRules.call(this, rulesController.SCHEDULING_RULE, newRulesCollection, false);
+            updateRules.call(this, RulesController.SCHEDULING_RULE, newRulesCollection, false);
         },
 
         /**
@@ -967,7 +975,7 @@ let MediaPlayer /**
          * @memberof MediaPlayer#
          */
         setABRRules: function (newRulesCollection) {
-            updateRules.call(this, rulesController.ABR_RULE, newRulesCollection, true);
+            updateRules.call(this, RulesController.ABR_RULE, newRulesCollection, true);
         },
 
         /**
@@ -995,7 +1003,7 @@ let MediaPlayer /**
          * @memberof MediaPlayer#
          */
         addABRRules: function (newRulesCollection) {
-            updateRules.call(this, rulesController.ABR_RULE, newRulesCollection, false);
+            updateRules.call(this, RulesController.ABR_RULE, newRulesCollection, false);
         },
 
         /**

@@ -63,7 +63,7 @@ function BufferOccupancyRule(config) {
             lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
             isBufferRich = false,
             maxIndex = mediaInfo.representationCount - 1,
-            switchRequest = new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
+            switchRequest = SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             abrController.getAbandonmentStateFor(mediaType) === AbrController.ABANDON_LOAD) {
@@ -77,15 +77,15 @@ function BufferOccupancyRule(config) {
             if (lastBufferLevelVO.level > lastBufferStateVO.target) {
                 isBufferRich = (lastBufferLevelVO.level - lastBufferStateVO.target) > BufferController.RICH_BUFFER_THRESHOLD;
                 if (isBufferRich && mediaInfo.representationCount > 1) {
-                    switchRequest = new SwitchRequest(maxIndex, SwitchRequest.prototype.STRONG);
+                    switchRequest = SwitchRequest.create(maxIndex, SwitchRequest.STRONG);
                 }
             }
         }
 
-        if (switchRequest.value !== SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
+        if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {
             log("BufferOccupancyRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                switchRequest.priority === SwitchRequest.prototype.DEFAULT ? "Default" :
-                    switchRequest.priority === SwitchRequest.prototype.STRONG ? "Strong" : "Weak");
+                switchRequest.priority === SwitchRequest.DEFAULT ? "Default" :
+                    switchRequest.priority === SwitchRequest.STRONG ? "Strong" : "Weak");
         }
 
         callback(switchRequest);

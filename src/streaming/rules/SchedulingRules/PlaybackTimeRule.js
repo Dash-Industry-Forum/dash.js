@@ -51,7 +51,7 @@ let PlaybackTimeRule = function () {
                     representationInfo = streamProcessor.getCurrentRepresentationInfo(),
                     seekTarget = scheduleController.getSeekTarget(),//seekTarget ? seekTarget[mediaType] : null,
                     hasSeekTarget = !isNaN(seekTarget),
-                    p = hasSeekTarget ? SwitchRequest.prototype.STRONG  : SwitchRequest.prototype.DEFAULT,
+                    p = hasSeekTarget ? SwitchRequest.STRONG  : SwitchRequest.DEFAULT,
                     keepIdx = !hasSeekTarget,
                     time = hasSeekTarget ? seekTarget : this.adapter.getIndexHandlerTime(streamProcessor),
                     buffer = streamProcessor.bufferController.getBuffer(),
@@ -61,7 +61,7 @@ let PlaybackTimeRule = function () {
 
 
             if (isNaN(time) || (mediaType === "fragmentedText" && this.textSourceBuffer.getAllTracksAreDisabled())) {
-                callback(new SwitchRequest(null, p));
+                callback(SwitchRequest.create(null, p));
                 return;
             }
 
@@ -96,8 +96,8 @@ let PlaybackTimeRule = function () {
                 request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
             }
 
-            callback(new SwitchRequest(request, p));
-        },
+            callback(SwitchRequest.create(request, p));
+        }
     };
 };
 

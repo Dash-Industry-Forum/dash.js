@@ -235,7 +235,7 @@ function ScheduleController(config) {
         var rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES);
 
         rulesController.applyRules(rules, streamProcessor, callback, fragmentsToLoad, function(currentValue, newValue) {
-            currentValue = currentValue === SwitchRequest.prototype.NO_CHANGE ? 0 : currentValue;
+            currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
             return Math.max(currentValue, newValue);
         });
     }

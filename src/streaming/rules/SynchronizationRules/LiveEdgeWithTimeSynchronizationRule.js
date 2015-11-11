@@ -46,7 +46,7 @@ let LiveEdgeWithTimeSynchronizationRule = function () {
         execute: function (context, callback) {
             var representationInfo = context.getTrackInfo(),
                 liveEdgeInitialSearchPosition = representationInfo.DVRWindow.end,
-                p = SwitchRequest.prototype.DEFAULT;
+                p = SwitchRequest.DEFAULT;
 
             if (representationInfo.useCalculatedLiveEdgeTime) {
                 //By default an expected live edge is the end of the last segment.
@@ -57,9 +57,9 @@ let LiveEdgeWithTimeSynchronizationRule = function () {
                 // Thus, we need to switch an expected live edge and actual live edge for SegmentTimelne streams.
                 var actualLiveEdge = this.timelineConverter.getExpectedLiveEdge();
                 this.timelineConverter.setExpectedLiveEdge(liveEdgeInitialSearchPosition);
-                callback(new SwitchRequest(actualLiveEdge, p));
+                callback(SwitchRequest.create(actualLiveEdge, p));
             } else {
-                callback(new SwitchRequest(liveEdgeInitialSearchPosition, p));
+                callback(SwitchRequest.create(liveEdgeInitialSearchPosition, p));
             }
         }
     };

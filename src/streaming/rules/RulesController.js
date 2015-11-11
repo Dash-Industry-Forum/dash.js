@@ -30,206 +30,228 @@
  */
 import RulesContext from './RulesContext.js';
 import SwitchRequest from './SwitchRequest.js';
-import ABRRulesCollection from './ABRRules/ABRRulesCollection.js';
 import ScheduleRulesCollection from './schedulingRules/ScheduleRulesCollection.js';
 import SynchronizationRulesCollection from './synchronizationRules/SynchronizationRulesCollection.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-let RulesController = function () {
+let factory = FactoryMaker.getSingletonFactory(RulesController);
+
+const SCHEDULING_RULE = 0;
+const ABR_RULE =1;
+const SYNC_RULE = 2;
+
+factory.SCHEDULING_RULE = SCHEDULING_RULE;
+factory.ABR_RULE = ABR_RULE;
+factory.SYNC_RULE = SYNC_RULE;
+
+export default factory;
+
+function RulesController() {
     "use strict";
 
-    var rules = {},
+    let instance = {
+        setConfig: setConfig,
+        setRules: setRules,
+        addRules: addRules,
+        applyRules: applyRules,
+        reset: reset
+    };
 
-        ruleMandatoryProperties = ["execute"],
+    setup();
 
-        isRuleTypeSupported = function(ruleType) {
-            return ((ruleType === this.SCHEDULING_RULE) || (ruleType === this.ABR_RULE));
-        },
+    return instance;
 
-        isRule = function(obj) {
-            var ln = ruleMandatoryProperties.length,
-                i = 0;
+    let rules,
+        ruleMandatoryProperties;
 
-            for (i; i < ln; i += 1) {
-                if (!obj.hasOwnProperty(ruleMandatoryProperties[i])) return false;
-            }
+    function setup() {
+        rules = {};
+        ruleMandatoryProperties = ["execute"];
+    }
 
-            return true;
-        },
+    function setConfig(config) {
+        if (!config) return;
 
-        getRulesContext = function(streamProcessor, currentValue) {
-            return new RulesContext(streamProcessor, currentValue);
-        },
+        if (config.abrRulesCollection) {
+            rules[ABR_RULE] = config.abrRulesCollection;
+        }
 
-        normalizeRule = function(rule) {
-            var exec = rule.execute.bind(rule);
+        if (config.scheduleRulesCollection) {
+            rules[SCHEDULING_RULE] = config.scheduleRulesCollection;
+        }
 
-            rule.execute = function(context, callback) {
-                var normalizedCallback = function(result) {
-                    callback.call(rule, new SwitchRequest(result.value, result.priority));
-                };
+        if (config.synchronizationRulesCollection) {
+            rules[SYNC_RULE] = config.synchronizationRulesCollection;
+        }
+    }
 
-                exec(context, normalizedCallback);
+    function setRules(ruleType, rulesCollection) {
+        if (!isRuleTypeSupported(ruleType) || !rulesCollection) return;
+
+        updateRules(rules[ruleType], rulesCollection, true);
+    }
+
+    function addRules(ruleType, rulesCollection) {
+        if (!isRuleTypeSupported(ruleType) || !rulesCollection) return;
+
+        updateRules(rules[ruleType], rulesCollection, false);
+    }
+
+    function applyRules(rulesArr, streamProcessor, callback, current, overrideFunc) {
+        var rulesCount = rulesArr.length,
+            ln = rulesCount,
+            values = {},
+            rulesContext = getRulesContext(streamProcessor, current),
+            rule,
+            i,
+
+            callbackFunc = function(result) {
+                var value,
+                    confidence;
+
+                if (result.value !== SwitchRequest.NO_CHANGE) {
+                    values[result.priority] = overrideFunc(values[result.priority], result.value);
+                }
+
+                if (--rulesCount) return;
+
+                if (values[SwitchRequest.WEAK] !== SwitchRequest.NO_CHANGE) {
+                    confidence = SwitchRequest.WEAK;
+                    value = values[SwitchRequest.WEAK];
+
+                }
+
+                if (values[SwitchRequest.DEFAULT] !== SwitchRequest.NO_CHANGE) {
+                    confidence = SwitchRequest.DEFAULT;
+                    value = values[SwitchRequest.DEFAULT];
+                }
+
+                if (values[SwitchRequest.STRONG] !== SwitchRequest.NO_CHANGE) {
+                    confidence = SwitchRequest.STRONG;
+                    value = values[SwitchRequest.STRONG];
+                }
+
+                if (confidence != SwitchRequest.STRONG &&
+                    confidence != SwitchRequest.WEAK) {
+                    confidence = SwitchRequest.DEFAULT;
+                }
+
+
+
+                callback({value: (value !== undefined) ? value : current, confidence: confidence});
+
             };
 
-            if (typeof(rule.reset) !== "function") {
-                rule.reset = function(){
-                    //TODO do some default clearing
-                };
+        values[SwitchRequest.STRONG] = SwitchRequest.NO_CHANGE;
+        values[SwitchRequest.WEAK] = SwitchRequest.NO_CHANGE;
+        values[SwitchRequest.DEFAULT] = SwitchRequest.NO_CHANGE;
+
+        for (i = 0; i < ln; i += 1) {
+            rule = rulesArr[i];
+
+            if (!isRule(rule)) {
+                rulesCount--;
+                continue;
             }
 
-            return rule;
-        },
+            rule.execute(rulesContext, callbackFunc);
+        }
+    }
 
-        updateRules = function(currentRulesCollection, newRulesCollection, override) {
-            var rule,
-                ruleSubType,
-                subTypeRuleSet,
-                ruleArr,
-                ln,
-                i;
+    function reset() {
+        var abrRules = rules[ABR_RULE],
+            schedulingRules = rules[SCHEDULING_RULE],
+            synchronizationRules = rules[SYNC_RULE],
+            allRules = (abrRules.getRules(abrRules.QUALITY_SWITCH_RULES) || []).
+            concat(abrRules.getRules(abrRules.ABANDON_FRAGMENT_RULES) || []).
+            concat(schedulingRules.getRules(ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES) || []).
+            concat(schedulingRules.getRules(ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES) || []).
+            concat(synchronizationRules.getRules(SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES) || []).
+            concat(synchronizationRules.getRules(SynchronizationRulesCollection.prototype.BEST_GUESS_RULES) || []),
+            ln = allRules.length,
+            rule,
+            i;
 
-            for (ruleSubType in newRulesCollection) {
-                ruleArr = newRulesCollection[ruleSubType];
-                ln = ruleArr.length;
+        for (i = 0; i < ln; i += 1) {
+            rule = allRules[i];
 
-                if (!ln) continue;
+            if (typeof (rule.reset) !== "function") continue;
 
-                for (i = 0; i < ln; i += 1) {
-                    rule = ruleArr[i];
+            rule.reset();
+        }
 
-                    if (!isRule.call(this, rule)) continue;
+        rules = {};
+    }
 
-                    rule = normalizeRule.call(this, rule);
+    function isRuleTypeSupported(ruleType) {
+        return ((ruleType === SCHEDULING_RULE) || (ruleType === ABR_RULE));
+    }
 
-                    subTypeRuleSet = currentRulesCollection.getRules(ruleSubType);
+    function isRule(obj) {
+        var ln = ruleMandatoryProperties.length,
+            i = 0;
 
-                    if (override) {
-                        override = false;
-                        subTypeRuleSet.length = 0;
-                    }
+        for (i; i < ln; i += 1) {
+            if (!obj.hasOwnProperty(ruleMandatoryProperties[i])) return false;
+        }
 
-                    this.system.injectInto(rule);
-                    subTypeRuleSet.push(rule);
-                }
-            }
+        return true;
+    }
+
+    function getRulesContext(streamProcessor, currentValue) {
+        return RulesContext.create({streamProcessor: streamProcessor, currentValue: currentValue});
+    }
+
+    function normalizeRule(rule) {
+        var exec = rule.execute.bind(rule);
+
+        rule.execute = function(context, callback) {
+            var normalizedCallback = function(result) {
+                callback.call(rule, SwitchRequest.create(result.value, result.priority));
+            };
+
+            exec(context, normalizedCallback);
         };
 
-    return {
-        system: undefined,
-        log: undefined,
+        if (typeof(rule.reset) !== "function") {
+            rule.reset = function(){
+                //TODO do some default clearing
+            };
+        }
 
-        SCHEDULING_RULE: 0,
-        ABR_RULE: 1,
-        SYNC_RULE: 2,
+        return rule;
+    }
 
-        initialize: function() {
-            rules[this.ABR_RULE] = ABRRulesCollection.getInstance();
-            rules[this.SCHEDULING_RULE] = this.system.getObject("scheduleRulesCollection");
-            rules[this.SYNC_RULE] = this.system.getObject("synchronizationRulesCollection");
-        },
+    function updateRules(currentRulesCollection, newRulesCollection, override) {
+        var rule,
+            ruleSubType,
+            subTypeRuleSet,
+            ruleArr,
+            ln,
+            i;
 
-        setRules: function(ruleType, rulesCollection) {
-            if (!isRuleTypeSupported.call(this, ruleType) || !rulesCollection) return;
+        for (ruleSubType in newRulesCollection) {
+            ruleArr = newRulesCollection[ruleSubType];
+            ln = ruleArr.length;
 
-            updateRules.call(this, rules[ruleType], rulesCollection, true);
-        },
-
-        addRules: function(ruleType, rulesCollection) {
-            if (!isRuleTypeSupported.call(this, ruleType) || !rulesCollection) return;
-
-            updateRules.call(this, rules[ruleType], rulesCollection, false);
-        },
-
-        applyRules: function(rulesArr, streamProcessor, callback, current, overrideFunc) {
-            var rulesCount = rulesArr.length,
-                ln = rulesCount,
-                values = {},
-                rulesContext = getRulesContext.call(this, streamProcessor, current),
-                rule,
-                i,
-
-                callbackFunc = function(result) {
-                    var value,
-                        confidence;
-
-                    if (result.value !== SwitchRequest.prototype.NO_CHANGE) {
-                        values[result.priority] = overrideFunc(values[result.priority], result.value);
-                    }
-
-                    if (--rulesCount) return;
-
-                    if (values[SwitchRequest.prototype.WEAK] !== SwitchRequest.prototype.NO_CHANGE) {
-                        confidence = SwitchRequest.prototype.WEAK;
-                        value = values[SwitchRequest.prototype.WEAK];
-
-                    }
-
-                    if (values[SwitchRequest.prototype.DEFAULT] !== SwitchRequest.prototype.NO_CHANGE) {
-                        confidence = SwitchRequest.prototype.DEFAULT;
-                        value = values[SwitchRequest.prototype.DEFAULT];
-                    }
-
-                    if (values[SwitchRequest.prototype.STRONG] !== SwitchRequest.prototype.NO_CHANGE) {
-                        confidence = SwitchRequest.prototype.STRONG;
-                        value = values[SwitchRequest.prototype.STRONG];
-                    }
-
-                    if (confidence != SwitchRequest.prototype.STRONG &&
-                        confidence != SwitchRequest.prototype.WEAK) {
-                        confidence = SwitchRequest.prototype.DEFAULT;
-                    }
-
-
-
-                    callback({value: (value !== undefined) ? value : current, confidence: confidence});
-
-                };
-
-            values[SwitchRequest.prototype.STRONG] = SwitchRequest.prototype.NO_CHANGE;
-            values[SwitchRequest.prototype.WEAK] = SwitchRequest.prototype.NO_CHANGE;
-            values[SwitchRequest.prototype.DEFAULT] = SwitchRequest.prototype.NO_CHANGE;
+            if (!ln) continue;
 
             for (i = 0; i < ln; i += 1) {
-                rule = rulesArr[i];
+                rule = ruleArr[i];
 
-                if (!isRule.call(this, rule)) {
-                    rulesCount--;
-                    continue;
+                if (!isRule(rule)) continue;
+
+                rule = normalizeRule(rule);
+
+                subTypeRuleSet = currentRulesCollection.getRules(ruleSubType);
+
+                if (override) {
+                    override = false;
+                    subTypeRuleSet.length = 0;
                 }
 
-                rule.execute(rulesContext, callbackFunc);
+                subTypeRuleSet.push(rule);
             }
-        },
-
-        reset: function() {
-            var abrRules = rules[this.ABR_RULE],
-                schedulingRules = rules[this.SCHEDULING_RULE],
-                synchronizationRules = rules[this.SYNC_RULE],
-                allRules = (abrRules.getRules(abrRules.QUALITY_SWITCH_RULES) || []).
-                    concat(abrRules.getRules(abrRules.ABANDON_FRAGMENT_RULES) || []).
-                    concat(schedulingRules.getRules(ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES) || []).
-                    concat(schedulingRules.getRules(ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES) || []).
-                    concat(synchronizationRules.getRules(SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES) || []).
-                    concat(synchronizationRules.getRules(SynchronizationRulesCollection.prototype.BEST_GUESS_RULES) || []),
-                ln = allRules.length,
-                rule,
-                i;
-
-            for (i = 0; i < ln; i += 1) {
-                rule = allRules[i];
-
-                if (typeof (rule.reset) !== "function") continue;
-
-                rule.reset();
-            }
-
-            rules = {};
         }
-    };
-};
-
-RulesController.prototype = {
-    constructor: RulesController
-};
-
-export default RulesController;
+    }
+}

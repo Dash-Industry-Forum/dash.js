@@ -28,42 +28,49 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let RulesContext = function (streamProcessor, currentValue) {
+
+import FactoryMaker from '../../core/FactoryMaker.js';
+
+export default FactoryMaker.getClassFactory(RulesContext);
+
+function RulesContext(config) {
     "use strict";
-    var representationInfo = streamProcessor.getCurrentRepresentationInfo(),
-        sp = streamProcessor;
+    let representationInfo = config.streamProcessor.getCurrentRepresentationInfo(),
+        sp = config.streamProcessor,
+        currentValue = config.currentValue;
 
-    return {
-        getStreamInfo: function() {
-            return representationInfo.mediaInfo.streamInfo;
-        },
-
-        getMediaInfo: function() {
-            return representationInfo.mediaInfo;
-        },
-
-        getTrackInfo: function() {
-            return representationInfo;
-        },
-
-        getCurrentValue: function() {
-            return currentValue;
-        },
-
-        getManifestInfo: function() {
-            return representationInfo.mediaInfo.streamInfo.manifestInfo;
-        },
-
-        getStreamProcessor: function() {
-            return sp;
-        }
-
-
+    let instance = {
+        getStreamInfo: getStreamInfo,
+        getMediaInfo: getMediaInfo,
+        getTrackInfo: getTrackInfo,
+        getCurrentValue: getCurrentValue,
+        getManifestInfo: getManifestInfo,
+        getStreamProcessor: getStreamProcessor
     };
-};
 
-RulesContext.prototype = {
-    constructor: RulesContext
-};
+    return instance;
 
-export default RulesContext;
+    function getStreamInfo() {
+        return representationInfo.mediaInfo.streamInfo;
+    }
+
+    function getMediaInfo() {
+        return representationInfo.mediaInfo;
+    }
+
+    function getTrackInfo() {
+        return representationInfo;
+    }
+
+    function getCurrentValue() {
+        return currentValue;
+    }
+
+    function getManifestInfo() {
+        return representationInfo.mediaInfo.streamInfo.manifestInfo;
+    }
+
+    function getStreamProcessor() {
+        return sp;
+    }
+}
