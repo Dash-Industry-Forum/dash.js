@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import RequestModifierExtensions from '../../streaming/extensions/RequestModifierExtensions.js'
 import Segment from '../vo/Segment.js';
 import Error from '../../streaming/vo/Error.js';
 import Events from '../../streaming/Events.js'
@@ -264,7 +265,10 @@ let BaseURLExtensions = function () {
     return {
         log: undefined,
         errHandler: undefined,
-        requestModifierExt:undefined,
+
+        setup: function() {
+            this.requestModifierExt = RequestModifierExtensions.getInstance();
+        },
 
         loadSegments: function(representation, type, range) {
             var parts = range ? range.split("-") : null;

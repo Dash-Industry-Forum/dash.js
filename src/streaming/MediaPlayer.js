@@ -49,11 +49,9 @@ import VideoModel from './models/VideoModel.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import RulesController from './rules/RulesController.js';
 import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
+import FactoryMaker from '../core/FactoryMaker.js'
 
-let MediaPlayer /**
-*
-*/
-= function (context) {
+let MediaPlayer = function (context) {
 
     "use strict";
 
@@ -372,6 +370,11 @@ let MediaPlayer /**
             mediaController = system.getObject("mediaController");
             this.restoreDefaultUTCTimingSources();
             this.debug.log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
+        },
+
+
+        extend: function(parentNameString, childInstance) {
+            FactoryMaker.extend(parentNameString, childInstance);
         },
 
         /**

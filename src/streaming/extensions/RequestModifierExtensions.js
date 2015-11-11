@@ -28,17 +28,24 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let RequestModifierExtensions = function () {
-    "use strict";
-    return {
-        modifyRequestURL : function (url) {
-            return url;
-        },
 
-        modifyRequestHeader : function (request) {
-            return request;
-        }
-    };
+import FactoryMaker from '../../core/FactoryMaker.js';
+export default FactoryMaker.getSingletonFactory(RequestModifierExtensions);
+
+function RequestModifierExtensions() {
+
+    let instance = {
+        modifyRequestURL:modifyRequestURL,
+        modifyRequestHeader:modifyRequestHeader
+    }
+
+    return instance;
+
+    function modifyRequestURL(url) {
+        return url;
+    }
+
+    function modifyRequestHeader(request) {
+        return request;
+    }
 };
-
-export default RequestModifierExtensions;

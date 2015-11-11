@@ -29,10 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import XlinkController from './controllers/XlinkController.js';
+import RequestModifierExtensions from './extensions/RequestModifierExtensions.js'
+
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
+
 
 let ManifestLoader = function () {
     "use strict";
@@ -172,13 +175,13 @@ let ManifestLoader = function () {
         parser: undefined,
         errHandler: undefined,
         metricsModel: undefined,
-        requestModifierExt:undefined,
         system: undefined,
 
         load: function(url) {
             doLoad.call(this, url, RETRY_ATTEMPTS);
         },
         setup: function() {
+            this.requestModifierExt = RequestModifierExtensions.getInstance();
             this.xlinkController = this.system.getObject("xlinkController");
         },
 

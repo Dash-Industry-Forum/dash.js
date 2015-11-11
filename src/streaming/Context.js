@@ -58,7 +58,6 @@ import DRMToday from './protection/servers/DRMToday.js';
 import PlayReady from './protection/servers/PlayReady.js';
 import Widevine from './protection/servers/Widevine.js';
 
-import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
@@ -160,7 +159,6 @@ let Context = function () {
             this.system.mapSingleton('serverClearKey', ClearKey);
             this.system.mapSingleton('serverDRMToday', DRMToday);
 
-            this.system.mapSingleton('requestModifierExt', RequestModifierExtensions);
             this.system.mapSingleton('textSourceBuffer', TextSourceBuffer);
             this.system.mapSingleton('mediaSourceExt', MediaSourceExtensions);
             this.system.mapSingleton('sourceBufferExt', SourceBufferExtensions);

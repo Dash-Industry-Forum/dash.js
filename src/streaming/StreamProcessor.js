@@ -41,6 +41,7 @@ import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollec
 //import FragmentModel from './models/FragmentModel.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import FragmentLoader from './FragmentLoader.js';
+import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
 //import RepresentationController from '../dash/controllers/RepresentationController.js';
 //import MediaController from './controllers/MediaController.js';
 
@@ -107,7 +108,7 @@ let StreamProcessor = function () {
                     metricsModel:this.system.getObject("metricsModel"),
                     errHandler:this.system.getObject("errHandler"),
                     log: this.system.getObject("log"),
-                    requestModifierExt:this.system.getObject("requestModifierExt")
+                    requestModifierExt:RequestModifierExtensions.getInstance()
                 }),
 
                 bufferController = createBufferControllerForType.call(self, typeValue);

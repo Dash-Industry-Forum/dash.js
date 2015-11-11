@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import RequestModifierExtensions from './extensions/RequestModifierExtensions.js'
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
 import EventBus from '../streaming/utils/EventBus.js';
@@ -151,7 +152,10 @@ let XlinkLoader = function () {
     return {
         errHandler: undefined,
         metricsModel: undefined,
-        requestModifierExt: undefined,
+
+        setup: function(){
+            this.requestModifierExt = RequestModifierExtensions.getInstance();
+        },
 
         load: function (url, element, resolveObject) {
             // Error handling: resolveToZero, no valid url
