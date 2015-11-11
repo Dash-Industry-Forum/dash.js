@@ -48,6 +48,7 @@ import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
 import VideoModel from './models/VideoModel.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import RulesController from './rules/RulesController.js';
+import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
 
 let MediaPlayer /**
 *
@@ -353,7 +354,7 @@ let MediaPlayer /**
 
             rulesController.setConfig({
                 abrRulesCollection: ABRRulesCollection.getInstance({system:system, playbackController: playbackController}),
-                scheduleRulesCollection: system.getObject("scheduleRulesCollection"),
+                scheduleRulesCollection: ScheduleRulesCollection.getInstance({system: system}),
                 synchronizationRulesCollection: system.getObject("synchronizationRulesCollection")
             });
 

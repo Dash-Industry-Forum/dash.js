@@ -232,7 +232,7 @@ function ScheduleController(config) {
     }
 
     function getRequiredFragmentCount(callback) {
-        var rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES);
+        var rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.FRAGMENTS_TO_SCHEDULE_RULES);
 
         rulesController.applyRules(rules, streamProcessor, callback, fragmentsToLoad, function(currentValue, newValue) {
             currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
@@ -254,7 +254,7 @@ function ScheduleController(config) {
     }
 
     function getNextFragment(callback) {
-        var rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES);
+        var rules = scheduleRulesCollection.getRules(ScheduleRulesCollection.NEXT_FRAGMENT_RULES);
 
         rulesController.applyRules(rules, streamProcessor, callback, null, function(currentValue, newValue) {
             return newValue;

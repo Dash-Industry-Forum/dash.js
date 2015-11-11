@@ -28,39 +28,50 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let ScheduleRulesCollection = function () {
+import FactoryMaker from '../../../core/FactoryMaker.js';
+
+let factory = FactoryMaker.getSingletonFactory(ScheduleRulesCollection);
+
+const FRAGMENTS_TO_SCHEDULE_RULES = "fragmentsToScheduleRules";
+const NEXT_FRAGMENT_RULES = "nextFragmentRules";
+
+factory.FRAGMENTS_TO_SCHEDULE_RULES = FRAGMENTS_TO_SCHEDULE_RULES;
+factory.NEXT_FRAGMENT_RULES = NEXT_FRAGMENT_RULES;
+
+export default factory;
+
+function ScheduleRulesCollection(config) {
     "use strict";
 
-    var fragmentsToScheduleRules = [],
+    let system = config.system;
+
+    let instance = {
+        getRules: getRules
+    };
+
+    setup();
+
+    return instance;
+
+    let fragmentsToScheduleRules,
+        nextFragmentRules;
+
+    function setup() {
+        fragmentsToScheduleRules = [];
         nextFragmentRules = [];
 
+        fragmentsToScheduleRules.push(system.getObject("bufferLevelRule"));
+        nextFragmentRules.push(system.getObject("playbackTimeRule"));
+    }
 
-    return {
-        bufferLevelRule: undefined,
-        playbackTimeRule: undefined,
-
-        getRules: function (type) {
-            switch (type) {
-                case ScheduleRulesCollection.prototype.FRAGMENTS_TO_SCHEDULE_RULES:
-                    return fragmentsToScheduleRules;
-                case ScheduleRulesCollection.prototype.NEXT_FRAGMENT_RULES:
-                    return nextFragmentRules;
-                default:
-                    return null;
-            }
-        },
-
-        setup: function () {
-            fragmentsToScheduleRules.push(this.bufferLevelRule);
-            nextFragmentRules.push(this.playbackTimeRule);
+    function getRules(type) {
+        switch (type) {
+            case FRAGMENTS_TO_SCHEDULE_RULES:
+                return fragmentsToScheduleRules;
+            case NEXT_FRAGMENT_RULES:
+                return nextFragmentRules;
+            default:
+                return null;
         }
-    };
-};
-
-ScheduleRulesCollection.prototype = {
-    constructor: ScheduleRulesCollection,
-    FRAGMENTS_TO_SCHEDULE_RULES: "fragmentsToScheduleRules",
-    NEXT_FRAGMENT_RULES: "nextFragmentRules",
-};
-
-export default ScheduleRulesCollection;
+    }
+}

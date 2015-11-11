@@ -35,6 +35,7 @@ import PlaybackController from './controllers/PlaybackController.js';
 //import TextController from './controllers/TextController.js';
 import ScheduleController from './controllers/ScheduleController.js';
 import RulesController from './rules/RulesController.js';
+import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
 //import LiveEdgeFinder from './LiveEdgeFinder.js';
 //import Stream from './Stream.js';
 //import FragmentModel from './models/FragmentModel.js';
@@ -96,7 +97,7 @@ let StreamProcessor = function () {
                     metricsExt:this.system.getObject("metricsExt"),
                     manifestExt:this.system.getObject("manifestExt"),
                     timelineConverter:this.system.getObject("timelineConverter"),
-                    scheduleRulesCollection:this.system.getObject("scheduleRulesCollection"),
+                    scheduleRulesCollection: ScheduleRulesCollection.getInstance(),
                     rulesController: RulesController.getInstance(),
                     mediaPlayerModel:MediaPlayerModel.getInstance(),
                     system:this.system
