@@ -39,13 +39,11 @@ export default FactoryMaker.getClassFactory(InsufficientBufferRule);
 
 function InsufficientBufferRule(config) {
 
-    let log = config ? config.log : null,
-        metricsModel = config ? config.metricsModel : null,
-        playbackController = config ? config.playbackController : null;
+    let log = config.log,
+        metricsModel = config.metricsModel;
 
     let instance = {
         execute:execute,
-        setConfig:setConfig,
         reset:reset
     }
 
@@ -104,19 +102,6 @@ function InsufficientBufferRule(config) {
 
     function onPlaybackSeeking() {
         bufferStateDict = {};
-    }
-
-    function setConfig(config){
-        if (!config) return;
-        if (config.log){
-            log = config.log;
-        }
-        if (config.metricsModel){
-            metricsModel = config.metricsModel;
-        }
-        if (config.playbackController){
-            playbackController = config.playbackController;
-        }
     }
 
     function reset() {

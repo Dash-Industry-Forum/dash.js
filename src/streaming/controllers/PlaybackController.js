@@ -482,7 +482,7 @@ function PlaybackController(config) {
             ranges = e.bufferedRanges,
             id = streamInfo.id,
             time = getTime(),
-            sp = e.sender.streamProcessor,
+            sp = e.sender.getStreamProcessor(),
             type = sp.getType(),
             stream = streamController.getStreamById(streamInfo.id),
             streamStart = getStreamStartTime(streamInfo),

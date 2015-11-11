@@ -155,7 +155,7 @@ let ScheduleController = function () {
         validate = function () {
             if (isStopped || (playbackController.isPaused() && (playbackController.getPlayedRanges().length > 0) && !this.scheduleWhilePaused)) return;
             getRequiredFragmentCount.call(this, onGetRequiredFragmentCount.bind(this));
-            //this.log("validate", type);
+            this.log("validate", type);
         },
 
         getRequiredFragmentCount = function(callback) {
@@ -245,7 +245,7 @@ let ScheduleController = function () {
         },
 
         onBytesAppended = function(e) {
-            if (e.sender.streamProcessor !== this.streamProcessor) return;
+            if (e.sender.getStreamProcessor() !== this.streamProcessor) return;
 
             addPlaylistTraceMetrics.call(this);
             validate.call(this);
@@ -269,7 +269,7 @@ let ScheduleController = function () {
             // the executed requests for which playback time is inside the time interval that has been removed from the buffer
             fragmentModel.removeExecutedRequestsBeforeTime(e.to);
 
-            if (e.hasEnoughSpaceToAppend && !this.bufferController.isBufferingCompleted()) {
+            if (e.hasEnoughSpaceToAppend && !this.bufferController.getIsBufferingCompleted()) {
                 doStart.call(this);
             }
         },

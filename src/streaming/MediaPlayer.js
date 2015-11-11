@@ -144,8 +144,10 @@ let MediaPlayer /**
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
-            system.mapValue("numOfParallelRequestAllowed", numOfParallelRequestAllowed);
-            system.mapOutlet("numOfParallelRequestAllowed", "scheduleController");
+
+
+            //system.mapValue("numOfParallelRequestAllowed", numOfParallelRequestAllowed);
+            //system.mapOutlet("numOfParallelRequestAllowed", "scheduleController");
             //system.mapValue("bufferMax", bufferMax);
             //system.mapOutlet("bufferMax", "bufferController");
 

@@ -37,14 +37,17 @@ import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(AbrController);
+let factory = FactoryMaker.getSingletonFactory(AbrController);
+
+factory.ABANDON_LOAD = "abandonload";
+factory.BANDWIDTH_SAFETY = 0.9;
+
+export default factory;
 
 function AbrController(config) {
     "use strict";
 
     const ABANDON_TIMEOUT = 10000;
-    const BANDWIDTH_SAFETY = 0.9;
-    const ABANDON_LOAD = "abandonload";
     const ALLOW_LOAD = "allowload";
 
     let log = config ? config.log : null,
@@ -53,8 +56,6 @@ function AbrController(config) {
         streamController = config ? config.streamController : null;
 
     let instance = {
-        BANDWIDTH_SAFETY        :BANDWIDTH_SAFETY,
-        ABANDON_LOAD            :ABANDON_LOAD,
         isPlayingAtTopQuality   :isPlayingAtTopQuality,
         updateTopQualityIndex   :updateTopQualityIndex,
         getAverageThroughput    :getAverageThroughput,
@@ -188,7 +189,7 @@ function AbrController(config) {
                         if (newQuality < currentQuality){
 
                             fragmentModel.abortRequests();
-                            setAbandonmentStateFor(type, ABANDON_LOAD);
+                            setAbandonmentStateFor(type, AbrController.ABANDON_LOAD);
                             setPlaybackQuality(type, streamController.getActiveStreamInfo() , newQuality);
                             scheduleController.replaceCanceledRequests(requests);
                             setupTimeout(type);

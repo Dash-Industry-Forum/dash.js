@@ -42,7 +42,6 @@ function BufferOccupancyRule(config) {
 
     let instance = {
         execute:execute,
-        setConfig:setConfig,
         reset:reset
     }
 
@@ -67,7 +66,7 @@ function BufferOccupancyRule(config) {
             switchRequest = new SwitchRequest(SwitchRequest.prototype.NO_CHANGE, SwitchRequest.prototype.WEAK);
 
         if (now - lastSwitchTime < waitToSwitchTime ||
-            abrController.getAbandonmentStateFor(mediaType) === abrController.ABANDON_LOAD) {
+            abrController.getAbandonmentStateFor(mediaType) === AbrController.ABANDON_LOAD) {
             callback(switchRequest);
             return;
         }
@@ -94,15 +93,5 @@ function BufferOccupancyRule(config) {
 
     function reset() {
         lastSwitchTime = 0;
-    }
-
-    function setConfig(config){
-        if (!config) return;
-        if (config.log){
-            log = config.log;
-        }
-        if (config.metricsModel){
-            metricsModel = config.metricsModel;
-        }
     }
 };

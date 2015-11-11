@@ -87,7 +87,6 @@ import XlinkLoader from './XlinkLoader.js';
 import StreamProcessor from './StreamProcessor.js';
 import EventController from './controllers/EventController.js';
 import TextController from './controllers/TextController.js';
-import BufferController from './controllers/BufferController.js';
 import ManifestLoader from './ManifestLoader.js';
 import ManifestUpdater from './ManifestUpdater.js';
 import FragmentController from './controllers/FragmentController.js';
@@ -201,7 +200,6 @@ let Context = function () {
             this.system.mapClass('streamProcessor', StreamProcessor);
             this.system.mapClass('eventController', EventController);
             this.system.mapClass('textController', TextController);
-            this.system.mapClass('bufferController', BufferController);
             this.system.mapClass('manifestLoader', ManifestLoader);
             this.system.mapSingleton('manifestUpdater', ManifestUpdater);
             this.system.mapClass('fragmentController', FragmentController);

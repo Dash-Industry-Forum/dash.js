@@ -42,15 +42,12 @@ function ThroughputRule(config) {
     const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2;
     const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3;
 
-    let log = config ? config.log : null,
-        metricsExt = config ? config.metricsExt : null,
-        metricsModel = config ? config.metricsModel : null,
-        manifestExt = config ? config.manifestExt : null,
-        manifestModel = config ? config.manifestModel : null;
+    let log = config.log,
+        metricsExt = config.metricsExt,
+        metricsModel = config.metricsModel;
 
     let instance = {
         execute:execute,
-        setConfig:setConfig,
         reset:reset
     }
 
@@ -97,7 +94,7 @@ function ThroughputRule(config) {
             arr.shift();
         }
 
-        return averageThroughput / 1000;
+        return (averageThroughput / 1000 ) * AbrController.BANDWIDTH_SAFETY;
     }
 
     function execute (context, callback) {
@@ -134,10 +131,10 @@ function ThroughputRule(config) {
             storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
         }
 
-        averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic) * abrController.BANDWIDTH_SAFETY );
+        averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic));
         abrController.setAverageThroughput(mediaType, averageThroughput);
 
-        if (abrController.getAbandonmentStateFor(mediaType) !== abrController.ABANDON_LOAD) {
+        if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
 
             if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
                 var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
@@ -158,25 +155,5 @@ function ThroughputRule(config) {
     function reset() {
         throughputArray = [];
         lastSwitchTime = 0;
-    }
-
-    function setConfig(config){
-        if (!config) return;
-
-        if (config.log){
-            log = config.log;
-        }
-        if (config.metricsExt){
-            metricsExt = config.metricsExt;
-        }
-        if (config.metricsModel){
-            metricsModel = config.metricsModel;
-        }
-        if (config.manifestExt){
-            manifestExt = config.manifestExt;
-        }
-        if (config.manifestModel){
-            manifestModel = config.manifestModel;
-        }
     }
 };

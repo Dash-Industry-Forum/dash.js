@@ -53,10 +53,24 @@ let StreamProcessor = function () {
         mediaInfoArr = [],
 
         createBufferControllerForType = function(type) {
-            var self = this,
-            controllerName = (type === "video" || type === "audio" || type === "fragmentedText") ? "bufferController" : "textController";
-
-            return self.system.getObject(controllerName);
+            if (type === "video" || type === "audio" || type === "fragmentedText") {
+                return BufferController.create({
+                    log:this.system.getObject("log"),
+                    metricsModel:this.system.getObject("metricsModel"),
+                    manifestModel:this.system.getObject("manifestModel"),
+                    sourceBufferExt:this.system.getObject("sourceBufferExt"),
+                    errHandler:this.system.getObject("errHandler"),
+                    mediaSourceExt:this.system.getObject("mediaSourceExt"),
+                    streamController:this.system.getObject("streamController"),
+                    mediaController:this.system.getObject("mediaController"),
+                    adapter:this.system.getObject("adapter"),
+                    virtualBuffer:this.system.getObject("virtualBuffer"),
+                    textSourceBuffer:this.system.getObject("textSourceBuffer"),
+                    system:this.system
+                })
+            }else {
+                return this.system.getObject("textController")
+            }
         };
 
     return {
@@ -194,7 +208,7 @@ let StreamProcessor = function () {
         },
 
         isBufferingCompleted: function() {
-            return this.bufferController.isBufferingCompleted();
+            return this.bufferController.getIsBufferingCompleted();
         },
 
         /**
