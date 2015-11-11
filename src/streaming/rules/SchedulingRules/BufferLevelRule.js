@@ -30,68 +30,62 @@
  */
 import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
-import FragmentController from '../../controllers/FragmentController.js';
-import AbrController from '../../controllers/AbrController.js';
 import PlaybackController from '../../controllers/PlaybackController.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
-let BufferLevelRule = function () {
+export default FactoryMaker.getClassFactory(BufferLevelRule);
+
+function BufferLevelRule(config) {
     "use strict";
 
-    var getBufferTarget = function (context, type) {
-            var streamProcessor = context.getStreamProcessor(),
-                streamInfo = context.getStreamInfo(),
-                abrController = streamProcessor.getABRController(),
-                duration = streamInfo.manifestInfo.duration,
-                trackInfo = context.getTrackInfo(),
-                isDynamic = streamProcessor.isDynamic(), //TODO make is dynamic false if live stream is playing more than X seconds from live edge in DVR window. So it will act like VOD.
-                isLongFormContent = (duration >= BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
-                bufferTarget = NaN;
+    let metricsExt = config.metricsExt,
+        metricsModel = config.metricsModel,
+        textSourceBuffer = config.textSourceBuffer;
 
-            if (!isDynamic && abrController.isPlayingAtTopQuality(streamInfo)) {//TODO || allow larger buffer targets if we stabilize on a non top quality for more than 30 seconds.
-                bufferTarget = isLongFormContent ? BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM : BufferController.BUFFER_TIME_AT_TOP_QUALITY;
-            }else if (!isDynamic) {
-                //General VOD target non top quality and not stabilized on a given quality.
-                bufferTarget = BufferController.DEFAULT_MIN_BUFFER_TIME;
-            } else {
-                bufferTarget = PlaybackController.getInstance().getLiveDelay();
-            }
-
-            if (type === "fragmentedText"){
-                bufferTarget = this.textSourceBuffer.getAllTracksAreDisabled() ? 0 : trackInfo.fragmentDuration;
-            }
-
-            return bufferTarget;
-        };
-
-    return {
-        system:undefined,
-        metricsExt: undefined,
-        metricsModel: undefined,
-        textSourceBuffer:undefined,
-        log:undefined,
-
-        setup: function(){
-            this.abrController = AbrController.getInstance();
-        },
-
-        execute: function(context, callback) {
-            var mediaInfo = context.getMediaInfo(),
-                mediaType = mediaInfo.type,
-                metrics = this.metricsModel.getReadOnlyMetricsFor(mediaType),
-                bufferLevel = this.metricsExt.getCurrentBufferLevel(metrics) ? this.metricsExt.getCurrentBufferLevel(metrics).level : 0,
-                fragmentCount;
-
-            fragmentCount = bufferLevel < getBufferTarget.call(this, context, mediaType) ? 1 : 0;
-
-            callback(SwitchRequest.create(fragmentCount, SwitchRequest.DEFAULT));
-        },
-
-        reset: function() {}
+    let instance = {
+        execute: execute,
+        reset: reset
     };
-};
 
-BufferLevelRule.prototype = {
-    constructor: BufferLevelRule
-};
+    return instance;
 
-export default BufferLevelRule;
+    function execute(context, callback) {
+        var mediaInfo = context.getMediaInfo(),
+            mediaType = mediaInfo.type,
+            metrics = metricsModel.getReadOnlyMetricsFor(mediaType),
+            bufferLevel = metricsExt.getCurrentBufferLevel(metrics) ? metricsExt.getCurrentBufferLevel(metrics).level : 0,
+            fragmentCount;
+
+        fragmentCount = bufferLevel < getBufferTarget(context, mediaType) ? 1 : 0;
+
+        callback(SwitchRequest.create(fragmentCount, SwitchRequest.DEFAULT));
+    }
+
+    function reset() {}
+
+    function getBufferTarget(context, type) {
+        var streamProcessor = context.getStreamProcessor(),
+            streamInfo = context.getStreamInfo(),
+            abrController = streamProcessor.getABRController(),
+            duration = streamInfo.manifestInfo.duration,
+            trackInfo = context.getTrackInfo(),
+            isDynamic = streamProcessor.isDynamic(), //TODO make is dynamic false if live stream is playing more than X seconds from live edge in DVR window. So it will act like VOD.
+            isLongFormContent = (duration >= BufferController.LONG_FORM_CONTENT_DURATION_THRESHOLD),
+            bufferTarget = NaN;
+
+        if (!isDynamic && abrController.isPlayingAtTopQuality(streamInfo)) {//TODO || allow larger buffer targets if we stabilize on a non top quality for more than 30 seconds.
+            bufferTarget = isLongFormContent ? BufferController.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM : BufferController.BUFFER_TIME_AT_TOP_QUALITY;
+        }else if (!isDynamic) {
+            //General VOD target non top quality and not stabilized on a given quality.
+            bufferTarget = BufferController.DEFAULT_MIN_BUFFER_TIME;
+        } else {
+            bufferTarget = PlaybackController.getInstance().getLiveDelay();
+        }
+
+        if (type === "fragmentedText"){
+            bufferTarget = textSourceBuffer.getAllTracksAreDisabled() ? 0 : trackInfo.fragmentDuration;
+        }
+
+        return bufferTarget;
+    }
+}

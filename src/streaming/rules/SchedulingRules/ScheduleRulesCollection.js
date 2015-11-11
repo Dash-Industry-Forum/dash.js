@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import BufferLevelRule from './BufferLevelRule.js';
+import PlaybackTimeRule from './PlaybackTimeRule.js';
 
 let factory = FactoryMaker.getSingletonFactory(ScheduleRulesCollection);
 
@@ -60,8 +62,18 @@ function ScheduleRulesCollection(config) {
         fragmentsToScheduleRules = [];
         nextFragmentRules = [];
 
-        fragmentsToScheduleRules.push(system.getObject("bufferLevelRule"));
-        nextFragmentRules.push(system.getObject("playbackTimeRule"));
+        fragmentsToScheduleRules.push(BufferLevelRule.create({
+            metricsExt: system.getObject("metricsExt"),
+            metricsModel: system.getObject("metricsModel"),
+            textSourceBuffer: system.getObject("textSourceBuffer")
+        }));
+        nextFragmentRules.push(PlaybackTimeRule.create({
+            adapter: system.getObject("adapter"),
+            sourceBufferExt: system.getObject("sourceBufferExt"),
+            virtualBuffer: system.getObject("virtualBuffer"),
+            textSourceBuffer: system.getObject("textSourceBuffer")
+
+        }));
     }
 
     function getRules(type) {

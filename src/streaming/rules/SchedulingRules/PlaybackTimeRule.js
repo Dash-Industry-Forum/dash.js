@@ -30,79 +30,78 @@
  */
 
 import SwitchRequest from '../SwitchRequest.js';
-import FragmentModel from '../../models/FragmentModel.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
-let PlaybackTimeRule = function () {
+export default FactoryMaker.getClassFactory(PlaybackTimeRule);
+
+function PlaybackTimeRule(config) {
     "use strict";
 
-    return {
-        adapter: undefined,
-        sourceBufferExt: undefined,
-        virtualBuffer: undefined,
-        textSourceBuffer:undefined,
-        log:undefined,
+    let adapter = config.adapter,
+        sourceBufferExt = config.sourceBufferExt,
+        virtualBuffer = config.virtualBuffer,
+        textSourceBuffer = config.textSourceBuffer;
 
-        execute: function(context, callback) {
-                var mediaType = context.getMediaInfo().type,
-                    mediaInfo = context.getMediaInfo(),
-                    streamId = context.getStreamInfo().id,
-                    streamProcessor = context.getStreamProcessor(),
-                    scheduleController = streamProcessor.getScheduleController(),
-                    representationInfo = streamProcessor.getCurrentRepresentationInfo(),
-                    seekTarget = scheduleController.getSeekTarget(),//seekTarget ? seekTarget[mediaType] : null,
-                    hasSeekTarget = !isNaN(seekTarget),
-                    p = hasSeekTarget ? SwitchRequest.STRONG  : SwitchRequest.DEFAULT,
-                    keepIdx = !hasSeekTarget,
-                    time = hasSeekTarget ? seekTarget : this.adapter.getIndexHandlerTime(streamProcessor),
-                    buffer = streamProcessor.bufferController.getBuffer(),
-                    appendedChunks,
-                    range = null,
-                    request;
-
-
-            if (isNaN(time) || (mediaType === "fragmentedText" && this.textSourceBuffer.getAllTracksAreDisabled())) {
-                callback(SwitchRequest.create(null, p));
-                return;
-            }
-
-            if (hasSeekTarget) {
-                scheduleController.setSeekTarget(NaN);
-            }
-
-            if (buffer) {
-                range = this.sourceBufferExt.getBufferRange(streamProcessor.bufferController.getBuffer(), time);
-                if (range !== null) {
-                    appendedChunks = this.virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: range});
-                    if (appendedChunks && appendedChunks.length > 0) {
-                        time = appendedChunks[appendedChunks.length-1].bufferedRange.end;
-                    }
-                }
-            }
-
-            request = this.adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: keepIdx});
-
-            while (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
-                if (request.action === "complete") {
-                    request = null;
-                    streamProcessor.setIndexHandlerTime(NaN);
-                    break;
-                }
-
-                request = this.adapter.getNextFragmentRequest(streamProcessor, representationInfo);
-            }
-
-            if (request ) {
-                streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
-                request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
-            }
-
-            callback(SwitchRequest.create(request, p));
-        }
+    let instance = {
+        execute: execute
     };
-};
 
-PlaybackTimeRule.prototype = {
-    constructor: PlaybackTimeRule
-};
+    return instance;
 
-export default PlaybackTimeRule;
+    function execute(context, callback) {
+        var mediaType = context.getMediaInfo().type,
+            mediaInfo = context.getMediaInfo(),
+            streamId = context.getStreamInfo().id,
+            streamProcessor = context.getStreamProcessor(),
+            scheduleController = streamProcessor.getScheduleController(),
+            representationInfo = streamProcessor.getCurrentRepresentationInfo(),
+            seekTarget = scheduleController.getSeekTarget(),//seekTarget ? seekTarget[mediaType] : null,
+            hasSeekTarget = !isNaN(seekTarget),
+            p = hasSeekTarget ? SwitchRequest.STRONG  : SwitchRequest.DEFAULT,
+            keepIdx = !hasSeekTarget,
+            time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor),
+            buffer = streamProcessor.bufferController.getBuffer(),
+            appendedChunks,
+            range = null,
+            request;
+
+
+        if (isNaN(time) || (mediaType === "fragmentedText" && textSourceBuffer.getAllTracksAreDisabled())) {
+            callback(SwitchRequest.create(null, p));
+            return;
+        }
+
+        if (hasSeekTarget) {
+            scheduleController.setSeekTarget(NaN);
+        }
+
+        if (buffer) {
+            range = sourceBufferExt.getBufferRange(streamProcessor.bufferController.getBuffer(), time);
+            if (range !== null) {
+                appendedChunks = virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: range});
+                if (appendedChunks && appendedChunks.length > 0) {
+                    time = appendedChunks[appendedChunks.length-1].bufferedRange.end;
+                }
+            }
+        }
+
+        request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: keepIdx});
+
+        while (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
+            if (request.action === "complete") {
+                request = null;
+                streamProcessor.setIndexHandlerTime(NaN);
+                break;
+            }
+
+            request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
+        }
+
+        if (request ) {
+            streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
+            request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
+        }
+
+        callback(SwitchRequest.create(request, p));
+    }
+}

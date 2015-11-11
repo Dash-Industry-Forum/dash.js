@@ -73,9 +73,6 @@ import MetricsList from './vo/MetricsList.js';
 import InsufficientBufferRule from './rules/ABRRules/InsufficientBufferRule.js';
 import AbandonRequestsRule from './rules/ABRRules/AbandonRequestsRule.js';
 
-import BufferLevelRule from './rules/SchedulingRules/BufferLevelRule.js';
-import PlaybackTimeRule from './rules/SchedulingRules/PlaybackTimeRule.js';
-
 import LiveEdgeBinarySearchRule from './rules/SynchronizationRules/LiveEdgeBinarySearchRule.js';
 import LiveEdgeWithTimeSynchronizationRule from './rules/SynchronizationRules/LiveEdgeWithTimeSynchronizationRule.js';
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
@@ -180,9 +177,6 @@ let Context = function () {
 
             this.system.mapClass('insufficientBufferRule', InsufficientBufferRule);
             this.system.mapClass('abandonRequestRule', AbandonRequestsRule);
-
-            this.system.mapClass('bufferLevelRule', BufferLevelRule);
-            this.system.mapClass('playbackTimeRule', PlaybackTimeRule);
 
             this.system.mapClass('liveEdgeBinarySearchRule', LiveEdgeBinarySearchRule);
             this.system.mapClass('liveEdgeWithTimeSynchronizationRule', LiveEdgeWithTimeSynchronizationRule);
