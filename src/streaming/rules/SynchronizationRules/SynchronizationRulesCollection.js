@@ -29,40 +29,57 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*globals MediaPlayer*/
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import LiveEdgeBinarySearchRule from './LiveEdgeBinarySearchRule.js';
+import LiveEdgeWithTimeSynchronizationRule from './LiveEdgeWithTimeSynchronizationRule.js';
 
-let SynchronizationRulesCollection = function () {
+let factory = FactoryMaker.getSingletonFactory(SynchronizationRulesCollection);
+
+const TIME_SYNCHRONIZED_RULES = "withAccurateTimeSourceRules";
+const BEST_GUESS_RULES = "bestGuestRules";
+
+factory.TIME_SYNCHRONIZED_RULES = TIME_SYNCHRONIZED_RULES;
+factory.BEST_GUESS_RULES = BEST_GUESS_RULES;
+
+export default factory;
+
+function SynchronizationRulesCollection(config) {
     "use strict";
 
-    var withAccurateTimeSourceRules = [],
+    let system = config.system;
+
+    let instance = {
+        initialize: initialize,
+        getRules: getRules
+    };
+
+    return instance;
+
+    let withAccurateTimeSourceRules,
+        bestGuestRules;
+
+    function initialize(){
+        withAccurateTimeSourceRules = [];
         bestGuestRules = [];
 
-    return {
-        liveEdgeBinarySearchRule: undefined,
-        liveEdgeWithTimeSynchronizationRule: undefined,
+        withAccurateTimeSourceRules.push(LiveEdgeWithTimeSynchronizationRule.create({
+            timelineConverter: system.getObject("timelineConverter")
+        }));
 
-        getRules: function (type) {
-            switch (type) {
-            case SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES:
+        bestGuestRules.push(LiveEdgeBinarySearchRule.create({
+            timelineConverter: system.getObject("timelineConverter"),
+            adapter: system.getObject("adapter")
+        }));
+    }
+
+    function getRules(type) {
+        switch (type) {
+            case TIME_SYNCHRONIZED_RULES:
                 return withAccurateTimeSourceRules;
-            case SynchronizationRulesCollection.prototype.BEST_GUESS_RULES:
+            case BEST_GUESS_RULES:
                 return bestGuestRules;
             default:
                 return null;
-            }
-        },
-
-        setup: function () {
-            withAccurateTimeSourceRules.push(this.liveEdgeWithTimeSynchronizationRule);
-            bestGuestRules.push(this.liveEdgeBinarySearchRule);
         }
-    };
-};
-
-SynchronizationRulesCollection.prototype = {
-    constructor: SynchronizationRulesCollection,
-    TIME_SYNCHRONIZED_RULES: "withAccurateTimeSourceRules",
-    BEST_GUESS_RULES: "bestGuestRules"
-};
-
-export default SynchronizationRulesCollection;
+    }
+}

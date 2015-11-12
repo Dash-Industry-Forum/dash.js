@@ -31,7 +31,6 @@
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
 import Error from './vo/Error.js';
 import Stream from './Stream.js';
-import TimeSyncController from './TimeSyncController.js';
 import EventBus from './utils/EventBus.js';
 import Events from "./Events.js";
 import RulesController from './rules/RulesController.js';
@@ -44,7 +43,7 @@ let LiveEdgeFinder = function () {
         searchStartTime = NaN,
         rules,
         liveEdge = null,
-        ruleSet = SynchronizationRulesCollection.prototype.BEST_GUESS_RULES,
+        ruleSet = SynchronizationRulesCollection.BEST_GUESS_RULES,
 
         onSearchCompleted = function(req) {
             var searchTime = (new Date().getTime() - searchStartTime) / 1000;
@@ -59,7 +58,7 @@ let LiveEdgeFinder = function () {
                 return;
             }
 
-            rules = self.synchronizationRulesCollection.getRules(ruleSet);
+            rules = SynchronizationRulesCollection.getInstance().getRules(ruleSet);
             isSearchStarted = true;
             searchStartTime = new Date().getTime();
 
@@ -70,16 +69,13 @@ let LiveEdgeFinder = function () {
 
         onTimeSyncComplete = function (e) {
             if (e.error) {
-                ruleSet = SynchronizationRulesCollection.prototype.BEST_GUESS_RULES;
+                ruleSet = SynchronizationRulesCollection.BEST_GUESS_RULES;
             } else {
-                ruleSet = SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES;
+                ruleSet = SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES;
             }
         };
 
     return {
-        system: undefined,
-        synchronizationRulesCollection: undefined,
-
         setup: function() {
             EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
         },

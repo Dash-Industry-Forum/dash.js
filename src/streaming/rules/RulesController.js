@@ -166,8 +166,8 @@ function RulesController() {
             concat(abrRules.getRules(abrRules.ABANDON_FRAGMENT_RULES) || []).
             concat(schedulingRules.getRules(ScheduleRulesCollection.NEXT_FRAGMENT_RULES) || []).
             concat(schedulingRules.getRules(ScheduleRulesCollection.FRAGMENTS_TO_SCHEDULE_RULES) || []).
-            concat(synchronizationRules.getRules(SynchronizationRulesCollection.prototype.TIME_SYNCHRONIZED_RULES) || []).
-            concat(synchronizationRules.getRules(SynchronizationRulesCollection.prototype.BEST_GUESS_RULES) || []),
+            concat(synchronizationRules.getRules(SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES) || []).
+            concat(synchronizationRules.getRules(SynchronizationRulesCollection.BEST_GUESS_RULES) || []),
             ln = allRules.length,
             rule,
             i;

@@ -72,10 +72,6 @@ import MetricsList from './vo/MetricsList.js';
 import InsufficientBufferRule from './rules/ABRRules/InsufficientBufferRule.js';
 import AbandonRequestsRule from './rules/ABRRules/AbandonRequestsRule.js';
 
-import LiveEdgeBinarySearchRule from './rules/SynchronizationRules/LiveEdgeBinarySearchRule.js';
-import LiveEdgeWithTimeSynchronizationRule from './rules/SynchronizationRules/LiveEdgeWithTimeSynchronizationRule.js';
-import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
-
 import XlinkController from './controllers/XlinkController.js';
 import XlinkLoader from './XlinkLoader.js';
 import StreamProcessor from './StreamProcessor.js';
@@ -174,10 +170,6 @@ let Context = function () {
 
             this.system.mapClass('insufficientBufferRule', InsufficientBufferRule);
             this.system.mapClass('abandonRequestRule', AbandonRequestsRule);
-
-            this.system.mapClass('liveEdgeBinarySearchRule', LiveEdgeBinarySearchRule);
-            this.system.mapClass('liveEdgeWithTimeSynchronizationRule', LiveEdgeWithTimeSynchronizationRule);
-            this.system.mapSingleton('synchronizationRulesCollection', SynchronizationRulesCollection);
 
             this.system.mapClass('xlinkController', XlinkController);
             this.system.mapClass('xlinkLoader', XlinkLoader);

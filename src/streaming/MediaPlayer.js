@@ -49,6 +49,7 @@ import VideoModel from './models/VideoModel.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import RulesController from './rules/RulesController.js';
 import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
+import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
 import FactoryMaker from '../core/FactoryMaker.js'
 
 let MediaPlayer = function (context) {
@@ -302,11 +303,15 @@ let MediaPlayer = function (context) {
         },
 
         createController = function(){
+            var synchronizationRulesCollection = SynchronizationRulesCollection.getInstance({system: system});
+
+            synchronizationRulesCollection.initialize();
+
             rulesController = RulesController.getInstance();
             rulesController.setConfig({
                 abrRulesCollection: ABRRulesCollection.getInstance({system:system, playbackController: playbackController}),
                 scheduleRulesCollection: ScheduleRulesCollection.getInstance({system: system}),
-                synchronizationRulesCollection: system.getObject("synchronizationRulesCollection")
+                synchronizationRulesCollection: synchronizationRulesCollection
             });
 
             streamController = StreamController.getInstance();
