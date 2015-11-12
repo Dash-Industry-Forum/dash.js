@@ -31,8 +31,9 @@
 import DashHandler from '../DashHandler.js';
 import AbrController from '../../streaming/controllers/AbrController.js';
 import PlaybackController from '../../streaming/controllers/PlaybackController.js';
-import LiveEdgeFinder from '../../streaming/LiveEdgeFinder.js';
-import BufferController from '../../streaming/controllers/BufferController.js';
+import StreamController from '../../streaming/controllers/StreamController.js';
+//import LiveEdgeFinder from '../../streaming/LiveEdgeFinder.js';
+//import BufferController from '../../streaming/controllers/BufferController.js';
 import DOMStorage from '../../streaming/utils/DOMStorage.js';
 import Error from '../../streaming/vo/Error.js';
 import EventBus from '../../streaming/utils/EventBus.js';
@@ -46,6 +47,7 @@ let RepresentationController = function () {
         updating = true,
         availableRepresentations = [],
         currentRepresentation,
+        streamController = StreamController.getInstance(),
         playbackController = PlaybackController.getInstance(),
 
         updateData = function(dataValue, adaptation, type) {
@@ -230,7 +232,7 @@ let RepresentationController = function () {
             // does not take into account clientServerTimeShift
             var manifest = this.manifestModel.getValue(),
                 period = currentRepresentation.adaptation.period,
-                streamInfo = this.streamController.getActiveStreamInfo();
+                streamInfo = streamController.getActiveStreamInfo();
 
             if (streamInfo.isLast) {
                 period.mpd.checkTime = this.manifestExt.getCheckTime(manifest, period);
@@ -271,13 +273,11 @@ let RepresentationController = function () {
         manifestModel: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
-        streamController: undefined,
         timelineConverter: undefined,
         DOMStorage:undefined,
         liveDelayFragmentCount:undefined,
 
         setup: function() {
-
             EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
             EventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, this);
             EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
@@ -316,6 +316,7 @@ let RepresentationController = function () {
             EventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, this);
             EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
             playbackController = null;
+            streamController = null;
         }
     };
 };

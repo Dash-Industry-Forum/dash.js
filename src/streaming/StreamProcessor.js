@@ -28,22 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-//import FragmentController from './controllers/FragmentController.js';
+
 import AbrController from './controllers/AbrController.js';
 import BufferController from './controllers/BufferController.js';
 import PlaybackController from './controllers/PlaybackController.js';
-//import TextController from './controllers/TextController.js';
+import StreamController from './controllers/StreamController.js';
 import ScheduleController from './controllers/ScheduleController.js';
 import RulesController from './rules/RulesController.js';
 import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
-//import LiveEdgeFinder from './LiveEdgeFinder.js';
-//import Stream from './Stream.js';
-//import FragmentModel from './models/FragmentModel.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import FragmentLoader from './FragmentLoader.js';
 import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
-//import RepresentationController from '../dash/controllers/RepresentationController.js';
-//import MediaController from './controllers/MediaController.js';
 
 let StreamProcessor = function () {
     "use strict";
@@ -64,7 +59,7 @@ let StreamProcessor = function () {
                     sourceBufferExt:this.system.getObject("sourceBufferExt"),
                     errHandler:this.system.getObject("errHandler"),
                     mediaSourceExt:this.system.getObject("mediaSourceExt"),
-                    streamController:this.system.getObject("streamController"),
+                    streamController:StreamController.getInstance(),
                     mediaController:this.system.getObject("mediaController"),
                     adapter:this.system.getObject("adapter"),
                     virtualBuffer:this.system.getObject("virtualBuffer"),

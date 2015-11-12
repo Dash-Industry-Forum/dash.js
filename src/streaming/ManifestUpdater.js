@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import ManifestLoader from './ManifestLoader.js';
-import StreamController from './controllers/StreamController.js';
+//import StreamController from './controllers/StreamController.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 

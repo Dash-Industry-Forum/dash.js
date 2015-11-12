@@ -52,6 +52,7 @@ let TextSourceBuffer = function () {
         timescale = NaN,
         allTracks = null,
         videoModel = null,
+        streamController = null,
 
         setTextTrack = function() {
 
@@ -61,7 +62,7 @@ let TextSourceBuffer = function () {
                 self = this;
 
             if (!allTracks) {
-                allTracks = self.mediaController.getTracksFor("fragmentedText", self.streamController.getActiveStreamInfo());
+                allTracks = self.mediaController.getTracksFor("fragmentedText", streamController.getActiveStreamInfo());
             }
 
             for (var i = 0; i < ln; i++ ) {
@@ -93,13 +94,13 @@ let TextSourceBuffer = function () {
         adapter: undefined,
         manifestExt:undefined,
         mediaController:undefined,
-        streamController:undefined,
         log: undefined,
 
         initialize: function (type, bufferController) {
             let streamProcessor = bufferController.streamProcessor;
             mediaInfos = streamProcessor.getMediaInfoArr();
             videoModel = VideoModel.getInstance();
+            streamController = StreamController.getInstance()
             textTrackExtensions = TextTrackExtensions.getInstance({videoModel: videoModel});
             isFragmented = !this.manifestExt.getIsTextTrack(type);
             if (isFragmented){
@@ -208,6 +209,7 @@ let TextSourceBuffer = function () {
             timescale = NaN;
             allTracks = null;
             videoModel = null;
+            streamController = null;
         },
 
         getParser:function(mimeType) {

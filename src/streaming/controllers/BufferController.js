@@ -145,8 +145,17 @@ function BufferController(config) {
         isAppendingInProgress = false;
         isPruningInProgress = false;
         inbandEventFound = false;
+    }
+
+    function initialize(Type, Source, StreamProcessor) {
+        type = Type;
+        setMediaSource(Source);
+        streamProcessor = StreamProcessor;
         playbackController = PlaybackController.getInstance();
         abrController = AbrController.getInstance();
+        fragmentController = streamProcessor.fragmentController;
+        scheduleController = streamProcessor.scheduleController;
+        requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
 
         EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         EventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
@@ -162,15 +171,6 @@ function BufferController(config) {
         EventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
         EventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
         EventBus.on(Events.CHUNK_APPENDED, onChunkAppended, this);
-    }
-
-    function initialize(Type, Source, StreamProcessor) {
-        type = Type;
-        setMediaSource(Source);
-        streamProcessor = StreamProcessor;
-        fragmentController = streamProcessor.fragmentController;
-        scheduleController = streamProcessor.scheduleController;
-        requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
     }
 
     function createBuffer(mediaInfo) {

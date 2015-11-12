@@ -116,10 +116,25 @@ function ScheduleController(config) {
         isFragmentLoading = false;
         timeToloadDelay = 0;
         seekTarget = NaN;
+    }
+
+    function initialize(Type, StreamProcessor) {
+        type = Type;
+        streamProcessor = StreamProcessor;
+        fragmentController = streamProcessor.fragmentController;
+        liveEdgeFinder = streamProcessor.liveEdgeFinder;
+        bufferController = streamProcessor.bufferController;
+        isDynamic = streamProcessor.isDynamic();
+        fragmentModel = fragmentController.getModel(this);
+
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
         playbackController = PlaybackController.getInstance();
         abrController = AbrController.getInstance();
 
+
+        if (manifestExt.getIsTextTrack(type)){
+            EventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
+        }
 
         EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
@@ -137,20 +152,6 @@ function ScheduleController(config) {
         EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         EventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
-    }
-
-    function initialize(Type, StreamProcessor) {
-        type = Type;
-        streamProcessor = StreamProcessor;
-        fragmentController = streamProcessor.fragmentController;
-        liveEdgeFinder = streamProcessor.liveEdgeFinder;
-        bufferController = streamProcessor.bufferController;
-        isDynamic = streamProcessor.isDynamic();
-        fragmentModel = fragmentController.getModel(this);
-
-        if (manifestExt.getIsTextTrack(type)){
-            EventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
-        }
     }
 
     function clearPlayListTraceMetrics(endTime, stopreason) {
@@ -287,7 +288,7 @@ function ScheduleController(config) {
         if (e.error) return;
 
         currentRepresentationInfo = streamProcessor.getCurrentRepresentationInfo();
-
+        
         if (!isDynamic || liveEdgeFinder.getLiveEdge() !== null) {
             ready = true;
         }

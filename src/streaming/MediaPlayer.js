@@ -128,7 +128,11 @@ let MediaPlayer = function (context) {
 
             playing = true;
             this.debug.log("Playback initiated!");
-            streamController = system.getObject("streamController");
+
+            if(!streamController){
+                createController.call(this);
+            }
+
             playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
 
             system.mapValue("liveDelayFragmentCount", liveDelayFragmentCount);
@@ -143,14 +147,10 @@ let MediaPlayer = function (context) {
             }
             streamController.setUTCTimingSources(UTCTimingSources, useManifestDateHeaderTimeSource);
 
-            //TODO Refactor need a way to inject to object fromhere?
+
             system.mapValue("scheduleWhilePaused", mediaPlayerModel.getScheduleWhilePaused());
             system.mapOutlet("scheduleWhilePaused", "stream");
-            system.mapOutlet("scheduleWhilePaused", "scheduleController");
 
-
-            //system.mapValue("numOfParallelRequestAllowed", numOfParallelRequestAllowed);
-            //system.mapOutlet("numOfParallelRequestAllowed", "scheduleController");
             //system.mapValue("bufferMax", bufferMax);
             //system.mapOutlet("bufferMax", "bufferController");
         },
@@ -299,6 +299,44 @@ let MediaPlayer = function (context) {
                     doAutoPlay.call(this);
                 }
             }
+        },
+
+        createController = function(){
+            rulesController = RulesController.getInstance();
+            rulesController.setConfig({
+                abrRulesCollection: ABRRulesCollection.getInstance({system:system, playbackController: playbackController}),
+                scheduleRulesCollection: ScheduleRulesCollection.getInstance({system: system}),
+                synchronizationRulesCollection: system.getObject("synchronizationRulesCollection")
+            });
+
+            streamController = StreamController.getInstance();
+            streamController.setConfig({
+                log : debug.log,
+                system : system,
+                capabilities : this.capabilities,
+                manifestUpdater :system.getObject("manifestUpdater"),
+                manifestLoader :system.getObject("manifestLoader"),
+                manifestModel :system.getObject("manifestModel"),
+                manifestExt :system.getObject("manifestExt"),
+                adapter : system.getObject("adapter"),
+                metricsModel : metricsModel,
+                metricsExt : metricsExt,
+                videoExt : system.getObject("videoExt"),
+                liveEdgeFinder : system.getObject("liveEdgeFinder"),
+                mediaSourceExt : system.getObject("mediaSourceExt"),
+                timeSyncController : system.getObject("timeSyncController"),
+                virtualBuffer : system.getObject("virtualBuffer"),
+                errHandler : this.errHandler,
+                timelineConverter : system.getObject("timelineConverter")
+            })
+
+            abrController = AbrController.getInstance();
+            abrController.setConfig({
+                abrRulesCollection:ABRRulesCollection.getInstance({system:system, playbackController: playbackController}),
+                rulesController: rulesController,
+                streamController:streamController,
+                log:system.getObject("log")
+            });
         };
 
 
@@ -347,27 +385,14 @@ let MediaPlayer = function (context) {
 
         setup: function () {
             metricsExt = system.getObject("metricsExt");
-            playbackController = PlaybackController.getInstance();
-            rulesController = RulesController.getInstance();
-
-            rulesController.setConfig({
-                abrRulesCollection: ABRRulesCollection.getInstance({system:system, playbackController: playbackController}),
-                scheduleRulesCollection: ScheduleRulesCollection.getInstance({system: system}),
-                synchronizationRulesCollection: system.getObject("synchronizationRulesCollection")
-            });
-
-            abrController = AbrController.getInstance();
-
-            abrController.setConfig({
-                abrRulesCollection:ABRRulesCollection.getInstance({system:system, playbackController: playbackController}),
-                rulesController: rulesController,
-                streamController:system.getObject("streamController"),
-                log:system.getObject("log")
-            });
-
             metricsModel = system.getObject("metricsModel");
             DOMStorage = system.getObject("DOMStorage");
             mediaController = system.getObject("mediaController");
+
+            playbackController = PlaybackController.getInstance();
+
+            createController.call(this);
+
             this.restoreDefaultUTCTimingSources();
             this.debug.log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
         },
