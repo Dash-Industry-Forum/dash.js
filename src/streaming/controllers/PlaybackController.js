@@ -31,8 +31,7 @@
 MediaPlayer.dependencies.PlaybackController = function () {
     "use strict";
 
-    var WALLCLOCK_TIME_UPDATE_INTERVAL = 100, //This value influences the startup time for live.
-        currentTime = 0,
+    var currentTime = 0,
         liveStartTime = NaN,
         wallclockTimeIntervalId = null,
         commonEarliestTime = {},
@@ -101,8 +100,7 @@ MediaPlayer.dependencies.PlaybackController = function () {
                 tick = function() {
                     onWallclockTime.call(self);
                 };
-
-            wallclockTimeIntervalId = setInterval(tick, WALLCLOCK_TIME_UPDATE_INTERVAL);
+            wallclockTimeIntervalId = setInterval(tick, MediaPlayer.dependencies.PlaybackController.WALLCLOCK_TIME_UPDATE_INTERVAL);
         },
 
         stopUpdatingWallclockTime = function() {
@@ -511,3 +509,5 @@ MediaPlayer.dependencies.PlaybackController.eventList = {
     ENAME_PLAYBACK_ERROR: "playbackError",
     ENAME_WALLCLOCK_TIME_UPDATED: "wallclockTimeUpdated"
 };
+
+MediaPlayer.dependencies.PlaybackController.WALLCLOCK_TIME_UPDATE_INTERVAL = 100; //This value influences the startup time for live.
