@@ -37,7 +37,6 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(ThroughputRule);
 
 function ThroughputRule(config) {
-    "use strict";
 
     const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2;
     const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3;

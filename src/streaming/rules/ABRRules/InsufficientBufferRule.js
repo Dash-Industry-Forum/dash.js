@@ -30,11 +30,10 @@
  */
 import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
-import PlaybackController from '../../controllers/PlaybackController.js';
 import EventBus from '../../utils/EventBus.js';
 import Events from "../../Events.js";
-
 import FactoryMaker from '../../../core/FactoryMaker.js';
+
 export default FactoryMaker.getClassFactory(InsufficientBufferRule);
 
 function InsufficientBufferRule(config) {

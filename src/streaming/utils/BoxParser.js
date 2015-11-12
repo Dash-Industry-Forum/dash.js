@@ -35,7 +35,6 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(BoxParser);
 
 function BoxParser(/*config*/) {
-    "use strict";
 
     let instance = {
         parse: parse

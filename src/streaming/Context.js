@@ -135,9 +135,6 @@ let Context = function () {
             this.system.mapSingleton('events', Events);
             this.system.mapSingleton('DOMStorage', DOMStorage);
             this.system.mapSingleton('virtualBuffer', VirtualBuffer);
-
-            //this.system.mapSingleton('textTrackExtensions', TextTrackExtensions);
-
             this.system.mapSingleton('manifestModel', ManifestModel);
             this.system.mapSingleton('metricsModel', MetricsModel);
 

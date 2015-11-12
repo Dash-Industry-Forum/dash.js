@@ -43,22 +43,21 @@ factory.NEXT_FRAGMENT_RULES = NEXT_FRAGMENT_RULES;
 export default factory;
 
 function ScheduleRulesCollection(config) {
-    "use strict";
 
+    //TODO temp
     let system = config.system;
 
     let instance = {
+        initialize:initialize,
         getRules: getRules
     };
-
-    setup();
 
     return instance;
 
     let fragmentsToScheduleRules,
         nextFragmentRules;
 
-    function setup() {
+    function initialize() {
         fragmentsToScheduleRules = [];
         nextFragmentRules = [];
 

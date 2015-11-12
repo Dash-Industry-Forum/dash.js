@@ -30,14 +30,16 @@
  */
 import RulesContext from './RulesContext.js';
 import SwitchRequest from './SwitchRequest.js';
+import ABRRulesCollection from './ABRRules/ABRRulesCollection.js';
 import ScheduleRulesCollection from './schedulingRules/ScheduleRulesCollection.js';
 import SynchronizationRulesCollection from './synchronizationRules/SynchronizationRulesCollection.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-let factory = FactoryMaker.getSingletonFactory(RulesController);
+
+let factory =  FactoryMaker.getSingletonFactory(RulesController);
 
 const SCHEDULING_RULE = 0;
-const ABR_RULE =1;
+const ABR_RULE = 1;
 const SYNC_RULE = 2;
 
 factory.SCHEDULING_RULE = SCHEDULING_RULE;
@@ -47,9 +49,9 @@ factory.SYNC_RULE = SYNC_RULE;
 export default factory;
 
 function RulesController() {
-    "use strict";
 
     let instance = {
+        initialize:initialize,
         setConfig: setConfig,
         setRules: setRules,
         addRules: addRules,
@@ -57,14 +59,12 @@ function RulesController() {
         reset: reset
     };
 
-    setup();
-
     return instance;
 
     let rules,
         ruleMandatoryProperties;
 
-    function setup() {
+    function initialize() {
         rules = {};
         ruleMandatoryProperties = ["execute"];
     }
@@ -156,18 +156,18 @@ function RulesController() {
 
             rule.execute(rulesContext, callbackFunc);
         }
-    }
+    }w
 
     function reset() {
         var abrRules = rules[ABR_RULE],
             schedulingRules = rules[SCHEDULING_RULE],
             synchronizationRules = rules[SYNC_RULE],
-            allRules = (abrRules.getRules(abrRules.QUALITY_SWITCH_RULES) || []).
-            concat(abrRules.getRules(abrRules.ABANDON_FRAGMENT_RULES) || []).
-            concat(schedulingRules.getRules(ScheduleRulesCollection.NEXT_FRAGMENT_RULES) || []).
-            concat(schedulingRules.getRules(ScheduleRulesCollection.FRAGMENTS_TO_SCHEDULE_RULES) || []).
-            concat(synchronizationRules.getRules(SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES) || []).
-            concat(synchronizationRules.getRules(SynchronizationRulesCollection.BEST_GUESS_RULES) || []),
+            allRules = (abrRules.getRules(ABRRulesCollection.QUALITY_SWITCH_RULES) || []).
+                concat(abrRules.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES) || []).
+                concat(schedulingRules.getRules(ScheduleRulesCollection.NEXT_FRAGMENT_RULES) || []).
+                concat(schedulingRules.getRules(ScheduleRulesCollection.FRAGMENTS_TO_SCHEDULE_RULES) || []).
+                concat(synchronizationRules.getRules(SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES) || []).
+                concat(synchronizationRules.getRules(SynchronizationRulesCollection.BEST_GUESS_RULES) || []),
             ln = allRules.length,
             rule,
             i;
@@ -184,7 +184,7 @@ function RulesController() {
     }
 
     function isRuleTypeSupported(ruleType) {
-        return ((ruleType === SCHEDULING_RULE) || (ruleType === ABR_RULE));
+        return ((ruleType === ABRRulesCollection.SCHEDULING_RULE) || (ruleType === ABRRulesCollection.ABR_RULE));
     }
 
     function isRule(obj) {

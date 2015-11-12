@@ -41,15 +41,7 @@ function PlaybackController(config) {
 
     const WALLCLOCK_TIME_UPDATE_INTERVAL = 50; //This value influences the startup time for live.
 
-    let streamController = config ? config.streamController : null,
-        log = config ? config.log : null,
-        timelineConverter = config ? config.timelineConverter : null,
-        metricsModel = config ? config.metricsModel : null,
-        metricsExt = config ? config.metricsExt : null,
-        manifestModel = config ? config.manifestModel : null,
-        manifestExt = config ? config.manifestExt : null,
-        adapter = config ? config.adapter : null,
-        videoModel = config ? config.videoModel : null;
+
 
     let instance = {
         initialize: initialize,
@@ -76,10 +68,22 @@ function PlaybackController(config) {
     };
 
     setup();
+    if (config){
+        setConfig.call(instance, config);
+    }
 
     return instance;
 
-    let currentTime,
+    let streamController,
+        log,
+        timelineConverter,
+        metricsModel,
+        metricsExt,
+        manifestModel,
+        manifestExt,
+        adapter,
+        videoModel,
+        currentTime,
         liveStartTime,
         wallclockTimeIntervalId,
         commonEarliestTime,
@@ -89,9 +93,17 @@ function PlaybackController(config) {
         liveDelayFragmentCount,
         useSuggestedPresentationDelay;
 
+    function setup() {
+        currentTime = 0;
+        liveStartTime = NaN;
+        wallclockTimeIntervalId = null;
+        commonEarliestTime = {};
+        firstAppended = {};
+        liveDelayFragmentCount = NaN;
+    }
+
     function initialize(streamInfoValue) {
         streamInfo = streamInfoValue;
-        commonEarliestTime = {};
         removeAllListeners();
         setupVideoModel();
         isDynamic = streamInfo.manifestInfo.isDynamic;
@@ -198,40 +210,16 @@ function PlaybackController(config) {
         EventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         EventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
+
         stopUpdatingWallclockTime();
         removeAllListeners();
         videoModel = null;
         streamInfo = null;
-        currentTime = 0;
-        liveStartTime = NaN;
-        commonEarliestTime = {};
-        firstAppended = {};
         isDynamic = undefined;
         useSuggestedPresentationDelay = undefined;
-        liveDelayFragmentCount = NaN;
+        setup();
     }
 
-    function setup() {
-        currentTime = 0;
-        liveStartTime = NaN;
-        wallclockTimeIntervalId = null;
-        commonEarliestTime = {};
-        firstAppended = {};
-        liveDelayFragmentCount = NaN;
-
-        onCanPlay = onCanPlay.bind(instance);
-        onPlaybackStart = onPlaybackStart.bind(instance);
-        onPlaybackPlaying = onPlaybackPlaying.bind(instance);
-        onPlaybackPaused = onPlaybackPaused.bind(instance);
-        onPlaybackError = onPlaybackError.bind(instance);
-        onPlaybackSeeking = onPlaybackSeeking.bind(instance);
-        onPlaybackSeeked = onPlaybackSeeked.bind(instance);
-        onPlaybackTimeUpdated = onPlaybackTimeUpdated.bind(instance);
-        onPlaybackProgress = onPlaybackProgress.bind(instance);
-        onPlaybackRateChanged = onPlaybackRateChanged.bind(instance);
-        onPlaybackMetaDataLoaded = onPlaybackMetaDataLoaded.bind(instance);
-        onPlaybackEnded = onPlaybackEnded.bind(instance);
-    }
 
     function setConfig(config) {
         if (!config) return;

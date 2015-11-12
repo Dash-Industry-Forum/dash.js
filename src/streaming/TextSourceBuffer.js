@@ -31,6 +31,7 @@
 
 import DashAdapter from "../dash/DashAdapter.js";
 import MediaPlayer from './MediaPlayer.js';
+import StreamController from './controllers/StreamController.js';
 import TextTrackInfo from './vo/TextTrackInfo.js';
 import FragmentExtensions from '../dash/extensions/FragmentExtensions.js';
 import BoxParser from './utils/BoxParser.js';
@@ -97,7 +98,7 @@ let TextSourceBuffer = function () {
         log: undefined,
 
         initialize: function (type, bufferController) {
-            let streamProcessor = bufferController.streamProcessor;
+            let streamProcessor = bufferController.getStreamProcessor();
             mediaInfos = streamProcessor.getMediaInfoArr();
             videoModel = VideoModel.getInstance();
             streamController = StreamController.getInstance()

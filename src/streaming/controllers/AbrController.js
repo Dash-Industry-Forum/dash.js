@@ -28,11 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import ABRRulesCollection from '../rules/ABRRules/ABRRulesCollection';
+
 import SwitchRequest from '../rules/SwitchRequest';
 import BitrateInfo from '../vo/BitrateInfo.js';
-import FragmentLoader from '../FragmentLoader.js';
-import ScheduleController from './ScheduleController.js';
+import ABRRulesCollection from '../rules/ABRRules/ABRRulesCollection.js';
 import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -45,15 +44,9 @@ factory.BANDWIDTH_SAFETY = 0.9;
 export default factory;
 
 function AbrController(config) {
-    "use strict";
 
     const ABANDON_TIMEOUT = 10000;
     const ALLOW_LOAD = "allowload";
-
-    let log = config ? config.log : null,
-        abrRulesCollection = config ? config.abrRulesCollection : null,
-        rulesController = config ? config.rulesController : null,
-        streamController = config ? config.streamController : null;
 
     let instance = {
         isPlayingAtTopQuality   :isPlayingAtTopQuality,
@@ -81,10 +74,17 @@ function AbrController(config) {
     };
 
     setup();
+    if (config){
+        setConfig.call(instance, config);
+    }
 
     return instance;
 
-    let autoSwitchBitrate,
+    let log,
+        abrRulesCollection,
+        rulesController,
+        streamController,
+        autoSwitchBitrate,
         topQualities,
         qualityDict,
         confidenceDict,
@@ -92,10 +92,10 @@ function AbrController(config) {
         averageThroughputDict,
         streamProcessorDict,
         abandonmentStateDict,
-        abandonmentTimeout
+        abandonmentTimeout;
 
-    function setup() {
-        autoSwitchBitrate = true,
+   function setup() {
+        autoSwitchBitrate = true
         topQualities = {};
         qualityDict = {};
         confidenceDict = {};
@@ -109,97 +109,23 @@ function AbrController(config) {
         streamProcessorDict[type] = streamProcessor;
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
         abandonmentStateDict[type].state = ALLOW_LOAD;
-        EventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
+        //EventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
     }
 
-    function getQualityFor(type, streamInfo) {
-        var id = streamInfo.id,
-            quality;
+    function setConfig(config){
+        if (!config) return;
 
-        qualityDict[id] = qualityDict[id] || {};
-
-        if (!qualityDict[id].hasOwnProperty(type)) {
-            qualityDict[id][type] = 0;
+        if (config.log){
+            log = config.log;
         }
-
-        quality = qualityDict[id][type];
-        return quality;
-    }
-
-    function setInternalQuality(type, id, value) {
-        qualityDict[id] = qualityDict[id] || {};
-        qualityDict[id][type] = value;
-    }
-
-    function  getConfidenceFor(type, id) {
-        var confidence;
-
-        confidenceDict[id] = confidenceDict[id] || {};
-
-        if (!confidenceDict[id].hasOwnProperty(type)) {
-            confidenceDict[id][type] = 0;
+        if (config.abrRulesCollection){
+            abrRulesCollection = config.abrRulesCollection;
         }
-
-        confidence = confidenceDict[id][type];
-
-        return confidence;
-    }
-
-    function setConfidenceFor(type, id, value) {
-        confidenceDict[id] = confidenceDict[id] || {};
-        confidenceDict[id][type] = value;
-    }
-
-    function setTopQualityIndex(type, id, value) {
-        topQualities[id] = topQualities[id] || {};
-        topQualities[id][type] = value;
-    }
-
-    function checkMaxBitrate(idx, type){
-        var maxBitrate = getMaxAllowedBitrateFor(type);
-        if (isNaN(maxBitrate)) {
-            return idx;
+        if (config.rulesController){
+            rulesController = config.rulesController;
         }
-        var maxIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
-        return Math.min (idx , maxIdx);
-    }
-
-    function onFragmentLoadProgress(e) {
-
-        if (autoSwitchBitrate) { //check to see if there are parallel request or just one at a time.
-
-            var type = e.request.mediaType,
-                rules = abrRulesCollection.getRules(abrRulesCollection.ABANDON_FRAGMENT_RULES),
-                scheduleController = streamProcessorDict[type].getScheduleController(),
-                fragmentModel = scheduleController.getFragmentModel(),
-                callback = function (switchRequest) {
-
-                    function setupTimeout(type){
-                        abandonmentTimeout = setTimeout(function () {
-                            setAbandonmentStateFor(type, ALLOW_LOAD);
-                        }, ABANDON_TIMEOUT);
-                    }
-
-                    if (switchRequest.confidence === SwitchRequest.STRONG) {
-
-                        var requests = fragmentModel.getRequests({state:FragmentModel.states.LOADING, }),
-                            newQuality = switchRequest.value,
-                            currentQuality = getQualityFor(type, streamController.getActiveStreamInfo());
-
-                        if (newQuality < currentQuality){
-
-                            fragmentModel.abortRequests();
-                            setAbandonmentStateFor(type, AbrController.ABANDON_LOAD);
-                            setPlaybackQuality(type, streamController.getActiveStreamInfo() , newQuality);
-                            scheduleController.replaceCanceledRequests(requests);
-                            setupTimeout(type);
-                        }
-                    }
-                };
-
-            rulesController.applyRules(rules, streamProcessorDict[type], callback, e, function(currentValue, newValue) {
-                return newValue;
-            });
+        if (config.streamController){
+            streamController = config.streamController;
         }
     }
 
@@ -412,32 +338,101 @@ function AbrController(config) {
     }
 
     function reset () {
-        EventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
-        autoSwitchBitrate = true;
-        topQualities = {};
-        qualityDict = {};
-        confidenceDict = {};
-        streamProcessorDict = {};
-        abandonmentStateDict = {};
-        averageThroughputDict = {};
+        //Uncomment when needed again.
+        //EventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         clearTimeout(abandonmentTimeout);
         abandonmentTimeout = null;
+        setup();
     }
 
-    function setConfig(config){
-        if (!config) return;
+    function getQualityFor(type, streamInfo) {
+        var id = streamInfo.id,
+            quality;
 
-        if (config.log){
-            log = config.log;
+        qualityDict[id] = qualityDict[id] || {};
+
+        if (!qualityDict[id].hasOwnProperty(type)) {
+            qualityDict[id][type] = 0;
         }
-        if (config.abrRulesCollection){
-            abrRulesCollection = config.abrRulesCollection;
+
+        quality = qualityDict[id][type];
+        return quality;
+    }
+
+    function setInternalQuality(type, id, value) {
+        qualityDict[id] = qualityDict[id] || {};
+        qualityDict[id][type] = value;
+    }
+
+    function  getConfidenceFor(type, id) {
+        var confidence;
+
+        confidenceDict[id] = confidenceDict[id] || {};
+
+        if (!confidenceDict[id].hasOwnProperty(type)) {
+            confidenceDict[id][type] = 0;
         }
-        if (config.rulesController){
-            rulesController = config.rulesController;
+
+        confidence = confidenceDict[id][type];
+
+        return confidence;
+    }
+
+    function setConfidenceFor(type, id, value) {
+        confidenceDict[id] = confidenceDict[id] || {};
+        confidenceDict[id][type] = value;
+    }
+
+    function setTopQualityIndex(type, id, value) {
+        topQualities[id] = topQualities[id] || {};
+        topQualities[id][type] = value;
+    }
+
+    function checkMaxBitrate(idx, type){
+        var maxBitrate = getMaxAllowedBitrateFor(type);
+        if (isNaN(maxBitrate)) {
+            return idx;
         }
-        if (config.streamController){
-            streamController = config.streamController;
+        var maxIdx = getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
+        return Math.min (idx , maxIdx);
+    }
+
+    function onFragmentLoadProgress(e) {
+
+        if (autoSwitchBitrate) { //check to see if there are parallel request or just one at a time.
+
+            var type = e.request.mediaType,
+                rules = abrRulesCollection.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES),
+                scheduleController = streamProcessorDict[type].getScheduleController(),
+                fragmentModel = scheduleController.getFragmentModel(),
+                callback = function (switchRequest) {
+
+                    function setupTimeout(type){
+                        abandonmentTimeout = setTimeout(function () {
+                            setAbandonmentStateFor(type, ALLOW_LOAD);
+                        }, ABANDON_TIMEOUT);
+                    }
+
+                    if (switchRequest.confidence === SwitchRequest.STRONG) {
+
+                        var requests = fragmentModel.getRequests({state:FragmentModel.states.LOADING, }),
+                            newQuality = switchRequest.value,
+                            currentQuality = getQualityFor(type, streamController.getActiveStreamInfo());
+
+                        if (newQuality < currentQuality){
+
+                            fragmentModel.abortRequests();
+                            setAbandonmentStateFor(type, AbrController.ABANDON_LOAD);
+                            setPlaybackQuality(type, streamController.getActiveStreamInfo() , newQuality);
+                            scheduleController.replaceCanceledRequests(requests);
+                            setupTimeout(type);
+                        }
+                    }
+                };
+
+            rulesController.applyRules(rules, streamProcessorDict[type], callback, e, function(currentValue, newValue) {
+                return newValue;
+            });
         }
     }
 };

@@ -45,6 +45,9 @@ function TTMLParser(config) {
     };
 
     setup();
+    if (config) {
+        setConfig.call(instance, config);
+    }
 
     return instance;
 

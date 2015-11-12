@@ -34,17 +34,20 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(FragmentExtensions);
 
 function FragmentExtensions(config) {
-    "use strict";
-
-    let boxParser = config.parser;
 
     let instance = {
         getSamplesInfo: getSamplesInfo,
         getMediaTimescaleFromMoov: getMediaTimescaleFromMoov,
-        setParser: setConfig
+        setConfig: setConfig
     };
 
+    if (config){
+        setConfig.call(instance, config);
+    }
+
     return instance;
+
+    let boxParser;
 
     function setConfig(config) {
         if (config) return;

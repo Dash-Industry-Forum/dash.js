@@ -34,9 +34,9 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(VideoModel);
 
 function VideoModel() {
-    "use strict";
 
     let instance = {
+        initialize:initialize,
         play: play,
         pause: pause,
         isPaused: isPaused,
@@ -56,8 +56,6 @@ function VideoModel() {
         setSource: setSource
     };
 
-    setup();
-
     return instance;
 
     let element,
@@ -65,7 +63,7 @@ function VideoModel() {
         videoContainer,
         stalledStreams;
 
-    function setup() {
+    function initialize() {
         stalledStreams = [];
     }
 

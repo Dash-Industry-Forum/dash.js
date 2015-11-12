@@ -35,23 +35,27 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(URIQueryAndFragmentModel);
 
 function URIQueryAndFragmentModel(/*config*/) {
-    "use strict";
 
     let instance = {
+        initialize: initialize,
         parseURI: parseURI,
         getURIFragmentData: getURIFragmentData,
         getURIQueryData: getURIQueryData,
-        isManifestHTTPS: isManifestHTTPS,
-        reset: reset
+        isManifestHTTPS: isManifestHTTPS
     };
 
-    setup();
-
     return instance;
+
 
     let URIFragmentDataVO,
         URIQueryData,
         isHTTPS;
+
+    function initialize() {
+        URIFragmentDataVO = new URIFragmentData();
+        URIQueryData = [];
+        isHTTPS = false;
+    }
 
     function getURIFragmentData(){
         return URIFragmentDataVO;
@@ -63,18 +67,6 @@ function URIQueryAndFragmentModel(/*config*/) {
 
     function isManifestHTTPS(){
         return isHTTPS;
-    }
-
-    function reset() {
-        URIFragmentDataVO = new URIFragmentData();
-        URIQueryData = [];
-        isHTTPS = false;
-    }
-
-    function setup() {
-        URIFragmentDataVO = new URIFragmentData();
-        URIQueryData = [];
-        isHTTPS = false;
     }
 
     function parseURI(uri) {

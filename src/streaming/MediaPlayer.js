@@ -132,7 +132,7 @@ let MediaPlayer = function (context) {
             this.debug.log("Playback initiated!");
 
             if(!streamController){
-                createController.call(this);
+                createControllers.call(this);
             }
 
             playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
@@ -303,15 +303,24 @@ let MediaPlayer = function (context) {
             }
         },
 
-        createController = function(){
-            var synchronizationRulesCollection = SynchronizationRulesCollection.getInstance({system: system});
+        createControllers = function() {
 
+            let synchronizationRulesCollection = SynchronizationRulesCollection.getInstance({system: system});
             synchronizationRulesCollection.initialize();
 
+            let abrRulesCollection = ABRRulesCollection.getInstance({system:system, playbackController: playbackController});
+            abrRulesCollection.initialize();
+
+            let scheduleRulesCollection = ScheduleRulesCollection.getInstance({system: system});
+            scheduleRulesCollection.initialize();
+
+            playbackController = PlaybackController.getInstance();
+
             rulesController = RulesController.getInstance();
+            rulesController.initialize();
             rulesController.setConfig({
-                abrRulesCollection: ABRRulesCollection.getInstance({system:system, playbackController: playbackController}),
-                scheduleRulesCollection: ScheduleRulesCollection.getInstance({system: system}),
+                abrRulesCollection:abrRulesCollection,
+                scheduleRulesCollection:scheduleRulesCollection,
                 synchronizationRulesCollection: synchronizationRulesCollection
             });
 
@@ -338,10 +347,10 @@ let MediaPlayer = function (context) {
 
             abrController = AbrController.getInstance();
             abrController.setConfig({
-                abrRulesCollection:ABRRulesCollection.getInstance({system:system, playbackController: playbackController}),
+                abrRulesCollection:abrRulesCollection,
                 rulesController: rulesController,
                 streamController:streamController,
-                log:system.getObject("log")
+                log:debug.log
             });
         };
 
@@ -395,9 +404,7 @@ let MediaPlayer = function (context) {
             DOMStorage = system.getObject("DOMStorage");
             mediaController = system.getObject("mediaController");
 
-            playbackController = PlaybackController.getInstance();
-
-            createController.call(this);
+            createControllers.call(this);
 
             this.restoreDefaultUTCTimingSources();
             this.debug.log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
@@ -1196,7 +1203,7 @@ let MediaPlayer = function (context) {
          */
         displayCaptionsOnTop: function (value) {
             var textTrackExt = TextTrackExtensions.getInstance({videoModel:videoModel});
-
+            textTrackExt.initialize();
             textTrackExt.displayCConTop(value);
         },
 
@@ -1230,6 +1237,7 @@ let MediaPlayer = function (context) {
             videoModel = null;
             if (element) {
                 videoModel = VideoModel.getInstance();
+                videoModel.initialize()
                 videoModel.setElement(element);
                 // Workaround to force Firefox to fire the canplay event.
                 element.preload = "auto";
@@ -1275,7 +1283,7 @@ let MediaPlayer = function (context) {
 
             if (typeof urlOrManifest === "string") {
                 var uriQueryFragModel = URIQueryAndFragmentModel.getInstance();
-                uriQueryFragModel.reset();
+                uriQueryFragModel.initialize();
                 source = uriQueryFragModel.parseURI(urlOrManifest);
             } else {
                 source = urlOrManifest;

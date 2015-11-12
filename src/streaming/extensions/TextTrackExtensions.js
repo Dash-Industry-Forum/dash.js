@@ -35,31 +35,31 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(TextTrackExtensions);
 
 function TextTrackExtensions(config) {
-    "use strict";
-
-    //Injected Dependencies - if singleton also must have setter and should route through setter.
-    let videoModel = config ? config.videoModel : null;
 
     let instance = {
-            displayCConTop      :displayCConTop,
-            addTextTrack        :addTextTrack,
-            addCaptions         :addCaptions,
-            getTextTrack        :getTextTrack,
-            getCurrentTextTrack :getCurrentTextTrack,
-            getCurrentTrackIdx  :getCurrentTrackIdx,
-            setCurrentTrackIdx  :setCurrentTrackIdx,
-            deleteTrackCues     :deleteTrackCues,
-            deleteAllTextTracks :deleteAllTextTracks,
-            deleteTextTrack     :deleteTextTrack,
-            setConfig           :setConfig
+        initialize          :initialize,
+        displayCConTop      :displayCConTop,
+        addTextTrack        :addTextTrack,
+        addCaptions         :addCaptions,
+        getTextTrack        :getTextTrack,
+        getCurrentTextTrack :getCurrentTextTrack,
+        getCurrentTrackIdx  :getCurrentTrackIdx,
+        setCurrentTrackIdx  :setCurrentTrackIdx,
+        deleteTrackCues     :deleteTrackCues,
+        deleteAllTextTracks :deleteAllTextTracks,
+        deleteTextTrack     :deleteTextTrack,
+        setConfig           :setConfig
+    };
 
-        };
+    if (config) {
+        setConfig.call(instance, config);
+    }
 
-    setup();
     return instance;
 
 
     let Cue,
+        videoModel,
         video,
         textTrackQueue,
         trackElementArr,
@@ -76,7 +76,7 @@ function TextTrackExtensions(config) {
         displayCCOnTop,
         topZIndex;
 
-    function setup () {
+    function initialize () {
         Cue = window.VTTCue || window.TextTrackCue;
         textTrackQueue = [];
         trackElementArr = [];

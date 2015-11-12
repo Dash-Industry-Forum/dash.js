@@ -33,31 +33,32 @@ import BufferOccupancyRule from './BufferOccupancyRule.js'
 import InsufficientBufferRule from './InsufficientBufferRule.js'
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-export default FactoryMaker.getSingletonFactory(ABRRulesCollection);
+let factory =  FactoryMaker.getSingletonFactory(ABRRulesCollection);
+
+const QUALITY_SWITCH_RULES = "qualitySwitchRules";
+const ABANDON_FRAGMENT_RULES = "abandonFragmentRules";
+
+factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
+factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
+
+export default factory;
 
 function ABRRulesCollection(config) {
-    "use strict";
-
-    const QUALITY_SWITCH_RULES = "qualitySwitchRules";
-    const ABANDON_FRAGMENT_RULES = "abandonFragmentRules";
 
     //TODO Temp until dijon is removed no setConfig due to being temp.
     let system = config.system;
 
     let instance = {
-        QUALITY_SWITCH_RULES    :QUALITY_SWITCH_RULES,
-        ABANDON_FRAGMENT_RULES  :ABANDON_FRAGMENT_RULES,
-        getRules                :getRules
+        initialize:initialize,
+        getRules:getRules
     };
-
-    setup();
 
     return instance;
 
     let qualitySwitchRules,
         abandonFragmentRules;
 
-    function setup() {
+    function initialize() {
         qualitySwitchRules = [];
         abandonFragmentRules = [];
 
@@ -85,9 +86,9 @@ function ABRRulesCollection(config) {
 
     function getRules (type) {
         switch (type) {
-            case QUALITY_SWITCH_RULES:
+            case ABRRulesCollection.QUALITY_SWITCH_RULES:
                 return qualitySwitchRules;
-            case ABANDON_FRAGMENT_RULES:
+            case ABRRulesCollection.ABANDON_FRAGMENT_RULES:
                 return abandonFragmentRules;
             default:
                 return null;

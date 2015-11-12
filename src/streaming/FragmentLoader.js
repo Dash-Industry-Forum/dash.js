@@ -36,7 +36,7 @@ import FactoryMaker from '../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(FragmentLoader);
 
 function FragmentLoader(config) {
-    "use strict";
+
     const RETRY_ATTEMPTS = 3;
     const RETRY_INTERVAL = 3;
 
@@ -51,15 +51,9 @@ function FragmentLoader(config) {
         abort: abort
     };
 
-    setup();
-
     return instance;
 
     let xhrs;
-
-    function setup() {
-        xhrs = [];
-    }
 
     function doLoad(request, remainingAttempts) {
         var req = new XMLHttpRequest(),
@@ -118,6 +112,7 @@ function FragmentLoader(config) {
                     });
                 }
             };
+
 
         xhrs.push(req);
         request.requestStartDate = new Date();
@@ -233,7 +228,7 @@ function FragmentLoader(config) {
     }
 
     function load(req) {
-
+        xhrs = xhrs || [];
         if (!req) {
             EventBus.trigger(Events.LOADING_COMPLETED, {
                 request: req,

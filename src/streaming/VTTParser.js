@@ -33,9 +33,6 @@ import FactoryMaker from '../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(VTTParser);
 
 function VTTParser(config) {
-    "use strict";
-
-    let log = config ? config.log : null;
 
     let instance = {
         parse: parse,
@@ -43,10 +40,14 @@ function VTTParser(config) {
     };
 
     setup();
+    if (config) {
+        setConfig.call(instance, config);
+    }
 
     return instance;
 
-    let regExNewLine,
+    let log,
+        regExNewLine,
         regExToken,
         regExWhiteSpace,
         regExWhiteSpaceWordBoundry;
