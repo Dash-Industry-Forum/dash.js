@@ -34,80 +34,82 @@ import Stream from './Stream.js';
 import EventBus from './utils/EventBus.js';
 import Events from "./Events.js";
 import RulesController from './rules/RulesController.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
-let LiveEdgeFinder = function () {
+const LIVE_EDGE_NOT_FOUND_ERROR_CODE = 1;
 
+let factory = FactoryMaker.getSingletonFactory(LiveEdgeFinder);
+factory.LIVE_EDGE_NOT_FOUND_ERROR_CODE = LIVE_EDGE_NOT_FOUND_ERROR_CODE;
+
+export default factory;
+
+function LiveEdgeFinder() {
     "use strict";
 
-    var isSearchStarted = false,
-        searchStartTime = NaN,
-        rules,
-        liveEdge = null,
-        ruleSet = SynchronizationRulesCollection.BEST_GUESS_RULES,
-
-        onSearchCompleted = function(req) {
-            var searchTime = (new Date().getTime() - searchStartTime) / 1000;
-            liveEdge = req.value;
-            EventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime, error:liveEdge === null ? new Error(LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null});
-        },
-
-        onStreamInitialized = function(e) {
-            var self = this;
-
-            if (!self.streamProcessor.isDynamic() || isSearchStarted || e.error) {
-                return;
-            }
-
-            rules = SynchronizationRulesCollection.getInstance().getRules(ruleSet);
-            isSearchStarted = true;
-            searchStartTime = new Date().getTime();
-
-            RulesController.getInstance().applyRules(rules, self.streamProcessor, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
-                return newValue;
-            });
-        },
-
-        onTimeSyncComplete = function (e) {
-            if (e.error) {
-                ruleSet = SynchronizationRulesCollection.BEST_GUESS_RULES;
-            } else {
-                ruleSet = SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES;
-            }
-        };
-
-    return {
-        setup: function() {
-            EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
-        },
-
-        initialize: function(streamProcessor) {
-            this.streamProcessor = streamProcessor;
-            this.fragmentLoader = streamProcessor.fragmentLoader;
-            EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
-        },
-
-        abortSearch: function() {
-            isSearchStarted = false;
-            searchStartTime = NaN;
-        },
-
-        getLiveEdge: function(){
-            return liveEdge;
-        },
-
-        reset: function(){
-            EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
-            EventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
-            this.abortSearch();
-            liveEdge = null;
-        }
+    let instance = {
+        initialize:initialize,
+        abortSearch: abortSearch,
+        getLiveEdge: getLiveEdge,
+        reset: reset
     };
-};
 
-LiveEdgeFinder.prototype = {
-    constructor: LiveEdgeFinder
-};
+    return instance;
 
-LiveEdgeFinder.LIVE_EDGE_NOT_FOUND_ERROR_CODE = 1;
+    let isSearchStarted,
+        searchStartTime,
+        rules,
+        liveEdge,
+        timelineConverter,
+        ruleSet;
 
-export default LiveEdgeFinder;
+    function initialize(config) {
+        isSearchStarted = false;
+        searchStartTime = NaN;
+        liveEdge = null;
+        timelineConverter = config.timelineConverter;
+        ruleSet = SynchronizationRulesCollection.BEST_GUESS_RULES;
+
+        this.streamProcessor = config.streamProcessor;
+        this.fragmentLoader = config.fragmentLoader;
+        EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
+    }
+
+    function abortSearch() {
+        isSearchStarted = false;
+        searchStartTime = NaN;
+    }
+
+    function getLiveEdge(){
+        return liveEdge;
+    }
+
+    function reset(){
+        EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
+        abortSearch();
+        liveEdge = null;
+    }
+
+    function onSearchCompleted(req) {
+        var searchTime = (new Date().getTime() - searchStartTime) / 1000;
+        liveEdge = req.value;
+        EventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime, error:liveEdge === null ? new Error(LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null});
+    }
+
+    function onStreamInitialized(e) {
+        var self = this;
+
+        if (!self.streamProcessor.isDynamic() || isSearchStarted || e.error) {
+            return;
+        }
+
+        ruleSet = timelineConverter.isTimeSyncCompleted() ? SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES : SynchronizationRulesCollection.BEST_GUESS_RULES;
+
+        rules = SynchronizationRulesCollection.getInstance().getRules(ruleSet);
+        isSearchStarted = true;
+        searchStartTime = new Date().getTime();
+
+        RulesController.getInstance().applyRules(rules, self.streamProcessor, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
+            return newValue;
+        });
+    }
+}

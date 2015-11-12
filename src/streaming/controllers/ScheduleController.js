@@ -41,7 +41,7 @@ import AbrController from './AbrController.js';
 import BufferController from './BufferController.js';
 import TextController from './TextController.js';
 //import Stream from '../Stream.js';
-//import LiveEdgeFinder from '../LiveEdgeFinder.js';
+import LiveEdgeFinder from '../LiveEdgeFinder.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -122,7 +122,7 @@ function ScheduleController(config) {
         type = Type;
         streamProcessor = StreamProcessor;
         fragmentController = streamProcessor.fragmentController;
-        liveEdgeFinder = streamProcessor.liveEdgeFinder;
+        liveEdgeFinder = LiveEdgeFinder.getInstance();
         bufferController = streamProcessor.bufferController;
         isDynamic = streamProcessor.isDynamic();
         fragmentModel = fragmentController.getModel(this);
@@ -288,7 +288,7 @@ function ScheduleController(config) {
         if (e.error) return;
 
         currentRepresentationInfo = streamProcessor.getCurrentRepresentationInfo();
-        
+
         if (!isDynamic || liveEdgeFinder.getLiveEdge() !== null) {
             ready = true;
         }

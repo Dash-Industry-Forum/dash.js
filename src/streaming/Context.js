@@ -66,8 +66,6 @@ import VideoModelExtensions from './extensions/VideoModelExtensions.js';
 import ProtectionExtensions from './extensions/ProtectionExtensions.js';
 import ProtectionController from './controllers/ProtectionController.js';
 
-import LiveEdgeFinder from './LiveEdgeFinder.js';
-
 import MetricsList from './vo/MetricsList.js';
 
 import XlinkController from './controllers/XlinkController.js';
@@ -161,8 +159,6 @@ let Context = function () {
             this.system.mapClass('protectionController', ProtectionController);
 
             mapProtectionModel.call(this); // Determines EME API support and version
-
-            this.system.mapSingleton('liveEdgeFinder', LiveEdgeFinder);
 
             this.system.mapClass('metrics', MetricsList);
 

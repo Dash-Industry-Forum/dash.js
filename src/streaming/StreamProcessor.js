@@ -74,7 +74,6 @@ let StreamProcessor = function () {
     return {
         system : undefined,
         indexHandler: undefined,
-        liveEdgeFinder: undefined,
         timelineConverter: undefined,
         adapter: undefined,
         manifestModel: undefined,

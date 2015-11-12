@@ -39,6 +39,7 @@ import UTCTiming from '../dash/vo/UTCTiming.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
 import ManifestLoader from './ManifestLoader.js';
+import LiveEdgeFinder from './LiveEdgeFinder.js';
 import Events from './Events.js';
 import PublicEvents from './PublicEvents.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
@@ -327,13 +328,13 @@ let MediaPlayer = function (context) {
                 metricsModel : metricsModel,
                 metricsExt : metricsExt,
                 videoExt : system.getObject("videoExt"),
-                liveEdgeFinder : system.getObject("liveEdgeFinder"),
+                liveEdgeFinder : LiveEdgeFinder.getInstance(),
                 mediaSourceExt : system.getObject("mediaSourceExt"),
                 timeSyncController : system.getObject("timeSyncController"),
                 virtualBuffer : system.getObject("virtualBuffer"),
                 errHandler : this.errHandler,
                 timelineConverter : system.getObject("timelineConverter")
-            })
+            });
 
             abrController = AbrController.getInstance();
             abrController.setConfig({

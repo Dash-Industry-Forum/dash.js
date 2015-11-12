@@ -51,6 +51,7 @@ let Stream = function () {
         isUpdating = false,
         isInitialized = false,
         protectionController,
+        liveEdgeFinder = LiveEdgeFinder.getInstance(),
         playbackController = PlaybackController.getInstance(),
         boundProtectionErrorHandler,
 
@@ -214,7 +215,7 @@ let Stream = function () {
                 self.errHandler.manifestError(msg, "nostreams", manifest);
                 self.log(msg);
             } else {
-                self.liveEdgeFinder.initialize(streamProcessors[0]);
+                liveEdgeFinder.initialize({timelineConverter: self.system.getObject("timelineConverter"), streamProcessor: streamProcessors[0]});
                 //self.log("Playback initialized!");
                 checkIfInitializationCompleted.call(this);
             }
@@ -354,8 +355,6 @@ let Stream = function () {
         capabilities: undefined,
         log: undefined,
         errHandler: undefined,
-        liveEdgeFinder: undefined,
-
 
         setup: function () {
             EventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
@@ -419,7 +418,7 @@ let Stream = function () {
                 this.fragmentController.reset();
             }
             this.fragmentController = undefined;
-            this.liveEdgeFinder.abortSearch();
+            liveEdgeFinder.abortSearch();
 
             EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             EventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
