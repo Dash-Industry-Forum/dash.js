@@ -69,8 +69,6 @@ import ProtectionController from './controllers/ProtectionController.js';
 import LiveEdgeFinder from './LiveEdgeFinder.js';
 
 import MetricsList from './vo/MetricsList.js';
-import InsufficientBufferRule from './rules/ABRRules/InsufficientBufferRule.js';
-import AbandonRequestsRule from './rules/ABRRules/AbandonRequestsRule.js';
 
 import XlinkController from './controllers/XlinkController.js';
 import XlinkLoader from './XlinkLoader.js';
@@ -167,9 +165,6 @@ let Context = function () {
             this.system.mapSingleton('liveEdgeFinder', LiveEdgeFinder);
 
             this.system.mapClass('metrics', MetricsList);
-
-            this.system.mapClass('insufficientBufferRule', InsufficientBufferRule);
-            this.system.mapClass('abandonRequestRule', AbandonRequestsRule);
 
             this.system.mapClass('xlinkController', XlinkController);
             this.system.mapClass('xlinkLoader', XlinkLoader);

@@ -30,112 +30,116 @@
  */
 import SwitchRequest from '../SwitchRequest.js';
 import AbrController from '../../controllers/AbrController.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
-let AbandonRequestsRule = function () {
+export default FactoryMaker.getClassFactory(AbandonRequestsRule);
+
+function AbandonRequestsRule(config) {
     "use strict";
 
-    var GRACE_TIME_THRESHOLD = 500,
-        ABANDON_MULTIPLIER = 1.5,
-        fragmentDict = {},
-        abandonDict = {},
+    const GRACE_TIME_THRESHOLD = 500;
+    const ABANDON_MULTIPLIER = 1.5;
 
-        setFragmentRequestDict = function (type, id) {
-            fragmentDict[type] = fragmentDict[type] || {};
-            fragmentDict[type][id] = fragmentDict[type][id] || {};
-        };
+    let log = config.log;
 
-        //getAggragateBandwidth = function(mediaType, concurrentCount){
-        //    var tbl = 0,
-        //        tet = 0;
-        //    for (var key in fragmentDict[mediaType]) {
-        //        var obj = fragmentDict[mediaType][key];
-        //        if (obj.bytesLoaded < obj.bytesTotal && obj.elapsedTime >= GRACE_TIME_THRESHOLD) { //check if obj is complete or not
-        //            tbl += obj.bytesLoaded;
-        //            tet += obj.elapsedTime;
-        //        }else{
-        //            delete fragmentDict[mediaType][key];//delete entries that are complete.
-        //        }
-        //    }
-        //    var measuredBandwidthInKbps = Math.round((tbl*8/tet) * concurrentCount);
-        //    return measuredBandwidthInKbps;
-        //};
+    let instance = {
+        execute: execute,
+        reset: reset
+    };
 
-    return {
-        metricsExt: undefined,
-        log:undefined,
+    setup();
 
-        execute: function(context, callback) {
+    return instance;
 
-            var now = new Date().getTime(),
-                mediaInfo = context.getMediaInfo(),
-                mediaType = mediaInfo.type,
-                progressEvent = context.getCurrentValue(),
-                representationInfo = context.getTrackInfo(),
-                req = progressEvent.data.request,
-                abrController = context.getStreamProcessor().getABRController(),
-                fragmentInfo,
-                switchRequest = SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+    let fragmentDict,
+        abandonDict;
 
-            if (!isNaN(req.index)) {
-                setFragmentRequestDict(mediaType, req.index);
-                fragmentInfo = fragmentDict[mediaType][req.index];
+    function setup() {
+        fragmentDict = {};
+        abandonDict = {};
+    }
 
-                if (fragmentInfo === null || req.firstByteDate === null || abandonDict.hasOwnProperty(fragmentInfo.id)) {
-                    callback(switchRequest);
-                    return;
-                }
+    function setFragmentRequestDict(type, id) {
+        fragmentDict[type] = fragmentDict[type] || {};
+        fragmentDict[type][id] = fragmentDict[type][id] || {};
+    }
 
-                //setup some init info based on first progress event
-                if (fragmentInfo.firstByteTime === undefined) {
-                    fragmentInfo.firstByteTime = req.firstByteDate.getTime();
-                    fragmentInfo.segmentDuration = req.duration;
-                    fragmentInfo.bytesTotal = req.bytesTotal;
-                    fragmentInfo.id = req.index;
-                   //this.log("XXX FRAG ID : " ,fragmentInfo.id, " *****************");
-                }
-                //update info base on subsequent progress events until completed.
-                fragmentInfo.bytesLoaded = req.bytesLoaded;
-                fragmentInfo.elapsedTime = now - fragmentInfo.firstByteTime;
+    //function getAggragateBandwidth(mediaType, concurrentCount){
+    //    var tbl = 0,
+    //        tet = 0;
+    //    for (var key in fragmentDict[mediaType]) {
+    //        var obj = fragmentDict[mediaType][key];
+    //        if (obj.bytesLoaded < obj.bytesTotal && obj.elapsedTime >= GRACE_TIME_THRESHOLD) { //check if obj is complete or not
+    //            tbl += obj.bytesLoaded;
+    //            tet += obj.elapsedTime;
+    //        }else{
+    //            delete fragmentDict[mediaType][key];//delete entries that are complete.
+    //        }
+    //    }
+    //    var measuredBandwidthInKbps = Math.round((tbl*8/tet) * concurrentCount);
+    //    return measuredBandwidthInKbps;
+    //}
 
-                if (fragmentInfo.bytesLoaded < fragmentInfo.bytesTotal &&
-                    fragmentInfo.elapsedTime >= GRACE_TIME_THRESHOLD) {
+    function execute(context, callback) {
+        var now = new Date().getTime(),
+            mediaInfo = context.getMediaInfo(),
+            mediaType = mediaInfo.type,
+            progressEvent = context.getCurrentValue(),
+            representationInfo = context.getTrackInfo(),
+            req = progressEvent.data.request,
+            abrController = context.getStreamProcessor().getABRController(),
+            fragmentInfo,
+            switchRequest = SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
-                    fragmentInfo.measuredBandwidthInKbps = Math.round(fragmentInfo.bytesLoaded*8/fragmentInfo.elapsedTime);
-                    //fragmentInfo.measuredBandwidthInKbps = (concurrentCount > 1) ? getAggragateBandwidth.call(this, mediaType, concurrentCount) :  Math.round(fragmentInfo.bytesLoaded*8/fragmentInfo.elapsedTime);
-                    fragmentInfo.estimatedTimeOfDownload = (fragmentInfo.bytesTotal*8*0.001/fragmentInfo.measuredBandwidthInKbps).toFixed(2);
-                    //this.log("XXX","id: ",fragmentInfo.id,  "kbps: ", fragmentInfo.measuredBandwidthInKbps, "etd: ",fragmentInfo.estimatedTimeOfDownload, "et: ", fragmentInfo.elapsedTime/1000);
+        if (!isNaN(req.index)) {
+            setFragmentRequestDict(mediaType, req.index);
+            fragmentInfo = fragmentDict[mediaType][req.index];
 
-                    if (fragmentInfo.estimatedTimeOfDownload < (fragmentInfo.segmentDuration * ABANDON_MULTIPLIER) || representationInfo.quality === 0) {
-                        callback(switchRequest);
-                        return;
-                    }else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
-                        var newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * AbrController.BANDWIDTH_SAFETY);
-                        switchRequest = SwitchRequest.create(newQuality, SwitchRequest.STRONG);
-                        abandonDict[fragmentInfo.id] = fragmentInfo;
-                        this.log("AbandonRequestsRule ( ", mediaType, "frag id",fragmentInfo.id,") is asking to abandon and switch to quality to ", newQuality, " measured bandwidth was", fragmentInfo.measuredBandwidthInKbps);
-                        delete fragmentDict[mediaType][fragmentInfo.id];
-                    }
-                }else if (fragmentInfo.bytesLoaded === fragmentInfo.bytesTotal) {
-                    delete fragmentDict[mediaType][fragmentInfo.id];
-                }
+            if (fragmentInfo === null || req.firstByteDate === null || abandonDict.hasOwnProperty(fragmentInfo.id)) {
+                callback(switchRequest);
+                return;
             }
 
-            callback(switchRequest);
-        },
+            //setup some init info based on first progress event
+            if (fragmentInfo.firstByteTime === undefined) {
+                fragmentInfo.firstByteTime = req.firstByteDate.getTime();
+                fragmentInfo.segmentDuration = req.duration;
+                fragmentInfo.bytesTotal = req.bytesTotal;
+                fragmentInfo.id = req.index;
+                //log("XXX FRAG ID : " ,fragmentInfo.id, " *****************");
+            }
+            //update info base on subsequent progress events until completed.
+            fragmentInfo.bytesLoaded = req.bytesLoaded;
+            fragmentInfo.elapsedTime = now - fragmentInfo.firstByteTime;
 
-        reset: function() {
-            fragmentDict = {};
-            abandonDict = {};
+            if (fragmentInfo.bytesLoaded < fragmentInfo.bytesTotal &&
+                fragmentInfo.elapsedTime >= GRACE_TIME_THRESHOLD) {
+
+                fragmentInfo.measuredBandwidthInKbps = Math.round(fragmentInfo.bytesLoaded*8/fragmentInfo.elapsedTime);
+                //fragmentInfo.measuredBandwidthInKbps = (concurrentCount > 1) ? getAggragateBandwidth(mediaType, concurrentCount) :  Math.round(fragmentInfo.bytesLoaded*8/fragmentInfo.elapsedTime);
+                fragmentInfo.estimatedTimeOfDownload = (fragmentInfo.bytesTotal*8*0.001/fragmentInfo.measuredBandwidthInKbps).toFixed(2);
+                //log("XXX","id: ",fragmentInfo.id,  "kbps: ", fragmentInfo.measuredBandwidthInKbps, "etd: ",fragmentInfo.estimatedTimeOfDownload, "et: ", fragmentInfo.elapsedTime/1000);
+
+                if (fragmentInfo.estimatedTimeOfDownload < (fragmentInfo.segmentDuration * ABANDON_MULTIPLIER) || representationInfo.quality === 0) {
+                    callback(switchRequest);
+                    return;
+                }else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
+                    var newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * AbrController.BANDWIDTH_SAFETY);
+                    switchRequest = SwitchRequest.create(newQuality, SwitchRequest.STRONG);
+                    abandonDict[fragmentInfo.id] = fragmentInfo;
+                    log("AbandonRequestsRule ( ", mediaType, "frag id",fragmentInfo.id,") is asking to abandon and switch to quality to ", newQuality, " measured bandwidth was", fragmentInfo.measuredBandwidthInKbps);
+                    delete fragmentDict[mediaType][fragmentInfo.id];
+                }
+            }else if (fragmentInfo.bytesLoaded === fragmentInfo.bytesTotal) {
+                delete fragmentDict[mediaType][fragmentInfo.id];
+            }
         }
-    };
-};
 
-AbandonRequestsRule.prototype = {
-    constructor: AbandonRequestsRule
-};
+        callback(switchRequest);
+    }
 
-export default AbandonRequestsRule;
-
-
-
-
+    function reset() {
+        fragmentDict = {};
+        abandonDict = {};
+    }
+}
