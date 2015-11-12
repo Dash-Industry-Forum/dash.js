@@ -233,9 +233,7 @@ MediaPlayer.dependencies.MediaController = function () {
          */
         addTrack: function(track) {
             var mediaType = track ? track.type : null,
-                streamId = track? track.streamInfo.id : null,
-                initSettings = this.getInitialSettings(mediaType);
-
+                streamId = track? track.streamInfo.id : null;
             if (!track || (!this.isMultiTrackSupportedByType(mediaType))) return false;
 
             tracks[streamId] = tracks[streamId] || createTrackInfo.call(this);
@@ -244,9 +242,13 @@ MediaPlayer.dependencies.MediaController = function () {
 
             tracks[streamId][mediaType].list.push(track);
 
+            /*
+
+            var  initSettings = this.getInitialSettings(mediaType);
+
             if (initSettings && (matchSettings.call(this, initSettings, track)) && !this.getCurrentTrackFor(mediaType, track.streamInfo)) {
                 this.setTrack(track);
-            }
+                }*/
 
             return true;
         },
@@ -416,7 +418,13 @@ MediaPlayer.dependencies.MediaController = function () {
          * @memberof MediaController#
          */
         isTracksEqual: function(t1, t2) {
-            return t1.index === t2.index;
+            var sameId = t1.id === t2.id,
+                sameViewpoint = t1.viewpoint === t2.viewpoint,
+                sameLang = t1.lang === t2.lang,
+                sameRoles = t1.roles.toString() == t2.roles.toString(),
+                sameAccessibility = t1.accessibility.toString() == t2.accessibility.toString(),
+                sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() == t2.audioChannelConfiguration.toString();
+            return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
         },
 
         /**
