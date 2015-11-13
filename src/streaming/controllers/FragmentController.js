@@ -28,124 +28,125 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FragmentModel from '../models/FragmentModel.js';
-import FragmentRequest from '../vo/FragmentRequest.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
-import SourceBufferExtensions from '../extensions/SourceBufferExtensions.js';
 import DataChunk from '../vo/DataChunk.js';
-import BufferController from './BufferController.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-let FragmentController = function () {
-    "use strict";
+export default FactoryMaker.getClassFactory(FragmentController);
 
-    var fragmentModels = [],
+function FragmentController(config) {
 
-        findModel = function(context) {
-            var ln = fragmentModels.length;
-            // We expect one-to-one relation between FragmentModel and context,
-            // so just compare the given context object with the one that stored in the model to find the model for it
-            for (var i = 0; i < ln; i++) {
-                if (fragmentModels[i].getContext() == context) {
-                    return fragmentModels[i];
-                }
-            }
+    let system = config.system,
+        log = config.log;
 
-            return null;
-        },
-
-        createDataChunk = function(bytes, request, streamId) {
-            var chunk = new DataChunk();
-
-            chunk.streamId = streamId;
-            chunk.mediaInfo = request.mediaInfo;
-            chunk.segmentType = request.type;
-            chunk.start = request.startTime;
-            chunk.duration = request.duration;
-            chunk.end = chunk.start + chunk.duration;
-            chunk.bytes = bytes;
-            chunk.index = request.index;
-            chunk.quality = request.quality;
-
-            return chunk;
-        },
-
-        onFragmentLoadingCompleted = function(e) {
-            if (!findModel.call(this, e.sender.getContext())) return;
-
-            var request = e.request,
-                bytes = e.response,
-                isInit = this.isInitializationRequest(request),
-                chunk;
-
-            var streamId = e.sender.getContext().getStreamProcessor().getStreamInfo().id
-
-
-            if (!bytes) {
-                this.log("No " + request.mediaType + " bytes to push.");
-                return;
-            }
-
-            chunk = createDataChunk.call(this, bytes, request, streamId);
-            EventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {chunk: chunk, fragmentModel: e.sender});
-        };
-
-
-
-    return {
-        system: undefined,
-        log: undefined,
-
-        setup: function() {
-            EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
-        },
-
-        process: function (bytes) {
-            var result = null;
-
-            if (bytes !== null && bytes !== undefined && bytes.byteLength > 0) {
-                result = new Uint8Array(bytes);
-            }
-
-            return result;
-        },
-
-        getModel: function(context) {
-            if (!context) return null;
-            // Wrap the buffer controller into model and store it to track the loading state and execute the requests
-            var model = findModel(context);
-
-            if (!model){
-                model = this.system.getObject("fragmentModel");
-                model.setContext(context);
-                fragmentModels.push(model);
-            }
-
-            return model;
-        },
-
-        detachModel: function(model) {
-            var idx = fragmentModels.indexOf(model);
-            // If we have the model for the given buffer just remove it from array
-            if (idx > -1) {
-                fragmentModels.splice(idx, 1);
-            }
-        },
-
-		isInitializationRequest: function(request){
-			return (request && request.type && request.type === HTTPRequest.INIT_SEGMENT_TYPE);
-		},
-
-        reset: function() {
-            EventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
-            fragmentModels = [];
-        }
+    let instance = {
+        process :process,
+        getModel :getModel,
+        detachModel :detachModel,
+        isInitializationRequest:isInitializationRequest,
+        reset :reset
     };
-};
 
-FragmentController.prototype = {
-    constructor: FragmentController
-};
+    setup();
 
-export default FragmentController;
+    return instance;
+
+    let fragmentModels;
+
+    function setup() {
+        fragmentModels = [];
+        EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
+    }
+
+    function process(bytes) {
+        var result = null;
+
+        if (bytes !== null && bytes !== undefined && bytes.byteLength > 0) {
+            result = new Uint8Array(bytes);
+        }
+
+        return result;
+    }
+
+    function getModel(context) {
+        if (!context) return null;
+        // Wrap the buffer controller into model and store it to track the loading state and execute the requests
+        var model = findModel(context);
+
+        if (!model){
+            model = system.getObject("fragmentModel");
+            model.setContext(context);
+            fragmentModels.push(model);
+        }
+
+        return model;
+    }
+
+    function detachModel(model) {
+        var idx = fragmentModels.indexOf(model);
+        // If we have the model for the given buffer just remove it from array
+        if (idx > -1) {
+            fragmentModels.splice(idx, 1);
+        }
+    }
+
+    function isInitializationRequest(request){
+        return (request && request.type && request.type === HTTPRequest.INIT_SEGMENT_TYPE);
+    }
+
+    function reset() {
+        EventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
+        fragmentModels = [];
+    }
+
+    function findModel(context) {
+        var ln = fragmentModels.length;
+        // We expect one-to-one relation between FragmentModel and context,
+        // so just compare the given context object with the one that stored in the model to find the model for it
+        for (var i = 0; i < ln; i++) {
+            if (fragmentModels[i].getContext() == context) {
+                return fragmentModels[i];
+            }
+        }
+
+        return null;
+    }
+
+    function createDataChunk(bytes, request, streamId) {
+        var chunk = new DataChunk();
+
+        chunk.streamId = streamId;
+        chunk.mediaInfo = request.mediaInfo;
+        chunk.segmentType = request.type;
+        chunk.start = request.startTime;
+        chunk.duration = request.duration;
+        chunk.end = chunk.start + chunk.duration;
+        chunk.bytes = bytes;
+        chunk.index = request.index;
+        chunk.quality = request.quality;
+
+        return chunk;
+    }
+
+    function onFragmentLoadingCompleted(e) {
+        if (!findModel(e.sender.getContext())) return;
+
+        var request = e.request,
+            bytes = e.response,
+            isInit = isInitializationRequest(request),
+            chunk;
+
+        var streamId = e.sender.getContext().getStreamProcessor().getStreamInfo().id
+
+
+        if (!bytes) {
+            log("No " + request.mediaType + " bytes to push.");
+            return;
+        }
+
+        chunk = createDataChunk(bytes, request, streamId);
+        EventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {chunk: chunk, fragmentModel: e.sender});
+    }
+};

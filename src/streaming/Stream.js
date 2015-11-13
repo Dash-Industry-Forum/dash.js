@@ -35,6 +35,7 @@ import RepresentationController from '../dash/controllers/RepresentationControll
 import ProtectionController from './controllers/ProtectionController.js';
 import MediaController from './controllers/MediaController.js';
 import EventController from './controllers/EventController.js';
+import FragmentController from './controllers/FragmentController.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import AbrController from './controllers/AbrController.js';
@@ -55,6 +56,7 @@ let Stream = function () {
         liveEdgeFinder = LiveEdgeFinder.getInstance(),
         playbackController = PlaybackController.getInstance(),
         mediaController = null,
+        fragmentController = null,
         eventController = null,
 
         // Encrypted Media Extensions
@@ -127,7 +129,7 @@ let Stream = function () {
                 streamProcessor = self.system.getObject("streamProcessor"),
                 allMediaForType = this.adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);
 
-            streamProcessor.initialize(getMimeTypeOrType.call(self, mediaInfo), self.fragmentController, mediaSource, self, eventController);
+            streamProcessor.initialize(getMimeTypeOrType.call(self, mediaInfo), fragmentController, mediaSource, self, eventController);
             self.abrController.updateTopQualityIndex(mediaInfo);
 
             if (optionalSettings) {
@@ -356,13 +358,18 @@ let Stream = function () {
         manifestModel: undefined,
         sourceBufferExt: undefined,
         adapter: undefined,
-        fragmentController: undefined,
         capabilities: undefined,
         log: undefined,
         errHandler: undefined,
 
         setup: function () {
             mediaController = MediaController.getInstance();
+
+            fragmentController = FragmentController.create({
+                log:this.log,
+                system:this.system
+            })
+
             EventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
             EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         },
@@ -416,16 +423,19 @@ let Stream = function () {
             playbackController.pause();
             playbackController = null;
             mediaController = null;
+
             this.deactivate();
 
             isUpdating = false;
             isInitialized = false;
 
-            if (this.fragmentController) {
-                this.fragmentController.reset();
+            if (fragmentController) {
+                fragmentController.reset();
             }
-            this.fragmentController = undefined;
+            fragmentController = null;
+
             liveEdgeFinder.abortSearch();
+            updateError = {};
 
             EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             EventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
@@ -434,8 +444,6 @@ let Stream = function () {
             EventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, this);
             EventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, this);
             EventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, this);
-
-            updateError = {};
         },
 
         getDuration: function () {
