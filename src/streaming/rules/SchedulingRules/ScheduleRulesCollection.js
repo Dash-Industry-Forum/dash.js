@@ -32,10 +32,10 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 import BufferLevelRule from './BufferLevelRule.js';
 import PlaybackTimeRule from './PlaybackTimeRule.js';
 
-let factory = FactoryMaker.getSingletonFactory(ScheduleRulesCollection);
-
 const FRAGMENTS_TO_SCHEDULE_RULES = "fragmentsToScheduleRules";
 const NEXT_FRAGMENT_RULES = "nextFragmentRules";
+
+let factory = FactoryMaker.getSingletonFactory(ScheduleRulesCollection);
 
 factory.FRAGMENTS_TO_SCHEDULE_RULES = FRAGMENTS_TO_SCHEDULE_RULES;
 factory.NEXT_FRAGMENT_RULES = NEXT_FRAGMENT_RULES;

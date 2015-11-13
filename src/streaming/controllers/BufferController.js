@@ -28,43 +28,43 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-//import RepresentationController from '../../dash/controllers/RepresentationController.js';
+
 import FragmentModel from '../models/FragmentModel.js';
-//import FragmentController from './FragmentController.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import SourceBufferExtensions from '../extensions/SourceBufferExtensions.js';
 import AbrController from './AbrController.js';
 import PlaybackController from './PlaybackController.js';
-//import VirtualBuffer from '../utils/VirtualBuffer.js';
-import MediaPlayer from '../MediaPlayer.js';
 import MediaController from './MediaController.js';
 import CustomTimeRanges from '../utils/CustomTimeRanges.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import BoxParser from '../utils/BoxParser.js';
-
-
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-
+const DEFAULT_MIN_BUFFER_TIME = 12;
+const BUFFER_TIME_AT_TOP_QUALITY = 30;
+const BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
+const LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
+const RICH_BUFFER_THRESHOLD = 20;
+const BUFFER_LOADED = "bufferLoaded";
+const BUFFER_EMPTY = "bufferStalled";
+const STALL_THRESHOLD = 0.5;
+const BUFFER_TO_KEEP = 30;
+const BUFFER_PRUNING_INTERVAL = 30;
 
 let factory = FactoryMaker.getClassFactory(BufferController);
 
-factory.DEFAULT_MIN_BUFFER_TIME = 12;
-factory.BUFFER_TIME_AT_TOP_QUALITY = 30;
-factory.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = 60;
-factory.LONG_FORM_CONTENT_DURATION_THRESHOLD = 600;
-factory.RICH_BUFFER_THRESHOLD = 20;
-factory.BUFFER_LOADED = "bufferLoaded";
-factory.BUFFER_EMPTY = "bufferStalled";
+factory.DEFAULT_MIN_BUFFER_TIME = DEFAULT_MIN_BUFFER_TIME;
+factory.BUFFER_TIME_AT_TOP_QUALITY = BUFFER_TIME_AT_TOP_QUALITY;
+factory.BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM = BUFFER_TIME_AT_TOP_QUALITY_LONG_FORM;
+factory.LONG_FORM_CONTENT_DURATION_THRESHOLD = LONG_FORM_CONTENT_DURATION_THRESHOLD;
+factory.RICH_BUFFER_THRESHOLD = RICH_BUFFER_THRESHOLD;
+factory.BUFFER_LOADED = BUFFER_LOADED;
+factory.BUFFER_EMPTY = BUFFER_EMPTY;
 
 export default factory;
 
 function BufferController(config) {
-
-    const STALL_THRESHOLD = 0.5;
-    const BUFFER_TO_KEEP = 30;
-    const BUFFER_PRUNING_INTERVAL = 30;
 
     let log = config.log,
         metricsModel = config.metricsModel,
@@ -139,7 +139,7 @@ function BufferController(config) {
         maxAppendedIndex = -1,
         lastIndex = -1,
         buffer = null;
-        bufferState = BufferController.BUFFER_EMPTY;
+        bufferState = BUFFER_EMPTY;
         wallclockTicked = 0;
         appendingMediaChunk = false,
         isAppendingInProgress = false;
@@ -425,9 +425,9 @@ function BufferController(config) {
 
     function checkIfSufficientBuffer() {
         if (bufferLevel < STALL_THRESHOLD && !isBufferingCompleted) {
-            notifyBufferStateChanged(BufferController.BUFFER_EMPTY);
+            notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
-            notifyBufferStateChanged(BufferController.BUFFER_LOADED);
+            notifyBufferStateChanged(BUFFER_LOADED);
         }
     }
 
@@ -437,7 +437,7 @@ function BufferController(config) {
         bufferState = state;
         addBufferMetrics();
         EventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {sender: instance, state:state, mediaType:type, streamInfo:streamProcessor.getStreamInfo()});
-        log(state === BufferController.BUFFER_LOADED ? ("Got enough buffer to start.") : ("Waiting for more buffer before starting playback."));
+        log(state === BUFFER_LOADED ? ("Got enough buffer to start.") : ("Waiting for more buffer before starting playback."));
     }
 
 
@@ -749,7 +749,7 @@ function BufferController(config) {
         EventBus.off(Events.CHUNK_APPENDED, onChunkAppended, this);
 
         criticalBufferLevel = Number.POSITIVE_INFINITY;
-        bufferState = BufferController.BUFFER_EMPTY;
+        bufferState = BUFFER_EMPTY;
         minBufferTime = null;
         currentQuality = -1;
         lastIndex = -1;

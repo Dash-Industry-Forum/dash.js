@@ -30,12 +30,12 @@
  */
 import FactoryMaker from '../core/FactoryMaker.js';
 
+const SECONDS_IN_HOUR = 60 * 60; // Expression of an hour in seconds
+const SECONDS_IN_MIN = 60; // Expression of a minute in seconds
+
 export default FactoryMaker.getSingletonFactory(TTMLParser);
 
 function TTMLParser(config) {
-    "use strict";
-    const SECONDS_IN_HOUR = 60 * 60; // Expression of an hour in seconds
-    const SECONDS_IN_MIN = 60; // Expression of a minute in seconds
 
     let videoModel = config ? config.videoModel : null;
 

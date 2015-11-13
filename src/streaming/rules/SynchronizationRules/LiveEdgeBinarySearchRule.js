@@ -33,12 +33,11 @@ import EventBus from '../../utils/EventBus.js';
 import Events from '../../Events.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
+const SEARCH_TIME_SPAN = 12 * 60 * 60; // set the time span that limits our search range to a 12 hours in seconds
+
 export default FactoryMaker.getClassFactory(LiveEdgeBinarySearchRule);
 
 function LiveEdgeBinarySearchRule(config) {
-    "use strict";
-
-    const SEARCH_TIME_SPAN = 12 * 60 * 60; // set the time span that limits our search range to a 12 hours in seconds
 
     let adapter = config.adapter,
         timelineConverter = config.timelineConverter;

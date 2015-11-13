@@ -32,13 +32,12 @@ import SwitchRequest from '../SwitchRequest.js';
 import AbrController from '../../controllers/AbrController.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
+const GRACE_TIME_THRESHOLD = 500;
+const ABANDON_MULTIPLIER = 1.5;
+
 export default FactoryMaker.getClassFactory(AbandonRequestsRule);
 
 function AbandonRequestsRule(config) {
-    "use strict";
-
-    const GRACE_TIME_THRESHOLD = 500;
-    const ABANDON_MULTIPLIER = 1.5;
 
     let log = config.log;
 

@@ -32,14 +32,14 @@ import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
 import AbrController from '../../controllers/AbrController.js';
 import HTTPRequest from '../../vo/metrics/HTTPRequest.js';
-
 import FactoryMaker from '../../../core/FactoryMaker.js';
+
+const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2;
+const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3;
+
 export default FactoryMaker.getClassFactory(ThroughputRule);
 
 function ThroughputRule(config) {
-
-    const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2;
-    const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3;
 
     let log = config.log,
         metricsExt = config.metricsExt,
@@ -50,18 +50,10 @@ function ThroughputRule(config) {
         reset:reset
     }
 
-    setup();
-
+    reset();
     return instance;
 
-
-    let throughputArray,
-        lastSwitchTime;
-
-    function setup(){
-        throughputArray = [];
-        lastSwitchTime = 0;
-    }
+    let throughputArray;
 
     function storeLastRequestThroughputByType(type, lastRequestThroughput) {
         throughputArray[type] = throughputArray[type] || [];
@@ -97,17 +89,15 @@ function ThroughputRule(config) {
     }
 
     function execute (context, callback) {
-        var now = new Date().getTime()/1000,
-            mediaInfo = context.getMediaInfo(),
+
+        var mediaInfo = context.getMediaInfo(),
             mediaType = mediaInfo.type,
             current = context.getCurrentValue(),
-            representationInfo = context.getTrackInfo(),
             metrics = metricsModel.getReadOnlyMetricsFor(mediaType),
             streamProcessor = context.getStreamProcessor(),
             abrController = streamProcessor.getABRController(),
             isDynamic= streamProcessor.isDynamic(),
             lastRequest = metricsExt.getCurrentHttpRequest(metrics),
-            waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2,
             downloadTime,
             averageThroughput,
             lastRequestThroughput,
@@ -115,12 +105,12 @@ function ThroughputRule(config) {
             bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
             switchRequest =  SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
-        if (now - lastSwitchTime < waitToSwitchTime ||
-            !metrics || lastRequest === null ||
-            lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE ||
-            bufferStateVO === null || bufferLevelVO === null) {
+        if (!metrics || !lastRequest || lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE ||
+            !bufferStateVO || !bufferLevelVO ) {
+
             callback(switchRequest);
             return;
+
         }
 
         downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
@@ -153,6 +143,5 @@ function ThroughputRule(config) {
 
     function reset() {
         throughputArray = [];
-        lastSwitchTime = 0;
     }
 };

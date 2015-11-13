@@ -33,10 +33,10 @@ import BufferOccupancyRule from './BufferOccupancyRule.js'
 import InsufficientBufferRule from './InsufficientBufferRule.js'
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-let factory =  FactoryMaker.getSingletonFactory(ABRRulesCollection);
-
 const QUALITY_SWITCH_RULES = "qualitySwitchRules";
 const ABANDON_FRAGMENT_RULES = "abandonFragmentRules";
+
+let factory =  FactoryMaker.getSingletonFactory(ABRRulesCollection);
 
 factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
 factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;

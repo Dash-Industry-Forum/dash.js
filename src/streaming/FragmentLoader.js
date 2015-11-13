@@ -33,12 +33,12 @@ import EventBus from './utils/EventBus.js';
 import Events from "./Events.js";
 import FactoryMaker from '../core/FactoryMaker.js';
 
+const RETRY_ATTEMPTS = 3;
+const RETRY_INTERVAL = 3;
+
 export default FactoryMaker.getClassFactory(FragmentLoader);
 
 function FragmentLoader(config) {
-
-    const RETRY_ATTEMPTS = 3;
-    const RETRY_INTERVAL = 3;
 
     let metricsModel = config.metricsModel,
         errHandler = config.errHandler,

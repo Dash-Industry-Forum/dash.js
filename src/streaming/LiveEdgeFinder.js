@@ -44,7 +44,6 @@ factory.LIVE_EDGE_NOT_FOUND_ERROR_CODE = LIVE_EDGE_NOT_FOUND_ERROR_CODE;
 export default factory;
 
 function LiveEdgeFinder() {
-    "use strict";
 
     let instance = {
         initialize:initialize,

@@ -36,29 +36,11 @@ import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
 import VideoModel from '../models/VideoModel.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
+const STREAM_END_THRESHOLD = 0.2;
+
 export default FactoryMaker.getSingletonFactory(StreamController);
+
 function StreamController(config) {
-
-    const STREAM_END_THRESHOLD = 0.2;
-
-    let log                 = config ? config.log : null,
-        system              = config ? config.system : null,
-        capabilities        = config ? config.capabilities : null,
-        manifestUpdater     = config ? config.manifestUpdater : null,
-        manifestLoader      = config ? config.manifestLoader : null,
-        manifestModel       = config ? config.manifestModel : null,
-        manifestExt         = config ? config.manifestExt : null,
-        adapter             = config ? config.adapter : null,
-        metricsModel        = config ? config.metricsModel : null,
-        metricsExt          = config ? config.metricsExt : null,
-        videoExt            = config ? config.videoExt : null,
-        liveEdgeFinder      = config ? config.liveEdgeFinder : null,
-        mediaSourceExt      = config ? config.mediaSourceExt : null,
-        timeSyncController  = config ? config.timeSyncController : null,
-        virtualBuffer       = config ? config.virtualBuffer : null,
-        errHandler          = config ? config.errHandler : null,
-        timelineConverter   = config ? config.timelineConverter : null;
-
 
     let instance = {
         initialize          :initialize,
@@ -75,10 +57,31 @@ function StreamController(config) {
 
     setup();
 
+    if (config) {
+        setConfig.call(instance, config);
+    }
+
     return instance;
 
 
-    let streams,
+    let log,
+        system,
+        capabilities,
+        manifestUpdater,
+        manifestLoader,
+        manifestModel,
+        manifestExt,
+        adapter,
+        metricsModel,
+        metricsExt,
+        videoExt,
+        liveEdgeFinder,
+        mediaSourceExt,
+        timeSyncController,
+        virtualBuffer,
+        errHandler,
+        timelineConverter,
+        streams,
         activeStream,
         protectionController,
         ownProtectionController,

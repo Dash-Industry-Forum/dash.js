@@ -29,18 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-//import FragmentModel from '../models/FragmentModel.js';
-//import FragmentController from './FragmentController.js';
-//import RepresentationController from '../../dash/controllers/RepresentationController.js';
 import PlayList from '../vo/metrics/PlayList.js';
 import ScheduleRulesCollection from '../rules/SchedulingRules/ScheduleRulesCollection.js';
 import SwitchRequest from '../rules/SwitchRequest.js';
-//import FragmentRequest from '../vo/FragmentRequest.js';
 import PlaybackController from './PlaybackController.js';
 import AbrController from './AbrController.js';
 import BufferController from './BufferController.js';
 import TextController from './TextController.js';
-//import Stream from '../Stream.js';
 import LiveEdgeFinder from '../LiveEdgeFinder.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
@@ -126,7 +121,6 @@ function ScheduleController(config) {
         bufferController = streamProcessor.bufferController;
         isDynamic = streamProcessor.isDynamic();
         fragmentModel = fragmentController.getModel(this);
-
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
         playbackController = PlaybackController.getInstance();
         abrController = AbrController.getInstance();

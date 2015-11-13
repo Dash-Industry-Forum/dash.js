@@ -33,10 +33,10 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 import LiveEdgeBinarySearchRule from './LiveEdgeBinarySearchRule.js';
 import LiveEdgeWithTimeSynchronizationRule from './LiveEdgeWithTimeSynchronizationRule.js';
 
-let factory = FactoryMaker.getSingletonFactory(SynchronizationRulesCollection);
-
 const TIME_SYNCHRONIZED_RULES = "withAccurateTimeSourceRules";
 const BEST_GUESS_RULES = "bestGuestRules";
+
+let factory = FactoryMaker.getSingletonFactory(SynchronizationRulesCollection);
 
 factory.TIME_SYNCHRONIZED_RULES = TIME_SYNCHRONIZED_RULES;
 factory.BEST_GUESS_RULES = BEST_GUESS_RULES;

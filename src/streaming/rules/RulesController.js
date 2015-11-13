@@ -35,13 +35,11 @@ import ScheduleRulesCollection from './schedulingRules/ScheduleRulesCollection.j
 import SynchronizationRulesCollection from './synchronizationRules/SynchronizationRulesCollection.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-
-let factory =  FactoryMaker.getSingletonFactory(RulesController);
-
 const SCHEDULING_RULE = 0;
 const ABR_RULE = 1;
 const SYNC_RULE = 2;
 
+let factory =  FactoryMaker.getSingletonFactory(RulesController);
 factory.SCHEDULING_RULE = SCHEDULING_RULE;
 factory.ABR_RULE = ABR_RULE;
 factory.SYNC_RULE = SYNC_RULE;

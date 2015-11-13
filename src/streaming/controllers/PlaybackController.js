@@ -34,14 +34,11 @@ import Events from "../Events.js";
 import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
+const WALLCLOCK_TIME_UPDATE_INTERVAL = 50; //This value influences the startup time for live.
+
 export default FactoryMaker.getSingletonFactory(PlaybackController);
 
 function PlaybackController(config) {
-    "use strict";
-
-    const WALLCLOCK_TIME_UPDATE_INTERVAL = 50; //This value influences the startup time for live.
-
-
 
     let instance = {
         initialize: initialize,
