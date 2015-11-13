@@ -28,14 +28,22 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let MediaSourceExtensions = function () {
-    "use strict";
-};
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-MediaSourceExtensions.prototype = {
-    constructor: MediaSourceExtensions,
+export default FactoryMaker.getSingletonFactory(MediaSourceExtensions);
 
-    createMediaSource: function () {
+function MediaSourceExtensions() {
+    let instance = {
+        createMediaSource: createMediaSource,
+        attachMediaSource: attachMediaSource,
+        detachMediaSource: detachMediaSource,
+        setDuration: setDuration,
+        signalEndOfStream: signalEndOfStream
+    };
+
+    return instance;
+
+    function createMediaSource() {
         "use strict";
 
         var hasWebKit = ("WebKitMediaSource" in window),
@@ -48,9 +56,9 @@ MediaSourceExtensions.prototype = {
         }
 
         return null;
-    },
+    }
 
-    attachMediaSource: function (source, videoModel) {
+    function attachMediaSource(source, videoModel) {
         "use strict";
 
         var objectURL = window.URL.createObjectURL(source);
@@ -58,25 +66,25 @@ MediaSourceExtensions.prototype = {
         videoModel.setSource(objectURL);
 
         return objectURL;
-    },
+    }
 
-    detachMediaSource: function (videoModel) {
+    function detachMediaSource(videoModel) {
         "use strict";
         // it seems that any value passed to the setSource is cast to a sting when setting element.src,
         // so we cannot use null or undefined to reset the element. Use empty string instead.
         videoModel.setSource("");
-    },
+    }
 
-    setDuration: function (source, value) {
+    function setDuration(source, value) {
         "use strict";
 
         if (source.duration != value)
             source.duration = value;
 
         return source.duration;
-    },
+    }
 
-    signalEndOfStream: function(source) {
+    function signalEndOfStream(source) {
         "use strict";
 
         var buffers = source.sourceBuffers,
@@ -91,6 +99,4 @@ MediaSourceExtensions.prototype = {
 
         source.endOfStream();
     }
-};
-
-export default MediaSourceExtensions;
+}

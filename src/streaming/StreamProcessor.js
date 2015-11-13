@@ -40,6 +40,7 @@ import MediaPlayerModel from './models/MediaPlayerModel.js';
 import FragmentLoader from './FragmentLoader.js';
 import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
 import TextSourceBuffer from './TextSourceBuffer.js';
+import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 
 let StreamProcessor = function () {
     "use strict";
@@ -59,7 +60,7 @@ let StreamProcessor = function () {
                     manifestModel:this.system.getObject("manifestModel"),
                     sourceBufferExt:this.system.getObject("sourceBufferExt"),
                     errHandler:this.system.getObject("errHandler"),
-                    mediaSourceExt:this.system.getObject("mediaSourceExt"),
+                    mediaSourceExt:MediaSourceExtensions.getInstance(),
                     streamController:StreamController.getInstance(),
                     mediaController:this.system.getObject("mediaController"),
                     adapter:this.system.getObject("adapter"),

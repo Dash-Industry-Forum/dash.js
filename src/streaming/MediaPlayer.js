@@ -52,6 +52,7 @@ import MediaPlayerModel from './models/MediaPlayerModel.js';
 import RulesController from './rules/RulesController.js';
 import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
+import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 import FactoryMaker from '../core/FactoryMaker.js'
 
 let MediaPlayer = function (context) {
@@ -339,7 +340,7 @@ let MediaPlayer = function (context) {
                 metricsExt : metricsExt,
                 videoExt : system.getObject("videoExt"),
                 liveEdgeFinder : LiveEdgeFinder.getInstance(),
-                mediaSourceExt : system.getObject("mediaSourceExt"),
+                mediaSourceExt : MediaSourceExtensions.getInstance(),
                 timeSyncController : system.getObject("timeSyncController"),
                 virtualBuffer : system.getObject("virtualBuffer"),
                 errHandler : this.errHandler,
