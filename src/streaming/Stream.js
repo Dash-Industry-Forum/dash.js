@@ -34,6 +34,7 @@ import BufferController from './controllers/BufferController.js';
 import RepresentationController from '../dash/controllers/RepresentationController.js';
 import ProtectionController from './controllers/ProtectionController.js';
 import MediaController from './controllers/MediaController.js';
+import EventController from './controllers/EventController.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import AbrController from './controllers/AbrController.js';
@@ -194,7 +195,13 @@ let Stream = function () {
                 manifest = self.manifestModel.getValue(),
                 events;
 
-            eventController = self.system.getObject("eventController");
+            eventController = EventController.getInstance();
+            eventController.initialize();
+            eventController.setConfig({
+                log: self.system.getObject("log"),
+                manifestModel: self.system.getObject("manifestModel"),
+                manifestUpdater: self.system.getObject("manifestUpdater")
+            });
             events = self.adapter.getEventsFor(manifest, streamInfo);
             eventController.addInlineEvents(events);
 
