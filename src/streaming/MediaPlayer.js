@@ -38,6 +38,7 @@ import Debug from "./utils/Debug.js";
 import UTCTiming from '../dash/vo/UTCTiming.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
+import ProtectionController from './controllers/ProtectionController.js';
 import ManifestLoader from './ManifestLoader.js';
 import LiveEdgeFinder from './LiveEdgeFinder.js';
 import Events from './Events.js';
@@ -1059,7 +1060,12 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          */
         createProtection: function () {
-            return system.getObject("protectionController");
+            return  ProtectionController.create({
+                protectionExt: system.getObject('protectionExt'),
+                adapter: system.getObject('adapter'),
+                log: debug.log,
+                system: system
+            })
         },
 
         /**

@@ -243,7 +243,7 @@ let Stream = function () {
             EventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error:error});
 
             if (!isMediaInitialized || isStreamActivated) return;
-            protectionController.init(self.manifestModel.getValue(), getMediaInfo.call(this, "audio"), getMediaInfo.call(this, "video"));
+            protectionController.initialize(self.manifestModel.getValue(), getMediaInfo.call(this, "audio"), getMediaInfo.call(this, "video"));
             isStreamActivated = true;
         },
 

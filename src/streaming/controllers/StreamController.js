@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import PlaybackController from './PlaybackController.js';
+import ProtectionController from './ProtectionController.js';
 import MediaPlayer from '../MediaPlayer.js';
 import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
@@ -377,7 +378,12 @@ function StreamController(config) {
 
         if (capabilities.supportsEncryptedMedia()) {
             if (!protectionController) {
-                protectionController = system.getObject("protectionController");
+                protectionController = ProtectionController.create({
+                    protectionExt: system.getObject('protectionExt'),
+                    adapter: adapter,
+                    log: log,
+                    system: system
+                })
                 EventBus.trigger(Events.PROTECTION_CREATED, {controller: protectionController, manifest: manifest});
                 ownProtectionController = true;
             }
@@ -662,7 +668,7 @@ function StreamController(config) {
                 EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
             };
             EventBus.on(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
-            protectionController.teardown();
+            protectionController.reset();
         } else {
             protectionController.setMediaElement(null);
             protectionController = null;

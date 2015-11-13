@@ -62,7 +62,7 @@ import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
 import ErrorHandler from './ErrorHandler.js';
 import VideoModelExtensions from './extensions/VideoModelExtensions.js';
 import ProtectionExtensions from './extensions/ProtectionExtensions.js';
-import ProtectionController from './controllers/ProtectionController.js';
+
 
 import MetricsList from './vo/MetricsList.js';
 
@@ -147,7 +147,7 @@ let Context = function () {
             this.system.mapSingleton('errHandler', ErrorHandler);
             this.system.mapSingleton('videoExt', VideoModelExtensions);
             this.system.mapSingleton('protectionExt', ProtectionExtensions);
-            this.system.mapClass('protectionController', ProtectionController);
+
 
             mapProtectionModel.call(this); // Determines EME API support and version
 
