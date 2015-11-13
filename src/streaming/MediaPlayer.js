@@ -43,6 +43,7 @@ import LiveEdgeFinder from './LiveEdgeFinder.js';
 import Events from './Events.js';
 import PublicEvents from './PublicEvents.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
+import TextSourceBuffer from './TextSourceBuffer.js';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
 import AbrController from './controllers/AbrController.js'
 import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
@@ -721,7 +722,7 @@ let MediaPlayer = function (context) {
             //For external time text file,  the only action needed to change a track is marking the track mode to showing.
             // Fragmented text tracks need the additional step of calling textSourceBuffer.setTextTrack();
             if (textSourceBuffer === undefined) {
-                textSourceBuffer = system.getObject("textSourceBuffer");
+                textSourceBuffer = TextSourceBuffer.getInstance();
             }
 
             var tracks = element.textTracks,

@@ -39,6 +39,7 @@ import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollec
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import FragmentLoader from './FragmentLoader.js';
 import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
+import TextSourceBuffer from './TextSourceBuffer.js';
 
 let StreamProcessor = function () {
     "use strict";
@@ -63,7 +64,7 @@ let StreamProcessor = function () {
                     mediaController:this.system.getObject("mediaController"),
                     adapter:this.system.getObject("adapter"),
                     virtualBuffer:this.system.getObject("virtualBuffer"),
-                    textSourceBuffer:this.system.getObject("textSourceBuffer"),
+                    textSourceBuffer:TextSourceBuffer.getInstance(),
                     system:this.system
                 })
             }else {

@@ -40,202 +40,246 @@ import VTTParser from './VTTParser.js';
 import TTMLParser from './TTMLParser.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
 import VideoModel from './models/VideoModel.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
-let TextSourceBuffer = function () {
-    var allTracksAreDisabled = false,
-        parser = null,
-        fragmentExt = null,
-        mediaInfos = null,
-        textTrackExtensions = null,
-        isFragmented = false,
-        fragmentModel = null,
-        initializationSegmentReceived= false,
-        timescale = NaN,
-        allTracks = null,
-        videoModel = null,
-        streamController = null,
+export default FactoryMaker.getSingletonFactory(TextSourceBuffer);
 
-        setTextTrack = function() {
+function  TextSourceBuffer(config) {
 
-            var el = videoModel.getElement(),
-                tracks = el.textTracks,
-                ln = tracks.length,
-                self = this;
-
-            if (!allTracks) {
-                allTracks = self.mediaController.getTracksFor("fragmentedText", streamController.getActiveStreamInfo());
-            }
-
-            for (var i = 0; i < ln; i++ ) {
-                var track = tracks[i];
-                allTracksAreDisabled = track.mode !== "showing";
-                if (track.mode === "showing") {
-                    if (textTrackExtensions.getCurrentTrackIdx() !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
-                        textTrackExtensions.setCurrentTrackIdx(i);
-                        if (isFragmented) {
-                            if (!self.mediaController.isCurrentTrack(allTracks[i])) {
-                                fragmentModel.abortRequests();
-                                textTrackExtensions.deleteTrackCues(textTrackExtensions.getCurrentTextTrack());
-                                self.mediaController.setTrack(allTracks[i]);
-                            }
-                        }
-                    }
-                    break;
-                }
-            }
-
-            if (allTracksAreDisabled){
-                textTrackExtensions.setCurrentTrackIdx(-1);
-            }
-        };
-
-    return {
-        system:undefined,
-        errHandler: undefined,
-        adapter: undefined,
-        manifestExt:undefined,
-        mediaController:undefined,
-        log: undefined,
-
-        initialize: function (type, bufferController) {
-            let streamProcessor = bufferController.getStreamProcessor();
-            mediaInfos = streamProcessor.getMediaInfoArr();
-            videoModel = VideoModel.getInstance();
-            streamController = StreamController.getInstance()
-            textTrackExtensions = TextTrackExtensions.getInstance({videoModel: videoModel});
-            textTrackExtensions.initialize();
-            isFragmented = !this.manifestExt.getIsTextTrack(type);
-            if (isFragmented){
-                fragmentExt = FragmentExtensions.getInstance({boxParser: BoxParser.getInstance()});
-                fragmentModel = streamProcessor.getFragmentModel();
-                this.buffered =  CustomTimeRanges.create();
-            }
-        },
-
-        append: function (bytes, chunk) {
-            var self = this,
-                result,
-                samplesInfo,
-                i,
-                ccContent,
-                mediaInfo = chunk.mediaInfo,
-                mediaType = mediaInfo.type,
-                mimeType = mediaInfo.mimeType;
-
-            function createTextTrackFromMediaInfo(captionData, mediaInfo) {
-                var textTrackInfo = new TextTrackInfo(),
-                    trackKindMap = {subtitle:"subtitles", caption:"captions"},//Dash Spec has no "s" on end of KIND but HTML needs plural.
-                    getKind = function () {
-                        var kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
-                        kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
-                        return kind;
-                    },
-
-                    checkTTML = function () {
-                        var ttml = false;
-                        if (mediaInfo.codec && mediaInfo.codec.search("stpp") >= 0) {
-                            ttml = true;
-                        }
-                        if (mediaInfo.mimeType && mediaInfo.mimeType.search("ttml") >= 0) {
-                            ttml = true;
-                        }
-                        return ttml;
-                    };
-
-                textTrackInfo.captionData = captionData;
-                textTrackInfo.lang = mediaInfo.lang;
-                textTrackInfo.label = mediaInfo.id; // AdaptationSet id (an unsigned int)
-                textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
-                textTrackInfo.isTTML = checkTTML();
-                textTrackInfo.video = videoModel.getElement();
-                textTrackInfo.defaultTrack = self.getIsDefault(mediaInfo);
-                textTrackInfo.isFragmented = isFragmented;
-                textTrackInfo.kind = getKind();
-                textTrackExtensions.addTextTrack(textTrackInfo, mediaInfos.length);
-            }
-
-            if(mediaType === "fragmentedText"){
-                if(!initializationSegmentReceived){
-                    initializationSegmentReceived=true;
-                    for (i = 0; i < mediaInfos.length; i++){
-                        createTextTrackFromMediaInfo(null, mediaInfos[i]);
-                    }
-                    timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
-                }else {
-                    samplesInfo = fragmentExt.getSamplesInfo(bytes);
-                    for(i= 0 ; i < samplesInfo.length ; i++) {
-                        if(!this.firstSubtitleStart){
-                            this.firstSubtitleStart = samplesInfo[0].cts - chunk.start * timescale;
-                        }
-                        samplesInfo[i].cts -= this.firstSubtitleStart;
-                        this.buffered.add(samplesInfo[i].cts / timescale,(samplesInfo[i].cts + samplesInfo[i].duration) / timescale);
-                        ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset, samplesInfo[i].offset+samplesInfo[i].size)));
-                        parser = parser !== null ? parser : self.getParser(mimeType);
-                        try{
-                            result = parser.parse(ccContent);
-                            textTrackExtensions.addCaptions(this.firstSubtitleStart / timescale,result);
-                        } catch(e) {
-                            //empty cue ?
-                        }
-                    }
-                }
-            }else{
-                bytes = new Uint8Array(bytes);
-                ccContent=window.UTF8.decode(bytes);
-                try {
-                    result = self.getParser(mimeType).parse(ccContent);
-                    createTextTrackFromMediaInfo(result, mediaInfo);
-                } catch(e) {
-                    self.errHandler.timedTextError(e, "parse", ccContent);
-                }
-            }
-        },
-
-        getIsDefault:function(mediaInfo){
-            //TODO How to tag default. currently same order as listed in manifest.
-            // Is there a way to mark a text adaptation set as the default one? DASHIF meeting talk about using role which is being used for track KIND
-            // Eg subtitles etc. You can have multiple role tags per adaptation Not defined in the spec yet.
-            return mediaInfo.index === mediaInfos[0].index;
-        },
-
-        abort:function() {
-            textTrackExtensions.deleteAllTextTracks();
-            allTracksAreDisabled = false;
-            parser = null;
-            fragmentExt = null;
-            mediaInfos = null;
-            textTrackExtensions = null;
-            isFragmented = false;
-            fragmentModel = null;
-            initializationSegmentReceived= false;
-            timescale = NaN;
-            allTracks = null;
-            videoModel = null;
-            streamController = null;
-        },
-
-        getParser:function(mimeType) {
-            var parser;
-            if (mimeType === "text/vtt") {
-                parser = VTTParser.getInstance();
-                parser.setConfig({logger: this.log});
-            } else if (mimeType === "application/ttml+xml" || mimeType === "application/mp4") {
-                parser = TTMLParser.getInstance();
-                parser.setConfig({videoModel: videoModel});
-            }
-            return parser;
-        },
-
-        getAllTracksAreDisabled : function (){
-            return allTracksAreDisabled;
-        },
-
-        setTextTrack: setTextTrack
+    let instance = {
+        initialize :initialize,
+        append :append,
+        abort:abort,
+        getAllTracksAreDisabled:getAllTracksAreDisabled,
+        setTextTrack: setTextTrack,
+        setConfig :setConfig
     };
-};
 
-TextSourceBuffer.prototype = {
-    constructor: TextSourceBuffer
-};
+    if (config) {
+        setConfig.call(instance, config);
+    }
 
-export default TextSourceBuffer;
+    return instance;
+
+
+    let system,
+        errHandler,
+        adapter,
+        manifestExt,
+        mediaController,
+        log,
+        allTracksAreDisabled,
+        parser,
+        fragmentExt,
+        mediaInfos,
+        textTrackExtensions,
+        isFragmented,
+        fragmentModel,
+        initializationSegmentReceived,
+        timescale,
+        allTracks,
+        videoModel,
+        streamController,
+        firstSubtitleStart;
+
+    function initialize(type, bufferController) {
+        allTracksAreDisabled = false;
+        parser = null;
+        fragmentExt = null;
+        fragmentModel = null;
+        initializationSegmentReceived= false;
+        timescale = NaN;
+        allTracks = null;
+        firstSubtitleStart = null;
+
+        let streamProcessor = bufferController.getStreamProcessor();
+
+        mediaInfos = streamProcessor.getMediaInfoArr();
+        videoModel = VideoModel.getInstance();
+        streamController = StreamController.getInstance()
+        textTrackExtensions = TextTrackExtensions.getInstance({videoModel: videoModel});
+        textTrackExtensions.initialize();
+        isFragmented = !manifestExt.getIsTextTrack(type);
+
+        if (isFragmented){
+            fragmentExt = FragmentExtensions.getInstance({boxParser: BoxParser.getInstance()});
+            fragmentModel = streamProcessor.getFragmentModel();
+            this.buffered =  CustomTimeRanges.create();
+        }
+    }
+
+    function append(bytes, chunk) {
+        var result,
+            samplesInfo,
+            i,
+            ccContent,
+            mediaInfo = chunk.mediaInfo,
+            mediaType = mediaInfo.type,
+            mimeType = mediaInfo.mimeType;
+
+        function createTextTrackFromMediaInfo(captionData, mediaInfo) {
+            var textTrackInfo = new TextTrackInfo(),
+                trackKindMap = {subtitle:"subtitles", caption:"captions"},//Dash Spec has no "s" on end of KIND but HTML needs plural.
+                getKind = function () {
+                    var kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
+                    kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
+                    return kind;
+                },
+
+                checkTTML = function () {
+                    var ttml = false;
+                    if (mediaInfo.codec && mediaInfo.codec.search("stpp") >= 0) {
+                        ttml = true;
+                    }
+                    if (mediaInfo.mimeType && mediaInfo.mimeType.search("ttml") >= 0) {
+                        ttml = true;
+                    }
+                    return ttml;
+                };
+
+            textTrackInfo.captionData = captionData;
+            textTrackInfo.lang = mediaInfo.lang;
+            textTrackInfo.label = mediaInfo.id; // AdaptationSet id (an unsigned int)
+            textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
+            textTrackInfo.isTTML = checkTTML();
+            textTrackInfo.video = videoModel.getElement();
+            textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
+            textTrackInfo.isFragmented = isFragmented;
+            textTrackInfo.kind = getKind();
+            textTrackExtensions.addTextTrack(textTrackInfo, mediaInfos.length);
+        }
+
+        if(mediaType === "fragmentedText"){
+            if(!initializationSegmentReceived){
+                initializationSegmentReceived=true;
+                for (i = 0; i < mediaInfos.length; i++){
+                    createTextTrackFromMediaInfo(null, mediaInfos[i]);
+                }
+                timescale = fragmentExt.getMediaTimescaleFromMoov(bytes);
+            }else {
+                samplesInfo = fragmentExt.getSamplesInfo(bytes);
+                for(i= 0 ; i < samplesInfo.length ; i++) {
+                    if(!firstSubtitleStart){
+                        firstSubtitleStart = samplesInfo[0].cts - chunk.start * timescale;
+                    }
+                    samplesInfo[i].cts -= firstSubtitleStart;
+                    this.buffered.add(samplesInfo[i].cts / timescale,(samplesInfo[i].cts + samplesInfo[i].duration) / timescale);
+                    ccContent = window.UTF8.decode(new Uint8Array(bytes.slice(samplesInfo[i].offset, samplesInfo[i].offset+samplesInfo[i].size)));
+                    parser = parser !== null ? parser : getParser(mimeType);
+                    try{
+                        result = parser.parse(ccContent);
+                        textTrackExtensions.addCaptions(firstSubtitleStart / timescale,result);
+                    } catch(e) {
+                        //empty cue ?
+                    }
+                }
+            }
+        }else{
+            bytes = new Uint8Array(bytes);
+            ccContent=window.UTF8.decode(bytes);
+            try {
+                result = getParser(mimeType).parse(ccContent);
+                createTextTrackFromMediaInfo(result, mediaInfo);
+            } catch(e) {
+                errHandler.timedTextError(e, "parse", ccContent);
+            }
+        }
+    }
+
+    function abort() {
+        textTrackExtensions.deleteAllTextTracks();
+        allTracksAreDisabled = false;
+        parser = null;
+        fragmentExt = null;
+        mediaInfos = null;
+        textTrackExtensions = null;
+        isFragmented = false;
+        fragmentModel = null;
+        initializationSegmentReceived= false;
+        timescale = NaN;
+        allTracks = null;
+        videoModel = null;
+        streamController = null;
+    }
+
+    function getAllTracksAreDisabled(){
+        return allTracksAreDisabled;
+    }
+
+    function setConfig(config){
+        if (!config) return;
+
+        if (config.system){
+            system = config.system;
+        }
+        if (config.errHandler){
+            errHandler = config.errHandler;
+        }
+        if (config.adapter){
+            adapter = config.adapter;
+        }
+        if (config.manifestExt){
+            manifestExt = config.manifestExt;
+        }
+        if (config.mediaController){
+            mediaController = config.mediaController;
+        }
+
+        if (config.log){
+            log = config.log;
+        }
+
+    }
+
+    function setTextTrack() {
+
+        var el = videoModel.getElement(),
+            tracks = el.textTracks,
+            ln = tracks.length;
+
+        if (!allTracks) {
+            allTracks = mediaController.getTracksFor("fragmentedText", streamController.getActiveStreamInfo());
+        }
+
+        for (var i = 0; i < ln; i++ ) {
+            var track = tracks[i];
+            allTracksAreDisabled = track.mode !== "showing";
+            if (track.mode === "showing") {
+                if (textTrackExtensions.getCurrentTrackIdx() !== i) { // do not reset track if already the current track.  This happens when all captions get turned off via UI and then turned on again and with videojs.
+                    textTrackExtensions.setCurrentTrackIdx(i);
+                    if (isFragmented) {
+                        if (!mediaController.isCurrentTrack(allTracks[i])) {
+                            fragmentModel.abortRequests();
+                            textTrackExtensions.deleteTrackCues(textTrackExtensions.getCurrentTextTrack());
+                            mediaController.setTrack(allTracks[i]);
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        if (allTracksAreDisabled){
+            textTrackExtensions.setCurrentTrackIdx(-1);
+        }
+    }
+
+    function getIsDefault(mediaInfo) {
+        //TODO How to tag default. currently same order as listed in manifest.
+        // Is there a way to mark a text adaptation set as the default one? DASHIF meeting talk about using role which is being used for track KIND
+        // Eg subtitles etc. You can have multiple role tags per adaptation Not defined in the spec yet.
+        return mediaInfo.index === mediaInfos[0].index;
+    }
+
+    function getParser(mimeType) {
+        var parser;
+        if (mimeType === "text/vtt") {
+            parser = VTTParser.getInstance();
+            parser.setConfig({logger: log});
+        } else if (mimeType === "application/ttml+xml" || mimeType === "application/mp4") {
+            parser = TTMLParser.getInstance();
+            parser.setConfig({videoModel: videoModel});
+        }
+        return parser;
+    }
+};

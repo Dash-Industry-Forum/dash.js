@@ -31,6 +31,7 @@
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import BufferLevelRule from './BufferLevelRule.js';
 import PlaybackTimeRule from './PlaybackTimeRule.js';
+import TextSourceBuffer from '../../TextSourceBuffer.js';
 
 const FRAGMENTS_TO_SCHEDULE_RULES = "fragmentsToScheduleRules";
 const NEXT_FRAGMENT_RULES = "nextFragmentRules";
@@ -64,13 +65,13 @@ function ScheduleRulesCollection(config) {
         fragmentsToScheduleRules.push(BufferLevelRule.create({
             metricsExt: system.getObject("metricsExt"),
             metricsModel: system.getObject("metricsModel"),
-            textSourceBuffer: system.getObject("textSourceBuffer")
+            textSourceBuffer:TextSourceBuffer.getInstance()
         }));
         nextFragmentRules.push(PlaybackTimeRule.create({
             adapter: system.getObject("adapter"),
             sourceBufferExt: system.getObject("sourceBufferExt"),
             virtualBuffer: system.getObject("virtualBuffer"),
-            textSourceBuffer: system.getObject("textSourceBuffer")
+            textSourceBuffer: TextSourceBuffer.getInstance()
 
         }));
     }

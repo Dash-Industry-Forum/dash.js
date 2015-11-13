@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import TextSourceBuffer from '../TextSourceBuffer.js';
 import Error from '../vo/Error.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
@@ -61,7 +62,15 @@ SourceBufferExtensions.prototype = {
 
         } catch (ex) {
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp"') !== -1)) {
-                buffer = self.system.getObject("textSourceBuffer");
+                buffer = TextSourceBuffer.getInstance()
+                buffer.setConfig({
+                    system:this.system,
+                    errHandler:this.system.getObject("errHandler"),
+                    adapter:this.system.getObject("adapter"),
+                    manifestExt:this.manifestExt,
+                    mediaController:this.system.getObject("mediaController"),
+                    log:this.system.getObject("log")
+                })
             } else {
                 throw ex;
             }
