@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import TextSourceBuffer from '../TextSourceBuffer.js';
+import MediaController from '../controllers/MediaController.js';
 import Error from '../vo/Error.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
@@ -68,7 +69,7 @@ SourceBufferExtensions.prototype = {
                     errHandler:this.system.getObject("errHandler"),
                     adapter:this.system.getObject("adapter"),
                     manifestExt:this.manifestExt,
-                    mediaController:this.system.getObject("mediaController"),
+                    mediaController:MediaController.getInstance(),
                     log:this.system.getObject("log")
                 })
             } else {

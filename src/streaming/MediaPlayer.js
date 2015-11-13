@@ -38,6 +38,7 @@ import Debug from "./utils/Debug.js";
 import UTCTiming from '../dash/vo/UTCTiming.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
+import MediaController from './controllers/MediaController.js';
 import ProtectionController from './controllers/ProtectionController.js';
 import ManifestLoader from './ManifestLoader.js';
 import LiveEdgeFinder from './LiveEdgeFinder.js';
@@ -318,6 +319,16 @@ let MediaPlayer = function (context) {
             let scheduleRulesCollection = ScheduleRulesCollection.getInstance({system: system});
             scheduleRulesCollection.initialize();
 
+
+            mediaController = MediaController.getInstance();
+            mediaController.initialize();
+            mediaController.setConfig({
+                log :debug.log,
+                system :system,
+                DOMStorage :DOMStorage,
+                errHandler :this.errHandler
+            });
+
             playbackController = PlaybackController.getInstance();
 
             rulesController = RulesController.getInstance();
@@ -406,7 +417,7 @@ let MediaPlayer = function (context) {
             metricsExt = system.getObject("metricsExt");
             metricsModel = system.getObject("metricsModel");
             DOMStorage = system.getObject("DOMStorage");
-            mediaController = system.getObject("mediaController");
+
 
             createControllers.call(this);
 
@@ -879,10 +890,10 @@ let MediaPlayer = function (context) {
         /**
          * This method sets the current track switch mode. Available options are:
          *
-         * MediaPlayer.dependencies.MediaController.trackSwitchModes.NEVER_REPLACE
+         * MediaController.TRACK_SWITCH_MODE_NEVER_REPLACE
          * (used to forbid clearing the buffered data (prior to current playback position) after track switch. Default for video)
          *
-         * MediaPlayer.dependencies.MediaController.trackSwitchModes.ALWAYS_REPLACE
+         * MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE
          * (used to clear the buffered data (prior to current playback position) after track switch. Default for audio)
          *
          * @param type

@@ -613,7 +613,7 @@ function BufferController(config) {
 
         for (var i = 0, ln = rangesToClear.length; i < ln; i +=1) {
             range = {start: rangesToClear.start(i), end: rangesToClear.end(i)};
-            if (mediaController.getSwitchMode(type) === MediaController.trackSwitchModes.ALWAYS_REPLACE || range.start > currentTime) {
+            if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE || range.start > currentTime) {
                 clearBuffer(range);
             }
         }
@@ -657,10 +657,10 @@ function BufferController(config) {
         if (type !== mediaType) return;
 
         switch (switchMode) {
-            case MediaController.trackSwitchModes.ALWAYS_REPLACE:
+            case MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE:
                 clearBuffer(range);
                 break;
-            case MediaController.trackSwitchModes.NEVER_REPLACE:
+            case MediaController.TRACK_SWITCH_MODE_NEVER_REPLACE:
                 break;
             default:
                 log("track switch mode is not supported: " + switchMode);

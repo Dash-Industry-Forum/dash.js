@@ -33,6 +33,7 @@ import AbrController from './controllers/AbrController.js';
 import BufferController from './controllers/BufferController.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
+import MediaController from './controllers/MediaController.js';
 import TextController from './controllers/TextController.js';
 import ScheduleController from './controllers/ScheduleController.js';
 import RulesController from './rules/RulesController.js';
@@ -64,7 +65,7 @@ let StreamProcessor = function () {
                     errHandler:this.system.getObject("errHandler"),
                     mediaSourceExt:MediaSourceExtensions.getInstance(),
                     streamController:StreamController.getInstance(),
-                    mediaController:this.system.getObject("mediaController"),
+                    mediaController:MediaController.getInstance(),
                     adapter:this.system.getObject("adapter"),
                     virtualBuffer:this.system.getObject("virtualBuffer"),
                     textSourceBuffer:TextSourceBuffer.getInstance(),

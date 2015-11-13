@@ -32,6 +32,7 @@
 /**
  * Represents data structure to keep and drive {@link DataChunk}
  */
+import MediaController from '../controllers/MediaController.js';
 import CustomTimeRanges from './CustomTimeRanges.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import EventBus from './EventBus.js';
@@ -270,7 +271,7 @@ let VirtualBuffer = function () {
                 appended = filter.appended,
                 removeOrigin = filter.removeOrigin,
                 limit = filter.limit || Number.POSITIVE_INFINITY,
-                mediaController = this.system.getObject("mediaController"),
+                mediaController = MediaController.getInstance(),
                 ln = 0,
                 result = [],
                 sourceArr;

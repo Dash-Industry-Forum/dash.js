@@ -54,8 +54,7 @@ let Stream = function () {
         protectionController,
         liveEdgeFinder = LiveEdgeFinder.getInstance(),
         playbackController = PlaybackController.getInstance(),
-        boundProtectionErrorHandler,
-
+        mediaController = null,
         eventController = null,
 
         // Encrypted Media Extensions
@@ -174,15 +173,15 @@ let Stream = function () {
 
                 if (!isMediaSupported.call(self, mediaInfo, mediaSource, manifest)) continue;
 
-                if (self.mediaController.isMultiTrackSupportedByType(mediaInfo.type)) {
-                    self.mediaController.addTrack(mediaInfo, streamInfo);
+                if (mediaController.isMultiTrackSupportedByType(mediaInfo.type)) {
+                    mediaController.addTrack(mediaInfo, streamInfo);
                 }
             }
 
-            if (this.mediaController.getTracksFor(type, streamInfo).length === 0) return;
+            if (mediaController.getTracksFor(type, streamInfo).length === 0) return;
 
-            this.mediaController.checkInitialMediaSettings(streamInfo);
-            initialMediaInfo = this.mediaController.getCurrentTrackFor(type, streamInfo);
+            mediaController.checkInitialMediaSettings(streamInfo);
+            initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
 
             // TODO : How to tell index handler live/duration?
             // TODO : Pass to controller and then pass to each method on handler?
@@ -358,12 +357,12 @@ let Stream = function () {
         sourceBufferExt: undefined,
         adapter: undefined,
         fragmentController: undefined,
-        mediaController: undefined,
         capabilities: undefined,
         log: undefined,
         errHandler: undefined,
 
         setup: function () {
+            mediaController = MediaController.getInstance();
             EventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
             EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         },
@@ -413,9 +412,10 @@ let Stream = function () {
             EventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         },
 
-        reset: function (errored) {
+        reset: function (/*errored*/) {
             playbackController.pause();
             playbackController = null;
+            mediaController = null;
             this.deactivate();
 
             isUpdating = false;
