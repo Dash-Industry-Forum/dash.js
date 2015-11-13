@@ -66,7 +66,7 @@ import ProtectionExtensions from './extensions/ProtectionExtensions.js';
 
 import MetricsList from './vo/MetricsList.js';
 
-import XlinkController from './controllers/XlinkController.js';
+
 import XlinkLoader from './XlinkLoader.js';
 import StreamProcessor from './StreamProcessor.js';
 
@@ -153,7 +153,7 @@ let Context = function () {
 
             this.system.mapClass('metrics', MetricsList);
 
-            this.system.mapClass('xlinkController', XlinkController);
+
             this.system.mapClass('xlinkLoader', XlinkLoader);
             this.system.mapClass('streamProcessor', StreamProcessor);
             this.system.mapClass('manifestLoader', ManifestLoader);

@@ -30,7 +30,6 @@
  */
 import XlinkController from './controllers/XlinkController.js';
 import RequestModifierExtensions from './extensions/RequestModifierExtensions.js'
-
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
 import EventBus from './utils/EventBus.js';
@@ -182,7 +181,9 @@ let ManifestLoader = function () {
         },
         setup: function() {
             this.requestModifierExt = RequestModifierExtensions.getInstance();
-            this.xlinkController = this.system.getObject("xlinkController");
+            this.xlinkController = XlinkController.create({
+                xlinkLoader:this.system.getObject('xlinkLoader')
+            })
         },
 
         initialize: function() {
