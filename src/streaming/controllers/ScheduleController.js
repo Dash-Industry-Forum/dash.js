@@ -35,7 +35,6 @@ import SwitchRequest from '../rules/SwitchRequest.js';
 import PlaybackController from './PlaybackController.js';
 import AbrController from './AbrController.js';
 import BufferController from './BufferController.js';
-import TextController from './TextController.js';
 import LiveEdgeFinder from '../LiveEdgeFinder.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";

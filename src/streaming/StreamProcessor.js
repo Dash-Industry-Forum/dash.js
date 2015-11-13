@@ -33,6 +33,7 @@ import AbrController from './controllers/AbrController.js';
 import BufferController from './controllers/BufferController.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
+import TextController from './controllers/TextController.js';
 import ScheduleController from './controllers/ScheduleController.js';
 import RulesController from './rules/RulesController.js';
 import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
@@ -53,8 +54,9 @@ let StreamProcessor = function () {
         mediaInfoArr = [],
 
         createBufferControllerForType = function(type) {
+            var controller = null;
             if (type === "video" || type === "audio" || type === "fragmentedText") {
-                return BufferController.create({
+                controller = BufferController.create({
                     log:this.system.getObject("log"),
                     metricsModel:this.system.getObject("metricsModel"),
                     manifestModel:this.system.getObject("manifestModel"),
@@ -69,8 +71,13 @@ let StreamProcessor = function () {
                     system:this.system
                 })
             }else {
-                return this.system.getObject("textController");
+                controller = TextController.create({
+                    errHandler:this.system.getObject("errHandler"),
+                    sourceBufferExt:this.system.getObject("sourceBufferExt")
+                })
             }
+
+            return controller;
         };
 
     return {

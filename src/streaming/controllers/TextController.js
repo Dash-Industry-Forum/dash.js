@@ -32,94 +32,107 @@ import RepresentationController from '../../dash/controllers/RepresentationContr
 import FragmentController from './FragmentController.js';
 import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-let TextController = function () {
+export default FactoryMaker.getClassFactory(TextController);
 
-     var initialized = false,
-         mediaSource = null,
-         buffer = null,
-         type = null,
+function TextController(config) {
 
-         onDataUpdateCompleted = function(e) {
-             if (e.sender.streamProcessor !== this.streamProcessor) return;
-             EventBus.trigger(Events.TIMED_TEXT_REQUESTED, {index: 0, sender:e.sender}) //TODO make index dynamic if referring to MP?
-         },
+    let sourceBufferExt = config.sourceBufferExt,
+        errHandler = config.errHandler;
 
-         onInitFragmentLoaded = function (e) {
-             var self = this;
-
-             if (e.fragmentModel !== self.streamProcessor.getFragmentModel() || (!e.chunk.bytes)) return;
-
-             self.sourceBufferExt.append(buffer, e.chunk);
-         };
-
-    return {
-        sourceBufferExt: undefined,
-        log: undefined,
-        system: undefined,
-        errHandler: undefined,
-
-        setup: function() {
-            EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-            EventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
-        },
-
-        initialize: function (typeValue, source, streamProcessor) {
-            var self = this;
-
-            type = typeValue;
-            self.setMediaSource(source);
-            self.representationController = streamProcessor.representationController;
-            self.streamProcessor = streamProcessor;
-        },
-
-        /**
-         * @param mediaInfo object
-         * @returns SourceBuffer object
-         * @memberof BufferController#
-         */
-        createBuffer: function(mediaInfo) {
-            try{
-                buffer = this.sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
-
-                if (!initialized) {
-                    if (buffer.hasOwnProperty('initialize')) {
-                        buffer.initialize(type, this);
-                    }
-                    initialized = true;
-                }
-            } catch (e) {
-                this.errHandler.mediaSourceError("Error creating " + type +" source buffer.");
-            }
-
-            return buffer;
-        },
-
-        getBuffer: function () {
-            return buffer;
-        },
-
-        setBuffer: function (value) {
-            buffer = value;
-        },
-
-        setMediaSource: function(value) {
-            mediaSource = value;
-        },
-
-        reset: function (errored) {
-            EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-            EventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
-            if (!errored) {
-                this.sourceBufferExt.abort(mediaSource, buffer);
-                this.sourceBufferExt.removeSourceBuffer(mediaSource, buffer);
-            }
-        }
+    let instance = {
+        initialize :initialize,
+        createBuffer :createBuffer,
+        getBuffer :getBuffer,
+        setBuffer :setBuffer,
+        setMediaSource :setMediaSource,
+        reset :reset
     };
-};
 
-TextController.prototype = {
-    constructor: TextController
-};
+    setup();
 
-export default TextController;
+    return instance;
+
+    let initialized,
+        mediaSource,
+        buffer,
+        type,
+        streamProcessor,
+        representationController;
+
+    function setup() {
+
+        initialized = false;
+        mediaSource = null;
+        buffer = null;
+        type = null;
+        streamProcessor = null;
+        representationController = null;
+
+        EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        EventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+    }
+
+    function initialize(Type, source, StreamProcessor) {
+        type = Type;
+        setMediaSource(source);
+        streamProcessor = StreamProcessor;
+        representationController = streamProcessor.representationController;
+    }
+
+    /**
+     * @param mediaInfo object
+     * @returns SourceBuffer object
+     * @memberof BufferController#
+     */
+    function createBuffer(mediaInfo) {
+        try{
+            buffer = sourceBufferExt.createSourceBuffer(mediaSource, mediaInfo);
+
+            if (!initialized) {
+                if (buffer.hasOwnProperty('initialize')) {
+                    buffer.initialize(type, this);
+                }
+                initialized = true;
+            }
+        } catch (e) {
+            errHandler.mediaSourceError("Error creating " + type +" source buffer.");
+        }
+
+        return buffer;
+    }
+
+    function getBuffer() {
+        return buffer;
+    }
+
+    function setBuffer(value) {
+        buffer = value;
+    }
+
+    function setMediaSource(value) {
+        mediaSource = value;
+    }
+
+    function reset(errored) {
+
+        EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        EventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+
+        if (!errored) {
+            sourceBufferExt.abort(mediaSource, buffer);
+            sourceBufferExt.removeSourceBuffer(mediaSource, buffer);
+        }
+    }
+
+    function onDataUpdateCompleted(e) {
+         if (e.sender.getStreamProcessor() !== streamProcessor) return;
+         EventBus.trigger(Events.TIMED_TEXT_REQUESTED, {index: 0, sender:e.sender}) //TODO make index dynamic if referring to MP?
+     }
+
+    function onInitFragmentLoaded(e) {
+         if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) return;
+         sourceBufferExt.append(buffer, e.chunk);
+     }
+};
