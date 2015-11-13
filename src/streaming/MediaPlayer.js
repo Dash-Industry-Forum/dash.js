@@ -46,6 +46,7 @@ import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
 import AbrController from './controllers/AbrController.js'
+import TimeSyncController from './TimeSyncController.js';
 import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
 import VideoModel from './models/VideoModel.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
@@ -341,7 +342,7 @@ let MediaPlayer = function (context) {
                 videoExt : system.getObject("videoExt"),
                 liveEdgeFinder : LiveEdgeFinder.getInstance(),
                 mediaSourceExt : MediaSourceExtensions.getInstance(),
-                timeSyncController : system.getObject("timeSyncController"),
+                timeSyncController : TimeSyncController.getInstance(),
                 virtualBuffer : system.getObject("virtualBuffer"),
                 errHandler : this.errHandler,
                 timelineConverter : system.getObject("timelineConverter")

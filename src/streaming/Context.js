@@ -77,7 +77,6 @@ import FragmentController from './controllers/FragmentController.js';
 import FragmentModel from './models/FragmentModel.js';
 import Stream from './Stream.js';
 import MediaController from './controllers/MediaController.js';
-import TimeSyncController from './TimeSyncController.js';
 
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
 import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
@@ -166,7 +165,6 @@ let Context = function () {
             this.system.mapClass('fragmentModel', FragmentModel);
             this.system.mapSingleton('mediaController', MediaController);
             this.system.mapClass('stream', Stream);
-            this.system.mapSingleton('timeSyncController', TimeSyncController);
         }
     };
 };

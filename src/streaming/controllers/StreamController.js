@@ -503,8 +503,11 @@ function StreamController(config) {
                     }
                 });
 
-            timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource);
-
+            timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource, {
+                    log: log,
+                    metricsModel: metricsModel,
+                    metricsExt: metricsExt
+                });
         } else {
             reset();
         }
