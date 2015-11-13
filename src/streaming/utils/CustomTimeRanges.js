@@ -1,4 +1,4 @@
-﻿/**
+﻿﻿/**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
@@ -33,8 +33,10 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(CustomTimeRanges);
 
 function CustomTimeRanges(/*config*/) {
+    let customTimeRangeArray = [],
+        length =0;
 
-    let instance = {
+    return {
         customTimeRangeArray: customTimeRangeArray,
         length: length,
         add: add,
@@ -45,41 +47,29 @@ function CustomTimeRanges(/*config*/) {
         end: end
     };
 
-    setup();
-
-    return instance;
-
-    let customTimeRangeArray,
-        length;
-
-    function setup(){
-        customTimeRangeArray = [];
-        length = 0;
-    }
-
     function add(start,end){
         var i=0;
 
-        for(i = 0; (i < customTimeRangeArray.length) && (start > customTimeRangeArray[i].start); i++);
+        for(i=0;(i<this.customTimeRangeArray.length)&&(start>this.customTimeRangeArray[i].start);i++);
 
-        customTimeRangeArray.splice(i, 0, {start:start, end:end});
+        this.customTimeRangeArray.splice(i, 0, {start:start,end:end});
 
-        for(i = 0; i < customTimeRangeArray.length - 1; i++ ){
-            if(mergeRanges(i,i+1)){
+        for(i=0;i<this.customTimeRangeArray.length-1;i++){
+            if(this.mergeRanges(i,i+1)){
                 i--;
             }
         }
-        length = customTimeRangeArray.length;
+        this.length=this.customTimeRangeArray.length;
     }
 
     function clear(){
-        customTimeRangeArray = [];
-        length = 0;
+        this.customTimeRangeArray = [];
+        this.length = 0;
     }
 
     function remove(start,end){
-        for(var i = 0; i < customTimeRangeArray.length; i++){
-            if(start <= customTimeRangeArray[i].start && end >= customTimeRangeArray[i].end) {
+        for(var i=0;i<this.customTimeRangeArray.length;i++){
+            if(start<=this.customTimeRangeArray[i].start && end>=this.customTimeRangeArray[i].end) {
                 //      |--------------Range i-------|
                 //|---------------Range to remove ---------------|
                 //    or
@@ -88,71 +78,71 @@ function CustomTimeRanges(/*config*/) {
                 //    or
                 //                 |--------------Range i-------|
                 //|--------------Range to remove ---------------|
-                customTimeRangeArray.splice(i,1);
+                this.customTimeRangeArray.splice(i,1);
                 i--;
 
-            }else if(start > customTimeRangeArray[i].start && end < customTimeRangeArray[i].end) {
+            }else if(start>this.customTimeRangeArray[i].start && end<this.customTimeRangeArray[i].end) {
                 //|-----------------Range i----------------|
                 //        |-------Range to remove -----|
-                customTimeRangeArray.splice(i+1, 0, {start:end, end:customTimeRangeArray[i].end});
-                customTimeRangeArray[i].end=start;
+                this.customTimeRangeArray.splice(i+1, 0, {start:end,end:this.customTimeRangeArray[i].end});
+                this.customTimeRangeArray[i].end=start;
                 break;
-            }else if( start > customTimeRangeArray[i].start && start<customTimeRangeArray[i].end) {
+            }else if( start>this.customTimeRangeArray[i].start && start<this.customTimeRangeArray[i].end) {
                 //|-----------Range i----------|
                 //                    |---------Range to remove --------|
                 //    or
                 //|-----------------Range i----------------|
                 //            |-------Range to remove -----|
-                customTimeRangeArray[i].end=start;
-            }else if( end > customTimeRangeArray[i].start && end<customTimeRangeArray[i].end) {
+                this.customTimeRangeArray[i].end=start;
+            }else if( end>this.customTimeRangeArray[i].start && end<this.customTimeRangeArray[i].end) {
                 //                     |-----------Range i----------|
                 //|---------Range to remove --------|
                 //            or
                 //|-----------------Range i----------------|
                 //|-------Range to remove -----|
-                customTimeRangeArray[i].start = end;
+                this.customTimeRangeArray[i].start=end;
             }
         }
 
-        length = customTimeRangeArray.length;
+        this.length = this.customTimeRangeArray.length;
     }
 
     function mergeRanges(rangeIndex1,rangeIndex2) {
-        var range1=customTimeRangeArray[rangeIndex1];
-        var range2=customTimeRangeArray[rangeIndex2];
+        var range1=this.customTimeRangeArray[rangeIndex1];
+        var range2=this.customTimeRangeArray[rangeIndex2];
 
         if (range1.start <=  range2.start && range2.start <= range1.end && range1.end <= range2.end) {
             //|-----------Range1----------|
             //                    |-----------Range2----------|
             range1.end=range2.end;
-            customTimeRangeArray.splice(rangeIndex2,1);
+            this.customTimeRangeArray.splice(rangeIndex2,1);
             return true;
 
         } else if (range2.start <= range1.start && range1.start <= range2.end && range2.end <= range1.end) {
             //                |-----------Range1----------|
             //|-----------Range2----------|
             range1.start=range2.start;
-            customTimeRangeArray.splice(rangeIndex2,1);
+            this.customTimeRangeArray.splice(rangeIndex2,1);
             return true;
         } else if (range2.start <= range1.start && range1.start <= range2.end && range1.end <= range2.end) {
             //      |--------Range1-------|
             //|---------------Range2--------------|
-            customTimeRangeArray.splice(rangeIndex1,1);
+            this.customTimeRangeArray.splice(rangeIndex1,1);
             return true;
         } else if (range1.start <= range2.start && range2.start <= range1.end && range2.end <= range1.end) {
             //|-----------------Range1--------------|
             //        |-----------Range2----------|
-            customTimeRangeArray.splice(rangeIndex2,1);
+            this.customTimeRangeArray.splice(rangeIndex2,1);
             return true;
         }
         return false;
     }
 
     function start(index) {
-        return customTimeRangeArray[index].start;
+        return this.customTimeRangeArray[index].start;
     }
 
     function end(index) {
-        return customTimeRangeArray[index].end;
+        return this.customTimeRangeArray[index].end;
     }
 }

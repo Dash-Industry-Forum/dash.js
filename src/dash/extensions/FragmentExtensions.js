@@ -50,7 +50,7 @@ function FragmentExtensions(config) {
     let boxParser;
 
     function setConfig(config) {
-        if (config) return;
+        if (!config) return;
 
         if (config.boxParser) {
             boxParser = config.boxParser;
@@ -98,6 +98,7 @@ function FragmentExtensions(config) {
     function getMediaTimescaleFromMoov(ab) {
         var isoFile = boxParser.parse(ab),
             mdhdBox = isoFile.getBox("mdhd");
+
         return mdhdBox ? mdhdBox.timescale : NaN;
     };
 };
