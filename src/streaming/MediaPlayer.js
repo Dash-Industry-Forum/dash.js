@@ -1086,25 +1086,26 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          */
         retrieveManifest: function (url, callback) {
-            (function (manifestUrl) {
-                var manifestLoader = system.getObject("manifestLoader"),
-                    self = this;
+            var manifestLoader = system.getObject("manifestLoader"),
+                self = this;
 
-                manifestLoader.initialize();
+            manifestLoader.initialize();
 
-                var handler = function (e) {
-                    if (!e.error) {
-                        callback(e.manifest);
-                    } else {
-                        callback(null, e.error);
-                    }
-                    EventBus.off(Events.MANIFEST_LOADED, handler, self);
-                    manifestLoader.reset();
-                };
+            var handler = function (e) {
+                if (!e.error) {
+                    callback(e.manifest);
+                } else {
+                    callback(null, e.error);
+                }
+                EventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+                manifestLoader.reset();
+            };
 
-                EventBus.on(Events.MANIFEST_LOADED, handler, self);
-                manifestLoader.load(URIQueryAndFragmentModel.getInstance().parseURI(manifestUrl));
-            })(url);
+            EventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+
+            let uriQueryFragModel = URIQueryAndFragmentModel.getInstance();
+            uriQueryFragModel.initialize();
+            manifestLoader.load(uriQueryFragModel.parseURI(url));
         },
 
         /**

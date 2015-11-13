@@ -340,7 +340,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
                 addDRMData(manifest, protCtrl);
 
-                protCtrl.init(manifest);
+                protCtrl.initialize(manifest);
             }
 
         } else {
@@ -377,7 +377,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
         for (var i = 0; i < $scope.drmData.length; i++) {
             if ($scope.drmData[i] === data) {
                 $scope.drmData.splice(i,1);
-                data.protCtrl.teardown();
+                data.protCtrl.reset();
                 $scope.safeApply();
             }
         }
