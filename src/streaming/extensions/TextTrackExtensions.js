@@ -34,7 +34,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(TextTrackExtensions);
 
-function TextTrackExtensions(config) {
+function TextTrackExtensions() {
 
     let instance = {
         initialize          :initialize,
@@ -50,11 +50,7 @@ function TextTrackExtensions(config) {
         deleteTextTrack     :deleteTextTrack,
         setConfig           :setConfig
     };
-
-    if (config) {
-        setConfig.call(instance, config);
-    }
-
+    
     return instance;
 
 

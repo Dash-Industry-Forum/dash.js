@@ -41,10 +41,6 @@ function FragmentExtensions(config) {
         setConfig: setConfig
     };
 
-    if (config){
-        setConfig.call(instance, config);
-    }
-
     return instance;
 
     let boxParser;

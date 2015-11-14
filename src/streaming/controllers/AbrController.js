@@ -48,7 +48,7 @@ factory.BANDWIDTH_SAFETY = BANDWIDTH_SAFETY;
 
 export default factory;
 
-function AbrController(config) {
+function AbrController() {
 
     let instance = {
         isPlayingAtTopQuality   :isPlayingAtTopQuality,
@@ -76,9 +76,6 @@ function AbrController(config) {
     };
 
     setup();
-    if (config){
-        setConfig.call(instance, config);
-    }
 
     return instance;
 

@@ -35,9 +35,7 @@ const SECONDS_IN_MIN = 60; // Expression of a minute in seconds
 
 export default FactoryMaker.getSingletonFactory(TTMLParser);
 
-function TTMLParser(config) {
-
-    let videoModel = config ? config.videoModel : null;
+function TTMLParser() {
 
     let instance = {
         parse: parse,
@@ -45,10 +43,6 @@ function TTMLParser(config) {
     };
 
     setup();
-    if (config) {
-        setConfig.call(instance, config);
-    }
-
     return instance;
 
     /*
@@ -69,7 +63,8 @@ function TTMLParser(config) {
         wrapOption,
         unicodeBidi,
         displayAlign,
-        writingMode;
+        writingMode,
+        videoModel;
 
     function setConfig(config) {
         if (!config) return;

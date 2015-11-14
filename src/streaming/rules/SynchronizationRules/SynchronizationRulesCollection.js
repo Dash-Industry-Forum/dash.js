@@ -44,7 +44,6 @@ factory.BEST_GUESS_RULES = BEST_GUESS_RULES;
 export default factory;
 
 function SynchronizationRulesCollection(config) {
-    "use strict";
 
     let system = config.system;
 

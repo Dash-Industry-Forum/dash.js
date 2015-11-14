@@ -49,7 +49,7 @@ factory.DEFAULT_INIT_TRACK_SELECTION_MODE = DEFAULT_INIT_TRACK_SELECTION_MODE;
 
 export default factory;
 
-function MediaController(config) {
+function MediaController() {
 
     let instance = {
         initialize:initialize,

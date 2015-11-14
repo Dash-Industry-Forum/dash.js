@@ -38,7 +38,7 @@ const WALLCLOCK_TIME_UPDATE_INTERVAL = 50; //This value influences the startup t
 
 export default FactoryMaker.getSingletonFactory(PlaybackController);
 
-function PlaybackController(config) {
+function PlaybackController() {
 
     let instance = {
         initialize: initialize,
@@ -65,9 +65,6 @@ function PlaybackController(config) {
     };
 
     setup();
-    if (config){
-        setConfig.call(instance, config);
-    }
 
     return instance;
 

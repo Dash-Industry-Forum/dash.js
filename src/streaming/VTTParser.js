@@ -32,7 +32,7 @@ import FactoryMaker from '../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(VTTParser);
 
-function VTTParser(config) {
+function VTTParser() {
 
     let instance = {
         parse: parse,
@@ -40,10 +40,6 @@ function VTTParser(config) {
     };
 
     setup();
-    if (config) {
-        setConfig.call(instance, config);
-    }
-
     return instance;
 
     let log,

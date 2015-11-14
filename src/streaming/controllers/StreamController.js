@@ -41,7 +41,7 @@ const STREAM_END_THRESHOLD = 0.2;
 
 export default FactoryMaker.getSingletonFactory(StreamController);
 
-function StreamController(config) {
+function StreamController() {
 
     let instance = {
         initialize          :initialize,
@@ -57,10 +57,6 @@ function StreamController(config) {
     };
 
     setup();
-
-    if (config) {
-        setConfig.call(instance, config);
-    }
 
     return instance;
 

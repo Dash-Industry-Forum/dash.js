@@ -1223,7 +1223,8 @@ let MediaPlayer = function (context) {
          * @param value {Boolean}
          */
         displayCaptionsOnTop: function (value) {
-            var textTrackExt = TextTrackExtensions.getInstance({videoModel:videoModel});
+            var textTrackExt = TextTrackExtensions.getInstance();
+            textTrackExt.setConfig({videoModel:videoModel});
             textTrackExt.initialize();
             textTrackExt.displayCConTop(value);
         },

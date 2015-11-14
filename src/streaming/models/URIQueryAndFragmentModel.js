@@ -34,7 +34,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(URIQueryAndFragmentModel);
 
-function URIQueryAndFragmentModel(/*config*/) {
+function URIQueryAndFragmentModel() {
 
     let instance = {
         initialize: initialize,

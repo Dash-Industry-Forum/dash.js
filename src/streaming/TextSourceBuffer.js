@@ -44,7 +44,7 @@ import FactoryMaker from '../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(TextSourceBuffer);
 
-function  TextSourceBuffer(config) {
+function  TextSourceBuffer() {
 
     let instance = {
         initialize :initialize,
@@ -55,12 +55,7 @@ function  TextSourceBuffer(config) {
         setConfig :setConfig
     };
 
-    if (config) {
-        setConfig.call(instance, config);
-    }
-
     return instance;
-
 
     let system,
         errHandler,
@@ -96,13 +91,15 @@ function  TextSourceBuffer(config) {
 
         mediaInfos = streamProcessor.getMediaInfoArr();
         videoModel = VideoModel.getInstance();
-        streamController = StreamController.getInstance()
-        textTrackExtensions = TextTrackExtensions.getInstance({videoModel: videoModel});
+        streamController = StreamController.getInstance();
+        textTrackExtensions = TextTrackExtensions.getInstance();
+        textTrackExtensions.setConfig({videoModel: videoModel});
         textTrackExtensions.initialize();
         isFragmented = !manifestExt.getIsTextTrack(type);
 
         if (isFragmented){
-            fragmentExt = FragmentExtensions.getInstance({boxParser: BoxParser.getInstance()});
+            fragmentExt = FragmentExtensions.getInstance();
+            fragmentExt.setConfig({boxParser: BoxParser.getInstance()});
             fragmentModel = streamProcessor.getFragmentModel();
             this.buffered =  CustomTimeRanges.create();
         }
