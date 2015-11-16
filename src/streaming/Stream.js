@@ -356,7 +356,6 @@ let Stream = function () {
     return {
         system: undefined,
         manifestModel: undefined,
-        sourceBufferExt: undefined,
         adapter: undefined,
         capabilities: undefined,
         log: undefined,

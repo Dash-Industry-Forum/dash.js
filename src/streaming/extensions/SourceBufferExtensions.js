@@ -33,21 +33,40 @@ import MediaController from '../controllers/MediaController.js';
 import Error from '../vo/Error.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-let SourceBufferExtensions = function () {
-    "use strict";
-    this.system = undefined;
-    this.manifestExt = undefined;
-};
+const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
-SourceBufferExtensions.prototype = {
+let factory = FactoryMaker.getSingletonFactory(SourceBufferExtensions);
 
-    constructor: SourceBufferExtensions,
+factory.QUOTA_EXCEEDED_ERROR_CODE = QUOTA_EXCEEDED_ERROR_CODE;
 
-    createSourceBuffer: function (mediaSource, mediaInfo) {
-        "use strict";
-        var self = this,
-            codec = mediaInfo.codec,
+export default factory;
+
+function SourceBufferExtensions() {
+
+    let instance = {
+        append :append,
+        remove :remove,
+        abort :abort,
+        createSourceBuffer:createSourceBuffer,
+        removeSourceBuffer :removeSourceBuffer,
+        getBufferRange :getBufferRange,
+        getAllRanges:getAllRanges,
+        getTotalBufferedTime :getTotalBufferedTime,
+        getBufferLength :getBufferLength,
+        getRangeDifference :getRangeDifference,
+        setConfig :setConfig
+    }
+
+    return instance;
+
+    let system,
+        manifestExt;
+
+    function createSourceBuffer(mediaSource, mediaInfo) {
+
+        var codec = mediaInfo.codec,
             buffer = null;
 
         try {
@@ -65,12 +84,12 @@ SourceBufferExtensions.prototype = {
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp"') !== -1)) {
                 buffer = TextSourceBuffer.getInstance()
                 buffer.setConfig({
-                    system:this.system,
-                    errHandler:this.system.getObject("errHandler"),
-                    adapter:this.system.getObject("adapter"),
-                    manifestExt:this.manifestExt,
+                    system:system,
+                    errHandler:system.getObject("errHandler"),
+                    adapter:system.getObject("adapter"),
+                    manifestExt:manifestExt,
                     mediaController:MediaController.getInstance(),
-                    log:this.system.getObject("log")
+                    log:system.getObject("log")
                 })
             } else {
                 throw ex;
@@ -78,18 +97,18 @@ SourceBufferExtensions.prototype = {
         }
 
         return buffer;
-    },
+    }
 
-    removeSourceBuffer: function (mediaSource, buffer) {
+    function removeSourceBuffer(mediaSource, buffer) {
         "use strict";
 
         try {
             mediaSource.removeSourceBuffer(buffer);
         } catch(ex){
         }
-    },
+    }
 
-    getBufferRange: function (buffer, time, tolerance) {
+    function getBufferRange(buffer, time, tolerance) {
         "use strict";
 
         var ranges = null,
@@ -140,9 +159,9 @@ SourceBufferExtensions.prototype = {
         }
 
         return null;
-    },
+    }
 
-    getAllRanges: function(buffer) {
+    function getAllRanges(buffer) {
         var ranges = null;
 
         try{
@@ -151,10 +170,10 @@ SourceBufferExtensions.prototype = {
         } catch (ex) {
             return null;
         }
-    },
+    }
 
-    getTotalBufferedTime: function(buffer) {
-        var ranges = this.getAllRanges(buffer),
+    function getTotalBufferedTime(buffer) {
+        var ranges = getAllRanges(buffer),
             totalBufferedTime = 0,
             ln,
             i;
@@ -166,16 +185,14 @@ SourceBufferExtensions.prototype = {
         }
 
         return totalBufferedTime;
-    },
+    }
 
-    getBufferLength: function (buffer, time, tolerance) {
-        "use strict";
+    function getBufferLength(buffer, time, tolerance) {
 
-        var self = this,
-            range,
+        var range,
             length;
 
-        range = self.getBufferRange(buffer, time, tolerance);
+        range = getBufferRange(buffer, time, tolerance);
 
         if (range === null) {
             length = 0;
@@ -184,15 +201,15 @@ SourceBufferExtensions.prototype = {
         }
 
         return length;
-    },
+    }
 
-    getRangeDifference: function(currentRanges, buffer) {
+    function getRangeDifference(currentRanges, buffer) {
         if (!buffer) return null;
 
         //TODO we may need to look for a more elegant and robust method
         // The logic below checks that is the difference between currentRanges and actual SourceBuffer ranges
 
-        var newRanges = this.getAllRanges(buffer),
+        var newRanges = getAllRanges(buffer),
             newStart,
             newEnd,
             equalStart,
@@ -259,9 +276,78 @@ SourceBufferExtensions.prototype = {
         }
 
         return null;
-    },
+    }
 
-    waitForUpdateEnd: function(buffer, callback) {
+    function append(buffer, chunk) {
+        var bytes = chunk.bytes,
+            appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null),
+            // our user-defined sourcebuffer-like object has Object as its
+            // prototype whereas built-in SourceBuffers will have something
+            // more sensible. do not pass chunk to built-in append.
+            acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === "Object";
+
+        if (!appendMethod) return;
+
+        try {
+            waitForUpdateEnd(buffer, function() {
+                if (acceptsChunk) {
+                    // chunk.start is used in calculations by TextSourceBuffer
+                    buffer[appendMethod](bytes, chunk);
+                } else {
+                    buffer[appendMethod](bytes);
+                }
+                // updating is in progress, we should wait for it to complete before signaling that this operation is done
+                waitForUpdateEnd(buffer, function() {
+                    EventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
+                });
+            });
+        } catch (err) {
+            EventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes, error:new Error(err.code, err.message, null)});
+        }
+    }
+
+    function remove(buffer, start, end, mediaSource) {
+        var self = this;
+
+        try {
+            // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
+            waitForUpdateEnd(buffer, function() {
+                if ((start >= 0) && (end > start) && (mediaSource.readyState !== "ended")) {
+                    buffer.remove(start, end);
+                }
+                // updating is in progress, we should wait for it to complete before signaling that this operation is done
+                waitForUpdateEnd(buffer, function() {
+                    EventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
+                });
+            });
+        } catch (err) {
+            EventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end, error:new Error(err.code, err.message, null)});
+        }
+    }
+
+    function abort(mediaSource, buffer) {
+        "use strict";
+        try {
+            if (mediaSource.readyState === "open") {
+                buffer.abort();
+            }
+        } catch(ex){
+        }
+    }
+
+    function setConfig(config){
+        if (!config) return;
+
+        if (config.system){
+            system = config.system;
+        }
+        if (config.manifestExt){
+            manifestExt = config.manifestExt;
+        }
+    }
+
+    //private
+    function waitForUpdateEnd(buffer, callback) {
         "use strict";
         var intervalId,
             CHECK_INTERVAL = 50,
@@ -296,68 +382,5 @@ SourceBufferExtensions.prototype = {
             // use setInterval to periodically check if updating has been completed
             intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
         }
-    },
-
-    append: function (buffer, chunk) {
-        var self = this,
-            bytes = chunk.bytes,
-            appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null),
-            // our user-defined sourcebuffer-like object has Object as its
-            // prototype whereas built-in SourceBuffers will have something
-            // more sensible. do not pass chunk to built-in append.
-            acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === "Object";
-
-        if (!appendMethod) return;
-
-        try {
-            self.waitForUpdateEnd(buffer, function() {
-                if (acceptsChunk) {
-                    // chunk.start is used in calculations by TextSourceBuffer
-                    buffer[appendMethod](bytes, chunk);
-                } else {
-                    buffer[appendMethod](bytes);
-                }
-                // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                self.waitForUpdateEnd(buffer, function() {
-                    EventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
-                });
-            });
-        } catch (err) {
-            EventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes, error:new Error(err.code, err.message, null)});
-        }
-    },
-
-    remove: function (buffer, start, end, mediaSource) {
-        var self = this;
-
-        try {
-            // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
-            self.waitForUpdateEnd(buffer, function() {
-                if ((start >= 0) && (end > start) && (mediaSource.readyState !== "ended")) {
-                    buffer.remove(start, end);
-                }
-                // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                self.waitForUpdateEnd(buffer, function() {
-                    EventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
-                });
-            });
-        } catch (err) {
-            EventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end, error:new Error(err.code, err.message, null)});
-        }
-    },
-
-    abort: function (mediaSource, buffer) {
-        "use strict";
-        try {
-            if (mediaSource.readyState === "open") {
-                buffer.abort();
-            }
-        } catch(ex){
-        }
     }
 };
-
-SourceBufferExtensions.QUOTA_EXCEEDED_ERROR_CODE = 22;
-
-
-export default SourceBufferExtensions;

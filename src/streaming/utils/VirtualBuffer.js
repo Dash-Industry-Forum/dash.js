@@ -33,6 +33,7 @@
  * Represents data structure to keep and drive {@link DataChunk}
  */
 import MediaController from '../controllers/MediaController.js';
+import SourceBufferExtensions from '../extensions/SourceBufferExtensions.js';
 import CustomTimeRanges from './CustomTimeRanges.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import EventBus from './EventBus.js';
@@ -40,6 +41,7 @@ import Events from "../Events.js";
 
 let VirtualBuffer = function () {
     var data = {},
+        sourceBufferExt = null,
 
         sortArrayByProperty = function(array, sortProp) {
             var compare = function (obj1, obj2){
@@ -128,7 +130,11 @@ let VirtualBuffer = function () {
 
     return {
         system:undefined,
-        sourceBufferExt: undefined,
+
+
+        initialize: function(){
+            sourceBufferExt = SourceBufferExtensions.getInstance();
+        },
 
         /**
          * Adds DataChunk to array of chunks
@@ -181,7 +187,7 @@ let VirtualBuffer = function () {
             }
 
             sortArrayByProperty(data[streamId][mediaType].appended, "start");
-            diff = this.sourceBufferExt.getRangeDifference(bufferedRanges, buffer);
+            diff = sourceBufferExt.getRangeDifference(bufferedRanges, buffer);
 
             if (!diff) {
                 if (oldChunk) {
@@ -340,7 +346,7 @@ let VirtualBuffer = function () {
 
             for (var streamId in data) {
                 if (data.hasOwnProperty(streamId)) {
-                    level += this.sourceBufferExt.getTotalBufferedTime({buffered: data[streamId][mediaType].calculatedBufferedRanges});
+                    level += sourceBufferExt.getTotalBufferedTime({buffered: data[streamId][mediaType].calculatedBufferedRanges});
                 }
             }
 
@@ -351,7 +357,8 @@ let VirtualBuffer = function () {
          * @memberof VirtualBuffer#
          */
         reset: function() {
-            data = {};
+            data = {}
+            sourceBufferExt = null;
         }
     };
 };
