@@ -41,8 +41,9 @@ import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollec
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import FragmentLoader from './FragmentLoader.js';
 import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
-import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
+import SourceBufferExtensions from './extensions/SourceBufferExtensions';
 import TextSourceBuffer from './TextSourceBuffer.js';
+import VirtualBuffer from './utils/VirtualBuffer.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 
 let StreamProcessor = function () {
@@ -56,30 +57,28 @@ let StreamProcessor = function () {
         mediaInfoArr = [],
 
         createBufferControllerForType = function(type) {
-            var controller = null,
-                sourceBufferExt = SourceBufferExtensions.getInstance();
+            var controller = null
 
-            sourceBufferExt.setConfig({system:this.system, manifestExt:this.system.getObject("manifestExt")});
 
             if (type === "video" || type === "audio" || type === "fragmentedText") {
                 controller = BufferController.create({
                     log:this.system.getObject("log"),
                     metricsModel:this.system.getObject("metricsModel"),
                     manifestModel:this.system.getObject("manifestModel"),
-                    sourceBufferExt:sourceBufferExt,
+                    sourceBufferExt:SourceBufferExtensions.getInstance(),
                     errHandler:this.system.getObject("errHandler"),
                     mediaSourceExt:MediaSourceExtensions.getInstance(),
                     streamController:StreamController.getInstance(),
                     mediaController:MediaController.getInstance(),
                     adapter:this.system.getObject("adapter"),
-                    virtualBuffer:this.system.getObject("virtualBuffer"),
+                    virtualBuffer:VirtualBuffer.getInstance(),
                     textSourceBuffer:TextSourceBuffer.getInstance(),
                     system:this.system
                 })
             }else {
                 controller = TextController.create({
                     errHandler:this.system.getObject("errHandler"),
-                    sourceBufferExt:sourceBufferExt
+                    sourceBufferExt:SourceBufferExtensions.getInstance()
                 })
             }
 

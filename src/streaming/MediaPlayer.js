@@ -45,6 +45,8 @@ import LiveEdgeFinder from './LiveEdgeFinder.js';
 import Events from './Events.js';
 import PublicEvents from './PublicEvents.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
+import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
+import VirtualBuffer from './utils/VirtualBuffer.js';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
 import AbrController from './controllers/AbrController.js'
@@ -319,6 +321,13 @@ let MediaPlayer = function (context) {
             let scheduleRulesCollection = ScheduleRulesCollection.getInstance({system: system});
             scheduleRulesCollection.initialize();
 
+            let sourceBufferExt = SourceBufferExtensions.getInstance();
+            sourceBufferExt.setConfig({system:system, manifestExt:system.getObject("manifestExt")});
+
+            let virtualBuffer = VirtualBuffer.getInstance();
+            virtualBuffer.setConfig({
+                sourceBufferExt:sourceBufferExt
+            });
 
             mediaController = MediaController.getInstance();
             mediaController.initialize();
@@ -355,7 +364,7 @@ let MediaPlayer = function (context) {
                 liveEdgeFinder : LiveEdgeFinder.getInstance(),
                 mediaSourceExt : MediaSourceExtensions.getInstance(),
                 timeSyncController : TimeSyncController.getInstance(),
-                virtualBuffer : system.getObject("virtualBuffer"),
+                virtualBuffer : virtualBuffer,
                 errHandler : this.errHandler,
                 timelineConverter : system.getObject("timelineConverter")
             });
