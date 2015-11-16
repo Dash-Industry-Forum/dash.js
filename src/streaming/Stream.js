@@ -29,489 +29,509 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import LiveEdgeFinder from './LiveEdgeFinder.js';
-import MediaPlayer from './MediaPlayer.js';
-import BufferController from './controllers/BufferController.js';
-import RepresentationController from '../dash/controllers/RepresentationController.js';
-import ProtectionController from './controllers/ProtectionController.js';
 import MediaController from './controllers/MediaController.js';
 import EventController from './controllers/EventController.js';
 import FragmentController from './controllers/FragmentController.js';
-import EventBus from './utils/EventBus.js';
-import Events from './Events.js';
 import AbrController from './controllers/AbrController.js';
 import VideoModel from './models/VideoModel.js';
 import PlaybackController from './controllers/PlaybackController.js';
+import EventBus from './utils/EventBus.js';
+import Events from './Events.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
-let Stream = function () {
-    "use strict";
+const DATA_UPDATE_FAILED_ERROR_CODE = 1;
 
-    var streamProcessors = [],
-        isStreamActivated = false,
-        isMediaInitialized = false,
-        streamInfo = null,
-        updateError = {},
-        isUpdating = false,
-        isInitialized = false,
+export default FactoryMaker.getClassFactory(Stream);
+
+function Stream(config) {
+
+    let system = config.system,
+        manifestModel = config.manifestModel,
+        adapter = config.adapter,
+        capabilities = config.capabilities,
+        log = config.log,
+        errHandler = config.errHandler;
+
+    let instance = {
+        initialize :initialize,
+        activate :activate,
+        deactivate :deactivate,
+        getDuration :getDuration,
+        getStartTime :getStartTime,
+        getStreamIndex :getStreamIndex,
+        getId :getId,
+        getStreamInfo :getStreamInfo,
+        hasMedia :hasMedia,
+        getBitrateListFor :getBitrateListFor,
+        startEventController :startEventController,
+        resetEventController :resetEventController,
+        isActivated :isActivated,
+        isInitialized :isInitialized,
+        updateData: updateData,
+        reset :reset
+    }
+
+    setup();
+    return instance;
+
+    let streamProcessors,
+        isStreamActivated,
+        isMediaInitialized,
+        streamInfo,
+        updateError,
+        isUpdating,
+        initialized,
         protectionController,
-        liveEdgeFinder = LiveEdgeFinder.getInstance(),
-        playbackController = PlaybackController.getInstance(),
-        mediaController = null,
-        fragmentController = null,
-        eventController = null,
-
-        // Encrypted Media Extensions
-        onProtectionError = function(event) {
-            if (event.error) {
-                this.errHandler.mediaKeySessionError(event.error);
-                this.log(event.error);
-                this.reset();
-            }
-        },
-
-        getMimeTypeOrType = function(mediaInfo) {
-            return mediaInfo.type === "text"? mediaInfo.mimeType : mediaInfo.type;
-        },
-
-        isMediaSupported = function(mediaInfo, mediaSource, manifest) {
-            var self = this,
-                type = mediaInfo.type,
-                codec,
-                msg;
-
-            if (type === "muxed" && mediaInfo) {
-                msg = "Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines";
-                this.log(msg);
-                this.errHandler.manifestError(msg, "multiplexedrep", this.manifestModel.getValue());
-                return false;
-            }
-
-            if ((type === "text") || (type === "fragmentedText")) return true;
-
-            codec = mediaInfo.codec;
-            self.log(type + " codec: " + codec);
-
-            if (!!mediaInfo.contentProtection && !self.capabilities.supportsEncryptedMedia()) {
-                self.errHandler.capabilityError("encryptedmedia");
-            } else if (!self.capabilities.supportsCodec(VideoModel.getInstance().getElement(), codec)) {
-                msg = type + "Codec (" + codec + ") is not supported.";
-                self.errHandler.manifestError(msg, "codec", manifest);
-                self.log(msg);
-                return false;
-            }
-
-            return true;
-        },
-
-        onCurrentTrackChanged = function(e) {
-            if (e.newMediaInfo.streamInfo.id !== streamInfo.id) return;
-
-            var processor = getProcessorForMediaInfo.call(this, e.oldMediaInfo);
-            if (!processor) return;
-
-            var currentTime = playbackController.getTime(),
-                buffer = processor.getBuffer(),
-                mediaInfo = e.newMediaInfo,
-                manifest = this.manifestModel.getValue(),
-                idx = streamProcessors.indexOf(processor),
-                mediaSource = processor.getMediaSource();
-
-            if (mediaInfo.type !== "fragmentedText"){
-                processor.reset(true);
-                createStreamProcessor.call(this, mediaInfo, manifest, mediaSource, {buffer: buffer, replaceIdx: idx, currentTime: currentTime});
-                playbackController.seek(playbackController.getTime());
-            }else {
-                processor.updateMediaInfo(manifest, mediaInfo);
-            }
-        },
-
-        createStreamProcessor = function(mediaInfo, manifest, mediaSource, optionalSettings) {
-            var self = this,
-                streamProcessor = self.system.getObject("streamProcessor"),
-                allMediaForType = this.adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);
-
-            streamProcessor.initialize(getMimeTypeOrType.call(self, mediaInfo), fragmentController, mediaSource, self, eventController);
-            self.abrController.updateTopQualityIndex(mediaInfo);
-
-            if (optionalSettings) {
-                streamProcessor.setBuffer(optionalSettings.buffer);
-                streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
-                streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
-            } else {
-                streamProcessors.push(streamProcessor);
-            }
-
-            if((mediaInfo.type === "text" || mediaInfo.type === "fragmentedText")) {
-                var idx;
-                for(var i = 0; i < allMediaForType.length; i++){
-                    if(allMediaForType[i].index === mediaInfo.index) {
-                        idx = i;
-                    }
-                    streamProcessor.updateMediaInfo(manifest, allMediaForType[i]);//creates text tracks for all adaptations in one stream processor
-                }
-                if(mediaInfo.type === "fragmentedText"){
-                    streamProcessor.updateMediaInfo(manifest, allMediaForType[idx]);//sets the initial media info
-                }
-            }else {
-                streamProcessor.updateMediaInfo(manifest, mediaInfo);
-            }
-
-            return streamProcessor;
-        },
-
-        initializeMediaForType = function(type, mediaSource) {
-            var self = this,
-                manifest = self.manifestModel.getValue(),
-                allMediaForType = this.adapter.getAllMediaInfoForType(manifest, streamInfo, type),
-                mediaInfo = null,
-                initialMediaInfo;
-
-            if (!allMediaForType || allMediaForType.length === 0) {
-                self.log("No " + type + " data.");
-                return;
-            }
-
-            for (var i = 0, ln = allMediaForType.length; i < ln; i += 1) {
-                mediaInfo = allMediaForType[i];
-
-                if (!isMediaSupported.call(self, mediaInfo, mediaSource, manifest)) continue;
-
-                if (mediaController.isMultiTrackSupportedByType(mediaInfo.type)) {
-                    mediaController.addTrack(mediaInfo, streamInfo);
-                }
-            }
-
-            if (mediaController.getTracksFor(type, streamInfo).length === 0) return;
-
-            mediaController.checkInitialMediaSettings(streamInfo);
-            initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
-
-            // TODO : How to tell index handler live/duration?
-            // TODO : Pass to controller and then pass to each method on handler?
-
-            createStreamProcessor.call(this, initialMediaInfo, manifest, mediaSource);
-        },
-
-        initializeMedia = function (mediaSource) {
-            var self = this,
-                manifest = self.manifestModel.getValue(),
-                events;
-
-            eventController = EventController.getInstance();
-            eventController.initialize();
-            eventController.setConfig({
-                log: self.system.getObject("log"),
-                manifestModel: self.system.getObject("manifestModel"),
-                manifestUpdater: self.system.getObject("manifestUpdater")
-            });
-            events = self.adapter.getEventsFor(manifest, streamInfo);
-            eventController.addInlineEvents(events);
-
-            isUpdating = true;
-            initializeMediaForType.call(self, "video", mediaSource);
-            initializeMediaForType.call(self, "audio", mediaSource);
-            initializeMediaForType.call(self, "text", mediaSource);
-            initializeMediaForType.call(self, "fragmentedText", mediaSource);
-            initializeMediaForType.call(self, "muxed", mediaSource);
-
-            createBuffers.call(self);
-
-            isMediaInitialized = true;
-            isUpdating = false;
-
-            if (streamProcessors.length === 0) {
-                var msg = "No streams to play.";
-                self.errHandler.manifestError(msg, "nostreams", manifest);
-                self.log(msg);
-            } else {
-                liveEdgeFinder.initialize({timelineConverter: self.system.getObject("timelineConverter"), streamProcessor: streamProcessors[0]});
-                //self.log("Playback initialized!");
-                checkIfInitializationCompleted.call(this);
-            }
-        },
-
-        checkIfInitializationCompleted = function() {
-            var self = this,
-                ln = streamProcessors.length,
-                hasError = !!updateError.audio || !!updateError.video,
-                error = hasError ? new Error(Stream.DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null,
-                i = 0;
-
-            for (i; i < ln; i += 1) {
-                if (streamProcessors[i].isUpdating() || isUpdating) return;
-            }
-
-            isInitialized = true;
-            EventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error:error});
-
-            if (!isMediaInitialized || isStreamActivated) return;
-            protectionController.initialize(self.manifestModel.getValue(), getMediaInfo.call(this, "audio"), getMediaInfo.call(this, "video"));
-            isStreamActivated = true;
-        },
-
-        getMediaInfo = function(type) {
-            var ln = streamProcessors.length,
-                mediaCtrl = null;
-
-            for (var i = 0; i < ln; i += 1) {
-                mediaCtrl = streamProcessors[i];
-
-                if (mediaCtrl.getType() === type) return mediaCtrl.getMediaInfo();
-            }
-
-            return null;
-        },
-
-        createBuffers = function() {
-            for (var i = 0, ln = streamProcessors.length; i < ln; i += 1) {
-                streamProcessors[i].createBuffer();
-            }
-        },
-
-        onBufferingCompleted = function(e) {
-            if (e.streamInfo !== streamInfo) return;
-
-            var processors = getProcessors(),
-                ln = processors.length,
-                i = 0;
-
-            // if there is at least one buffer controller that has not completed buffering yet do nothing
-            for (i; i < ln; i += 1) {
-                if (!processors[i].isBufferingCompleted()) return;
-            }
-
-            EventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {streamInfo: streamInfo});
-        },
-
-        onDataUpdateCompleted = function(e) {
-            if (e.sender.streamProcessor.getStreamInfo() !== streamInfo) return;
-
-            var type = e.sender.streamProcessor.getType();
-
-            updateError[type] = e.error;
-
-            checkIfInitializationCompleted.call(this);
-        },
-
-        getProcessorForMediaInfo = function(mediaInfo) {
-            if (!mediaInfo) return false;
-
-            var processors = getProcessors.call(this);
-
-            return processors.filter(function(processor){
-                return (processor.getType() === mediaInfo.type);
-            })[0];
-        },
-
-        getProcessors = function() {
-            var arr = [],
-                i = 0,
-                ln = streamProcessors.length,
-                type,
-                controller;
-
-            for (i; i < ln; i += 1) {
-                controller = streamProcessors[i];
-                type = controller.getType();
-
-                if (type === "audio" || type === "video" || type === "fragmentedText") {
-                    arr.push(controller);
-                }
-            }
-
-            return arr;
-        },
-
-        updateData = function (updatedStreamInfo) {
-            var self = this,
-                ln = streamProcessors.length,
-                manifest = self.manifestModel.getValue(),
-                i = 0,
-                mediaInfo,
-                events,
-                controller;
-
-            isStreamActivated = false;
-            streamInfo = updatedStreamInfo;
-            self.log("Manifest updated... set new data on buffers.");
-
-            if (eventController) {
-                events = self.adapter.getEventsFor(manifest, streamInfo);
-                eventController.addInlineEvents(events);
-            }
-
-            isUpdating = true;
-            isInitialized = false;
-
-            for (i; i < ln; i +=1) {
-                controller = streamProcessors[i];
-                mediaInfo = self.adapter.getMediaInfoForType(manifest, streamInfo, controller.getType());
-                this.abrController.updateTopQualityIndex(mediaInfo);
-                controller.updateMediaInfo(manifest, mediaInfo);
-            }
-
-            isUpdating = false;
-            checkIfInitializationCompleted.call(self);
-        };
-
-    return {
-        system: undefined,
-        manifestModel: undefined,
-        adapter: undefined,
-        capabilities: undefined,
-        log: undefined,
-        errHandler: undefined,
-
-        setup: function () {
-            mediaController = MediaController.getInstance();
-
-            fragmentController = FragmentController.create({
-                log:this.log,
-                system:this.system
-            })
-
-            EventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
-            EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        },
-
-        initialize: function(strmInfo, protectionCtrl) {
-            this.abrController = AbrController.getInstance();
-
-            streamInfo = strmInfo;
-            protectionController = protectionCtrl;
-            EventBus.on(Events.KEY_ERROR, onProtectionError, this);
-            EventBus.on(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, this);
-            EventBus.on(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, this);
-            EventBus.on(Events.KEY_SYSTEM_SELECTED, onProtectionError, this);
-            EventBus.on(Events.KEY_SESSION_CREATED, onProtectionError, this);
-        },
-
-        /**
-         * Activates Stream by re-initalizing some of its components
-         * @param mediaSource {MediaSource}
-         * @memberof Stream#
-         */
-        activate: function(mediaSource){
-            if (!isStreamActivated) {
-                EventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
-                initializeMedia.call(this, mediaSource);
-            } else {
-                createBuffers.call(this);
-            }
-        },
-
-        /**
-         * Partially resets some of the Stream elements
-         * @memberof Stream#
-         */
-        deactivate: function() {
-            var ln = streamProcessors.length,
-                i = 0;
-
-            for (i; i < ln; i += 1) {
-                streamProcessors[i].reset();
-            }
-
-            streamProcessors = [];
-            isStreamActivated = false;
-            isMediaInitialized = false;
-            this.resetEventController();
-            EventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
-        },
-
-        reset: function (/*errored*/) {
-            playbackController.pause();
-            playbackController = null;
-            mediaController = null;
-
-            this.deactivate();
-
-            isUpdating = false;
-            isInitialized = false;
-
-            if (fragmentController) {
-                fragmentController.reset();
-            }
-            fragmentController = null;
-
-            liveEdgeFinder.abortSearch();
-            updateError = {};
-
-            EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-            EventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
-            EventBus.off(Events.KEY_ERROR, onProtectionError, this);
-            EventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, this);
-            EventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, this);
-            EventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, this);
-            EventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, this);
-        },
-
-        getDuration: function () {
-            return streamInfo.duration;
-        },
-
-        getStartTime: function() {
-            return streamInfo.start;
-        },
-
-        getStreamIndex: function() {
-            return streamInfo.index;
-        },
-
-        getId: function() {
-            return streamInfo.id;
-        },
-
-        getStreamInfo: function() {
-            return streamInfo;
-        },
-
-        hasMedia: function(type){
-            return (getMediaInfo.call(this, type) !== null);
-        },
-
-        /**
-         * @param type
-         * @returns {Array}
-         * @memberof Stream#
-         */
-        getBitrateListFor: function(type) {
-            var mediaInfo = getMediaInfo.call(this, type);
-
-            return this.abrController.getBitrateList(mediaInfo);
-        },
-
-        startEventController: function() {
+        liveEdgeFinder,
+        playbackController,
+        mediaController,
+        fragmentController,
+        eventController,
+        abrController;
+
+
+    function setup() {
+        streamProcessors = [];
+        isStreamActivated = false;
+        isMediaInitialized = false;
+        streamInfo = null;
+        updateError = {};
+        isUpdating = false;
+        initialized = false;
+
+        liveEdgeFinder = LiveEdgeFinder.getInstance();
+        playbackController = PlaybackController.getInstance();
+        abrController = AbrController.getInstance();
+        mediaController = MediaController.getInstance();
+        fragmentController = FragmentController.create({
+            log:log,
+            system:system
+        })
+
+        EventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
+        EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+    }
+
+    function initialize(StreamInfo, ProtectionController) {
+        streamInfo = StreamInfo;
+
+        //TODO will need to seperate this once DRM is optional.
+        protectionController = ProtectionController;
+        if (protectionController) {
+            EventBus.on(Events.KEY_ERROR, onProtectionError, instance);
+            EventBus.on(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
+            EventBus.on(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
+            EventBus.on(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
+            EventBus.on(Events.KEY_SESSION_CREATED, onProtectionError, instance);
+        }
+    }
+
+    /**
+     * Activates Stream by re-initalizing some of its components
+     * @param mediaSource {MediaSource}
+     * @memberof Stream#
+     */
+    function activate(mediaSource){
+        if (!isStreamActivated) {
+            EventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+            initializeMedia(mediaSource);
+        } else {
+            createBuffers();
+        }
+    }
+
+    /**
+     * Partially resets some of the Stream elements
+     * @memberof Stream#
+     */
+    function deactivate() {
+        var ln = streamProcessors.length,
+            i = 0;
+
+        for (i; i < ln; i += 1) {
+            streamProcessors[i].reset();
+        }
+
+        streamProcessors = [];
+        isStreamActivated = false;
+        isMediaInitialized = false;
+        resetEventController();
+        EventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+    }
+
+    function reset() {
+        playbackController.pause();
+        playbackController = null;
+        mediaController = null;
+        abrController = null;
+
+        deactivate();
+
+        isUpdating = false;
+        initialized = false;
+
+        if (fragmentController) {
+            fragmentController.reset();
+        }
+        fragmentController = null;
+
+        liveEdgeFinder.abortSearch();
+        updateError = {};
+
+        EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+        EventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
+        EventBus.off(Events.KEY_ERROR, onProtectionError, instance);
+        EventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
+        EventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
+        EventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
+        EventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, instance);
+    }
+
+    function getDuration() {
+        return streamInfo.duration;
+    }
+
+    function getStartTime() {
+        return streamInfo.start;
+    }
+
+    function getStreamIndex() {
+        return streamInfo.index;
+    }
+
+    function getId() {
+        return streamInfo.id;
+    }
+
+    function getStreamInfo() {
+        return streamInfo;
+    }
+
+    function hasMedia(type){
+        return (getMediaInfo(type) !== null);
+    }
+
+    /**
+     * @param type
+     * @returns {Array}
+     * @memberof Stream#
+     */
+    function getBitrateListFor(type) {
+        var mediaInfo = getMediaInfo(type);
+        return abrController.getBitrateList(mediaInfo);
+    }
+
+    function startEventController() {
+        if (eventController) {
             eventController.start();
-        },
+        }
+    }
 
-        resetEventController: function() {
-            if (eventController) {
-                eventController.reset();
+    function resetEventController() {
+        if (eventController) {
+            eventController.reset();
+       }
+    }
+
+    /**
+     * Indicates whether the stream has been activated or not
+     * @returns {Boolean}
+     * @memberof Stream#
+     */
+    function isActivated() {
+        return isStreamActivated;
+    }
+
+    function isInitialized() {
+        return initialized;
+    }
+
+
+    // Encrypted Media Extensions
+    function onProtectionError(event) {
+        if (event.error) {
+            errHandler.mediaKeySessionError(event.error);
+            log(event.error);
+            reset();
+        }
+    }
+
+    function getMimeTypeOrType(mediaInfo) {
+        return mediaInfo.type === "text"? mediaInfo.mimeType : mediaInfo.type;
+    }
+
+    function isMediaSupported(mediaInfo, mediaSource, manifest) {
+        var type = mediaInfo.type,
+            codec,
+            msg;
+
+        if (type === "muxed" && mediaInfo) {
+            msg = "Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines";
+            log(msg);
+            errHandler.manifestError(msg, "multiplexedrep", manifestModel.getValue());
+            return false;
+        }
+
+        if ((type === "text") || (type === "fragmentedText")) return true;
+
+        codec = mediaInfo.codec;
+        log(type + " codec: " + codec);
+
+        if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
+            errHandler.capabilityError("encryptedmedia");
+        } else if (!capabilities.supportsCodec(VideoModel.getInstance().getElement(), codec)) {
+            msg = type + "Codec (" + codec + ") is not supported.";
+            errHandler.manifestError(msg, "codec", manifest);
+            log(msg);
+            return false;
+        }
+
+        return true;
+    }
+
+    function onCurrentTrackChanged(e) {
+        if (e.newMediaInfo.streamInfo.id !== streamInfo.id) return;
+
+        var processor = getProcessorForMediaInfo(e.oldMediaInfo);
+        if (!processor) return;
+
+        var currentTime = playbackController.getTime(),
+            buffer = processor.getBuffer(),
+            mediaInfo = e.newMediaInfo,
+            manifest = manifestModel.getValue(),
+            idx = streamProcessors.indexOf(processor),
+            mediaSource = processor.getMediaSource();
+
+        if (mediaInfo.type !== "fragmentedText"){
+            processor.reset(true);
+            createStreamProcessor(mediaInfo, manifest, mediaSource, {buffer: buffer, replaceIdx: idx, currentTime: currentTime});
+            playbackController.seek(playbackController.getTime());
+        }else {
+            processor.updateMediaInfo(manifest, mediaInfo);
+        }
+    }
+
+    function createStreamProcessor(mediaInfo, manifest, mediaSource, optionalSettings) {
+        var streamProcessor = system.getObject("streamProcessor"),
+            allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);
+
+        streamProcessor.initialize(getMimeTypeOrType(mediaInfo), fragmentController, mediaSource, instance, eventController);
+        abrController.updateTopQualityIndex(mediaInfo);
+
+        if (optionalSettings) {
+            streamProcessor.setBuffer(optionalSettings.buffer);
+            streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
+            streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
+        } else {
+            streamProcessors.push(streamProcessor);
+        }
+
+        if((mediaInfo.type === "text" || mediaInfo.type === "fragmentedText")) {
+            var idx;
+            for(var i = 0; i < allMediaForType.length; i++){
+                if(allMediaForType[i].index === mediaInfo.index) {
+                    idx = i;
+                }
+                streamProcessor.updateMediaInfo(manifest, allMediaForType[i]);//creates text tracks for all adaptations in one stream processor
             }
-        },
+            if(mediaInfo.type === "fragmentedText"){
+                streamProcessor.updateMediaInfo(manifest, allMediaForType[idx]);//sets the initial media info
+            }
+        }else {
+            streamProcessor.updateMediaInfo(manifest, mediaInfo);
+        }
 
-        /**
-         * Indicates whether the stream has been activated or not
-         * @returns {Boolean}
-         * @memberof Stream#
-         */
-        isActivated: function() {
-            return isStreamActivated;
-        },
+        return streamProcessor;
+    }
 
-        isInitialized: function() {
-            return isInitialized;
-        },
+    function initializeMediaForType(type, mediaSource) {
+        var manifest = manifestModel.getValue(),
+            allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, type),
+            mediaInfo = null,
+            initialMediaInfo;
 
-        updateData: updateData
-    };
+        if (!allMediaForType || allMediaForType.length === 0) {
+            log("No " + type + " data.");
+            return;
+        }
+
+        for (var i = 0, ln = allMediaForType.length; i < ln; i += 1) {
+            mediaInfo = allMediaForType[i];
+
+            if (!isMediaSupported(mediaInfo, mediaSource, manifest)) continue;
+
+            if (mediaController.isMultiTrackSupportedByType(mediaInfo.type)) {
+                mediaController.addTrack(mediaInfo, streamInfo);
+            }
+        }
+
+        if (mediaController.getTracksFor(type, streamInfo).length === 0) return;
+
+        mediaController.checkInitialMediaSettings(streamInfo);
+        initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
+
+        // TODO : How to tell index handler live/duration?
+        // TODO : Pass to controller and then pass to each method on handler?
+
+        createStreamProcessor(initialMediaInfo, manifest, mediaSource);
+    }
+
+    function initializeMedia(mediaSource) {
+        var manifest = manifestModel.getValue(),
+            events;
+
+        eventController = EventController.getInstance();
+        eventController.initialize();
+        eventController.setConfig({
+            log: log,
+            manifestModel: manifestModel,
+            manifestUpdater: system.getObject("manifestUpdater")
+        });
+        events = adapter.getEventsFor(manifest, streamInfo);
+        eventController.addInlineEvents(events);
+
+        isUpdating = true;
+        initializeMediaForType("video", mediaSource);
+        initializeMediaForType("audio", mediaSource);
+        initializeMediaForType("text", mediaSource);
+        initializeMediaForType("fragmentedText", mediaSource);
+        initializeMediaForType("muxed", mediaSource);
+
+        createBuffers();
+
+        isMediaInitialized = true;
+        isUpdating = false;
+
+        if (streamProcessors.length === 0) {
+            var msg = "No streams to play.";
+            errHandler.manifestError(msg, "nostreams", manifest);
+            log(msg);
+        } else {
+            liveEdgeFinder.initialize({timelineConverter: system.getObject("timelineConverter"), streamProcessor: streamProcessors[0]});
+            //log("Playback initialized!");
+            checkIfInitializationCompleted();
+        }
+    }
+
+    function checkIfInitializationCompleted() {
+        var ln = streamProcessors.length,
+            hasError = !!updateError.audio || !!updateError.video,
+            error = hasError ? new Error(Stream.DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null,
+            i = 0;
+
+        for (i; i < ln; i += 1) {
+            if (streamProcessors[i].isUpdating() || isUpdating) return;
+        }
+
+        isInitialized = true;
+        EventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error:error});
+
+        if (!isMediaInitialized || isStreamActivated) return;
+        protectionController.initialize(manifestModel.getValue(), getMediaInfo("audio"), getMediaInfo("video"));
+        isStreamActivated = true;
+    }
+
+    function getMediaInfo(type) {
+        var ln = streamProcessors.length,
+            mediaCtrl = null;
+
+        for (var i = 0; i < ln; i += 1) {
+            mediaCtrl = streamProcessors[i];
+
+            if (mediaCtrl.getType() === type) return mediaCtrl.getMediaInfo();
+        }
+
+        return null;
+    }
+
+    function createBuffers() {
+        for (var i = 0, ln = streamProcessors.length; i < ln; i += 1) {
+            streamProcessors[i].createBuffer();
+        }
+    }
+
+    function onBufferingCompleted(e) {
+        if (e.streamInfo !== streamInfo) return;
+
+        var processors = getProcessors(),
+            ln = processors.length,
+            i = 0;
+
+        // if there is at least one buffer controller that has not completed buffering yet do nothing
+        for (i; i < ln; i += 1) {
+            if (!processors[i].isBufferingCompleted()) return;
+        }
+
+        EventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {streamInfo: streamInfo});
+    }
+
+    function onDataUpdateCompleted(e) {
+        if (e.sender.streamProcessor.getStreamInfo() !== streamInfo) return;
+
+        var type = e.sender.streamProcessor.getType();
+
+        updateError[type] = e.error;
+
+        checkIfInitializationCompleted();
+    }
+
+    function getProcessorForMediaInfo(mediaInfo) {
+        if (!mediaInfo) return false;
+
+        var processors = getProcessors();
+
+        return processors.filter(function(processor){
+            return (processor.getType() === mediaInfo.type);
+        })[0];
+    }
+
+    function getProcessors() {
+        var arr = [],
+            i = 0,
+            ln = streamProcessors.length,
+            type,
+            controller;
+
+        for (i; i < ln; i += 1) {
+            controller = streamProcessors[i];
+            type = controller.getType();
+
+            if (type === "audio" || type === "video" || type === "fragmentedText") {
+                arr.push(controller);
+            }
+        }
+
+        return arr;
+    }
+
+    function updateData(updatedStreamInfo) {
+        var ln = streamProcessors.length,
+            manifest = manifestModel.getValue(),
+            i = 0,
+            mediaInfo,
+            events,
+            controller;
+
+        isStreamActivated = false;
+        streamInfo = updatedStreamInfo;
+        log("Manifest updated... set new data on buffers.");
+
+        if (eventController) {
+            events = adapter.getEventsFor(manifest, streamInfo);
+            eventController.addInlineEvents(events);
+        }
+
+        isUpdating = true;
+        isInitialized = false;
+
+        for (i; i < ln; i +=1) {
+            controller = streamProcessors[i];
+            mediaInfo = adapter.getMediaInfoForType(manifest, streamInfo, controller.getType());
+            abrController.updateTopQualityIndex(mediaInfo);
+            controller.updateMediaInfo(manifest, mediaInfo);
+        }
+
+        isUpdating = false;
+        checkIfInitializationCompleted();
+    }
 };
-
-Stream.prototype = {
-    constructor: Stream
-};
-
-Stream.DATA_UPDATE_FAILED_ERROR_CODE = 1;
-
-
-export default Stream;

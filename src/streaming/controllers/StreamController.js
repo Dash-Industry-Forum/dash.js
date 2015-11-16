@@ -31,6 +31,7 @@
 import PlaybackController from './PlaybackController.js';
 import ProtectionController from './ProtectionController.js';
 import MediaPlayer from '../MediaPlayer.js';
+import Stream from '../Stream.js';
 import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
@@ -413,8 +414,17 @@ function StreamController() {
                 // If the Stream object does not exist we probably loaded the manifest the first time or it was
                 // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
                 if (!stream) {
-                    stream = system.getObject("stream");
-                    stream.initialize(streamInfo, protectionController, protectionData);
+
+                    stream = Stream.create({
+                        system :system,
+                        manifestModel: manifestModel,
+                        adapter:adapter,
+                        capabilities:capabilities,
+                        log :log,
+                        errHandler :errHandler
+                    })
+                    stream.initialize(streamInfo, protectionController);
+
                     EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
                     remainingStreams.push(stream);
 

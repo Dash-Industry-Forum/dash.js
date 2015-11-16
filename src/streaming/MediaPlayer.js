@@ -156,12 +156,6 @@ let MediaPlayer = function (context) {
             }
             streamController.setUTCTimingSources(UTCTimingSources, useManifestDateHeaderTimeSource);
 
-
-            system.mapValue("scheduleWhilePaused", mediaPlayerModel.getScheduleWhilePaused());
-            system.mapOutlet("scheduleWhilePaused", "stream");
-
-            //system.mapValue("bufferMax", bufferMax);
-            //system.mapOutlet("bufferMax", "bufferController");
         },
 
         doAutoPlay = function () {

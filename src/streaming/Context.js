@@ -73,7 +73,7 @@ import ManifestLoader from './ManifestLoader.js';
 import ManifestUpdater from './ManifestUpdater.js';
 
 import FragmentModel from './models/FragmentModel.js';
-import Stream from './Stream.js';
+
 
 
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
@@ -158,7 +158,6 @@ let Context = function () {
             this.system.mapSingleton('manifestUpdater', ManifestUpdater);
 
             this.system.mapClass('fragmentModel', FragmentModel);
-            this.system.mapClass('stream', Stream);
         }
     };
 };
