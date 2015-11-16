@@ -115,15 +115,14 @@ function ScheduleController(config) {
     function initialize(Type, StreamProcessor) {
         type = Type;
         streamProcessor = StreamProcessor;
-        fragmentController = streamProcessor.fragmentController;
         liveEdgeFinder = LiveEdgeFinder.getInstance();
-        bufferController = streamProcessor.bufferController;
-        isDynamic = streamProcessor.isDynamic();
-        fragmentModel = fragmentController.getModel(this);
-        scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
         playbackController = PlaybackController.getInstance();
         abrController = AbrController.getInstance();
-
+        fragmentController = streamProcessor.getFragmentController();
+        bufferController = streamProcessor.getBufferController();
+        fragmentModel = fragmentController.getModel(this);
+        isDynamic = streamProcessor.isDynamic();
+        scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
         if (manifestExt.getIsTextTrack(type)){
             EventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);

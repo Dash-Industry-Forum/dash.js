@@ -288,7 +288,7 @@ let RepresentationController = function () {
         initialize: function(streamProcessor) {
             this.abrController = AbrController.getInstance();
             this.streamProcessor = streamProcessor;
-            this.indexHandler = streamProcessor.indexHandler;
+            this.indexHandler = streamProcessor.getIndexHandler();
         },
 
         getData: function() {

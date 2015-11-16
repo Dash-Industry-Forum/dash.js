@@ -50,31 +50,19 @@ import MetricsModel from './models/MetricsModel.js';
 import KeySystem_PlayReady from './protection/drm/KeySystem_PlayReady.js';
 import KeySystem_Widevine from './protection/drm/KeySystem_Widevine.js';
 import KeySystem_ClearKey from './protection/drm/KeySystem_ClearKey.js';
-
-
 import ClearKey from './protection/servers/ClearKey.js';
 import DRMToday from './protection/servers/DRMToday.js';
 import PlayReady from './protection/servers/PlayReady.js';
 import Widevine from './protection/servers/Widevine.js';
 
-
 import ErrorHandler from './ErrorHandler.js';
 import VideoModelExtensions from './extensions/VideoModelExtensions.js';
 import ProtectionExtensions from './extensions/ProtectionExtensions.js';
-
-
 import MetricsList from './vo/MetricsList.js';
-
-
 import XlinkLoader from './XlinkLoader.js';
-import StreamProcessor from './StreamProcessor.js';
-
 import ManifestLoader from './ManifestLoader.js';
 import ManifestUpdater from './ManifestUpdater.js';
-
 import FragmentModel from './models/FragmentModel.js';
-
-
 
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
 import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
@@ -153,7 +141,6 @@ let Context = function () {
 
 
             this.system.mapClass('xlinkLoader', XlinkLoader);
-            this.system.mapClass('streamProcessor', StreamProcessor);
             this.system.mapClass('manifestLoader', ManifestLoader);
             this.system.mapSingleton('manifestUpdater', ManifestUpdater);
 

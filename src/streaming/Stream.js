@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import LiveEdgeFinder from './LiveEdgeFinder.js';
+import StreamProcessor from './StreamProcessor.js';
 import MediaController from './controllers/MediaController.js';
 import EventController from './controllers/EventController.js';
 import FragmentController from './controllers/FragmentController.js';
@@ -312,7 +313,13 @@ function Stream(config) {
     }
 
     function createStreamProcessor(mediaInfo, manifest, mediaSource, optionalSettings) {
-        var streamProcessor = system.getObject("streamProcessor"),
+        var streamProcessor = StreamProcessor.create({
+                system :system,
+                indexHandler: system.getObject("indexHandler"),
+                timelineConverter :system.getObject("timelineConverter"),
+                adapter:adapter,
+                manifestModel:manifestModel
+            }),
             allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);
 
         streamProcessor.initialize(getMimeTypeOrType(mediaInfo), fragmentController, mediaSource, instance, eventController);

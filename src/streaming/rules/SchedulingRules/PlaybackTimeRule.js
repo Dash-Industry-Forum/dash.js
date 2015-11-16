@@ -60,7 +60,7 @@ function PlaybackTimeRule(config) {
             p = hasSeekTarget ? SwitchRequest.STRONG  : SwitchRequest.DEFAULT,
             keepIdx = !hasSeekTarget,
             time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor),
-            buffer = streamProcessor.bufferController.getBuffer(),
+            buffer = streamProcessor.getBuffer(),
             appendedChunks,
             range = null,
             request;
@@ -76,7 +76,7 @@ function PlaybackTimeRule(config) {
         }
 
         if (buffer) {
-            range = sourceBufferExt.getBufferRange(streamProcessor.bufferController.getBuffer(), time);
+            range = sourceBufferExt.getBufferRange(streamProcessor.getBuffer(), time);
             if (range !== null) {
                 appendedChunks = virtualBuffer.getChunks({streamId: streamId, mediaType: mediaType, appended: true, mediaInfo: mediaInfo, forRange: range});
                 if (appendedChunks && appendedChunks.length > 0) {

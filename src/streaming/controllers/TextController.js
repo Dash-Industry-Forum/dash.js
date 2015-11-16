@@ -78,7 +78,7 @@ function TextController(config) {
         type = Type;
         setMediaSource(source);
         streamProcessor = StreamProcessor;
-        representationController = streamProcessor.representationController;
+        representationController = streamProcessor.getRepresentationController();
     }
 
     /**

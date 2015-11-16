@@ -153,8 +153,8 @@ function BufferController(config) {
         streamProcessor = StreamProcessor;
         playbackController = PlaybackController.getInstance();
         abrController = AbrController.getInstance();
-        fragmentController = streamProcessor.fragmentController;
-        scheduleController = streamProcessor.scheduleController;
+        fragmentController = streamProcessor.getFragmentController();
+        scheduleController = streamProcessor.getScheduleController();
         requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
 
         EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);

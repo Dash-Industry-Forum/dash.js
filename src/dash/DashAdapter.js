@@ -215,33 +215,32 @@ let DashAdapter = function () {
         },
 
         getInitRequest = function(streamProcessor, quality) {
-            var representation = streamProcessor.representationController.getRepresentationForQuality(quality);
-
-            return streamProcessor.indexHandler.getInitRequest(representation);
+            var representation = streamProcessor.getRepresentationController().getRepresentationForQuality(quality);
+            return streamProcessor.getIndexHandler().getInitRequest(representation);
         },
 
         getNextFragmentRequest = function(streamProcessor, trackInfo) {
-            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.representationController);
-            return streamProcessor.indexHandler.getNextSegmentRequest(representation);
+            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.getRepresentationController());
+            return streamProcessor.getIndexHandler().getNextSegmentRequest(representation);
         },
 
         getFragmentRequestForTime = function(streamProcessor, trackInfo, time, options) {
-            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.representationController);
-            return streamProcessor.indexHandler.getSegmentRequestForTime(representation, time, options);
+            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.getRepresentationController());
+            return streamProcessor.getIndexHandler().getSegmentRequestForTime(representation, time, options);
         },
 
         generateFragmentRequestForTime = function(streamProcessor, trackInfo, time) {
-            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.representationController);
+            var representation = getRepresentationForTrackInfo(trackInfo, streamProcessor.getRepresentationController());
 
-            return streamProcessor.indexHandler.generateSegmentRequestForTime(representation, time);
+            return streamProcessor.getIndexHandler().generateSegmentRequestForTime(representation, time);
         },
 
         getIndexHandlerTime = function(streamProcessor) {
-            return streamProcessor.indexHandler.getCurrentTime();
+            return streamProcessor.getIndexHandler().getCurrentTime();
         },
 
         setIndexHandlerTime = function(streamProcessor, value) {
-            return streamProcessor.indexHandler.setCurrentTime(value);
+            return streamProcessor.getIndexHandler().setCurrentTime(value);
         },
 
         updateData = function(manifest, streamProcessor) {
@@ -254,7 +253,7 @@ let DashAdapter = function () {
 
             id = mediaInfo.id;
             data = id ? this.manifestExt.getAdaptationForId(id, manifest, periodInfo.index) : this.manifestExt.getAdaptationForIndex(mediaInfo.index, manifest, periodInfo.index);
-            streamProcessor.representationController.updateData(data, adaptation, type);
+            streamProcessor.getRepresentationController().updateData(data, adaptation, type);
         },
 
         getRepresentationInfoForQuality = function(manifest, representationController, quality) {
@@ -302,7 +301,7 @@ let DashAdapter = function () {
             } else if (info instanceof MediaInfo) {
                 events = this.manifestExt.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info));
             } else if (info instanceof TrackInfo) {
-                events = this.manifestExt.getEventStreamForRepresentation(manifest, getRepresentationForTrackInfo(info, streamProcessor.representationController));
+                events = this.manifestExt.getEventStreamForRepresentation(manifest, getRepresentationForTrackInfo(info, streamProcessor.getRepresentationController()));
             }
 
             return events;

@@ -45,233 +45,277 @@ import SourceBufferExtensions from './extensions/SourceBufferExtensions';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import VirtualBuffer from './utils/VirtualBuffer.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
-let StreamProcessor = function () {
-    "use strict";
+export default FactoryMaker.getClassFactory(StreamProcessor);
 
-    var isDynamic,
-        stream = null,
-        mediaInfo = null,
-        type = null,
-        eventController = null,
-        mediaInfoArr = [],
+function StreamProcessor(config) {
 
-        createBufferControllerForType = function(type) {
-            var controller = null
+    let system = config.system,
+        indexHandler = config.indexHandler,
+        timelineConverter = config.timelineConverter,
+        adapter = config.adapter,
+        manifestModel = config.manifestModel;
 
 
-            if (type === "video" || type === "audio" || type === "fragmentedText") {
-                controller = BufferController.create({
-                    log:this.system.getObject("log"),
-                    metricsModel:this.system.getObject("metricsModel"),
-                    manifestModel:this.system.getObject("manifestModel"),
-                    sourceBufferExt:SourceBufferExtensions.getInstance(),
-                    errHandler:this.system.getObject("errHandler"),
-                    mediaSourceExt:MediaSourceExtensions.getInstance(),
-                    streamController:StreamController.getInstance(),
-                    mediaController:MediaController.getInstance(),
-                    adapter:this.system.getObject("adapter"),
-                    virtualBuffer:VirtualBuffer.getInstance(),
-                    textSourceBuffer:TextSourceBuffer.getInstance(),
-                    system:this.system
-                })
-            }else {
-                controller = TextController.create({
-                    errHandler:this.system.getObject("errHandler"),
-                    sourceBufferExt:SourceBufferExtensions.getInstance()
-                })
-            }
+    let instance = {
+        initialize :initialize,
+        isUpdating :isUpdating,
+        getType :getType,
+        getBufferController :getBufferController,
+        getABRController :getABRController,
+        getFragmentLoader :getFragmentLoader,
+        getFragmentModel :getFragmentModel,
+        getScheduleController :getScheduleController,
+        getEventController :getEventController,
+        getFragmentController:getFragmentController,
+        getRepresentationController:getRepresentationController,
+        getIndexHandler:getIndexHandler,
+        getIndexHandlerTime :getIndexHandlerTime,
+        setIndexHandlerTime :setIndexHandlerTime,
+        getCurrentRepresentationInfo :getCurrentRepresentationInfo,
+        getRepresentationInfoForQuality :getRepresentationInfoForQuality,
+        isBufferingCompleted :isBufferingCompleted,
+        createBuffer :createBuffer,
+        getStreamInfo :getStreamInfo,
+        updateMediaInfo :updateMediaInfo,
+        getMediaInfoArr :getMediaInfoArr,
+        getMediaInfo :getMediaInfo,
+        getMediaSource :getMediaSource,
+        getBuffer :getBuffer,
+        setBuffer :setBuffer,
+        start :start,
+        stop :stop,
+        isDynamic :isDynamic,
+        reset :reset
+    }
 
-            return controller;
-        };
+    setup();
+    return instance;
 
-    return {
-        system : undefined,
-        indexHandler: undefined,
-        timelineConverter: undefined,
-        adapter: undefined,
-        manifestModel: undefined,
+    let dynamic,
+        mediaInfo,
+        type,
+        mediaInfoArr,
+        stream,
+        eventController,
+        abrController,
+        bufferController,
+        scheduleController,
+        representationController,
+        fragmentController,
+        fragmentLoader;
 
-        initialize: function (typeValue, fragmentController, mediaSource, streamValue, eventControllerValue) {
 
-            var self = this,
-                representationController = self.system.getObject("representationController"),
-                indexHandler = self.indexHandler,
-                fragmentModel,
-                scheduleController = ScheduleController.create({
-                    log: this.system.getObject("log"),
-                    metricsModel:this.system.getObject("metricsModel"),
-                    manifestModel:this.system.getObject("manifestModel"),
-                    adapter:this.system.getObject("adapter"),
-                    metricsExt:this.system.getObject("metricsExt"),
-                    manifestExt:this.system.getObject("manifestExt"),
-                    timelineConverter:this.system.getObject("timelineConverter"),
-                    scheduleRulesCollection: ScheduleRulesCollection.getInstance(),
-                    rulesController: RulesController.getInstance(),
-                    mediaPlayerModel:MediaPlayerModel.getInstance(),
-                    system:this.system
-                }),
+    function setup() {
+        mediaInfoArr = [];
+    }
 
-                fragmentLoader = FragmentLoader.create({
-                    metricsModel:this.system.getObject("metricsModel"),
-                    errHandler:this.system.getObject("errHandler"),
-                    log: this.system.getObject("log"),
-                    requestModifierExt:RequestModifierExtensions.getInstance()
-                }),
+    function initialize(Type, FragmentController, mediaSource, Stream, EventController) {
 
-                bufferController = createBufferControllerForType.call(self, typeValue);
+        type = Type;
+        stream = Stream;
+        eventController = EventController;
+        fragmentController = FragmentController;
+        dynamic = stream.getStreamInfo().manifestInfo.isDynamic;
 
-            stream = streamValue;
-            type = typeValue;
-            eventController = eventControllerValue;
-            isDynamic = stream.getStreamInfo().manifestInfo.isDynamic;
 
-            //todo re-scope
-            self.abrController = AbrController.getInstance();
-            self.abrController.initialize(type, this);
-            self.bufferController = bufferController;
-            self.scheduleController = scheduleController;
-            self.representationController = representationController;
-            self.fragmentController = fragmentController;
-            self.fragmentLoader = fragmentLoader;
+        abrController = AbrController.getInstance();
+        abrController.initialize(type, this);
 
-            indexHandler.initialize(this);
-            indexHandler.setCurrentTime(PlaybackController.getInstance().getStreamStartTime(this.getStreamInfo()));
-            bufferController.initialize(type, mediaSource, self);
-            scheduleController.initialize(type, this);
+        bufferController = createBufferControllerForType(Type);
+        bufferController.initialize(type, mediaSource, this);
 
-            fragmentModel = this.getFragmentModel();
-            fragmentModel.setLoader(fragmentLoader);
-            representationController.initialize(this);
-        },
+        scheduleController = ScheduleController.create({
+            log: system.getObject("log"),
+            metricsModel:system.getObject("metricsModel"),
+            manifestModel:manifestModel,
+            adapter:adapter,
+            metricsExt:system.getObject("metricsExt"),
+            manifestExt:system.getObject("manifestExt"),
+            timelineConverter:timelineConverter,
+            scheduleRulesCollection: ScheduleRulesCollection.getInstance(),
+            rulesController: RulesController.getInstance(),
+            mediaPlayerModel:MediaPlayerModel.getInstance(),
+            system:system
+        })
+        scheduleController.initialize(type, this);
 
-        isUpdating: function() {
-            return this.representationController.isUpdating();
-        },
+        fragmentLoader = FragmentLoader.create({
+            metricsModel:system.getObject("metricsModel"),
+            errHandler:system.getObject("errHandler"),
+            log: system.getObject("log"),
+            requestModifierExt:RequestModifierExtensions.getInstance()
+        })
 
-        getType: function() {
-            return type;
-        },
 
-        getABRController:function() {
-            return this.abrController;
-        },
+        indexHandler.initialize(this);
+        indexHandler.setCurrentTime(PlaybackController.getInstance().getStreamStartTime(getStreamInfo()));
 
-        getFragmentLoader: function () {
-            return this.fragmentLoader;
-        },
+        representationController = system.getObject("representationController");
+        representationController.initialize(this);
 
-        getBuffer: function() {
-            return this.bufferController.getBuffer();
-        },
+        getFragmentModel().setLoader(fragmentLoader);
+    }
 
-        setBuffer: function(buffer) {
-            this.bufferController.setBuffer(buffer);
-        },
+    function reset(errored) {
+        getFragmentModel().reset();
+        indexHandler.reset();
+        bufferController.reset(errored);
+        scheduleController.reset();
+        representationController.reset();
+        bufferController = null;
+        scheduleController = null;
+        representationController = null;
+        fragmentController = null;
+        fragmentLoader = null
+        eventController = null;
+        stream = null;
+        dynamic = null;
+        mediaInfo = null;
+        mediaInfoArr = [];
+        type = null;
+    }
 
-        getFragmentModel: function() {
-            return this.scheduleController.getFragmentModel();
-        },
+    function isUpdating() {
+        return representationController.isUpdating();
+    }
 
-        getStreamInfo: function() {
-            return stream.getStreamInfo();
-        },
+    function getType() {
+        return type;
+    }
 
-        updateMediaInfo: function(manifest, newMediaInfo) {
-            if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
-                mediaInfo = newMediaInfo;
-            }
-            if (mediaInfoArr.indexOf(newMediaInfo) === -1){
-                mediaInfoArr.push(newMediaInfo);
-            }
-            this.adapter.updateData(manifest, this);
-        },
+    function getABRController() {
+        return abrController;
+    }
 
-        getMediaInfoArr: function() {
-            return mediaInfoArr;
-        },
+    function getRepresentationController() {
+        return representationController;
+    }
 
-        getMediaInfo: function() {
-            return mediaInfo;
-        },
+    function getFragmentLoader() {
+        return fragmentLoader;
+    }
 
-        getMediaSource: function() {
-            return this.bufferController.getMediaSource();
-        },
+    function getIndexHandler(){
+        return indexHandler;
+    }
 
-        getScheduleController:function () {
-            return this.scheduleController;
-        },
+    function getFragmentController() {
+        return fragmentController;
+    }
 
-        getEventController: function() {
-            return eventController;
-        },
+    function getBuffer() {
+        return bufferController.getBuffer();
+    }
 
-        start: function() {
-            this.scheduleController.start();
-        },
+    function setBuffer(buffer) {
+        bufferController.setBuffer(buffer);
+    }
 
-        stop: function() {
-            this.scheduleController.stop();
-        },
+    function getBufferController(){
+        return bufferController;
+    };
 
-        getIndexHandlerTime: function() {
-            return this.adapter.getIndexHandlerTime(this);
-        },
+    function getFragmentModel() {
+        return scheduleController.getFragmentModel();
+    }
 
-        setIndexHandlerTime: function(value) {
-            this.adapter.setIndexHandlerTime(this, value);
-        },
+    function getStreamInfo() {
+        return stream.getStreamInfo();
+    }
 
-        getCurrentRepresentationInfo: function() {
-            return this.adapter.getCurrentRepresentationInfo(this.manifestModel.getValue(), this.representationController);
-        },
+    function updateMediaInfo(manifest, newMediaInfo) {
+        if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
+            mediaInfo = newMediaInfo;
+        }
+        if (mediaInfoArr.indexOf(newMediaInfo) === -1){
+            mediaInfoArr.push(newMediaInfo);
+        }
+        adapter.updateData(manifest, this);
+    }
 
-        getRepresentationInfoForQuality: function(quality) {
-            return this.adapter.getRepresentationInfoForQuality(this.manifestModel.getValue(), this.representationController, quality);
-        },
+    function getMediaInfoArr() {
+        return mediaInfoArr;
+    }
 
-        isBufferingCompleted: function() {
-            return this.bufferController.getIsBufferingCompleted();
-        },
+    function getMediaInfo() {
+        return mediaInfo;
+    }
 
-        /**
-         * @returns SourceBuffer object
-         * @memberof StreamProcessor#
-         */
-        createBuffer: function() {
-            return (this.bufferController.getBuffer() || this.bufferController.createBuffer(mediaInfo));
-        },
+    function getMediaSource() {
+        return bufferController.getMediaSource();
+    }
 
-        isDynamic: function(){
-            return isDynamic;
-        },
+    function getScheduleController() {
+        return scheduleController;
+    }
 
-        reset: function(errored) {
-            var indexHandler = this.indexHandler,
-                fragmentModel = this.getFragmentModel()
+    function getEventController() {
+        return eventController;
+    }
 
-            fragmentModel.reset();
-            indexHandler.reset();
-            this.bufferController.reset(errored);
-            this.scheduleController.reset();
-            this.bufferController = null;
-            this.scheduleController = null;
-            this.representationController.reset();
-            this.representationController = null;
-            this.fragmentController = null;
-            isDynamic = undefined;
-            stream = null;
-            mediaInfo = null;
-            type = null;
-            eventController = null;
+    function start() {
+        scheduleController.start();
+    }
+
+    function stop() {
+        scheduleController.stop();
+    }
+
+    function getIndexHandlerTime() {
+        return adapter.getIndexHandlerTime(this);
+    }
+
+    function setIndexHandlerTime(value) {
+        adapter.setIndexHandlerTime(this, value);
+    }
+
+    function getCurrentRepresentationInfo() {
+        return adapter.getCurrentRepresentationInfo(manifestModel.getValue(), representationController);
+    }
+
+    function getRepresentationInfoForQuality(quality) {
+        return adapter.getRepresentationInfoForQuality(manifestModel.getValue(), representationController, quality);
+    }
+
+    function isBufferingCompleted() {
+        return bufferController.getIsBufferingCompleted();
+    }
+
+    function createBuffer() {
+        return (bufferController.getBuffer() || bufferController.createBuffer(mediaInfo));
+    }
+
+    function isDynamic(){
+        return dynamic;
+    }
+
+    function createBufferControllerForType(type) {
+        var controller = null;
+
+        if (type === "video" || type === "audio" || type === "fragmentedText") {
+            controller = BufferController.create({
+                log:system.getObject("log"),
+                metricsModel:system.getObject("metricsModel"),
+                manifestModel:manifestModel,
+                sourceBufferExt:SourceBufferExtensions.getInstance(),
+                errHandler:system.getObject("errHandler"),
+                mediaSourceExt:MediaSourceExtensions.getInstance(),
+                streamController:StreamController.getInstance(),
+                mediaController:MediaController.getInstance(),
+                adapter:adapter,
+                virtualBuffer:VirtualBuffer.getInstance(),
+                textSourceBuffer:TextSourceBuffer.getInstance(),
+                system:system
+            })
+        }else {
+            controller = TextController.create({
+                errHandler:system.getObject("errHandler"),
+                sourceBufferExt:SourceBufferExtensions.getInstance()
+            })
         }
 
+        return controller;
     };
 };
-
-StreamProcessor.prototype = {
-    constructor: StreamProcessor
-};
-
-export default StreamProcessor;
