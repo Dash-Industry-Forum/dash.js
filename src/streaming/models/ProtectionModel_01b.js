@@ -46,10 +46,12 @@ import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
 import SessionToken from '../vo/protection/SessionToken.js';
 import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
+import ErrorHandler from '../ErrorHandler.js';
 
 let ProtectionModel_01b = function () {
 
     var videoElement = null,
+        errHandler = null
 
         // API names object selected for this user agent
         api = null,
@@ -163,7 +165,7 @@ let ProtectionModel_01b = function () {
                                 sessions.push(sessionToken);
 
                                 if (pendingSessions.length !== 0) {
-                                    self.errHandler.mediaKeyMessageError("Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!");
+                                    errHandler.mediaKeyMessageError("Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!");
                                 }
                             }
 
@@ -219,11 +221,11 @@ let ProtectionModel_01b = function () {
     return {
         system: undefined,
         log: undefined,
-        errHandler: undefined,
         protectionExt: undefined,
         keySystem: null,
 
         setup: function() {
+            errHandler = ErrorHandler.getInstance();
             eventHandler = createEventHandler.call(this);
         },
 

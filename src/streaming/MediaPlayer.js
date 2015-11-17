@@ -43,6 +43,7 @@ import ProtectionController from './controllers/ProtectionController.js';
 import ManifestLoader from './ManifestLoader.js';
 import LiveEdgeFinder from './LiveEdgeFinder.js';
 import Events from './Events.js';
+import ErrorHandler from './ErrorHandler.js';
 import PublicEvents from './PublicEvents.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
@@ -116,6 +117,7 @@ let MediaPlayer = function (context) {
         liveDelayFragmentCount = 4,
         usePresentationDelay = false,
         mediaPlayerModel = MediaPlayerModel.getInstance(),
+        errHandler = ErrorHandler.getInstance(),
 
         isReady = function () {
             return (!!element && !!source && !resetting);
@@ -127,7 +129,7 @@ let MediaPlayer = function (context) {
             }
 
             if (!this.capabilities.supportsMediaSource()) {
-                this.errHandler.capabilityError("mediasource");
+                errHandler.capabilityError("mediasource");
                 return;
             }
 
@@ -307,7 +309,7 @@ let MediaPlayer = function (context) {
         createManifestLoader = function () {
             return ManifestLoader.create({
                 log :debug.log,
-                errHandler : this.errHandler,
+                errHandler : errHandler,
                 parser :system.getObject('parser'),
                 metricsModel :metricsModel
             });
@@ -339,7 +341,7 @@ let MediaPlayer = function (context) {
                 log :debug.log,
                 system :system,
                 DOMStorage :DOMStorage,
-                errHandler :this.errHandler
+                errHandler :errHandler
             });
 
             playbackController = PlaybackController.getInstance();
@@ -368,7 +370,7 @@ let MediaPlayer = function (context) {
                 mediaSourceExt : MediaSourceExtensions.getInstance(),
                 timeSyncController : TimeSyncController.getInstance(),
                 virtualBuffer : virtualBuffer,
-                errHandler : this.errHandler,
+                errHandler : errHandler,
                 timelineConverter : system.getObject("timelineConverter")
             });
 
@@ -422,14 +424,12 @@ let MediaPlayer = function (context) {
         debug: undefined,
         capabilities: undefined,
         adapter: undefined,
-        errHandler: undefined,
         videoElementExt: undefined,
 
         setup: function () {
             metricsExt = system.getObject("metricsExt");
             metricsModel = system.getObject("metricsModel");
             DOMStorage = system.getObject("DOMStorage");
-
 
             createControllers.call(this);
 

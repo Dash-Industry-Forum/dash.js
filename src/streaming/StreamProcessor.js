@@ -45,6 +45,7 @@ import SourceBufferExtensions from './extensions/SourceBufferExtensions';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import VirtualBuffer from './utils/VirtualBuffer.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
+import ErrorHandler from './ErrorHandler.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 export default FactoryMaker.getClassFactory(StreamProcessor);
@@ -143,7 +144,7 @@ function StreamProcessor(config) {
 
         fragmentLoader = FragmentLoader.create({
             metricsModel:system.getObject("metricsModel"),
-            errHandler:system.getObject("errHandler"),
+            errHandler:ErrorHandler.getInstance(),
             log: system.getObject("log"),
             requestModifierExt:RequestModifierExtensions.getInstance()
         })
@@ -300,7 +301,7 @@ function StreamProcessor(config) {
                 metricsModel:system.getObject("metricsModel"),
                 manifestModel:manifestModel,
                 sourceBufferExt:SourceBufferExtensions.getInstance(),
-                errHandler:system.getObject("errHandler"),
+                errHandler:ErrorHandler.getInstance(),
                 mediaSourceExt:MediaSourceExtensions.getInstance(),
                 streamController:StreamController.getInstance(),
                 mediaController:MediaController.getInstance(),
@@ -311,7 +312,7 @@ function StreamProcessor(config) {
             })
         }else {
             controller = TextController.create({
-                errHandler:system.getObject("errHandler"),
+                errHandler:ErrorHandler.getInstance(),
                 sourceBufferExt:SourceBufferExtensions.getInstance()
             })
         }

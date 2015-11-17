@@ -31,12 +31,14 @@
 import RequestModifierExtensions from '../../streaming/extensions/RequestModifierExtensions.js'
 import Segment from '../vo/Segment.js';
 import Error from '../../streaming/vo/Error.js';
+import ErrorHandler from '../../streaming/ErrorHandler.js';
 import Events from '../../streaming/Events.js'
 import EventBus from '../../streaming/utils/EventBus.js';
 import BoxParser from '../../streaming/utils/BoxParser.js';
 
 let BaseURLExtensions = function () {
     "use strict";
+    var errHandler = null
 
     var getSegmentsForSidx = function (sidx, info) {
             var refs = sidx.references,
@@ -133,7 +135,7 @@ let BaseURLExtensions = function () {
                 if (!needFailureReport) return;
                 needFailureReport = false;
 
-                self.errHandler.downloadError("initialization", info.url, request);
+                errHandler.downloadError("initialization", info.url, request);
                 EventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
             };
 
@@ -238,7 +240,7 @@ let BaseURLExtensions = function () {
                 if (!needFailureReport) return;
 
                 needFailureReport = false;
-                self.errHandler.downloadError("SIDX", info.url, request);
+                errHandler.downloadError("SIDX", info.url, request);
                 callback.call(self, null, representation, type);
             };
 
@@ -264,9 +266,9 @@ let BaseURLExtensions = function () {
 
     return {
         log: undefined,
-        errHandler: undefined,
 
         setup: function() {
+            errHandler = ErrorHandler.getInstance();
             this.requestModifierExt = RequestModifierExtensions.getInstance();
         },
 

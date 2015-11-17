@@ -34,6 +34,7 @@ import Error from '../vo/Error.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
+import ErrorHandler from '../../streaming/ErrorHandler.js';
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
@@ -85,7 +86,7 @@ function SourceBufferExtensions() {
                 buffer = TextSourceBuffer.getInstance()
                 buffer.setConfig({
                     system:system,
-                    errHandler:system.getObject("errHandler"),
+                    errHandler:ErrorHandler.getInstance(),
                     adapter:system.getObject("adapter"),
                     manifestExt:manifestExt,
                     mediaController:MediaController.getInstance(),

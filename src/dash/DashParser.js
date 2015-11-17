@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import ErrorHandler from '../streaming/ErrorHandler.js';
+
 let DashParser = function () {
     "use strict";
 
@@ -393,7 +395,7 @@ let DashParser = function () {
 
                 this.log("Parsing complete: ( xml2json: " + (json.getTime() - start.getTime()) + "ms, objectiron: " + (ironed.getTime() - json.getTime()) + "ms, total: " + ((ironed.getTime() - start.getTime()) / 1000) + "s)");
             } catch (err) {
-                this.errHandler.manifestError("parsing the manifest failed", "parse", data);
+                ErrorHandler.getInstance().manifestError("parsing the manifest failed", "parse", data);
                 return null;
             }
             return manifest;
@@ -401,7 +403,6 @@ let DashParser = function () {
 
     return {
         log: undefined,
-        errHandler: undefined,
         parse: internalParse
     };
 };

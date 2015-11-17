@@ -28,49 +28,54 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MediaPlayer from './MediaPlayer.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
-let ErrorHandler = function () {
-    "use strict";
+export default FactoryMaker.getSingletonFactory(ErrorHandler);
 
-    return {
-        // "mediasource"|"mediakeys"
-        capabilityError: function (err) {
-            EventBus.trigger(Events.ERROR, {error: "capability", event: err});
-        },
+function ErrorHandler() {
 
-        // {id: "manifest"|"SIDX"|"content"|"initialization", url: "", request: {XMLHttpRequest instance}}
-        downloadError: function (id, url, request) {
-            EventBus.trigger(Events.ERROR, {error: "download", event: {id: id, url: url, request: request}});
-        },
+    var instance = {
+        capabilityError :capabilityError,
+        downloadError :downloadError,
+        manifestError :manifestError,
+        timedTextError :timedTextError,
+        mediaSourceError :mediaSourceError,
+        mediaKeySessionError :mediaKeySessionError,
+        mediaKeyMessageError :mediaKeyMessageError
+    }
 
-        // {message: "", id: "codec"|"parse"|"nostreams", manifest: {parsed manifest}}
-        manifestError: function (message, id, manifest) {
-            EventBus.trigger(Events.ERROR, {error: "manifestError", event: {message: message, id: id, manifest: manifest}});
-        },
+    return instance;
 
-        timedTextError: function (message, id, ccContent) {
-            EventBus.trigger(Events.ERROR, {error: "cc", event: {message: message, id: id, cc: ccContent}});
-        },
+    // "mediasource"|"mediakeys"
+    function capabilityError(err) {
+        EventBus.trigger(Events.ERROR, {error: "capability", event: err});
+    }
 
-        mediaSourceError: function (err) {
-            EventBus.trigger(Events.ERROR, {error: "mediasource", event: err});
-        },
+    // {id: "manifest"|"SIDX"|"content"|"initialization", url: "", request: {XMLHttpRequest instance}}
+    function downloadError(id, url, request) {
+        EventBus.trigger(Events.ERROR, {error: "download", event: {id: id, url: url, request: request}});
+    }
 
-        mediaKeySessionError: function (err) {
-            EventBus.trigger(Events.ERROR, {error: "key_session", event: err});
-        },
+    // {message: "", id: "codec"|"parse"|"nostreams", manifest: {parsed manifest}}
+    function manifestError(message, id, manifest) {
+        EventBus.trigger(Events.ERROR, {error: "manifestError", event: {message: message, id: id, manifest: manifest}});
+    }
 
-        mediaKeyMessageError: function (err) {
-            EventBus.trigger(Events.ERROR, {error: "key_message", event: err});
-        }
-    };
+    function timedTextError(message, id, ccContent) {
+        EventBus.trigger(Events.ERROR, {error: "cc", event: {message: message, id: id, cc: ccContent}});
+    }
+
+    function mediaSourceError(err) {
+        EventBus.trigger(Events.ERROR, {error: "mediasource", event: err});
+    }
+
+    function mediaKeySessionError(err) {
+        EventBus.trigger(Events.ERROR, {error: "key_session", event: err});
+    }
+
+    function mediaKeyMessageError(err) {
+        EventBus.trigger(Events.ERROR, {error: "key_message", event: err});
+    }
 };
-
-ErrorHandler.prototype = {
-    constructor: ErrorHandler
-};
-
-export default ErrorHandler;
