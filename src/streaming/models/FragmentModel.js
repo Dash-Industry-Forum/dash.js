@@ -29,306 +29,321 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import BufferController from '../controllers/BufferController.js';
-import FragmentLoader from '../FragmentLoader.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-let FragmentModel = function () {
+const FRAGMENT_MODEL_LOADING = "loading";
+const FRAGMENT_MODEL_EXECUTED = "executed";
+const FRAGMENT_MODEL_CANCELED = "canceled";
+const FRAGMENT_MODEL_FAILED = "failed";
 
-    "use strict";
 
-    var context = null,
-        executedRequests = [],
-        loadingRequests = [],
+let factory = FactoryMaker.getClassFactory(FragmentModel);
+
+factory.FRAGMENT_MODEL_LOADING = FRAGMENT_MODEL_LOADING;
+factory.FRAGMENT_MODEL_EXECUTED = FRAGMENT_MODEL_EXECUTED;
+factory.FRAGMENT_MODEL_CANCELED = FRAGMENT_MODEL_CANCELED;
+factory.FRAGMENT_MODEL_FAILED = FRAGMENT_MODEL_FAILED;
+
+export default factory;
+
+function FragmentModel(config) {
+
+    let log = config.log,
+        metricsModel = config.metricsModel
+
+    let instance = {
+        setLoader:setLoader,
+        setContext:setContext,
+        getContext:getContext,
+        getRequests:getRequests,
+        isFragmentLoaded:isFragmentLoaded,
+        removeExecutedRequestsBeforeTime:removeExecutedRequestsBeforeTime,
+        abortRequests:abortRequests,
+        executeRequest:executeRequest,
+        reset:reset
+    }
+
+    setup();
+    return instance;
+
+    let context,
+        executedRequests,
+        loadingRequests,
         delayLoadingTimeout,
+        fragmentLoader;
 
-        loadCurrentFragment = function(request) {
-            EventBus.trigger(Events.FRAGMENT_LOADING_STARTED, {self: this, request: request});
-            this.fragmentLoader.load(request);
-        },
+    function setup(){
+        context = null;
+        fragmentLoader = null;
+        executedRequests = [];
+        loadingRequests = [];
 
-        removeRequest = function(arr, request) {
-            var idx = arr.indexOf(request);
+        EventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, instance);
+        EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+    }
 
-            if (idx !== -1) {
-                arr.splice(idx, 1);
-            }
-        },
+    function setLoader(value) {
+        fragmentLoader = value;
+    }
 
-        getRequestForTime = function(arr, time, threshold) {
-            var lastIdx = arr.length - 1,
-                start = NaN,
-                end = NaN,
-                req = null,
-                i;
+    function setContext(value) {
+        context = value;
+    }
 
-            // loop through the executed requests and pick the one for which the playback interval matches the given time
-            for (i = lastIdx; i >= 0; i -=1) {
-                req = arr[i];
-                start = req.startTime;
-                end = start + req.duration;
-                threshold = threshold || (req.duration / 2);
-                if ((!isNaN(start) && !isNaN(end) && ((time + threshold) >= start) && ((time - threshold) < end)) || (isNaN(start) && isNaN(time))) {
-                    return req;
-                }
-            }
+    function getContext() {
+        return context;
+    }
 
-            return null;
-        },
+    function isFragmentLoaded(request) {
+        var isEqualComplete = function(req1, req2) {
+                return ((req1.action === "complete") && (req1.action === req2.action));
+            },
 
-        filterRequests = function(arr, filter) {
-            if (!filter) return arr;
+            isEqualMedia = function(req1, req2) {
+                return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
+            },
 
-            // for time use a specific filtration function
-            if (filter.hasOwnProperty("time")) {
-                return [getRequestForTime.call(this, arr, filter.time, filter.threshold)];
-            }
+            isEqualInit = function(req1, req2) {
+                return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
+            },
 
-            return arr.filter(function(request/*, idx, arr*/) {
-                for (var prop in filter) {
-                    if (prop === "state") continue;
+            check = function(arr) {
+                var req,
+                    isLoaded = false,
+                    ln = arr.length,
+                    i;
 
-                    if (filter.hasOwnProperty(prop) && request[prop] != filter[prop]) return false;
-                }
+                for (i = 0; i < ln; i += 1) {
+                    req = arr[i];
 
-                return true;
-            });
-        },
-
-        getRequestsForState = function(state) {
-            var requests;
-
-            switch (state) {
-                case FragmentModel.states.LOADING:
-                    requests = loadingRequests;
-                    break;
-                case FragmentModel.states.EXECUTED:
-                    requests = executedRequests;
-                    break;
-                default:
-                    requests = [];
-            }
-
-            return requests;
-        },
-
-        addSchedulingInfoMetrics = function(request, state) {
-            if (!request) return;
-
-            var mediaType = request.mediaType,
-                now = new Date(),
-                type = request.type,
-                startTime = request.startTime,
-                availabilityStartTime = request.availabilityStartTime,
-                duration = request.duration,
-                quality = request.quality,
-                range = request.range;
-
-            this.metricsModel.addSchedulingInfo(mediaType, now, type, startTime, availabilityStartTime, duration, quality, range, state);
-            this.metricsModel.addRequestsQueue(mediaType, loadingRequests, executedRequests);
-        },
-
-        onLoadingCompleted = function(e) {
-            if (e.sender !== this.fragmentLoader) return;
-
-            var request = e.request,
-                response = e.response,
-                error = e.error;
-
-            loadingRequests.splice(loadingRequests.indexOf(request), 1);
-
-            if (response && !error) {
-                executedRequests.push(request);
-            }
-
-            addSchedulingInfoMetrics.call(this, request, error ? FragmentModel.states.FAILED : FragmentModel.states.EXECUTED);
-            EventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {request: request, response: response, error:error, sender:this})
-        },
-
-        onPlaybackSeeking = function(){
-            if (delayLoadingTimeout !== undefined){
-                clearTimeout(delayLoadingTimeout);
-            }
-        };
-
-
-    return {
-        system: undefined,
-        log: undefined,
-        metricsModel: undefined,
-        manifestExt:undefined,
-
-        setup: function() {
-            EventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, this);
-            EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        },
-
-        setLoader: function(value) {
-            this.fragmentLoader = value;
-        },
-
-        setContext: function(value) {
-            context = value;
-        },
-
-        getContext: function() {
-            return context;
-        },
-
-        isFragmentLoaded: function(request) {
-            var isEqualComplete = function(req1, req2) {
-                    return ((req1.action === "complete") && (req1.action === req2.action));
-                },
-
-                isEqualMedia = function(req1, req2) {
-                    return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
-                },
-
-                isEqualInit = function(req1, req2) {
-                    return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
-                },
-
-                check = function(arr) {
-                    var req,
-                        isLoaded = false,
-                        ln = arr.length,
-                        i;
-
-                    for (i = 0; i < ln; i += 1) {
-                        req = arr[i];
-
-                        if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
-                            //self.log(request.mediaType + "Fragment already loaded for time: " + request.startTime);
-                            isLoaded = true;
-                            break;
-                        }
+                    if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
+                        //log(request.mediaType + "Fragment already loaded for time: " + request.startTime);
+                        isLoaded = true;
+                        break;
                     }
-
-                    return isLoaded;
-                };
-
-            return (check(loadingRequests) || check(executedRequests));
-        },
-
-        /**
-         *
-         * Gets an array of {@link FragmentRequest} objects
-         *
-         * @param {object} filter The object with properties by which the method filters the requests to be returned.
-         *  the only mandatory property is state, which must be a value from {@link FragmentModel.states}
-         *  other properties should match the properties of {@link FragmentRequest}. E.g.:
-         *  getRequests({state: FragmentModel.states.EXECUTED, quality: 0}) - returns
-         *  all the requests from executedRequests array where requests.quality = filter.quality
-         *
-         * @returns {Array}
-         * @memberof FragmentModel#
-         */
-        getRequests: function(filter) {
-            var requests = [],
-                filteredRequests = [],
-                states,
-                ln = 1;
-
-            if (!filter || !filter.state) return requests;
-
-            if (filter.state instanceof Array) {
-                ln = filter.state.length;
-                states = filter.state;
-            } else {
-                states = [filter.state];
-            }
-
-            for(var i = 0; i < ln; i += 1) {
-                requests = getRequestsForState.call(this, states[i]);
-                filteredRequests = filteredRequests.concat(filterRequests.call(this, requests, filter));
-            }
-
-            return filteredRequests;
-        },
-
-        removeExecutedRequestsBeforeTime: function(time) {
-            var lastIdx = executedRequests.length - 1,
-                start = NaN,
-                req = null,
-                i;
-
-            // loop through the executed requests and remove the ones for which startTime is less than the given time
-            for (i = lastIdx; i >= 0; i -=1) {
-                req = executedRequests[i];
-                start = req.startTime;
-                if (!isNaN(start) && (start < time)) {
-                    removeRequest.call(this, executedRequests, req);
                 }
-            }
-        },
 
-        abortRequests: function() {
-            var reqs = [];
-            this.fragmentLoader.abort();
+                return isLoaded;
+            };
 
-            while (loadingRequests.length > 0) {
-                reqs.push(loadingRequests[0]);
-                removeRequest.call(this, loadingRequests, loadingRequests[0]);
-            }
+        return (check(loadingRequests) || check(executedRequests));
+    }
 
-            loadingRequests = [];
+    /**
+     *
+     * Gets an array of {@link FragmentRequest} objects
+     *
+     * @param {object} filter The object with properties by which the method filters the requests to be returned.
+     *  the only mandatory property is state, which must be a value from
+     *  other properties should match the properties of {@link FragmentRequest}. E.g.:
+     *  getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, quality: 0}) - returns
+     *  all the requests from executedRequests array where requests.quality = filter.quality
+     *
+     * @returns {Array}
+     * @memberof FragmentModel#
+     */
+    function getRequests(filter) {
+        var requests = [],
+            filteredRequests = [],
+            states,
+            ln = 1;
 
-            return reqs;
-        },
+        if (!filter || !filter.state) return requests;
 
-        executeRequest: function(request) {
-            var self = this,
-                now = new Date().getTime();
-
-            if (!request) return;
-
-            //Adds the ability to delay single fragment loading time to control buffer. Needed for Advanced ABR rules.
-            if (now < request.delayLoadingTime ) {
-                delayLoadingTimeout = setTimeout(function(){
-                    self.executeRequest(request);
-                }, (request.delayLoadingTime - now) );
-                return;
-            }
-
-            switch (request.action) {
-                case "complete":
-                    // Stream has completed, execute the corresponding callback
-                    executedRequests.push(request);
-                    addSchedulingInfoMetrics.call(self, request, FragmentModel.states.EXECUTED);
-                    EventBus.trigger(Events.STREAM_COMPLETED, {request: request, fragmentModel:this});
-                    break;
-                case "download":
-                    loadingRequests.push(request);
-                    addSchedulingInfoMetrics.call(self, request, FragmentModel.states.LOADING);
-                    loadCurrentFragment.call(self, request);
-                    break;
-                default:
-                    this.log("Unknown request action.");
-            }
-        },
-
-        reset: function() {
-            EventBus.off(Events.LOADING_COMPLETED, onLoadingCompleted, this);
-            EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-            this.abortRequests();
-            context = null;
-            executedRequests = [];
-            loadingRequests = [];
+        if (filter.state instanceof Array) {
+            ln = filter.state.length;
+            states = filter.state;
+        } else {
+            states = [filter.state];
         }
-    };
-};
 
-FragmentModel.prototype = {
-    constructor: FragmentModel
-};
+        for(var i = 0; i < ln; i += 1) {
+            requests = getRequestsForState(states[i]);
+            filteredRequests = filteredRequests.concat(filterRequests(requests, filter));
+        }
 
-/* Public Static Constants */
-FragmentModel.states = {
-    LOADING: "loading",
-    EXECUTED: "executed",
-    CANCELED: "canceled",
-    FAILED: "failed"
-};
+        return filteredRequests;
+    }
 
-export default FragmentModel;
+    function removeExecutedRequestsBeforeTime(time) {
+        var lastIdx = executedRequests.length - 1,
+            start = NaN,
+            req = null,
+            i;
+
+        // loop through the executed requests and remove the ones for which startTime is less than the given time
+        for (i = lastIdx; i >= 0; i -=1) {
+            req = executedRequests[i];
+            start = req.startTime;
+            if (!isNaN(start) && (start < time)) {
+                removeRequest(executedRequests, req);
+            }
+        }
+    }
+
+    function abortRequests() {
+        var reqs = [];
+        fragmentLoader.abort();
+
+        while (loadingRequests.length > 0) {
+            reqs.push(loadingRequests[0]);
+            removeRequest(loadingRequests, loadingRequests[0]);
+        }
+
+        loadingRequests = [];
+
+        return reqs;
+    }
+
+    function executeRequest(request) {
+        var now = new Date().getTime();
+
+        if (!request) return;
+
+        //Adds the ability to delay single fragment loading time to control buffer. Needed for Advanced ABR rules.
+        if (now < request.delayLoadingTime ) {
+            delayLoadingTimeout = setTimeout(function(){
+                executeRequest(request);
+            }, (request.delayLoadingTime - now) );
+            return;
+        }
+
+        switch (request.action) {
+            case "complete":
+                // Stream has completed, execute the corresponding callback
+                executedRequests.push(request);
+                addSchedulingInfoMetrics(request, FRAGMENT_MODEL_EXECUTED);
+                EventBus.trigger(Events.STREAM_COMPLETED, {request: request, fragmentModel:this});
+                break;
+            case "download":
+                loadingRequests.push(request);
+                addSchedulingInfoMetrics(request, FRAGMENT_MODEL_LOADING);
+                loadCurrentFragment(request);
+                break;
+            default:
+                log("Unknown request action.");
+        }
+    }
+
+    function reset() {
+        EventBus.off(Events.LOADING_COMPLETED, onLoadingCompleted, this);
+        EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+
+        abortRequests();
+        context = null;
+        fragmentLoader = null;
+        executedRequests = [];
+        loadingRequests = [];
+    }
+
+    function loadCurrentFragment(request) {
+        EventBus.trigger(Events.FRAGMENT_LOADING_STARTED, {sender: instance, request: request});
+        fragmentLoader.load(request);
+    }
+
+    function removeRequest(arr, request) {
+        var idx = arr.indexOf(request);
+
+        if (idx !== -1) {
+            arr.splice(idx, 1);
+        }
+    }
+
+    function getRequestForTime(arr, time, threshold) {
+        var lastIdx = arr.length - 1,
+            start = NaN,
+            end = NaN,
+            req = null,
+            i;
+
+        // loop through the executed requests and pick the one for which the playback interval matches the given time
+        for (i = lastIdx; i >= 0; i -=1) {
+            req = arr[i];
+            start = req.startTime;
+            end = start + req.duration;
+            threshold = threshold || (req.duration / 2);
+            if ((!isNaN(start) && !isNaN(end) && ((time + threshold) >= start) && ((time - threshold) < end)) || (isNaN(start) && isNaN(time))) {
+                return req;
+            }
+        }
+
+        return null;
+    }
+
+    function filterRequests(arr, filter) {
+        if (!filter) return arr;
+
+        // for time use a specific filtration function
+        if (filter.hasOwnProperty("time")) {
+            return [getRequestForTime(arr, filter.time, filter.threshold)];
+        }
+
+        return arr.filter(function(request/*, idx, arr*/) {
+            for (var prop in filter) {
+                if (prop === "state") continue;
+
+                if (filter.hasOwnProperty(prop) && request[prop] != filter[prop]) return false;
+            }
+
+            return true;
+        });
+    }
+
+    function getRequestsForState(state) {
+        var requests;
+
+        switch (state) {
+            case FRAGMENT_MODEL_LOADING:
+                requests = loadingRequests;
+                break;
+            case FRAGMENT_MODEL_EXECUTED:
+                requests = executedRequests;
+                break;
+            default:
+                requests = [];
+        }
+
+        return requests;
+    }
+
+    function addSchedulingInfoMetrics(request, state) {
+        if (!request) return;
+
+        var mediaType = request.mediaType,
+            now = new Date(),
+            type = request.type,
+            startTime = request.startTime,
+            availabilityStartTime = request.availabilityStartTime,
+            duration = request.duration,
+            quality = request.quality,
+            range = request.range;
+
+        metricsModel.addSchedulingInfo(mediaType, now, type, startTime, availabilityStartTime, duration, quality, range, state);
+        metricsModel.addRequestsQueue(mediaType, loadingRequests, executedRequests);
+    }
+
+    function onLoadingCompleted(e) {
+        if (e.sender !== fragmentLoader) return;
+
+        var request = e.request,
+            response = e.response,
+            error = e.error;
+
+        loadingRequests.splice(loadingRequests.indexOf(request), 1);
+
+        if (response && !error) {
+            executedRequests.push(request);
+        }
+
+        addSchedulingInfoMetrics(request, error ? FRAGMENT_MODEL_FAILED : FRAGMENT_MODEL_EXECUTED);
+        EventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {request: request, response: response, error:error, sender:this})
+    }
+
+    function onPlaybackSeeking (){
+        if (delayLoadingTimeout !== undefined){
+            clearTimeout(delayLoadingTimeout);
+        }
+    }
+};

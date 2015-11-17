@@ -471,7 +471,6 @@ function ScheduleController(config) {
         }
 
         doStop();
-        fragmentModel.abortRequests();
         fragmentController.detachModel(fragmentModel);
         isFragmentLoading = false;
         fragmentsToLoad = 0;

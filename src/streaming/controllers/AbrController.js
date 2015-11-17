@@ -32,6 +32,7 @@
 import SwitchRequest from '../rules/SwitchRequest';
 import BitrateInfo from '../vo/BitrateInfo.js';
 import ABRRulesCollection from '../rules/ABRRules/ABRRulesCollection.js';
+import FragmentModel from '../models/FragmentModel.js';
 import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -413,7 +414,7 @@ function AbrController() {
 
                     if (switchRequest.confidence === SwitchRequest.STRONG) {
 
-                        var requests = fragmentModel.getRequests({state:FragmentModel.states.LOADING, }),
+                        var requests = fragmentModel.getRequests({state:FragmentModel.FRAGMENT_MODEL_LOADING, }),
                             newQuality = switchRequest.value,
                             currentQuality = getQualityFor(type, streamController.getActiveStreamInfo());
 

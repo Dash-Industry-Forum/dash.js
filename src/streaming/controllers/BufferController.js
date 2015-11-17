@@ -227,7 +227,7 @@ function BufferController(config) {
             bytes = chunk.bytes,
             quality = chunk.quality,
             index = chunk.index,
-            request = streamProcessor.getFragmentModel().getRequests({state: FragmentModel.states.EXECUTED, quality: quality, index: index})[0],
+            request = streamProcessor.getFragmentModel().getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, quality: quality, index: index})[0],
             currentRepresentation = streamProcessor.getRepresentationInfoForQuality(quality),
             manifest = manifestModel.getValue(),
             eventStreamMedia = adapter.getEventsFor(manifest, currentRepresentation.mediaInfo, streamProcessor),
@@ -539,7 +539,7 @@ function BufferController(config) {
 
         currentTime = playbackController.getTime();
         // we need to remove data that is more than one fragment before the video currentTime
-        req = streamProcessor.getFragmentModel().getRequests({state: FragmentModel.states.EXECUTED, time: currentTime})[0];
+        req = streamProcessor.getFragmentModel().getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, time: currentTime})[0];
         removeEnd = (req && !isNaN(req.startTime)) ? req.startTime : Math.floor(currentTime);
 
         range = sourceBufferExt.getBufferRange(buffer, currentTime);

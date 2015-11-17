@@ -30,6 +30,7 @@
  */
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import DataChunk from '../vo/DataChunk.js';
+import FragmentModel from '../models/FragmentModel.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -76,7 +77,7 @@ function FragmentController(config) {
         var model = findModel(context);
 
         if (!model){
-            model = system.getObject("fragmentModel");
+            model = FragmentModel.create({log:log, metricsModel:system.getObject('metricsModel')});
             model.setContext(context);
             fragmentModels.push(model);
         }

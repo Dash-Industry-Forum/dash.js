@@ -57,7 +57,7 @@ import Widevine from './protection/servers/Widevine.js';
 import VideoModelExtensions from './extensions/VideoModelExtensions.js';
 import ProtectionExtensions from './extensions/ProtectionExtensions.js';
 import MetricsList from './vo/MetricsList.js';
-import FragmentModel from './models/FragmentModel.js';
+
 
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
 import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
@@ -132,7 +132,6 @@ let Context = function () {
             mapProtectionModel.call(this); // Determines EME API support and version
 
             this.system.mapClass('metrics', MetricsList);
-            this.system.mapClass('fragmentModel', FragmentModel);
         }
     };
 };
