@@ -309,8 +309,7 @@ let MediaPlayer = function (context) {
                 log :debug.log,
                 errHandler : this.errHandler,
                 parser :system.getObject('parser'),
-                metricsModel :metricsModel,
-                system :system
+                metricsModel :metricsModel
             });
         },
 

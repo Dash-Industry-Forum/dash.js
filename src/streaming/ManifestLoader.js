@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import XlinkController from './controllers/XlinkController.js';
+import XlinkLoader from './XlinkLoader.js';
 import RequestModifierExtensions from './extensions/RequestModifierExtensions.js'
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
@@ -47,8 +48,7 @@ function ManifestLoader(config) {
     let log = config.log,
         parser = config.parser,
         errHandler = config.errHandler,
-        metricsModel = config.metricsModel,
-        system = config.system;
+        metricsModel = config.metricsModel
 
     let instance = {
         load:load,
@@ -62,10 +62,9 @@ function ManifestLoader(config) {
         xlinkController;
 
     function setup() {
+        let xlinkLoader = XlinkLoader.create({errHandler:errHandler, metricsModel:metricsModel});
+        xlinkController = XlinkController.create({xlinkLoader:xlinkLoader});
         requestModifierExt = RequestModifierExtensions.getInstance();
-        xlinkController = XlinkController.create({
-            xlinkLoader:system.getObject('xlinkLoader')
-        })
         EventBus.on(Events.XLINK_READY, onXlinkReady, instance);
     }
 
