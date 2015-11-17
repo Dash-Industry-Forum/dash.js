@@ -52,6 +52,7 @@ import VirtualBuffer from './utils/VirtualBuffer.js';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
 import ManifestModel from './models/ManifestModel.js';
+import MetricsModel from './models/MetricsModel.js';
 import AbrController from './controllers/AbrController.js'
 import TimeSyncController from './TimeSyncController.js';
 import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
@@ -104,7 +105,6 @@ let MediaPlayer = function (context) {
         rulesController,
         playbackController,
         metricsExt,
-        metricsModel,
         videoModel,
         textSourceBuffer,
         DOMStorage,
@@ -117,6 +117,7 @@ let MediaPlayer = function (context) {
         UTCTimingSources = [],
         liveDelayFragmentCount = 4,
         usePresentationDelay = false,
+        metricsModel = MetricsModel.getInstance(),
         mediaPlayerModel = MediaPlayerModel.getInstance(),
         errHandler = ErrorHandler.getInstance(),
         capabilities = Capabilities.getInstance(),
@@ -364,7 +365,7 @@ let MediaPlayer = function (context) {
                 manifestLoader :createManifestLoader.call(this),
                 manifestModel :ManifestModel.getInstance(),
                 manifestExt :system.getObject("manifestExt"),
-                adapter : system.getObject("adapter"),
+                adapter : this.adapter,
                 metricsModel : metricsModel,
                 metricsExt : metricsExt,
                 videoExt : system.getObject("videoExt"),
@@ -424,14 +425,16 @@ let MediaPlayer = function (context) {
     return {
 
         debug: undefined,
-
         adapter: undefined,
         videoElementExt: undefined,
 
         setup: function () {
             metricsExt = system.getObject("metricsExt");
-            metricsModel = system.getObject("metricsModel");
             DOMStorage = system.getObject("DOMStorage");
+            metricsModel.setConfig({
+                adapter:this.adapter,
+                system:system
+            })
             capabilities.setConfig({
                 log:debug.log,
                 system:system
@@ -1090,7 +1093,7 @@ let MediaPlayer = function (context) {
         createProtection: function () {
             return  ProtectionController.create({
                 protectionExt: system.getObject('protectionExt'),
-                adapter: system.getObject('adapter'),
+                adapter: this.adapter,
                 log: debug.log,
                 system: system
             })

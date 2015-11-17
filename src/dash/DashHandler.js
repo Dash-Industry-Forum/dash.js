@@ -33,6 +33,7 @@ import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import Error from '../streaming/vo/Error.js';
 import HTTPRequest from '../streaming/vo/metrics/HTTPRequest.js';
 import BaseURLExtensions from './extensions/BaseURLExtensions.js';
+import MetricsModel from '../streaming/models/MetricsModel.js';
 import Events from '../streaming/Events.js';
 import EventBus from '../streaming/utils/EventBus.js';
 
@@ -45,6 +46,7 @@ let DashHandler = function () {
         type,
         currentTime = 0,
         absUrl = new RegExp('^(?:(?:[a-z]+:)?\/)?\/', 'i'),
+        metricsModel = MetricsModel.getInstance(),
 
         zeroPadToLength = function (numStr, minStrLength) {
             while (numStr.length < minStrLength) {
@@ -637,10 +639,10 @@ let DashHandler = function () {
             if (isDynamic && isNaN(this.timelineConverter.getExpectedLiveEdge())) {
                 lastSegment = segments[lastIdx];
                 liveEdge = lastSegment.presentationStartTime;
-                metrics = this.metricsModel.getMetricsFor("stream");
+                metrics = metricsModel.getMetricsFor("stream");
                 // the last segment is supposed to be a live edge
                 this.timelineConverter.setExpectedLiveEdge(liveEdge);
-                this.metricsModel.updateManifestUpdateInfo(this.metricsExt.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
+                metricsModel.updateManifestUpdateInfo(this.metricsExt.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
             }
         },
 
@@ -935,7 +937,6 @@ let DashHandler = function () {
         log: undefined,
         baseURLExt: undefined,
         timelineConverter: undefined,
-        metricsModel: undefined,
         metricsExt: undefined,
 
         setup: function() {

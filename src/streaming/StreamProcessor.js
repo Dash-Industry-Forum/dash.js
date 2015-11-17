@@ -39,6 +39,7 @@ import ScheduleController from './controllers/ScheduleController.js';
 import RulesController from './rules/RulesController.js';
 import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
+import MetricsModel from './models/MetricsModel.js';
 import FragmentLoader from './FragmentLoader.js';
 import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
 import SourceBufferExtensions from './extensions/SourceBufferExtensions';
@@ -129,7 +130,7 @@ function StreamProcessor(config) {
 
         scheduleController = ScheduleController.create({
             log: system.getObject("log"),
-            metricsModel:system.getObject("metricsModel"),
+            metricsModel:MetricsModel.getInstance(),
             manifestModel:manifestModel,
             adapter:adapter,
             metricsExt:system.getObject("metricsExt"),
@@ -143,7 +144,7 @@ function StreamProcessor(config) {
         scheduleController.initialize(type, this);
 
         fragmentLoader = FragmentLoader.create({
-            metricsModel:system.getObject("metricsModel"),
+            metricsModel:MetricsModel.getInstance(),
             errHandler:ErrorHandler.getInstance(),
             log: system.getObject("log"),
             requestModifierExt:RequestModifierExtensions.getInstance()
@@ -298,7 +299,7 @@ function StreamProcessor(config) {
         if (type === "video" || type === "audio" || type === "fragmentedText") {
             controller = BufferController.create({
                 log:system.getObject("log"),
-                metricsModel:system.getObject("metricsModel"),
+                metricsModel:MetricsModel.getInstance(),
                 manifestModel:manifestModel,
                 sourceBufferExt:SourceBufferExtensions.getInstance(),
                 errHandler:ErrorHandler.getInstance(),

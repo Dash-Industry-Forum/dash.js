@@ -33,6 +33,7 @@ import AbrController from '../../streaming/controllers/AbrController.js';
 import PlaybackController from '../../streaming/controllers/PlaybackController.js';
 import StreamController from '../../streaming/controllers/StreamController.js';
 import ManifestModel from '../../streaming/models/ManifestModel.js';
+import MetricsModel from '../../streaming/models/MetricsModel.js';
 import DOMStorage from '../../streaming/utils/DOMStorage.js';
 import Error from '../../streaming/vo/Error.js';
 import EventBus from '../../streaming/utils/EventBus.js';
@@ -49,6 +50,7 @@ let RepresentationController = function () {
         streamController = StreamController.getInstance(),
         playbackController = PlaybackController.getInstance(),
         manifestModel = ManifestModel.getInstance(),
+        metricsModel = MetricsModel.getInstance(),
 
         updateData = function(dataValue, adaptation, type) {
             var self = this,
@@ -94,14 +96,14 @@ let RepresentationController = function () {
                 currentRepresentation = this.getCurrentRepresentation(),
                 currentVideoTime = playbackController.getTime();
 
-            this.metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
+            metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
         },
 
         addDVRMetric = function() {
             var streamProcessor = this.streamProcessor,
                 range = this.timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, streamProcessor.isDynamic());
 
-            this.metricsModel.addDVRInfo(streamProcessor.getType(), playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
+            metricsModel.addDVRInfo(streamProcessor.getType(), playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
         },
 
         getRepresentationForQuality = function(quality) {
@@ -169,8 +171,8 @@ let RepresentationController = function () {
 
             var self = this,
                 r = e.representation,
-                streamMetrics = self.metricsModel.getMetricsFor("stream"),
-                metrics = self.metricsModel.getMetricsFor(this.getCurrentRepresentation().adaptation.type),
+                streamMetrics = metricsModel.getMetricsFor("stream"),
+                metrics = metricsModel.getMetricsFor(this.getCurrentRepresentation().adaptation.type),
                 manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(streamMetrics),
                 repInfo,
                 err,
@@ -196,7 +198,7 @@ let RepresentationController = function () {
                 }
 
                 if (!alreadyAdded) {
-                    self.metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
+                    metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
                             self.streamProcessor.getType(),r.presentationTimeOffset, r.startNumber, r.segmentInfoType);
                 }
             }
@@ -204,7 +206,7 @@ let RepresentationController = function () {
             if (isAllRepresentationsUpdated()) {
                 updating = false;
                 self.abrController.setPlaybackQuality(self.streamProcessor.getType(), self.streamProcessor.getStreamInfo(), getQualityForRepresentation.call(this, currentRepresentation));
-                self.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - playbackController.getTime()});
+                metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - playbackController.getTime()});
 
                 repSwitch = self.metricsExt.getCurrentRepresentationSwitch(metrics);
 
@@ -270,7 +272,6 @@ let RepresentationController = function () {
         system: undefined,
         log: undefined,
         manifestExt: undefined,
-        metricsModel: undefined,
         metricsExt: undefined,
         timelineConverter: undefined,
         DOMStorage:undefined,

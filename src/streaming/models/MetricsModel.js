@@ -42,346 +42,386 @@ import PlayList from '../vo/metrics/PlayList.js';
 import EventBus from '../utils/EventBus.js';
 import RequestsQueue from '../vo/metrics/RequestsQueue.js';
 import Events from '../Events.js'
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-let MetricsModel = function () {
-    "use strict";
+export default FactoryMaker.getSingletonFactory(MetricsModel);
 
-    return {
-        system : undefined,
-        adapter: undefined,
-        streamMetrics: {},
-        metricsChanged: function () {
-            EventBus.trigger(Events.METRICS_CHANGED);
-        },
+function  MetricsModel() {
 
-        metricChanged: function (mediaType) {
-            EventBus.trigger(Events.METRIC_CHANGED, {mediaType: mediaType});
-            this.metricsChanged();
-        },
+    let instance = {
+        metricsChanged:metricsChanged,
+        metricChanged:metricChanged,
+        metricUpdated:metricUpdated,
+        metricAdded:metricAdded,
+        clearCurrentMetricsForType:clearCurrentMetricsForType,
+        clearAllCurrentMetrics:clearAllCurrentMetrics,
+        getReadOnlyMetricsFor:getReadOnlyMetricsFor,
+        getMetricsFor:getMetricsFor,
+        addTcpConnection:addTcpConnection,
+        addHttpRequest:addHttpRequest,
+        appendHttpTrace:appendHttpTrace,
+        addRepresentationSwitch:addRepresentationSwitch,
+        addBufferLevel:addBufferLevel,
+        addBufferState:addBufferState,
+        addDVRInfo:addDVRInfo,
+        addDroppedFrames:addDroppedFrames,
+        addSchedulingInfo:addSchedulingInfo,
+        addRequestsQueue:addRequestsQueue,
+        addManifestUpdate:addManifestUpdate,
+        updateManifestUpdateInfo:updateManifestUpdateInfo,
+        addManifestUpdateStreamInfo:addManifestUpdateStreamInfo,
+        addManifestUpdateRepresentationInfo:addManifestUpdateRepresentationInfo,
+        addPlayList:addPlayList,
+        appendPlayListTrace:appendPlayListTrace,
+        setConfig:setConfig
+    }
 
-        metricUpdated: function (mediaType, metricType, vo) {
-            EventBus.trigger(Events.METRIC_UPDATED, {mediaType: mediaType, metric: metricType, value: vo});
-            this.metricChanged(mediaType);
-        },
+    setup();
+    return instance;
 
-        metricAdded: function (mediaType, metricType, vo) {
-            EventBus.trigger(Events.METRIC_ADDED, {mediaType: mediaType, metric: metricType, value: vo});
-            this.metricChanged(mediaType);
-        },
+    let system,
+        adapter,
+        streamMetrics;
 
-        clearCurrentMetricsForType: function (type) {
-            delete this.streamMetrics[type];
-            this.metricChanged(type);
-        },
+    function setup() {
+        streamMetrics = {};
+    }
 
-        clearAllCurrentMetrics: function () {
-            var self = this;
-            this.streamMetrics = {};
-            this.metricsChanged.call(self);
-        },
+    function setConfig(config) {
+        if (!config) return;
 
-        getReadOnlyMetricsFor: function(type) {
-            if (this.streamMetrics.hasOwnProperty(type)) {
-                return this.streamMetrics[type];
+        if (config.adapter) {
+            adapter = config.adapter;
+        }
+
+        if (config.system) {
+            system = config.system;
+        }
+    }
+
+    function metricsChanged() {
+        EventBus.trigger(Events.METRICS_CHANGED);
+    }
+
+    function metricChanged(mediaType) {
+        EventBus.trigger(Events.METRIC_CHANGED, {mediaType: mediaType});
+        metricsChanged();
+    }
+
+    function metricUpdated(mediaType, metricType, vo) {
+        EventBus.trigger(Events.METRIC_UPDATED, {mediaType: mediaType, metric: metricType, value: vo});
+        metricChanged(mediaType);
+    }
+
+    function metricAdded(mediaType, metricType, vo) {
+        EventBus.trigger(Events.METRIC_ADDED, {mediaType: mediaType, metric: metricType, value: vo});
+        metricChanged(mediaType);
+    }
+
+    function clearCurrentMetricsForType(type) {
+        delete streamMetrics[type];
+        metricChanged(type);
+    }
+
+    function clearAllCurrentMetrics() {
+        streamMetrics = {};
+        metricsChanged();
+    }
+
+    function getReadOnlyMetricsFor(type) {
+        if (streamMetrics.hasOwnProperty(type)) {
+            return streamMetrics[type];
+        }
+
+        return null;
+    }
+
+    function getMetricsFor(type) {
+        var metrics;
+
+        if (streamMetrics.hasOwnProperty(type)) {
+            metrics = streamMetrics[type];
+        } else {
+            metrics = system.getObject("metrics");
+            streamMetrics[type] = metrics;
+        }
+
+        return metrics;
+    }
+
+    function addTcpConnection(mediaType, tcpid, dest, topen, tclose, tconnect) {
+        var vo = new TCPConnection();
+
+        vo.tcpid = tcpid;
+        vo.dest = dest;
+        vo.topen = topen;
+        vo.tclose = tclose;
+        vo.tconnect = tconnect;
+
+        getMetricsFor(mediaType).TcpList.push(vo);
+
+        metricAdded(mediaType, adapter.metricsList.TCP_CONNECTION, vo);
+        return vo;
+    }
+
+    function addHttpRequest(mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders) {
+        var vo = new HTTPRequest();
+
+        // ISO 23009-1 D.4.3 NOTE 2:
+        // All entries for a given object will have the same URL and range
+        // and so can easily be correlated. If there were redirects or
+        // failures there will be one entry for each redirect/failure.
+        // The redirect-to URL or alternative url (where multiple have been
+        // provided in the MPD) will appear as the actualurl of the next
+        // entry with the same url value.
+        if (actualurl && (actualurl !== url)) {
+
+            // given the above, add an entry for the original request
+            addHttpRequest(
+                mediaType,
+                null,
+                type,
+                url,
+                null,
+                range,
+                trequest,
+                null, // unknown
+                null, // unknown
+                null, // unknown, probably a 302
+                mediaduration,
+                null
+            );
+
+            vo.actualurl = actualurl;
+        }
+
+        vo.stream = mediaType;
+        vo.tcpid = tcpid;
+        vo.type = type;
+        vo.url = url;
+        vo.range = range;
+        vo.trequest = trequest;
+        vo.tresponse = tresponse;
+        vo.tfinish = tfinish;
+        vo.responsecode = responsecode;
+        vo.mediaduration = mediaduration;
+        vo.responseHeaders = responseHeaders;
+        getMetricsFor(mediaType).HttpList.push(vo);
+
+        metricAdded(mediaType, adapter.metricsList.HTTP_REQUEST, vo);
+        return vo;
+    }
+
+    function appendHttpTrace(httpRequest, s, d, b) {
+        var vo = new HTTPRequest.Trace();
+
+        vo.s = s;
+        vo.d = d;
+        vo.b = b;
+
+        httpRequest.trace.push(vo);
+
+        if (!httpRequest.interval) {
+            httpRequest.interval = 0;
+        }
+
+        httpRequest.interval += d;
+
+        metricUpdated(httpRequest.stream, adapter.metricsList.HTTP_REQUEST_TRACE, httpRequest);
+        return vo;
+    }
+
+    function addRepresentationSwitch(mediaType, t, mt, to, lto) {
+        var vo = new TrackSwitch();
+
+        vo.t = t;
+        vo.mt = mt;
+        vo.to = to;
+        vo.lto = lto;
+
+        getMetricsFor(mediaType).RepSwitchList.push(vo);
+
+        metricAdded(mediaType, adapter.metricsList.TRACK_SWITCH, vo);
+        return vo;
+    }
+
+    function addBufferLevel(mediaType, t, level) {
+        var vo = new BufferLevel();
+        vo.t = t;
+        vo.level = level;
+        getMetricsFor(mediaType).BufferLevel.push(vo);
+
+        metricAdded(mediaType, adapter.metricsList.BUFFER_LEVEL, vo);
+        return vo;
+    }
+
+    function addBufferState(mediaType, state, target) {
+        var vo = new BufferState();
+        vo.target = target;
+        vo.state = state;
+        getMetricsFor(mediaType).BufferState.push(vo);
+
+        metricAdded(mediaType, adapter.metricsList.BUFFER_STATE, vo);
+        return vo;
+    }
+
+
+    function addDVRInfo(mediaType, currentTime, mpd, range) {
+        var vo = new DVRInfo();
+
+        vo.time = currentTime ;
+        vo.range = range;
+        vo.manifestInfo = mpd;
+
+        getMetricsFor(mediaType).DVRInfo.push(vo);
+        metricAdded(mediaType, adapter.metricsList.DVR_INFO, vo);
+
+        return vo;
+    }
+
+    function addDroppedFrames(mediaType, quality) {
+        var vo = new DroppedFrames(),
+            list = getMetricsFor(mediaType).DroppedFrames;
+
+        vo.time = quality.creationTime;
+        vo.droppedFrames = quality.droppedVideoFrames;
+
+        if (list.length > 0 && list[list.length - 1] == vo) {
+            return list[list.length - 1];
+        }
+
+        list.push(vo);
+
+        metricAdded(mediaType, adapter.metricsList.DROPPED_FRAMES, vo);
+        return vo;
+    }
+
+    function addSchedulingInfo(mediaType, t, type, startTime, availabilityStartTime, duration, quality, range, state) {
+        var vo = new SchedulingInfo();
+
+        vo.mediaType = mediaType;
+        vo.t = t;
+
+        vo.type = type;
+        vo.startTime = startTime;
+        vo.availabilityStartTime = availabilityStartTime;
+        vo.duration = duration;
+        vo.quality = quality;
+        vo.range = range;
+
+        vo.state = state;
+
+        getMetricsFor(mediaType).SchedulingInfo.push(vo);
+
+        metricAdded(mediaType, adapter.metricsList.SCHEDULING_INFO, vo);
+        return vo;
+    }
+
+    function addRequestsQueue(mediaType, loadingRequests, executedRequests) {
+        var vo = new RequestsQueue();
+        vo.loadingRequests = loadingRequests;
+        vo.executedRequests = executedRequests;
+
+        getMetricsFor(mediaType).RequestsQueue = vo;
+        metricAdded(mediaType, adapter.metricsList.REQUESTS_QUEUE, vo);
+    }
+
+    function addManifestUpdate(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
+        var vo = new ManifestUpdate(),
+            metrics = getMetricsFor("stream");
+
+        vo.mediaType = mediaType;
+        vo.type = type;
+        vo.requestTime = requestTime; // when this manifest update was requested
+        vo.fetchTime = fetchTime; // when this manifest update was received
+        vo.availabilityStartTime = availabilityStartTime;
+        vo.presentationStartTime = presentationStartTime; // the seek point (liveEdge for dynamic, Stream[0].startTime for static)
+        vo.clientTimeOffset = clientTimeOffset; // the calculated difference between the server and client wall clock time
+        vo.currentTime = currentTime; // actual element.currentTime
+        vo.buffered = buffered; // actual element.ranges
+        vo.latency = latency; // (static is fixed value of zero. dynamic should be ((Now-@availabilityStartTime) - currentTime)
+
+        metrics.ManifestUpdate.push(vo);
+        metricAdded(mediaType, adapter.metricsList.MANIFEST_UPDATE, vo);
+
+        return vo;
+    }
+
+    function updateManifestUpdateInfo(manifestUpdate, updatedFields) {
+        if (manifestUpdate) {
+            for (var field in updatedFields) {
+                manifestUpdate[field] = updatedFields[field];
             }
 
-            return null;
-        },
+            metricUpdated(manifestUpdate.mediaType, adapter.metricsList.MANIFEST_UPDATE, manifestUpdate);
+        }
+    }
 
-        getMetricsFor: function(type) {
-            var metrics;
+    function addManifestUpdateStreamInfo(manifestUpdate, id, index, start, duration) {
+        if (manifestUpdate) {
+            var vo = new ManifestUpdate.StreamInfo();
 
-            if (this.streamMetrics.hasOwnProperty(type)) {
-                metrics = this.streamMetrics[type];
-            } else {
-                metrics = this.system.getObject("metrics");
-                this.streamMetrics[type] = metrics;
-            }
-
-            return metrics;
-        },
-
-        addTcpConnection: function (mediaType, tcpid, dest, topen, tclose, tconnect) {
-            var vo = new TCPConnection();
-
-            vo.tcpid = tcpid;
-            vo.dest = dest;
-            vo.topen = topen;
-            vo.tclose = tclose;
-            vo.tconnect = tconnect;
-
-            this.getMetricsFor(mediaType).TcpList.push(vo);
-
-            this.metricAdded(mediaType, this.adapter.metricsList.TCP_CONNECTION, vo);
-            return vo;
-        },
-
-        addHttpRequest: function (mediaType, tcpid, type, url, actualurl, range, trequest, tresponse, tfinish, responsecode, mediaduration, responseHeaders) {
-            var vo = new HTTPRequest();
-
-            // ISO 23009-1 D.4.3 NOTE 2:
-            // All entries for a given object will have the same URL and range
-            // and so can easily be correlated. If there were redirects or
-            // failures there will be one entry for each redirect/failure.
-            // The redirect-to URL or alternative url (where multiple have been
-            // provided in the MPD) will appear as the actualurl of the next
-            // entry with the same url value.
-            if (actualurl && (actualurl !== url)) {
-
-                // given the above, add an entry for the original request
-                this.addHttpRequest(
-                    mediaType,
-                    null,
-                    type,
-                    url,
-                    null,
-                    range,
-                    trequest,
-                    null, // unknown
-                    null, // unknown
-                    null, // unknown, probably a 302
-                    mediaduration,
-                    null
-                );
-
-                vo.actualurl = actualurl;
-            }
-
-            vo.stream = mediaType;
-            vo.tcpid = tcpid;
-            vo.type = type;
-            vo.url = url;
-            vo.range = range;
-            vo.trequest = trequest;
-            vo.tresponse = tresponse;
-            vo.tfinish = tfinish;
-            vo.responsecode = responsecode;
-            vo.mediaduration = mediaduration;
-            vo.responseHeaders = responseHeaders;
-            this.getMetricsFor(mediaType).HttpList.push(vo);
-
-            this.metricAdded(mediaType, this.adapter.metricsList.HTTP_REQUEST, vo);
-            return vo;
-        },
-
-        appendHttpTrace: function (httpRequest, s, d, b) {
-            var vo = new HTTPRequest.Trace();
-
-            vo.s = s;
-            vo.d = d;
-            vo.b = b;
-
-            httpRequest.trace.push(vo);
-
-            if (!httpRequest.interval) {
-                httpRequest.interval = 0;
-            }
-
-            httpRequest.interval += d;
-
-            this.metricUpdated(httpRequest.stream, this.adapter.metricsList.HTTP_REQUEST_TRACE, httpRequest);
-            return vo;
-        },
-
-        addRepresentationSwitch: function (mediaType, t, mt, to, lto) {
-            var vo = new TrackSwitch();
-
-            vo.t = t;
-            vo.mt = mt;
-            vo.to = to;
-            vo.lto = lto;
-
-            this.getMetricsFor(mediaType).RepSwitchList.push(vo);
-
-            this.metricAdded(mediaType, this.adapter.metricsList.TRACK_SWITCH, vo);
-            return vo;
-        },
-
-        addBufferLevel: function (mediaType, t, level) {
-            var vo = new BufferLevel();
-            vo.t = t;
-            vo.level = level;
-            this.getMetricsFor(mediaType).BufferLevel.push(vo);
-
-            this.metricAdded(mediaType, this.adapter.metricsList.BUFFER_LEVEL, vo);
-            return vo;
-        },
-
-        addBufferState: function (mediaType, state, target) {
-            var vo = new BufferState();
-            vo.target = target;
-            vo.state = state;
-            this.getMetricsFor(mediaType).BufferState.push(vo);
-
-            this.metricAdded(mediaType, this.adapter.metricsList.BUFFER_STATE, vo);
-            return vo;
-        },
-
-
-        addDVRInfo: function (mediaType, currentTime, mpd, range)
-        {
-            var vo = new DVRInfo();
-
-            vo.time = currentTime ;
-            vo.range = range;
-            vo.manifestInfo = mpd;
-
-            this.getMetricsFor(mediaType).DVRInfo.push(vo);
-            this.metricAdded(mediaType, this.adapter.metricsList.DVR_INFO, vo);
-
-            return vo;
-        },
-
-        addDroppedFrames: function (mediaType, quality) {
-            var vo = new DroppedFrames(),
-                list = this.getMetricsFor(mediaType).DroppedFrames;
-
-            vo.time = quality.creationTime;
-            vo.droppedFrames = quality.droppedVideoFrames;
-
-            if (list.length > 0 && list[list.length - 1] == vo) {
-                return list[list.length - 1];
-            }
-
-            list.push(vo);
-
-            this.metricAdded(mediaType, this.adapter.metricsList.DROPPED_FRAMES, vo);
-            return vo;
-        },
-
-        addSchedulingInfo: function(mediaType, t, type, startTime, availabilityStartTime, duration, quality, range, state) {
-            var vo = new SchedulingInfo();
-
-            vo.mediaType = mediaType;
-            vo.t = t;
-
-            vo.type = type;
-            vo.startTime = startTime;
-            vo.availabilityStartTime = availabilityStartTime;
-            vo.duration = duration;
-            vo.quality = quality;
-            vo.range = range;
-
-            vo.state = state;
-
-            this.getMetricsFor(mediaType).SchedulingInfo.push(vo);
-
-            this.metricAdded(mediaType, this.adapter.metricsList.SCHEDULING_INFO, vo);
-            return vo;
-        },
-
-        addRequestsQueue: function(mediaType, loadingRequests, executedRequests) {
-            var vo = new RequestsQueue();
-            vo.loadingRequests = loadingRequests;
-            vo.executedRequests = executedRequests;
-
-            this.getMetricsFor(mediaType).RequestsQueue = vo;
-            this.metricAdded(mediaType, this.adapter.metricsList.REQUESTS_QUEUE, vo);
-        },
-
-        addManifestUpdate: function(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
-            var vo = new ManifestUpdate(),
-                metrics = this.getMetricsFor("stream");
-
-            vo.mediaType = mediaType;
-            vo.type = type;
-            vo.requestTime = requestTime; // when this manifest update was requested
-            vo.fetchTime = fetchTime; // when this manifest update was received
-            vo.availabilityStartTime = availabilityStartTime;
-            vo.presentationStartTime = presentationStartTime; // the seek point (liveEdge for dynamic, Stream[0].startTime for static)
-            vo.clientTimeOffset = clientTimeOffset; // the calculated difference between the server and client wall clock time
-            vo.currentTime = currentTime; // actual element.currentTime
-            vo.buffered = buffered; // actual element.ranges
-            vo.latency = latency; // (static is fixed value of zero. dynamic should be ((Now-@availabilityStartTime) - currentTime)
-
-            metrics.ManifestUpdate.push(vo);
-            this.metricAdded(mediaType, this.adapter.metricsList.MANIFEST_UPDATE, vo);
-
-            return vo;
-        },
-
-        updateManifestUpdateInfo: function(manifestUpdate, updatedFields) {
-            if (manifestUpdate) {
-                for (var field in updatedFields) {
-                    manifestUpdate[field] = updatedFields[field];
-                }
-
-                this.metricUpdated(manifestUpdate.mediaType, this.adapter.metricsList.MANIFEST_UPDATE, manifestUpdate);
-            }
-        },
-
-        addManifestUpdateStreamInfo: function(manifestUpdate, id, index, start, duration) {
-            if (manifestUpdate) {
-                var vo = new ManifestUpdate.StreamInfo();
-
-                vo.id = id;
-                vo.index = index;
-                vo.start = start;
-                vo.duration = duration;
-
-                manifestUpdate.streamInfo.push(vo);
-                this.metricUpdated(manifestUpdate.mediaType, this.adapter.metricsList.MANIFEST_UPDATE_STREAM_INFO, manifestUpdate);
-
-                return vo;
-            }
-            return null;
-        },
-
-        addManifestUpdateRepresentationInfo: function(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
-            if (manifestUpdate) {
-                var vo = new ManifestUpdate.TrackInfo();
-
-                vo.id = id;
-                vo.index = index;
-                vo.streamIndex = streamIndex;
-                vo.mediaType = mediaType;
-                vo.startNumber = startNumber;
-                vo.fragmentInfoType = fragmentInfoType;
-                vo.presentationTimeOffset = presentationTimeOffset;
-
-                manifestUpdate.trackInfo.push(vo);
-                this.metricUpdated(manifestUpdate.mediaType, this.adapter.metricsList.MANIFEST_UPDATE_TRACK_INFO, manifestUpdate);
-
-                return vo;
-            }
-            return null;
-        },
-
-        addPlayList: function (mediaType, start, mstart, starttype) {
-            var vo = new PlayList();
-
-            vo.stream = mediaType;
+            vo.id = id;
+            vo.index = index;
             vo.start = start;
-            vo.mstart = mstart;
-            vo.starttype = starttype;
-
-            this.getMetricsFor(mediaType).PlayList.push(vo);
-
-            this.metricAdded(mediaType, this.adapter.metricsList.PLAY_LIST, vo);
-            return vo;
-        },
-
-        appendPlayListTrace: function (playList, trackId, subreplevel, start, mstart, duration, playbackspeed, stopreason) {
-            var vo = new PlayList.Trace();
-
-            vo.representationid = trackId;
-            vo.subreplevel = subreplevel;
-            vo.start = start;
-            vo.mstart = mstart;
             vo.duration = duration;
-            vo.playbackspeed = playbackspeed;
-            vo.stopreason = stopreason;
 
-            playList.trace.push(vo);
+            manifestUpdate.streamInfo.push(vo);
+            metricUpdated(manifestUpdate.mediaType, adapter.metricsList.MANIFEST_UPDATE_STREAM_INFO, manifestUpdate);
 
-            this.metricUpdated(playList.stream, this.adapter.metricsList.PLAY_LIST_TRACE, playList);
             return vo;
         }
-    };
-};
+        return null;
+    }
 
-MetricsModel.prototype = {
-    constructor: MetricsModel
-};
+    function addManifestUpdateRepresentationInfo(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
+        if (manifestUpdate) {
+            var vo = new ManifestUpdate.TrackInfo();
 
-export default MetricsModel;
+            vo.id = id;
+            vo.index = index;
+            vo.streamIndex = streamIndex;
+            vo.mediaType = mediaType;
+            vo.startNumber = startNumber;
+            vo.fragmentInfoType = fragmentInfoType;
+            vo.presentationTimeOffset = presentationTimeOffset;
+
+            manifestUpdate.trackInfo.push(vo);
+            metricUpdated(manifestUpdate.mediaType, adapter.metricsList.MANIFEST_UPDATE_TRACK_INFO, manifestUpdate);
+
+            return vo;
+        }
+        return null;
+    }
+
+    function addPlayList(mediaType, start, mstart, starttype) {
+        var vo = new PlayList();
+
+        vo.stream = mediaType;
+        vo.start = start;
+        vo.mstart = mstart;
+        vo.starttype = starttype;
+
+        getMetricsFor(mediaType).PlayList.push(vo);
+
+        metricAdded(mediaType, adapter.metricsList.PLAY_LIST, vo);
+        return vo;
+    }
+
+    function appendPlayListTrace(playList, trackId, subreplevel, start, mstart, duration, playbackspeed, stopreason) {
+        var vo = new PlayList.Trace();
+
+        vo.representationid = trackId;
+        vo.subreplevel = subreplevel;
+        vo.start = start;
+        vo.mstart = mstart;
+        vo.duration = duration;
+        vo.playbackspeed = playbackspeed;
+        vo.stopreason = stopreason;
+
+        playList.trace.push(vo);
+
+        metricUpdated(playList.stream, adapter.metricsList.PLAY_LIST_TRACE, playList);
+        return vo;
+    }
+};

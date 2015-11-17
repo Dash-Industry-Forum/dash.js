@@ -231,9 +231,9 @@ function FragmentModel(config) {
         EventBus.off(Events.LOADING_COMPLETED, onLoadingCompleted, this);
         EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
 
-        abortRequests();
-        context = null;
+        fragmentLoader.abort();
         fragmentLoader = null;
+        context = null;
         executedRequests = [];
         loadingRequests = [];
     }

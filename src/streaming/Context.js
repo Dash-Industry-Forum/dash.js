@@ -44,7 +44,7 @@ import DOMStorage from './utils/DOMStorage.js';
 import IsoFile from './utils/IsoFile.js';
 
 
-import MetricsModel from './models/MetricsModel.js';
+
 
 import KeySystem_PlayReady from './protection/drm/KeySystem_PlayReady.js';
 import KeySystem_Widevine from './protection/drm/KeySystem_Widevine.js';
@@ -112,7 +112,7 @@ let Context = function () {
             this.system.mapSingleton('events', Events);
             this.system.mapSingleton('DOMStorage', DOMStorage);
 
-            this.system.mapSingleton('metricsModel', MetricsModel);
+
 
             this.system.mapSingleton('ksPlayReady', KeySystem_PlayReady);
             this.system.mapSingleton('ksWidevine', KeySystem_Widevine);
