@@ -900,7 +900,26 @@ MediaPlayer = function (context) {
          * @returns {object}
          * @memberof MediaPlayer#
          */
-        getAutoSwitchQuality : function (type) {
+        getAutoSwitchQuality : function () {
+            return this.getAutoSwitchQualityFor('video') || this.getAutoSwitchQualityFor('audio');
+        },
+
+        /**
+         * @param type {string}
+         * @param value
+         * @memberof MediaPlayer#
+         */
+        setAutoSwitchQuality : function (value) {
+            this.setAutoSwitchQualityFor('audio', value);
+            this.setAutoSwitchQualityFor('video', value);
+        },
+
+        /**
+         * @param type {string}
+         * @returns {object}
+         * @memberof MediaPlayer#
+         */
+        getAutoSwitchQualityFor : function (type) {
             return abrController.getAutoSwitchBitrate(type);
         },
 
@@ -909,7 +928,7 @@ MediaPlayer = function (context) {
          * @param value
          * @memberof MediaPlayer#
          */
-        setAutoSwitchQuality : function (type, value) {
+        setAutoSwitchQualityFor : function (type, value) {
             abrController.setAutoSwitchBitrate(type, value);
         },
 
