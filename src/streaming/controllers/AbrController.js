@@ -94,7 +94,7 @@ function AbrController() {
         abandonmentTimeout;
 
    function setup() {
-        autoSwitchBitrate = true
+        autoSwitchBitrate = true;
         topQualities = {};
         qualityDict = {};
         confidenceDict = {};
@@ -181,8 +181,7 @@ function AbrController() {
     }
 
     function getPlaybackQuality(streamProcessor, completedCallback) {
-        var self = this,
-            type = streamProcessor.getType(),
+        var type = streamProcessor.getType(),
             streamInfo = streamProcessor.getStreamInfo(),
             streamId = streamInfo.id,
             quality,
@@ -231,7 +230,7 @@ function AbrController() {
             }
         } else {
             rules = abrRulesCollection.getRules(abrRulesCollection.QUALITY_SWITCH_RULES);
-            rulesController.applyRules(rules, streamProcessor, callback.bind(self), quality, function(currentValue, newValue) {
+            rulesController.applyRules(rules, streamProcessor, callback, quality, function(currentValue, newValue) {
                 currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
                 return Math.max(currentValue, newValue);
             });
