@@ -896,7 +896,6 @@ MediaPlayer = function (context) {
         },
 
         /**
-         * @param type {string}
          * @returns {object}
          * @memberof MediaPlayer#
          */
@@ -905,7 +904,6 @@ MediaPlayer = function (context) {
         },
 
         /**
-         * @param type {string}
          * @param value
          * @memberof MediaPlayer#
          */
