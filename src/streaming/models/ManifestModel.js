@@ -31,28 +31,26 @@
 import MediaPlayer from '../MediaPlayer.js';
 import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-let ManifestModel = function () {
-    "use strict";
+export default FactoryMaker.getSingletonFactory(ManifestModel);
 
-    var manifest;
+function  ManifestModel() {
 
-    return {
-        system: undefined,
+    let instance = {
+        getValue:getValue,
+        setValue:setValue
+    }
+    return instance;
 
-        getValue:  function () {
-            return manifest;
-        },
+    let manifest;
 
-        setValue: function (value) {
-            manifest = value;
-            EventBus.trigger(Events.MANIFEST_LOADED,  {data: value});
-        }
-    };
+    function getValue() {
+        return manifest;
+    }
+
+    function setValue(value) {
+        manifest = value;
+        EventBus.trigger(Events.MANIFEST_LOADED,  {data: value});
+    }
 };
-
-ManifestModel.prototype = {
-    constructor: ManifestModel
-};
-
-export default ManifestModel;

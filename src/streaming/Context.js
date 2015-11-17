@@ -43,7 +43,7 @@ import ProtectionEvents from './protection/ProtectionEvents.js';
 import DOMStorage from './utils/DOMStorage.js';
 import IsoFile from './utils/IsoFile.js';
 
-import ManifestModel from './models/ManifestModel.js';
+
 import MetricsModel from './models/MetricsModel.js';
 
 import KeySystem_PlayReady from './protection/drm/KeySystem_PlayReady.js';
@@ -111,7 +111,7 @@ let Context = function () {
             this.system.mapSingleton('eventBus', EventBus);
             this.system.mapSingleton('events', Events);
             this.system.mapSingleton('DOMStorage', DOMStorage);
-            this.system.mapSingleton('manifestModel', ManifestModel);
+
             this.system.mapSingleton('metricsModel', MetricsModel);
 
             this.system.mapSingleton('ksPlayReady', KeySystem_PlayReady);

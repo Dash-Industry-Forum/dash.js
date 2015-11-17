@@ -30,10 +30,14 @@
  */
 import HTTPRequest from '../../streaming/vo/metrics/HTTPRequest.js';
 import AbrController from "../../streaming/controllers/AbrController.js";
+import ManifestModel from "../../streaming/models/ManifestModel.js";
 
 let DashMetricsExtensions = function () {
     "use strict";
-    var findRepresentationIndex = function (period, representationId) {
+
+    var manifestModel = ManifestModel.getInstance(),
+
+        findRepresentationIndex = function (period, representationId) {
             var adaptationSet,
                 adaptationSetArray,
                 representation,
@@ -105,7 +109,7 @@ let DashMetricsExtensions = function () {
 
         getBandwidthForRepresentation = function (representationId, periodId) {
             var self = this,
-                manifest = self.manifestModel.getValue(),
+                manifest = manifestModel.getValue(),
                 representation,
                 period = manifest.Period_asArray[periodId];
 
@@ -120,7 +124,7 @@ let DashMetricsExtensions = function () {
 
         getIndexForRepresentation = function (representationId, periodIdx) {
             var self = this,
-                manifest = self.manifestModel.getValue(),
+                manifest = manifestModel.getValue(),
                 representationIndex,
                 period = manifest.Period_asArray[periodIdx];
 
@@ -130,7 +134,7 @@ let DashMetricsExtensions = function () {
 
         getMaxIndexForBufferType = function (bufferType, periodIdx) {
             var self = this,
-                manifest = self.manifestModel.getValue(),
+                manifest = manifestModel.getValue(),
                 maxIndex,
                 period = manifest.Period_asArray[periodIdx];
 
@@ -389,9 +393,10 @@ let DashMetricsExtensions = function () {
 
 
     return {
-        manifestModel: undefined,
+
         manifestExt: undefined,
         system:undefined,
+
         getBandwidthForRepresentation : getBandwidthForRepresentation,
         getIndexForRepresentation : getIndexForRepresentation,
         /**

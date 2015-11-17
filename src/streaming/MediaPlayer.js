@@ -51,6 +51,7 @@ import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
 import VirtualBuffer from './utils/VirtualBuffer.js';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
+import ManifestModel from './models/ManifestModel.js';
 import AbrController from './controllers/AbrController.js'
 import TimeSyncController from './TimeSyncController.js';
 import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
@@ -361,7 +362,7 @@ let MediaPlayer = function (context) {
                 system : system,
                 capabilities :capabilities,
                 manifestLoader :createManifestLoader.call(this),
-                manifestModel :system.getObject("manifestModel"),
+                manifestModel :ManifestModel.getInstance(),
                 manifestExt :system.getObject("manifestExt"),
                 adapter : system.getObject("adapter"),
                 metricsModel : metricsModel,

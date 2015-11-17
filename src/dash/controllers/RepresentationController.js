@@ -32,8 +32,7 @@ import DashHandler from '../DashHandler.js';
 import AbrController from '../../streaming/controllers/AbrController.js';
 import PlaybackController from '../../streaming/controllers/PlaybackController.js';
 import StreamController from '../../streaming/controllers/StreamController.js';
-//import LiveEdgeFinder from '../../streaming/LiveEdgeFinder.js';
-//import BufferController from '../../streaming/controllers/BufferController.js';
+import ManifestModel from '../../streaming/models/ManifestModel.js';
 import DOMStorage from '../../streaming/utils/DOMStorage.js';
 import Error from '../../streaming/vo/Error.js';
 import EventBus from '../../streaming/utils/EventBus.js';
@@ -49,6 +48,7 @@ let RepresentationController = function () {
         currentRepresentation,
         streamController = StreamController.getInstance(),
         playbackController = PlaybackController.getInstance(),
+        manifestModel = ManifestModel.getInstance(),
 
         updateData = function(dataValue, adaptation, type) {
             var self = this,
@@ -128,7 +128,7 @@ let RepresentationController = function () {
         updateRepresentations = function(adaptation) {
             var self = this,
                 reps,
-                manifest = self.manifestModel.getValue();
+                manifest = manifestModel.getValue();
 
             dataIndex = self.manifestExt.getIndexForAdaptation(data, manifest, adaptation.period.index);
             reps = self.manifestExt.getRepresentationsForAdaptation(manifest, adaptation);
@@ -230,13 +230,13 @@ let RepresentationController = function () {
 
             // we need to update checkTime after we have found the live edge because its initial value
             // does not take into account clientServerTimeShift
-            var manifest = this.manifestModel.getValue(),
+            var manifest = manifestModel.getValue(),
                 period = currentRepresentation.adaptation.period,
                 streamInfo = streamController.getActiveStreamInfo();
 
             if (streamInfo.isLast) {
                 period.mpd.checkTime = this.manifestExt.getCheckTime(manifest, period);
-                period.duration = this.manifestExt.getEndTimeForLastPeriod(this.manifestModel.getValue(), period) - period.start;
+                period.duration = this.manifestExt.getEndTimeForLastPeriod(manifestModel.getValue(), period) - period.start;
                 streamInfo.duration = period.duration;
             }
         },
@@ -270,7 +270,6 @@ let RepresentationController = function () {
         system: undefined,
         log: undefined,
         manifestExt: undefined,
-        manifestModel: undefined,
         metricsModel: undefined,
         metricsExt: undefined,
         timelineConverter: undefined,
@@ -317,6 +316,7 @@ let RepresentationController = function () {
             EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
             playbackController = null;
             streamController = null;
+            manifestModel = null;
         }
     };
 };
