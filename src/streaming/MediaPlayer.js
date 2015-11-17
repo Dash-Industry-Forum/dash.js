@@ -304,73 +304,85 @@ let MediaPlayer = function (context) {
             }
         },
 
+        createManifestLoader = function () {
+            return ManifestLoader.create({
+                log :debug.log,
+                errHandler : this.errHandler,
+                parser :system.getObject('parser'),
+                metricsModel :metricsModel,
+                system :system
+            });
+        },
+
         createControllers = function() {
 
-            let synchronizationRulesCollection = SynchronizationRulesCollection.getInstance({system: system});
-            synchronizationRulesCollection.initialize();
 
-            let abrRulesCollection = ABRRulesCollection.getInstance({system:system, playbackController: playbackController});
-            abrRulesCollection.initialize();
 
-            let scheduleRulesCollection = ScheduleRulesCollection.getInstance({system: system});
-            scheduleRulesCollection.initialize();
+                let synchronizationRulesCollection = SynchronizationRulesCollection.getInstance({system: system});
+                synchronizationRulesCollection.initialize();
 
-            let sourceBufferExt = SourceBufferExtensions.getInstance();
-            sourceBufferExt.setConfig({system:system, manifestExt:system.getObject("manifestExt")});
+                let abrRulesCollection = ABRRulesCollection.getInstance({system:system, playbackController: playbackController});
+                abrRulesCollection.initialize();
 
-            let virtualBuffer = VirtualBuffer.getInstance();
-            virtualBuffer.setConfig({
-                sourceBufferExt:sourceBufferExt
-            });
+                let scheduleRulesCollection = ScheduleRulesCollection.getInstance({system: system});
+                scheduleRulesCollection.initialize();
 
-            mediaController = MediaController.getInstance();
-            mediaController.initialize();
-            mediaController.setConfig({
-                log :debug.log,
-                system :system,
-                DOMStorage :DOMStorage,
-                errHandler :this.errHandler
-            });
+                let sourceBufferExt = SourceBufferExtensions.getInstance();
+                sourceBufferExt.setConfig({system:system, manifestExt:system.getObject("manifestExt")});
 
-            playbackController = PlaybackController.getInstance();
+                let virtualBuffer = VirtualBuffer.getInstance();
+                virtualBuffer.setConfig({
+                    sourceBufferExt:sourceBufferExt
+                });
 
-            rulesController = RulesController.getInstance();
-            rulesController.initialize();
-            rulesController.setConfig({
-                abrRulesCollection:abrRulesCollection,
-                scheduleRulesCollection:scheduleRulesCollection,
-                synchronizationRulesCollection: synchronizationRulesCollection
-            });
+                mediaController = MediaController.getInstance();
+                mediaController.initialize();
+                mediaController.setConfig({
+                    log :debug.log,
+                    system :system,
+                    DOMStorage :DOMStorage,
+                    errHandler :this.errHandler
+                });
 
-            streamController = StreamController.getInstance();
-            streamController.setConfig({
-                log : debug.log,
-                system : system,
-                capabilities : this.capabilities,
-                manifestUpdater :system.getObject("manifestUpdater"),
-                manifestLoader :system.getObject("manifestLoader"),
-                manifestModel :system.getObject("manifestModel"),
-                manifestExt :system.getObject("manifestExt"),
-                adapter : system.getObject("adapter"),
-                metricsModel : metricsModel,
-                metricsExt : metricsExt,
-                videoExt : system.getObject("videoExt"),
-                liveEdgeFinder : LiveEdgeFinder.getInstance(),
-                mediaSourceExt : MediaSourceExtensions.getInstance(),
-                timeSyncController : TimeSyncController.getInstance(),
-                virtualBuffer : virtualBuffer,
-                errHandler : this.errHandler,
-                timelineConverter : system.getObject("timelineConverter")
-            });
+                playbackController = PlaybackController.getInstance();
 
-            abrController = AbrController.getInstance();
-            abrController.setConfig({
-                abrRulesCollection:abrRulesCollection,
-                rulesController: rulesController,
-                streamController:streamController,
-                log:debug.log
-            });
-        };
+                rulesController = RulesController.getInstance();
+                rulesController.initialize();
+                rulesController.setConfig({
+                    abrRulesCollection:abrRulesCollection,
+                    scheduleRulesCollection:scheduleRulesCollection,
+                    synchronizationRulesCollection: synchronizationRulesCollection
+                });
+
+                streamController = StreamController.getInstance();
+                streamController.setConfig({
+                    log : debug.log,
+                    system : system,
+                    capabilities : this.capabilities,
+                    manifestUpdater :system.getObject("manifestUpdater"),
+                    manifestLoader :createManifestLoader.call(this),
+                    manifestModel :system.getObject("manifestModel"),
+                    manifestExt :system.getObject("manifestExt"),
+                    adapter : system.getObject("adapter"),
+                    metricsModel : metricsModel,
+                    metricsExt : metricsExt,
+                    videoExt : system.getObject("videoExt"),
+                    liveEdgeFinder : LiveEdgeFinder.getInstance(),
+                    mediaSourceExt : MediaSourceExtensions.getInstance(),
+                    timeSyncController : TimeSyncController.getInstance(),
+                    virtualBuffer : virtualBuffer,
+                    errHandler : this.errHandler,
+                    timelineConverter : system.getObject("timelineConverter")
+                });
+
+                abrController = AbrController.getInstance();
+                abrController.setConfig({
+                    abrRulesCollection:abrRulesCollection,
+                    rulesController: rulesController,
+                    streamController:streamController,
+                    log:debug.log
+                });
+            };
 
 
     // Overload dijon getObject function
@@ -1100,10 +1112,8 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          */
         retrieveManifest: function (url, callback) {
-            var manifestLoader = system.getObject("manifestLoader"),
+            var manifestLoader = createManifestLoader.call(this),
                 self = this;
-
-            manifestLoader.initialize();
 
             var handler = function (e) {
                 if (!e.error) {

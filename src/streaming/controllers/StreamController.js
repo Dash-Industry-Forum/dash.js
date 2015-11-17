@@ -110,7 +110,6 @@ function StreamController() {
         protectionController = protCtrl;
         protectionData = protData;
         timelineConverter.initialize();
-        manifestLoader.initialize();
         manifestUpdater.initialize(manifestLoader);
 
         videoModel = VideoModel.getInstance();

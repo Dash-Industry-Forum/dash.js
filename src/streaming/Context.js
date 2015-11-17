@@ -60,7 +60,6 @@ import VideoModelExtensions from './extensions/VideoModelExtensions.js';
 import ProtectionExtensions from './extensions/ProtectionExtensions.js';
 import MetricsList from './vo/MetricsList.js';
 import XlinkLoader from './XlinkLoader.js';
-import ManifestLoader from './ManifestLoader.js';
 import ManifestUpdater from './ManifestUpdater.js';
 import FragmentModel from './models/FragmentModel.js';
 
@@ -141,7 +140,6 @@ let Context = function () {
 
 
             this.system.mapClass('xlinkLoader', XlinkLoader);
-            this.system.mapClass('manifestLoader', ManifestLoader);
             this.system.mapSingleton('manifestUpdater', ManifestUpdater);
 
             this.system.mapClass('fragmentModel', FragmentModel);
