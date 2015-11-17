@@ -32,6 +32,7 @@ import PlaybackController from './PlaybackController.js';
 import ProtectionController from './ProtectionController.js';
 import MediaPlayer from '../MediaPlayer.js';
 import Stream from '../Stream.js';
+import ManifestUpdater from '../ManifestUpdater.js';
 import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
@@ -110,6 +111,13 @@ function StreamController() {
         protectionController = protCtrl;
         protectionData = protData;
         timelineConverter.initialize();
+
+        manifestUpdater = ManifestUpdater.getInstance();
+        manifestUpdater.setConfig({
+            log :log,
+            manifestModel: manifestModel,
+            manifestExt :manifestExt
+        });
         manifestUpdater.initialize(manifestLoader);
 
         videoModel = VideoModel.getInstance();
@@ -204,7 +212,6 @@ function StreamController() {
     /*
      * Called when current playback position is changed.
      * Used to determine the time current stream is finished and we should switch to the next stream.
-     * TODO move to ???Extensions class
      */
     function onPlaybackTimeUpdated(e) {
         var playbackQuality = videoExt.getPlaybackQuality(videoModel.getElement());
@@ -417,6 +424,7 @@ function StreamController() {
                     stream = Stream.create({
                         system :system,
                         manifestModel: manifestModel,
+                        manifestUpdater:manifestUpdater,
                         adapter:adapter,
                         capabilities:capabilities,
                         log :log,
@@ -566,9 +574,6 @@ function StreamController() {
         }
         if (config.capabilities){
             capabilities = config.capabilities;
-        }
-        if (config.manifestUpdater){
-            manifestUpdater = config.manifestUpdater;
         }
         if (config.manifestLoader){
             manifestLoader = config.manifestLoader;

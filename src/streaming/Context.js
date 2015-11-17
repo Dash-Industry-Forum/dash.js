@@ -60,7 +60,6 @@ import VideoModelExtensions from './extensions/VideoModelExtensions.js';
 import ProtectionExtensions from './extensions/ProtectionExtensions.js';
 import MetricsList from './vo/MetricsList.js';
 import XlinkLoader from './XlinkLoader.js';
-import ManifestUpdater from './ManifestUpdater.js';
 import FragmentModel from './models/FragmentModel.js';
 
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
@@ -137,11 +136,7 @@ let Context = function () {
             mapProtectionModel.call(this); // Determines EME API support and version
 
             this.system.mapClass('metrics', MetricsList);
-
-
             this.system.mapClass('xlinkLoader', XlinkLoader);
-            this.system.mapSingleton('manifestUpdater', ManifestUpdater);
-
             this.system.mapClass('fragmentModel', FragmentModel);
         }
     };

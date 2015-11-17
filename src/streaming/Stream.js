@@ -48,6 +48,7 @@ function Stream(config) {
 
     let system = config.system,
         manifestModel = config.manifestModel,
+        manifestUpdater = config.manifestUpdater,
         adapter = config.adapter,
         capabilities = config.capabilities,
         log = config.log,
@@ -162,21 +163,22 @@ function Stream(config) {
 
     function reset() {
         playbackController.pause();
-        playbackController = null;
-        mediaController = null;
-        abrController = null;
-
+        fragmentController.reset();
+        liveEdgeFinder.abortSearch();
         deactivate();
 
+        playbackController = null;
+        fragmentController = null;
+        mediaController = null;
+        abrController = null;
+        manifestUpdater = null;
+        manifestModel = null;
+        adapter = null;
+        capabilities = null;
+        log = null;
+        errHandler = null;
         isUpdating = false;
         initialized = false;
-
-        if (fragmentController) {
-            fragmentController.reset();
-        }
-        fragmentController = null;
-
-        liveEdgeFinder.abortSearch();
         updateError = {};
 
         EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
@@ -234,11 +236,6 @@ function Stream(config) {
        }
     }
 
-    /**
-     * Indicates whether the stream has been activated or not
-     * @returns {Boolean}
-     * @memberof Stream#
-     */
     function isActivated() {
         return isStreamActivated;
     }
@@ -247,8 +244,6 @@ function Stream(config) {
         return initialized;
     }
 
-
-    // Encrypted Media Extensions
     function onProtectionError(event) {
         if (event.error) {
             errHandler.mediaKeySessionError(event.error);
@@ -333,7 +328,7 @@ function Stream(config) {
             streamProcessors.push(streamProcessor);
         }
 
-        if((mediaInfo.type === "text" || mediaInfo.type === "fragmentedText")) {
+        if ((mediaInfo.type === "text" || mediaInfo.type === "fragmentedText")) {
             var idx;
             for(var i = 0; i < allMediaForType.length; i++){
                 if(allMediaForType[i].index === mediaInfo.index) {
@@ -392,7 +387,7 @@ function Stream(config) {
         eventController.setConfig({
             log: log,
             manifestModel: manifestModel,
-            manifestUpdater: system.getObject("manifestUpdater")
+            manifestUpdater: manifestUpdater
         });
         events = adapter.getEventsFor(manifest, streamInfo);
         eventController.addInlineEvents(events);
@@ -430,7 +425,7 @@ function Stream(config) {
             if (streamProcessors[i].isUpdating() || isUpdating) return;
         }
 
-        isInitialized = true;
+        initialized = true;
         EventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error:error});
 
         if (!isMediaInitialized || isStreamActivated) return;
@@ -529,7 +524,7 @@ function Stream(config) {
         }
 
         isUpdating = true;
-        isInitialized = false;
+        initialized = false;
 
         for (i; i < ln; i +=1) {
             controller = streamProcessors[i];
