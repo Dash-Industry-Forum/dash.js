@@ -28,24 +28,40 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let Capabilities = function () {
-    "use strict";
-};
+import FactoryMaker from '../../core/FactoryMaker.js';
+export default FactoryMaker.getSingletonFactory(Capabilities);
 
+function Capabilities() {
 
-Capabilities.prototype = {
-    constructor: Capabilities,
-    system: undefined,
-    log: undefined,
+    let instance = {
+        supportsMediaSource:supportsMediaSource,
+        supportsEncryptedMedia:supportsEncryptedMedia,
+        supportsCodec:supportsCodec,
+        setConfig:setConfig
+    }
 
-    supportsMediaSource: function () {
-        "use strict";
+    return instance;
 
+    let system,
+        log;
+
+    function setConfig(config){
+        if (!config) return;
+
+        if (config.system) {
+            system = config.system;
+        }
+        if (config.log) {
+            log = config.log;
+        }
+    }
+
+    function supportsMediaSource() {
         var hasWebKit = ("WebKitMediaSource" in window),
             hasMediaSource = ("MediaSource" in window);
 
         return (hasWebKit || hasMediaSource);
-    },
+    }
 
     /**
      * Returns whether Encrypted Media Extensions are supported on this
@@ -53,12 +69,11 @@ Capabilities.prototype = {
      *
      * @return {boolean} true if EME is supported, false otherwise
      */
-    supportsEncryptedMedia: function () {
-        return this.system.hasMapping('protectionModel');
-    },
+    function supportsEncryptedMedia() {
+        return system.hasMapping('protectionModel');
+    }
 
-    supportsCodec: function (element, codec) {
-        "use strict";
+    function supportsCodec(element, codec) {
 
         if (!(element instanceof HTMLMediaElement)) {
             throw "element must be of type HTMLMediaElement.";
@@ -68,5 +83,3 @@ Capabilities.prototype = {
         return (canPlay === "probably" || canPlay === "maybe");
     }
 };
-
-export default Capabilities;

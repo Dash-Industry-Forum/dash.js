@@ -44,6 +44,7 @@ import ManifestLoader from './ManifestLoader.js';
 import LiveEdgeFinder from './LiveEdgeFinder.js';
 import Events from './Events.js';
 import ErrorHandler from './ErrorHandler.js';
+import Capabilities from './utils/Capabilities.js';
 import PublicEvents from './PublicEvents.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
@@ -91,7 +92,6 @@ let MediaPlayer = function (context) {
      * 7) Push fragmemt bytes into SourceBuffer.
      */
     var VERSION = "2.0.0",
-        numOfParallelRequestAllowed = 0,
         system,
         abrController,
         mediaController,
@@ -118,6 +118,7 @@ let MediaPlayer = function (context) {
         usePresentationDelay = false,
         mediaPlayerModel = MediaPlayerModel.getInstance(),
         errHandler = ErrorHandler.getInstance(),
+        capabilities = Capabilities.getInstance(),
 
         isReady = function () {
             return (!!element && !!source && !resetting);
@@ -128,7 +129,7 @@ let MediaPlayer = function (context) {
                 throw "MediaPlayer not initialized!";
             }
 
-            if (!this.capabilities.supportsMediaSource()) {
+            if (!capabilities.supportsMediaSource()) {
                 errHandler.capabilityError("mediasource");
                 return;
             }
@@ -358,7 +359,7 @@ let MediaPlayer = function (context) {
             streamController.setConfig({
                 log : debug.log,
                 system : system,
-                capabilities : this.capabilities,
+                capabilities :capabilities,
                 manifestLoader :createManifestLoader.call(this),
                 manifestModel :system.getObject("manifestModel"),
                 manifestExt :system.getObject("manifestExt"),
@@ -422,7 +423,7 @@ let MediaPlayer = function (context) {
     return {
 
         debug: undefined,
-        capabilities: undefined,
+
         adapter: undefined,
         videoElementExt: undefined,
 
@@ -430,7 +431,10 @@ let MediaPlayer = function (context) {
             metricsExt = system.getObject("metricsExt");
             metricsModel = system.getObject("metricsModel");
             DOMStorage = system.getObject("DOMStorage");
-
+            capabilities.setConfig({
+                log:debug.log,
+                system:system
+            })
             createControllers.call(this);
 
             this.restoreDefaultUTCTimingSources();
