@@ -83,7 +83,7 @@ function StreamController() {
         streams,
         activeStream,
         protectionController,
-        ownProtectionController,
+        //ownProtectionController,
         protectionData,
         autoPlay,
         canPlay,
@@ -97,8 +97,9 @@ function StreamController() {
         playbackController;
 
     function setup() {
+        protectionController = null;
         streams = [];
-        ownProtectionController = false;
+        //ownProtectionController = false;
         autoPlay = true;
         canPlay = false;
         isStreamSwitchingInProgress = false;
@@ -106,9 +107,8 @@ function StreamController() {
         hasMediaError = false;
     }
 
-    function initialize(autoPl, protCtrl, protData) {
+    function initialize(autoPl, protData) {
         autoPlay = autoPl;
-        protectionController = protCtrl;
         protectionData = protData;
         timelineConverter.initialize();
 
@@ -379,21 +379,23 @@ function StreamController() {
 
         streamsInfo = adapter.getStreamsInfo(manifest);
 
-        if (capabilities.supportsEncryptedMedia()) {
-            if (!protectionController) {
-                protectionController = ProtectionController.create({
-                    protectionExt: system.getObject('protectionExt'),
-                    adapter: adapter,
-                    log: log,
-                    system: system
-                })
-                EventBus.trigger(Events.PROTECTION_CREATED, {controller: protectionController, manifest: manifest});
-                ownProtectionController = true;
-            }
+        if (capabilities.supportsEncryptedMedia() && protectionController) {
+            //if (!protectionController) {//Todo detech here and create on mediaplayer level?
+            //    protectionController = ProtectionController.create({
+            //        protectionExt: system.getObject('protectionExt'),
+            //        adapter: adapter,
+            //        log: log,
+            //        system: system
+            //    })
+            //
+            //    ownProtectionController = true;
+            //}
+            EventBus.trigger(Events.PROTECTION_CREATED, {controller: protectionController, manifest: manifest});
             protectionController.setMediaElement(videoModel.getElement());
             if (protectionData) {
                 protectionController.setProtectionData(protectionData);
             }
+
         }
 
         try {
@@ -584,6 +586,10 @@ function StreamController() {
         if (config.manifestExt){
             manifestExt = config.manifestExt;
         }
+
+        if (config.protectionController){
+            protectionController = config.protectionController;
+        }
         if (config.adapter){
             adapter = config.adapter;
         }
@@ -665,7 +671,7 @@ function StreamController() {
         if (!protectionController) {
             EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
         }
-        else if (ownProtectionController) {
+        /*else if (ownProtectionController) {
             var onTeardownComplete = function () {
                 EventBus.off(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
                 // Complete teardown process
@@ -679,7 +685,8 @@ function StreamController() {
             };
             EventBus.on(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
             protectionController.reset();
-        } else {
+        }*/
+        else {
             protectionController.setMediaElement(null);
             protectionController = null;
             protectionData = null;

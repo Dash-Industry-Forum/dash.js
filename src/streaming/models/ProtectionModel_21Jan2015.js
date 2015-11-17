@@ -38,6 +38,7 @@
  * @class
  */
 import ProtectionModel from './ProtectionModel.js';
+import ProtectionExtensions from '../extensions/ProtectionExtensions.js';
 import NeedKey from '../vo/protection/NeedKey.js';
 import KeyError from '../vo/protection/KeyError.js';
 import KeyMessage from '../vo/protection/KeyMessage.js';
@@ -50,6 +51,7 @@ import Events from '../Events.js';
 let ProtectionModel_21Jan2015 = function () {
 
     var videoElement = null,
+        protectionExt = ProtectionExtensions.getInstance(),
         mediaKeys = null,
 
         // Session list
@@ -182,7 +184,6 @@ let ProtectionModel_21Jan2015 = function () {
 
     return {
         system: undefined,
-        protectionExt: undefined,
         keySystem: null,
         log:undefined,
 
@@ -322,8 +323,7 @@ let ProtectionModel_21Jan2015 = function () {
             var session = sessionToken.session;
 
             // Send our request to the key session
-            var self = this;
-            if (this.protectionExt.isClearKey(this.keySystem)) {
+            if (protectionExt.isClearKey(this.keySystem)) {
                 message = message.toJWK();
             }
             session.update(message).catch(function (error) {

@@ -40,6 +40,7 @@ import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
 import MediaController from './controllers/MediaController.js';
 import ProtectionController from './controllers/ProtectionController.js';
+import ProtectionExtensions from './extensions/ProtectionExtensions.js';
 import ManifestLoader from './ManifestLoader.js';
 import LiveEdgeFinder from './LiveEdgeFinder.js';
 import Events from './Events.js';
@@ -152,7 +153,7 @@ let MediaPlayer = function (context) {
             system.mapValue("liveDelayFragmentCount", liveDelayFragmentCount);
             system.mapOutlet("liveDelayFragmentCount", "trackController");
 
-            streamController.initialize(autoPlay, protectionController, protectionData);
+            streamController.initialize(autoPlay, protectionData);
             DOMStorage.checkInitialBitrate();
             if (typeof source === "string") {
                 streamController.load(source);
@@ -365,6 +366,7 @@ let MediaPlayer = function (context) {
                 manifestLoader :createManifestLoader.call(this),
                 manifestModel :ManifestModel.getInstance(),
                 manifestExt :system.getObject("manifestExt"),
+                protectionController:this.createProtection(),
                 adapter : this.adapter,
                 metricsModel : metricsModel,
                 metricsExt : metricsExt,
@@ -1090,13 +1092,30 @@ let MediaPlayer = function (context) {
          * @return {MediaPlayer.dependencies.ProtectionController} protection controller
          * @memberof MediaPlayer#
          */
+        //TODO-Refactor this work flow when protection is optional
         createProtection: function () {
-            return  ProtectionController.create({
-                protectionExt: system.getObject('protectionExt'),
-                adapter: this.adapter,
-                log: debug.log,
-                system: system
-            })
+
+            let controller = protectionController//see if external controller has been set.
+
+            if(!controller && capabilities.supportsEncryptedMedia()) {
+
+                let protectionExt = ProtectionExtensions.getInstance();
+
+                protectionExt.setConfig({
+                    log:debug.log,
+                    system:system
+                })
+                protectionExt.initialize();
+
+                controller = ProtectionController.create({
+                    protectionExt: protectionExt,
+                    adapter: this.adapter,
+                    log: debug.log,
+                    system: system
+                });
+            }
+
+            return controller;
         },
 
         /**

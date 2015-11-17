@@ -40,37 +40,61 @@ import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 import ProtectionModel from '../models/ProtectionModel.js';
 import KeySystem_ClearKey from '../protection/drm/KeySystem_ClearKey.js';
 
-let ProtectionExtensions = function () {
-    "use strict";
+import FactoryMaker from '../../core/FactoryMaker.js';
+export default FactoryMaker.getSingletonFactory(ProtectionExtensions);
 
-    this.system = undefined;
-    this.log = undefined;
-    this.keySystems = [];
-    this.clearkeyKeySystem = undefined;
-};
+function  ProtectionExtensions() {
 
-ProtectionExtensions.prototype = {
-    constructor: ProtectionExtensions,
+    let instance = {
+        initialize:initialize,
+        isClearKey:isClearKey,
+        initDataEquals:initDataEquals,
+        getKeySystems:getKeySystems,
+        getKeySystemBySystemString:getKeySystemBySystemString,
+        getSupportedKeySystemsFromContentProtection:getSupportedKeySystemsFromContentProtection,
+        getSupportedKeySystems:getSupportedKeySystems,
+        getLicenseServer:getLicenseServer,
+        processClearKeyLicenseRequest:processClearKeyLicenseRequest,
+        setConfig:setConfig
+    }
 
-    /**
-     * Setup the key systems available in the player
-     */
-    setup: function() {
-        var keySystem;
+    return instance;
 
+
+    let system,
+        log,
+        keySystems,
+        clearkeyKeySystem;
+
+    function setConfig(config) {
+        if (!config) return;
+
+        if (config.log) {
+            log = config.log;
+        }
+
+        if (config.system) {
+            system = config.system;
+        }
+    }
+
+    function initialize() {
+        keySystems = [];
+
+        var keySystem
         // PlayReady
-        keySystem = this.system.getObject("ksPlayReady");
-        this.keySystems.push(keySystem);
+        keySystem = system.getObject("ksPlayReady");
+        keySystems.push(keySystem);
 
         // Widevine
-        keySystem = this.system.getObject("ksWidevine");
-        this.keySystems.push(keySystem);
+        keySystem = system.getObject("ksWidevine");
+        keySystems.push(keySystem);
 
         // ClearKey
-        keySystem = this.system.getObject("ksClearKey");
-        this.keySystems.push(keySystem);
-        this.clearkeyKeySystem = keySystem;
-    },
+        keySystem = system.getObject("ksClearKey");
+        keySystems.push(keySystem);
+        clearkeyKeySystem = keySystem;
+    }
 
     /**
      * Returns a prioritized list of key systems supported
@@ -80,9 +104,9 @@ ProtectionExtensions.prototype = {
      * @returns {KeySystem[]} a prioritized
      * list of key systems
      */
-    getKeySystems: function() {
-        return this.keySystems;
-    },
+    function getKeySystems() {
+        return keySystems;
+    }
 
     /**
      * Returns the key system associated with the given key system string
@@ -93,14 +117,14 @@ ProtectionExtensions.prototype = {
      * or null if no supported key system is associated with the given key
      * system string
      */
-    getKeySystemBySystemString: function(systemString) {
-        for (var i = 0; i < this.keySystems.length; i++) {
-            if (this.keySystems[i].systemString === systemString) {
-                return this.keySystems[i];
+    function getKeySystemBySystemString(systemString) {
+        for (var i = 0; i < keySystems.length; i++) {
+            if (keySystems[i].systemString === systemString) {
+                return keySystems[i];
             }
         }
         return null;
-    },
+    }
 
     /**
      * Determines whether the given key system is ClearKey.  This is
@@ -114,9 +138,9 @@ ProtectionExtensions.prototype = {
      * @returns {boolean} true if this is the ClearKey key system, false
      * otherwise
      */
-    isClearKey: function(keySystem) {
-        return (keySystem === this.clearkeyKeySystem);
-    },
+    function isClearKey(keySystem) {
+        return (keySystem === clearkeyKeySystem);
+    }
 
     /**
      * Check equality of initData array buffers.
@@ -126,7 +150,7 @@ ProtectionExtensions.prototype = {
      * @returns {boolean} true if the initData arrays are equal in size and
      * contents, false otherwise
      */
-    initDataEquals: function(initData1, initData2) {
+    function initDataEquals(initData1, initData2) {
         if (initData1.byteLength === initData2.byteLength) {
             var data1 = new Uint8Array(initData1),
                 data2 = new Uint8Array(initData2);
@@ -138,7 +162,7 @@ ProtectionExtensions.prototype = {
             return true;
         }
         return false;
-    },
+    }
 
     /**
      * Returns a set of supported key systems and CENC intialization data
@@ -156,12 +180,12 @@ ProtectionExtensions.prototype = {
      * @returns {ArrayBuffer} Object.initData the initialization data parsed
      * from the ContentProtection element
      */
-    getSupportedKeySystemsFromContentProtection: function(cps) {
+    function getSupportedKeySystemsFromContentProtection(cps) {
         var cp, ks, ksIdx, cpIdx, supportedKS = [];
 
         if (cps) {
-            for(ksIdx = 0; ksIdx < this.keySystems.length; ++ksIdx) {
-                ks = this.keySystems[ksIdx];
+            for(ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
+                ks = keySystems[ksIdx];
                 for(cpIdx = 0; cpIdx < cps.length; ++cpIdx) {
                     cp = cps[cpIdx];
                     if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
@@ -170,7 +194,7 @@ ProtectionExtensions.prototype = {
                         var initData = ks.getInitData(cp);
                         if (!!initData) {
                             supportedKS.push({
-                                ks: this.keySystems[ksIdx],
+                                ks: keySystems[ksIdx],
                                 initData: initData
                             });
                         }
@@ -179,7 +203,7 @@ ProtectionExtensions.prototype = {
             }
         }
         return supportedKS;
-    },
+    }
 
     /**
      * Returns key systems supported by this player for the given PSSH
@@ -197,20 +221,20 @@ ProtectionExtensions.prototype = {
      * @returns {ArrayBuffer} Object.initData the initialization data
      * associated with the key system
      */
-    getSupportedKeySystems: function(initData) {
+    function getSupportedKeySystems(initData) {
         var ksIdx, supportedKS = [],
-                pssh = CommonEncryption.parsePSSHList(initData);
+            pssh = CommonEncryption.parsePSSHList(initData);
 
-        for (ksIdx = 0; ksIdx < this.keySystems.length; ++ksIdx) {
-            if (this.keySystems[ksIdx].uuid in pssh) {
+        for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
+            if (keySystems[ksIdx].uuid in pssh) {
                 supportedKS.push({
-                    ks: this.keySystems[ksIdx],
-                    initData: pssh[this.keySystems[ksIdx].uuid]
+                    ks: keySystems[ksIdx],
+                    initData: pssh[keySystems[ksIdx].uuid]
                 });
             }
         }
         return supportedKS;
-    },
+    }
 
     /**
      * Returns the license server implementation data that should be used for this request.
@@ -227,7 +251,7 @@ ProtectionExtensions.prototype = {
      * pass messages of the given type to a license server
      *
      */
-    getLicenseServer: function(keySystem, protData, messageType) {
+    function getLicenseServer(keySystem, protData, messageType) {
 
         // Our default server implementations do not do anything with "license-release" or
         // "individualization-request" messages, so we just send a success event
@@ -237,17 +261,17 @@ ProtectionExtensions.prototype = {
 
         var licenseServerData = null;
         if (protData && protData.hasOwnProperty("drmtoday")) {
-            licenseServerData = this.system.getObject("serverDRMToday");
+            licenseServerData = system.getObject("serverDRMToday");
         } else if (keySystem.systemString === "com.widevine.alpha") {
-            licenseServerData = this.system.getObject("serverWidevine");
+            licenseServerData = system.getObject("serverWidevine");
         } else if (keySystem.systemString === "com.microsoft.playready") {
-            licenseServerData = this.system.getObject("serverPlayReady");
+            licenseServerData = system.getObject("serverPlayReady");
         } else if (keySystem.systemString === "org.w3.clearkey") {
-            licenseServerData = this.system.getObject("serverClearKey");
+            licenseServerData = system.getObject("serverClearKey");
         }
 
         return licenseServerData;
-    },
+    }
 
     /**
      * Allows application-specific retrieval of ClearKey keys.
@@ -258,14 +282,12 @@ ProtectionExtensions.prototype = {
      * @return {ClearKeyKeySet} the clear keys associated with
      * the request or null if no keys can be returned by this function
      */
-    processClearKeyLicenseRequest: function(protData, message) {
+    function processClearKeyLicenseRequest(protData, message) {
         try {
             return KeySystem_ClearKey.getClearKeysFromProtectionData(protData, message);
         } catch (error) {
-            this.log("Failed to retrieve clearkeys from ProtectionData");
+            log("Failed to retrieve clearkeys from ProtectionData");
             return null;
         }
     }
 };
-
-export default ProtectionExtensions;

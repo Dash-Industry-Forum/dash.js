@@ -38,6 +38,7 @@
  * @class
  */
 import ProtectionModel from './ProtectionModel.js';
+import ProtectionExtensions from '../extensions/ProtectionExtensions.js';
 import NeedKey from '../vo/protection/NeedKey.js';
 import KeyError from '../vo/protection/KeyError.js';
 import KeyMessage from '../vo/protection/KeyMessage.js';
@@ -51,7 +52,8 @@ import ErrorHandler from '../ErrorHandler.js';
 let ProtectionModel_01b = function () {
 
     var videoElement = null,
-        errHandler = null
+        protectionExt = ProtectionExtensions.getInstance(),
+        errHandler = ErrorHandler.getInstance(),
 
         // API names object selected for this user agent
         api = null,
@@ -221,11 +223,9 @@ let ProtectionModel_01b = function () {
     return {
         system: undefined,
         log: undefined,
-        protectionExt: undefined,
         keySystem: null,
 
         setup: function() {
-            errHandler = ErrorHandler.getInstance();
             eventHandler = createEventHandler.call(this);
         },
 
@@ -312,7 +312,7 @@ let ProtectionModel_01b = function () {
                     // This configuration is supported
                     found = true;
                     var ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
-                    var ks = this.protectionExt.getKeySystemBySystemString(systemString);
+                    var ks = protectionExt.getKeySystemBySystemString(systemString);
                     EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data:new KeySystemAccess(ks, ksConfig)})
                     break;
                 }
@@ -389,7 +389,7 @@ let ProtectionModel_01b = function () {
 
         updateKeySession: function(sessionToken, message) {
             var sessionID = sessionToken.sessionID;
-            if (!this.protectionExt.isClearKey(this.keySystem)) {
+            if (!protectionExt.isClearKey(this.keySystem)) {
                 // Send our request to the CDM
                 videoElement[api.addKey](this.keySystem.systemString,
                         new Uint8Array(message), sessionToken.initData, sessionID);
