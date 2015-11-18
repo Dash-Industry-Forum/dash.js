@@ -29,115 +29,80 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 let EventBus = (function () {
-    "use strict";
 
-    var registrations,
-        handlers = {},
+    let handlers = {};
 
-        getListeners = function (type, useCapture) {
-            var captype = (useCapture? '1' : '0') + type;
+    let instance = {
+        on:on,
+        off:off,
+        trigger:trigger,
+        reset:reset
+    }
 
-            if (!(captype in registrations)) {
-                registrations[captype]= [];
-            }
+    return instance;
 
-            return registrations[captype];
-        },
+    function on(type, listener, scope) {
+        if (!type) {
+            throw new Error("event type cannot be null or undefined");
+        }
 
-        getHandlerIdx = function(type, listener, scope) {
-            var handlersForType = handlers[type],
-                result = -1;
+        if (!listener || typeof(listener) !== "function") {
+            throw new Error("listener must be a function: " + listener);
+        }
 
-            if (!handlersForType || handlersForType.length === 0) return result;
+        if (getHandlerIdx(type, listener, scope) >= 0) return;
 
-            for (var i = 0; i < handlersForType.length; i += 1) {
-                if (handlersForType[i].callback === listener && (!scope || scope === handlersForType[i].scope)) return i;
-            }
-
-            return result;
-        },
-
-        init = function () {
-            registrations = {};
+        var handler = {
+            callback: listener,
+            scope: scope
         };
 
-    init();
+        handlers[type] = handlers[type] || [];
+        handlers[type].push(handler);
+    }
 
-    return {
-        addEventListener: function (type, listener, useCapture) {
-            var listeners = getListeners(type, useCapture);
-            var idx = listeners.indexOf(listener);
-            if (idx === -1) {
-                listeners.push(listener);
-            }
-        },
+    function off(type, listener, scope) {
+        if (!type || !listener || !handlers[type]) return;
 
-        removeEventListener: function (type, listener, useCapture) {
-            var listeners = getListeners(type, useCapture);
-            var idx= listeners.indexOf(listener);
-            if (idx !== -1) {
-                listeners.splice(idx, 1);
-            }
-        },
+        var idx = getHandlerIdx(type, listener, scope);
 
-        dispatchEvent: function (evt) {
-            var listeners = getListeners(evt.type, false).slice();
-            for (var i= 0; i < listeners.length; i++) {
-                listeners[i].call(this, evt);
-            }
-            return !evt.defaultPrevented;
-        },
+        if (idx < 0) return;
 
-        on: function(type, listener, scope) {
-            if (!type) {
-                throw new Error("event type cannot be null or undefined");
-            }
+        handlers[type].splice(idx, 1);
+    }
 
-            if (!listener || typeof(listener) !== "function") {
-                throw new Error("listener must be a function: " + listener);
-            }
+    function trigger(type, args) {
+        if (!type || !handlers[type]) return;
 
-            if (getHandlerIdx.call(this, type, listener, scope) >= 0) return;
+        args = args || {};
 
-            var handler = {
-                callback: listener,
-                scope: scope
-            };
-
-            handlers[type] = handlers[type] || [];
-            handlers[type].push(handler);
-        },
-
-        off: function(type, listener, scope) {
-            if (!type || !listener || !handlers[type]) return;
-
-            var idx = getHandlerIdx.call(this, type, listener, scope);
-
-            if (idx < 0) return;
-
-            handlers[type].splice(idx, 1);
-        },
-
-        trigger: function(type, args) {
-            if (!type || !handlers[type]) return;
-
-            args = args || {};
-
-            if (args.hasOwnProperty("type")) {
-                throw new Error("'type' is a reserved word for event dispatching");
-            }
-
-            args.type = type;
-
-            handlers[type].forEach(function(handler) {
-                handler.callback.call(handler.scope, args);
-            });
-        },
-
-        reset: function() {
-            handlers = {};
+        if (args.hasOwnProperty("type")) {
+            throw new Error("'type' is a reserved word for event dispatching");
         }
-    };
-}());
+
+        args.type = type;
+
+        handlers[type].forEach(function(handler) {
+            handler.callback.call(handler.scope, args);
+        });
+    }
+
+    function reset() {
+        handlers = {};
+    }
+
+    function getHandlerIdx(type, listener, scope) {
+        var handlersForType = handlers[type],
+            result = -1;
+
+        if (!handlersForType || handlersForType.length === 0) return result;
+
+        for (var i = 0; i < handlersForType.length; i += 1) {
+            if (handlersForType[i].callback === listener && (!scope || scope === handlersForType[i].scope)) return i;
+        }
+
+        return result;
+    }
+})()
 
 export default EventBus;

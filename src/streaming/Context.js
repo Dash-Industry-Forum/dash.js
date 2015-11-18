@@ -35,7 +35,6 @@
  * @class
  */
 import Debug from './utils/Debug.js';
-import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import CoreEvents from '../core/events/CoreEvents.js';
 import PublicEvents from './PublicEvents';
@@ -86,10 +85,7 @@ let Context = function () {
 
             this.system.autoMapOutlets = true;
 
-            this.system.mapSingleton('eventBus', EventBus);
             this.system.mapSingleton('events', Events);
-
-
 
 
             this.system.mapSingleton('ksPlayReady', KeySystem_PlayReady);
