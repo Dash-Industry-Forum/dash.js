@@ -51,6 +51,7 @@ let RepresentationController = function () {
         playbackController = PlaybackController.getInstance(),
         manifestModel = ManifestModel.getInstance(),
         metricsModel = MetricsModel.getInstance(),
+        domStorage = DOMStorage.getInstance(),
 
         updateData = function(dataValue, adaptation, type) {
             var self = this,
@@ -263,7 +264,7 @@ let RepresentationController = function () {
         },
 
         setLocalStorage = function(type, bitrate) {
-            if (this.DOMStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
+            if (domStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
                 localStorage.setItem(DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_BITRATE_KEY"], JSON.stringify({bitrate:bitrate/1000, timestamp:new Date().getTime()}));
             }
         };
@@ -274,7 +275,6 @@ let RepresentationController = function () {
         manifestExt: undefined,
         metricsExt: undefined,
         timelineConverter: undefined,
-        DOMStorage:undefined,
         liveDelayFragmentCount:undefined,
 
         setup: function() {

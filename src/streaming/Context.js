@@ -40,7 +40,6 @@ import Events from './Events.js';
 import CoreEvents from '../core/events/CoreEvents.js';
 import PublicEvents from './PublicEvents';
 import ProtectionEvents from './protection/ProtectionEvents.js';
-import DOMStorage from './utils/DOMStorage.js';
 import IsoFile from './utils/IsoFile.js';
 
 
@@ -89,7 +88,7 @@ let Context = function () {
 
             this.system.mapSingleton('eventBus', EventBus);
             this.system.mapSingleton('events', Events);
-            this.system.mapSingleton('DOMStorage', DOMStorage);
+
 
 
 

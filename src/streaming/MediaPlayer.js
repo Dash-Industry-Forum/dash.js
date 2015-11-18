@@ -46,6 +46,7 @@ import LiveEdgeFinder from './LiveEdgeFinder.js';
 import Events from './Events.js';
 import ErrorHandler from './ErrorHandler.js';
 import Capabilities from './utils/Capabilities.js';
+import DOMStorage from './utils/DOMStorage.js';
 import PublicEvents from './PublicEvents.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
@@ -115,7 +116,6 @@ let MediaPlayer = function (context) {
         metricsExt,
         videoModel,
         textSourceBuffer,
-        DOMStorage,
         initialized = false,
         resetting = false,
         playing = false,
@@ -125,6 +125,7 @@ let MediaPlayer = function (context) {
         UTCTimingSources = [],
         liveDelayFragmentCount = 4,
         usePresentationDelay = false,
+        domStorage = DOMStorage.getInstance(),
         metricsModel = MetricsModel.getInstance(),
         mediaPlayerModel = MediaPlayerModel.getInstance(),
         errHandler = ErrorHandler.getInstance(),
@@ -159,7 +160,7 @@ let MediaPlayer = function (context) {
             system.mapOutlet("liveDelayFragmentCount", "trackController");
 
             streamController.initialize(autoPlay, protectionData);
-            DOMStorage.checkInitialBitrate();
+            domStorage.checkInitialBitrate();
             if (typeof source === "string") {
                 streamController.load(source);
             } else {
@@ -349,7 +350,7 @@ let MediaPlayer = function (context) {
             mediaController.setConfig({
                 log :debug.log,
                 system :system,
-                DOMStorage :DOMStorage,
+                DOMStorage :domStorage,
                 errHandler :errHandler
             });
 
@@ -438,13 +439,13 @@ let MediaPlayer = function (context) {
 
         setup: function () {
             metricsExt = system.getObject("metricsExt");
-            DOMStorage = system.getObject("DOMStorage");
+            domStorage.setConfig({
+                log:debug.log
+            })
             metricsModel.setConfig({
                 adapter:this.adapter,
                 system:system
             })
-
-            //createControllers.call(this);
 
             this.restoreDefaultUTCTimingSources();
             this.debug.log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
@@ -594,7 +595,7 @@ let MediaPlayer = function (context) {
          *
          */
         enableLastBitrateCaching: function (enable, ttl) {
-            DOMStorage.enableLastBitrateCaching(enable, ttl);
+            domStorage.enableLastBitrateCaching(enable, ttl);
         },
 
         /**
@@ -611,7 +612,7 @@ let MediaPlayer = function (context) {
          *
          */
         enableLastMediaSettingsCaching: function (enable, ttl) {
-            DOMStorage.enableLastMediaSettingsCaching(enable, ttl);
+            domStorage.enableLastMediaSettingsCaching(enable, ttl);
         },
 
         /**
