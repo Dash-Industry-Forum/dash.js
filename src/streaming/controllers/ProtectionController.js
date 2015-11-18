@@ -55,6 +55,7 @@ export default FactoryMaker.getClassFactory(ProtectionController);
 function ProtectionController(config) {
 
     let protectionExt = config.protectionExt,
+        protectionModel = config.protectionModel,
         adapter = config.adapter,
         log = config.log,
         system = config.system;
@@ -83,7 +84,6 @@ function ProtectionController(config) {
         protDataSet,
         initialized,
         sessionType,
-        protectionModel,
         keySystem;
 
     function setup() {
@@ -92,9 +92,7 @@ function ProtectionController(config) {
         initialized = false;
         sessionType = "temporary";
 
-        protectionModel = system.getObject("protectionModel");//TODO Will need to fix mapProtectionMOdel here I think once context is gone.
-        protectionModel.init();
-
+        //protectionModel.init(); Not needed in lates
         EventBus.on(Events.NEED_KEY, onNeedKey, this);
         EventBus.on(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
     }
@@ -298,10 +296,10 @@ function ProtectionController(config) {
         EventBus.off(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         EventBus.off(Events.NEED_KEY, onNeedKey, this);
 
-        keySystem = undefined;
+        keySystem = undefined;//TODO-Refactor look at why undefined is needed for this. refactor
 
-        protectionModel.teardown();
-        protectionModel = undefined;
+        protectionModel.reset();
+        protectionModel = null;
     }
 
     ///////////////
@@ -393,7 +391,7 @@ function ProtectionController(config) {
                 EventBus.off(Events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
                 EventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                 if (!event.error) {
-                    keySystem = protectionModel.keySystem;
+                    keySystem = protectionModel.getKeySystem();
                     EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: keySystemAccess});
                     for (var i = 0; i < pendingNeedKeyData.length; i++) {
                         for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {

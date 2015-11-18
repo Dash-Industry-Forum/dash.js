@@ -378,8 +378,8 @@ function StreamController() {
         if (!manifest) return;
 
         streamsInfo = adapter.getStreamsInfo(manifest);
-
-        if (capabilities.supportsEncryptedMedia() && protectionController) {
+        //capabilities.supportsEncryptedMedia() &&
+        if ( protectionController) {
             //if (!protectionController) {//Todo detech here and create on mediaplayer level?
             //    protectionController = ProtectionController.create({
             //        protectionExt: system.getObject('protectionExt'),

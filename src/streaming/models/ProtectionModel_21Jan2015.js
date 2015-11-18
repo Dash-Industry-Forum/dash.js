@@ -37,7 +37,6 @@
  * @implements ProtectionModel
  * @class
  */
-import ProtectionModel from './ProtectionModel.js';
 import ProtectionExtensions from '../extensions/ProtectionExtensions.js';
 import NeedKey from '../vo/protection/NeedKey.js';
 import KeyError from '../vo/protection/KeyError.js';
@@ -47,356 +46,343 @@ import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
 import SessionToken from '../vo/protection/SessionToken.js';
 import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-let ProtectionModel_21Jan2015 = function () {
+export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);
 
-    var videoElement = null,
-        protectionExt = ProtectionExtensions.getInstance(),
-        mediaKeys = null,
+function ProtectionModel_21Jan2015(config) {
 
-        // Session list
-        sessions = [],
+    let log = config.log,
+        system = config.system;
 
-        requestKeySystemAccessInternal = function(ksConfigurations, idx) {
-            var self = this;
-            (function(i) {
-                var keySystem = ksConfigurations[i].ks;
-                var configs = ksConfigurations[i].configs;
-                navigator.requestMediaKeySystemAccess(keySystem.systemString, configs).then(function(mediaKeySystemAccess) {
+    let instance = {
+        reset:reset,
+        getAllInitData:getAllInitData,
+        requestKeySystemAccess:requestKeySystemAccess,
+        getKeySystem:getKeySystem,
+        selectKeySystem:selectKeySystem,
+        setMediaElement:setMediaElement,
+        setServerCertificate:setServerCertificate,
+        createKeySession:createKeySession,
+        updateKeySession:updateKeySession,
+        loadKeySession:loadKeySession,
+        removeKeySession:removeKeySession,
+        closeKeySession:closeKeySession,
+    };
 
-                    // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
-                    var configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
-                            mediaKeySystemAccess.getConfiguration() : null;
-                    var keySystemAccess = new KeySystemAccess(keySystem, configuration);
-                    keySystemAccess.mksa = mediaKeySystemAccess;
-                    EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data:keySystemAccess});
+    setup();
 
-                }).catch(function() {
-                    if (++i < ksConfigurations.length) {
-                        requestKeySystemAccessInternal.call(self, ksConfigurations, i);
-                    } else {
-                        EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:"Key system access denied!"});
-                    }
-                });
-            })(idx);
-        },
+    return instance;
 
-        closeKeySessionInternal = function(sessionToken) {
-            var session = sessionToken.session;
+    var keySystem,
+        videoElement,
+        mediaKeys,
+        sessions,
+        eventHandler,
+        protectionExt;
 
-            // Remove event listeners
-            session.removeEventListener("keystatuseschange", sessionToken);
-            session.removeEventListener("message", sessionToken);
+    function setup() {
+        keySystem = null;
+        videoElement = null;
+        mediaKeys = null;
+        sessions = [];
+        protectionExt = ProtectionExtensions.getInstance();
+        eventHandler = createEventHandler();
+    }
 
-            // Send our request to the key session
-            return session.close();
-        },
+    function reset() {
+        var numSessions = sessions.length,
+            session;
 
-        // This is our main event handler for all desired HTMLMediaElement events
-        // related to EME.  These events are translated into our API-independent
-        // versions of the same events
-        createEventHandler = function() {
-            var self = this;
-            return {
-                handleEvent: function(event) {
-                    switch (event.type) {
-
-                        case "encrypted":
-                            if (event.initData) {
-                                var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                                EventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, event.initDataType)});
-                            }
-                            break;
-                    }
-                }
-            };
-        },
-        eventHandler = null,
-
-        removeSession = function(token) {
-            // Remove from our session list
-            for (var i = 0; i < sessions.length; i++) {
-                if (sessions[i] === token) {
-                    sessions.splice(i,1);
-                    break;
-                }
-            }
-        },
-
-        // Function to create our session token objects which manage the EME
-        // MediaKeySession and session-specific event handler
-        createSessionToken = function(session, initData, sessionType) {
-
-            var self = this;
-            var token = { // Implements SessionToken
-                session: session,
-                initData: initData,
-
-                // This is our main event handler for all desired MediaKeySession events
-                // These events are translated into our API-independent versions of the
-                // same events
-                handleEvent: function(event) {
-                    switch (event.type) {
-                        case "keystatuseschange":
-                            EventBus.trigger(Events.KEY_STATUSES_CHANGED, {data:this});
-                            break;
-
-                        case "message":
-                            var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                            EventBus.trigger(Events.INTERNAL_KEY_MESSAGE, {data:new KeyMessage(this, message, undefined, event.messageType)});
-                            break;
-                    }
-                },
-
-                getSessionID: function() {
-                    return this.session.sessionId;
-                },
-
-                getExpirationTime: function() {
-                    return this.session.expiration;
-                },
-
-                getKeyStatuses: function() {
-                    return this.session.keyStatuses;
-                },
-
-                getSessionType: function() {
-                    return sessionType;
-                }
-            };
-
-            // Add all event listeners
-            session.addEventListener("keystatuseschange", token);
-            session.addEventListener("message", token);
-
-            // Register callback for session closed Promise
-            session.closed.then(function () {
-                removeSession(token);
-                self.log("DRM: Session closed.  SessionID = " + token.getSessionID());
-                EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:token.getSessionID()});
-            });
-
-            // Add to our session list
-            sessions.push(token);
-
-            return token;
-        };
-
-    return {
-        system: undefined,
-        keySystem: null,
-        log:undefined,
-
-        setup: function() {
-            eventHandler = createEventHandler.call(this);
-        },
-
-        /**
-         * Initialize this protection model
-         */
-        init: function() {
-        },
-
-        teardown: function() {
-            var numSessions = sessions.length,
-                session,
-                self = this;
-            if (numSessions !== 0) {
-                // Called when we are done closing a session.  Success or fail
-                var done = function(session) {
-                    removeSession(session);
-                    if (sessions.length === 0) {
-                        if (videoElement) {
-                            videoElement.removeEventListener("encrypted", eventHandler);
-                            videoElement.setMediaKeys(null).then(function () {
-                                EventBus.trigger(Events.TEARDOWN_COMPLETE);
-                            });
-                        } else {
+        if (numSessions !== 0) {
+            // Called when we are done closing a session.  Success or fail
+            var done = function(session) {
+                removeSession(session);
+                if (sessions.length === 0) {
+                    if (videoElement) {
+                        videoElement.removeEventListener("encrypted", eventHandler);
+                        videoElement.setMediaKeys(null).then(function () {
                             EventBus.trigger(Events.TEARDOWN_COMPLETE);
-                        }
+                        });
+                    } else {
+                        EventBus.trigger(Events.TEARDOWN_COMPLETE);
                     }
-                };
-                for (var i = 0; i < numSessions; i++) {
-                    session = sessions[i];
-                    (function (s) {
-                        // Override closed promise resolver
-                        session.session.closed.then(function () {
-                            done(s);
-                        });
-                        // Close the session and handle errors, otherwise promise
-                        // resolver above will be called
-                        closeKeySessionInternal(session).catch(function () {
-                            done(s);
-                        });
-
-                    })(session);
                 }
+            };
+            for (var i = 0; i < numSessions; i++) {
+                session = sessions[i];
+                (function (s) {
+                    // Override closed promise resolver
+                    session.session.closed.then(function () {
+                        done(s);
+                    });
+                    // Close the session and handle errors, otherwise promise
+                    // resolver above will be called
+                    closeKeySessionInternal(session).catch(function () {
+                        done(s);
+                    });
+
+                })(session);
+            }
+        } else {
+            EventBus.trigger(Events.TEARDOWN_COMPLETE);
+        }
+    }
+
+    function getKeySystem() {
+        return keySystem;
+    }
+
+    function getAllInitData() {
+        var retVal = [];
+        for (var i = 0; i < sessions.length; i++) {
+            retVal.push(sessions[i].initData);
+        }
+        return retVal;
+    }
+
+    function requestKeySystemAccess(ksConfigurations) {
+        requestKeySystemAccessInternal(ksConfigurations, 0);
+    }
+
+    function selectKeySystem(keySystemAccess) {
+        keySystemAccess.mksa.createMediaKeys().then(function(mkeys) {
+            keySystem = keySystemAccess.keySystem;
+            mediaKeys = mkeys;
+            if (videoElement) {
+                videoElement.setMediaKeys(mediaKeys);
+            }
+            EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
+
+        }).catch(function() {
+            EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED, {error:"Error selecting keys system (" + keySystemAccess.keySystem.systemString + ")! Could not create MediaKeys -- TODO"});
+        });
+    }
+
+    function setMediaElement(mediaElement) {
+        if (videoElement === mediaElement)
+            return;
+
+        // Replacing the previous element
+        if (videoElement) {
+            videoElement.removeEventListener("encrypted", eventHandler);
+            videoElement.setMediaKeys(null);
+        }
+
+        videoElement = mediaElement;
+
+        // Only if we are not detaching from the existing element
+        if (videoElement) {
+            videoElement.addEventListener("encrypted", eventHandler);
+            if (mediaKeys) {
+                videoElement.setMediaKeys(mediaKeys);
+            }
+        }
+    }
+
+    function setServerCertificate(serverCertificate) {
+        if (!keySystem || !mediaKeys) {
+            throw new Error("Can not set server certificate until you have selected a key system");
+        }
+        mediaKeys.setServerCertificate(serverCertificate).then(function() {
+            log("DRM: License server certificate successfully updated.");
+            EventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED);
+        }).catch(function(error) {
+            EventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED, {error:"Error updating server certificate -- " + error.name});
+        });
+    }
+
+    function createKeySession(initData, sessionType) {
+
+        if (!keySystem || !mediaKeys) {
+            throw new Error("Can not create sessions until you have selected a key system");
+        }
+
+        var session = mediaKeys.createSession(sessionType);
+        var sessionToken = createSessionToken(session, initData, sessionType);
+
+        // Generate initial key request
+        session.generateRequest("cenc", initData).then(function() {
+            log("DRM: Session created.  SessionID = " + sessionToken.getSessionID());
+            EventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
+        }).catch(function(error) {
+            // TODO: Better error string
+            removeSession(sessionToken);
+            EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Error generating key request -- " + error.name});
+        });
+    }
+
+    function updateKeySession(sessionToken, message) {
+
+        var session = sessionToken.session;
+
+        // Send our request to the key session
+        if (protectionExt.isClearKey(keySystem)) {
+            message = message.toJWK();
+        }
+        session.update(message).catch(function (error) {
+            EventBus.trigger(Events.KEY_ERROR, {data:new KeyError(sessionToken, "Error sending update() message! " + error.name)});
+        });
+    }
+
+    function loadKeySession(sessionID) {
+        if (!keySystem || !mediaKeys) {
+            throw new Error("Can not load sessions until you have selected a key system");
+        }
+
+        var session = mediaKeys.createSession()
+        // Load persisted session data into our newly created session object
+        session.load(sessionID).then(function (success) {
+            if (success) {
+                var sessionToken = createSessionToken(session);
+                log("DRM: Session created.  SessionID = " + sessionToken.getSessionID());
+                EventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
             } else {
-                EventBus.trigger(Events.TEARDOWN_COMPLETE);
+                EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Could not load session! Invalid Session ID (" + sessionID + ")"});
             }
-        },
+        }).catch(function (error) {
+            EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Could not load session (" + sessionID + ")! " + error.name});
+        });
+    }
 
-        getAllInitData: function() {
-            var retVal = [];
-            for (var i = 0; i < sessions.length; i++) {
-                retVal.push(sessions[i].initData);
-            }
-            return retVal;
-        },
+    function removeKeySession(sessionToken) {
+        var session = sessionToken.session;
 
-        requestKeySystemAccess: function(ksConfigurations) {
-            requestKeySystemAccessInternal.call(this, ksConfigurations, 0);
-        },
+        session.remove().then(function () {
+            log("DRM: Session removed.  SessionID = " + sessionToken.getSessionID());
+            EventBus.trigger(Events.KEY_SESSION_REMOVED, {data:sessionToken.getSessionID()});
+        }, function (error) {
+            EventBus.trigger(Events.KEY_SESSION_REMOVED, {data:null, error:"Error removing session (" + sessionToken.getSessionID() + "). " + error.name});
 
-        selectKeySystem: function(keySystemAccess) {
-            var self = this;
-            keySystemAccess.mksa.createMediaKeys().then(function(mkeys) {
-                self.keySystem = keySystemAccess.keySystem;
-                mediaKeys = mkeys;
-                if (videoElement) {
-                    videoElement.setMediaKeys(mediaKeys);
-                }
-                EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
+        });
+    }
+
+    function closeKeySession(sessionToken) {
+        // Send our request to the key session
+        closeKeySessionInternal(sessionToken).catch(function(error) {
+            removeSession(sessionToken);
+            EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:null, error:"Error closing session (" + sessionToken.getSessionID() + ") " + error.name});
+        });
+    }
+
+    function requestKeySystemAccessInternal(ksConfigurations, idx) {
+        (function(i) {
+            var keySystem = ksConfigurations[i].ks;
+            var configs = ksConfigurations[i].configs;
+            navigator.requestMediaKeySystemAccess(keySystem.systemString, configs).then(function(mediaKeySystemAccess) {
+
+                // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
+                var configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
+                        mediaKeySystemAccess.getConfiguration() : null;
+                var keySystemAccess = new KeySystemAccess(keySystem, configuration);
+                keySystemAccess.mksa = mediaKeySystemAccess;
+                EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data:keySystemAccess});
 
             }).catch(function() {
-                EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED, {error:"Error selecting keys system (" + keySystemAccess.keySystem.systemString + ")! Could not create MediaKeys -- TODO"});
-            });
-        },
-
-        setMediaElement: function(mediaElement) {
-            if (videoElement === mediaElement)
-                return;
-
-            // Replacing the previous element
-            if (videoElement) {
-                videoElement.removeEventListener("encrypted", eventHandler);
-                videoElement.setMediaKeys(null);
-            }
-
-            videoElement = mediaElement;
-
-            // Only if we are not detaching from the existing element
-            if (videoElement) {
-                videoElement.addEventListener("encrypted", eventHandler);
-                if (mediaKeys) {
-                    videoElement.setMediaKeys(mediaKeys);
-                }
-            }
-        },
-
-        setServerCertificate: function(serverCertificate) {
-            var self = this;
-            if (!this.keySystem || !mediaKeys) {
-                throw new Error("Can not set server certificate until you have selected a key system");
-            }
-            mediaKeys.setServerCertificate(serverCertificate).then(function() {
-                self.log("DRM: License server certificate successfully updated.");
-                EventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED);
-            }).catch(function(error) {
-                EventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED, {error:"Error updating server certificate -- " + error.name});
-            });
-        },
-
-        createKeySession: function(initData, sessionType) {
-
-            if (!this.keySystem || !mediaKeys) {
-                throw new Error("Can not create sessions until you have selected a key system");
-            }
-
-            var session = mediaKeys.createSession(sessionType);
-            var sessionToken = createSessionToken.call(this, session, initData, sessionType);
-
-            // Generate initial key request
-            var self = this;
-            session.generateRequest("cenc", initData).then(function() {
-                self.log("DRM: Session created.  SessionID = " + sessionToken.getSessionID());
-                EventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
-            }).catch(function(error) {
-                // TODO: Better error string
-                removeSession(sessionToken);
-                EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Error generating key request -- " + error.name});
-            });
-        },
-
-        updateKeySession: function(sessionToken, message) {
-
-            var session = sessionToken.session;
-
-            // Send our request to the key session
-            if (protectionExt.isClearKey(this.keySystem)) {
-                message = message.toJWK();
-            }
-            session.update(message).catch(function (error) {
-                EventBus.trigger(Events.KEY_ERROR, {data:new KeyError(sessionToken, "Error sending update() message! " + error.name)});
-            });
-        },
-
-        loadKeySession: function(sessionID) {
-            if (!this.keySystem || !mediaKeys) {
-                throw new Error("Can not load sessions until you have selected a key system");
-            }
-
-            var session = mediaKeys.createSession(),
-                self = this;
-            // Load persisted session data into our newly created session object
-            session.load(sessionID).then(function (success) {
-                if (success) {
-                    var sessionToken = createSessionToken.call(this, session);
-                    self.log("DRM: Session created.  SessionID = " + sessionToken.getSessionID());
-                    EventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
+                if (++i < ksConfigurations.length) {
+                    requestKeySystemAccessInternal(ksConfigurations, i);
                 } else {
-                    EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Could not load session! Invalid Session ID (" + sessionID + ")"});
+                    EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:"Key system access denied!"});
                 }
-            }).catch(function (error) {
-                EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Could not load session (" + sessionID + ")! " + error.name});
             });
-        },
+        })(idx);
+    }
 
-        removeKeySession: function(sessionToken) {
-            var session = sessionToken.session,
-                self = this;
+    function closeKeySessionInternal(sessionToken) {
+        var session = sessionToken.session;
 
-            session.remove().then(function () {
-                self.log("DRM: Session removed.  SessionID = " + sessionToken.getSessionID());
-                EventBus.trigger(Events.KEY_SESSION_REMOVED, {data:sessionToken.getSessionID()});
-            }, function (error) {
-                EventBus.trigger(Events.KEY_SESSION_REMOVED, {data:null, error:"Error removing session (" + sessionToken.getSessionID() + "). " + error.name});
+        // Remove event listeners
+        session.removeEventListener("keystatuseschange", sessionToken);
+        session.removeEventListener("message", sessionToken);
 
-            });
-        },
+        // Send our request to the key session
+        return session.close();
+    }
 
-        closeKeySession: function(sessionToken) {
-            // Send our request to the key session
-            closeKeySessionInternal(sessionToken).catch(function(error) {
-                removeSession(sessionToken);
-                EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:null, error:"Error closing session (" + sessionToken.getSessionID() + ") " + error.name});
-            });
+    // This is our main event handler for all desired HTMLMediaElement events
+    // related to EME.  These events are translated into our API-independent
+    // versions of the same events
+    function createEventHandler() {
+        return {
+            handleEvent: function(event) {
+                switch (event.type) {
+
+                    case "encrypted":
+                        if (event.initData) {
+                            var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
+                            EventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, event.initDataType)});
+                        }
+                        break;
+                }
+            }
+        };
+    }
+
+    function removeSession(token) {
+        // Remove from our session list
+        for (var i = 0; i < sessions.length; i++) {
+            if (sessions[i] === token) {
+                sessions.splice(i,1);
+                break;
+            }
         }
-    };
-};
-
-/**
- * Detects presence of EME v21Jan2015 APIs
- *
- * @param videoElement {HTMLMediaElement} the media element that will be
- * used for detecting API support
- * @returns {Boolean} true if support was detected, false otherwise
- */
-ProtectionModel_21Jan2015.detect = function(videoElement) {
-    if (videoElement.onencrypted === undefined ||
-            videoElement.mediaKeys === undefined) {
-        return false;
-    }
-    if (navigator.requestMediaKeySystemAccess === undefined ||
-            typeof navigator.requestMediaKeySystemAccess !== 'function') {
-        return false;
     }
 
-    return true;
-};
+    // Function to create our session token objects which manage the EME
+    // MediaKeySession and session-specific event handler
+    function createSessionToken(session, initData, sessionType) {
 
-ProtectionModel_21Jan2015.prototype = {
-    constructor: ProtectionModel_21Jan2015
-};
+        var token = { // Implements SessionToken
+            session: session,
+            initData: initData,
 
-export default ProtectionModel_21Jan2015;
+            // This is our main event handler for all desired MediaKeySession events
+            // These events are translated into our API-independent versions of the
+            // same events
+            handleEvent: function(event) {
+                switch (event.type) {
+                    case "keystatuseschange":
+                        EventBus.trigger(Events.KEY_STATUSES_CHANGED, {data:this});
+                        break;
+
+                    case "message":
+                        var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
+                        EventBus.trigger(Events.INTERNAL_KEY_MESSAGE, {data:new KeyMessage(this, message, undefined, event.messageType)});
+                        break;
+                }
+            },
+
+            getSessionID: function() {
+                return session.sessionId;
+            },
+
+            getExpirationTime: function() {
+                return session.expiration;
+            },
+
+            getKeyStatuses: function() {
+                return session.keyStatuses;
+            },
+
+            getSessionType: function() {
+                return sessionType;
+            }
+        };
+
+        // Add all event listeners
+        session.addEventListener("keystatuseschange", token);
+        session.addEventListener("message", token);
+
+        // Register callback for session closed Promise
+        session.closed.then(function () {
+            removeSession(token);
+            log("DRM: Session closed.  SessionID = " + token.getSessionID());
+            EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:token.getSessionID()});
+        });
+
+        // Add to our session list
+        sessions.push(token);
+
+        return token;
+    }
+};

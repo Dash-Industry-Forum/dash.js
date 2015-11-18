@@ -40,10 +40,17 @@ function Capabilities() {
         setConfig:setConfig
     }
 
+    setup()
     return instance;
 
     let system,
-        log;
+        log,
+        videoModel,
+        encryptedMediaSupported;
+
+    function setup(){
+        encryptedMediaSupported = null;
+    }
 
     function setConfig(config){
         if (!config) return;
@@ -54,10 +61,13 @@ function Capabilities() {
         if (config.log) {
             log = config.log;
         }
+        if (config.videoModel) {
+            videoModel = config.videoModel;
+        }
     }
 
     function supportsMediaSource() {
-        var hasWebKit = ("WebKitMediaSource" in window),
+        let hasWebKit = ("WebKitMediaSource" in window),
             hasMediaSource = ("MediaSource" in window);
 
         return (hasWebKit || hasMediaSource);
@@ -70,7 +80,26 @@ function Capabilities() {
      * @return {boolean} true if EME is supported, false otherwise
      */
     function supportsEncryptedMedia() {
-        return system.hasMapping('protectionModel');
+
+        if (!encryptedMediaSupported) {
+
+            let videoElement = videoModel.getElement();
+
+            if (videoElement.onencrypted === undefined ||
+                videoElement.mediaKeys === undefined ||
+                navigator.requestMediaKeySystemAccess === undefined ||
+                typeof navigator.requestMediaKeySystemAccess !== 'function') {
+
+                encryptedMediaSupported = false;
+                log("No supported version of EME detected on this user agent! - Attempts to play encrypted content will fail!");
+
+            } else {
+                encryptedMediaSupported = true
+                log("EME detected on this user agent!");
+            }
+        }
+
+        return encryptedMediaSupported;
     }
 
     function supportsCodec(element, codec) {

@@ -58,29 +58,9 @@ import VideoModelExtensions from './extensions/VideoModelExtensions.js';
 import MetricsList from './vo/MetricsList.js';
 
 
-import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
-import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
-import ProtectionModel_01b from './models/ProtectionModel_01b.js';
-
 
 let Context = function () {
-    "use strict";
 
-    var mapProtectionModel = function() {
-        var videoElement = document.createElement("video");
-
-        // Detect EME APIs.  Look for newest API versions first
-        if (ProtectionModel_21Jan2015.detect(videoElement)) {
-            this.system.mapClass('protectionModel', ProtectionModel_21Jan2015);
-        } else if (ProtectionModel_3Feb2014.detect(videoElement)) {
-            this.system.mapClass('protectionModel', ProtectionModel_3Feb2014);
-        } else if (ProtectionModel_01b.detect(videoElement)) {
-            this.system.mapClass('protectionModel', ProtectionModel_01b);
-        } else {
-            this.debug.log("No supported version of EME detected on this user agent!");
-            this.debug.log("Attempts to play encrypted content will fail!");
-        }
-    };
 
     return {
         system : undefined,
@@ -116,19 +96,12 @@ let Context = function () {
             this.system.mapSingleton('ksPlayReady', KeySystem_PlayReady);
             this.system.mapSingleton('ksWidevine', KeySystem_Widevine);
             this.system.mapSingleton('ksClearKey', KeySystem_ClearKey);
-
             this.system.mapSingleton('serverPlayReady', PlayReady);
             this.system.mapSingleton('serverWidevine', Widevine);
             this.system.mapSingleton('serverClearKey', ClearKey);
             this.system.mapSingleton('serverDRMToday', DRMToday);
 
-
-
             this.system.mapSingleton('videoExt', VideoModelExtensions);
-
-
-
-            mapProtectionModel.call(this); // Determines EME API support and version
 
             this.system.mapClass('metrics', MetricsList);
         }

@@ -63,6 +63,13 @@ import RulesController from './rules/RulesController.js';
 import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
+
+
+import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
+//import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
+//import ProtectionModel_01b from './models/ProtectionModel_01b.js';
+
+
 import FactoryMaker from '../core/FactoryMaker.js'
 
 let MediaPlayer = function (context) {
@@ -143,10 +150,8 @@ let MediaPlayer = function (context) {
 
             playing = true;
             this.debug.log("Playback initiated!");
+            createControllers.call(this);
 
-            if(!streamController){
-                createControllers.call(this);
-            }
 
             playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
 
@@ -389,6 +394,7 @@ let MediaPlayer = function (context) {
         };
 
 
+
     // Overload dijon getObject function
     var _getObject = dijon.System.prototype.getObject;
     dijon.System.prototype.getObject = function (name) {
@@ -437,11 +443,8 @@ let MediaPlayer = function (context) {
                 adapter:this.adapter,
                 system:system
             })
-            capabilities.setConfig({
-                log:debug.log,
-                system:system
-            })
-            createControllers.call(this);
+
+            //createControllers.call(this);
 
             this.restoreDefaultUTCTimingSources();
             this.debug.log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
@@ -1095,6 +1098,7 @@ let MediaPlayer = function (context) {
         //TODO-Refactor this work flow when protection is optional
         createProtection: function () {
 
+
             let controller = protectionController//see if external controller has been set.
 
             if(!controller && capabilities.supportsEncryptedMedia()) {
@@ -1107,7 +1111,13 @@ let MediaPlayer = function (context) {
                 })
                 protectionExt.initialize();
 
+                let protectionModel = ProtectionModel_21Jan2015.create({
+                    log:debug.log,
+                    system:system
+                })
+
                 controller = ProtectionController.create({
+                    protectionModel:protectionModel,
                     protectionExt: protectionExt,
                     adapter: this.adapter,
                     log: debug.log,
@@ -1300,9 +1310,13 @@ let MediaPlayer = function (context) {
                 videoModel.setElement(element);
                 // Workaround to force Firefox to fire the canplay event.
                 element.preload = "auto";
-            }
 
-            // TODO : update
+                capabilities.setConfig({
+                    log:debug.log,
+                    system:system,
+                    videoModel:videoModel
+                })
+            }
             resetAndPlay.call(this);
         },
 

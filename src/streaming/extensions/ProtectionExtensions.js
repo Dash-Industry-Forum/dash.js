@@ -37,7 +37,6 @@
 import MediaCapability from '../vo/protection/MediaCapability.js';
 import CommonEncryption from '../protection/CommonEncryption.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
-import ProtectionModel from '../models/ProtectionModel.js';
 import KeySystem_ClearKey from '../protection/drm/KeySystem_ClearKey.js';
 
 import FactoryMaker from '../../core/FactoryMaker.js';
