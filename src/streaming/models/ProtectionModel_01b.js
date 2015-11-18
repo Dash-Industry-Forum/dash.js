@@ -51,174 +51,175 @@ import ErrorHandler from '../ErrorHandler.js';
 
 let ProtectionModel_01b = function () {
 
-    var videoElement = null,
-        protectionExt = ProtectionExtensions.getInstance(),
-        errHandler = ErrorHandler.getInstance(),
+    var videoElement = null;
+    var protectionExt = ProtectionExtensions.getInstance();
+    var errHandler = ErrorHandler.getInstance();
 
-        // API names object selected for this user agent
-        api = null,
+    // API names object selected for this user agent
+    var api = null;
 
-        // With this version of the EME APIs, sessionIDs are not assigned to
-        // sessions until the first key message is received.  We are assuming
-        // that in the case of multiple sessions, key messages will be received
-        // in the order that generateKeyRequest() is called.
+    // With this version of the EME APIs, sessionIDs are not assigned to
+    // sessions until the first key message is received.  We are assuming
+    // that in the case of multiple sessions, key messages will be received
+    // in the order that generateKeyRequest() is called.
 
-        // Holding spot for newly-created sessions until we determine whether or
-        // not the CDM supports sessionIDs
-        pendingSessions = [],
+    // Holding spot for newly-created sessions until we determine whether or
+    // not the CDM supports sessionIDs
+    var pendingSessions = [];
 
-        // List of sessions that have been initialized.  Only the first position will
-        // be used in the case that the CDM does not support sessionIDs
-        sessions = [],
+    // List of sessions that have been initialized.  Only the first position will
+    // be used in the case that the CDM does not support sessionIDs
+    var sessions = [];
 
-        // Not all CDMs support the notion of sessionIDs.  Without sessionIDs
-        // there is no way for us to differentiate between sessions, therefore
-        // we must only allow a single session.  Once we receive the first key
-        // message we can set this flag to determine if more sessions are allowed
-        moreSessionsAllowed,
+    // Not all CDMs support the notion of sessionIDs.  Without sessionIDs
+    // there is no way for us to differentiate between sessions, therefore
+    // we must only allow a single session.  Once we receive the first key
+    // message we can set this flag to determine if more sessions are allowed
+    var moreSessionsAllowed;
 
-        // This is our main event handler for all desired HTMLMediaElement events
-        // related to EME.  These events are translated into our API-independent
-        // versions of the same events
-        createEventHandler = function() {
-            var self = this;
-            return {
-                handleEvent: function(event) {
-                    var sessionToken = null;
-                    switch (event.type) {
+    // This is our main event handler for all desired HTMLMediaElement events
+    // related to EME.  These events are translated into our API-independent
+    // versions of the same events
+    var createEventHandler = function() {
+        var self = this;
+        return {
+            handleEvent: function(event) {
+                var sessionToken = null;
+                switch (event.type) {
 
-                        case api.needkey:
-                            var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                            EventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, "cenc")});
-                            break;
+                    case api.needkey:
+                        var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
+                        EventBus.trigger(Events.NEED_KEY, { key: new NeedKey(initData, "cenc") });
+                        break;
 
-                        case api.keyerror:
+                    case api.keyerror:
+                        sessionToken = findSessionByID(sessions, event.sessionId);
+                        if (!sessionToken) {
+                            sessionToken = findSessionByID(pendingSessions, event.sessionId);
+                        }
+
+                        if (sessionToken) {
+                            var msg = "";
+                            switch (event.errorCode.code) {
+                                case 1:
+                                    msg += "MEDIA_KEYERR_UNKNOWN - An unspecified error occurred. This value is used for errors that don't match any of the other codes.";
+                                    break;
+                                case 2:
+                                    msg += "MEDIA_KEYERR_CLIENT - The Key System could not be installed or updated.";
+                                    break;
+                                case 3:
+                                    msg += "MEDIA_KEYERR_SERVICE - The message passed into update indicated an error from the license service.";
+                                    break;
+                                case 4:
+                                    msg += "MEDIA_KEYERR_OUTPUT - There is no available output device with the required characteristics for the content protection system.";
+                                    break;
+                                case 5:
+                                    msg += "MEDIA_KEYERR_HARDWARECHANGE - A hardware configuration change caused a content protection error.";
+                                    break;
+                                case 6:
+                                    msg += "MEDIA_KEYERR_DOMAIN - An error occurred in a multi-device domain licensing configuration. The most common error is a failure to join the domain.";
+                                    break;
+                            }
+                            msg += "  System Code = " + event.systemCode;
+                            // TODO: Build error string based on key error
+                            EventBus.trigger(Events.KEY_ERROR, { data: new KeyError(sessionToken, msg) });
+                        } else {
+                            self.log("No session token found for key error");
+                        }
+                        break;
+
+                    case api.keyadded:
+                        sessionToken = findSessionByID(sessions, event.sessionId);
+                        if (!sessionToken) {
+                            sessionToken = findSessionByID(pendingSessions, event.sessionId);
+                        }
+
+                        if (sessionToken) {
+                            self.log("DRM: Key added.");
+                            EventBus.trigger(Events.KEY_ADDED, { data: sessionToken }); //TODO not sure anything is using sessionToken? why there?
+                        } else {
+                            self.log("No session token found for key added");
+                        }
+                        break;
+
+                    case api.keymessage:
+
+                        // If this CDM does not support session IDs, we will be limited
+                        // to a single session
+                        moreSessionsAllowed = (event.sessionId !== null) && (event.sessionId !== undefined);
+
+                        // SessionIDs supported
+                        if (moreSessionsAllowed) {
+
+                            // Attempt to find an uninitialized token with this sessionID
                             sessionToken = findSessionByID(sessions, event.sessionId);
-                            if (!sessionToken) {
-                                sessionToken = findSessionByID(pendingSessions, event.sessionId);
-                            }
+                            if (!sessionToken && pendingSessions.length > 0) {
 
-                            if (sessionToken) {
-                                var msg = "";
-                                switch (event.errorCode.code) {
-                                    case 1:
-                                        msg += "MEDIA_KEYERR_UNKNOWN - An unspecified error occurred. This value is used for errors that don't match any of the other codes.";
-                                        break;
-                                    case 2:
-                                        msg += "MEDIA_KEYERR_CLIENT - The Key System could not be installed or updated.";
-                                        break;
-                                    case 3:
-                                        msg += "MEDIA_KEYERR_SERVICE - The message passed into update indicated an error from the license service.";
-                                        break;
-                                    case 4:
-                                        msg += "MEDIA_KEYERR_OUTPUT - There is no available output device with the required characteristics for the content protection system.";
-                                        break;
-                                    case 5:
-                                        msg += "MEDIA_KEYERR_HARDWARECHANGE - A hardware configuration change caused a content protection error.";
-                                        break;
-                                    case 6:
-                                        msg += "MEDIA_KEYERR_DOMAIN - An error occurred in a multi-device domain licensing configuration. The most common error is a failure to join the domain.";
-                                        break;
-                                }
-                                msg += "  System Code = " + event.systemCode;
-                                // TODO: Build error string based on key error
-                                EventBus.trigger(Events.KEY_ERROR, {data:new KeyError(sessionToken, msg)});
-                            } else {
-                                self.log("No session token found for key error");
-                            }
-                            break;
-
-                        case api.keyadded:
-                            sessionToken = findSessionByID(sessions, event.sessionId);
-                            if (!sessionToken) {
-                                sessionToken = findSessionByID(pendingSessions, event.sessionId);
-                            }
-
-                            if (sessionToken) {
-                                self.log("DRM: Key added.");
-                                EventBus.trigger(Events.KEY_ADDED, {data:sessionToken});//TODO not sure anything is using sessionToken? why there?
-                            } else {
-                                self.log("No session token found for key added");
-                            }
-                            break;
-
-                        case api.keymessage:
-
-                            // If this CDM does not support session IDs, we will be limited
-                            // to a single session
-                            moreSessionsAllowed = (event.sessionId !== null) && (event.sessionId !== undefined);
-
-                            // SessionIDs supported
-                            if (moreSessionsAllowed) {
-
-                                // Attempt to find an uninitialized token with this sessionID
-                                sessionToken = findSessionByID(sessions, event.sessionId);
-                                if (!sessionToken && pendingSessions.length > 0) {
-
-                                    // This is the first message for our latest session, so set the
-                                    // sessionID and add it to our list
-                                    sessionToken = pendingSessions.shift();
-                                    sessions.push(sessionToken);
-                                    sessionToken.sessionID = event.sessionId;
-                                }
-                            } else if (pendingSessions.length > 0) { // SessionIDs not supported
-
+                                // This is the first message for our latest session, so set the
+                                // sessionID and add it to our list
                                 sessionToken = pendingSessions.shift();
                                 sessions.push(sessionToken);
-
-                                if (pendingSessions.length !== 0) {
-                                    errHandler.mediaKeyMessageError("Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!");
-                                }
+                                sessionToken.sessionID = event.sessionId;
                             }
+                        } else if (pendingSessions.length > 0) { // SessionIDs not supported
 
-                            if (sessionToken) {
-                                var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
+                            sessionToken = pendingSessions.shift();
+                            sessions.push(sessionToken);
 
-                                // For ClearKey, the spec mandates that you pass this message to the
-                                // addKey method, so we always save it to the token since there is no
-                                // way to tell which key system is in use
-                                sessionToken.keyMessage = message;
-                                EventBus.trigger(Events.KEY_MESSAGE, {data:new KeyMessage(sessionToken, message, event.defaultURL)});
-
-                            } else {
-                                self.log("No session token found for key message");
+                            if (pendingSessions.length !== 0) {
+                                errHandler.mediaKeyMessageError("Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!");
                             }
-                            break;
-                    }
-                }
-            };
-        },
-        eventHandler = null,
+                        }
 
-        /**
-         * Helper function to retrieve the stored session token based on a given
-         * sessionID value
-         *
-         * @param sessionArray {Array} the array of sessions to search
-         * @param sessionID the sessionID to search for
-         * @returns {*} the session token with the given sessionID
-         */
-        findSessionByID = function(sessionArray, sessionID) {
+                        if (sessionToken) {
+                            var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
 
-            if (!sessionID || !sessionArray) {
-                return null;
-            } else {
-                var len = sessionArray.length;
-                for (var i = 0; i < len; i++) {
-                    if (sessionArray[i].sessionID == sessionID) {
-                        return sessionArray[i];
-                    }
+                            // For ClearKey, the spec mandates that you pass this message to the
+                            // addKey method, so we always save it to the token since there is no
+                            // way to tell which key system is in use
+                            sessionToken.keyMessage = message;
+                            EventBus.trigger(Events.KEY_MESSAGE, { data: new KeyMessage(sessionToken, message, event.defaultURL) });
+
+                        } else {
+                            self.log("No session token found for key message");
+                        }
+                        break;
                 }
-                return null;
             }
-        },
-
-        removeEventListeners = function() {
-            videoElement.removeEventListener(api.keyerror, eventHandler);
-            videoElement.removeEventListener(api.needkey, eventHandler);
-            videoElement.removeEventListener(api.keymessage, eventHandler);
-            videoElement.removeEventListener(api.keyadded, eventHandler);
         };
+    };
+
+    var eventHandler = null;
+
+    /**
+     * Helper function to retrieve the stored session token based on a given
+     * sessionID value
+     *
+     * @param sessionArray {Array} the array of sessions to search
+     * @param sessionID the sessionID to search for
+     * @returns {*} the session token with the given sessionID
+     */
+    var findSessionByID = function(sessionArray, sessionID) {
+
+        if (!sessionID || !sessionArray) {
+            return null;
+        } else {
+            var len = sessionArray.length;
+            for (var i = 0; i < len; i++) {
+                if (sessionArray[i].sessionID == sessionID) {
+                    return sessionArray[i];
+                }
+            }
+            return null;
+        }
+    };
+
+    var removeEventListeners = function() {
+        videoElement.removeEventListener(api.keyerror, eventHandler);
+        videoElement.removeEventListener(api.needkey, eventHandler);
+        videoElement.removeEventListener(api.keymessage, eventHandler);
+        videoElement.removeEventListener(api.keyadded, eventHandler);
+    };
 
     return {
         system: undefined,

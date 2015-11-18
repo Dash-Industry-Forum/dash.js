@@ -44,17 +44,17 @@ export default FactoryMaker.getClassFactory(ScheduleController);
 
 function ScheduleController(config) {
 
-    let log = config.log,
-        metricsModel = config.metricsModel,
-        manifestModel = config.manifestModel,
-        adapter = config.adapter,
-        metricsExt = config.metricsExt,
-        manifestExt = config.manifestExt,
-        timelineConverter = config.timelineConverter,
-        scheduleRulesCollection = config.scheduleRulesCollection,
-        rulesController = config.rulesController,
-        mediaPlayerModel = config.mediaPlayerModel;
-        //system = config.system;
+    let log = config.log;
+    let metricsModel = config.metricsModel;
+    let manifestModel = config.manifestModel;
+    let adapter = config.adapter;
+    let metricsExt = config.metricsExt;
+    let manifestExt = config.manifestExt;
+    let timelineConverter = config.timelineConverter;
+    let scheduleRulesCollection = config.scheduleRulesCollection;
+    let rulesController = config.rulesController;
+    let mediaPlayerModel = config.mediaPlayerModel;
+    //let system = config.system;
 
 
     let instance = {
@@ -76,28 +76,28 @@ function ScheduleController(config) {
     return instance;
 
 
-    let fragmentsToLoad,
-        type,
-        ready,
-        fragmentModel,
-        isDynamic,
-        currentRepresentationInfo,
-        initialPlayback,
-        isStopped,
-        playListMetrics,
-        playListTraceMetrics,
-        playListTraceMetricsClosed,
-        isFragmentLoading,
-        timeToloadDelay,
-        validateTimeout,
-        seekTarget,
-        playbackController,
-        abrController,
-        streamProcessor,
-        fragmentController,
-        liveEdgeFinder,
-        bufferController,
-        scheduleWhilePaused;
+    let fragmentsToLoad;
+    let type;
+    let ready;
+    let fragmentModel;
+    let isDynamic;
+    let currentRepresentationInfo;
+    let initialPlayback;
+    let isStopped;
+    let playListMetrics;
+    let playListTraceMetrics;
+    let playListTraceMetricsClosed;
+    let isFragmentLoading;
+    let timeToloadDelay;
+    let validateTimeout;
+    let seekTarget;
+    let playbackController;
+    let abrController;
+    let streamProcessor;
+    let fragmentController;
+    let liveEdgeFinder;
+    let bufferController;
+    let scheduleWhilePaused;
 
 
     function setup() {
@@ -147,8 +147,8 @@ function ScheduleController(config) {
     }
 
     function clearPlayListTraceMetrics(endTime, stopreason) {
-        var duration = 0,
-            startTime = null;
+        var duration = 0;
+        var startTime = null;
 
         if (playListTraceMetricsClosed === false) {
             startTime = playListTraceMetrics.start;
@@ -202,13 +202,13 @@ function ScheduleController(config) {
     }
 
     function replaceCanceledRequests(canceledRequests) {
-        var ln = canceledRequests.length,
+        var ln = canceledRequests.length;
         // EPSILON is used to avoid javascript floating point issue, e.g. if request.startTime = 19.2,
         // request.duration = 3.83, than request.startTime + request.startTime = 19.2 + 1.92 = 21.119999999999997
-            EPSILON = 0.1,
-            request,
-            time,
-            i;
+        var EPSILON = 0.1;
+        var request;
+        var time;
+        var i;
 
         for (i = 0; i < ln; i += 1) {
             request = canceledRequests[i];
@@ -348,16 +348,17 @@ function ScheduleController(config) {
     }
 
     function addPlaylistMetrics(stopReason) {
-        var currentTime = new Date(),
-            presentationTime = playbackController.getTime();
+        var currentTime = new Date();
+        var presentationTime = playbackController.getTime();
+
         clearPlayListTraceMetrics(currentTime, PlayList.Trace.USER_REQUEST_STOP_REASON);
         playListMetrics = metricsModel.addPlayList(type, currentTime, presentationTime, stopReason);
     }
 
     function addPlaylistTraceMetrics() {
-        var currentVideoTime = playbackController.getTime(),
-            rate = playbackController.getPlaybackRate(),
-            currentTime = new Date();
+        var currentVideoTime = playbackController.getTime();
+        var rate = playbackController.getPlaybackRate();
+        var currentTime = new Date();
 
         if (playListTraceMetricsClosed === true && currentRepresentationInfo && playListMetrics) {
             playListTraceMetricsClosed = false;
@@ -380,8 +381,8 @@ function ScheduleController(config) {
             isFragmentLoading = false;
         }
 
-        var metrics = metricsModel.getMetricsFor("stream"),
-            manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
+        var metrics = metricsModel.getMetricsFor("stream");
+        var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
 
         seekTarget = e.seekTime;
         log("seek: " + seekTarget);
@@ -402,14 +403,15 @@ function ScheduleController(config) {
         if (e.error) return;
 
         // step back from a found live edge time to be able to buffer some data
-        var liveEdgeTime = e.liveEdge,
-            manifestInfo = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo,
-            startTime = liveEdgeTime - Math.min((playbackController.getLiveDelay(currentRepresentationInfo.fragmentDuration)), manifestInfo.DVRWindowSize / 2),
-            request,
-            metrics = metricsModel.getMetricsFor("stream"),
-            manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics),
-            currentLiveStart = playbackController.getLiveStartTime(),
-            actualStartTime;
+        var liveEdgeTime = e.liveEdge;
+        var manifestInfo = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo;
+        var startTime = liveEdgeTime - Math.min((playbackController.getLiveDelay(currentRepresentationInfo.fragmentDuration)), manifestInfo.DVRWindowSize / 2);
+        var request;
+        var metrics = metricsModel.getMetricsFor("stream");
+        var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
+        var currentLiveStart = playbackController.getLiveStartTime();
+        var actualStartTime;
+
         // get a request for a start time
         request = adapter.getFragmentRequestForTime(streamProcessor, currentRepresentationInfo, startTime, {ignoreIsFinished: true});
         actualStartTime = request.startTime;

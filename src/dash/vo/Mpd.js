@@ -28,21 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let Mpd = function () {
-    "use strict";
-    this.manifest = null;
-    this.suggestedPresentationDelay = 0;
-    this.availabilityStartTime = null;
-    this.availabilityEndTime = Number.POSITIVE_INFINITY;
-    this.timeShiftBufferDepth = Number.POSITIVE_INFINITY;
-    this.maxSegmentDuration = Number.POSITIVE_INFINITY;
-    this.checkTime = NaN;
-    this.clientServerTimeShift = 0;
-    this.isClientServerTimeSyncCompleted = false;
-};
 
-Mpd.prototype = {
-    constructor: Mpd
-};
+class Mpd {
+    constructor (){
+        this.manifest = null;
+        this.suggestedPresentationDelay = 0;
+        this.availabilityStartTime = null;
+        this.availabilityEndTime = Number.POSITIVE_INFINITY;
+        this.timeShiftBufferDepth = Number.POSITIVE_INFINITY;
+        this.maxSegmentDuration = Number.POSITIVE_INFINITY;
+        this.checkTime = NaN;
+        this.clientServerTimeShift = 0;
+        this.isClientServerTimeSyncCompleted = false;
+    }
+}
 
 export default Mpd;

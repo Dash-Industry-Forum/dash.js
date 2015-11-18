@@ -59,8 +59,8 @@ function RulesController() {
 
     return instance;
 
-    let rules,
-        ruleMandatoryProperties;
+    let rules;
+    let ruleMandatoryProperties;
 
     function initialize() {
         rules = {};
@@ -96,49 +96,48 @@ function RulesController() {
     }
 
     function applyRules(rulesArr, streamProcessor, callback, current, overrideFunc) {
-        var rulesCount = rulesArr.length,
-            ln = rulesCount,
-            values = {},
-            rulesContext = getRulesContext(streamProcessor, current),
-            rule,
-            i,
+        var rulesCount = rulesArr.length;
+        var ln = rulesCount;
+        var values = {};
+        var rulesContext = getRulesContext(streamProcessor, current);
+        var rule;
+        var i;
 
-            callbackFunc = function(result) {
-                var value,
-                    confidence;
+        var callbackFunc = function(result) {
+            var value;
+            var confidence;
 
-                if (result.value !== SwitchRequest.NO_CHANGE) {
-                    values[result.priority] = overrideFunc(values[result.priority], result.value);
-                }
+            if (result.value !== SwitchRequest.NO_CHANGE) {
+                values[result.priority] = overrideFunc(values[result.priority], result.value);
+            }
 
-                if (--rulesCount) return;
+            if (--rulesCount) return;
 
-                if (values[SwitchRequest.WEAK] !== SwitchRequest.NO_CHANGE) {
-                    confidence = SwitchRequest.WEAK;
-                    value = values[SwitchRequest.WEAK];
+            if (values[SwitchRequest.WEAK] !== SwitchRequest.NO_CHANGE) {
+                confidence = SwitchRequest.WEAK;
+                value = values[SwitchRequest.WEAK];
 
-                }
+            }
 
-                if (values[SwitchRequest.DEFAULT] !== SwitchRequest.NO_CHANGE) {
-                    confidence = SwitchRequest.DEFAULT;
-                    value = values[SwitchRequest.DEFAULT];
-                }
+            if (values[SwitchRequest.DEFAULT] !== SwitchRequest.NO_CHANGE) {
+                confidence = SwitchRequest.DEFAULT;
+                value = values[SwitchRequest.DEFAULT];
+            }
 
-                if (values[SwitchRequest.STRONG] !== SwitchRequest.NO_CHANGE) {
-                    confidence = SwitchRequest.STRONG;
-                    value = values[SwitchRequest.STRONG];
-                }
+            if (values[SwitchRequest.STRONG] !== SwitchRequest.NO_CHANGE) {
+                confidence = SwitchRequest.STRONG;
+                value = values[SwitchRequest.STRONG];
+            }
 
-                if (confidence != SwitchRequest.STRONG &&
-                    confidence != SwitchRequest.WEAK) {
-                    confidence = SwitchRequest.DEFAULT;
-                }
+            if (confidence != SwitchRequest.STRONG &&
+                confidence != SwitchRequest.WEAK) {
+                confidence = SwitchRequest.DEFAULT;
+            }
 
 
+            callback({ value: (value !== undefined) ? value : current, confidence: confidence });
 
-                callback({value: (value !== undefined) ? value : current, confidence: confidence});
-
-            };
+        };
 
         values[SwitchRequest.STRONG] = SwitchRequest.NO_CHANGE;
         values[SwitchRequest.WEAK] = SwitchRequest.NO_CHANGE;
@@ -154,21 +153,21 @@ function RulesController() {
 
             rule.execute(rulesContext, callbackFunc);
         }
-    }w
+    }
 
     function reset() {
-        var abrRules = rules[ABR_RULE],
-            schedulingRules = rules[SCHEDULING_RULE],
-            synchronizationRules = rules[SYNC_RULE],
-            allRules = (abrRules.getRules(ABRRulesCollection.QUALITY_SWITCH_RULES) || []).
-                concat(abrRules.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES) || []).
-                concat(schedulingRules.getRules(ScheduleRulesCollection.NEXT_FRAGMENT_RULES) || []).
-                concat(schedulingRules.getRules(ScheduleRulesCollection.FRAGMENTS_TO_SCHEDULE_RULES) || []).
-                concat(synchronizationRules.getRules(SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES) || []).
-                concat(synchronizationRules.getRules(SynchronizationRulesCollection.BEST_GUESS_RULES) || []),
-            ln = allRules.length,
-            rule,
-            i;
+        var abrRules = rules[ABR_RULE];
+        var schedulingRules = rules[SCHEDULING_RULE];
+        var synchronizationRules = rules[SYNC_RULE];
+        var allRules = (abrRules.getRules(ABRRulesCollection.QUALITY_SWITCH_RULES) || []).
+            concat(abrRules.getRules(ABRRulesCollection.ABANDON_FRAGMENT_RULES) || []).
+            concat(schedulingRules.getRules(ScheduleRulesCollection.NEXT_FRAGMENT_RULES) || []).
+            concat(schedulingRules.getRules(ScheduleRulesCollection.FRAGMENTS_TO_SCHEDULE_RULES) || []).
+            concat(synchronizationRules.getRules(SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES) || []).
+            concat(synchronizationRules.getRules(SynchronizationRulesCollection.BEST_GUESS_RULES) || []);
+        var ln = allRules.length;
+        var rule;
+        var i;
 
         for (i = 0; i < ln; i += 1) {
             rule = allRules[i];
@@ -186,8 +185,8 @@ function RulesController() {
     }
 
     function isRule(obj) {
-        var ln = ruleMandatoryProperties.length,
-            i = 0;
+        var ln = ruleMandatoryProperties.length;
+        var i = 0;
 
         for (i; i < ln; i += 1) {
             if (!obj.hasOwnProperty(ruleMandatoryProperties[i])) return false;
@@ -221,12 +220,12 @@ function RulesController() {
     }
 
     function updateRules(currentRulesCollection, newRulesCollection, override) {
-        var rule,
-            ruleSubType,
-            subTypeRuleSet,
-            ruleArr,
-            ln,
-            i;
+        var rule;
+        var ruleSubType;
+        var subTypeRuleSet;
+        var ruleArr;
+        var ln;
+        var i;
 
         for (ruleSubType in newRulesCollection) {
             ruleArr = newRulesCollection[ruleSubType];

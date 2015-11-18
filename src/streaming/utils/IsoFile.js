@@ -36,16 +36,16 @@ export default FactoryMaker.getClassFactory(IsoFile);
 
 function IsoFile() {
     "use strict";
-    let parsedIsoFile,
-        commonProps,
-        sidxProps,
-        sidxRefProps,
-        emsgProps,
-        mdhdProps,
-        tfhdProps,
-        tfdtProps,
-        trunProps,
-        trunSampleProps;
+    let parsedIsoFile;
+    let commonProps;
+    let sidxProps;
+    let sidxRefProps;
+    let emsgProps;
+    let mdhdProps;
+    let tfhdProps;
+    let tfdtProps;
+    let trunProps;
+    let trunSampleProps;
 
     let instance = {
             getBox: getBox,
@@ -76,9 +76,9 @@ function IsoFile() {
     * @memberof IsoFile#
     */
     function getBoxes(type) {
-        var boxData = parsedIsoFile.fetchAll(type),
-            boxes = [],
-            box;
+        var boxData = parsedIsoFile.fetchAll(type);
+        var boxes = [];
+        var box;
 
         for (var i = 0, ln = boxData.length; i < ln; i += 1) {
             box = convertToDashIsoBox(boxData[i]);
@@ -106,8 +106,8 @@ function IsoFile() {
     function getLastBox() {
         if (!parsedIsoFile || !parsedIsoFile.boxes || !parsedIsoFile.boxes.length) return null;
 
-        var type = parsedIsoFile.boxes[parsedIsoFile.boxes.length-1].type,
-            boxes = getBoxes(type);
+        var type = parsedIsoFile.boxes[parsedIsoFile.boxes.length - 1].type;
+        var boxes = getBoxes(type);
 
         return boxes[boxes.length-1];
     }
@@ -193,9 +193,9 @@ function IsoFile() {
     function convertToDashIsoBox(boxData) {
         if (!boxData) return null;
 
-        var box = new IsoBox(),
-            i,
-            ln;
+        var box = new IsoBox();
+        var i;
+        var ln;
 
         copyProps(boxData, box, commonProps);
 

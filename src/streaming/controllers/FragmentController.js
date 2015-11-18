@@ -41,8 +41,8 @@ export default FactoryMaker.getClassFactory(FragmentController);
 
 function FragmentController(config) {
 
-    let system = config.system,
-        log = config.log;
+    let system = config.system;
+    let log = config.log;
 
     let instance = {
         process :process,
@@ -136,12 +136,12 @@ function FragmentController(config) {
     function onFragmentLoadingCompleted(e) {
         if (!findModel(e.sender.getContext())) return;
 
-        var request = e.request,
-            bytes = e.response,
-            isInit = isInitializationRequest(request),
-            chunk;
+        var request = e.request;
+        var bytes = e.response;
+        var isInit = isInitializationRequest(request);
+        var chunk;
 
-        var streamId = e.sender.getContext().getStreamProcessor().getStreamInfo().id
+        var streamId = e.sender.getContext().getStreamProcessor().getStreamInfo().id;
 
 
         if (!bytes) {

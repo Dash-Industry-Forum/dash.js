@@ -58,10 +58,10 @@ function VideoModel() {
 
     return instance;
 
-    let element,
-        TTMLRenderingDiv,
-        videoContainer,
-        stalledStreams;
+    let element;
+    let TTMLRenderingDiv;
+    let videoContainer;
+    let stalledStreams;
 
     function initialize() {
         stalledStreams = [];

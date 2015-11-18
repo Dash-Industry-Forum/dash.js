@@ -28,29 +28,27 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let Representation = function () {
-    "use strict";
-    this.id = null;
-    this.index = -1;
-    this.adaptation = null;
-    this.segmentInfoType = null;
-    this.initialization = null;
-    this.segmentDuration = NaN;
-    this.timescale = 1;
-    this.startNumber = 1;
-    this.indexRange = null;
-    this.range = null;
-    this.presentationTimeOffset = 0;
-    // Set the source buffer timeOffset to this
-    this.MSETimeOffset = NaN;
-    this.segmentAvailabilityRange = null;
-    this.availableSegmentsNumber = 0;
-    this.bandwidth = NaN;
-    this.maxPlayoutRate = NaN;
-};
 
-Representation.prototype = {
-    constructor: Representation
-};
+class Representation {
+    constructor(){
+        this.id = null;
+        this.index = -1;
+        this.adaptation = null;
+        this.segmentInfoType = null;
+        this.initialization = null;
+        this.segmentDuration = NaN;
+        this.timescale = 1;
+        this.startNumber = 1;
+        this.indexRange = null;
+        this.range = null;
+        this.presentationTimeOffset = 0;
+        // Set the source buffer timeOffset to this
+        this.MSETimeOffset = NaN;
+        this.segmentAvailabilityRange = null;
+        this.availableSegmentsNumber = 0;
+        this.bandwidth = NaN;
+        this.maxPlayoutRate = NaN;
+    }
+}
 
 export default Representation;

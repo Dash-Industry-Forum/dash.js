@@ -50,8 +50,8 @@ export default factory;
 
 function FragmentModel(config) {
 
-    let log = config.log,
-        metricsModel = config.metricsModel
+    let log = config.log;
+    let metricsModel = config.metricsModel;
 
     let instance = {
         setLoader:setLoader,
@@ -68,11 +68,11 @@ function FragmentModel(config) {
     setup();
     return instance;
 
-    let context,
-        executedRequests,
-        loadingRequests,
-        delayLoadingTimeout,
-        fragmentLoader;
+    let context;
+    let executedRequests;
+    let loadingRequests;
+    let delayLoadingTimeout;
+    let fragmentLoader;
 
     function setup(){
         context = null;
@@ -98,35 +98,35 @@ function FragmentModel(config) {
 
     function isFragmentLoaded(request) {
         var isEqualComplete = function(req1, req2) {
-                return ((req1.action === "complete") && (req1.action === req2.action));
-            },
+            return ((req1.action === "complete") && (req1.action === req2.action));
+        };
 
-            isEqualMedia = function(req1, req2) {
-                return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
-            },
+        var isEqualMedia = function(req1, req2) {
+            return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
+        };
 
-            isEqualInit = function(req1, req2) {
-                return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
-            },
+        var isEqualInit = function(req1, req2) {
+            return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
+        };
 
-            check = function(arr) {
-                var req,
-                    isLoaded = false,
-                    ln = arr.length,
-                    i;
+        var check = function(arr) {
+            var req;
+            var isLoaded = false;
+            var ln = arr.length;
+            var i;
 
-                for (i = 0; i < ln; i += 1) {
-                    req = arr[i];
+            for (i = 0; i < ln; i += 1) {
+                req = arr[i];
 
-                    if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
-                        //log(request.mediaType + "Fragment already loaded for time: " + request.startTime);
-                        isLoaded = true;
-                        break;
-                    }
+                if (isEqualMedia(request, req) || isEqualInit(request, req) || isEqualComplete(request, req)) {
+                    //log(request.mediaType + "Fragment already loaded for time: " + request.startTime);
+                    isLoaded = true;
+                    break;
                 }
+            }
 
-                return isLoaded;
-            };
+            return isLoaded;
+        };
 
         return (check(loadingRequests) || check(executedRequests));
     }
@@ -145,10 +145,10 @@ function FragmentModel(config) {
      * @memberof FragmentModel#
      */
     function getRequests(filter) {
-        var requests = [],
-            filteredRequests = [],
-            states,
-            ln = 1;
+        var requests = [];
+        var filteredRequests = [];
+        var states;
+        var ln = 1;
 
         if (!filter || !filter.state) return requests;
 
@@ -168,10 +168,10 @@ function FragmentModel(config) {
     }
 
     function removeExecutedRequestsBeforeTime(time) {
-        var lastIdx = executedRequests.length - 1,
-            start = NaN,
-            req = null,
-            i;
+        var lastIdx = executedRequests.length - 1;
+        var start = NaN;
+        var req = null;
+        var i;
 
         // loop through the executed requests and remove the ones for which startTime is less than the given time
         for (i = lastIdx; i >= 0; i -=1) {
@@ -252,11 +252,11 @@ function FragmentModel(config) {
     }
 
     function getRequestForTime(arr, time, threshold) {
-        var lastIdx = arr.length - 1,
-            start = NaN,
-            end = NaN,
-            req = null,
-            i;
+        var lastIdx = arr.length - 1;
+        var start = NaN;
+        var end = NaN;
+        var req = null;
+        var i;
 
         // loop through the executed requests and pick the one for which the playback interval matches the given time
         for (i = lastIdx; i >= 0; i -=1) {
@@ -311,14 +311,14 @@ function FragmentModel(config) {
     function addSchedulingInfoMetrics(request, state) {
         if (!request) return;
 
-        var mediaType = request.mediaType,
-            now = new Date(),
-            type = request.type,
-            startTime = request.startTime,
-            availabilityStartTime = request.availabilityStartTime,
-            duration = request.duration,
-            quality = request.quality,
-            range = request.range;
+        var mediaType = request.mediaType;
+        var now = new Date();
+        var type = request.type;
+        var startTime = request.startTime;
+        var availabilityStartTime = request.availabilityStartTime;
+        var duration = request.duration;
+        var quality = request.quality;
+        var range = request.range;
 
         metricsModel.addSchedulingInfo(mediaType, now, type, startTime, availabilityStartTime, duration, quality, range, state);
         metricsModel.addRequestsQueue(mediaType, loadingRequests, executedRequests);
@@ -327,9 +327,9 @@ function FragmentModel(config) {
     function onLoadingCompleted(e) {
         if (e.sender !== fragmentLoader) return;
 
-        var request = e.request,
-            response = e.response,
-            error = e.error;
+        var request = e.request;
+        var response = e.response;
+        var error = e.error;
 
         loadingRequests.splice(loadingRequests.indexOf(request), 1);
 
@@ -338,7 +338,7 @@ function FragmentModel(config) {
         }
 
         addSchedulingInfoMetrics(request, error ? FRAGMENT_MODEL_FAILED : FRAGMENT_MODEL_EXECUTED);
-        EventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {request: request, response: response, error:error, sender:this})
+        EventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, { request: request, response: response, error: error, sender: this });
     }
 
     function onPlaybackSeeking (){

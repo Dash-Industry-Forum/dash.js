@@ -37,8 +37,8 @@ export default FactoryMaker.getClassFactory(BufferOccupancyRule);
 
 function BufferOccupancyRule(config) {
 
-    let log = config ? config.log : null,
-        metricsModel = config ? config.metricsModel : null;
+    let log = config ? config.log : null;
+    let metricsModel = config ? config.metricsModel : null;
 
     let instance = {
         execute:execute,
@@ -50,20 +50,20 @@ function BufferOccupancyRule(config) {
     return instance;
 
     function execute (context, callback) {
-        var now = new Date().getTime()/1000,
-            mediaInfo = context.getMediaInfo(),
-            representationInfo = context.getTrackInfo(),
-            mediaType = mediaInfo.type,
-            waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2,
-            current = context.getCurrentValue(),
-            streamProcessor = context.getStreamProcessor(),
-            abrController = streamProcessor.getABRController(),
-            metrics = metricsModel.getReadOnlyMetricsFor(mediaType),
-            lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
-            lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
-            isBufferRich = false,
-            maxIndex = mediaInfo.representationCount - 1,
-            switchRequest = SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var now = new Date().getTime() / 1000;
+        var mediaInfo = context.getMediaInfo();
+        var representationInfo = context.getTrackInfo();
+        var mediaType = mediaInfo.type;
+        var waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2;
+        var current = context.getCurrentValue();
+        var streamProcessor = context.getStreamProcessor();
+        var abrController = streamProcessor.getABRController();
+        var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        var lastBufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null;
+        var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+        var isBufferRich = false;
+        var maxIndex = mediaInfo.representationCount - 1;
+        var switchRequest = SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             abrController.getAbandonmentStateFor(mediaType) === AbrController.ABANDON_LOAD) {

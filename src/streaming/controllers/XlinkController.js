@@ -56,10 +56,10 @@ function XlinkController(config) {
     setup();
     return instance;
 
-    let matchers,
-        iron,
-        manifest,
-        converter;
+    let matchers;
+    let iron;
+    let manifest;
+    let converter;
 
     function setup() {
         EventBus.on(Events.XLINK_ELEMENT_LOADED, onXlinkElementLoaded, instance);
@@ -91,10 +91,10 @@ function XlinkController(config) {
     }
 
     function resolve(elements, type, resolveType) {
-        var element,
-            url,
-            resolveObject = {},
-            i;
+        var element;
+        var url;
+        var resolveObject = {};
+        var i;
 
         resolveObject.elements = elements;
         resolveObject.type = type;
@@ -115,12 +115,12 @@ function XlinkController(config) {
     }
 
     function onXlinkElementLoaded(event) {
-        var element,
-            resolveObject,
-            index,
-            openingTag = '<response>',
-            closingTag = '</response>',
-            mergedContent = '';
+        var element;
+        var resolveObject;
+        var index;
+        var openingTag = '<response>';
+        var closingTag = '</response>';
+        var mergedContent = '';
 
         element = event.element;
         resolveObject = event.resolveObject;
@@ -138,9 +138,9 @@ function XlinkController(config) {
 
     // We got to wait till all elements of the current queue are resolved before merging back
     function onXlinkAllElementsLoaded (resolveObject) {
-        var elements = [],
-            i,
-            obj;
+        var elements = [];
+        var i;
+        var obj;
 
         mergeElementsBack(resolveObject);
         if (resolveObject.resolveType === RESOLVE_TYPE_ONACTUATE) {
@@ -171,10 +171,11 @@ function XlinkController(config) {
 
     // Returns the elements with the specific resolve Type
     function getElementsToResolve(elements, parentElement, type, resolveType) {
-        var toResolve = [],
-            element,
-            i,
-            xlinkObject;
+        var toResolve = [];
+        var element;
+        var i;
+        var xlinkObject;
+
         // first remove all the resolve-to-zero elements
         for (i = elements.length - 1; i >= 0; i -= 1) {
             element = elements[i];
@@ -182,6 +183,7 @@ function XlinkController(config) {
                 elements.splice(i, 1);
             }
         }
+
         // now get the elements with the right resolve type
         for (i = 0; i < elements.length; i++) {
             element = elements[i];
@@ -190,17 +192,19 @@ function XlinkController(config) {
                 toResolve.push(xlinkObject);
             }
         }
+
         return toResolve;
     }
 
     function mergeElementsBack(resolveObject) {
-        var element,
-            type,
-            resolvedElements = [],
-            obj,
-            i,
-            j,
-            k;
+        var element;
+        var type;
+        var resolvedElements = [];
+        var obj;
+        var i;
+        var j;
+        var k;
+
         // Start merging back from the end because of index shifting. Note that the elements with the same parent have to be ordered by index ascending
         for (i = resolveObject.elements.length - 1; i >= 0; i --) {
             element = resolveObject.elements[i];
@@ -212,7 +216,7 @@ function XlinkController(config) {
                 delete element.originalContent['xlink:href'];
                 resolvedElements.push(element.originalContent);
             }
-            // Element was successfully resolved
+                // Element was successfully resolved
             else if (element.resolvedContent) {
                 for (j = 0; j < element.resolvedContent[type].length; j++) {
                     //TODO Contains another Xlink attribute with xlink:actuate set to onload. Remove all xLink attributes
@@ -222,11 +226,14 @@ function XlinkController(config) {
             }
             // Replace the old elements in the parent with the resolved ones
             element.parentElement[type].splice(element.index, 1);
+
             for (k = 0; k < resolvedElements.length; k++) {
                 element.parentElement[type].splice(element.index + k, 0, resolvedElements[k]);
             }
+
             resolvedElements = [];
         }
+
         if (resolveObject.elements.length > 0) {
             iron.run(manifest);
         }
@@ -247,8 +254,9 @@ function XlinkController(config) {
 
     // Check if all pending requests are finished
     function isResolvingFinished(elementsToResolve) {
-        var i,
-            obj;
+        var i;
+        var obj;
+
         for (i = 0; i < elementsToResolve.elements.length; i++) {
             obj = elementsToResolve.elements[i];
             if (obj.resolved === false) {

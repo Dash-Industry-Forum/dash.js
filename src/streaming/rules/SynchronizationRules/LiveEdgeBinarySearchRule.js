@@ -39,8 +39,8 @@ export default FactoryMaker.getClassFactory(LiveEdgeBinarySearchRule);
 
 function LiveEdgeBinarySearchRule(config) {
 
-    let adapter = config.adapter,
-        timelineConverter = config.timelineConverter;
+    let adapter = config.adapter;
+    let timelineConverter = config.timelineConverter;
 
     let instance = {
         execute: execute,
@@ -51,16 +51,16 @@ function LiveEdgeBinarySearchRule(config) {
 
     return instance;
 
-    let liveEdgeInitialSearchPosition,
-        liveEdgeSearchRange,
-        liveEdgeSearchStep,
-        representationInfo,
-        useBinarySearch,
-        fragmentDuration,
-        p,
-        callback,
-        fragmentLoader,
-        streamProcessor;
+    let liveEdgeInitialSearchPosition;
+    let liveEdgeSearchRange;
+    let liveEdgeSearchStep;
+    let representationInfo;
+    let useBinarySearch;
+    let fragmentDuration;
+    let p;
+    let callback;
+    let fragmentLoader;
+    let streamProcessor;
 
     function setup() {
         liveEdgeInitialSearchPosition = NaN;
@@ -73,8 +73,8 @@ function LiveEdgeBinarySearchRule(config) {
     }
 
     function execute(context, callbackFunc) {
-        var request,
-            DVRWindow; // all fragments are supposed to be available in this interval
+        var request;
+        var DVRWindow; // all fragments are supposed to be available in this interval
 
         callback = callbackFunc;
         streamProcessor = context.getStreamProcessor();
@@ -143,9 +143,9 @@ function LiveEdgeBinarySearchRule(config) {
     }
 
     function onSearchForFragmentFailed(request, lastSearchTime) {
-        var searchTime,
-            req,
-            searchInterval;
+        var searchTime;
+        var req;
+        var searchInterval;
 
         if (useBinarySearch) {
             binarySearch(false, lastSearchTime);
@@ -168,9 +168,9 @@ function LiveEdgeBinarySearchRule(config) {
     }
 
     function onSearchForFragmentSucceeded(request, lastSearchTime) {
-        var startTime = request.startTime,
-            req,
-            searchTime;
+        var startTime = request.startTime;
+        var req;
+        var searchTime;
 
         if (!useBinarySearch) {
             // if the fragment duration is unknown we cannot use binary search because we will not be able to
@@ -201,9 +201,9 @@ function LiveEdgeBinarySearchRule(config) {
     }
 
     function binarySearch(lastSearchSucceeded, lastSearchTime) {
-        var isSearchCompleted,
-            req,
-            searchTime;
+        var isSearchCompleted;
+        var req;
+        var searchTime;
 
         if (lastSearchSucceeded) {
             liveEdgeSearchRange.start = lastSearchTime;

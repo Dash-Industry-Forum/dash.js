@@ -57,8 +57,8 @@ let CommonEncryption = {
      * @return {ArrayBuffer} data portion of the PSSH
      */
     getPSSHData: function(pssh) {
-        var offset = 8, // Box size and type fields
-            view = new DataView(pssh);
+        var offset = 8; // Box size and type fields
+        var view = new DataView(pssh);
 
         // Read version
         var version = view.getUint8(offset);
@@ -119,16 +119,20 @@ let CommonEncryption = {
         if (data === null)
             return [];
 
-        var dv = new DataView(data),
-                done = false;
+        var dv = new DataView(data);
+        var done = false;
         var pssh = {};
 
         // TODO: Need to check every data read for end of buffer
         var byteCursor = 0;
         while (!done) {
 
-            var size, nextBox, version,
-                    systemID, psshDataSize, boxStart = byteCursor;
+            var size;
+            var nextBox;
+            var version;
+            var systemID;
+            var psshDataSize;
+            var boxStart = byteCursor;
 
             if (byteCursor >= dv.buffer.byteLength)
                 break;
@@ -157,7 +161,8 @@ let CommonEncryption = {
 
             // 16-byte UUID/SystemID
             systemID = "";
-            var i, val;
+            var i;
+            var val;
             for (i = 0; i < 4; i++) {
                 val = dv.getUint8(byteCursor+i).toString(16);
                 systemID += (val.length === 1) ? "0" + val : val;

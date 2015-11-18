@@ -28,20 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let Period = function () {
-    "use strict";
-    this.id = null;
-    this.index = -1;
-    this.duration = NaN;
-    this.start = NaN;
-    this.mpd = null;
-};
 
-Period.prototype = {
-    constructor: Period
-};
+class Period {
+    constructor(){
+        this.id = null;
+        this.index = -1;
+        this.duration = NaN;
+        this.start = NaN;
+        this.mpd = null;
+    }
+}
 
 Period.DEFAULT_ID = "defaultId";
 
 export default Period;
-

@@ -52,8 +52,8 @@ export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);
 
 function ProtectionModel_21Jan2015(config) {
 
-    let log = config.log,
-        system = config.system;
+    let log = config.log;
+    let system = config.system;
 
     let instance = {
         reset:reset,
@@ -74,12 +74,12 @@ function ProtectionModel_21Jan2015(config) {
 
     return instance;
 
-    var keySystem,
-        videoElement,
-        mediaKeys,
-        sessions,
-        eventHandler,
-        protectionExt;
+    var keySystem;
+    var videoElement;
+    var mediaKeys;
+    var sessions;
+    var eventHandler;
+    var protectionExt;
 
     function setup() {
         keySystem = null;
@@ -91,8 +91,8 @@ function ProtectionModel_21Jan2015(config) {
     }
 
     function reset() {
-        var numSessions = sessions.length,
-            session;
+        var numSessions = sessions.length;
+        var session;
 
         if (numSessions !== 0) {
             // Called when we are done closing a session.  Success or fail
@@ -230,7 +230,7 @@ function ProtectionModel_21Jan2015(config) {
             throw new Error("Can not load sessions until you have selected a key system");
         }
 
-        var session = mediaKeys.createSession()
+        var session = mediaKeys.createSession();
         // Load persisted session data into our newly created session object
         session.load(sessionID).then(function (success) {
             if (success) {

@@ -63,38 +63,38 @@ function StreamController() {
     return instance;
 
 
-    let log,
-        system,
-        capabilities,
-        manifestUpdater,
-        manifestLoader,
-        manifestModel,
-        manifestExt,
-        adapter,
-        metricsModel,
-        metricsExt,
-        videoExt,
-        liveEdgeFinder,
-        mediaSourceExt,
-        timeSyncController,
-        virtualBuffer,
-        errHandler,
-        timelineConverter,
-        streams,
-        activeStream,
-        protectionController,
-        //ownProtectionController,
-        protectionData,
-        autoPlay,
-        canPlay,
-        isStreamSwitchingInProgress,
-        isUpdating,
-        hasMediaError,
-        mediaSource,
-        UTCTimingSources,
-        useManifestDateHeaderTimeSource,
-        videoModel,
-        playbackController;
+    let log;
+    let system;
+    let capabilities;
+    let manifestUpdater;
+    let manifestLoader;
+    let manifestModel;
+    let manifestExt;
+    let adapter;
+    let metricsModel;
+    let metricsExt;
+    let videoExt;
+    let liveEdgeFinder;
+    let mediaSourceExt;
+    let timeSyncController;
+    let virtualBuffer;
+    let errHandler;
+    let timelineConverter;
+    let streams;
+    let activeStream;
+    let protectionController;
+    //let ownProtectionController;
+    let protectionData;
+    let autoPlay;
+    let canPlay;
+    let isStreamSwitchingInProgress;
+    let isUpdating;
+    let hasMediaError;
+    let mediaSource;
+    let UTCTimingSources;
+    let useManifestDateHeaderTimeSource;
+    let videoModel;
+    let playbackController;
 
     function setup() {
         protectionController = null;
@@ -149,7 +149,7 @@ function StreamController() {
      * and implements corresponding logic to switch between them.
      */
     function fireSwitchEvent(eventType, fromStream, toStream) {
-        EventBus.trigger(eventType, {fromStreamInfo: fromStream ? fromStream.getStreamInfo() : null, toStreamInfo: toStream.getStreamInfo()})
+        EventBus.trigger(eventType, { fromStreamInfo: fromStream ? fromStream.getStreamInfo() : null, toStreamInfo: toStream.getStreamInfo() });
     }
 
     function startAutoPlay() {
@@ -170,8 +170,8 @@ function StreamController() {
     }
 
     function onPlaybackError(e) {
-        var code = e.error ? e.error.code : 0,
-            msg = "";
+        var code = e.error ? e.error.code : 0;
+        var msg = "";
 
         if (code === -1) {
             // not an error!
@@ -245,8 +245,8 @@ function StreamController() {
      * Handles the current stream buffering end moment to start the next stream buffering
      */
     function onStreamBufferingCompleted(e) {
-        var nextStream = getNextStream(),
-            isLast = e.data.streamInfo.isLast;
+        var nextStream = getNextStream();
+        var isLast = e.data.streamInfo.isLast;
 
         // buffering has been complted, now we can signal end of stream
         if (mediaSource && isLast) {
@@ -259,8 +259,8 @@ function StreamController() {
     }
 
     function getNextStream() {
-        var start = activeStream.getStreamInfo().start,
-            duration = activeStream.getStreamInfo().duration;
+        var start = activeStream.getStreamInfo().start;
+        var duration = activeStream.getStreamInfo().duration;
 
         return streams.filter(function(stream){
             return (stream.getStreamInfo().start === (start + duration));
@@ -268,9 +268,9 @@ function StreamController() {
     }
 
     function getStreamForTime(time) {
-        var duration = 0,
-            stream = null,
-            ln = streams.length;
+        var duration = 0;
+        var stream = null;
+        var ln = streams.length;
 
         if (ln > 0) {
             duration += streams[0].getStartTime();
@@ -296,15 +296,15 @@ function StreamController() {
         isStreamSwitchingInProgress = true;
 
         var onMediaSourceReady = function() {
-                if (seekTo !== undefined) {
-                    playbackController.seek(seekTo);
-                }
+            if (seekTo !== undefined) {
+                playbackController.seek(seekTo);
+            }
 
-                playbackController.start();
-                activeStream.startEventController();
-                isStreamSwitchingInProgress = false;
-                fireSwitchEvent(Events.PERIOD_SWITCH_COMPLETED, from, to);
-            };
+            playbackController.start();
+            activeStream.startEventController();
+            isStreamSwitchingInProgress = false;
+            fireSwitchEvent(Events.PERIOD_SWITCH_COMPLETED, from, to);
+        };
 
         // TODO switchStream could be called from a handler of seeking event. from.deactivate() contains logic for
         // removing event listeners including that seeking event handler. Since dijon calls event listeners
@@ -319,25 +319,25 @@ function StreamController() {
     }
 
     function setupMediaSource(callback) {
-        var sourceUrl,
+        var sourceUrl;
 
-            onMediaSourceOpen = function (e) {
-                log("MediaSource is open!");
-                log(e);
-                window.URL.revokeObjectURL(sourceUrl);
+        var onMediaSourceOpen = function(e) {
+            log("MediaSource is open!");
+            log(e);
+            window.URL.revokeObjectURL(sourceUrl);
 
-                mediaSource.removeEventListener("sourceopen", onMediaSourceOpen);
-                mediaSource.removeEventListener("webkitsourceopen", onMediaSourceOpen);
+            mediaSource.removeEventListener("sourceopen", onMediaSourceOpen);
+            mediaSource.removeEventListener("webkitsourceopen", onMediaSourceOpen);
 
-                //log("MediaSource set up.");
-                setMediaDuration();
+            //log("MediaSource set up.");
+            setMediaDuration();
 
-                activeStream.activate(mediaSource);
+            activeStream.activate(mediaSource);
 
-                if (callback) {
-                    callback();
-                }
-            };
+            if (callback) {
+                callback();
+            }
+        };
 
         if (!mediaSource) {
             mediaSource = mediaSourceExt.createMediaSource();
@@ -354,8 +354,8 @@ function StreamController() {
     }
 
     function setMediaDuration() {
-        var manifestDuration,
-            mediaDuration;
+        var manifestDuration;
+        var mediaDuration;
 
         manifestDuration = activeStream.getStreamInfo().manifestInfo.duration;
         mediaDuration = mediaSourceExt.setDuration(mediaSource, manifestDuration);
@@ -363,17 +363,17 @@ function StreamController() {
     }
 
     function composeStreams() {
-        var manifest = manifestModel.getValue(),
-            metrics = metricsModel.getMetricsFor("stream"),
-            manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics),
-            streamInfo,
-            pLen,
-            sLen,
-            pIdx,
-            sIdx,
-            streamsInfo,
-            remainingStreams = [],
-            stream;
+        var manifest = manifestModel.getValue();
+        var metrics = metricsModel.getMetricsFor("stream");
+        var manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(metrics);
+        var streamInfo;
+        var pLen;
+        var sLen;
+        var pIdx;
+        var sIdx;
+        var streamsInfo;
+        var remainingStreams = [];
+        var stream;
 
         if (!manifest) return;
 
@@ -424,14 +424,14 @@ function StreamController() {
                 if (!stream) {
 
                     stream = Stream.create({
-                        system :system,
+                        system: system,
                         manifestModel: manifestModel,
-                        manifestUpdater:manifestUpdater,
-                        adapter:adapter,
-                        capabilities:capabilities,
-                        log :log,
-                        errHandler :errHandler
-                    })
+                        manifestUpdater: manifestUpdater,
+                        adapter: adapter,
+                        capabilities: capabilities,
+                        log: log,
+                        errHandler: errHandler
+                    });
                     stream.initialize(streamInfo, protectionController);
 
                     EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
@@ -470,8 +470,8 @@ function StreamController() {
     function checkIfUpdateCompleted() {
         if (isUpdating) return;
 
-        var ln = streams.length,
-            i = 0;
+        var ln = streams.length;
+        var i = 0;
 
         startAutoPlay();
 
@@ -494,14 +494,14 @@ function StreamController() {
         if (!e.error) {
             //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
             //is SegmentTimeline to avoid using time source
-            var manifest = e.manifest,
-                streamInfo = adapter.getStreamsInfo(manifest)[0],
-                mediaInfo = (
-                    adapter.getMediaInfoForType(manifest, streamInfo, "video") ||
+            var manifest = e.manifest;
+            var streamInfo = adapter.getStreamsInfo(manifest)[0];
+            var mediaInfo = (
+                adapter.getMediaInfoForType(manifest, streamInfo, "video") ||
                     adapter.getMediaInfoForType(manifest, streamInfo, "audio")
-                ),
-                adaptation,
-                useCalculatedLiveEdgeTime;
+            );
+            var adaptation;
+            var useCalculatedLiveEdgeTime;
 
             if (mediaInfo) {
                 adaptation = adapter.getDataForMedia(mediaInfo);
@@ -513,22 +513,22 @@ function StreamController() {
                 }
             }
 
-            var manifestUTCTimingSources = manifestExt.getUTCTimingSources(e.manifest),
-                allUTCTimingSources = (!manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime ) ?  manifestUTCTimingSources :  manifestUTCTimingSources.concat(UTCTimingSources),
-                isHTTPS = URIQueryAndFragmentModel.getInstance().isManifestHTTPS();
-                //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
-                allUTCTimingSources.forEach(function(item){
-                    if (item.value.replace(/.*?:\/\//g, "") === MediaPlayer.UTCTimingSources.default.value.replace(/.*?:\/\//g, "")){
-                        item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? "https://" : "http://");
-                        log("Matching default timing source protocol to manifest protocol: " , item.value);
-                    }
-                });
+            var manifestUTCTimingSources = manifestExt.getUTCTimingSources(e.manifest);
+            var allUTCTimingSources = (!manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(UTCTimingSources);
+            var isHTTPS = URIQueryAndFragmentModel.getInstance().isManifestHTTPS();
+            //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
+            allUTCTimingSources.forEach(function(item){
+                if (item.value.replace(/.*?:\/\//g, "") === MediaPlayer.UTCTimingSources.default.value.replace(/.*?:\/\//g, "")){
+                    item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? "https://" : "http://");
+                    log("Matching default timing source protocol to manifest protocol: " , item.value);
+                }
+            });
 
             timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource, {
-                    log: log,
-                    metricsModel: metricsModel,
-                    metricsExt: metricsExt
-                });
+                log: log,
+                metricsModel: metricsModel,
+                metricsExt: metricsExt
+            });
         } else {
             reset();
         }
@@ -671,21 +671,21 @@ function StreamController() {
         if (!protectionController) {
             EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
         }
-        /*else if (ownProtectionController) {
-            var onTeardownComplete = function () {
-                EventBus.off(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
-                // Complete teardown process
-                ownProtectionController = false;
-                protectionController = null;
-                protectionData = null;
-                if (manifestUrl) {
-                    EventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestUrl});
-                }
-                EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
-            };
-            EventBus.on(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
-            protectionController.reset();
-        }*/
+            /*else if (ownProtectionController) {
+                var onTeardownComplete = function () {
+                    EventBus.off(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
+                    // Complete teardown process
+                    ownProtectionController = false;
+                    protectionController = null;
+                    protectionData = null;
+                    if (manifestUrl) {
+                        EventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestUrl});
+                    }
+                    EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
+                };
+                EventBus.on(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
+                protectionController.reset();
+            }*/
         else {
             protectionController.setMediaElement(null);
             protectionController = null;

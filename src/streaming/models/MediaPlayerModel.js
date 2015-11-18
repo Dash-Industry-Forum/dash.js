@@ -14,10 +14,9 @@ function MediaPlayerModel() {
 
     return instance;
 
-    let usePresentationDelay,
-        liveDelayFragmentCount,
-        scheduleWhilePaused
-
+    let usePresentationDelay;
+    let liveDelayFragmentCount;
+    let scheduleWhilePaused;
 
     function setup() {
         scheduleWhilePaused = false;
