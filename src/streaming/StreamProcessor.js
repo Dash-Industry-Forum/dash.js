@@ -148,7 +148,7 @@ MediaPlayer.dependencies.StreamProcessor = function () {
             representationController.subscribe(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_COMPLETED, stream);
 
             indexHandler.initialize(this);
-            indexHandler.setCurrentTime(playbackController.getStreamStartTime(this.getStreamInfo()));
+            indexHandler.setCurrentTime(playbackController.getInitialTime(this.getStreamInfo()));
             bufferController.initialize(type, mediaSource, self);
             scheduleController.initialize(type, this);
             abrController.initialize(type, this);
