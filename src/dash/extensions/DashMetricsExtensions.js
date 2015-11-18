@@ -278,7 +278,6 @@ Dash.dependencies.DashMetricsExtensions = function () {
                 if (segmentCount>5) {
                     // this implies all were thought of as in the cache,
                     // just return the considered from cache time
-                    this.log("latency likely all cached:"+PROBABLY_IN_CACHE_MS);
                     return PROBABLY_IN_CACHE_MS;
                 }
                 return -1;
@@ -332,7 +331,6 @@ Dash.dependencies.DashMetricsExtensions = function () {
                     // this implies all were thought of as in the cache,
                     // just return the last throughput, it's likely to be
                     // higher than any of our manifests
-                    this.log("throughput likely all cached is:"+throughput);
                     return throughput;
                 }
                 return -1;
