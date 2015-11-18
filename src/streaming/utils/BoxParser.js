@@ -54,8 +54,8 @@ function BoxParser(/*config*/) {
             data.fileStart = 0;
         }
 
-        var parsedFile = ISOBoxer.parseBuffer(data),
-            dashIsoFile = IsoFile.create();
+        var parsedFile = ISOBoxer.parseBuffer(data);
+        var dashIsoFile = IsoFile.create();
 
         dashIsoFile.setData(parsedFile);
 

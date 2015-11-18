@@ -31,35 +31,35 @@
 let EventBus = (function () {
     "use strict";
 
-    var registrations,
-        handlers = {},
+    var registrations;
+    var handlers = {};
 
-        getListeners = function (type, useCapture) {
-            var captype = (useCapture? '1' : '0') + type;
+    var getListeners = function(type, useCapture) {
+        var captype = (useCapture ? '1' : '0') + type;
 
-            if (!(captype in registrations)) {
-                registrations[captype]= [];
-            }
+        if (!(captype in registrations)) {
+            registrations[captype] = [];
+        }
 
-            return registrations[captype];
-        },
+        return registrations[captype];
+    };
 
-        getHandlerIdx = function(type, listener, scope) {
-            var handlersForType = handlers[type],
-                result = -1;
+    var getHandlerIdx = function(type, listener, scope) {
+        var handlersForType = handlers[type];
+        var result = -1;
 
-            if (!handlersForType || handlersForType.length === 0) return result;
+        if (!handlersForType || handlersForType.length === 0) return result;
 
-            for (var i = 0; i < handlersForType.length; i += 1) {
-                if (handlersForType[i].callback === listener && (!scope || scope === handlersForType[i].scope)) return i;
-            }
+        for (var i = 0; i < handlersForType.length; i += 1) {
+            if (handlersForType[i].callback === listener && (!scope || scope === handlersForType[i].scope)) return i;
+        }
 
-            return result;
-        },
+        return result;
+    };
 
-        init = function () {
-            registrations = {};
-        };
+    var init = function () {
+        registrations = {};
+    };
 
     init();
 

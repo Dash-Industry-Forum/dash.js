@@ -47,9 +47,9 @@ function URIQueryAndFragmentModel() {
     return instance;
 
 
-    let URIFragmentDataVO,
-        URIQueryData,
-        isHTTPS;
+    let URIFragmentDataVO;
+    let URIQueryData;
+    let isHTTPS;
 
     function initialize() {
         URIFragmentDataVO = new URIFragmentData();
@@ -72,13 +72,13 @@ function URIQueryAndFragmentModel() {
     function parseURI(uri) {
         if (!uri) return null;
 
-        var URIFragmentData = [],
-            testQuery = new RegExp(/[?]/),
-            testFragment = new RegExp(/[#]/),
-            testHTTPS = new RegExp(/^(https:)?\/\//i),
-            isQuery = testQuery.test(uri),
-            isFragment = testFragment.test(uri),
-            mappedArr;
+        var URIFragmentData = [];
+        var testQuery = new RegExp(/[?]/);
+        var testFragment = new RegExp(/[#]/);
+        var testHTTPS = new RegExp(/^(https:)?\/\//i);
+        var isQuery = testQuery.test(uri);
+        var isFragment = testFragment.test(uri);
+        var mappedArr;
 
         isHTTPS = testHTTPS.test(uri);
 

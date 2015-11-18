@@ -54,23 +54,23 @@ function TextTrackExtensions() {
     return instance;
 
 
-    let Cue,
-        videoModel,
-        video,
-        textTrackQueue,
-        trackElementArr,
-        currentTrackIdx,
-        actualVideoLeft,
-        actualVideoTop,
-        actualVideoWidth,
-        actualVideoHeight,
-        captionContainer,
-        videoSizeCheckInterval,
-        isIE11orEdge,
-        isChrome,
-        fullscreenAttribute,
-        displayCCOnTop,
-        topZIndex;
+    let Cue;
+    let videoModel;
+    let video;
+    let textTrackQueue;
+    let trackElementArr;
+    let currentTrackIdx;
+    let actualVideoLeft;
+    let actualVideoTop;
+    let actualVideoWidth;
+    let actualVideoHeight;
+    let captionContainer;
+    let videoSizeCheckInterval;
+    let isIE11orEdge;
+    let isChrome;
+    let fullscreenAttribute;
+    let displayCCOnTop;
+    let topZIndex;
 
     function initialize () {
         Cue = window.VTTCue || window.TextTrackCue;
@@ -108,11 +108,11 @@ function TextTrackExtensions() {
         var lang = textTrackQueue[i].lang;
         var track = isIE11orEdge ? video.addTextTrack(kind, label, lang) : document.createElement('track');
 
-         if (!isIE11orEdge) {
-             track.kind = kind;
-             track.label = label;
-             track.srclang = lang;
-         }
+        if (!isIE11orEdge) {
+            track.kind = kind;
+            track.label = label;
+            track.srclang = lang;
+        }
 
         return track;
     }
@@ -190,7 +190,7 @@ function TextTrackExtensions() {
             y:videoPictureY,
             w:videoPictureWidth,
             h:videoPictureHeight }; /* Maximal picture size in videos aspect ratio */
-     }
+    }
 
 
     function checkVideoSize() {
@@ -232,9 +232,9 @@ function TextTrackExtensions() {
     function scaleCue(activeCue) {
         var videoWidth = actualVideoWidth;
         var videoHeight = actualVideoHeight;
-        var key,
-            replaceValue,
-            elements;
+        var key;
+        var replaceValue;
+        var elements;
 
         var cellUnit = [videoWidth / activeCue.cellResolution[0], videoHeight / activeCue.cellResolution[1]];
 
@@ -288,23 +288,23 @@ function TextTrackExtensions() {
 
 
     function addCaptions(timeOffset, captionData) {
-        var track = getCurrentTextTrack.call(this),
-            self = this;
+        var track = getCurrentTextTrack.call(this);
+        var self = this;
 
         if(!track) return;
 
         track.mode = "showing";//make sure tracks are showing to be able to add the cue...
 
         for(var item in captionData) {
-            var cue,
-                currentItem = captionData[item];
+            var cue;
+            var currentItem = captionData[item];
 
-            if (!videoSizeCheckInterval && currentItem.type=="html") {
+            if (!videoSizeCheckInterval && currentItem.type == "html") {
                 videoSizeCheckInterval = setInterval(checkVideoSize.bind(this), 500);
             }
 
             //image subtitle extracted from TTML
-            if(currentItem.type=="image"){
+            if(currentItem.type == "image"){
                 cue = new Cue(currentItem.start-timeOffset, currentItem.end-timeOffset, "");
                 cue.image=currentItem.data;
                 cue.id=currentItem.id;
@@ -312,7 +312,7 @@ function TextTrackExtensions() {
                 cue.type="image"; // active image overlay
                 cue.onenter =  function () {
                     var img = new Image();
-                    img.id = 'ttmlImage_'+this.id;
+                    img.id = 'ttmlImage_' + this.id;
                     img.src = this.image;
                     img.className = 'cue-image';
                     if (captionContainer) {
@@ -323,9 +323,9 @@ function TextTrackExtensions() {
                 };
 
                 cue.onexit =  function () {
-                    var container,
-                        i,
-                        imgs;
+                    var container;
+                    var i;
+                    var imgs;
                     if (captionContainer) {
                         container = captionContainer;
                     } else {
@@ -333,7 +333,7 @@ function TextTrackExtensions() {
                     }
                     imgs = container.childNodes;
                     for(i=0;i<imgs.length;i++){
-                        if(imgs[i].id=='ttmlImage_'+this.id){
+                        if(imgs[i].id == 'ttmlImage_' + this.id){
                             container.removeChild(imgs[i]);
                         }
                     }
@@ -428,8 +428,8 @@ function TextTrackExtensions() {
 
     function deleteTrackCues(track) {
         if (track.cues){
-            var cues = track.cues,
-                lastIdx = cues.length - 1;
+            var cues = track.cues;
+            var lastIdx = cues.length - 1;
 
             for (var r = lastIdx; r >= 0 ; r--) {
                 track.removeCue(cues[r]);
@@ -463,7 +463,7 @@ function TextTrackExtensions() {
         trackElementArr.splice(idx, 1);
     }
 
-         /* Set native cue style to transparent background to avoid it being displayed. */
+    /* Set native cue style to transparent background to avoid it being displayed. */
     function setNativeCueStyle() {
         if (!isChrome) return;
         var styleElement = document.getElementById('native-cue-style');
@@ -482,7 +482,7 @@ function TextTrackExtensions() {
         }
     }
 
-        /* Remove the extra cue style with transparent background for native cues. */
+    /* Remove the extra cue style with transparent background for native cues. */
     function removeNativeCueStyle() {
         if (!isChrome) return;
         var styleElement = document.getElementById('native-cue-style');

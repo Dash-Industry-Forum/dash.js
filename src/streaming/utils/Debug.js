@@ -34,10 +34,10 @@ import Events from '../Events.js'
 let Debug = function () {
     "use strict";
 
-    var logToBrowserConsole = true,
-        showLogTimestamp = false,
-        showCalleeName = false,
-        startTime = new Date().getTime();
+    var logToBrowserConsole = true;
+    var showLogTimestamp = false;
+    var showCalleeName = false;
+    var startTime = new Date().getTime();
 
     return {
         system: undefined,
@@ -88,8 +88,8 @@ let Debug = function () {
          */
         log: function () {
 
-            var message = "",
-                logTime = null;
+            var message = "";
+            var logTime = null;
 
             if (showLogTimestamp) {
                 logTime = new Date().getTime();

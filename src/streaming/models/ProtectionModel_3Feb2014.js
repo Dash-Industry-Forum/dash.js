@@ -51,104 +51,105 @@ import Events from '../Events.js';
 
 let ProtectionModel_3Feb2014 = function () {
 
-    var videoElement = null,
-        protectionExt = ProtectionExtensions.getInstance(),
-        mediaKeys = null,
-        keySystemAccess = null,
+    var videoElement = null;
+    var protectionExt = ProtectionExtensions.getInstance();
+    var mediaKeys = null;
+    var keySystemAccess = null;
 
-        // API names object selected for this user agent
-        api = null,
+    // API names object selected for this user agent
+    var api = null;
 
-        // Session list
-        sessions = [],
+    // Session list
+    var sessions = [];
 
-        // This is our main event handler for all desired HTMLMediaElement events
-        // related to EME.  These events are translated into our API-independent
-        // versions of the same events
-        createEventHandler = function() {
-            var self = this;
-            return {
-                handleEvent: function(event) {
-                    switch (event.type) {
+    // This is our main event handler for all desired HTMLMediaElement events
+    // related to EME.  These events are translated into our API-independent
+    // versions of the same events
+    var createEventHandler = function() {
+        var self = this;
+        return {
+            handleEvent: function(event) {
+                switch (event.type) {
 
-                        case api.needkey:
-                            if (event.initData) {
-                                var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                                EventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, "cenc")});
-                            }
-                            break;
-                    }
+                    case api.needkey:
+                        if (event.initData) {
+                            var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
+                            EventBus.trigger(Events.NEED_KEY, { key: new NeedKey(initData, "cenc") });
+                        }
+                        break;
                 }
-            };
-        },
-        eventHandler = null,
-
-        // IE11 does not let you set MediaKeys until it has entered a certain
-        // readyState, so we need this logic to ensure we don't set the keys
-        // too early
-        setMediaKeys = function() {
-            var boundDoSetKeys = null;
-            var doSetKeys = function() {
-                videoElement.removeEventListener("loadedmetadata", boundDoSetKeys);
-                videoElement[api.setMediaKeys](mediaKeys);
-                EventBus.trigger(Events.VIDEO_ELEMENT_SELECTED);
-            };
-            if (videoElement.readyState >= 1) {
-                doSetKeys.call(this);
-            } else {
-                boundDoSetKeys = doSetKeys.bind(this);
-                videoElement.addEventListener("loadedmetadata", boundDoSetKeys);
             }
-
-        },
-
-        // Function to create our session token objects which manage the EME
-        // MediaKeySession and session-specific event handler
-        createSessionToken = function(keySession, initData) {
-            var self = this;
-            return { // Implements SessionToken
-                session: keySession,
-                initData: initData,
-
-                // This is our main event handler for all desired MediaKeySession events
-                // These events are translated into our API-independent versions of the
-                // same events
-                handleEvent: function(event) {
-                    switch (event.type) {
-
-                        case api.error:
-                            var errorStr = "KeyError"; // TODO: Make better string from event
-                            EventBus.trigger(Events.KEY_ERROR, {data:new KeyError(this, errorStr)});
-                            break;
-                        case api.message:
-                            var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                            EventBus.trigger(Events.INTERNAL_KEY_MESSAGE, {data:new KeyMessage(this, message, event.destinationURL)});
-                            break;
-                        case api.ready:
-                            self.log("DRM: Key added.");
-                            EventBus.trigger(Events.KEY_ADDED);
-                            break;
-
-                        case api.close:
-                            self.log("DRM: Session closed.  SessionID = " + this.getSessionID());
-                            EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:this.getSessionID()});
-                            break;
-                    }
-                },
-
-                getSessionID: function() {
-                    return this.session.sessionId;
-                },
-
-                getExpirationTime: function() {
-                    return NaN;
-                },
-
-                getSessionType: function() {
-                    return "temporary";
-                }
-            };
         };
+    };
+    var eventHandler = null;
+
+    // IE11 does not let you set MediaKeys until it has entered a certain
+    // readyState, so we need this logic to ensure we don't set the keys
+    // too early
+    var setMediaKeys = function() {
+        var boundDoSetKeys = null;
+        var doSetKeys = function() {
+            videoElement.removeEventListener("loadedmetadata", boundDoSetKeys);
+            videoElement[api.setMediaKeys](mediaKeys);
+            EventBus.trigger(Events.VIDEO_ELEMENT_SELECTED);
+        };
+        if (videoElement.readyState >= 1) {
+            doSetKeys.call(this);
+        } else {
+            boundDoSetKeys = doSetKeys.bind(this);
+            videoElement.addEventListener("loadedmetadata", boundDoSetKeys);
+        }
+
+    };
+
+    // Function to create our session token objects which manage the EME
+    // MediaKeySession and session-specific event handler
+    var createSessionToken = function(keySession, initData) {
+        var self = this;
+        return {
+            // Implements SessionToken
+            session: keySession,
+            initData: initData,
+
+            // This is our main event handler for all desired MediaKeySession events
+            // These events are translated into our API-independent versions of the
+            // same events
+            handleEvent: function(event) {
+                switch (event.type) {
+
+                    case api.error:
+                        var errorStr = "KeyError"; // TODO: Make better string from event
+                        EventBus.trigger(Events.KEY_ERROR, { data: new KeyError(this, errorStr) });
+                        break;
+                    case api.message:
+                        var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
+                        EventBus.trigger(Events.INTERNAL_KEY_MESSAGE, { data: new KeyMessage(this, message, event.destinationURL) });
+                        break;
+                    case api.ready:
+                        self.log("DRM: Key added.");
+                        EventBus.trigger(Events.KEY_ADDED);
+                        break;
+
+                    case api.close:
+                        self.log("DRM: Session closed.  SessionID = " + this.getSessionID());
+                        EventBus.trigger(Events.KEY_SESSION_CLOSED, { data: this.getSessionID() });
+                        break;
+                }
+            },
+
+            getSessionID: function() {
+                return this.session.sessionId;
+            },
+
+            getExpirationTime: function() {
+                return NaN;
+            },
+
+            getSessionType: function() {
+                return "temporary";
+            }
+        };
+    };
 
     return {
         system: undefined,

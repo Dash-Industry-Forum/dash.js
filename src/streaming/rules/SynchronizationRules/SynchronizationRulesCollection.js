@@ -54,8 +54,8 @@ function SynchronizationRulesCollection(config) {
 
     return instance;
 
-    let withAccurateTimeSourceRules,
-        bestGuestRules;
+    let withAccurateTimeSourceRules;
+    let bestGuestRules;
 
     function initialize(){
         withAccurateTimeSourceRules = [];

@@ -38,8 +38,8 @@ export default FactoryMaker.getClassFactory(TextController);
 
 function TextController(config) {
 
-    let sourceBufferExt = config.sourceBufferExt,
-        errHandler = config.errHandler;
+    let sourceBufferExt = config.sourceBufferExt;
+    let errHandler = config.errHandler;
 
     let instance = {
         initialize :initialize,
@@ -54,12 +54,12 @@ function TextController(config) {
 
     return instance;
 
-    let initialized,
-        mediaSource,
-        buffer,
-        type,
-        streamProcessor,
-        representationController;
+    let initialized;
+    let mediaSource;
+    let buffer;
+    let type;
+    let streamProcessor;
+    let representationController;
 
     function setup() {
 
@@ -127,12 +127,12 @@ function TextController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-         if (e.sender.streamProcessor !== streamProcessor) return;
-         EventBus.trigger(Events.TIMED_TEXT_REQUESTED, {index: 0, sender:e.sender}) //TODO make index dynamic if referring to MP?
-     }
+        if (e.sender.streamProcessor !== streamProcessor) return;
+        EventBus.trigger(Events.TIMED_TEXT_REQUESTED, { index: 0, sender: e.sender }); //TODO make index dynamic if referring to MP?
+    }
 
     function onInitFragmentLoaded(e) {
-         if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) return;
-         sourceBufferExt.append(buffer, e.chunk);
-     }
+        if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) return;
+        sourceBufferExt.append(buffer, e.chunk);
+    }
 };

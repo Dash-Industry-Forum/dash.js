@@ -37,10 +37,10 @@ export default FactoryMaker.getClassFactory(PlaybackTimeRule);
 function PlaybackTimeRule(config) {
     "use strict";
 
-    let adapter = config.adapter,
-        sourceBufferExt = config.sourceBufferExt,
-        virtualBuffer = config.virtualBuffer,
-        textSourceBuffer = config.textSourceBuffer;
+    let adapter = config.adapter;
+    let sourceBufferExt = config.sourceBufferExt;
+    let virtualBuffer = config.virtualBuffer;
+    let textSourceBuffer = config.textSourceBuffer;
 
     let instance = {
         execute: execute
@@ -49,21 +49,21 @@ function PlaybackTimeRule(config) {
     return instance;
 
     function execute(context, callback) {
-        var mediaType = context.getMediaInfo().type,
-            mediaInfo = context.getMediaInfo(),
-            streamId = context.getStreamInfo().id,
-            streamProcessor = context.getStreamProcessor(),
-            scheduleController = streamProcessor.getScheduleController(),
-            representationInfo = streamProcessor.getCurrentRepresentationInfo(),
-            seekTarget = scheduleController.getSeekTarget(),//seekTarget ? seekTarget[mediaType] : null,
-            hasSeekTarget = !isNaN(seekTarget),
-            p = hasSeekTarget ? SwitchRequest.STRONG  : SwitchRequest.DEFAULT,
-            keepIdx = !hasSeekTarget,
-            time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor),
-            buffer = streamProcessor.getBuffer(),
-            appendedChunks,
-            range = null,
-            request;
+        var mediaType = context.getMediaInfo().type;
+        var mediaInfo = context.getMediaInfo();
+        var streamId = context.getStreamInfo().id;
+        var streamProcessor = context.getStreamProcessor();
+        var scheduleController = streamProcessor.getScheduleController();
+        var representationInfo = streamProcessor.getCurrentRepresentationInfo();
+        var seekTarget = scheduleController.getSeekTarget(); //seekTarget ? seekTarget[mediaType] : null,
+        var hasSeekTarget = !isNaN(seekTarget);
+        var p = hasSeekTarget ? SwitchRequest.STRONG : SwitchRequest.DEFAULT;
+        var keepIdx = !hasSeekTarget;
+        var time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
+        var buffer = streamProcessor.getBuffer();
+        var appendedChunks;
+        var range = null;
+        var request;
 
 
         if (isNaN(time) || (mediaType === "fragmentedText" && textSourceBuffer.getAllTracksAreDisabled())) {

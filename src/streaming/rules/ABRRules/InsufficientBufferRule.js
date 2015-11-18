@@ -38,8 +38,8 @@ export default FactoryMaker.getClassFactory(InsufficientBufferRule);
 
 function InsufficientBufferRule(config) {
 
-    let log = config.log,
-        metricsModel = config.metricsModel;
+    let log = config.log;
+    let metricsModel = config.metricsModel;
 
     let instance = {
         execute:execute,
@@ -50,9 +50,9 @@ function InsufficientBufferRule(config) {
 
     return instance;
 
-    let bufferStateDict,
-        lastSwitchTime,
-        waitToSwitchTime;
+    let bufferStateDict;
+    let lastSwitchTime;
+    let waitToSwitchTime;
 
     function setup() {
         bufferStateDict = {};
@@ -62,12 +62,12 @@ function InsufficientBufferRule(config) {
     }
 
     function execute (context, callback) {
-        var now = new Date().getTime(),
-            mediaType = context.getMediaInfo().type,
-            current = context.getCurrentValue(),
-            metrics = metricsModel.getReadOnlyMetricsFor(mediaType),
-            lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
-            switchRequest = SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var now = new Date().getTime();
+        var mediaType = context.getMediaInfo().type;
+        var current = context.getCurrentValue();
+        var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+        var switchRequest = SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             lastBufferStateVO === null) {

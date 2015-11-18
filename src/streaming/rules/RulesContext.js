@@ -35,9 +35,9 @@ export default FactoryMaker.getClassFactory(RulesContext);
 
 function RulesContext(config) {
     "use strict";
-    let representationInfo = config.streamProcessor.getCurrentRepresentationInfo(),
-        sp = config.streamProcessor,
-        currentValue = config.currentValue;
+    let representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
+    let sp = config.streamProcessor;
+    let currentValue = config.currentValue;
 
     let instance = {
         getStreamInfo: getStreamInfo,

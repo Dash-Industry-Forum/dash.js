@@ -40,13 +40,13 @@ function Capabilities() {
         setConfig:setConfig
     }
 
-    setup()
+    setup();
     return instance;
 
-    let system,
-        log,
-        videoModel,
-        encryptedMediaSupported;
+    let system;
+    let log;
+    let videoModel;
+    let encryptedMediaSupported;
 
     function setup(){
         encryptedMediaSupported = null;
@@ -67,8 +67,8 @@ function Capabilities() {
     }
 
     function supportsMediaSource() {
-        let hasWebKit = ("WebKitMediaSource" in window),
-            hasMediaSource = ("MediaSource" in window);
+        let hasWebKit = ("WebKitMediaSource" in window);
+        let hasMediaSource = ("MediaSource" in window);
 
         return (hasWebKit || hasMediaSource);
     }

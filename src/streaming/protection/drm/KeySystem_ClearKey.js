@@ -38,8 +38,8 @@ import CommonEncryption from '../CommonEncryption.js';
 let KeySystem_ClearKey = function() {
     "use strict";
 
-    var keySystemStr = "org.w3.clearkey",
-        keySystemUUID = "1077efec-c0b2-4d02-ace3-3c1e52e2fb4b";
+    var keySystemStr = "org.w3.clearkey";
+    var keySystemUUID = "1077efec-c0b2-4d02-ace3-3c1e52e2fb4b";
 
     return {
 
@@ -80,8 +80,8 @@ KeySystem_ClearKey.getClearKeysFromProtectionData = function(protData, message) 
         var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
         var keyPairs = [];
         for (var i = 0; i < jsonMsg.kids.length; i++) {
-            var clearkeyID = jsonMsg.kids[i],
-                    clearkey = (protData.clearkeys.hasOwnProperty(clearkeyID)) ? protData.clearkeys[clearkeyID] : null;
+            var clearkeyID = jsonMsg.kids[i];
+            var clearkey = (protData.clearkeys.hasOwnProperty(clearkeyID)) ? protData.clearkeys[clearkeyID] : null;
             if (!clearkey) {
                 throw new Error("DRM: ClearKey keyID (" + clearkeyID + ") is not known!");
             }

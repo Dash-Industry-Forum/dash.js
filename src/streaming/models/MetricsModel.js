@@ -79,9 +79,9 @@ function  MetricsModel() {
     setup();
     return instance;
 
-    let system,
-        adapter,
-        streamMetrics;
+    let system;
+    let adapter;
+    let streamMetrics;
 
     function setup() {
         streamMetrics = {};
@@ -280,8 +280,8 @@ function  MetricsModel() {
     }
 
     function addDroppedFrames(mediaType, quality) {
-        var vo = new DroppedFrames(),
-            list = getMetricsFor(mediaType).DroppedFrames;
+        var vo = new DroppedFrames();
+        var list = getMetricsFor(mediaType).DroppedFrames;
 
         vo.time = quality.creationTime;
         vo.droppedFrames = quality.droppedVideoFrames;
@@ -327,8 +327,8 @@ function  MetricsModel() {
     }
 
     function addManifestUpdate(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
-        var vo = new ManifestUpdate(),
-            metrics = getMetricsFor("stream");
+        var vo = new ManifestUpdate();
+        var metrics = getMetricsFor("stream");
 
         vo.mediaType = mediaType;
         vo.type = type;

@@ -41,8 +41,8 @@ import CommonEncryption from '../CommonEncryption.js';
 let KeySystem_Widevine = function() {
     "use strict";
 
-    var keySystemStr = "com.widevine.alpha",
-        keySystemUUID = "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed";
+    var keySystemStr = "com.widevine.alpha";
+    var keySystemUUID = "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed";
 
     return {
 

@@ -56,30 +56,30 @@ function ABRRulesCollection(config) {
 
     return instance;
 
-    let qualitySwitchRules,
-        abandonFragmentRules;
+    let qualitySwitchRules;
+    let abandonFragmentRules;
 
     function initialize() {
         qualitySwitchRules = [];
         abandonFragmentRules = [];
 
         qualitySwitchRules.push(ThroughputRule.create({
-                log:system.getObject("log"),
-                metricsExt:system.getObject("metricsExt"),
-                metricsModel:MetricsModel.getInstance()
-            })
+            log:system.getObject("log"),
+            metricsExt:system.getObject("metricsExt"),
+            metricsModel:MetricsModel.getInstance()
+        })
         );
 
         qualitySwitchRules.push(BufferOccupancyRule.create({
-                log:system.getObject("log"),
-                metricsModel:MetricsModel.getInstance()
-            })
+            log:system.getObject("log"),
+            metricsModel:MetricsModel.getInstance()
+        })
         );
 
         qualitySwitchRules.push(InsufficientBufferRule.create({
-                log:system.getObject("log"),
-                metricsModel:MetricsModel.getInstance()
-            })
+            log:system.getObject("log"),
+            metricsModel:MetricsModel.getInstance()
+        })
         );
 
         //adandonFragmentRules.push(this.abandonRequestRule);

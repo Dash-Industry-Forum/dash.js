@@ -62,13 +62,13 @@ function SourceBufferExtensions() {
 
     return instance;
 
-    let system,
-        manifestExt;
+    let system;
+    let manifestExt;
 
     function createSourceBuffer(mediaSource, mediaInfo) {
 
-        var codec = mediaInfo.codec,
-            buffer = null;
+        var codec = mediaInfo.codec;
+        var buffer = null;
 
         try {
             // Safari claims to support anything starting 'application/mp4'.
@@ -83,15 +83,15 @@ function SourceBufferExtensions() {
 
         } catch (ex) {
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp"') !== -1)) {
-                buffer = TextSourceBuffer.getInstance()
+                buffer = TextSourceBuffer.getInstance();
                 buffer.setConfig({
-                    system:system,
-                    errHandler:ErrorHandler.getInstance(),
-                    adapter:system.getObject("adapter"),
-                    manifestExt:manifestExt,
-                    mediaController:MediaController.getInstance(),
-                    log:system.getObject("log")
-                })
+                    system: system,
+                    errHandler: ErrorHandler.getInstance(),
+                    adapter: system.getObject("adapter"),
+                    manifestExt: manifestExt,
+                    mediaController: MediaController.getInstance(),
+                    log: system.getObject("log")
+                });
             } else {
                 throw ex;
             }
@@ -112,15 +112,15 @@ function SourceBufferExtensions() {
     function getBufferRange(buffer, time, tolerance) {
         "use strict";
 
-        var ranges = null,
-            start = 0,
-            end = 0,
-            firstStart = null,
-            lastEnd = null,
-            gap = 0,
-            toler = (tolerance || 0.15),
-            len,
-            i;
+        var ranges = null;
+        var start = 0;
+        var end = 0;
+        var firstStart = null;
+        var lastEnd = null;
+        var gap = 0;
+        var toler = (tolerance || 0.15);
+        var len;
+        var i;
 
         try {
             ranges = buffer.buffered;
@@ -174,10 +174,10 @@ function SourceBufferExtensions() {
     }
 
     function getTotalBufferedTime(buffer) {
-        var ranges = getAllRanges(buffer),
-            totalBufferedTime = 0,
-            ln,
-            i;
+        var ranges = getAllRanges(buffer);
+        var totalBufferedTime = 0;
+        var ln;
+        var i;
 
         if (!ranges) return totalBufferedTime;
 
@@ -190,8 +190,8 @@ function SourceBufferExtensions() {
 
     function getBufferLength(buffer, time, tolerance) {
 
-        var range,
-            length;
+        var range;
+        var length;
 
         range = getBufferRange(buffer, time, tolerance);
 
@@ -210,16 +210,16 @@ function SourceBufferExtensions() {
         //TODO we may need to look for a more elegant and robust method
         // The logic below checks that is the difference between currentRanges and actual SourceBuffer ranges
 
-        var newRanges = getAllRanges(buffer),
-            newStart,
-            newEnd,
-            equalStart,
-            equalEnd,
-            currentRange,
-            nextCurrentRange,
-            nextNewRange,
-            hasRange,
-            diff;
+        var newRanges = getAllRanges(buffer);
+        var newStart;
+        var newEnd;
+        var equalStart;
+        var equalEnd;
+        var currentRange;
+        var nextCurrentRange;
+        var nextNewRange;
+        var hasRange;
+        var diff;
 
         if (!newRanges) return null;
 
@@ -280,12 +280,12 @@ function SourceBufferExtensions() {
     }
 
     function append(buffer, chunk) {
-        var bytes = chunk.bytes,
-            appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null),
-            // our user-defined sourcebuffer-like object has Object as its
-            // prototype whereas built-in SourceBuffers will have something
-            // more sensible. do not pass chunk to built-in append.
-            acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === "Object";
+        var bytes = chunk.bytes;
+        var appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null);
+        // our user-defined sourcebuffer-like object has Object as its
+        // prototype whereas built-in SourceBuffers will have something
+        // more sensible. do not pass chunk to built-in append.
+        var acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === "Object";
 
         if (!appendMethod) return;
 
@@ -342,6 +342,7 @@ function SourceBufferExtensions() {
         if (config.system){
             system = config.system;
         }
+
         if (config.manifestExt){
             manifestExt = config.manifestExt;
         }
@@ -350,21 +351,21 @@ function SourceBufferExtensions() {
     //private
     function waitForUpdateEnd(buffer, callback) {
         "use strict";
-        var intervalId,
-            CHECK_INTERVAL = 50,
-            checkIsUpdateEnded = function() {
-                // if undating is still in progress do nothing and wait for the next check again.
-                if (buffer.updating) return;
-                // updating is completed, now we can stop checking and resolve the promise
-                clearInterval(intervalId);
-                callback();
-            },
-            updateEndHandler = function() {
-                if (buffer.updating) return;
+        var intervalId;
+        var CHECK_INTERVAL = 50;
+        var checkIsUpdateEnded = function() {
+            // if undating is still in progress do nothing and wait for the next check again.
+            if (buffer.updating) return;
+            // updating is completed, now we can stop checking and resolve the promise
+            clearInterval(intervalId);
+            callback();
+        };
+        var updateEndHandler = function() {
+            if (buffer.updating) return;
 
-                buffer.removeEventListener("updateend", updateEndHandler, false);
-                callback();
-            };
+            buffer.removeEventListener("updateend", updateEndHandler, false);
+            callback();
+        };
 
         if (!buffer.updating) {
             callback();

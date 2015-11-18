@@ -34,9 +34,9 @@ let VideoModelExtensions = function () {
 
     return {
         getPlaybackQuality: function (videoElement) {
-            var hasWebKit = ("webkitDroppedFrameCount" in videoElement),
-                hasQuality = ("getVideoPlaybackQuality" in videoElement),
-                result = null;
+            var hasWebKit = ("webkitDroppedFrameCount" in videoElement);
+            var hasQuality = ("getVideoPlaybackQuality" in videoElement);
+            var result = null;
 
             if (hasQuality) {
                 result = videoElement.getVideoPlaybackQuality();

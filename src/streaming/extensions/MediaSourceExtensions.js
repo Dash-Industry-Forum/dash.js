@@ -46,8 +46,8 @@ function MediaSourceExtensions() {
     function createMediaSource() {
         "use strict";
 
-        var hasWebKit = ("WebKitMediaSource" in window),
-            hasMediaSource = ("MediaSource" in window);
+        var hasWebKit = ("WebKitMediaSource" in window);
+        var hasMediaSource = ("MediaSource" in window);
 
         if (hasMediaSource) {
             return new MediaSource();
@@ -87,9 +87,9 @@ function MediaSourceExtensions() {
     function signalEndOfStream(source) {
         "use strict";
 
-        var buffers = source.sourceBuffers,
-            ln = buffers.length,
-            i = 0;
+        var buffers = source.sourceBuffers;
+        var ln = buffers.length;
+        var i = 0;
 
         if (source.readyState !== "open") return;
 

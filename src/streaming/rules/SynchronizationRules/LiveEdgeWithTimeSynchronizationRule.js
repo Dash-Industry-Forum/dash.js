@@ -50,9 +50,9 @@ function LiveEdgeWithTimeSynchronizationRule(config) {
     // should be the live edge. if that is incorrect for whatever reason,
     // playback will fail to start and some other action should be taken.
     function execute(context, callback) {
-        var representationInfo = context.getTrackInfo(),
-            liveEdgeInitialSearchPosition = representationInfo.DVRWindow.end,
-            p = SwitchRequest.DEFAULT;
+        var representationInfo = context.getTrackInfo();
+        var liveEdgeInitialSearchPosition = representationInfo.DVRWindow.end;
+        var p = SwitchRequest.DEFAULT;
 
         if (representationInfo.useCalculatedLiveEdgeTime) {
             //By default an expected live edge is the end of the last segment.

@@ -58,8 +58,8 @@ function ScheduleRulesCollection(config) {
 
     return instance;
 
-    let fragmentsToScheduleRules,
-        nextFragmentRules;
+    let fragmentsToScheduleRules;
+    let nextFragmentRules;
 
     function initialize() {
         fragmentsToScheduleRules = [];
