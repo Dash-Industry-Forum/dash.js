@@ -28,18 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/*globals Dash */
 
-let UTCTiming = function () {
-    "use strict";
-
-    // UTCTiming is a DescriptorType and doesn't have any additional fields
-    this.schemeIdUri = "";
-    this.value = "";
-};
-
-UTCTiming.prototype = {
-    constructor: UTCTiming
-};
+class UTCTiming {
+    constructor (){
+        // UTCTiming is a DescriptorType and doesn't have any additional fields
+        this.schemeIdUri = "";
+        this.value = "";
+    }
+}
 
 export default UTCTiming;
