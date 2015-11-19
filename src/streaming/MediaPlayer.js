@@ -69,6 +69,7 @@ import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 //dash
 import DashAdapter from '../dash/DashAdapter.js';
 import DashHandler from '../dash/DashHandler.js';
+import DashParser from '../dash/DashParser.js';
 
 
 //protection
@@ -323,15 +324,6 @@ let MediaPlayer = function (context) {
             }
         },
 
-        createManifestLoader = function () {
-            return ManifestLoader.create({
-                log :debug.log,
-                errHandler : errHandler,
-                parser :system.getObject('parser'),
-                metricsModel :metricsModel
-            });
-        },
-
         createControllers = function() {
 
             let synchronizationRulesCollection = SynchronizationRulesCollection.getInstance({system: system});
@@ -401,7 +393,24 @@ let MediaPlayer = function (context) {
             });
         },
 
+        createManifestLoader = function () {
+            return ManifestLoader.create({
+                log :debug.log,
+                errHandler : errHandler,
+                parser :createManifestParser.call(),
+                metricsModel :metricsModel
+            });
+        },
+
+        createManifestParser = function () {
+            //TODO-Refactor Need to be able to switch this create out so will need API to set which parser to use?
+            return DashParser.create({
+                log:debug.log
+            });
+        },
+
         createAdaptor = function () {
+            //TODO-Refactor Need to be able to switch this create out so will need API to set which adapter to use? Handler is created is inside streamProcessor so need to figure that out as well
             adapter = DashAdapter.getInstance();
             adapter.initialize()
             adapter.setConfig({manifestExt:system.getObject("manifestExt")});

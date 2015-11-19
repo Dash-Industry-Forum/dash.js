@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashParser from './DashParser.js';
 import BaseURLExtensions from './extensions/BaseURLExtensions.js';
 import RepresentationController from './controllers/RepresentationController.js';
 import DashManifestExtensions from './extensions/DashManifestExtensions.js';
@@ -43,7 +42,6 @@ let DashContext = function () {
         setup : function () {
             DashContext.prototype.setup.call(this);
 
-            this.system.mapClass('parser', DashParser);
             this.system.mapSingleton('baseURLExt', BaseURLExtensions);
             this.system.mapClass('representationController', RepresentationController);
             this.system.mapSingleton('manifestExt', DashManifestExtensions);
