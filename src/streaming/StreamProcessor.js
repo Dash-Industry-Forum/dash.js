@@ -47,6 +47,7 @@ import TextSourceBuffer from './TextSourceBuffer.js';
 import VirtualBuffer from './utils/VirtualBuffer.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js";
+import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import ErrorHandler from './ErrorHandler.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -135,7 +136,7 @@ function StreamProcessor(config) {
             metricsModel:MetricsModel.getInstance(),
             manifestModel:manifestModel,
             adapter:adapter,
-            metricsExt:system.getObject("metricsExt"),
+            metricsExt:DashMetricsExtensions.getInstance(),
             manifestExt: DashManifestExtensions.getInstance(),
             timelineConverter:timelineConverter,
             scheduleRulesCollection: ScheduleRulesCollection.getInstance(),

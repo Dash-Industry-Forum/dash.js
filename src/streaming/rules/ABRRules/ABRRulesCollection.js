@@ -32,6 +32,7 @@ import ThroughputRule from './ThroughputRule.js'
 import BufferOccupancyRule from './BufferOccupancyRule.js'
 import InsufficientBufferRule from './InsufficientBufferRule.js'
 import MetricsModel from '../../models/MetricsModel.js';
+import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 const QUALITY_SWITCH_RULES = "qualitySwitchRules";
@@ -65,7 +66,7 @@ function ABRRulesCollection(config) {
 
         qualitySwitchRules.push(ThroughputRule.create({
                 log:system.getObject("log"),
-                metricsExt:system.getObject("metricsExt"),
+                metricsExt:DashMetricsExtensions.getInstance(),
                 metricsModel:MetricsModel.getInstance()
             })
         );

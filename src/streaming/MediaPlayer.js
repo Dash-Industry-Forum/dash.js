@@ -71,6 +71,7 @@ import DashAdapter from '../dash/DashAdapter.js';
 import DashHandler from '../dash/DashHandler.js';
 import DashParser from '../dash/DashParser.js';
 import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js";
+import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import TimelineConverter from '../dash/TimelineConverter.js';
 
 
@@ -335,7 +336,7 @@ let MediaPlayer = function (context) {
             let abrRulesCollection = ABRRulesCollection.getInstance({system:system, playbackController: playbackController});
             abrRulesCollection.initialize();
 
-            let scheduleRulesCollection = ScheduleRulesCollection.getInstance({system: system});
+            let scheduleRulesCollection = ScheduleRulesCollection.getInstance();
             scheduleRulesCollection.initialize();
 
             let sourceBufferExt = SourceBufferExtensions.getInstance();
@@ -465,9 +466,9 @@ let MediaPlayer = function (context) {
         videoElementExt: undefined,
 
         setup: function() {
-            metricsExt = system.getObject("metricsExt");
+            //TODO-Refactor  Dash specific objects.  Abstract?
+            metricsExt = DashMetricsExtensions.getInstance();
             manifestExt = DashManifestExtensions.getInstance();
-
             createAdaptor.call(this);
 
             domStorage.setConfig({

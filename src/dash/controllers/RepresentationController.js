@@ -30,6 +30,7 @@
  */
 import DashHandler from '../DashHandler.js';
 import DashManifestExtensions from "../extensions/DashManifestExtensions.js";
+import DashMetricsExtensions from "../extensions/DashMetricsExtensions.js";
 import TimelineConverter from '../TimelineConverter.js';
 import AbrController from '../../streaming/controllers/AbrController.js';
 import PlaybackController from '../../streaming/controllers/PlaybackController.js';
@@ -56,6 +57,8 @@ let RepresentationController = function () {
         domStorage = DOMStorage.getInstance(),
         timelineConverter = TimelineConverter.getInstance(),
         manifestExt = DashManifestExtensions.getInstance(),
+        metricsExt = DashMetricsExtensions.getInstance(),
+
 
         updateData = function(dataValue, adaptation, type) {
             var self = this,
@@ -133,8 +136,7 @@ let RepresentationController = function () {
         },
 
         updateRepresentations = function(adaptation) {
-            var self = this,
-                reps,
+            var reps,
                 manifest = manifestModel.getValue();
 
             dataIndex = manifestExt.getIndexForAdaptation(data, manifest, adaptation.period.index);
@@ -177,7 +179,7 @@ let RepresentationController = function () {
                 r = e.representation,
                 streamMetrics = metricsModel.getMetricsFor("stream"),
                 metrics = metricsModel.getMetricsFor(this.getCurrentRepresentation().adaptation.type),
-                manifestUpdateInfo = self.metricsExt.getCurrentManifestUpdate(streamMetrics),
+                manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(streamMetrics),
                 repInfo,
                 err,
                 alreadyAdded = false,
@@ -212,7 +214,7 @@ let RepresentationController = function () {
                 self.abrController.setPlaybackQuality(self.streamProcessor.getType(), self.streamProcessor.getStreamInfo(), getQualityForRepresentation.call(this, currentRepresentation));
                 metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - playbackController.getTime()});
 
-                repSwitch = self.metricsExt.getCurrentRepresentationSwitch(metrics);
+                repSwitch = metricsExt.getCurrentRepresentationSwitch(metrics);
 
                 if (!repSwitch) {
                     addRepresentationSwitch.call(self);
@@ -275,7 +277,6 @@ let RepresentationController = function () {
     return {
         system: undefined,
         log: undefined,
-        metricsExt: undefined,
         liveDelayFragmentCount:undefined,
 
         setup: function() {

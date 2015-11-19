@@ -34,6 +34,7 @@ import PlaybackTimeRule from './PlaybackTimeRule.js';
 import TextSourceBuffer from '../../TextSourceBuffer.js';
 import MetricsModel from '../../models/MetricsModel.js';
 import DashAdapter from '../../../dash/DashAdapter.js';
+import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
 import SourceBufferExtensions from '../../extensions/SourceBufferExtensions.js';
 import VirtualBuffer from '../../utils/VirtualBuffer.js';
 
@@ -47,10 +48,7 @@ factory.NEXT_FRAGMENT_RULES = NEXT_FRAGMENT_RULES;
 
 export default factory;
 
-function ScheduleRulesCollection(config) {
-
-    //TODO temp
-    let system = config.system;
+function ScheduleRulesCollection() {
 
     let instance = {
         initialize:initialize,
@@ -67,7 +65,7 @@ function ScheduleRulesCollection(config) {
         nextFragmentRules = [];
 
         fragmentsToScheduleRules.push(BufferLevelRule.create({
-            metricsExt: system.getObject("metricsExt"),
+            metricsExt: DashMetricsExtensions.getInstance(),
             metricsModel: MetricsModel.getInstance(),
             textSourceBuffer:TextSourceBuffer.getInstance()
         }));

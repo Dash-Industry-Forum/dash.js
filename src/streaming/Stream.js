@@ -39,6 +39,7 @@ import MetricsModel from './models/MetricsModel.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import DashHandler from '../dash/DashHandler.js';
 import BaseURLExtensions from '../dash/extensions/BaseURLExtensions.js';
+import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
@@ -321,7 +322,7 @@ function Stream(config) {
                 log:log,
                 baseURLExt:baseUrlExt,
                 timelineConverter: timelineConverter,
-                metricsExt:system.getObject("metricsExt"),
+                metricsExt:DashMetricsExtensions.getInstance(),
                 metricsModel:MetricsModel.getInstance()
             }
         );
