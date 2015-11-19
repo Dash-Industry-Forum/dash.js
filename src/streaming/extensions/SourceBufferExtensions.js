@@ -48,18 +48,18 @@ export default factory;
 function SourceBufferExtensions() {
 
     let instance = {
-        append :append,
-        remove :remove,
-        abort :abort,
-        createSourceBuffer:createSourceBuffer,
-        removeSourceBuffer :removeSourceBuffer,
-        getBufferRange :getBufferRange,
-        getAllRanges:getAllRanges,
-        getTotalBufferedTime :getTotalBufferedTime,
-        getBufferLength :getBufferLength,
-        getRangeDifference :getRangeDifference,
-        setConfig :setConfig
-    }
+        append: append,
+        remove: remove,
+        abort: abort,
+        createSourceBuffer: createSourceBuffer,
+        removeSourceBuffer: removeSourceBuffer,
+        getBufferRange: getBufferRange,
+        getAllRanges: getAllRanges,
+        getTotalBufferedTime: getTotalBufferedTime,
+        getBufferLength: getBufferLength,
+        getRangeDifference: getRangeDifference,
+        setConfig: setConfig
+    };
 
     return instance;
 
@@ -68,8 +68,8 @@ function SourceBufferExtensions() {
 
     function createSourceBuffer(mediaSource, mediaInfo) {
 
-        var codec = mediaInfo.codec,
-            buffer = null;
+        var codec = mediaInfo.codec;
+        var buffer = null;
 
         try {
             // Safari claims to support anything starting 'application/mp4'.
@@ -86,12 +86,12 @@ function SourceBufferExtensions() {
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp"') !== -1)) {
                 buffer = TextSourceBuffer.getInstance()
                 buffer.setConfig({
-                    errHandler:ErrorHandler.getInstance(),
-                    adapter:DashAdapter.getInstance(),
-                    manifestExt:manifestExt,
-                    mediaController:MediaController.getInstance(),
-                    log:system.getObject("log")
-                })
+                    errHandler: ErrorHandler.getInstance(),
+                    adapter: DashAdapter.getInstance(),
+                    manifestExt: manifestExt,
+                    mediaController: MediaController.getInstance(),
+                    log: system.getObject("log")
+                });
             } else {
                 throw ex;
             }
@@ -118,9 +118,10 @@ function SourceBufferExtensions() {
             firstStart = null,
             lastEnd = null,
             gap = 0,
-            toler = (tolerance || 0.15),
             len,
             i;
+
+        var toler = (tolerance || 0.15);
 
         try {
             ranges = buffer.buffered;
@@ -174,10 +175,10 @@ function SourceBufferExtensions() {
     }
 
     function getTotalBufferedTime(buffer) {
-        var ranges = getAllRanges(buffer),
-            totalBufferedTime = 0,
-            ln,
-            i;
+        var ranges = getAllRanges(buffer);
+        var totalBufferedTime = 0,
+         ln,
+         i;
 
         if (!ranges) return totalBufferedTime;
 
@@ -210,8 +211,8 @@ function SourceBufferExtensions() {
         //TODO we may need to look for a more elegant and robust method
         // The logic below checks that is the difference between currentRanges and actual SourceBuffer ranges
 
-        var newRanges = getAllRanges(buffer),
-            newStart,
+        var newRanges = getAllRanges(buffer);
+        var newStart,
             newEnd,
             equalStart,
             equalEnd,
@@ -280,12 +281,12 @@ function SourceBufferExtensions() {
     }
 
     function append(buffer, chunk) {
-        var bytes = chunk.bytes,
-            appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null),
-            // our user-defined sourcebuffer-like object has Object as its
-            // prototype whereas built-in SourceBuffers will have something
-            // more sensible. do not pass chunk to built-in append.
-            acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === "Object";
+        var bytes = chunk.bytes;
+        var appendMethod = ("append" in buffer) ? "append" : (("appendBuffer" in buffer) ? "appendBuffer" : null);
+        // our user-defined sourcebuffer-like object has Object as its
+        // prototype whereas built-in SourceBuffers will have something
+        // more sensible. do not pass chunk to built-in append.
+        var acceptsChunk = Object.prototype.toString.call(buffer).slice(8, -1) === "Object";
 
         if (!appendMethod) return;
 
@@ -351,20 +352,20 @@ function SourceBufferExtensions() {
     function waitForUpdateEnd(buffer, callback) {
         "use strict";
         var intervalId,
-            CHECK_INTERVAL = 50,
-            checkIsUpdateEnded = function() {
-                // if undating is still in progress do nothing and wait for the next check again.
-                if (buffer.updating) return;
-                // updating is completed, now we can stop checking and resolve the promise
-                clearInterval(intervalId);
-                callback();
-            },
-            updateEndHandler = function() {
-                if (buffer.updating) return;
+            CHECK_INTERVAL = 50;
+        var checkIsUpdateEnded = function() {
+            // if undating is still in progress do nothing and wait for the next check again.
+            if (buffer.updating) return;
+            // updating is completed, now we can stop checking and resolve the promise
+            clearInterval(intervalId);
+            callback();
+        };
+        var updateEndHandler = function() {
+            if (buffer.updating) return;
 
-                buffer.removeEventListener("updateend", updateEndHandler, false);
-                callback();
-            };
+            buffer.removeEventListener("updateend", updateEndHandler, false);
+            callback();
+        };
 
         if (!buffer.updating) {
             callback();

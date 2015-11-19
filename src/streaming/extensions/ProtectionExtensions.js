@@ -45,17 +45,17 @@ export default FactoryMaker.getSingletonFactory(ProtectionExtensions);
 function  ProtectionExtensions() {
 
     let instance = {
-        initialize:initialize,
-        isClearKey:isClearKey,
-        initDataEquals:initDataEquals,
-        getKeySystems:getKeySystems,
-        getKeySystemBySystemString:getKeySystemBySystemString,
-        getSupportedKeySystemsFromContentProtection:getSupportedKeySystemsFromContentProtection,
-        getSupportedKeySystems:getSupportedKeySystems,
-        getLicenseServer:getLicenseServer,
-        processClearKeyLicenseRequest:processClearKeyLicenseRequest,
-        setConfig:setConfig
-    }
+        initialize: initialize,
+        isClearKey: isClearKey,
+        initDataEquals: initDataEquals,
+        getKeySystems: getKeySystems,
+        getKeySystemBySystemString: getKeySystemBySystemString,
+        getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
+        getSupportedKeySystems: getSupportedKeySystems,
+        getLicenseServer: getLicenseServer,
+        processClearKeyLicenseRequest: processClearKeyLicenseRequest,
+        setConfig: setConfig
+    };
 
     return instance;
 
@@ -80,7 +80,8 @@ function  ProtectionExtensions() {
     function initialize() {
         keySystems = [];
 
-        var keySystem
+        var keySystem;
+
         // PlayReady
         keySystem = system.getObject("ksPlayReady");
         keySystems.push(keySystem);
@@ -151,8 +152,9 @@ function  ProtectionExtensions() {
      */
     function initDataEquals(initData1, initData2) {
         if (initData1.byteLength === initData2.byteLength) {
-            var data1 = new Uint8Array(initData1),
-                data2 = new Uint8Array(initData2);
+            var data1 = new Uint8Array(initData1);
+            var data2 = new Uint8Array(initData2);
+
             for (var j = 0; j < data1.length; j++) {
                 if (data1[j] !== data2[j]) {
                     return false;
@@ -221,8 +223,8 @@ function  ProtectionExtensions() {
      * associated with the key system
      */
     function getSupportedKeySystems(initData) {
-        var ksIdx, supportedKS = [],
-            pssh = CommonEncryption.parsePSSHList(initData);
+        var ksIdx, supportedKS = [];
+        var pssh = CommonEncryption.parsePSSHList(initData);
 
         for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
             if (keySystems[ksIdx].uuid in pssh) {

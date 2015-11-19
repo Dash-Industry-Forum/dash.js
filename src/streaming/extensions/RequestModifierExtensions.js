@@ -35,9 +35,9 @@ export default FactoryMaker.getSingletonFactory(RequestModifierExtensions);
 function RequestModifierExtensions() {
 
     let instance = {
-        modifyRequestURL:modifyRequestURL,
-        modifyRequestHeader:modifyRequestHeader
-    }
+        modifyRequestURL: modifyRequestURL,
+        modifyRequestHeader: modifyRequestHeader
+    };
 
     return instance;
 
