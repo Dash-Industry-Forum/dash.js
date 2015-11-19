@@ -230,7 +230,7 @@ function AbrController() {
                 completedCallback();
             }
         } else {
-            rules = abrRulesCollection.getRules(abrRulesCollection.QUALITY_SWITCH_RULES);
+            rules = abrRulesCollection.getRules(ABRRulesCollection.QUALITY_SWITCH_RULES);
             rulesController.applyRules(rules, streamProcessor, callback, quality, function(currentValue, newValue) {
                 currentValue = currentValue === SwitchRequest.NO_CHANGE ? 0 : currentValue;
                 return Math.max(currentValue, newValue);

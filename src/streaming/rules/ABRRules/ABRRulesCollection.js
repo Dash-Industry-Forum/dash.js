@@ -87,9 +87,9 @@ function ABRRulesCollection(config) {
 
     function getRules (type) {
         switch (type) {
-            case ABRRulesCollection.QUALITY_SWITCH_RULES:
+            case QUALITY_SWITCH_RULES:
                 return qualitySwitchRules;
-            case ABRRulesCollection.ABANDON_FRAGMENT_RULES:
+            case ABANDON_FRAGMENT_RULES:
                 return abandonFragmentRules;
             default:
                 return null;

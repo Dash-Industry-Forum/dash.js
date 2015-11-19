@@ -154,7 +154,7 @@ function RulesController() {
 
             rule.execute(rulesContext, callbackFunc);
         }
-    }w
+    }
 
     function reset() {
         var abrRules = rules[ABR_RULE],
