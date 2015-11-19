@@ -32,6 +32,8 @@
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import LiveEdgeBinarySearchRule from './LiveEdgeBinarySearchRule.js';
 import LiveEdgeWithTimeSynchronizationRule from './LiveEdgeWithTimeSynchronizationRule.js';
+import DashAdapter from '../../../dash/DashAdapter.js';
+
 
 const TIME_SYNCHRONIZED_RULES = "withAccurateTimeSourceRules";
 const BEST_GUESS_RULES = "bestGuestRules";
@@ -67,7 +69,7 @@ function SynchronizationRulesCollection(config) {
 
         bestGuestRules.push(LiveEdgeBinarySearchRule.create({
             timelineConverter: system.getObject("timelineConverter"),
-            adapter: system.getObject("adapter")
+            adapter: DashAdapter.getInstance()
         }));
     }
 

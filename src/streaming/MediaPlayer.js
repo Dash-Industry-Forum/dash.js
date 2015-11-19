@@ -66,6 +66,11 @@ import SynchronizationRulesCollection from './rules/SynchronizationRules/Synchro
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 
 
+//dash
+import DashAdapter from '../dash/DashAdapter.js';
+
+
+//protection
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
 //import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
 //import ProtectionModel_01b from './models/ProtectionModel_01b.js';
@@ -125,6 +130,7 @@ let MediaPlayer = function (context) {
         UTCTimingSources = [],
         liveDelayFragmentCount = 4,
         usePresentationDelay = false,
+        adapter = null,
         domStorage = DOMStorage.getInstance(),
         metricsModel = MetricsModel.getInstance(),
         mediaPlayerModel = MediaPlayerModel.getInstance(),
@@ -302,7 +308,7 @@ let MediaPlayer = function (context) {
         },
 
         resetAndPlay = function () {
-            this.adapter.reset();
+            adapter.reset();
             if (playing && streamController) {
                 if (!resetting) {
                     resetting = true;
@@ -366,32 +372,38 @@ let MediaPlayer = function (context) {
 
             streamController = StreamController.getInstance();
             streamController.setConfig({
-                log : debug.log,
-                system : system,
-                capabilities :capabilities,
-                manifestLoader :createManifestLoader.call(this),
-                manifestModel :ManifestModel.getInstance(),
-                manifestExt :system.getObject("manifestExt"),
-                protectionController:this.createProtection(),
-                adapter : this.adapter,
-                metricsModel : metricsModel,
-                metricsExt : metricsExt,
-                videoExt : system.getObject("videoExt"),
-                liveEdgeFinder : LiveEdgeFinder.getInstance(),
-                mediaSourceExt : MediaSourceExtensions.getInstance(),
-                timeSyncController : TimeSyncController.getInstance(),
-                virtualBuffer : virtualBuffer,
-                errHandler : errHandler,
-                timelineConverter : system.getObject("timelineConverter")
+                log: debug.log,
+                system: system,
+                capabilities: capabilities,
+                manifestLoader: createManifestLoader.call(this),
+                manifestModel: ManifestModel.getInstance(),
+                manifestExt: system.getObject("manifestExt"),
+                protectionController: this.createProtection(),
+                adapter: adapter,
+                metricsModel: metricsModel,
+                metricsExt: metricsExt,
+                videoExt: system.getObject("videoExt"),
+                liveEdgeFinder: LiveEdgeFinder.getInstance(),
+                mediaSourceExt: MediaSourceExtensions.getInstance(),
+                timeSyncController: TimeSyncController.getInstance(),
+                virtualBuffer: virtualBuffer,
+                errHandler: errHandler,
+                timelineConverter: system.getObject("timelineConverter")
             });
 
             abrController = AbrController.getInstance();
             abrController.setConfig({
-                abrRulesCollection:abrRulesCollection,
+                abrRulesCollection: abrRulesCollection,
                 rulesController: rulesController,
-                streamController:streamController,
-                log:debug.log
+                streamController: streamController,
+                log: debug.log
             });
+        },
+
+        createAdaptor = function () {
+            adapter = DashAdapter.getInstance();
+            adapter.initialize()
+            adapter.setConfig({manifestExt:system.getObject("manifestExt")});
         };
 
 
@@ -434,16 +446,20 @@ let MediaPlayer = function (context) {
     return {
 
         debug: undefined,
-        adapter: undefined,
+
         videoElementExt: undefined,
 
-        setup: function () {
+        setup: function() {
             metricsExt = system.getObject("metricsExt");
+
+            createAdaptor.call(this);
+
+
             domStorage.setConfig({
                 log:debug.log
             })
             metricsModel.setConfig({
-                adapter:this.adapter,
+                adapter:adapter,
                 system:system
             })
 
@@ -816,7 +832,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          */
         getStreamsFromManifest: function (manifest) {
-            return this.adapter.getStreamsInfo(manifest);
+            return adapter.getStreamsInfo(manifest);
         },
 
         /**
@@ -842,9 +858,9 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          */
         getTracksForTypeFromManifest: function (type, manifest, streamInfo) {
-            streamInfo = streamInfo || this.adapter.getStreamsInfo(manifest)[0];
+            streamInfo = streamInfo || adapter.getStreamsInfo(manifest)[0];
 
-            return streamInfo ? this.adapter.getAllMediaInfoForType(manifest, streamInfo, type) : [];
+            return streamInfo ? adapter.getAllMediaInfoForType(manifest, streamInfo, type) : [];
         },
 
         /**
@@ -1120,7 +1136,7 @@ let MediaPlayer = function (context) {
                 controller = ProtectionController.create({
                     protectionModel:protectionModel,
                     protectionExt: protectionExt,
-                    adapter: this.adapter,
+                    adapter: adapter,
                     log: debug.log,
                     system: system
                 });

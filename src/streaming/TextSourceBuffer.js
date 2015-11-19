@@ -28,8 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-import DashAdapter from "../dash/DashAdapter.js";
 import MediaPlayer from './MediaPlayer.js';
 import StreamController from './controllers/StreamController.js';
 import TextTrackInfo from './vo/TextTrackInfo.js';
@@ -57,8 +55,7 @@ function  TextSourceBuffer() {
 
     return instance;
 
-    let system,
-        errHandler,
+    let errHandler,
         adapter,
         manifestExt,
         mediaController,
@@ -206,9 +203,6 @@ function  TextSourceBuffer() {
     function setConfig(config){
         if (!config) return;
 
-        if (config.system){
-            system = config.system;
-        }
         if (config.errHandler){
             errHandler = config.errHandler;
         }

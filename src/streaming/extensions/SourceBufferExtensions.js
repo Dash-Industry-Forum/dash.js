@@ -30,11 +30,12 @@
  */
 import TextSourceBuffer from '../TextSourceBuffer.js';
 import MediaController from '../controllers/MediaController.js';
+import DashAdapter from '../../dash/DashAdapter.js';
 import Error from '../vo/Error.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
-import FactoryMaker from '../../core/FactoryMaker.js';
 import ErrorHandler from '../../streaming/ErrorHandler.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
@@ -85,9 +86,8 @@ function SourceBufferExtensions() {
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp"') !== -1)) {
                 buffer = TextSourceBuffer.getInstance()
                 buffer.setConfig({
-                    system:system,
                     errHandler:ErrorHandler.getInstance(),
-                    adapter:system.getObject("adapter"),
+                    adapter:DashAdapter.getInstance(),
                     manifestExt:manifestExt,
                     mediaController:MediaController.getInstance(),
                     log:system.getObject("log")

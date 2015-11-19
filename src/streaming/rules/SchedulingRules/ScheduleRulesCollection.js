@@ -33,6 +33,7 @@ import BufferLevelRule from './BufferLevelRule.js';
 import PlaybackTimeRule from './PlaybackTimeRule.js';
 import TextSourceBuffer from '../../TextSourceBuffer.js';
 import MetricsModel from '../../models/MetricsModel.js';
+import DashAdapter from '../../../dash/DashAdapter.js';
 import SourceBufferExtensions from '../../extensions/SourceBufferExtensions.js';
 import VirtualBuffer from '../../utils/VirtualBuffer.js';
 
@@ -71,7 +72,7 @@ function ScheduleRulesCollection(config) {
             textSourceBuffer:TextSourceBuffer.getInstance()
         }));
         nextFragmentRules.push(PlaybackTimeRule.create({
-            adapter: system.getObject("adapter"),
+            adapter: DashAdapter.getInstance(),
             sourceBufferExt: SourceBufferExtensions.getInstance(),
             virtualBuffer: VirtualBuffer.getInstance(),
             textSourceBuffer: TextSourceBuffer.getInstance()

@@ -35,7 +35,6 @@ import RepresentationController from './controllers/RepresentationController.js'
 import DashManifestExtensions from './extensions/DashManifestExtensions.js';
 import DashMetricsExtensions from './extensions/DashMetricsExtensions.js';
 import TimelineConverter from './TimelineConverter.js';
-import DashAdapter from './DashAdapter.js';
 
 let DashContext = function () {
     "use strict";
@@ -52,7 +51,6 @@ let DashContext = function () {
             this.system.mapSingleton('manifestExt', DashManifestExtensions);
             this.system.mapSingleton('metricsExt', DashMetricsExtensions);
             this.system.mapSingleton('timelineConverter', TimelineConverter);
-            this.system.mapSingleton('adapter', DashAdapter);
         }
     };
 };
