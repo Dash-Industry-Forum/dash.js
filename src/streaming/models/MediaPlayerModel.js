@@ -7,6 +7,10 @@ function MediaPlayerModel() {
     let instance = {
         setScheduleWhilePaused: setScheduleWhilePaused,
         getScheduleWhilePaused: getScheduleWhilePaused,
+        getUseSuggestedPresentationDelay: getUseSuggestedPresentationDelay,
+        setUseSuggestedPresentationDelay: setUseSuggestedPresentationDelay,
+        setLiveDelayFragmentCount: setLiveDelayFragmentCount,
+        getLiveDelayFragmentCount: getLiveDelayFragmentCount,
         reset: reset
     };
 
@@ -14,16 +18,17 @@ function MediaPlayerModel() {
 
     return instance;
 
-    let usePresentationDelay,
+    let useSuggestedPresentationDelay,
         liveDelayFragmentCount,
         scheduleWhilePaused;
 
-
     function setup() {
+        useSuggestedPresentationDelay = false,
         scheduleWhilePaused = false;
+        liveDelayFragmentCount = 4;
     }
 
-    function setScheduleWhilePaused(value){ //TODO Can we use Object.define to have setters/getters
+    function setScheduleWhilePaused(value) { //TODO Can we use Object.define to have setters/getters
         scheduleWhilePaused = value;
     }
 
@@ -31,8 +36,23 @@ function MediaPlayerModel() {
         return scheduleWhilePaused;
     }
 
-    function reset() {
-        scheduleWhilePaused = false;
+    function setLiveDelayFragmentCount(value) {
+        liveDelayFragmentCount = value;
     }
 
+    function getLiveDelayFragmentCount() {
+        return liveDelayFragmentCount;
+    }
+
+    function setUseSuggestedPresentationDelay(value) {
+        useSuggestedPresentationDelay = value;
+    }
+
+    function getUseSuggestedPresentationDelay() {
+        return useSuggestedPresentationDelay;
+    }
+
+    function reset() {
+        setup();
+    }
 }

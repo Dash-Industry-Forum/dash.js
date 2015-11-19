@@ -622,7 +622,7 @@ function BufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.streamProcessor !== streamProcessor) return;
+        if (e.sender.getStreamProcessor() !== streamProcessor) return;
         if (e.error) return;
 
         var bufferLength;

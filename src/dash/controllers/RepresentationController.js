@@ -37,19 +37,59 @@ import PlaybackController from '../../streaming/controllers/PlaybackController.j
 import StreamController from '../../streaming/controllers/StreamController.js';
 import ManifestModel from '../../streaming/models/ManifestModel.js';
 import MetricsModel from '../../streaming/models/MetricsModel.js';
+import MediaPlayerModel from '../../streaming/models/MediaPlayerModel.js';
 import DOMStorage from '../../streaming/utils/DOMStorage.js';
 import Error from '../../streaming/vo/Error.js';
 import EventBus from '../../streaming/utils/EventBus.js';
 import Events from "../../streaming/Events.js";
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-let RepresentationController = function () {
-    "use strict";
+const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
+export default FactoryMaker.getClassFactory(RepresentationController);
 
-    var data = null,
-        dataIndex = -1,
-        updating = true,
-        availableRepresentations = [],
+function  RepresentationController() {
+
+    let instance = {
+        initialize: initialize,
+        getData: getData,
+        getDataIndex: getDataIndex,
+        isUpdating: isUpdating,
+        updateData: updateData,
+        getStreamProcessor: getStreamProcessor,
+        getCurrentRepresentation: getCurrentRepresentation,
+        getRepresentationForQuality: getRepresentationForQuality,
+        reset: reset
+    }
+
+    setup();
+    return instance;
+
+    let data,
+        dataIndex,
+        updating,
+        availableRepresentations,
         currentRepresentation,
+        streamProcessor,
+        abrController,
+        indexHandler,
+        streamController,
+        playbackController,
+        manifestModel,
+        metricsModel,
+        domStorage,
+        timelineConverter,
+        manifestExt,
+        metricsExt,
+        mediaPlayerModel;
+
+
+    function setup() {
+        data = null;
+        dataIndex = -1;
+        updating = true;
+        availableRepresentations = [];
+
+        abrController = AbrController.getInstance();
         streamController = StreamController.getInstance(),
         playbackController = PlaybackController.getInstance(),
         manifestModel = ManifestModel.getInstance(),
@@ -58,276 +98,265 @@ let RepresentationController = function () {
         timelineConverter = TimelineConverter.getInstance(),
         manifestExt = DashManifestExtensions.getInstance(),
         metricsExt = DashMetricsExtensions.getInstance(),
+        mediaPlayerModel = MediaPlayerModel.getInstance();
 
+        EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, instance);
+        EventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
+        EventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+        EventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+    }
 
-        updateData = function(dataValue, adaptation, type) {
-            var self = this,
-                bitrate = null,
-                streamInfo = self.streamProcessor.getStreamInfo(),
-                quality,
-                maxQuality = self.abrController.getTopQualityIndexFor(type, streamInfo.id),
-                averageThroughput;
+    function initialize(StreamProcessor) {
+        streamProcessor = StreamProcessor;
+        indexHandler = streamProcessor.getIndexHandler();
+    }
 
-            updating = true;
-            EventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: self});
+    function getStreamProcessor() {
+        return streamProcessor;
+    }
 
-            availableRepresentations = updateRepresentations.call(self, adaptation);
+    function getData() {
+        return data;
+    }
 
-            if (data === null) {
-                averageThroughput = self.abrController.getAverageThroughput(type);
-                bitrate = averageThroughput || self.abrController.getInitialBitrateFor(type, streamInfo);
-                quality = self.abrController.getQualityForBitrate(self.streamProcessor.getMediaInfo(), bitrate);
-            } else {
-                quality = self.abrController.getQualityFor(type, streamInfo);
-            }
+    function getDataIndex() {
+        return dataIndex;
+    }
 
-            if (quality > maxQuality) {
-                quality = maxQuality;
-            }
+    function isUpdating() {
+        return updating;
+    }
 
-            currentRepresentation = getRepresentationForQuality.call(self, quality);
-            data = dataValue;
+    function getCurrentRepresentation() {
+        return currentRepresentation;
+    }
 
-            if (type !== "video" && type !== "audio" && type !== "fragmentedText") {
-                updating = false;
-                EventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: self, data: data, currentRepresentation: currentRepresentation});
-                return;
-            }
+    function reset() {
 
-            for (var i = 0; i < availableRepresentations.length; i += 1) {
-                self.indexHandler.updateRepresentation(availableRepresentations[i], true);
-            }
-        },
+        EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, instance);
+        EventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
+        EventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+        EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, instance);
 
-        addRepresentationSwitch = function() {
-            var now = new Date(),
-                currentRepresentation = this.getCurrentRepresentation(),
-                currentVideoTime = playbackController.getTime();
+        data = null;
+        dataIndex = -1;
+        updating = true;
+        availableRepresentations = [];
+        abrController = null;
+        streamController = null;
+        playbackController = null;
+        manifestModel = null;
+        metricsModel = null;
+        domStorage = null;
+        timelineConverter = null;
+        manifestExt = null;
+        metricsExt = null;
+        mediaPlayerModel = null;
 
-            metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
-        },
+    }
 
-        addDVRMetric = function() {
-            var streamProcessor = this.streamProcessor,
-                range = timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, streamProcessor.isDynamic());
+    function updateData(dataValue, adaptation, type) {
+        var bitrate = null,
+            streamInfo = streamProcessor.getStreamInfo(),
+            quality,
+            maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id),
+            averageThroughput;
 
-            metricsModel.addDVRInfo(streamProcessor.getType(), playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
-        },
+        updating = true;
+        EventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: this});
 
-        getRepresentationForQuality = function(quality) {
-            return availableRepresentations[quality];
-        },
+        availableRepresentations = updateRepresentations(adaptation);
 
-        getQualityForRepresentation = function(representation) {
-            return availableRepresentations.indexOf(representation);
-        },
-
-        isAllRepresentationsUpdated = function() {
-            for (var i = 0, ln = availableRepresentations.length; i < ln; i += 1) {
-                var segmentInfoType = availableRepresentations[i].segmentInfoType;
-                if (availableRepresentations[i].segmentAvailabilityRange === null || availableRepresentations[i].initialization === null ||
-                        ((segmentInfoType === "SegmentBase" || segmentInfoType === "BaseURL") && !availableRepresentations[i].segments)
-                ) {
-                    return false;
-                }
-            }
-
-            return true;
-        },
-
-        updateRepresentations = function(adaptation) {
-            var reps,
-                manifest = manifestModel.getValue();
-
-            dataIndex = manifestExt.getIndexForAdaptation(data, manifest, adaptation.period.index);
-            reps = manifestExt.getRepresentationsForAdaptation(manifest, adaptation);
-
-            return reps;
-        },
-
-        updateAvailabilityWindow = function(isDynamic) {
-            var rep;
-
-            for (var i = 0, ln = availableRepresentations.length; i < ln; i +=1) {
-                rep = availableRepresentations[i];
-                rep.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(rep, isDynamic);
-            }
-        },
-
-        postponeUpdate = function(availabilityDelay) {
-            var self = this,
-                delay = (availabilityDelay + (currentRepresentation.segmentDuration * this.liveDelayFragmentCount)) * 1000,
-                update = function() {
-                    if (this.isUpdating()) return;
-
-                    updating = true;
-                    EventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: self});
-                    for (var i = 0; i < availableRepresentations.length; i += 1) {
-                        self.indexHandler.updateRepresentation(availableRepresentations[i], true);
-                    }
-                };
-
-            updating = false;
-            setTimeout(update.bind(this), delay);
-        },
-
-        onRepresentationUpdated = function(e) {
-            if (e.sender.getStreamProcessor() !== this.streamProcessor) return;
-            if (!this.isUpdating()) return;
-
-            var self = this,
-                r = e.representation,
-                streamMetrics = metricsModel.getMetricsFor("stream"),
-                metrics = metricsModel.getMetricsFor(this.getCurrentRepresentation().adaptation.type),
-                manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(streamMetrics),
-                repInfo,
-                err,
-                alreadyAdded = false,
-                repSwitch;
-
-            if (e.error && e.error.code === DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE) {
-                addDVRMetric.call(this);
-                postponeUpdate.call(this, e.error.data.availabilityDelay);
-                err = new Error(RepresentationController.SEGMENTS_UPDATE_FAILED_ERROR_CODE, "Segments update failed", null);
-                EventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: self, data: data, currentRepresentation: currentRepresentation, error: err});
-
-                return;
-            }
-
-            if (manifestUpdateInfo) {
-                for (var i = 0; i < manifestUpdateInfo.trackInfo.length; i += 1) {
-                    repInfo = manifestUpdateInfo.trackInfo[i];
-                    if (repInfo.index === r.index && repInfo.mediaType === self.streamProcessor.getType()) {
-                        alreadyAdded = true;
-                        break;
-                    }
-                }
-
-                if (!alreadyAdded) {
-                    metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
-                            self.streamProcessor.getType(),r.presentationTimeOffset, r.startNumber, r.segmentInfoType);
-                }
-            }
-
-            if (isAllRepresentationsUpdated()) {
-                updating = false;
-                self.abrController.setPlaybackQuality(self.streamProcessor.getType(), self.streamProcessor.getStreamInfo(), getQualityForRepresentation.call(this, currentRepresentation));
-                metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - playbackController.getTime()});
-
-                repSwitch = metricsExt.getCurrentRepresentationSwitch(metrics);
-
-                if (!repSwitch) {
-                    addRepresentationSwitch.call(self);
-                }
-
-                EventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: self, data: data, currentRepresentation: currentRepresentation});
-            }
-        },
-
-        onWallclockTimeUpdated = function(e) {
-            if (e.isDynamic){
-                updateAvailabilityWindow.call(this, e.isDynamic);
-            }
-        },
-
-        onLiveEdgeSearchCompleted = function(e) {
-            if (e.error) return;
-
-            updateAvailabilityWindow.call(this, true);
-            this.indexHandler.updateRepresentation(currentRepresentation, false);
-
-            // we need to update checkTime after we have found the live edge because its initial value
-            // does not take into account clientServerTimeShift
-            var manifest = manifestModel.getValue(),
-                period = currentRepresentation.adaptation.period,
-                streamInfo = streamController.getActiveStreamInfo();
-
-            if (streamInfo.isLast) {
-                period.mpd.checkTime = manifestExt.getCheckTime(manifest, period);
-                period.duration = manifestExt.getEndTimeForLastPeriod(manifestModel.getValue(), period) - period.start;
-                streamInfo.duration = period.duration;
-            }
-        },
-
-        onBufferLevelUpdated = function(e) {
-            if (e.sender.getStreamProcessor() !== this.streamProcessor) return;
-
-            addDVRMetric.call(this);
-        },
-
-        onQualityChanged = function(e) {
-            var self = this;
-
-            if (e.mediaType !== self.streamProcessor.getType() || self.streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
-
-            if (e.oldQuality !== e.newQuality){
-                currentRepresentation = self.getRepresentationForQuality(e.newQuality);
-                setLocalStorage.call(self, e.mediaType, currentRepresentation.bandwidth);
-                addRepresentationSwitch.call(self);
-            }
-
-        },
-
-        setLocalStorage = function(type, bitrate) {
-            if (domStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
-                localStorage.setItem(DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_BITRATE_KEY"], JSON.stringify({bitrate:bitrate/1000, timestamp:new Date().getTime()}));
-            }
-        };
-
-    return {
-        system: undefined,
-        log: undefined,
-        liveDelayFragmentCount:undefined,
-
-        setup: function() {
-            EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
-            EventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, this);
-            EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-            EventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-            EventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, this);
-        },
-
-        initialize: function(streamProcessor) {
-            this.abrController = AbrController.getInstance();
-            this.streamProcessor = streamProcessor;
-            this.indexHandler = streamProcessor.getIndexHandler();
-        },
-
-        getData: function() {
-            return data;
-        },
-
-        getDataIndex: function() {
-            return dataIndex;
-        },
-
-        isUpdating: function() {
-            return updating;
-        },
-
-        updateData: updateData,
-        getRepresentationForQuality: getRepresentationForQuality,
-
-        getCurrentRepresentation: function() {
-            return currentRepresentation;
-        },
-
-        reset: function() {
-            EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
-            EventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, this);
-            EventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, this);
-            EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-            playbackController = null;
-            streamController = null;
-            manifestModel = null;
+        if (data === null) {
+            averageThroughput = abrController.getAverageThroughput(type);
+            bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo);
+            quality = abrController.getQualityForBitrate(streamProcessor.getMediaInfo(), bitrate);
+        } else {
+            quality = abrController.getQualityFor(type, streamInfo);
         }
-    };
+
+        if (quality > maxQuality) {
+            quality = maxQuality;
+        }
+
+        currentRepresentation = getRepresentationForQuality(quality);
+        data = dataValue;
+
+        if (type !== "video" && type !== "audio" && type !== "fragmentedText") {
+            updating = false;
+            EventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentRepresentation});
+            return;
+        }
+
+        for (var i = 0; i < availableRepresentations.length; i += 1) {
+            indexHandler.updateRepresentation(availableRepresentations[i], true);
+        }
+    }
+
+    function addRepresentationSwitch() {
+        var now = new Date(),
+            currentRepresentation = getCurrentRepresentation(),
+            currentVideoTime = playbackController.getTime();
+
+        metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
+    }
+
+    function addDVRMetric() {
+        var range = timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, streamProcessor.isDynamic());
+        metricsModel.addDVRInfo(streamProcessor.getType(), playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
+    }
+
+    function getRepresentationForQuality(quality) {
+        return availableRepresentations[quality];
+    }
+
+    function getQualityForRepresentation(representation) {
+        return availableRepresentations.indexOf(representation);
+    }
+
+    function isAllRepresentationsUpdated() {
+        for (var i = 0, ln = availableRepresentations.length; i < ln; i += 1) {
+            var segmentInfoType = availableRepresentations[i].segmentInfoType;
+            if (availableRepresentations[i].segmentAvailabilityRange === null || availableRepresentations[i].initialization === null ||
+                    ((segmentInfoType === "SegmentBase" || segmentInfoType === "BaseURL") && !availableRepresentations[i].segments)
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function updateRepresentations(adaptation) {
+        var reps,
+            manifest = manifestModel.getValue();
+
+        dataIndex = manifestExt.getIndexForAdaptation(data, manifest, adaptation.period.index);
+        reps = manifestExt.getRepresentationsForAdaptation(manifest, adaptation);
+
+        return reps;
+    }
+
+    function updateAvailabilityWindow(isDynamic) {
+        var rep;
+
+        for (var i = 0, ln = availableRepresentations.length; i < ln; i +=1) {
+            rep = availableRepresentations[i];
+            rep.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(rep, isDynamic);
+        }
+    }
+
+    function postponeUpdate(availabilityDelay) {
+        var delay = (availabilityDelay + (currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount())) * 1000,
+            update = function() {
+                if (isUpdating()) return;
+
+                updating = true;
+                EventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: instance});
+
+                for (var i = 0; i < availableRepresentations.length; i += 1) {
+                    indexHandler.updateRepresentation(availableRepresentations[i], true);
+                }
+            };
+
+        updating = false;
+        setTimeout(update, delay);
+    }
+
+    function onRepresentationUpdated(e) {
+        if (e.sender.getStreamProcessor() !== streamProcessor || !isUpdating()) return;
+
+        var r = e.representation,
+            streamMetrics = metricsModel.getMetricsFor("stream"),
+            metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type),
+            manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(streamMetrics),
+            repInfo,
+            err,
+            alreadyAdded = false,
+            repSwitch;
+
+        if (e.error && e.error.code === DashHandler.SEGMENTS_UNAVAILABLE_ERROR_CODE) {
+            addDVRMetric();
+            postponeUpdate(e.error.data.availabilityDelay);
+            err = new Error(SEGMENTS_UPDATE_FAILED_ERROR_CODE, "Segments update failed", null);
+            EventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentRepresentation, error: err});
+
+            return;
+        }
+
+        if (manifestUpdateInfo) {
+            for (var i = 0; i < manifestUpdateInfo.trackInfo.length; i += 1) {
+                repInfo = manifestUpdateInfo.trackInfo[i];
+                if (repInfo.index === r.index && repInfo.mediaType === streamProcessor.getType()) {
+                    alreadyAdded = true;
+                    break;
+                }
+            }
+
+            if (!alreadyAdded) {
+                metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
+                        streamProcessor.getType(),r.presentationTimeOffset, r.startNumber, r.segmentInfoType);
+            }
+        }
+
+        if (isAllRepresentationsUpdated()) {
+            updating = false;
+            abrController.setPlaybackQuality(streamProcessor.getType(), streamProcessor.getStreamInfo(), getQualityForRepresentation(currentRepresentation));
+            metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentation.segmentAvailabilityRange.end - playbackController.getTime()});
+
+            repSwitch = metricsExt.getCurrentRepresentationSwitch(metrics);
+
+            if (!repSwitch) {
+                addRepresentationSwitch();
+            }
+
+            EventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentRepresentation});
+        }
+    }
+
+    function onWallclockTimeUpdated(e) {
+        if (e.isDynamic){
+            updateAvailabilityWindow(e.isDynamic);
+        }
+    }
+
+    function onLiveEdgeSearchCompleted(e) {
+        if (e.error) return;
+
+        updateAvailabilityWindow(true);
+        indexHandler.updateRepresentation(currentRepresentation, false);
+
+        // we need to update checkTime after we have found the live edge because its initial value
+        // does not take into account clientServerTimeShift
+        var manifest = manifestModel.getValue(),
+            period = currentRepresentation.adaptation.period,
+            streamInfo = streamController.getActiveStreamInfo();
+
+        if (streamInfo.isLast) {
+            period.mpd.checkTime = manifestExt.getCheckTime(manifest, period);
+            period.duration = manifestExt.getEndTimeForLastPeriod(manifestModel.getValue(), period) - period.start;
+            streamInfo.duration = period.duration;
+        }
+    }
+
+    function onBufferLevelUpdated(e) {
+        if (e.sender.getStreamProcessor() !== streamProcessor) return;
+        addDVRMetric();
+    }
+
+    function onQualityChanged(e) {
+        if (e.mediaType !== streamProcessor.getType() || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
+
+        if (e.oldQuality !== e.newQuality){
+            currentRepresentation = getRepresentationForQuality(e.newQuality);
+            setLocalStorage(e.mediaType, currentRepresentation.bandwidth);
+            addRepresentationSwitch();
+        }
+    }
+
+    function setLocalStorage(type, bitrate) {
+        if (domStorage.isSupported(DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
+            localStorage.setItem(DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_BITRATE_KEY"], JSON.stringify({bitrate:bitrate/1000, timestamp:new Date().getTime()}));
+        }
+    }
 };
-
-RepresentationController.prototype = {
-    constructor: RepresentationController
-};
-
-RepresentationController.SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
-
-export default RepresentationController;

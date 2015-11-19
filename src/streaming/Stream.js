@@ -432,7 +432,7 @@ function Stream(config) {
             errHandler.manifestError(msg, "nostreams", manifest);
             log(msg);
         } else {
-            liveEdgeFinder.initialize({timelineConverter:timelineConverter, streamProcessor: streamProcessors[0]});
+            liveEdgeFinder.initialize(timelineConverter, streamProcessors[0]);
             //log("Playback initialized!");
             checkIfInitializationCompleted();
         }
@@ -491,12 +491,11 @@ function Stream(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.streamProcessor.getStreamInfo() !== streamInfo) return;
+        var sp = e.sender.getStreamProcessor();
 
-        var type = e.sender.streamProcessor.getType();
+        if (sp.getStreamInfo() !== streamInfo) return;
 
-        updateError[type] = e.error;
-
+        updateError[sp.getType()] = e.error;
         checkIfInitializationCompleted();
     }
 

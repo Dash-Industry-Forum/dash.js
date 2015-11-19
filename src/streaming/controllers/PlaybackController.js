@@ -29,9 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import BufferController from './BufferController.js';
+import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
+import MediaPlayerModel from '../../streaming/models/MediaPlayerModel.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
-import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50; //This value influences the startup time for live.
@@ -54,7 +55,6 @@ function PlaybackController() {
         getIsDynamic: getIsDynamic,
         setLiveStartTime: setLiveStartTime,
         getLiveStartTime: getLiveStartTime,
-        setLiveDelayAttributes: setLiveDelayAttributes,
         getLiveDelay: getLiveDelay,
         start: start,
         isPaused: isPaused,
@@ -84,8 +84,7 @@ function PlaybackController() {
         firstAppended,
         streamInfo,
         isDynamic,
-        liveDelayFragmentCount,
-        useSuggestedPresentationDelay;
+        mediaPlayerModel;
 
     function setup() {
         currentTime = 0;
@@ -93,7 +92,7 @@ function PlaybackController() {
         wallclockTimeIntervalId = null;
         commonEarliestTime = {};
         firstAppended = {};
-        liveDelayFragmentCount = NaN;
+        mediaPlayerModel = MediaPlayerModel.getInstance();
     }
 
     function initialize(streamInfoValue) {
@@ -102,6 +101,7 @@ function PlaybackController() {
         setupVideoModel();
         isDynamic = streamInfo.manifestInfo.isDynamic;
         liveStartTime = streamInfoValue.start;
+
         EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         EventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
@@ -150,11 +150,6 @@ function PlaybackController() {
         return liveStartTime;
     }
 
-    function setLiveDelayAttributes(count, useSPD) {
-        liveDelayFragmentCount = count;
-        useSuggestedPresentationDelay = useSPD;
-    }
-
     /**
      * Gets a desirable delay for the live edge to avoid a risk of getting 404 when playing at the bleeding edge
      * @returns {Number} object
@@ -164,10 +159,10 @@ function PlaybackController() {
         var delay;
         var mpd = manifestExt.getMpd(manifestModel.getValue());
 
-        if (useSuggestedPresentationDelay && mpd.hasOwnProperty("suggestedPresentationDelay")) {
+        if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty("suggestedPresentationDelay")) {
             delay = mpd.suggestedPresentationDelay;
         } else if (!isNaN(fragmentDuration)) {
-            delay = fragmentDuration * liveDelayFragmentCount;
+            delay = fragmentDuration * mediaPlayerModel.getLiveDelayFragmentCount();
         } else {
             delay = streamInfo.manifestInfo.minBufferTime * 2;
         }
@@ -210,7 +205,6 @@ function PlaybackController() {
         videoModel = null;
         streamInfo = null;
         isDynamic = undefined;
-        useSuggestedPresentationDelay = undefined;
         setup();
     }
 

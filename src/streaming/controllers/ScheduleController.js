@@ -314,7 +314,7 @@ function ScheduleController(config) {
     }
 
     function onDataUpdateStarted(e) {
-        if (e.sender.streamProcessor !== streamProcessor) return;
+        if (e.sender.getStreamProcessor() !== streamProcessor) return;
         doStop();
     }
 

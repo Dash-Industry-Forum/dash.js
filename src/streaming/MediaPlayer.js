@@ -54,12 +54,12 @@ import VirtualBuffer from './utils/VirtualBuffer.js';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
 import ManifestModel from './models/ManifestModel.js';
+import MediaPlayerModel from './models/MediaPlayerModel.js';
 import MetricsModel from './models/MetricsModel.js';
 import AbrController from './controllers/AbrController.js'
 import TimeSyncController from './TimeSyncController.js';
 import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
 import VideoModel from './models/VideoModel.js';
-import MediaPlayerModel from './models/MediaPlayerModel.js';
 import RulesController from './rules/RulesController.js';
 import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
@@ -134,8 +134,6 @@ let MediaPlayer = function (context) {
         //bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
         useManifestDateHeaderTimeSource = true,
         UTCTimingSources = [],
-        liveDelayFragmentCount = 4,
-        usePresentationDelay = false,
         adapter = null,
         domStorage = DOMStorage.getInstance(),
         metricsModel = MetricsModel.getInstance(),
@@ -160,26 +158,19 @@ let MediaPlayer = function (context) {
             if (!element || !source) {
                 throw "Missing view or source.";
             }
-
             playing = true;
-            this.debug.log("Playback initiated!");
             createControllers.call(this);
-
-
-            playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
-
-            system.mapValue("liveDelayFragmentCount", liveDelayFragmentCount);
-            system.mapOutlet("liveDelayFragmentCount", "trackController");
-
-            streamController.initialize(autoPlay, protectionData);
             domStorage.checkInitialBitrate();
+            this.debug.log("Playback initiated!");
+
             if (typeof source === "string") {
                 streamController.load(source);
             } else {
                 streamController.loadWithManifest(source);
             }
-            streamController.setUTCTimingSources(UTCTimingSources, useManifestDateHeaderTimeSource);
 
+            //TODO-refactor this to mediaPlayermodel and pull from there remove api to set.
+            streamController.setUTCTimingSources(UTCTimingSources, useManifestDateHeaderTimeSource);
         },
 
         doAutoPlay = function () {
@@ -387,6 +378,7 @@ let MediaPlayer = function (context) {
                 errHandler: errHandler,
                 timelineConverter:TimelineConverter.getInstance()
             });
+            streamController.initialize(autoPlay, protectionData);
 
             abrController = AbrController.getInstance();
             abrController.setConfig({
@@ -600,7 +592,7 @@ let MediaPlayer = function (context) {
          * @see {@link MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
          */
         setLiveDelayFragmentCount: function (value) {
-            liveDelayFragmentCount = value;
+            mediaPlayerModel.setLiveDelayFragmentCount(value);
         },
 
         /**
@@ -611,7 +603,7 @@ let MediaPlayer = function (context) {
          * @see {@link MediaPlayer#setLiveDelayFragmentCount setLiveDelayFragmentCount()}
          */
         useSuggestedPresentationDelay: function (value) {
-            usePresentationDelay = value;
+            mediaPlayerModel.setUseSuggestedPresentationDelay(value);
         },
 
         /**

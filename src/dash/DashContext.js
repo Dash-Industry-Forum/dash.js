@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import RepresentationController from './controllers/RepresentationController.js';
+
 
 let DashContext = function () {
     "use strict";
@@ -37,7 +37,6 @@ let DashContext = function () {
         system : undefined,
         setup : function () {
             DashContext.prototype.setup.call(this);
-            this.system.mapClass('representationController', RepresentationController);
         }
     };
 };

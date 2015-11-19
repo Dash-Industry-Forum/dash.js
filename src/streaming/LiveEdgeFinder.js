@@ -54,22 +54,23 @@ function LiveEdgeFinder() {
 
     return instance;
 
-    let isSearchStarted,
+    let timelineConverter,
+        streamProcessor,
+        rulesController,
+        isSearchStarted,
         searchStartTime,
         rules,
         liveEdge,
-        timelineConverter,
         ruleSet;
 
-    function initialize(config) {
+    function initialize(TimelineConverter, StreamProcessor) {
+        timelineConverter = TimelineConverter;
+        streamProcessor = StreamProcessor;
         isSearchStarted = false;
         searchStartTime = NaN;
         liveEdge = null;
-        timelineConverter = config.timelineConverter;
+        rulesController = RulesController.getInstance();
         ruleSet = SynchronizationRulesCollection.BEST_GUESS_RULES;
-
-        this.streamProcessor = config.streamProcessor;
-        this.fragmentLoader = config.fragmentLoader;
         EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
     }
 
@@ -86,6 +87,12 @@ function LiveEdgeFinder() {
         EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
         abortSearch();
         liveEdge = null;
+        timelineConverter = null;
+        streamProcessor = null;
+        isSearchStarted = false;
+        searchStartTime = NaN;
+        ruleSet = null;
+        rulesController = null;
     }
 
     function onSearchCompleted(req) {
@@ -95,9 +102,8 @@ function LiveEdgeFinder() {
     }
 
     function onStreamInitialized(e) {
-        var self = this;
 
-        if (!self.streamProcessor.isDynamic() || isSearchStarted || e.error) {
+        if (!streamProcessor.isDynamic() || isSearchStarted || e.error) {
             return;
         }
 
@@ -107,7 +113,7 @@ function LiveEdgeFinder() {
         isSearchStarted = true;
         searchStartTime = new Date().getTime();
 
-        RulesController.getInstance().applyRules(rules, self.streamProcessor, onSearchCompleted.bind(self), null, function(currentValue, newValue) {
+        rulesController.applyRules(rules, streamProcessor, onSearchCompleted, null, function(currentValue, newValue) {
             return newValue;
         });
     }

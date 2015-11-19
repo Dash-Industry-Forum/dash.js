@@ -127,7 +127,7 @@ function TextController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-         if (e.sender.streamProcessor !== streamProcessor) return;
+         if (e.sender.getStreamProcessor() !== streamProcessor) return;
          EventBus.trigger(Events.TIMED_TEXT_REQUESTED, {index: 0, sender:e.sender}) //TODO make index dynamic if referring to MP?
      }
 
