@@ -70,6 +70,7 @@ import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 import DashAdapter from '../dash/DashAdapter.js';
 import DashHandler from '../dash/DashHandler.js';
 import DashParser from '../dash/DashParser.js';
+import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js";
 import TimelineConverter from '../dash/TimelineConverter.js';
 
 
@@ -122,6 +123,7 @@ let MediaPlayer = function (context) {
         rulesController,
         playbackController,
         metricsExt,
+        manifestExt,
         videoModel,
         textSourceBuffer,
         initialized = false,
@@ -337,7 +339,7 @@ let MediaPlayer = function (context) {
             scheduleRulesCollection.initialize();
 
             let sourceBufferExt = SourceBufferExtensions.getInstance();
-            sourceBufferExt.setConfig({system:system, manifestExt:system.getObject("manifestExt")});
+            sourceBufferExt.setConfig({system:system, manifestExt:manifestExt});
 
 
             let virtualBuffer = VirtualBuffer.getInstance();
@@ -371,7 +373,7 @@ let MediaPlayer = function (context) {
                 capabilities: capabilities,
                 manifestLoader: createManifestLoader.call(this),
                 manifestModel: ManifestModel.getInstance(),
-                manifestExt: system.getObject("manifestExt"),
+                manifestExt: manifestExt,
                 protectionController: this.createProtection(),
                 adapter: adapter,
                 metricsModel: metricsModel,
@@ -414,7 +416,7 @@ let MediaPlayer = function (context) {
             //TODO-Refactor Need to be able to switch this create out so will need API to set which adapter to use? Handler is created is inside streamProcessor so need to figure that out as well
             adapter = DashAdapter.getInstance();
             adapter.initialize()
-            adapter.setConfig({manifestExt:system.getObject("manifestExt")});
+            adapter.setConfig({manifestExt: manifestExt});
         };
 
 
@@ -464,13 +466,14 @@ let MediaPlayer = function (context) {
 
         setup: function() {
             metricsExt = system.getObject("metricsExt");
+            manifestExt = DashManifestExtensions.getInstance();
 
             createAdaptor.call(this);
-
 
             domStorage.setConfig({
                 log:debug.log
             })
+
             metricsModel.setConfig({
                 adapter:adapter,
                 system:system

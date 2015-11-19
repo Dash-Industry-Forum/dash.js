@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashHandler from '../DashHandler.js';
+import DashManifestExtensions from "../extensions/DashManifestExtensions.js";
 import TimelineConverter from '../TimelineConverter.js';
 import AbrController from '../../streaming/controllers/AbrController.js';
 import PlaybackController from '../../streaming/controllers/PlaybackController.js';
@@ -54,6 +55,7 @@ let RepresentationController = function () {
         metricsModel = MetricsModel.getInstance(),
         domStorage = DOMStorage.getInstance(),
         timelineConverter = TimelineConverter.getInstance(),
+        manifestExt = DashManifestExtensions.getInstance(),
 
         updateData = function(dataValue, adaptation, type) {
             var self = this,
@@ -135,8 +137,8 @@ let RepresentationController = function () {
                 reps,
                 manifest = manifestModel.getValue();
 
-            dataIndex = self.manifestExt.getIndexForAdaptation(data, manifest, adaptation.period.index);
-            reps = self.manifestExt.getRepresentationsForAdaptation(manifest, adaptation);
+            dataIndex = manifestExt.getIndexForAdaptation(data, manifest, adaptation.period.index);
+            reps = manifestExt.getRepresentationsForAdaptation(manifest, adaptation);
 
             return reps;
         },
@@ -239,8 +241,8 @@ let RepresentationController = function () {
                 streamInfo = streamController.getActiveStreamInfo();
 
             if (streamInfo.isLast) {
-                period.mpd.checkTime = this.manifestExt.getCheckTime(manifest, period);
-                period.duration = this.manifestExt.getEndTimeForLastPeriod(manifestModel.getValue(), period) - period.start;
+                period.mpd.checkTime = manifestExt.getCheckTime(manifest, period);
+                period.duration = manifestExt.getEndTimeForLastPeriod(manifestModel.getValue(), period) - period.start;
                 streamInfo.duration = period.duration;
             }
         },
@@ -273,7 +275,6 @@ let RepresentationController = function () {
     return {
         system: undefined,
         log: undefined,
-        manifestExt: undefined,
         metricsExt: undefined,
         liveDelayFragmentCount:undefined,
 

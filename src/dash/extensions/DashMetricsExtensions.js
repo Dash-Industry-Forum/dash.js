@@ -31,6 +31,7 @@
 import HTTPRequest from '../../streaming/vo/metrics/HTTPRequest.js';
 import AbrController from "../../streaming/controllers/AbrController.js";
 import ManifestModel from "../../streaming/models/ManifestModel.js";
+import DashManifestExtensions from "../../dash/extensions/DashManifestExtensions.js";
 
 let DashMetricsExtensions = function () {
     "use strict";
@@ -84,7 +85,7 @@ let DashMetricsExtensions = function () {
         },
 
         adaptationIsType = function (adaptation, bufferType) {
-            return this.manifestExt.getIsTypeOf(adaptation, bufferType);
+            return DashManifestExtensions.getInstance().getIsTypeOf(adaptation, bufferType);
         },
 
         findMaxBufferIndex = function (period, bufferType) {
@@ -394,7 +395,6 @@ let DashMetricsExtensions = function () {
 
     return {
 
-        manifestExt: undefined,
         system:undefined,
 
         getBandwidthForRepresentation : getBandwidthForRepresentation,

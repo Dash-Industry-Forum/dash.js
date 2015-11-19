@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import RepresentationController from './controllers/RepresentationController.js';
-import DashManifestExtensions from './extensions/DashManifestExtensions.js';
 import DashMetricsExtensions from './extensions/DashMetricsExtensions.js';
 
 let DashContext = function () {
@@ -40,7 +39,6 @@ let DashContext = function () {
         setup : function () {
             DashContext.prototype.setup.call(this);
             this.system.mapClass('representationController', RepresentationController);
-            this.system.mapSingleton('manifestExt', DashManifestExtensions);
             this.system.mapSingleton('metricsExt', DashMetricsExtensions);
         }
     };
