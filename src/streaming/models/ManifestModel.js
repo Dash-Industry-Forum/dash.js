@@ -38,9 +38,10 @@ export default FactoryMaker.getSingletonFactory(ManifestModel);
 function  ManifestModel() {
 
     let instance = {
-        getValue:getValue,
-        setValue:setValue
-    }
+        getValue: getValue,
+        setValue: setValue
+    };
+
     return instance;
 
     let manifest;

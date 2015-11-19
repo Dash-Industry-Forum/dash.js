@@ -5,10 +5,10 @@ export default FactoryMaker.getSingletonFactory(MediaPlayerModel);
 function MediaPlayerModel() {
 
     let instance = {
-        setScheduleWhilePaused:setScheduleWhilePaused,
-        getScheduleWhilePaused:getScheduleWhilePaused,
-        reset:reset
-    }
+        setScheduleWhilePaused: setScheduleWhilePaused,
+        getScheduleWhilePaused: getScheduleWhilePaused,
+        reset: reset
+    };
 
     setup();
 
@@ -16,7 +16,7 @@ function MediaPlayerModel() {
 
     let usePresentationDelay,
         liveDelayFragmentCount,
-        scheduleWhilePaused
+        scheduleWhilePaused;
 
 
     function setup() {

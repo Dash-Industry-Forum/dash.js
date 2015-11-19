@@ -51,8 +51,8 @@ import Events from '../Events.js';
 
 let ProtectionModel_3Feb2014 = function () {
 
+    var protectionExt = ProtectionExtensions.getInstance();
     var videoElement = null,
-        protectionExt = ProtectionExtensions.getInstance(),
         mediaKeys = null,
         keySystemAccess = null,
 

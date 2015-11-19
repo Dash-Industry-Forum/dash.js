@@ -50,20 +50,20 @@ export default factory;
 
 function FragmentModel(config) {
 
-    let log = config.log,
-        metricsModel = config.metricsModel
+    let log = config.log;
+    let metricsModel = config.metricsModel;
 
     let instance = {
-        setLoader:setLoader,
-        setContext:setContext,
-        getContext:getContext,
-        getRequests:getRequests,
-        isFragmentLoaded:isFragmentLoaded,
-        removeExecutedRequestsBeforeTime:removeExecutedRequestsBeforeTime,
-        abortRequests:abortRequests,
-        executeRequest:executeRequest,
-        reset:reset
-    }
+        setLoader: setLoader,
+        setContext: setContext,
+        getContext: getContext,
+        getRequests: getRequests,
+        isFragmentLoaded: isFragmentLoaded,
+        removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
+        abortRequests: abortRequests,
+        executeRequest: executeRequest,
+        reset: reset
+    };
 
     setup();
     return instance;
@@ -112,8 +112,9 @@ function FragmentModel(config) {
             check = function(arr) {
                 var req,
                     isLoaded = false,
-                    ln = arr.length,
                     i;
+
+                var ln = arr.length;
 
                 for (i = 0; i < ln; i += 1) {
                     req = arr[i];
@@ -168,8 +169,8 @@ function FragmentModel(config) {
     }
 
     function removeExecutedRequestsBeforeTime(time) {
-        var lastIdx = executedRequests.length - 1,
-            start = NaN,
+        var lastIdx = executedRequests.length - 1;
+        var start = NaN,
             req = null,
             i;
 
@@ -252,8 +253,8 @@ function FragmentModel(config) {
     }
 
     function getRequestForTime(arr, time, threshold) {
-        var lastIdx = arr.length - 1,
-            start = NaN,
+        var lastIdx = arr.length - 1;
+        var start = NaN,
             end = NaN,
             req = null,
             i;
@@ -311,14 +312,14 @@ function FragmentModel(config) {
     function addSchedulingInfoMetrics(request, state) {
         if (!request) return;
 
-        var mediaType = request.mediaType,
-            now = new Date(),
-            type = request.type,
-            startTime = request.startTime,
-            availabilityStartTime = request.availabilityStartTime,
-            duration = request.duration,
-            quality = request.quality,
-            range = request.range;
+        var mediaType = request.mediaType;
+        var now = new Date();
+        var type = request.type;
+        var startTime = request.startTime;
+        var availabilityStartTime = request.availabilityStartTime;
+        var duration = request.duration;
+        var quality = request.quality;
+        var range = request.range;
 
         metricsModel.addSchedulingInfo(mediaType, now, type, startTime, availabilityStartTime, duration, quality, range, state);
         metricsModel.addRequestsQueue(mediaType, loadingRequests, executedRequests);
@@ -327,9 +328,9 @@ function FragmentModel(config) {
     function onLoadingCompleted(e) {
         if (e.sender !== fragmentLoader) return;
 
-        var request = e.request,
-            response = e.response,
-            error = e.error;
+        var request = e.request;
+        var response = e.response;
+        var error = e.error;
 
         loadingRequests.splice(loadingRequests.indexOf(request), 1);
 
