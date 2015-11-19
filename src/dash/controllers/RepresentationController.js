@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashHandler from '../DashHandler.js';
+import TimelineConverter from '../TimelineConverter.js';
 import AbrController from '../../streaming/controllers/AbrController.js';
 import PlaybackController from '../../streaming/controllers/PlaybackController.js';
 import StreamController from '../../streaming/controllers/StreamController.js';
@@ -52,6 +53,7 @@ let RepresentationController = function () {
         manifestModel = ManifestModel.getInstance(),
         metricsModel = MetricsModel.getInstance(),
         domStorage = DOMStorage.getInstance(),
+        timelineConverter = TimelineConverter.getInstance(),
 
         updateData = function(dataValue, adaptation, type) {
             var self = this,
@@ -102,7 +104,7 @@ let RepresentationController = function () {
 
         addDVRMetric = function() {
             var streamProcessor = this.streamProcessor,
-                range = this.timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, streamProcessor.isDynamic());
+                range = timelineConverter.calcSegmentAvailabilityRange(currentRepresentation, streamProcessor.isDynamic());
 
             metricsModel.addDVRInfo(streamProcessor.getType(), playbackController.getTime(), streamProcessor.getStreamInfo().manifestInfo, range);
         },
@@ -140,12 +142,11 @@ let RepresentationController = function () {
         },
 
         updateAvailabilityWindow = function(isDynamic) {
-            var self = this,
-                rep;
+            var rep;
 
             for (var i = 0, ln = availableRepresentations.length; i < ln; i +=1) {
                 rep = availableRepresentations[i];
-                rep.segmentAvailabilityRange = self.timelineConverter.calcSegmentAvailabilityRange(rep, isDynamic);
+                rep.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(rep, isDynamic);
             }
         },
 
@@ -274,7 +275,6 @@ let RepresentationController = function () {
         log: undefined,
         manifestExt: undefined,
         metricsExt: undefined,
-        timelineConverter: undefined,
         liveDelayFragmentCount:undefined,
 
         setup: function() {

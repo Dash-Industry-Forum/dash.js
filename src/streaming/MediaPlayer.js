@@ -70,6 +70,7 @@ import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 import DashAdapter from '../dash/DashAdapter.js';
 import DashHandler from '../dash/DashHandler.js';
 import DashParser from '../dash/DashParser.js';
+import TimelineConverter from '../dash/TimelineConverter.js';
 
 
 //protection
@@ -326,7 +327,7 @@ let MediaPlayer = function (context) {
 
         createControllers = function() {
 
-            let synchronizationRulesCollection = SynchronizationRulesCollection.getInstance({system: system});
+            let synchronizationRulesCollection = SynchronizationRulesCollection.getInstance();
             synchronizationRulesCollection.initialize();
 
             let abrRulesCollection = ABRRulesCollection.getInstance({system:system, playbackController: playbackController});
@@ -381,7 +382,7 @@ let MediaPlayer = function (context) {
                 timeSyncController: TimeSyncController.getInstance(),
                 virtualBuffer: virtualBuffer,
                 errHandler: errHandler,
-                timelineConverter: system.getObject("timelineConverter")
+                timelineConverter:TimelineConverter.getInstance()
             });
 
             abrController = AbrController.getInstance();

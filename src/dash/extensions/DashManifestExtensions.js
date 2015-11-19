@@ -34,12 +34,13 @@ import AdaptationSet from '../vo/AdaptationSet.js';
 import Period from '../vo/Period.js';
 import Mpd from '../vo/Mpd.js';
 import UTCTiming from '../vo/UTCTiming.js';
+import TimelineConverter from '../TimelineConverter.js';
 import Event from '../vo/Event.js';
 import EventStream from '../vo/EventStream.js';
 
 let DashManifestExtensions = function () {
     "use strict";
-    this.timelineConverter = undefined;
+    this.timelineConverter = TimelineConverter.getInstance();
 };
 
 

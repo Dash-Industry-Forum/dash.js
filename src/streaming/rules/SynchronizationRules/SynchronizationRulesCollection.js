@@ -30,6 +30,7 @@
  */
 
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import TimelineConverter from '../../../dash/TimelineConverter.js';
 import LiveEdgeBinarySearchRule from './LiveEdgeBinarySearchRule.js';
 import LiveEdgeWithTimeSynchronizationRule from './LiveEdgeWithTimeSynchronizationRule.js';
 import DashAdapter from '../../../dash/DashAdapter.js';
@@ -45,9 +46,7 @@ factory.BEST_GUESS_RULES = BEST_GUESS_RULES;
 
 export default factory;
 
-function SynchronizationRulesCollection(config) {
-
-    let system = config.system;
+function SynchronizationRulesCollection() {
 
     let instance = {
         initialize: initialize,
@@ -64,11 +63,11 @@ function SynchronizationRulesCollection(config) {
         bestGuestRules = [];
 
         withAccurateTimeSourceRules.push(LiveEdgeWithTimeSynchronizationRule.create({
-            timelineConverter: system.getObject("timelineConverter")
+            timelineConverter:TimelineConverter.getInstance()
         }));
 
         bestGuestRules.push(LiveEdgeBinarySearchRule.create({
-            timelineConverter: system.getObject("timelineConverter"),
+            timelineConverter:TimelineConverter.getInstance(),
             adapter: DashAdapter.getInstance()
         }));
     }
