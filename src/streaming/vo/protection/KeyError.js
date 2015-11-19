@@ -37,15 +37,11 @@
  * @class
  * @deprecated Newest versions of EME APIs will not use this error object
  */
-let KeyError = function(sessionToken, errorString) {
-    "use strict";
-    this.sessionToken = sessionToken;
-    this.error = errorString;
-};
-
-KeyError.prototype = {
-    constructor: KeyError
-};
+class KeyError {
+    constructor(sessionToken, errorString) {
+        this.sessionToken = sessionToken;
+        this.error = errorString;
+    }
+}
 
 export default KeyError;
-

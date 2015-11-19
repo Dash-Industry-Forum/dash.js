@@ -35,13 +35,11 @@
  * @param {string} [robustness]
  * @constructor
  */
-let MediaCapability = function(contentType, robustness) {
-    this.contentType = contentType;
-    this.robustness = robustness;
-};
-
-MediaCapability.prototype = {
-    constructor: MediaCapability
-};
+class MediaCapability {
+    constructor(contentType, robustness) {
+        this.contentType = contentType;
+        this.robustness = robustness;
+    }
+}
 
 export default MediaCapability;

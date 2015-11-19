@@ -49,32 +49,32 @@ export default FactoryMaker.getSingletonFactory(MetricsModel);
 function  MetricsModel() {
 
     let instance = {
-        metricsChanged:metricsChanged,
-        metricChanged:metricChanged,
-        metricUpdated:metricUpdated,
-        metricAdded:metricAdded,
-        clearCurrentMetricsForType:clearCurrentMetricsForType,
-        clearAllCurrentMetrics:clearAllCurrentMetrics,
-        getReadOnlyMetricsFor:getReadOnlyMetricsFor,
-        getMetricsFor:getMetricsFor,
-        addTcpConnection:addTcpConnection,
-        addHttpRequest:addHttpRequest,
-        appendHttpTrace:appendHttpTrace,
-        addRepresentationSwitch:addRepresentationSwitch,
-        addBufferLevel:addBufferLevel,
-        addBufferState:addBufferState,
-        addDVRInfo:addDVRInfo,
-        addDroppedFrames:addDroppedFrames,
-        addSchedulingInfo:addSchedulingInfo,
-        addRequestsQueue:addRequestsQueue,
-        addManifestUpdate:addManifestUpdate,
-        updateManifestUpdateInfo:updateManifestUpdateInfo,
-        addManifestUpdateStreamInfo:addManifestUpdateStreamInfo,
-        addManifestUpdateRepresentationInfo:addManifestUpdateRepresentationInfo,
-        addPlayList:addPlayList,
-        appendPlayListTrace:appendPlayListTrace,
-        setConfig:setConfig
-    }
+        metricsChanged: metricsChanged,
+        metricChanged: metricChanged,
+        metricUpdated: metricUpdated,
+        metricAdded: metricAdded,
+        clearCurrentMetricsForType: clearCurrentMetricsForType,
+        clearAllCurrentMetrics: clearAllCurrentMetrics,
+        getReadOnlyMetricsFor: getReadOnlyMetricsFor,
+        getMetricsFor: getMetricsFor,
+        addTcpConnection: addTcpConnection,
+        addHttpRequest: addHttpRequest,
+        appendHttpTrace: appendHttpTrace,
+        addRepresentationSwitch: addRepresentationSwitch,
+        addBufferLevel: addBufferLevel,
+        addBufferState: addBufferState,
+        addDVRInfo: addDVRInfo,
+        addDroppedFrames: addDroppedFrames,
+        addSchedulingInfo: addSchedulingInfo,
+        addRequestsQueue: addRequestsQueue,
+        addManifestUpdate: addManifestUpdate,
+        updateManifestUpdateInfo: updateManifestUpdateInfo,
+        addManifestUpdateStreamInfo: addManifestUpdateStreamInfo,
+        addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo,
+        addPlayList: addPlayList,
+        appendPlayListTrace: appendPlayListTrace,
+        setConfig: setConfig
+    };
 
     setup();
     return instance;
@@ -280,8 +280,8 @@ function  MetricsModel() {
     }
 
     function addDroppedFrames(mediaType, quality) {
-        var vo = new DroppedFrames(),
-            list = getMetricsFor(mediaType).DroppedFrames;
+        var vo = new DroppedFrames();
+        var list = getMetricsFor(mediaType).DroppedFrames;
 
         vo.time = quality.creationTime;
         vo.droppedFrames = quality.droppedVideoFrames;
@@ -327,8 +327,8 @@ function  MetricsModel() {
     }
 
     function addManifestUpdate(mediaType, type, requestTime, fetchTime, availabilityStartTime, presentationStartTime, clientTimeOffset, currentTime, buffered, latency) {
-        var vo = new ManifestUpdate(),
-            metrics = getMetricsFor("stream");
+        var vo = new ManifestUpdate();
+        var metrics = getMetricsFor("stream");
 
         vo.mediaType = mediaType;
         vo.type = type;

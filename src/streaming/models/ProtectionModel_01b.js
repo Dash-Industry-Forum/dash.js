@@ -51,9 +51,10 @@ import ErrorHandler from '../ErrorHandler.js';
 
 let ProtectionModel_01b = function () {
 
+    var protectionExt = ProtectionExtensions.getInstance();
+    var errHandler = ErrorHandler.getInstance();
+
     var videoElement = null,
-        protectionExt = ProtectionExtensions.getInstance(),
-        errHandler = ErrorHandler.getInstance(),
 
         // API names object selected for this user agent
         api = null,

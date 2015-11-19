@@ -28,34 +28,33 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let FragmentRequest = function () {
-    "use strict";
-    this.action = "download";
-    this.startTime = NaN;
-    this.mediaType = null;
-    this.mediaInfo = null;
-    this.type = null;
-    this.duration = NaN;
-    this.timescale = NaN;
-    this.range = null;
-    this.url = null;
-    this.requestStartDate = null;
-    this.firstByteDate = null;
-    this.requestEndDate = null;
-    this.quality = NaN;
-    this.index = NaN;
-    this.availabilityStartTime = null;
-    this.availabilityEndTime = null;
-    this.wallStartTime = null;
-    this.bytesLoaded = NaN;
-    this.bytesTotal = NaN;
-    this.delayLoadingTime = NaN;
-};
 
-FragmentRequest.prototype = {
-    constructor: FragmentRequest,
-    ACTION_DOWNLOAD: "download",
-    ACTION_COMPLETE: "complete"
-};
+class FragmentRequest {
+    constructor() {
+        this.action = "download";
+        this.startTime = NaN;
+        this.mediaType = null;
+        this.mediaInfo = null;
+        this.type = null;
+        this.duration = NaN;
+        this.timescale = NaN;
+        this.range = null;
+        this.url = null;
+        this.requestStartDate = null;
+        this.firstByteDate = null;
+        this.requestEndDate = null;
+        this.quality = NaN;
+        this.index = NaN;
+        this.availabilityStartTime = null;
+        this.availabilityEndTime = null;
+        this.wallStartTime = null;
+        this.bytesLoaded = NaN;
+        this.bytesTotal = NaN;
+        this.delayLoadingTime = NaN;
+    }
+}
+
+FragmentRequest.ACTION_DOWNLOAD = "download";
+FragmentRequest.ACTION_COMPLETE = "complete";
 
 export default FragmentRequest;

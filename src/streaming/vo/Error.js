@@ -28,15 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let Error = function (code, message, data) {
-    "use strict";
-    this.code = code || null;
-    this.message = message || null;
-    this.data = data || null;
-};
 
-Error.prototype = {
-    constructor: Error
-};
+class Error {
+    constructor(code, message, data) {
+        this.code = code || null;
+        this.message = message || null;
+        this.data = data || null;
+    }
+}
 
 export default Error

@@ -38,18 +38,20 @@
  * or 'temporary'.  Can also be null or undefined.
  * @class
  */
-let ClearKeyKeySet = function(keyPairs, type) {
-    if (type && type !== "persistent" && type !== "temporary")
-        throw new Error("Invalid ClearKey key set type!  Must be one of 'persistent' or 'temporary'");
-    this.keyPairs = keyPairs;
-    this.type = type;
+class ClearKeyKeySet {
+    constructor(keyPairs, type) {
+        if (type && type !== "persistent" && type !== "temporary")
+            throw new Error("Invalid ClearKey key set type!  Must be one of 'persistent' or 'temporary'");
+        this.keyPairs = keyPairs;
+        this.type = type;
+    }
 
     /**
      * Convert this key set to its JSON Web Key (JWK) representation
      *
      * @return {ArrayBuffer} JWK object UTF-8 encoded as ArrayBuffer
      */
-    this.toJWK = function() {
+    toJWK() {
         var i, numKeys = this.keyPairs.length,
             jwk = {};
         jwk.keys = [];
@@ -74,11 +76,7 @@ let ClearKeyKeySet = function(keyPairs, type) {
         for (i = 0; i < len; i++)
             bView[i] = jwkString.charCodeAt(i);
         return buf;
-    };
-};
-
-ClearKeyKeySet.prototype = {
-    constructor: ClearKeyKeySet
-};
+    }
+}
 
 export default ClearKeyKeySet;

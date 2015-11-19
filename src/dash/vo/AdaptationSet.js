@@ -28,15 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let AdaptationSet = function () {
-    "use strict";
-    this.period = null;
-    this.index = -1;
-    this.type = null;
-};
 
-AdaptationSet.prototype = {
-    constructor: AdaptationSet
-};
+class AdaptationSet {
+    constructor() {
+        this.period = null;
+        this.index = -1;
+        this.type = null;
+    }
+}
 
 export default AdaptationSet;

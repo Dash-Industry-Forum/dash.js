@@ -28,15 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let BitrateInfo = function () {
-    "use strict";
-    this.mediaType = null;
-    this.bitrate = null;
-    this.qualityIndex = NaN;
-};
-
-BitrateInfo.prototype = {
-    constructor: BitrateInfo
-};
+class BitrateInfo {
+    constructor() {
+        this.mediaType = null;
+        this.bitrate = null;
+        this.qualityIndex = NaN;
+    }
+}
 
 export default BitrateInfo;

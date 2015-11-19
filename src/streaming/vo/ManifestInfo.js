@@ -28,19 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let ManifestInfo = function () {
-    "use strict";
-    this.DVRWindowSize = NaN;
-    this.loadedTime = null;
-    this.availableFrom = null;
-    this.minBufferTime = NaN;
-    this.duration = NaN;
-    this.isDynamic = false;
-    this.maxFragmentDuration = null;
-};
 
-ManifestInfo.prototype = {
-    constructor: ManifestInfo
-};
+class ManifestInfo {
+    constructor() {
+        this.DVRWindowSize = NaN;
+        this.loadedTime = null;
+        this.availableFrom = null;
+        this.minBufferTime = NaN;
+        this.duration = NaN;
+        this.isDynamic = false;
+        this.maxFragmentDuration = null;
+    }
+}
 
 export default ManifestInfo;

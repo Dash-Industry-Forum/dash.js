@@ -45,10 +45,12 @@
  * Corresponding property values are keys, base64-encoded (no padding).
  * @class
  */
-let ProtectionData = function(serverURL, httpRequestHeaders, clearkeys) {
-    this.serverURL = serverURL;
-    this.httpRequestHeaders = httpRequestHeaders;
-    this.clearkeys = clearkeys;
+class ProtectionData {
+    constructor(serverURL, httpRequestHeaders, clearkeys) {
+        this.serverURL = serverURL;
+        this.httpRequestHeaders = httpRequestHeaders;
+        this.clearkeys = clearkeys;
+    }
 };
 
 /**
@@ -82,9 +84,5 @@ let ProtectionData = function(serverURL, httpRequestHeaders, clearkeys) {
  * @readonly
  * @memberof ProtectionData
  */
-
-ProtectionData.prototype = {
-    constructor: ProtectionData
-};
 
 export default ProtectionData

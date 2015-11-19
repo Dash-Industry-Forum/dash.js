@@ -145,8 +145,8 @@ function EventController(){
     }
 
     function triggerEvents(events) {
-        var currentVideoTime = VideoModel.getInstance().getCurrentTime(),
-            presentationTime;
+        var currentVideoTime = VideoModel.getInstance().getCurrentTime();
+        var presentationTime;
 
         /* == Trigger events that are ready == */
         if(events) {
@@ -190,8 +190,8 @@ function EventController(){
     }
 
     function refreshManifest() {
-        var manifest = manifestModel.getValue(),
-            url = manifest.url;
+        var manifest = manifestModel.getValue();
+        var url = manifest.url;
 
         if (manifest.hasOwnProperty("Location")) {
             url = manifest.Location;

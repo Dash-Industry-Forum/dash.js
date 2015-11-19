@@ -30,14 +30,11 @@
  */
 import BufferController from '../../controllers/BufferController.js';
 
-let BufferState = function () {
-    "use strict";
-    this.target = null; // Required Buffer Level determined by the BufferLevelRule.
-    this.state = BufferController.BUFFER_EMPTY;
-};
-
-BufferState.prototype = {
-    constructor: BufferState
-};
+class BufferState {
+    constructor() {
+        this.target = null; // Required Buffer Level determined by the BufferLevelRule.
+        this.state = BufferController.BUFFER_EMPTY;
+    }
+}
 
 export default BufferState;

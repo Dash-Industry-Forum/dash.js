@@ -28,18 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let StreamInfo = function () {
-    "use strict";
-    this.id = null;
-    this.index = null;
-    this.start = NaN;
-    this.duration = NaN;
-    this.manifestInfo = null;
-    this.isLast = true;
-};
 
-StreamInfo.prototype = {
-    constructor: StreamInfo
-};
+class StreamInfo {
+    constructor() {
+        this.id = null;
+        this.index = null;
+        this.start = NaN;
+        this.duration = NaN;
+        this.manifestInfo = null;
+        this.isLast = true;
+    }
+}
 
 export default StreamInfo;

@@ -54,11 +54,11 @@ export default FactoryMaker.getClassFactory(ProtectionController);
 
 function ProtectionController(config) {
 
-    let protectionExt = config.protectionExt,
-        protectionModel = config.protectionModel,
-        adapter = config.adapter,
-        log = config.log,
-        system = config.system;
+    let protectionExt = config.protectionExt;
+    let protectionModel = config.protectionModel;
+    let adapter = config.adapter;
+    let log = config.log;
+    let system = config.system;
 
     let instance = {
         initialize :initialize,
@@ -307,8 +307,9 @@ function ProtectionController(config) {
     ///////////////
 
     function getProtData(keySystem) {
-        var protData = null,
-            keySystemString = keySystem.systemString;
+        var protData = null;
+        var keySystemString = keySystem.systemString;
+
         if (protDataSet) {
             protData = (keySystemString in protDataSet) ? protDataSet[keySystemString] : null;
         }
@@ -430,13 +431,13 @@ function ProtectionController(config) {
         // Dispatch event to applications indicating we received a key message
         var keyMessage = e.data;
         EventBus.trigger(Events.KEY_MESSAGE, {data: keyMessage});
-        var messageType = (keyMessage.messageType) ? keyMessage.messageType : "license-request",
-            message = keyMessage.message,
-            sessionToken = keyMessage.sessionToken,
-            protData = getProtData(keySystem),
-            keySystemString = keySystem.systemString,
-            licenseServerData = protectionExt.getLicenseServer(keySystem, protData, messageType),
-            eventData = { sessionToken: sessionToken, messageType: messageType };
+        var messageType = (keyMessage.messageType) ? keyMessage.messageType : "license-request";
+        var message = keyMessage.message;
+        var sessionToken = keyMessage.sessionToken;
+        var protData = getProtData(keySystem);
+        var keySystemString = keySystem.systemString;
+        var licenseServerData = protectionExt.getLicenseServer(keySystem, protData, messageType);
+        var eventData = { sessionToken: sessionToken, messageType: messageType };
 
         // Message not destined for license server
         if (!licenseServerData) {

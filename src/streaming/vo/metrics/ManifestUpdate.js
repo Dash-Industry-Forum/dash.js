@@ -28,54 +28,43 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let ManifestUpdate = function () {
-    "use strict";
 
-    this.mediaType = null;
-    this.type = null;                       // static|dynamic
-    this.requestTime = null;                // when this manifest update was requested
-    this.fetchTime = null;                  // when this manifest update was received
-    this.availabilityStartTime = null;
-    this.presentationStartTime = 0;      // the seek point (liveEdge for dynamic, Stream[0].startTime for static)
-    this.clientTimeOffset = 0;           // the calculated difference between the server and client wall clock time
-    this.currentTime = null;                // actual element.currentTime
-    this.buffered = null;                   // actual element.ranges
-    this.latency = 0;                       // (static is fixed value of zero. dynamic should be ((Now-@availabilityStartTime) - elementCurrentTime)
-    this.streamInfo = [];
-    this.trackInfo = [];
+class ManifestUpdate {
+    constructor() {
+        this.mediaType = null;
+        this.type = null;                       // static|dynamic
+        this.requestTime = null;                // when this manifest update was requested
+        this.fetchTime = null;                  // when this manifest update was received
+        this.availabilityStartTime = null;
+        this.presentationStartTime = 0;      // the seek point (liveEdge for dynamic, Stream[0].startTime for static)
+        this.clientTimeOffset = 0;           // the calculated difference between the server and client wall clock time
+        this.currentTime = null;                // actual element.currentTime
+        this.buffered = null;                   // actual element.ranges
+        this.latency = 0;                       // (static is fixed value of zero. dynamic should be ((Now-@availabilityStartTime) - elementCurrentTime)
+        this.streamInfo = [];
+        this.trackInfo = [];
+    }
+}
+
+ManifestUpdate.StreamInfo = class {
+    constructor() {
+        this.id = null;         // Stream@id
+        this.index = null;
+        this.start = null;      // Stream@start
+        this.duration = null;   // Stream@duration
+    }
 };
 
-ManifestUpdate.StreamInfo = function () {
-    "use strict";
-
-    this.id = null;         // Stream@id
-    this.index = null;
-    this.start = null;      // Stream@start
-    this.duration = null;   // Stream@duration
-};
-
-ManifestUpdate.TrackInfo = function () {
-    "use strict";
-
-    this.id = null;                         // Track@id
-    this.index = null;
-    this.mediaType = null;
-    this.streamIndex = null;
-    this.presentationTimeOffset = null;     // @presentationTimeOffset
-    this.startNumber = null;                // @startNumber
-    this.fragmentInfoType = null;            // list|template|timeline
-};
-
-ManifestUpdate.prototype = {
-    constructor: ManifestUpdate
-};
-
-ManifestUpdate.StreamInfo.prototype = {
-    constructor: ManifestUpdate.StreamInfo
-};
-
-ManifestUpdate.TrackInfo.prototype = {
-    constructor: ManifestUpdate.TrackInfo
+ManifestUpdate.TrackInfo = class {
+    constructor() {
+        this.id = null;                         // Track@id
+        this.index = null;
+        this.mediaType = null;
+        this.streamIndex = null;
+        this.presentationTimeOffset = null;     // @presentationTimeOffset
+        this.startNumber = null;                // @startNumber
+        this.fragmentInfoType = null;            // list|template|timeline
+    }
 };
 
 export default ManifestUpdate;

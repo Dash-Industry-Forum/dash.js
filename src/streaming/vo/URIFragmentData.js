@@ -28,18 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let URIFragmentData = function () {
-    "use strict";
-    this.t = null;
-    this.xywh = null;
-    this.track = null;
-    this.id = null;
-    this.s = null;
-};
 
-URIFragmentData.prototype = {
-    constructor: URIFragmentData
-};
+class URIFragmentData {
+    constructor() {
+        this.t = null;
+        this.xywh = null;
+        this.track = null;
+        this.id = null;
+        this.s = null;
+    }
+}
 
 export default URIFragmentData;
 

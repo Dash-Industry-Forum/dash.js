@@ -73,14 +73,14 @@ function URIQueryAndFragmentModel() {
         if (!uri) return null;
 
         var URIFragmentData = [],
-            testQuery = new RegExp(/[?]/),
-            testFragment = new RegExp(/[#]/),
-            testHTTPS = new RegExp(/^(https:)?\/\//i),
-            isQuery = testQuery.test(uri),
-            isFragment = testFragment.test(uri),
             mappedArr;
 
-        isHTTPS = testHTTPS.test(uri);
+        var testQuery = new RegExp(/[?]/);
+        var testFragment = new RegExp(/[#]/);
+        var testHTTPS = new RegExp(/^(https:)?\/\//i);
+        var isQuery = testQuery.test(uri);
+        var isFragment = testFragment.test(uri);
+        var isHTTPS = testHTTPS.test(uri);
 
         function reduceArray(previousValue, currentValue, index, array) {
             var arr =  array[0].split(/[=]/);

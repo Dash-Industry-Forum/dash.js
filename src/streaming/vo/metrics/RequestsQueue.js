@@ -28,14 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let RequestsQueue = function () {
-    "use strict";
-    this.loadingRequests = [];
-    this.executedRequests = [];
-};
 
-RequestsQueue.prototype = {
-    constructor: RequestsQueue
+class RequestsQueue {
+    constructor() {
+        this.loadingRequests = [];
+        this.executedRequests = [];
+    }
 };
 
 export default RequestsQueue;
