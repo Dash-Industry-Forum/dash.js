@@ -35,7 +35,9 @@ import EventController from './controllers/EventController.js';
 import FragmentController from './controllers/FragmentController.js';
 import AbrController from './controllers/AbrController.js';
 import VideoModel from './models/VideoModel.js';
+import MetricsModel from './models/MetricsModel.js';
 import PlaybackController from './controllers/PlaybackController.js';
+import DashHandler from '../dash/DashHandler.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
@@ -52,7 +54,8 @@ function Stream(config) {
         adapter = config.adapter,
         capabilities = config.capabilities,
         log = config.log,
-        errHandler = config.errHandler;
+        errHandler = config.errHandler,
+        timelineConverter = config.timelineConverter;
 
     let instance = {
         initialize :initialize,
@@ -307,11 +310,22 @@ function Stream(config) {
         }
     }
 
+    function createIndexHandler(){
+        return DashHandler.create({
+                log:log,
+                baseURLExt: system.getObject("baseURLExt"),
+                timelineConverter: timelineConverter,
+                metricsExt:system.getObject("metricsExt"),
+                metricsModel:MetricsModel.getInstance()
+            }
+        );
+    }
+
     function createStreamProcessor(mediaInfo, manifest, mediaSource, optionalSettings) {
         var streamProcessor = StreamProcessor.create({
                 system :system,
-                indexHandler: system.getObject("indexHandler"),
-                timelineConverter :system.getObject("timelineConverter"),
+                indexHandler:createIndexHandler(),
+                timelineConverter:timelineConverter,
                 adapter:adapter,
                 manifestModel:manifestModel
             }),
@@ -409,7 +423,7 @@ function Stream(config) {
             errHandler.manifestError(msg, "nostreams", manifest);
             log(msg);
         } else {
-            liveEdgeFinder.initialize({timelineConverter: system.getObject("timelineConverter"), streamProcessor: streamProcessors[0]});
+            liveEdgeFinder.initialize({timelineConverter:timelineConverter, streamProcessor: streamProcessors[0]});
             //log("Playback initialized!");
             checkIfInitializationCompleted();
         }

@@ -167,7 +167,7 @@ let RepresentationController = function () {
         },
 
         onRepresentationUpdated = function(e) {
-            if (e.sender.streamProcessor !== this.streamProcessor) return;
+            if (e.sender.getStreamProcessor() !== this.streamProcessor) return;
             if (!this.isUpdating()) return;
 
             var self = this,
@@ -245,7 +245,7 @@ let RepresentationController = function () {
         },
 
         onBufferLevelUpdated = function(e) {
-            if (e.sender.streamProcessor !== this.streamProcessor) return;
+            if (e.sender.getStreamProcessor() !== this.streamProcessor) return;
 
             addDVRMetric.call(this);
         },

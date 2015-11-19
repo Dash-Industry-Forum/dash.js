@@ -68,6 +68,7 @@ import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 
 //dash
 import DashAdapter from '../dash/DashAdapter.js';
+import DashHandler from '../dash/DashHandler.js';
 
 
 //protection
@@ -405,6 +406,8 @@ let MediaPlayer = function (context) {
             adapter.initialize()
             adapter.setConfig({manifestExt:system.getObject("manifestExt")});
         };
+
+
 
 
 

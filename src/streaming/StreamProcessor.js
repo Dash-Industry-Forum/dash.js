@@ -106,7 +106,8 @@ function StreamProcessor(config) {
         scheduleController,
         representationController,
         fragmentController,
-        fragmentLoader;
+        fragmentLoader,
+        fragmentModel;
 
 
     function setup() {
@@ -150,18 +151,18 @@ function StreamProcessor(config) {
             requestModifierExt:RequestModifierExtensions.getInstance()
         })
 
-
         indexHandler.initialize(this);
         indexHandler.setCurrentTime(PlaybackController.getInstance().getStreamStartTime(getStreamInfo()));
 
         representationController = system.getObject("representationController");
         representationController.initialize(this);
 
-        getFragmentModel().setLoader(fragmentLoader);
+        fragmentModel = scheduleController.getFragmentModel();
+        fragmentModel.setLoader(fragmentLoader);
     }
 
     function reset(errored) {
-        getFragmentModel().reset();
+        fragmentModel.reset();
         indexHandler.reset();
         bufferController.reset(errored);
         scheduleController.reset();
@@ -171,6 +172,7 @@ function StreamProcessor(config) {
         representationController = null;
         fragmentController = null;
         fragmentLoader = null
+        fragmentModel = null;
         eventController = null;
         stream = null;
         dynamic = null;
@@ -220,7 +222,7 @@ function StreamProcessor(config) {
     };
 
     function getFragmentModel() {
-        return scheduleController.getFragmentModel();
+        return fragmentModel
     }
 
     function getStreamInfo() {

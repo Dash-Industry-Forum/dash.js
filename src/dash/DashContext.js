@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashParser from './DashParser.js';
-import DashHandler from './DashHandler.js';
 import BaseURLExtensions from './extensions/BaseURLExtensions.js';
 import RepresentationController from './controllers/RepresentationController.js';
 import DashManifestExtensions from './extensions/DashManifestExtensions.js';
@@ -45,7 +44,6 @@ let DashContext = function () {
             DashContext.prototype.setup.call(this);
 
             this.system.mapClass('parser', DashParser);
-            this.system.mapClass('indexHandler', DashHandler);
             this.system.mapSingleton('baseURLExt', BaseURLExtensions);
             this.system.mapClass('representationController', RepresentationController);
             this.system.mapSingleton('manifestExt', DashManifestExtensions);

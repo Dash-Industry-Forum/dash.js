@@ -96,6 +96,7 @@ function StreamController() {
         videoModel,
         playbackController;
 
+
     function setup() {
         protectionController = null;
         streams = [];
@@ -428,6 +429,7 @@ function StreamController() {
                         manifestModel: manifestModel,
                         manifestUpdater:manifestUpdater,
                         adapter:adapter,
+                        timelineConverter:timelineConverter,
                         capabilities:capabilities,
                         log :log,
                         errHandler :errHandler
