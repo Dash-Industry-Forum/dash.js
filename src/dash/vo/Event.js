@@ -28,19 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let Event = function () {
-    "use strict";
-    this.duration = NaN;
-    this.presentationTime = NaN;
-    this.id = NaN;
-    this.messageData = "";
-    this.eventStream = null;
-    this.presentationTimeDelta = NaN; // Specific EMSG Box parameter
 
-};
-
-Event.prototype = {
-    constructor: Event
-};
+class Event {
+    constructor() {
+        this.duration = NaN;
+        this.presentationTime = NaN;
+        this.id = NaN;
+        this.messageData = "";
+        this.eventStream = null;
+        this.presentationTimeDelta = NaN; // Specific EMSG Box parameter
+    }
+}
 
 export default Event;

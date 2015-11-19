@@ -28,15 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let DVRInfo = function () {
-    "use strict";
-    this.time = null;
-    this.range = null;
-    this.manifestInfo = null;
-};
 
-DVRInfo.prototype = {
-    constructor: DVRInfo
-};
+class DVRInfo {
+    constructor() {
+        this.time = null;
+        this.range = null;
+        this.manifestInfo = null;
+    }
+}
 
 export default DVRInfo;

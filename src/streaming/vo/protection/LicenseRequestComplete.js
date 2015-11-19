@@ -39,15 +39,12 @@
  * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @constructor
  */
-let LicenseRequestComplete = function(message, sessionToken, messageType) {
-    "use strict";
-    this.message = message;
-    this.sessionToken = sessionToken;
-    this.messageType = messageType ? messageType : "license-request";
-};
-
-LicenseRequestComplete.prototype = {
-    constructor: LicenseRequestComplete
-};
+class LicenseRequestComplete {
+    constructor(message, sessionToken, messageType) {
+        this.message = message;
+        this.sessionToken = sessionToken;
+        this.messageType = messageType ? messageType : "license-request";
+    }
+}
 
 export default LicenseRequestComplete;

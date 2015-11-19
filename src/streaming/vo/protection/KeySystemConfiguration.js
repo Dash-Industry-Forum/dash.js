@@ -47,19 +47,15 @@
  * be supported by the key system
  * @class
  */
-let KeySystemConfiguration = function(audioCapabilities, videoCapabilities,
-                                                            distinctiveIdentifier, persistentState,
-                                                            sessionTypes) {
-    this.initDataTypes = [ "cenc" ];
-    this.audioCapabilities = audioCapabilities;
-    this.videoCapabilities = videoCapabilities;
-    this.distinctiveIdentifier = distinctiveIdentifier;
-    this.persistentState = persistentState;
-    this.sessionTypes = sessionTypes;
-};
-
-KeySystemConfiguration.prototype = {
-    constructor: KeySystemConfiguration
-};
+class KeySystemConfiguration {
+    constructor(audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, sessionTypes) {
+        this.initDataTypes = [ "cenc" ];
+        this.audioCapabilities = audioCapabilities;
+        this.videoCapabilities = videoCapabilities;
+        this.distinctiveIdentifier = distinctiveIdentifier;
+        this.persistentState = persistentState;
+        this.sessionTypes = sessionTypes;
+    }
+}
 
 export default KeySystemConfiguration

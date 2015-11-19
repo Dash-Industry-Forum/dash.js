@@ -36,14 +36,11 @@
  * @param key {String} 128-bit encryption key, base64 encoded, with no padding
  * @class
  */
-let KeyPair = function(keyID, key) {
-    "use strict";
-    this.keyID = keyID;
-    this.key = key;
-};
-
-KeyPair.prototype = {
-    constructor: KeyPair
-};
+class KeyPair {
+    constructor(keyID, key) {
+        this.keyID = keyID;
+        this.key = key;
+    }
+}
 
 export default KeyPair;

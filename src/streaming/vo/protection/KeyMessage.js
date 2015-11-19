@@ -40,16 +40,13 @@
  * {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @class
  */
-let KeyMessage = function(sessionToken, message, defaultURL, messageType) {
-    "use strict";
-    this.sessionToken = sessionToken;
-    this.message = message;
-    this.defaultURL = defaultURL;
-    this.messageType = messageType ? messageType : "license-request";
-};
-
-KeyMessage.prototype = {
-    constructor: KeyMessage
-};
+class KeyMessage {
+    constructor(sessionToken, message, defaultURL, messageType) {
+        this.sessionToken = sessionToken;
+        this.message = message;
+        this.defaultURL = defaultURL;
+        this.messageType = messageType ? messageType : "license-request";
+    }
+}
 
 export default KeyMessage;

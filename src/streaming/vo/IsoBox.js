@@ -28,17 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let IsoBox = function () {
-    "use strict";
 
-    this.offset = NaN;
-    this.type = null;
-    this.size = NaN;
-    this.isComplete = true;
-};
-
-IsoBox.prototype = {
-    constructor: IsoBox
-};
+class IsoBox {
+    constructor() {
+        this.offset = NaN;
+        this.type = null;
+        this.size = NaN;
+        this.isComplete = true;
+    }
+}
 
 export default IsoBox;

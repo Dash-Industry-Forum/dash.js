@@ -28,26 +28,21 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let MetricsList = function () {
-    "use strict";
 
-    return {
-        TcpList: [],
-        HttpList: [],
-        RepSwitchList: [],
-        BufferLevel: [],
-        BufferState: [],
-        PlayList: [],
-        DroppedFrames: [],
-        SchedulingInfo: [],
-        DVRInfo: [],
-        ManifestUpdate: [],
-        RequestsQueue: null
-    };
-};
-
-MetricsList.prototype = {
-    constructor: MetricsList
-};
+class MetricsList {
+    constructor() {
+        this.TcpList = [];
+        this.HttpList = [];
+        this.RepSwitchList = [];
+        this.BufferLevel = [];
+        this.BufferState = [];
+        this.PlayList = [];
+        this.DroppedFrames = [];
+        this.SchedulingInfo = [];
+        this.DVRInfo = [];
+        this.ManifestUpdate = [];
+        this.RequestsQueue = null;
+    }
+}
 
 export default MetricsList;

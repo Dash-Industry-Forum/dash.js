@@ -38,7 +38,7 @@
  * @interface SessionToken
  */
 
-let SessionToken = function () { };
+class SessionToken {}
 
 /**
  * The initialization data used to create this session
@@ -90,4 +90,3 @@ let SessionToken = function () { };
  */
 
 export default SessionToken;
-

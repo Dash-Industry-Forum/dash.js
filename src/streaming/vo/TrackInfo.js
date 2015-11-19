@@ -28,18 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let TrackInfo = function () {
-    "use strict";
-    this.id = null;
-    this.quality = null;
-    this.DVRWindow = null;
-    this.fragmentDuration = null;
-    this.mediaInfo = null;
-    this.MSETimeOffset = null;
-};
 
-TrackInfo.prototype = {
-    constructor: TrackInfo
-};
+class TrackInfo {
+    constructor() {
+        this.id = null;
+        this.quality = null;
+        this.DVRWindow = null;
+        this.fragmentDuration = null;
+        this.mediaInfo = null;
+        this.MSETimeOffset = null;
+    }
+}
 
 export default TrackInfo

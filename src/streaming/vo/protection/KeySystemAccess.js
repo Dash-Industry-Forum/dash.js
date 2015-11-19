@@ -40,13 +40,11 @@
  * by this user agent
  * @class
  */
-let KeySystemAccess = function(keySystem, ksConfiguration) {
-    this.keySystem = keySystem;
-    this.ksConfiguration = ksConfiguration;
-};
-
-KeySystemAccess.prototype = {
-    constructor: KeySystemAccess
-};
+class KeySystemAccess {
+    constructor(keySystem, ksConfiguration){
+        this.keySystem = keySystem;
+        this.ksConfiguration = ksConfiguration;
+    }
+}
 
 export default KeySystemAccess;

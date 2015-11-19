@@ -35,13 +35,11 @@
  * @param {String} [initDataType] initialization data type
  * @constructor
  */
-let NeedKey = function(initData, initDataType) {
-    this.initData = initData;
-    this.initDataType = initDataType;
-};
-
-NeedKey.prototype = {
-    constructor: NeedKey
+class NeedKey {
+    constructor(initData, initDataType) {
+        this.initData = initData;
+        this.initDataType = initDataType;
+    }
 };
 
 export default NeedKey;
