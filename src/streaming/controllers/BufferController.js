@@ -313,14 +313,14 @@ MediaPlayer.dependencies.BufferController = function () {
 
         /* prune buffer on our own in background to avoid browsers pruning buffer silently */
         pruneBuffer = function() {
-            var start = buffer.buffered.start(0),
+            var start = buffer.buffered.length ? buffer.buffered.start(0) : 0,
                 currentTime = this.playbackController.getTime(),
                 bufferToPrune = currentTime - start - MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP;
+
             // we want to get rid off buffer that is more than x
             // seconds behind current time, but no pruning once it's
             // finished.
             if (!isPruningInProgress && mediaSource.readyState !== "ended" && bufferToPrune > MINIMUM_BUFFER_TO_PRUNE) {
-                this.log("need to prune:"+bufferToPrune);
                 isPruningInProgress = true;
                 this.sourceBufferExt.remove(buffer, 0, Math.round(start + bufferToPrune), mediaSource);
             }
@@ -382,7 +382,9 @@ MediaPlayer.dependencies.BufferController = function () {
         checkIfBufferingCompleted = function() {
             var TOLERANCE = 0.15,
                 currentTime = this.playbackController.getTime(),
-                lastRange;
+                lastRange,
+                i,
+                pruneStart;
 
             if (buffer.buffered.length === 0) {
                 return false;
@@ -397,6 +399,20 @@ MediaPlayer.dependencies.BufferController = function () {
                 }
                 return true;
             } else {
+                if (!isPruningInProgress) {
+                    // Prune future buffer if it's discontinuous and a long way away
+                    for (i = lastRange; i > 0; i--) {
+                        if (currentTime + MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP < buffer.buffered.start(i)) {
+                            pruneStart = buffer.buffered.start(i);
+                        } else {
+                            break;
+                        }
+                    }
+                    if (pruneStart) {
+                        isPruningInProgress = true;
+                        this.sourceBufferExt.remove(buffer, pruneStart, this.playbackController.getStreamDuration(), mediaSource);
+                    }
+                }
                 return false;
             }
         },
