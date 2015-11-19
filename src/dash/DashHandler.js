@@ -32,7 +32,6 @@ import Segment from './vo/Segment.js';
 import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import Error from '../streaming/vo/Error.js';
 import HTTPRequest from '../streaming/vo/metrics/HTTPRequest.js';
-import BaseURLExtensions from './extensions/BaseURLExtensions.js';
 import MetricsModel from '../streaming/models/MetricsModel.js';
 import Events from '../streaming/Events.js';
 import EventBus from '../streaming/utils/EventBus.js';

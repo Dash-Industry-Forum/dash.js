@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import BaseURLExtensions from './extensions/BaseURLExtensions.js';
 import RepresentationController from './controllers/RepresentationController.js';
 import DashManifestExtensions from './extensions/DashManifestExtensions.js';
 import DashMetricsExtensions from './extensions/DashMetricsExtensions.js';
@@ -40,8 +39,6 @@ let DashContext = function () {
         system : undefined,
         setup : function () {
             DashContext.prototype.setup.call(this);
-
-            this.system.mapSingleton('baseURLExt', BaseURLExtensions);
             this.system.mapClass('representationController', RepresentationController);
             this.system.mapSingleton('manifestExt', DashManifestExtensions);
             this.system.mapSingleton('metricsExt', DashMetricsExtensions);

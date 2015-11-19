@@ -66,7 +66,6 @@ let ProtectionModel_3Feb2014 = function () {
         // related to EME.  These events are translated into our API-independent
         // versions of the same events
         createEventHandler = function() {
-            var self = this;
             return {
                 handleEvent: function(event) {
                     switch (event.type) {

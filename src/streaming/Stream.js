@@ -38,6 +38,7 @@ import VideoModel from './models/VideoModel.js';
 import MetricsModel from './models/MetricsModel.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import DashHandler from '../dash/DashHandler.js';
+import BaseURLExtensions from '../dash/extensions/BaseURLExtensions.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
@@ -310,15 +311,22 @@ function Stream(config) {
         }
     }
 
-    function createIndexHandler(){
-        return DashHandler.create({
+    function createIndexHandler() {
+
+        let baseUrlExt = BaseURLExtensions.getInstance();
+        baseUrlExt.setConfig({log:log});
+        baseUrlExt.initialize();
+
+        let handler = DashHandler.create({
                 log:log,
-                baseURLExt: system.getObject("baseURLExt"),
+                baseURLExt:baseUrlExt,
                 timelineConverter: timelineConverter,
                 metricsExt:system.getObject("metricsExt"),
                 metricsModel:MetricsModel.getInstance()
             }
         );
+
+        return handler;
     }
 
     function createStreamProcessor(mediaInfo, manifest, mediaSource, optionalSettings) {
