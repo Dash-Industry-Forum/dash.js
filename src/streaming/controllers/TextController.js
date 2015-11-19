@@ -38,8 +38,8 @@ export default FactoryMaker.getClassFactory(TextController);
 
 function TextController(config) {
 
-    let sourceBufferExt = config.sourceBufferExt,
-        errHandler = config.errHandler;
+    let sourceBufferExt = config.sourceBufferExt;
+    let errHandler = config.errHandler;
 
     let instance = {
         initialize :initialize,
