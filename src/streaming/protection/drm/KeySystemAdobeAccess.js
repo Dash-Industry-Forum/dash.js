@@ -35,13 +35,11 @@
  * @class
  * @implements KeySystem
  */
-let KeySystem_Access = function() {
-    "use strict";
+import FactoryMaker from '../../../core/FactoryMaker.js';
+export default FactoryMaker.getSingletonFactory(KeySystemAdobeAccess);
+//TODO implement
+function KeySystemAdobeAccess() {
+    let instance = {}
+    return instance;
 };
-
-KeySystem_Access.prototype = {
-    constructor: KeySystem_Access
-};
-
-export default KeySystem_Access;
 

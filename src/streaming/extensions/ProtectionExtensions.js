@@ -38,6 +38,7 @@ import CommonEncryption from '../protection/CommonEncryption.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 import KeySystemClearKey from '../protection/drm/KeySystemClearKey.js';
 import KeySystemWidevine from '../protection/drm/KeySystemWidevine.js';
+import KeySystemPlayReady from '../protection/drm/KeySystemPlayReady.js';
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(ProtectionExtensions);
@@ -58,7 +59,6 @@ function  ProtectionExtensions() {
     };
 
     return instance;
-
 
     let system,
         log,
@@ -83,7 +83,7 @@ function  ProtectionExtensions() {
         var keySystem;
 
         // PlayReady
-        keySystem = system.getObject("ksPlayReady");
+        keySystem = KeySystemPlayReady.getInstance()
         keySystems.push(keySystem);
 
         // Widevine

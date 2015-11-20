@@ -114,11 +114,10 @@ function  BaseURLExtensions() {
     }
 
     function loadSegments(representation, type, range, loadingInfo, callback) {
+        var parts = range ? range.toString().split("-") : null;
 
-        var parts = range ? range.split("-") : null;
-
-        callback = !callback ? onLoaded : callback;
         range = parts ? {start: parseFloat(parts[0]), end: parseFloat(parts[1])} : null;
+        callback = !callback ? onLoaded : callback;
 
         var hasRange = range !== null,
             request = new XMLHttpRequest(),
