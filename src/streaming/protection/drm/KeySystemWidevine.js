@@ -37,31 +37,41 @@
  */
 
 import CommonEncryption from '../CommonEncryption.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
-let KeySystem_Widevine = function() {
-    "use strict";
+const uuid = "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed";
+const systemString = "com.widevine.alpha";
+const schemeIdURI = "urn:uuid:" + uuid;
 
-    var keySystemStr = "com.widevine.alpha",
-        keySystemUUID = "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed";
+export default FactoryMaker.getSingletonFactory(KeySystemWidevine);
 
-    return {
+function KeySystemWidevine() {
 
-        schemeIdURI: "urn:uuid:" + keySystemUUID,
-        systemString: keySystemStr,
-        uuid: keySystemUUID,
+    let instance = {
+        uuid:uuid,
+        schemeIdURI:schemeIdURI,
+        systemString:systemString,
+        getInitData:getInitData,
+        getRequestHeadersFromMessage:getRequestHeadersFromMessage,
+        getLicenseRequestFromMessage:getLicenseRequestFromMessage,
+        getLicenseServerURLFromInitData:getLicenseServerURLFromInitData,
+    }
 
-        getInitData: CommonEncryption.parseInitDataFromContentProtection,
+    return instance;
 
-        getRequestHeadersFromMessage: function(/*message*/) { return null; },
+    function getInitData() {
+        return CommonEncryption.parseInitDataFromContentProtection;
+    }
 
-        getLicenseRequestFromMessage: function(message) { return new Uint8Array(message); },
+    function getRequestHeadersFromMessage(/*message*/) {
+        return null;
+    }
 
-        getLicenseServerURLFromInitData: function(/*initData*/) { return null; }
-    };
+    function getLicenseRequestFromMessage(message) {
+        return new Uint8Array(message);
+    }
+
+    function getLicenseServerURLFromInitData(/*initData*/) {
+        return null;
+    }
 };
-
-KeySystem_Widevine.prototype = {
-    constructor: KeySystem_Widevine
-};
-
-export default KeySystem_Widevine;

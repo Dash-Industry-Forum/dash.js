@@ -45,7 +45,6 @@ import ProtectionEvents from './protection/ProtectionEvents.js';
 
 
 import KeySystem_PlayReady from './protection/drm/KeySystem_PlayReady.js';
-import KeySystem_Widevine from './protection/drm/KeySystem_Widevine.js';
 import ClearKey from './protection/servers/ClearKey.js';
 import DRMToday from './protection/servers/DRMToday.js';
 import PlayReady from './protection/servers/PlayReady.js';
@@ -85,7 +84,6 @@ let Context = function () {
 
 
             this.system.mapSingleton('ksPlayReady', KeySystem_PlayReady);
-            this.system.mapSingleton('ksWidevine', KeySystem_Widevine);
 
             this.system.mapSingleton('serverPlayReady', PlayReady);
             this.system.mapSingleton('serverWidevine', Widevine);

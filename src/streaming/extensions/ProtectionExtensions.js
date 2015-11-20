@@ -34,10 +34,10 @@
  *
  * @class ProtectionExtensions
  */
-import MediaCapability from '../vo/protection/MediaCapability.js';
 import CommonEncryption from '../protection/CommonEncryption.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 import KeySystemClearKey from '../protection/drm/KeySystemClearKey.js';
+import KeySystemWidevine from '../protection/drm/KeySystemWidevine.js';
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(ProtectionExtensions);
@@ -87,7 +87,7 @@ function  ProtectionExtensions() {
         keySystems.push(keySystem);
 
         // Widevine
-        keySystem = system.getObject("ksWidevine");
+        keySystem = KeySystemWidevine.getInstance()
         keySystems.push(keySystem);
 
         // ClearKey
