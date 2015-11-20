@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MediaPlayer from '../MediaPlayer.js';
+import MetricsList from '../vo/MetricsList.js';
 import TCPConnection from '../vo/metrics/TCPConnection.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import TrackSwitch from '../vo/metrics/RepresentationSwitch.js';
@@ -79,8 +79,7 @@ function  MetricsModel() {
     setup();
     return instance;
 
-    let system,
-        adapter,
+    let adapter,
         streamMetrics;
 
     function setup() {
@@ -92,10 +91,6 @@ function  MetricsModel() {
 
         if (config.adapter) {
             adapter = config.adapter;
-        }
-
-        if (config.system) {
-            system = config.system;
         }
     }
 
@@ -142,7 +137,7 @@ function  MetricsModel() {
         if (streamMetrics.hasOwnProperty(type)) {
             metrics = streamMetrics[type];
         } else {
-            metrics = system.getObject("metrics");
+            metrics = new MetricsList()
             streamMetrics[type] = metrics;
         }
 

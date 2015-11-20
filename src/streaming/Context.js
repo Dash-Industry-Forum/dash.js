@@ -52,7 +52,7 @@ import DRMToday from './protection/servers/DRMToday.js';
 import PlayReady from './protection/servers/PlayReady.js';
 import Widevine from './protection/servers/Widevine.js';
 
-import VideoModelExtensions from './extensions/VideoModelExtensions.js';
+
 import MetricsList from './vo/MetricsList.js';
 
 
@@ -95,8 +95,6 @@ let Context = function () {
             this.system.mapSingleton('serverWidevine', Widevine);
             this.system.mapSingleton('serverClearKey', ClearKey);
             this.system.mapSingleton('serverDRMToday', DRMToday);
-
-            this.system.mapSingleton('videoExt', VideoModelExtensions);
 
             this.system.mapClass('metrics', MetricsList);
         }

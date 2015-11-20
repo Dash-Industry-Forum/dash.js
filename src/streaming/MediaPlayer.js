@@ -64,6 +64,7 @@ import RulesController from './rules/RulesController.js';
 import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
+import VideoModelExtensions from './extensions/VideoModelExtensions.js';
 
 
 //dash
@@ -370,7 +371,7 @@ let MediaPlayer = function (context) {
                 adapter: adapter,
                 metricsModel: metricsModel,
                 metricsExt: metricsExt,
-                videoExt: system.getObject("videoExt"),
+                videoModelExt: VideoModelExtensions.getInstance(),
                 liveEdgeFinder: LiveEdgeFinder.getInstance(),
                 mediaSourceExt: MediaSourceExtensions.getInstance(),
                 timeSyncController: TimeSyncController.getInstance(),
@@ -468,8 +469,7 @@ let MediaPlayer = function (context) {
             })
 
             metricsModel.setConfig({
-                adapter:adapter,
-                system:system
+                adapter:adapter
             })
 
             this.restoreDefaultUTCTimingSources();

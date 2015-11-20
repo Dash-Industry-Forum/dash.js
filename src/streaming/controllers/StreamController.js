@@ -73,7 +73,7 @@ function StreamController() {
         adapter,
         metricsModel,
         metricsExt,
-        videoExt,
+        videoModelExt,
         liveEdgeFinder,
         mediaSourceExt,
         timeSyncController,
@@ -215,7 +215,7 @@ function StreamController() {
      * Used to determine the time current stream is finished and we should switch to the next stream.
      */
     function onPlaybackTimeUpdated(e) {
-        var playbackQuality = videoExt.getPlaybackQuality(videoModel.getElement());
+        var playbackQuality = videoModelExt.getPlaybackQuality(videoModel.getElement());
         if (playbackQuality) {
             metricsModel.addDroppedFrames("video", playbackQuality);
         }
@@ -604,8 +604,8 @@ function StreamController() {
         if (config.metricsExt){
             metricsExt = config.metricsExt;
         }
-        if (config.videoExt){
-            videoExt = config.videoExt;
+        if (config.videoModelExt){
+            videoModelExt = config.videoModelExt;
         }
         if (config.liveEdgeFinder){
             liveEdgeFinder = config.liveEdgeFinder;
