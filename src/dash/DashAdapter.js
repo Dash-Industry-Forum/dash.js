@@ -117,8 +117,8 @@ function DashAdapter() {
     }
 
     function getPeriodForStreamInfo(streamInfo) {
+        var ln = periods.length;
         var period,
-            ln = periods.length,
             i = 0;
 
         for (i; i < ln; i += 1) {
@@ -131,9 +131,9 @@ function DashAdapter() {
     }
 
     function convertRepresentationToTrackInfo(manifest, representation) {
-        var trackInfo = new TrackInfo(),
-            a = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index],
-            r = manifestExt.getRepresentationFor(representation.index, a);
+        var trackInfo = new TrackInfo();
+        var a = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
+        var r = manifestExt.getRepresentationFor(representation.index, a);
 
         trackInfo.id = representation.id;
         trackInfo.quality = representation.index;
@@ -148,9 +148,9 @@ function DashAdapter() {
     }
 
     function convertAdaptationToMediaInfo(manifest, adaptation) {
-        var mediaInfo = new MediaInfo(),
-            a = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index],
-            viewpoint;
+        var mediaInfo = new MediaInfo();
+        var a = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
+        var viewpoint;
 
         mediaInfo.id = adaptation.id;
         mediaInfo.index = adaptation.index;
@@ -186,8 +186,8 @@ function DashAdapter() {
     }
 
     function convertPeriodToStreamInfo(manifest, period) {
-        var streamInfo = new StreamInfo(),
-            THRESHOLD = 1;
+        var streamInfo = new StreamInfo();
+        var THRESHOLD = 1;
 
         streamInfo.id = period.id;
         streamInfo.index = period.index;
@@ -214,10 +214,10 @@ function DashAdapter() {
     }
 
     function getMediaInfoForType(manifest, streamInfo, type) {
-        var periodInfo = getPeriodForStreamInfo(streamInfo),
-            periodId = periodInfo.id,
-            data = manifestExt.getAdaptationForType(manifest, streamInfo.index, type),
-            idx;
+        var periodInfo = getPeriodForStreamInfo(streamInfo);
+        var periodId = periodInfo.id;
+        var data = manifestExt.getAdaptationForType(manifest, streamInfo.index, type);
+        var idx;
 
         if (!data) return null;
 
@@ -229,10 +229,11 @@ function DashAdapter() {
     }
 
     function getAllMediaInfoForType(manifest, streamInfo, type) {
-        var periodInfo = getPeriodForStreamInfo(streamInfo),
-            periodId = periodInfo.id,
-            adaptationsForType = manifestExt.getAdaptationsForType(manifest, streamInfo.index, type),
-            data,
+        var periodInfo = getPeriodForStreamInfo(streamInfo);
+        var periodId = periodInfo.id;
+        var adaptationsForType = manifestExt.getAdaptationsForType(manifest, streamInfo.index, type);
+
+        var data,
             mediaArr = [],
             media,
             idx;
@@ -310,11 +311,12 @@ function DashAdapter() {
     }
 
     function updateData(manifest, streamProcessor) {
-        var periodInfo = getPeriodForStreamInfo(streamProcessor.getStreamInfo()),
-            mediaInfo = streamProcessor.getMediaInfo(),
-            adaptation = getAdaptationForMediaInfo(mediaInfo),
-            type = streamProcessor.getType(),
-            id,
+        var periodInfo = getPeriodForStreamInfo(streamProcessor.getStreamInfo());
+        var mediaInfo = streamProcessor.getMediaInfo();
+        var adaptation = getAdaptationForMediaInfo(mediaInfo);
+        var type = streamProcessor.getType();
+
+        var id,
             data;
 
         id = mediaInfo.id;
@@ -333,15 +335,15 @@ function DashAdapter() {
     }
 
     function getEvent(eventBox, eventStreams, startTime) {
-        var event = new Event(),
-            schemeIdUri = eventBox.scheme_id_uri,
-            value = eventBox.value,
-            timescale = eventBox.timescale,
-            presentationTimeDelta = eventBox.presentation_time_delta,
-            duration = eventBox.event_duration,
-            id = eventBox.id,
-            messageData = eventBox.message_data,
-            presentationTime = startTime*timescale+presentationTimeDelta;
+        var event = new Event();
+        var schemeIdUri = eventBox.scheme_id_uri;
+        var value = eventBox.value;
+        var timescale = eventBox.timescale;
+        var presentationTimeDelta = eventBox.presentation_time_delta;
+        var duration = eventBox.event_duration;
+        var id = eventBox.id;
+        var messageData = eventBox.message_data;
+        var presentationTime = startTime * timescale + presentationTimeDelta;
 
         if (!eventStreams[schemeIdUri]) return null;
 

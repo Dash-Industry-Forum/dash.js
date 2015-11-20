@@ -70,11 +70,13 @@ function DashParser(config) {
                 type: "duration",
                 test: function (attr) {
 
-                    var attributeList = ["minBufferTime", "mediaPresentationDuration",
-                            "minimumUpdatePeriod","timeShiftBufferDepth", "maxSegmentDuration",
-                            "maxSubsegmentDuration", "suggestedPresentationDelay", "start",
-                            "starttime", "duration"],
-                        len = attributeList.length;
+                    var attributeList = [
+                        "minBufferTime", "mediaPresentationDuration",
+                        "minimumUpdatePeriod", "timeShiftBufferDepth", "maxSegmentDuration",
+                        "maxSubsegmentDuration", "suggestedPresentationDelay", "start",
+                        "starttime", "duration"
+                    ];
+                    var len = attributeList.length;
 
                     for (var i = 0; i < len; i++) {
                         if (attr.nodeName === attributeList[i]) {
@@ -106,8 +108,8 @@ function DashParser(config) {
                     return datetimeRegex.test(attr.value);
                 },
                 converter: function (str) {
-                    var match = datetimeRegex.exec(str),
-                        utcDate;
+                    var match = datetimeRegex.exec(str);
+                    var utcDate;
                     // If the string does not contain a timezone offset different browsers can interpret it either
                     // as UTC or as a local time so we have to parse the string manually to normalize the given date value for
                     // all browsers
@@ -374,10 +376,11 @@ function DashParser(config) {
 
     function parse(data, baseUrl, xlinkController) {
 
+        var converter = new X2JS(matchers, '', true);
+        var iron = new ObjectIron(getDashMap());
+        var start = new Date();
+
         var manifest,
-            converter = new X2JS(matchers, '', true),
-            iron = new ObjectIron(getDashMap()),
-            start = new Date(),
             json = null,
             ironed = null;
 

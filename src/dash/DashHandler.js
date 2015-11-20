@@ -47,11 +47,11 @@ export default factory;
 
 function DashHandler(config) {
 
-    let log = config.log,
-        baseURLExt = config.baseURLExt,
-        timelineConverter = config.timelineConverter,
-        metricsExt = config.metricsExt,
-        metricsModel = config.metricsModel;
+    let log = config.log;
+    let baseURLExt = config.baseURLExt;
+    let timelineConverter = config.timelineConverter;
+    let metricsExt = config.metricsExt;
+    let metricsModel = config.metricsModel;
 
     let instance = {
         initialize:initialize,
@@ -128,16 +128,16 @@ function DashHandler(config) {
     }
 
     function replaceTokenForTemplate(url, token, value) {
-
         var startPos,
             endPos,
-            tokenLen = token.length,
             formatTag = "%0",
-            formatTagLen = formatTag.length,
             formatTagPos,
             specifier,
             width,
             paddedValue;
+
+        var tokenLen = token.length;
+        var formatTagLen = formatTag.length;
 
         // keep looping round until all instances of <token> have been
         // replaced. once that has happened, startPos below will be -1
@@ -169,25 +169,25 @@ function DashHandler(config) {
                 // support the minimum specifiers required by IEEE 1003.1
                 // (d, i , o, u, x, and X) for completeness
                 switch (specifier) {
-                // treat all int types as uint,
-                // hence deliberate fallthrough
-                case 'd':
-                case 'i':
-                case 'u':
-                    paddedValue = zeroPadToLength(value.toString(), width);
-                    break;
-                case 'x':
-                    paddedValue = zeroPadToLength(value.toString(16), width);
-                    break;
-                case 'X':
-                    paddedValue = zeroPadToLength(value.toString(16), width).toUpperCase();
-                    break;
-                case 'o':
-                    paddedValue = zeroPadToLength(value.toString(8), width);
-                    break;
-                default:
-                    log("Unsupported/invalid IEEE 1003.1 format identifier string in URL");
-                    return url;
+                    // treat all int types as uint,
+                    // hence deliberate fallthrough
+                    case 'd':
+                    case 'i':
+                    case 'u':
+                        paddedValue = zeroPadToLength(value.toString(), width);
+                        break;
+                    case 'x':
+                        paddedValue = zeroPadToLength(value.toString(16), width);
+                        break;
+                    case 'X':
+                        paddedValue = zeroPadToLength(value.toString(16), width).toUpperCase();
+                        break;
+                    case 'o':
+                        paddedValue = zeroPadToLength(value.toString(8), width);
+                        break;
+                    default:
+                        log("Unsupported/invalid IEEE 1003.1 format identifier string in URL");
+                        return url;
                 }
             } else {
                 paddedValue = value;
@@ -213,8 +213,8 @@ function DashHandler(config) {
 
     function getRequestUrl(destination, representation) {
         var baseURL = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
-            url;
+            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
+        var url;
 
         if (destination === baseURL) {
             url = destination;
@@ -228,8 +228,8 @@ function DashHandler(config) {
     }
 
     function generateInitRequest(representation, mediaType) {
+        var request = new FragmentRequest();
         var period,
-            request = new FragmentRequest(),
             presentationStartTime;
 
         period = representation.adaptation.period;
@@ -259,11 +259,12 @@ function DashHandler(config) {
     }
 
     function isMediaFinished(representation) { // TODO
+        var period = representation.adaptation.period;
+        var segmentInfoType = representation.segmentInfoType;
+
         var sDuration,
-            period = representation.adaptation.period,
             isFinished = false,
             seg,
-            segmentInfoType = representation.segmentInfoType,
             fTime;
 
         if (index < 0) {
@@ -326,10 +327,11 @@ function DashHandler(config) {
 
     function getSegmentsFromTimeline(representation) {
         var template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate,
-            timeline = template.SegmentTimeline,
-            isAvailableSegmentNumberCalculated = representation.availableSegmentsNumber > 0,
-            maxSegmentsAhead = 10,
+            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
+        var timeline = template.SegmentTimeline;
+        var isAvailableSegmentNumberCalculated = representation.availableSegmentsNumber > 0;
+
+        var maxSegmentsAhead = 10,
             segments = [],
             fragments,
             frag,
@@ -458,11 +460,12 @@ function DashHandler(config) {
     }
 
     function getSegmentsFromTemplate(representation) {
+        var template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
+        var duration = representation.segmentDuration;
+        var availabilityWindow = representation.segmentAvailabilityRange;
+
         var segments = [],
-            template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate,
-            duration = representation.segmentDuration,
-            availabilityWindow = representation.segmentAvailabilityRange,
             segmentRange,
             periodSegIdx,
             startIdx,
@@ -507,16 +510,19 @@ function DashHandler(config) {
     }
 
     function decideSegmentListRangeForTemplate(representation) {
-        var duration = representation.segmentDuration,
-            minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime,
-            availabilityWindow = representation.segmentAvailabilityRange,
-            periodRelativeRange = {start: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.start),
-                end: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.end)},
-            originAvailabilityTime = NaN,
+        var duration = representation.segmentDuration;
+        var minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime;
+        var availabilityWindow = representation.segmentAvailabilityRange;
+        var periodRelativeRange = {
+            start: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.start),
+            end: timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, availabilityWindow.end)
+        };
+        var currentSegmentList = representation.segments;
+        var availabilityLowerLimit = 2 * duration;
+        var availabilityUpperLimit = Math.max(2 * minBufferTime, 10 * duration);
+
+        var originAvailabilityTime = NaN,
             originSegment = null,
-            currentSegmentList = representation.segments,
-            availabilityLowerLimit = 2 * duration,
-            availabilityUpperLimit = Math.max(2 * minBufferTime, 10 * duration),
             start,
             end,
             range;
@@ -582,9 +588,10 @@ function DashHandler(config) {
     }
 
     function getTimeBasedSegment(representation, time, duration, fTimescale, url, range, index) {
-        var scaledTime = time / fTimescale,
-            scaledDuration = Math.min(duration / fTimescale, representation.adaptation.period.mpd.maxSegmentDuration),
-            presentationStartTime,
+        var scaledTime = time / fTimescale;
+        var scaledDuration = Math.min(duration / fTimescale, representation.adaptation.period.mpd.maxSegmentDuration);
+
+        var presentationStartTime,
             presentationEndTime,
             seg;
 
@@ -620,12 +627,13 @@ function DashHandler(config) {
     }
 
     function getSegmentsFromList(representation) {
+        var list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
+        var baseURL = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
+        var len = list.SegmentURL_asArray.length;
+
         var segments = [],
-            list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList,
-            baseURL = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
-            len = list.SegmentURL_asArray.length,
             periodSegIdx,
             seg,
             s,
@@ -660,10 +668,10 @@ function DashHandler(config) {
     }
 
     function getSegments(representation) {
-        var segments,
-            type = representation.segmentInfoType;
+        var segments;
+        var type = representation.segmentInfoType;
 
-            // Already figure out the segments.
+        // Already figure out the segments.
         if (type === "SegmentBase" || type === "BaseURL" || !isSegmentListUpdateRequired(representation)) {
             segments = representation.segments;
         } else {
@@ -713,9 +721,9 @@ function DashHandler(config) {
     }
 
     function updateRepresentation(representation, keepIdx) {
-        var hasInitialization = representation.initialization,
-            hasSegments = representation.segmentInfoType !== "BaseURL" && representation.segmentInfoType !== "SegmentBase",
-            error;
+        var hasInitialization = representation.initialization;
+        var hasSegments = representation.segmentInfoType !== "BaseURL" && representation.segmentInfoType !== "SegmentBase";
+        var error;
 
         if (!representation.segmentDuration && !representation.segments) {
             updateSegmentList(representation);
@@ -750,9 +758,10 @@ function DashHandler(config) {
     }
 
     function getIndexForSegments(time, representation, timeThreshold) {
-        var segments = representation.segments,
-            ln = segments ? segments.length : null,
-            idx = -1,
+        var segments = representation.segments;
+        var ln = segments ? segments.length : null;
+
+        var idx = -1,
             epsilon,
             frag,
             ft,
@@ -780,8 +789,8 @@ function DashHandler(config) {
     function getSegmentByIndex(index, representation) {
         if (!representation || !representation.segments) return null;
 
-        var ln = representation.segments.length,
-            seg,
+        var ln = representation.segments.length;
+        var seg,
             i;
 
         for (i = 0; i < ln; i += 1) {
@@ -796,8 +805,8 @@ function DashHandler(config) {
     }
 
     function isSegmentListUpdateRequired(representation) {
+        var segments = representation.segments;
         var updateRequired = false,
-            segments = representation.segments,
             upperIdx,
             lowerIdx;
 
@@ -817,11 +826,11 @@ function DashHandler(config) {
             return null;
         }
 
-        var request = new FragmentRequest(),
-            representation = segment.representation,
-            bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth,
-            url;
+        var request = new FragmentRequest();
+        var representation = segment.representation;
+        var bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth;
+        var url;
 
         url = getRequestUrl(segment.media, representation);
         url = replaceTokenForTemplate(url, "Number", segment.replacementNumber);
@@ -851,10 +860,11 @@ function DashHandler(config) {
         var request,
             segment,
             finished,
-            idx = index,
-            keepIdx = options ? options.keepIdx : false,
-            timeThreshold = options ? options.timeThreshold : null,
-            ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
+            idx = index;
+
+        var keepIdx = options ? options.keepIdx : false;
+        var timeThreshold = options ? options.timeThreshold : null;
+        var ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
 
         if (!representation) {
             return null;
@@ -944,9 +954,9 @@ function DashHandler(config) {
     function onSegmentsLoaded(e) {
         if (e.error || (type !== e.mediaType)) return;
 
-        var fragments = e.segments,
-            representation = e.representation,
-            i,
+        var fragments = e.segments;
+        var representation = e.representation;
+        var i,
             len,
             s,
             segments = [],
