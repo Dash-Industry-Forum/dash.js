@@ -63,21 +63,23 @@ function  BaseURLExtensions() {
     }
 
     function loadInitialization(representation, loadingInfo) {
-        var request = new XMLHttpRequest(),
-            needFailureReport = true,
+        var needFailureReport = true,
             initRange = null,
-            isoFile = null,
-            media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
-            info = loadingInfo || {
-                    url: media,
-                    range: {start: 0,
-                        end: 1500},
-                    searching: false,
-                    bytesLoaded: 0,
-                    bytesToLoad: 1500,
-                    request: request
-                };
+            isoFile = null;
+        var request = new XMLHttpRequest();
+        var media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+                    AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
+        var info = loadingInfo || {
+            url: media,
+            range: {
+                start: 0,
+                end: 1500
+            },
+            searching: false,
+            bytesLoaded: 0,
+            bytesToLoad: 1500,
+            request: request
+        };
 
         log("Start searching for initialization.");
 
@@ -118,28 +120,27 @@ function  BaseURLExtensions() {
 
         range = parts ? {start: parseFloat(parts[0]), end: parseFloat(parts[1])} : null;
         callback = !callback ? onLoaded : callback;
-
-        var hasRange = range !== null,
-            request = new XMLHttpRequest(),
-            media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL,
-            needFailureReport = true,
+        var needFailureReport = true,
             isoFile = null,
-            sidx = null,
-            info = {
-                url: media,
-                range: hasRange ? range : {start: 0, end: 1500},
-                searching: !hasRange,
-                bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
-                bytesToLoad: 1500,
-                request: request
-            };
+            sidx = null;
+        var hasRange = range !== null;
+        var request = new XMLHttpRequest();
+        var media = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
+            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].BaseURL;
+        var info = {
+            url: media,
+            range: hasRange ? range : { start: 0, end: 1500 },
+            searching: !hasRange,
+            bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
+            bytesToLoad: 1500,
+            request: request
+        };
 
         request.onload = function () {
             if (request.status < 200 || request.status > 299) return;
 
-            var extraBytes = info.bytesToLoad,
-                loadedLength = request.response.byteLength;
+            var extraBytes = info.bytesToLoad;
+            var loadedLength = request.response.byteLength;
 
             needFailureReport = false;
             info.bytesLoaded = info.range.end - info.range.start;
@@ -166,8 +167,8 @@ function  BaseURLExtensions() {
                 }
                 loadSegments(representation, type, info.range, info, callback);
             } else {
-                var ref = sidx.references,
-                    loadMultiSidx,
+                var ref = sidx.references;
+                var loadMultiSidx,
                     segments;
 
                 if (ref !== null && ref !== undefined && ref.length > 0) {
@@ -179,20 +180,20 @@ function  BaseURLExtensions() {
                     info.range.end = info.range.start + sidx.size;
 
                     var j, len, ss, se, r, segs = [],
-                        count = 0,
-                        offset = (sidx.offset || info.range.start) + sidx.size,
-                        tmpCallback = function(result) {
-                            if (result) {
-                                segs = segs.concat(result);
-                                count += 1;
+                        count = 0;
+                    var offset = (sidx.offset || info.range.start) + sidx.size;
+                    var tmpCallback = function(result) {
+                        if (result) {
+                            segs = segs.concat(result);
+                            count += 1;
 
-                                if (count >= len) {
-                                    callback(segs, representation, type);
-                                }
-                            } else {
-                                callback(null, representation, type);
+                            if (count >= len) {
+                                callback(segs, representation, type);
                             }
-                        };
+                        } else {
+                            callback(null, representation, type);
+                        }
+                    };
 
                     for (j = 0, len = ref.length; j < len; j += 1) {
                         ss = offset;
@@ -239,12 +240,12 @@ function  BaseURLExtensions() {
 
     function  getSegmentsForSidx(sidx, info) {
 
-        var refs = sidx.references,
-            len = refs.length,
-            timescale = sidx.timescale,
-            time = sidx.earliest_presentation_time,
-            start = info.range.start + sidx.first_offset + sidx.size,
-            segments = [],
+        var refs = sidx.references;
+        var len = refs.length;
+        var timescale = sidx.timescale;
+        var time = sidx.earliest_presentation_time;
+        var start = info.range.start + sidx.first_offset + sidx.size;
+        var segments = [],
             segment,
             end,
             duration,
@@ -270,9 +271,9 @@ function  BaseURLExtensions() {
     }
 
     function findInitRange(isoFile) {
-        var ftyp = isoFile.getBox("ftyp"),
-            moov = isoFile.getBox("moov"),
-            start,
+        var ftyp = isoFile.getBox("ftyp");
+        var moov = isoFile.getBox("moov");
+        var start,
             end,
             initRange = null;
 
