@@ -76,8 +76,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     ////////////////////////////////////////
 
     video = document.querySelector(".dash-video-player video");
-    context = new Dash.di.DashContext();
-    player = new MediaPlayer(context);
+    player = new MediaPlayer();
     $scope.version = player.getVersion();
 
     player.startup();

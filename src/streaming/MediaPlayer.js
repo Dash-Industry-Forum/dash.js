@@ -30,7 +30,7 @@
  */
 /**
  * @class MediaPlayer
- * @param context - New instance of a dijon.js context (i.e. new Dash.di.DashContext()).  You can pass a custom context that extends Dash.di.DashContext to override item(s) in the DashContext.
+ *
  */
 /*jshint -W020 */
 import UTCTiming from '../dash/vo/UTCTiming.js';
@@ -92,7 +92,7 @@ import FactoryMaker from '../core/FactoryMaker.js'
 
 
 
-let MediaPlayer = function (context) {
+let MediaPlayer = function () {
 
 
     var VERSION = "2.0.0",
@@ -416,8 +416,7 @@ let MediaPlayer = function (context) {
 
 
 
-    // Dash.di.Context makes calls to Debug in its setup() function, so we need to
-    // map it here and explicitly inject Debug before we do a global inject into context
+
     let debug = Debug.getInstance();
     let log = debug.log;
 
@@ -446,7 +445,6 @@ let MediaPlayer = function (context) {
     metricsModel.setConfig({adapter:adapter});
 
     //restoreDefaultUTCTimingSources();
-
     log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
 
 
@@ -973,117 +971,7 @@ let MediaPlayer = function (context) {
             abrController.setAutoSwitchBitrate(value);
         },
 
-        /**
-         * <p>Allows you to override the default Scheduling Rules with a custom collection.</p>
-         *
-         * <pre>
-         * You need to use a custom context by extend DashContext.js and passing to MediaPlayer upon instantiation.
-         *
-         * //CustomRuleCollection code example.
-         *
-         *  MediaPlayer.rules.CustomRuleCollection = function () {
-         *      "use strict";
-         *  }
-         *
-         *  MediaPlayer.rules.CustomRuleCollection.prototype = new MediaPlayer.rules.ABRRulesCollection();
-         *  MediaPlayer.rules.CustomRuleCollection.prototype.constructor = MediaPlayer.rules.ABRRulesCollection;
-         *  MediaPlayer.rules.CustomRuleCollection.prototype.QUALITY_SWITCH_RULES = [new MediaPlayer.rules.CustomRuleCollection()];
-         *
-         *  MediaPlayer.rules.CustomRuleCollection.prototype = {
-         *      constructor: MediaPlayer.rules.CustomRuleCollection
-         *  };
-         * </pre>
-         *
-         * @param newRulesCollection
-         * @memberof MediaPlayer#
-         */
-        setSchedulingRules: function (newRulesCollection) {
-            updateRules.call(this, RulesController.SCHEDULING_RULE, newRulesCollection, true);
-        },
 
-        /**
-         * <p>Allows you to add a custom Scheduling rule to the existing stack of default rules.</p>
-         *
-         * <pre>
-         * You need to use a custom context by extend DashContext.js and passing to MediaPlayer upon instantiation.
-         *
-         * //CustomRuleCollection code example.
-         *
-         *  MediaPlayer.rules.CustomRuleCollection = function () {
-         *      "use strict";
-         *  }
-         *
-         *  MediaPlayer.rules.CustomRuleCollection.prototype = new MediaPlayer.rules.ABRRulesCollection();
-         *  MediaPlayer.rules.CustomRuleCollection.prototype.constructor = MediaPlayer.rules.ABRRulesCollection;
-         *  MediaPlayer.rules.CustomRuleCollection.prototype.QUALITY_SWITCH_RULES = [new MediaPlayer.rules.CustomRuleCollection()];
-         *
-         *  MediaPlayer.rules.CustomRuleCollection.prototype = {
-         *      constructor: MediaPlayer.rules.CustomRuleCollection
-         *  };
-         * </pre>
-         *
-         * @param newRulesCollection
-         * @memberof MediaPlayer#
-         */
-        addSchedulingRules: function (newRulesCollection) {
-            updateRules.call(this, RulesController.SCHEDULING_RULE, newRulesCollection, false);
-        },
-
-        /**
-         * <p>Allows you to override the default ABR Rules with a custom collection.</p>
-         *
-         * <pre>
-         * You need to use a custom context by extend DashContext.js and passing to MediaPlayer upon instantiation.
-         *
-         * //CustomRuleCollection code example.
-         *
-         *  MediaPlayer.rules.CustomRuleCollection = function () {
-         *      "use strict";
-         *  }
-         *
-         *  MediaPlayer.rules.CustomRuleCollection.prototype = new MediaPlayer.rules.ABRRulesCollection();
-         *  MediaPlayer.rules.CustomRuleCollection.prototype.constructor = MediaPlayer.rules.ABRRulesCollection;
-         *  MediaPlayer.rules.CustomRuleCollection.prototype.QUALITY_SWITCH_RULES = [new MediaPlayer.rules.CustomRuleCollection()];
-         *
-         *  MediaPlayer.rules.CustomRuleCollection.prototype = {
-         *      constructor: MediaPlayer.rules.CustomRuleCollection
-         *  };
-         * </pre>
-         *
-         * @param newRulesCollection
-         * @memberof MediaPlayer#
-         */
-        setABRRules: function (newRulesCollection) {
-            updateRules.call(this, RulesController.ABR_RULE, newRulesCollection, true);
-        },
-
-        /**
-         * <p>Allows you to add a custom ABR rule to the existing stack of default rules.</p>
-         *
-         * <pre>
-         * You need to use a custom context by extend DashContext.js and passing to MediaPlayer upon instantiation.
-         *
-         * //CustomRuleCollection code example.
-         *
-         *  MediaPlayer.rules.CustomRuleCollection = function () {
-         *      "use strict";
-         *  }
-         *
-         *  MediaPlayer.rules.CustomRuleCollection.prototype = new MediaPlayer.rules.ABRRulesCollection();
-         *  MediaPlayer.rules.CustomRuleCollection.prototype.constructor = MediaPlayer.rules.ABRRulesCollection;
-         *  MediaPlayer.rules.CustomRuleCollection.prototype.QUALITY_SWITCH_RULES = [new MediaPlayer.rules.CustomRuleCollection()];
-         *
-         *  MediaPlayer.rules.CustomRuleCollection.prototype = {
-         *      constructor: MediaPlayer.rules.CustomRuleCollection
-         *  };
-         * </pre>
-         *
-         * @param newRulesCollection
-         * @memberof MediaPlayer#
-         */
-        addABRRules: function (newRulesCollection) {
-            updateRules.call(this, RulesController.ABR_RULE, newRulesCollection, false);
-        },
 
         /**
          * Create a ProtectionController and associated ProtectionModel for use with

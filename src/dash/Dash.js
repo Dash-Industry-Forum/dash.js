@@ -30,18 +30,11 @@
  */
 
 /*jshint -W020 */
-import DashContext from './DashContext.js';
 import MediaPlayer from '../streaming/MediaPlayer.js';
 
 'use strict';
 
 let Dash = {
-    modules: {},
-    dependencies: {},
-    vo: {},
-    di: {
-        DashContext: DashContext,
-    },
     /**
      *  A new MediaPlayer is instantiated for the supplied videoElement and optional source and context.  If no context is provided,
      *  a default DashContext is used. If no source is provided, the videoElement is interrogated to extract the first source whose
