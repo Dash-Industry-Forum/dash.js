@@ -37,7 +37,7 @@
 import MediaCapability from '../vo/protection/MediaCapability.js';
 import CommonEncryption from '../protection/CommonEncryption.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
-import KeySystem_ClearKey from '../protection/drm/KeySystem_ClearKey.js';
+import KeySystemClearKey from '../protection/drm/KeySystemClearKey.js';
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(ProtectionExtensions);
@@ -91,7 +91,7 @@ function  ProtectionExtensions() {
         keySystems.push(keySystem);
 
         // ClearKey
-        keySystem = system.getObject("ksClearKey");
+        keySystem = KeySystemClearKey.getInstance();
         keySystems.push(keySystem);
         clearkeyKeySystem = keySystem;
     }
@@ -285,7 +285,7 @@ function  ProtectionExtensions() {
      */
     function processClearKeyLicenseRequest(protData, message) {
         try {
-            return KeySystem_ClearKey.getClearKeysFromProtectionData(protData, message);
+            return clearkeyKeySystem.getClearKeysFromProtectionData(protData, message);
         } catch (error) {
             log("Failed to retrieve clearkeys from ProtectionData");
             return null;

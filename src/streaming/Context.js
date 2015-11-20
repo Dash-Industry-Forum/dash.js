@@ -35,25 +35,21 @@
  * @class
  */
 import Debug from './utils/Debug.js';
+
 import Events from './Events.js';
 import CoreEvents from '../core/events/CoreEvents.js';
 import PublicEvents from './PublicEvents';
 import ProtectionEvents from './protection/ProtectionEvents.js';
-import IsoFile from './utils/IsoFile.js';
 
 
 
 
 import KeySystem_PlayReady from './protection/drm/KeySystem_PlayReady.js';
 import KeySystem_Widevine from './protection/drm/KeySystem_Widevine.js';
-import KeySystem_ClearKey from './protection/drm/KeySystem_ClearKey.js';
 import ClearKey from './protection/servers/ClearKey.js';
 import DRMToday from './protection/servers/DRMToday.js';
 import PlayReady from './protection/servers/PlayReady.js';
 import Widevine from './protection/servers/Widevine.js';
-
-
-import MetricsList from './vo/MetricsList.js';
 
 
 
@@ -90,13 +86,12 @@ let Context = function () {
 
             this.system.mapSingleton('ksPlayReady', KeySystem_PlayReady);
             this.system.mapSingleton('ksWidevine', KeySystem_Widevine);
-            this.system.mapSingleton('ksClearKey', KeySystem_ClearKey);
+
             this.system.mapSingleton('serverPlayReady', PlayReady);
             this.system.mapSingleton('serverWidevine', Widevine);
             this.system.mapSingleton('serverClearKey', ClearKey);
             this.system.mapSingleton('serverDRMToday', DRMToday);
 
-            this.system.mapClass('metrics', MetricsList);
         }
     };
 };

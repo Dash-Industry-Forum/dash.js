@@ -265,8 +265,8 @@ function ProtectionController(config) {
      * @memberof ProtectionController
      * @instance
      */
-    function setSessionType(sessionType) {
-        sessionType = sessionType;
+    function setSessionType(value) {
+        sessionType = value;
     }
 
     /**
