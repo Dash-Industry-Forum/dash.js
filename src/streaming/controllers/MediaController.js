@@ -78,7 +78,6 @@ function MediaController() {
         selectionMode,
         switchMode,
         log,
-        system,
         errHandler,
         DOMStorage;
 
@@ -327,9 +326,6 @@ function MediaController() {
 
         if (config.log){
             log = config.log;
-        }
-        if (config.system){
-            system = config.system;
         }
         if (config.errHandler){
             errHandler = config.errHandler;

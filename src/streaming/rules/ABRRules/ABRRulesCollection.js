@@ -31,6 +31,7 @@
 import ThroughputRule from './ThroughputRule.js'
 import BufferOccupancyRule from './BufferOccupancyRule.js'
 import InsufficientBufferRule from './InsufficientBufferRule.js'
+import Debug from '../../utils/Debug.js'
 import MetricsModel from '../../models/MetricsModel.js';
 import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
@@ -45,10 +46,7 @@ factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
 
 export default factory;
 
-function ABRRulesCollection(config) {
-
-    //TODO Temp until dijon is removed no setConfig due to being temp.
-    let system = config.system;
+function ABRRulesCollection() {
 
     let instance = {
         initialize:initialize,
@@ -65,20 +63,20 @@ function ABRRulesCollection(config) {
         abandonFragmentRules = [];
 
         qualitySwitchRules.push(ThroughputRule.create({
-                log:system.getObject("log"),
+                log:Debug.getInstance().log,
                 metricsExt:DashMetricsExtensions.getInstance(),
                 metricsModel:MetricsModel.getInstance()
             })
         );
 
         qualitySwitchRules.push(BufferOccupancyRule.create({
-                log:system.getObject("log"),
+                log:Debug.getInstance().log,
                 metricsModel:MetricsModel.getInstance()
             })
         );
 
         qualitySwitchRules.push(InsufficientBufferRule.create({
-                log:system.getObject("log"),
+                log:Debug.getInstance().log,
                 metricsModel:MetricsModel.getInstance()
             })
         );

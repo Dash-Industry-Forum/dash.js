@@ -34,50 +34,8 @@
  *
  * @class
  */
-import Debug from './utils/Debug.js';
-import Events from './Events.js';
-import CoreEvents from '../core/events/CoreEvents.js';
-import PublicEvents from './PublicEvents';
-import ProtectionEvents from './protection/ProtectionEvents.js';
-
 
 let Context = function () {
-
-
-    return {
-        system : undefined,
-        setup : function () {
-            var coreEvents,
-                protectionEvents;
-
-            if (CoreEvents) {
-                coreEvents = new CoreEvents();
-                Events.extend(coreEvents);
-            } else {
-                throw new Error("CoreEvents are mandatory");
-            }
-
-            if (ProtectionEvents) {
-                protectionEvents = new ProtectionEvents();
-                Events.extend(protectionEvents);
-                PublicEvents.extend(protectionEvents, {publicOnly:true})
-            }
-
-            if (PublicEvents) {
-                Events.extend(PublicEvents);
-            }
-
-            this.system.autoMapOutlets = true;
-
-            this.system.mapSingleton('events', Events);
-
-
-
-
-
-
-        }
-    };
 };
 
 export default Context;

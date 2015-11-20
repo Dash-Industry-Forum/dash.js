@@ -58,7 +58,6 @@ function ProtectionController(config) {
     let protectionModel = config.protectionModel;
     let adapter = config.adapter;
     let log = config.log;
-    let system = config.system;
 
     let instance = {
         initialize :initialize,
@@ -74,8 +73,9 @@ function ProtectionController(config) {
     };
 
     setup();
-
     return instance;
+
+
 
     let keySystems,
         pendingNeedKeyData,

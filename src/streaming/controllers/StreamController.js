@@ -64,7 +64,6 @@ function StreamController() {
 
 
     let log,
-        system,
         capabilities,
         manifestUpdater,
         manifestLoader,
@@ -426,7 +425,6 @@ function StreamController() {
                 if (!stream) {
 
                     stream = Stream.create({
-                        system: system,
                         manifestModel: manifestModel,
                         manifestUpdater: manifestUpdater,
                         adapter: adapter,
@@ -575,9 +573,6 @@ function StreamController() {
 
         if (config.log){
             log = config.log;
-        }
-        if (config.system){
-            system = config.system;
         }
         if (config.capabilities){
             capabilities = config.capabilities;

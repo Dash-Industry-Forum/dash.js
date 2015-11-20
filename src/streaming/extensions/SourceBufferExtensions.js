@@ -63,8 +63,7 @@ function SourceBufferExtensions() {
 
     return instance;
 
-    let system,
-        manifestExt;
+    let manifestExt;
 
     function createSourceBuffer(mediaSource, mediaInfo) {
 
@@ -90,7 +89,6 @@ function SourceBufferExtensions() {
                     adapter: DashAdapter.getInstance(),
                     manifestExt: manifestExt,
                     mediaController: MediaController.getInstance(),
-                    log: system.getObject("log")
                 });
             } else {
                 throw ex;
@@ -340,9 +338,6 @@ function SourceBufferExtensions() {
     function setConfig(config){
         if (!config) return;
 
-        if (config.system){
-            system = config.system;
-        }
         if (config.manifestExt){
             manifestExt = config.manifestExt;
         }

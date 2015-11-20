@@ -54,7 +54,6 @@ function ScheduleController(config) {
     let scheduleRulesCollection = config.scheduleRulesCollection;
     let rulesController = config.rulesController;
     let mediaPlayerModel = config.mediaPlayerModel;
-    //let system = config.system;
 
 
     let instance = {

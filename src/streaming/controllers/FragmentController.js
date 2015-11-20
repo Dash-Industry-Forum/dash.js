@@ -41,7 +41,6 @@ export default FactoryMaker.getClassFactory(FragmentController);
 
 function FragmentController(config) {
 
-    let system = config.system;
     let log = config.log;
 
     let instance = {

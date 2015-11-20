@@ -53,7 +53,6 @@ export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);
 function ProtectionModel_21Jan2015(config) {
 
     let log = config.log;
-    let system = config.system;
 
     let instance = {
         reset:reset,

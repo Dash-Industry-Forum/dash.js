@@ -31,19 +31,5 @@
 
 
 let DashContext = function () {
-    "use strict";
-
-    return {
-        system : undefined,
-        setup : function () {
-            DashContext.prototype.setup.call(this);
-        }
-    };
 };
 
-import MediaContext from '../streaming/Context.js';
-
-DashContext.prototype = new MediaContext();
-DashContext.prototype.constructor = MediaContext;
-
-export default DashContext;

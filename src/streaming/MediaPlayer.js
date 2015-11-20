@@ -33,8 +33,6 @@
  * @param context - New instance of a dijon.js context (i.e. new Dash.di.DashContext()).  You can pass a custom context that extends Dash.di.DashContext to override item(s) in the DashContext.
  */
 /*jshint -W020 */
-import EventBus from "./utils/EventBus.js";
-import Debug from "./utils/Debug.js";
 import UTCTiming from '../dash/vo/UTCTiming.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
@@ -43,11 +41,9 @@ import ProtectionController from './controllers/ProtectionController.js';
 import ProtectionExtensions from './extensions/ProtectionExtensions.js';
 import ManifestLoader from './ManifestLoader.js';
 import LiveEdgeFinder from './LiveEdgeFinder.js';
-import Events from './Events.js';
 import ErrorHandler from './ErrorHandler.js';
 import Capabilities from './utils/Capabilities.js';
 import DOMStorage from './utils/DOMStorage.js';
-import PublicEvents from './PublicEvents.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
 import VirtualBuffer from './utils/VirtualBuffer.js';
@@ -76,46 +72,32 @@ import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import TimelineConverter from '../dash/TimelineConverter.js';
 
 
+//Utils
+import EventBus from "./utils/EventBus.js";
+import Debug from "./utils/Debug.js";
+
+//Events
+import Events from './Events.js';
+import CoreEvents from '../core/events/CoreEvents.js';
+import PublicEvents from './PublicEvents.js';
+import ProtectionEvents from './protection/ProtectionEvents.js';
+
+
 //protection
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
 //import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
 //import ProtectionModel_01b from './models/ProtectionModel_01b.js';
 
-
 import FactoryMaker from '../core/FactoryMaker.js'
+
+
 
 let MediaPlayer = function (context) {
 
-    "use strict";
 
-    /*
-     * Initialization:
-     *
-     * 1) Check if MediaSource is available.
-     * 2) Load manifest.
-     * 3) Parse manifest.
-     * 4) Check if Video Element can play codecs.
-     * 5) Register MediaSource with Video Element.
-     * 6) Create SourceBuffers.
-     * 7) Do live stuff.
-     *      a. Start manifest refresh.
-     *      b. Calculate live point.
-     *      c. Calculate offset between availabilityStartTime and initial video timestamp.
-     * 8) Start buffer managers.
-     *
-     * Buffer Management:
-     *
-     * 1) Generate metrics.
-     * 2) Check if fragments should be loaded.
-     * 3) Check ABR for change in quality.
-     * 4) Figure out which fragments to load.
-     * 5) Load fragments.
-     * 6) Transform fragments.
-     * 7) Push fragmemt bytes into SourceBuffer.
-     */
     var VERSION = "2.0.0",
-        system,
         abrController,
+
         mediaController,
         element,
         source,
@@ -162,7 +144,7 @@ let MediaPlayer = function (context) {
             playing = true;
             createControllers.call(this);
             domStorage.checkInitialBitrate();
-            this.debug.log("Playback initiated!");
+            log("Playback initiated!");
 
             if (typeof source === "string") {
                 streamController.load(source);
@@ -325,14 +307,14 @@ let MediaPlayer = function (context) {
             let synchronizationRulesCollection = SynchronizationRulesCollection.getInstance();
             synchronizationRulesCollection.initialize();
 
-            let abrRulesCollection = ABRRulesCollection.getInstance({system:system, playbackController: playbackController});
+            let abrRulesCollection = ABRRulesCollection.getInstance();
             abrRulesCollection.initialize();
 
             let scheduleRulesCollection = ScheduleRulesCollection.getInstance();
             scheduleRulesCollection.initialize();
 
             let sourceBufferExt = SourceBufferExtensions.getInstance();
-            sourceBufferExt.setConfig({system:system, manifestExt:manifestExt});
+            sourceBufferExt.setConfig({manifestExt:manifestExt});
 
 
             let virtualBuffer = VirtualBuffer.getInstance();
@@ -343,8 +325,7 @@ let MediaPlayer = function (context) {
             mediaController = MediaController.getInstance();
             mediaController.initialize();
             mediaController.setConfig({
-                log :debug.log,
-                system :system,
+                log :log,
                 DOMStorage :domStorage,
                 errHandler :errHandler
             });
@@ -361,8 +342,7 @@ let MediaPlayer = function (context) {
 
             streamController = StreamController.getInstance();
             streamController.setConfig({
-                log: debug.log,
-                system: system,
+                log: log,
                 capabilities: capabilities,
                 manifestLoader: createManifestLoader.call(this),
                 manifestModel: ManifestModel.getInstance(),
@@ -386,13 +366,13 @@ let MediaPlayer = function (context) {
                 abrRulesCollection: abrRulesCollection,
                 rulesController: rulesController,
                 streamController: streamController,
-                log: debug.log
+                log: log
             });
         },
 
         createManifestLoader = function () {
             return ManifestLoader.create({
-                log :debug.log,
+                log :log,
                 errHandler : errHandler,
                 parser :createManifestParser.call(),
                 metricsModel :metricsModel
@@ -402,7 +382,7 @@ let MediaPlayer = function (context) {
         createManifestParser = function () {
             //TODO-Refactor Need to be able to switch this create out so will need API to set which parser to use?
             return DashParser.create({
-                log:debug.log
+                log:log
             });
         },
 
@@ -416,65 +396,63 @@ let MediaPlayer = function (context) {
 
 
 
+    //TODO - Need to move this to facotry maker and rework for new system.
+    //var _getObject = dijon.System.prototype.getObject;
+    //dijon.System.prototype.getObject = function (name) {
+    //    var obj = _getObject.call(this, name);
+    //    if (typeof obj === "object" && !obj.getName) {
+    //        obj.getName = function () {
+    //            return name;
+    //        };
+    //        obj.setMediaType = function (mediaType) {
+    //            obj.mediaType = mediaType;
+    //        };
+    //        obj.getMediaType = function () {
+    //            return obj.mediaType;
+    //        };
+    //    }
+    //    return obj;
+    //};
 
-    // Overload dijon getObject function
-    var _getObject = dijon.System.prototype.getObject;
-    dijon.System.prototype.getObject = function (name) {
-        var obj = _getObject.call(this, name);
-        if (typeof obj === "object" && !obj.getName) {
-            obj.getName = function () {
-                return name;
-            };
-            obj.setMediaType = function (mediaType) {
-                obj.mediaType = mediaType;
-            };
-            obj.getMediaType = function () {
-                return obj.mediaType;
-            };
-        }
-        return obj;
-    };
 
-    // Set up DI.
-    system = new dijon.System();
-
-    system.mapValue("system", system);
-    system.mapOutlet("system");
 
     // Dash.di.Context makes calls to Debug in its setup() function, so we need to
     // map it here and explicitly inject Debug before we do a global inject into context
-    var debug = new Debug();
-    system.mapValue("debug", debug);
-    system.mapOutlet("debug");
-    system.injectInto(debug);
-    debug.setup();
-    system.injectInto(context);
+    let debug = Debug.getInstance();
+    let log = debug.log;
+
+    let coreEvents,
+        protectionEvents;
+
+    if (CoreEvents) {
+        coreEvents = new CoreEvents();
+        Events.extend(coreEvents);
+    }
+
+    if (ProtectionEvents) {
+        protectionEvents = new ProtectionEvents();
+        Events.extend(protectionEvents);
+        PublicEvents.extend(protectionEvents, {publicOnly:true})
+    }
+
+    if (PublicEvents) {
+        Events.extend(PublicEvents);
+    }
+
+    //TODO-Refactor  Dash specific objects.  Abstract?
+    metricsExt = DashMetricsExtensions.getInstance();
+    manifestExt = DashManifestExtensions.getInstance();
+    createAdaptor();
+    metricsModel.setConfig({adapter:adapter});
+
+    //restoreDefaultUTCTimingSources();
+
+    log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
+
 
 
 
     return {
-
-        debug: undefined,
-
-        videoElementExt: undefined,
-
-        setup: function() {
-            //TODO-Refactor  Dash specific objects.  Abstract?
-            metricsExt = DashMetricsExtensions.getInstance();
-            manifestExt = DashManifestExtensions.getInstance();
-            createAdaptor.call(this);
-
-            domStorage.setConfig({
-                log:debug.log
-            })
-
-            metricsModel.setConfig({
-                adapter:adapter
-            })
-
-            this.restoreDefaultUTCTimingSources();
-            this.debug.log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
-        },
 
 
         extend: function(parentNameString, childInstance) {
@@ -537,20 +515,13 @@ let MediaPlayer = function (context) {
             return VERSION;
         },
 
-        /**
-         * @returns {Object} An instance of system object based on the string name in Context.js or DashContext.js
-         * @memberof MediaPlayer#
-         */
-        getObjectByContextName: function (name) {
-            return system.getObject(name);
-        },
 
         /**
          * @memberof MediaPlayer#
          */
         startup: function () {
             if (!initialized) {
-                system.injectInto(this);
+
                 initialized = true;
             }
         },
@@ -562,7 +533,7 @@ let MediaPlayer = function (context) {
          * @memberof MediaPlayer#
          */
         getDebug: function () {
-            return this.debug;
+            return debug;
         },
 
         /**
@@ -1131,21 +1102,19 @@ let MediaPlayer = function (context) {
 
                 let protectionExt = ProtectionExtensions.getInstance();
                 protectionExt.setConfig({
-                    log:debug.log,
+                    log:log,
                 })
                 protectionExt.initialize();
 
                 let protectionModel = ProtectionModel_21Jan2015.create({
-                    log:debug.log,
-                    system:system
+                    log:log
                 })
 
                 controller = ProtectionController.create({
                     protectionModel:protectionModel,
                     protectionExt: protectionExt,
                     adapter: adapter,
-                    log: debug.log,
-                    system: system
+                    log: log,
                 });
             }
 
@@ -1336,8 +1305,7 @@ let MediaPlayer = function (context) {
                 element.preload = "auto";
 
                 capabilities.setConfig({
-                    log:debug.log,
-                    system:system,
+                    log:log,
                     videoModel:videoModel
                 })
             }

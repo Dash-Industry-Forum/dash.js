@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Debug from '../utils/Debug.js';
 import AbrController from '../controllers/AbrController.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -55,13 +56,14 @@ export default factory;
 
 function DOMStorage() {
 
+
+
     let instance = {
         checkInitialBitrate :checkInitialBitrate,
         getSavedMediaSettings :getSavedMediaSettings,
         enableLastMediaSettingsCaching :enableLastMediaSettingsCaching,
         enableLastBitrateCaching :enableLastBitrateCaching,
-        isSupported :isSupported,
-        setConfig: setConfig
+        isSupported :isSupported
     }
 
     setup();
@@ -74,19 +76,14 @@ function DOMStorage() {
         experationDict,
         log;
 
-    function setConfig(config) {
-        if (!config) return;
-
-        if (config.log) {
-            log = config.log;
-        }
-    }
-
     function setup() {
+        log = Debug.getInstance().log;
+
         experationDict = {
             BITRATE_EXPIRATION :DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION,
             MEDIA_SETTINGS_EXPIRATION :DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
         };
+
         lastBitrateCachingEnabled = true;
         lastMediaSettingsCachingEnabled = true;
 

@@ -77,7 +77,6 @@ function BufferController(config) {
     let adapter = config.adapter;
     let virtualBuffer = config.virtualBuffer;
     let textSourceBuffer = config.textSourceBuffer;
-    let system = config.system;
 
 
     let instance = {

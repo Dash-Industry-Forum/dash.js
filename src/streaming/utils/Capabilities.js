@@ -43,8 +43,7 @@ function Capabilities() {
     setup()
     return instance;
 
-    let system,
-        log,
+    let log,
         videoModel,
         encryptedMediaSupported;
 
@@ -54,10 +53,6 @@ function Capabilities() {
 
     function setConfig(config){
         if (!config) return;
-
-        if (config.system) {
-            system = config.system;
-        }
         if (config.log) {
             log = config.log;
         }

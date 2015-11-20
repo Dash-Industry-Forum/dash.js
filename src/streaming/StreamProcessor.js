@@ -50,14 +50,14 @@ import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import RepresentationController from '../dash/controllers/RepresentationController.js';
 import ErrorHandler from './ErrorHandler.js';
+import Debug from '../streaming/utils/Debug.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 export default FactoryMaker.getClassFactory(StreamProcessor);
 
 function StreamProcessor(config) {
 
-    let system = config.system,
-        indexHandler = config.indexHandler,
+    let indexHandler = config.indexHandler,
         timelineConverter = config.timelineConverter,
         adapter = config.adapter,
         manifestModel = config.manifestModel;
@@ -110,11 +110,13 @@ function StreamProcessor(config) {
         representationController,
         fragmentController,
         fragmentLoader,
-        fragmentModel;
+        fragmentModel,
+        log;
 
 
     function setup() {
         mediaInfoArr = [];
+        log = Debug.getInstance().log
     }
 
     function initialize(Type, FragmentController, mediaSource, Stream, EventController) {
@@ -133,7 +135,7 @@ function StreamProcessor(config) {
         bufferController.initialize(type, mediaSource, this);
 
         scheduleController = ScheduleController.create({
-            log: system.getObject("log"),
+            log: log,
             metricsModel:MetricsModel.getInstance(),
             manifestModel:manifestModel,
             adapter:adapter,
@@ -143,14 +145,13 @@ function StreamProcessor(config) {
             scheduleRulesCollection: ScheduleRulesCollection.getInstance(),
             rulesController: RulesController.getInstance(),
             mediaPlayerModel:MediaPlayerModel.getInstance(),
-            system:system
         })
         scheduleController.initialize(type, this);
 
         fragmentLoader = FragmentLoader.create({
             metricsModel:MetricsModel.getInstance(),
             errHandler:ErrorHandler.getInstance(),
-            log: system.getObject("log"),
+            log: log,
             requestModifierExt:RequestModifierExtensions.getInstance()
         })
 
@@ -303,7 +304,7 @@ function StreamProcessor(config) {
 
         if (type === "video" || type === "audio" || type === "fragmentedText") {
             controller = BufferController.create({
-                log:system.getObject("log"),
+                log: log,
                 metricsModel:MetricsModel.getInstance(),
                 manifestModel:manifestModel,
                 sourceBufferExt:SourceBufferExtensions.getInstance(),
@@ -314,7 +315,6 @@ function StreamProcessor(config) {
                 adapter:adapter,
                 virtualBuffer:VirtualBuffer.getInstance(),
                 textSourceBuffer:TextSourceBuffer.getInstance(),
-                system:system
             })
         }else {
             controller = TextController.create({

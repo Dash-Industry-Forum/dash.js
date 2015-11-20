@@ -50,8 +50,7 @@ export default FactoryMaker.getClassFactory(Stream);
 
 function Stream(config) {
 
-    let system = config.system,
-        manifestModel = config.manifestModel,
+    let manifestModel = config.manifestModel,
         manifestUpdater = config.manifestUpdater,
         adapter = config.adapter,
         capabilities = config.capabilities,
@@ -111,8 +110,7 @@ function Stream(config) {
         abrController = AbrController.getInstance();
         mediaController = MediaController.getInstance();
         fragmentController = FragmentController.create({
-            log:log,
-            system:system
+            log:log
         })
 
         EventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
@@ -332,7 +330,6 @@ function Stream(config) {
 
     function createStreamProcessor(mediaInfo, manifest, mediaSource, optionalSettings) {
         var streamProcessor = StreamProcessor.create({
-                system :system,
                 indexHandler:createIndexHandler(),
                 timelineConverter:timelineConverter,
                 adapter:adapter,
