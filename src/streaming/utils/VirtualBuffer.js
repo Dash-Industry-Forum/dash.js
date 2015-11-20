@@ -165,10 +165,10 @@ MediaPlayer.utils.VirtualBuffer = function () {
             // of appended chunks.
             var streamId = chunk.streamId,
                 mediaType = chunk.mediaInfo.type,
-                bufferedRanges = data[streamId][mediaType].actualBufferedRanges,
                 oldChunk = this.getChunks({streamId: streamId, mediaType: mediaType, appended: true, start: chunk.start})[0],
-                diff,
                 idx;
+
+            chunk.bufferedRange = {start: chunk.start, end: chunk.end};
 
             if (oldChunk) {
                 idx = data[streamId][mediaType].appended.indexOf(oldChunk);
@@ -178,48 +178,6 @@ MediaPlayer.utils.VirtualBuffer = function () {
             }
 
             sortArrayByProperty(data[streamId][mediaType].appended, "start");
-            diff = this.sourceBufferExt.getRangeDifference(bufferedRanges, buffer);
-
-            if (!diff) {
-                if (oldChunk) {
-                    chunk.bufferedRange = oldChunk.bufferedRange;
-                }
-                return;
-            }
-
-            chunk.bufferedRange = diff;
-            bufferedRanges.add(diff.start, diff.end);
-
-            if (!oldChunk) return;
-
-            // if there is an old chunk already appended for the same index, we may need to adjust buffredRange of a new chunk, because
-            // it may be not valid.
-            //
-            // Example:
-            //
-            // Before appending the old chunk
-            //
-            // 0|-----Range-------|4
-            // 0|--occupied space-|4
-            //
-            // After appending the old chunk
-            //
-            // 0|-----------------Range----------------|10
-            // 0|-occupied space-4|-------Old chunk----|10
-            //
-            // After clearing the buffer from 7s to 10s
-            //
-            // 0|-----------------Range----|7
-            // 0|-occupied space-4|OldChunk|7
-            //
-            // Since the old chunk has been cut only partially, after appending the new chunk its range will be detected as
-            //
-            // |-----------------Range-----------------|10
-            // |----occupied space--------7|-New chunk-|10
-            // This is not a valid value because the actual range of a new chunk is the same as the original range of
-            // the old chunk, so we do the following adjustment
-            chunk.bufferedRange.start = Math.min(oldChunk.bufferedRange.start, diff.start);
-            chunk.bufferedRange.end = Math.max(oldChunk.bufferedRange.end, diff.end);
         },
 
         /**

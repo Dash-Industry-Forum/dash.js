@@ -42,8 +42,7 @@ Dash.dependencies.RepresentationController = function () {
                 bitrate = null,
                 streamInfo = self.streamProcessor.getStreamInfo(),
                 quality,
-                maxQuality = self.abrController.getTopQualityIndexFor(type, streamInfo.id),
-                averageThroughput;
+                maxQuality = self.abrController.getTopQualityIndexFor(type, streamInfo.id);
 
             updating = true;
             self.notify(Dash.dependencies.RepresentationController.eventList.ENAME_DATA_UPDATE_STARTED);
@@ -51,8 +50,7 @@ Dash.dependencies.RepresentationController = function () {
             availableRepresentations = updateRepresentations.call(self, adaptation);
 
             if (data === null) {
-                averageThroughput = self.abrController.getAverageThroughput(type);
-                bitrate = averageThroughput || self.abrController.getInitialBitrateFor(type, streamInfo);
+                bitrate = self.abrController.getInitialBitrateFor(type, streamInfo);
                 quality = self.abrController.getQualityForBitrate(self.streamProcessor.getMediaInfo(), bitrate);
             } else {
                 quality = self.abrController.getQualityFor(type, streamInfo);
@@ -79,9 +77,9 @@ Dash.dependencies.RepresentationController = function () {
         addRepresentationSwitch = function() {
             var now = new Date(),
                 currentRepresentation = this.getCurrentRepresentation(),
-                currentVideoTime = this.streamProcessor.playbackController.getTime();
+                currentVideoTimeMs = this.streamProcessor.playbackController.getTime() * 1000;
 
-            this.metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
+            this.metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
         },
 
         addDVRMetric = function() {
@@ -147,6 +145,10 @@ Dash.dependencies.RepresentationController = function () {
                 };
 
             updating = false;
+            self.eventBus.dispatchEvent({
+                type: MediaPlayer.events.AST_IN_FUTURE,
+                data: {delay: delay}
+            });
             setTimeout(update.bind(this), delay);
         },
 
@@ -226,7 +228,9 @@ Dash.dependencies.RepresentationController = function () {
         },
 
         onBufferLevelUpdated = function(/*e*/) {
-            addDVRMetric.call(this);
+            if (this.streamProcessor.isDynamic()) {
+                addDVRMetric.call(this);
+            }
         },
 
         onQualityChanged = function(e) {
@@ -240,8 +244,8 @@ Dash.dependencies.RepresentationController = function () {
         },
 
         setLocalStorage = function(type, bitrate) {
-            if (this.DOMStorage.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
-                localStorage.setItem(MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_BITRATE_KEY"], JSON.stringify({bitrate:bitrate/1000, timestamp:new Date().getTime()}));
+            if (type === "video" || type === "audio") {
+                this.DOMStorage.storeBitrate(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL, type, bitrate/1000);
             }
         };
 
@@ -260,6 +264,7 @@ Dash.dependencies.RepresentationController = function () {
         unsubscribe: undefined,
         DOMStorage:undefined,
         liveDelayFragmentCount:undefined,
+        eventBus: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.AbrController.eventList.ENAME_QUALITY_CHANGED] = onQualityChanged;

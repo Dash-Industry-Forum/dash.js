@@ -22,6 +22,7 @@ jsdocs
 .project
 .metadata
 bin/
+dist/
 tmp/
 .idea/
 *.tmp
@@ -177,3 +178,8 @@ pip-log.txt
 # Mac crap
 .DS_Store
 
+#############
+## VIM
+#############
+*~
+\#*

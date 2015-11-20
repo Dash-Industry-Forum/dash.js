@@ -30,6 +30,9 @@
  */
 Dash.dependencies.DashMetricsExtensions = function () {
     "use strict";
+
+    var PROBABLY_IN_CACHE_MS = 200;
+
     var findRepresentationIndex = function (period, representationId) {
             var adaptationSet,
                 adaptationSetArray,
@@ -169,52 +172,51 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
         getCurrentBufferLevel = function (metrics) {
             if (metrics === null) {
-                return null;
+                return 0;
             }
 
-            var bufferLevel = metrics.BufferLevel,
-                bufferLevelLength,
-                bufferLevelLastIndex,
-                currentBufferLevel;
-
+            var bufferLevel = metrics.BufferLevel;
             if (bufferLevel === null || bufferLevel.length <= 0) {
-                return null;
+                return 0;
             }
-
-            bufferLevelLength = bufferLevel.length;
-            bufferLevelLastIndex = bufferLevelLength - 1;
-
-            currentBufferLevel = bufferLevel[bufferLevelLastIndex];
-            return currentBufferLevel;
+            return bufferLevel[bufferLevel.length-1].level / 1000;
         },
 
         getRequestsQueue = function (metrics) {
             return metrics.RequestsQueue;
         },
 
-        getCurrentPlaybackRate = function (metrics) {
+        getLatestPlayList = function (metrics) {
             if (metrics === null) {
                 return null;
             }
 
-            var playList = metrics.PlayList,
-                trace,
-                currentRate;
+            var playList = metrics.PlayList;
 
             if (playList === null || playList.length <= 0) {
                 return null;
             }
 
-            trace = playList[playList.length - 1].trace;
+            return playList[playList.length - 1];
+        },
+/*
+        getLatestPlayListTrace = function (metrics) {
+            var playList = getLatestPlayList(metrics),
+                trace;
+
+            if (playList === null) {
+                return null;
+            }
+
+            trace = playList.trace;
 
             if (trace === null || trace.length <= 0) {
                 return null;
             }
 
-            currentRate = trace[trace.length - 1].playbackspeed;
-            return currentRate;
+            return trace[trace.length - 1];
         },
-
+*/
         getCurrentHttpRequest = function (metrics) {
             if (metrics === null) {
                 return null;
@@ -242,6 +244,103 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return currentHttpList;
         },
 
+        getRecentLatency = function(metrics,length) {
+            // Should be merged with hte getRecentThroughput code as
+            // it's a copy really, also possibly could be calculated
+            // when new things arrive, rather than on request, could
+            // also then discard old requests, deal with known network
+            // changes etc.
+            var httpList = metrics.HttpList,
+                interested = [],
+                i;
+
+            if (httpList === null) {
+                return -1;
+            }
+            var segmentCount = 0;
+
+            for (i=httpList.length-1;(i>=0 && interested.length<length);i--)
+            {
+                var response = httpList[i];
+                // only care about MediaSegments
+                if (response.responsecode && response.type==MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                    segmentCount++;
+                    var downloadTime = response.interval;
+                    var latency = (response.tresponse - response.trequest);
+                    var probalyFromCache = latency<PROBABLY_IN_CACHE_MS &&  downloadTime<PROBABLY_IN_CACHE_MS;
+                    if (!probalyFromCache) {
+                        interested.push(latency);
+                    }
+                }
+            }
+
+            if (interested.length === 0 ) {
+                if (segmentCount>5) {
+                    // this implies all were thought of as in the cache,
+                    // just return the considered from cache time
+                    return PROBABLY_IN_CACHE_MS;
+                }
+                return -1;
+            }
+            var total = 0;
+            for (i=0;i<interested.length;i++) {
+                total+=interested[i];
+            }
+            return total/interested.length;
+        },
+        getRecentThroughput = function(metrics,length) {
+
+            var httpList = metrics.HttpList,
+                throughput,
+                interested = [],
+                i;
+
+            if (httpList === null) {
+                return -1;
+            }
+            var segmentCount = 0;
+
+            for (i=httpList.length-1;(i>=0 && interested.length<length);i--)
+            {
+                var response = httpList[i];
+                // only care about MediaSegments
+                if (response.responsecode && response.type==MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                    segmentCount++;
+                    var downloadTime = response.interval;
+                    var latency = (response.tresponse - response.trequest);
+                    // Without a rule specific to latency we should
+                    // include both as that is what is actually
+                    // important.
+                    throughput = (response._bytes * 8) / (downloadTime+latency);
+                    // probably from cache simplified to just low
+                    // latency and low download for now, should be
+                    // more generalised into radically different
+                    // latency and download time from the average,
+                    // could also use logic about the progress events,
+                    // on chrome for example first progress event is
+                    // after exactly 32768 bytes
+                    var probalyFromCache = downloadTime<200 && latency<200;
+                    if (!probalyFromCache) {
+                        interested.push(throughput);
+                    }
+                }
+            }
+
+            if (interested.length === 0 ) {
+                if (segmentCount>5) {
+                    // this implies all were thought of as in the cache,
+                    // just return the last throughput, it's likely to be
+                    // higher than any of our manifests
+                    return throughput;
+                }
+                return -1;
+            }
+            var total = 0;
+            for (i=0;i<interested.length;i++) {
+                total+=interested[i];
+            }
+            return (total*1000)/interested.length;
+        },
         getHttpRequests = function (metrics) {
             if (metrics === null) {
                 return [];
@@ -361,9 +460,12 @@ Dash.dependencies.DashMetricsExtensions = function () {
             var httpRequest = getCurrentHttpRequest(metrics),
                 headers;
 
-            if (httpRequest === null || httpRequest.responseHeaders === null) return null;
+            if (httpRequest === null || httpRequest._responseHeaders === null) {
+                return null;
+            }
 
-            headers = parseResponseHeaders(httpRequest.responseHeaders);
+            headers = parseResponseHeaders(httpRequest._responseHeaders);
+
             return headers[id] === undefined ? null :  headers[id];
         },
 
@@ -386,6 +488,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
 
 
     return {
+        log: undefined,
         manifestModel: undefined,
         manifestExt: undefined,
         system:undefined,
@@ -416,8 +519,9 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getMaxAllowedIndexForBufferType : getMaxAllowedIndexForBufferType,
         getCurrentRepresentationSwitch : getCurrentRepresentationSwitch,
         getCurrentBufferLevel : getCurrentBufferLevel,
-        getCurrentPlaybackRate: getCurrentPlaybackRate,
         getCurrentHttpRequest : getCurrentHttpRequest,
+        getRecentThroughput : getRecentThroughput,
+        getRecentLatency : getRecentLatency,
         getHttpRequests : getHttpRequests,
         getCurrentDroppedFrames : getCurrentDroppedFrames,
         getCurrentSchedulingInfo: getCurrentSchedulingInfo,
@@ -425,7 +529,8 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getCurrentManifestUpdate: getCurrentManifestUpdate,
         getLatestFragmentRequestHeaderValueByID:getLatestFragmentRequestHeaderValueByID,
         getLatestMPDRequestHeaderValueByID:getLatestMPDRequestHeaderValueByID,
-        getRequestsQueue: getRequestsQueue
+        getRequestsQueue: getRequestsQueue,
+        getLatestPlayList: getLatestPlayList
     };
 };
 

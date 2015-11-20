@@ -15,10 +15,6 @@ describe("FragmentModel", function () {
         expect(typeof fragmentModel[loadingCompletedEventName]).toEqual("function");
     });
 
-    it("should not be postponed after creation", function () {
-        expect(fragmentModel.getIsPostponed()).toBeFalsy();
-    });
-
     it("should not have any loading, pending, executed or rejected requests", function () {
         var expectedValue = 0;
 
@@ -43,8 +39,8 @@ describe("FragmentModel", function () {
         });
 
         it("should detect duplicated requests", function () {
-            expect(fragmentModel.isFragmentLoadedOrPending(initRequest)).toBeTruthy();
-            expect(fragmentModel.isFragmentLoadedOrPending(mediaRequest)).toBeTruthy();
+            expect(fragmentModel.isFragmentLoadedOrPendingAndNotDiscarded(initRequest)).toBeTruthy();
+            expect(fragmentModel.isFragmentLoadedOrPendingAndNotDiscarded(mediaRequest)).toBeTruthy();
         });
 
         it("should return pending requests", function () {

@@ -44,24 +44,29 @@ MediaPlayer.dependencies.ScheduleController = function () {
         playListTraceMetrics = null,
         playListTraceMetricsClosed = true,
 
-
         clearPlayListTraceMetrics = function (endTime, stopreason) {
             var duration = 0,
                 startTime = null;
 
-            if (playListTraceMetricsClosed === false) {
+            if (playListMetrics && playListTraceMetricsClosed === false) {
                 startTime = playListTraceMetrics.start;
                 duration = endTime.getTime() - startTime.getTime();
 
                 playListTraceMetrics.duration = duration;
                 playListTraceMetrics.stopreason = stopreason;
 
+                playListMetrics.trace.push(playListTraceMetrics);
+
                 playListTraceMetricsClosed = true;
             }
         },
 
         doStart = function () {
-            if (!ready) return;
+            if (!ready) {
+                return;
+            }
+
+            addPlaylistTraceMetrics.call(this);
 
             isStopped = false;
 
@@ -78,7 +83,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
         startOnReady = function() {
             if (initialPlayback) {
                 getInitRequest.call(this, currentRepresentationInfo.quality);
-                addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.INITIAL_PLAY_START_REASON);
             }
 
             doStart.call(this);
@@ -94,8 +98,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             if (cancelPending) {
                 fragmentModel.cancelPendingRequests();
             }
-
-            clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
         },
 
         getNextFragment = function (callback) {
@@ -214,7 +216,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             if (e.data.fragmentModel !== this.streamProcessor.getFragmentModel()) return;
 
             this.log("Stream is complete");
-            clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON);
         },
 
         onMediaFragmentLoadingStart = function(e) {
@@ -231,10 +232,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             doStop.call(this);
         },
 
-        onBytesAppended = function(/*e*/) {
-            addPlaylistTraceMetrics.call(this);
-        },
-
         onDataUpdateStarted = function(/*e*/) {
             doStop.call(this, false);
         },
@@ -244,12 +241,14 @@ MediaPlayer.dependencies.ScheduleController = function () {
         },
 
         onBufferCleared = function(e) {
-            // after the data has been removed from the buffer we should remove the requests from the list of
-            // the executed requests for which playback time is inside the time interval that has been removed from the buffer
+            // after the data has been removed from the buffer we
+            // should remove the requests from the list of the
+            // executed requests for which playback time is inside the
+            // time interval that has been removed from the buffer
             fragmentModel.removeExecutedRequestsBeforeTime(e.data.to);
 
             if (e.data.hasEnoughSpaceToAppend) {
-                doStart.call(this);
+                validate.call(this);
             }
         },
 
@@ -258,7 +257,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
 
             if (!e.data.hasSufficientBuffer && !self.playbackController.isSeeking()) {
                 self.log("Stalling Buffer");
-                clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
+                clearPlayListTraceMetrics.call(this, new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON);
             }
         },
 
@@ -284,25 +283,19 @@ MediaPlayer.dependencies.ScheduleController = function () {
             }
 
             replaceCanceledRequests.call(self, canceledReqs);
-            clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
-        },
-
-        addPlaylistMetrics = function(stopReason) {
-            var currentTime = new Date(),
-                presentationTime = this.playbackController.getTime();
-            clearPlayListTraceMetrics(currentTime, MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON);
-            playListMetrics = this.metricsModel.addPlayList(type, currentTime, presentationTime, stopReason);
+            clearPlayListTraceMetrics.call(self, new Date(), MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON);
+            addPlaylistTraceMetrics.call(self);
         },
 
         addPlaylistTraceMetrics = function() {
-            var self = this,
-                currentVideoTime = self.playbackController.getTime(),
-                rate = self.playbackController.getPlaybackRate(),
-                currentTime = new Date();
-
-            if (playListTraceMetricsClosed === true && currentRepresentationInfo && playListMetrics) {
+            if (playListMetrics && playListTraceMetricsClosed === true && currentRepresentationInfo) {
                 playListTraceMetricsClosed = false;
-                playListTraceMetrics = self.metricsModel.appendPlayListTrace(playListMetrics, currentRepresentationInfo.id, null, currentTime, currentVideoTime, null, rate, null);
+
+                playListTraceMetrics = new MediaPlayer.vo.metrics.PlayList.Trace();
+                playListTraceMetrics.representationid = currentRepresentationInfo.id;
+                playListTraceMetrics.start = new Date();
+                playListTraceMetrics.mstart = this.playbackController.getTime() * 1000;
+                playListTraceMetrics.playbackspeed = this.playbackController.getPlaybackRate().toString();
             }
         },
 
@@ -326,13 +319,14 @@ MediaPlayer.dependencies.ScheduleController = function () {
                 manifestUpdateInfo = this.metricsExt.getCurrentManifestUpdate(metrics);
 
             this.log("seek: " + e.data.seekTime);
-            addPlaylistMetrics.call(this, MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON);
 
             this.metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentRepresentationInfo.DVRWindow.end - this.playbackController.getTime()});
         },
 
-        onPlaybackRateChanged = function(/*e*/) {
-            addPlaylistTraceMetrics.call(this);
+        onPlaybackRateChanged = function(e) {
+            if (playListTraceMetrics) {
+                playListTraceMetrics.playbackspeed = e.data.playbackRate.toString();
+            }
         },
 
         onWallclockTimeUpdated = function(/*e*/) {
@@ -383,6 +377,7 @@ MediaPlayer.dependencies.ScheduleController = function () {
         scheduleRulesCollection: undefined,
         rulesController: undefined,
         numOfParallelRequestAllowed:undefined,
+        streamController: undefined,
 
         setup: function() {
             this[MediaPlayer.dependencies.LiveEdgeFinder.eventList.ENAME_LIVE_EDGE_SEARCH_COMPLETED] = onLiveEdgeSearchCompleted;
@@ -398,7 +393,6 @@ MediaPlayer.dependencies.ScheduleController = function () {
             this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
 
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_CLEARED] = onBufferCleared;
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_APPENDED] = onBytesAppended;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_STATE_CHANGED] = onBufferLevelStateChanged;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_UPDATED] = onBufferLevelUpdated;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_INIT_REQUESTED] = onInitRequested;
@@ -452,11 +446,19 @@ MediaPlayer.dependencies.ScheduleController = function () {
             var self = this;
 
             doStop.call(self, true);
-            self.bufferController.unsubscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN, self.scheduleRulesCollection.bufferLevelRule);
-            self.bufferController.unsubscribe(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED, self.scheduleRulesCollection.bufferLevelRule);
             fragmentModel.abortRequests();
             self.fragmentController.detachModel(fragmentModel);
             fragmentsToLoad = 0;
+            playListMetrics = null;
+        },
+
+        setPlayList: function (playList) {
+            playListMetrics = playList;
+        },
+
+        finalisePlayList: function (time, reason) {
+            clearPlayListTraceMetrics.call(this, time, reason);
+            playListMetrics = null;
         },
 
         start: doStart,

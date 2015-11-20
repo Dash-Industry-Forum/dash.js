@@ -64,6 +64,7 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('customTimeRanges', MediaPlayer.utils.CustomTimeRanges);
             this.system.mapSingleton('virtualBuffer', MediaPlayer.utils.VirtualBuffer);
             this.system.mapClass('isoFile', MediaPlayer.utils.IsoFile);
+            this.system.mapSingleton('randomNumberGenerator', MediaPlayer.utils.RNG);
 
             this.system.mapSingleton('textTrackExtensions', MediaPlayer.utils.TextTrackExtensions);
             this.system.mapSingleton('vttParser', MediaPlayer.utils.VTTParser);
@@ -101,7 +102,6 @@ MediaPlayer.di.Context = function () {
 
             this.system.mapClass('metrics', MediaPlayer.models.MetricsList);
             this.system.mapClass('insufficientBufferRule', MediaPlayer.rules.InsufficientBufferRule);
-            this.system.mapClass('bufferOccupancyRule', MediaPlayer.rules.BufferOccupancyRule);
             this.system.mapClass('throughputRule', MediaPlayer.rules.ThroughputRule);
             this.system.mapSingleton('abrRulesCollection', MediaPlayer.rules.ABRRulesCollection);
 
@@ -133,6 +133,25 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('stream', MediaPlayer.dependencies.Stream);
             this.system.mapClass('scheduleController', MediaPlayer.dependencies.ScheduleController);
             this.system.mapSingleton('timeSyncController', MediaPlayer.dependencies.TimeSyncController);
+
+            this.system.mapSingleton('metricsCollectionController', MediaPlayer.dependencies.MetricsCollectionController);
+            this.system.mapClass('metricsController', MediaPlayer.dependencies.MetricsController);
+            this.system.mapClass('rangeController', MediaPlayer.dependencies.RangeController);
+            this.system.mapClass('reportingController', MediaPlayer.dependencies.ReportingController);
+            this.system.mapClass('metricsHandlersController', MediaPlayer.dependencies.MetricsHandlersController);
+
+            this.system.mapSingleton('reportingFactory', MediaPlayer.metrics.ReportingFactory);
+            this.system.mapClass('dvbReporting', MediaPlayer.metrics.reporting.DVBReporting);
+
+            this.system.mapSingleton('metricsHandlerFactory', MediaPlayer.metrics.MetricsHandlerFactory);
+            this.system.mapClass('bufferLevelHandler', MediaPlayer.metrics.handlers.BufferLevel);
+            this.system.mapClass('dVBErrorsHandler', MediaPlayer.metrics.handlers.DVBErrors);
+            this.system.mapClass('httpListHandler', MediaPlayer.metrics.handlers.HttpList);
+            this.system.mapClass('playListHandler', MediaPlayer.metrics.handlers.PlayList);
+            this.system.mapClass('genericMetricHandler', MediaPlayer.metrics.handlers.GenericMetricHandler);
+
+            this.system.mapSingleton('metricSerialiser', MediaPlayer.metrics.utils.MetricSerialiser);
+            this.system.mapSingleton('handlerHelpers', MediaPlayer.metrics.utils.HandlerHelpers);
 
             this.system.mapSingleton('notifier', MediaPlayer.dependencies.Notifier);
         }

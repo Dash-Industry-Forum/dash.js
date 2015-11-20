@@ -1,4 +1,4 @@
-﻿/**
+/**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
@@ -31,44 +31,14 @@
 MediaPlayer.rules.ThroughputRule = function () {
     "use strict";
 
+    // these numbers are way too small, particularly if coming from
+    // cache, they're also not by type, so it could well end up just
+    // using audio requests to choose video bitrates - which won't be
+    // a problem if from the same connection, but what if we have
+    // multiplexed audio/video with different distribution issues?
 
-    var throughputArray = [],
-        lastSwitchTime = 0,
-        AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2,
-        AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3,
-
-        storeLastRequestThroughputByType = function (type, lastRequestThroughput) {
-            throughputArray[type] = throughputArray[type] || [];
-            if (lastRequestThroughput !== Infinity &&
-                lastRequestThroughput !== throughputArray[type][throughputArray[type].length-1]) {
-                throughputArray[type].push(lastRequestThroughput);
-            }
-        },
-
-        getAverageThroughput = function (type,  isDynamic) {
-            var averageThroughput = 0,
-                sampleAmount = isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE: AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD,
-                arr = throughputArray[type],
-                len = arr.length;
-
-            sampleAmount = len < sampleAmount ? len : sampleAmount;
-
-            if (len > 0) {
-                var startValue = len - sampleAmount,
-                    totalSampledValue = 0;
-
-                for (var i = startValue; i < len; i++) {
-                    totalSampledValue += arr[i];
-                }
-                averageThroughput = totalSampledValue / sampleAmount;
-            }
-
-            if (arr.length > sampleAmount) {
-                arr.shift();
-            }
-
-            return (averageThroughput * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY) / 1000;
-        };
+    var AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2,
+        AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3;
 
 
     return {
@@ -80,63 +50,42 @@ MediaPlayer.rules.ThroughputRule = function () {
 
         execute: function (context, callback) {
             var self = this,
-                now = new Date().getTime()/1000,
                 mediaInfo = context.getMediaInfo(),
                 mediaType = mediaInfo.type,
                 current = context.getCurrentValue(),
-                representationInfo = context.getTrackInfo(),
                 metrics = self.metricsModel.getReadOnlyMetricsFor(mediaType),
                 streamProcessor = context.getStreamProcessor(),
                 abrController = streamProcessor.getABRController(),
                 isDynamic= streamProcessor.isDynamic(),
-                lastRequest = self.metricsExt.getCurrentHttpRequest(metrics),
-                waitToSwitchTime = !isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration / 2 : 2,
-                downloadTime,
-                averageThroughput,
-                lastRequestThroughput,
-                bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
-                bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
                 switchRequest =  new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE, MediaPlayer.rules.SwitchRequest.prototype.WEAK);
 
-            if (now - lastSwitchTime < waitToSwitchTime ||
-                !metrics || lastRequest === null ||
-                lastRequest.type !== MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE ||
-                bufferStateVO === null || bufferLevelVO === null) {
+            if ( (metrics.BufferState.length === 0) || (metrics.BufferLevel.length === 0) ) {
                 callback(switchRequest);
                 return;
             }
 
-            downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime()) / 1000;
+            var bufferStateVO = metrics.BufferState[metrics.BufferState.length - 1],
+                bufferLevelVO = metrics.BufferLevel[metrics.BufferLevel.length - 1];
 
-            if (lastRequest.trace.length) {
-                lastRequestThroughput = Math.round((lastRequest.trace[lastRequest.trace.length - 1].b * 8 ) / downloadTime);
-                storeLastRequestThroughputByType(mediaType, lastRequestThroughput);
+            var averageThroughput = self.metricsExt.getRecentThroughput(metrics, (isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD));
+            // insufficent data don't recommend
+            if (averageThroughput<0) {
+                callback(switchRequest);
+                return;
             }
 
-            averageThroughput = Math.round(getAverageThroughput(mediaType, isDynamic));
-            abrController.setAverageThroughput(mediaType, averageThroughput);
+            averageThroughput = Math.round((averageThroughput * MediaPlayer.dependencies.AbrController.BANDWIDTH_SAFETY) / 1000);
 
-            if (abrController.getAbandonmentStateFor(mediaType) !== MediaPlayer.dependencies.AbrController.ABANDON_LOAD) {
-
-                if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
-                    (bufferLevelVO.level >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD*2) || isDynamic)) {
-                    var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
-                    switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
-                }
-
-                if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
-                    self.log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ",
-                        switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.DEFAULT ? "Default" :
-                            switchRequest.priority === MediaPlayer.rules.SwitchRequest.prototype.STRONG ? "Strong" : "Weak", "Average throughput", Math.round(averageThroughput), "kbps");
-                }
+            if (bufferStateVO.state === MediaPlayer.dependencies.BufferController.BUFFER_LOADED &&
+                ((bufferLevelVO.level) >= (MediaPlayer.dependencies.BufferController.LOW_BUFFER_THRESHOLD_MS*2) || isDynamic)) {
+                var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
+                switchRequest = new MediaPlayer.rules.SwitchRequest(newQuality, MediaPlayer.rules.SwitchRequest.prototype.DEFAULT);
             }
 
+            if (switchRequest.value !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && switchRequest.value !== current) {
+                self.log("ThroughputRule requesting switch to index: ", switchRequest.value, "type: ",mediaType, " Priority: ", switchRequest.formatPriority(), "Average throughput", averageThroughput, "kbps");
+            }
             callback(switchRequest);
-        },
-
-        reset: function() {
-            throughputArray = [];
-            lastSwitchTime = 0;
         }
     };
 };

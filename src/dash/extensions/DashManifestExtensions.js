@@ -801,5 +801,109 @@ Dash.dependencies.DashManifestExtensions.prototype = {
         }
 
         return utcTimingEntries;
+    },
+
+    getMetricsRangeStartTime : function (manifest, dynamic, range) {
+        var mpd = this.getMpd(manifest),
+            periods,
+            presentationStartTime = 0,
+            reportingStartTime;
+
+        if (dynamic) {
+            // For services with MPD@type='dynamic', the start time is
+            // indicated in wall clock time by adding the value of this
+            // attribute to the value of the MPD@availabilityStartTime
+            // attribute.
+            presentationStartTime = mpd.availabilityStartTime.getTime() / 1000;
+        } else {
+            // For services with MPD@type='static', the start time is indicated
+            // in Media Presentation time and is relative to the PeriodStart
+            // time of the first Period in this MPD.
+            periods = this.getRegularPeriods(manifest, mpd);
+
+            if (periods.length) {
+                presentationStartTime = periods[0].start;
+            }
+        }
+
+        // When not present, DASH Metrics collection is
+        // requested from the beginning of content
+        // consumption.
+        reportingStartTime = presentationStartTime;
+
+        if (range && range.hasOwnProperty("starttime")) {
+            reportingStartTime += range.starttime;
+        }
+
+        return reportingStartTime;
+    },
+
+    getMetrics : function (manifest) {
+        var self = this,
+            metrics = [];
+
+        if (manifest.Metrics_asArray) {
+            manifest.Metrics_asArray.forEach(function (metric) {
+                var metricEntry = new Dash.vo.Metrics(),
+                    isDynamic = self.getIsDynamic(manifest);
+
+                if (metric.hasOwnProperty("metrics")) {
+                    metricEntry.metrics = metric.metrics;
+                } else {
+                    //console.log("Invalid Metrics. metrics must be set. Ignoring.");
+                    return;
+                }
+
+                if (metric.Range_asArray) {
+                    metric.Range_asArray.forEach(function (range) {
+                        var rangeEntry = new Dash.vo.Range();
+
+                        rangeEntry.starttime =
+                            self.getMetricsRangeStartTime(manifest, isDynamic, range);
+
+                        if (range.hasOwnProperty("duration")) {
+                            rangeEntry.duration = range.duration;
+                        } else {
+                            // if not present, the value is identical to the
+                            // Media Presentation duration.
+                            rangeEntry.duration = self.getDuration(manifest);
+                        }
+
+                        rangeEntry.useWallClockTime = isDynamic;
+
+                        metricEntry.Range.push(rangeEntry);
+                    });
+                }
+
+                if (metric.Reporting_asArray) {
+                    metric.Reporting_asArray.forEach(function (reporting) {
+                        var reportingEntry = new Dash.vo.Reporting(),
+                            prop;
+
+                        if(reporting.hasOwnProperty("schemeIdUri")) {
+                            reportingEntry.schemeIdUri = reporting.schemeIdUri;
+                        } else {
+                            //console.log("Invalid Reporting. schemeIdUri must be set. Ignoring.");
+                            return;
+                        }
+
+                        for (prop in reporting) {
+                            if (reporting.hasOwnProperty(prop)) {
+                                reportingEntry[prop] = reporting[prop];
+                            }
+                        }
+
+                        metricEntry.Reporting.push(reportingEntry);
+                    });
+                } else {
+                    //console.log("Invalid Metrics. At least one reporting must be present. Ignoring.");
+                    return;
+                }
+
+                metrics.push(metricEntry);
+            });
+        }
+
+        return metrics;
     }
 };

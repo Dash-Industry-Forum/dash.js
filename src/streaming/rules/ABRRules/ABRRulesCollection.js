@@ -36,7 +36,6 @@ MediaPlayer.rules.ABRRulesCollection = function () {
 
     return {
         insufficientBufferRule: undefined,
-        bufferOccupancyRule:undefined,
         throughputRule:undefined,
         abandonRequestRule:undefined,
 
@@ -54,7 +53,6 @@ MediaPlayer.rules.ABRRulesCollection = function () {
         setup: function () {
             qualitySwitchRules.push(this.insufficientBufferRule);
             qualitySwitchRules.push(this.throughputRule);
-            qualitySwitchRules.push(this.bufferOccupancyRule);
             adandonFragmentRules.push(this.abandonRequestRule);
         }
     };

@@ -62,7 +62,7 @@ MediaPlayer = function (context) {
  * 6) Transform fragments.
  * 7) Push fragmemt bytes into SourceBuffer.
  */
-    var VERSION = "1.5.1",
+    var VERSION = "1.5.2",
         numOfParallelRequestAllowed = 0,
         system,
         abrController,
@@ -84,6 +84,7 @@ MediaPlayer = function (context) {
         playing = false,
         autoPlay = true,
         scheduleWhilePaused = false,
+        limitBitrateByPortal = true,
         bufferMax = MediaPlayer.dependencies.BufferController.BUFFER_SIZE_REQUIRED,
         useManifestDateHeaderTimeSource = true,
         UTCTimingSources = [],
@@ -115,6 +116,8 @@ MediaPlayer = function (context) {
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
             playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
+            playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, streamController);
+            playbackController.subscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, streamController);
             playbackController.setLiveDelayAttributes(liveDelayFragmentCount, usePresentationDelay);
 
             system.mapValue("liveDelayFragmentCount", liveDelayFragmentCount);
@@ -128,6 +131,10 @@ MediaPlayer = function (context) {
                 streamController.loadWithManifest(source);
             }
             streamController.setUTCTimingSources(UTCTimingSources, useManifestDateHeaderTimeSource);
+
+            abrController = system.getObject('abrController');
+            abrController.limitBitrateByPortal = limitBitrateByPortal;
+
             system.mapValue("scheduleWhilePaused", scheduleWhilePaused);
             system.mapOutlet("scheduleWhilePaused", "stream");
             system.mapOutlet("scheduleWhilePaused", "scheduleController");
@@ -263,6 +270,8 @@ MediaPlayer = function (context) {
                     playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_TIME_UPDATED, streamController);
                     playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_CAN_PLAY, streamController);
                     playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_ERROR, streamController);
+                    playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_STARTED, streamController);
+                    playbackController.unsubscribe(MediaPlayer.dependencies.PlaybackController.eventList.ENAME_PLAYBACK_PAUSED, streamController);
 
                     var teardownComplete = {},
                             self = this;
@@ -343,7 +352,6 @@ MediaPlayer = function (context) {
             playbackController = system.getObject("playbackController");
             mediaController = system.getObject("mediaController");
             this.restoreDefaultUTCTimingSources();
-            this.debug.log("[dash.js "+ VERSION +"] " + "new MediaPlayer instance has been created");
         },
 
         /**
@@ -527,6 +535,35 @@ MediaPlayer = function (context) {
         },
 
         /**
+         * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum representation allowed,
+         * as a proportion of the size of the representation set.
+         *
+         * You can set or remove this cap at anytime before or during playback. To clear this setting you must use the API
+         * and set the value param to NaN.
+         *
+         * If both this and maxAllowedBitrate are defined, maxAllowedBitrate is evaluated first, then maxAllowedRepresentation,
+         * i.e. the lowest value from executing these rules is used.
+         *
+         * This feature is typically used to reserve higher representations for playback only when connected over a fast connection.
+         *
+         * @param type String 'video' or 'audio' are the type options.
+         * @param value number between 0 and 1, where 1 is allow all representations, and 0 is allow only the lowest.
+         * @memberof MediaPlayer#
+         */
+        setMaxAllowedRepresentationRatioFor:function(type, value) {
+            abrController.setMaxAllowedRepresentationRatioFor(type, value);
+        },
+
+        /**
+         * @param type String 'video' or 'audio' are the type options.
+         * @memberof MediaPlayer#
+         * @see {@link MediaPlayer#setMaxAllowedRepresentationRatioFor setMaxAllowedRepresentationRatioFor()}
+         */
+        getMaxAllowedRepresentationRatioFor:function(type) {
+            return abrController.getMaxAllowedRepresentationRatioFor(type);
+        },
+
+        /**
          * <p>Set to false to prevent stream from auto-playing when the view is attached.</p>
          *
          * @param value {boolean}
@@ -561,6 +598,22 @@ MediaPlayer = function (context) {
          */
         getScheduleWhilePaused: function() {
             return scheduleWhilePaused;
+        },
+
+        /**
+         * @param value
+         * @memberof MediaPlayer#
+         */
+        setLimitBitrateByPortal: function(value) {
+            limitBitrateByPortal = value;
+        },
+
+        /**
+         * @returns {boolean}
+         * @memberof MediaPlayer#
+         */
+        getLimitBitrateByPortal: function() {
+            return limitBitrateByPortal;
         },
 
         /**
@@ -825,23 +878,56 @@ MediaPlayer = function (context) {
         },
 
         /**
-         * @returns {boolean} Current state of adaptive bitrate switching
+         * @param type
+         * @param {number} value A value of the initial ratio, between 0 and 1
          * @memberof MediaPlayer#
-         *
          */
-        getAutoSwitchQuality : function () {
-            return abrController.getAutoSwitchBitrate();
+        setInitialRepresentationRatioFor: function(type, value) {
+            abrController.setInitialRepresentationRatioFor(type, value);
         },
 
         /**
-         * Set to false to switch off adaptive bitrate switching.
-         *
-         * @param value {boolean}
-         * @default {boolean} true
+         * @param type
+         * @returns {number} A value of the initial ratio, between 0 and 1
+         * @memberof MediaPlayer#
+         */
+        getInitialRepresentationRatioFor: function(type) {
+            return abrController.getInitialRepresentationRatioFor(type);
+        },
+
+        /**
+         * @returns {object}
+         * @memberof MediaPlayer#
+         */
+        getAutoSwitchQuality : function () {
+            return this.getAutoSwitchQualityFor('video') || this.getAutoSwitchQualityFor('audio');
+        },
+
+        /**
+         * @param value
          * @memberof MediaPlayer#
          */
         setAutoSwitchQuality : function (value) {
-            abrController.setAutoSwitchBitrate(value);
+            this.setAutoSwitchQualityFor('audio', value);
+            this.setAutoSwitchQualityFor('video', value);
+        },
+
+        /**
+         * @param type {string}
+         * @returns {object}
+         * @memberof MediaPlayer#
+         */
+        getAutoSwitchQualityFor : function (type) {
+            return abrController.getAutoSwitchBitrate(type);
+        },
+
+        /**
+         * @param type {string}
+         * @param value
+         * @memberof MediaPlayer#
+         */
+        setAutoSwitchQualityFor : function (type, value) {
+            abrController.setAutoSwitchBitrate(type, value);
         },
 
         /**
@@ -1386,6 +1472,15 @@ MediaPlayer.vo.protection = {};
 MediaPlayer.rules = {};
 
 /**
+ * Namespace for {@MediaPlayer} reporting classes
+ * @namespace
+ */
+MediaPlayer.metrics = {};
+MediaPlayer.metrics.reporting = {};
+MediaPlayer.metrics.handlers = {};
+MediaPlayer.metrics.utils = {};
+
+/**
  * Namespace for {@MediaPlayer} dependency-injection helper classes
  * @namespace
  */
@@ -1419,5 +1514,7 @@ MediaPlayer.events = {
     BUFFER_LOADED: "bufferloaded",
     BUFFER_EMPTY: "bufferstalled",
     ERROR: "error",
-    LOG: "log"
+    LOG: "log",
+    AST_IN_FUTURE: "astinfuture",
+    FRAGMENT_DISCARDED: "fragmentdiscarded"
 };

@@ -32,8 +32,8 @@ MediaPlayer.utils.Debug = function () {
     "use strict";
 
     var logToBrowserConsole = true,
-        showLogTimestamp = false,
-        showCalleeName = false,
+        showLogTimestamp = true,
+        showCalleeName = true,
         startTime = new Date().getTime(),
         eventBus;
 
