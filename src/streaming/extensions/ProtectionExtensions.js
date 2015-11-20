@@ -39,6 +39,10 @@ import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 import KeySystemClearKey from '../protection/drm/KeySystemClearKey.js';
 import KeySystemWidevine from '../protection/drm/KeySystemWidevine.js';
 import KeySystemPlayReady from '../protection/drm/KeySystemPlayReady.js';
+import DRMToday from '../protection/servers/DRMToday.js';
+import PlayReady from '../protection/servers/PlayReady.js';
+import Widevine from '../protection/servers/Widevine.js';
+import ClearKey from '../protection/servers/ClearKey.js';
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(ProtectionExtensions);
@@ -60,8 +64,7 @@ function  ProtectionExtensions() {
 
     return instance;
 
-    let system,
-        log,
+    let log,
         keySystems,
         clearkeyKeySystem;
 
@@ -70,10 +73,6 @@ function  ProtectionExtensions() {
 
         if (config.log) {
             log = config.log;
-        }
-
-        if (config.system) {
-            system = config.system;
         }
     }
 
@@ -262,13 +261,13 @@ function  ProtectionExtensions() {
 
         var licenseServerData = null;
         if (protData && protData.hasOwnProperty("drmtoday")) {
-            licenseServerData = system.getObject("serverDRMToday");
+            licenseServerData = DRMToday.getInstance();
         } else if (keySystem.systemString === "com.widevine.alpha") {
-            licenseServerData = system.getObject("serverWidevine");
+            licenseServerData = Widevine.getInstance();
         } else if (keySystem.systemString === "com.microsoft.playready") {
-            licenseServerData = system.getObject("serverPlayReady");
+            licenseServerData = PlayReady.getInstance();
         } else if (keySystem.systemString === "org.w3.clearkey") {
-            licenseServerData = system.getObject("serverClearKey");
+            licenseServerData = ClearKey.getInstance();
         }
 
         return licenseServerData;

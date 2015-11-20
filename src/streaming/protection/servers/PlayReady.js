@@ -37,29 +37,38 @@
  * @implements LicenseServer
  * @class
  */
-let PlayReady = function() {
-    "use strict";
+import FactoryMaker from '../../../core/FactoryMaker.js';
+export default FactoryMaker.getSingletonFactory(PlayReady);
 
-    return {
+function PlayReady() {
 
-        getServerURLFromMessage: function(url /*, message, messageType*/) { return url; },
+    var instance = {
+        getServerURLFromMessage: getServerURLFromMessage,
+        getHTTPMethod: getHTTPMethod,
+        getResponseType: getResponseType,
+        getLicenseMessage: getLicenseMessage,
+        getErrorResponse: getErrorResponse,
+    }
 
-        getHTTPMethod: function(/*messageType*/) { return 'POST'; },
+    return instance;
 
-        getResponseType: function(/*keySystemStr, messageType*/) { return 'arraybuffer'; },
+    function getServerURLFromMessage(url /*, message, messageType*/) {
+        return url;
+    }
 
-        getLicenseMessage: function(serverResponse/*, keySystemStr, messageType*/) {
-            return serverResponse;
-        },
+    function getHTTPMethod(/*messageType*/) {
+        return 'POST';
+    }
 
-        getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
-            return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
-        }
-    };
+    function getResponseType(/*keySystemStr, messageType*/) {
+        return 'arraybuffer';
+    }
+
+    function getLicenseMessage(serverResponse/*, keySystemStr, messageType*/) {
+        return serverResponse;
+    }
+
+    function getErrorResponse(serverResponse/*, keySystemStr, messageType*/) {
+        return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
+    }
 };
-
-PlayReady.prototype = {
-    constructor: PlayReady
-};
-
-export default PlayReady;

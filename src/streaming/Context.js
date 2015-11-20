@@ -35,18 +35,10 @@
  * @class
  */
 import Debug from './utils/Debug.js';
-
 import Events from './Events.js';
 import CoreEvents from '../core/events/CoreEvents.js';
 import PublicEvents from './PublicEvents';
 import ProtectionEvents from './protection/ProtectionEvents.js';
-
-
-import ClearKey from './protection/servers/ClearKey.js';
-import DRMToday from './protection/servers/DRMToday.js';
-import PlayReady from './protection/servers/PlayReady.js';
-import Widevine from './protection/servers/Widevine.js';
-
 
 
 let Context = function () {
@@ -82,10 +74,7 @@ let Context = function () {
 
 
 
-            this.system.mapSingleton('serverPlayReady', PlayReady);
-            this.system.mapSingleton('serverWidevine', Widevine);
-            this.system.mapSingleton('serverClearKey', ClearKey);
-            this.system.mapSingleton('serverDRMToday', DRMToday);
+
 
         }
     };

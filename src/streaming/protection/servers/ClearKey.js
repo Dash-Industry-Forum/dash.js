@@ -40,49 +40,56 @@
  */
 import KeyPair from '../../vo/protection/KeyPair.js';
 import ClearKeyKeySet from '../../vo/protection/ClearKeyKeySet.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
-let ClearKey = function() {
-    "use strict";
+export default FactoryMaker.getSingletonFactory(ClearKey);
 
-    return {
+function ClearKey() {
 
-        getServerURLFromMessage: function(url, message/*, messageType*/) {
-            // Build ClearKey server query string
-            var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
-            url += "/?";
-            for (var i = 0; i < jsonMsg.kids.length; i++) {
-                url += jsonMsg.kids[i] + "&";
-            }
-            url = url.substring(0, url.length-1);
-            return url;
-        },
+    var instance = {
+        getServerURLFromMessage: getServerURLFromMessage,
+        getHTTPMethod: getHTTPMethod,
+        getResponseType: getResponseType,
+        getLicenseMessage: getLicenseMessage,
+        getErrorResponse: getErrorResponse,
+    }
 
-        getHTTPMethod: function(/*messageType*/) { return 'GET'; },
+    return instance;
 
-        getResponseType: function(/*keySystemStr*/) { return 'json'; },
-
-        getLicenseMessage: function(serverResponse/*, keySystemStr, messageType*/) {
-            if (!serverResponse.hasOwnProperty("keys")) {
-                return null;
-            }
-            var i, keyPairs = [];
-            for (i = 0; i < serverResponse.keys.length; i++) {
-                var keypair = serverResponse.keys[i],
-                    keyid = keypair.kid.replace(/=/g, ""),
-                    key = keypair.k.replace(/=/g, "");
-                keyPairs.push(new KeyPair(keyid, key));
-            }
-            return new ClearKeyKeySet(keyPairs);
-        },
-
-        getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
-            return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
+    function getServerURLFromMessage(url, message/*, messageType*/) {
+        // Build ClearKey server query string
+        var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
+        url += "/?";
+        for (var i = 0; i < jsonMsg.kids.length; i++) {
+            url += jsonMsg.kids[i] + "&";
         }
-    };
-};
+        url = url.substring(0, url.length-1);
+        return url;
+    }
 
-ClearKey.prototype = {
-    constructor: ClearKey
-};
+    function getHTTPMethod(/*messageType*/) {
+        return 'GET';
+    }
 
-export default ClearKey;
+    function getResponseType(/*keySystemStr*/) {
+        return 'json';
+    }
+
+    function getLicenseMessage(serverResponse/*, keySystemStr, messageType*/) {
+        if (!serverResponse.hasOwnProperty("keys")) {
+            return null;
+        }
+        var i, keyPairs = [];
+        for (i = 0; i < serverResponse.keys.length; i++) {
+            var keypair = serverResponse.keys[i],
+                keyid = keypair.kid.replace(/=/g, ""),
+                key = keypair.k.replace(/=/g, "");
+            keyPairs.push(new KeyPair(keyid, key));
+        }
+        return new ClearKeyKeySet(keyPairs);
+    }
+
+    function getErrorResponse(serverResponse/*, keySystemStr, messageType*/) {
+        return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
+    }
+};

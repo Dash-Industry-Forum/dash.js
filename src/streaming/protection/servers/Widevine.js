@@ -28,30 +28,38 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import FactoryMaker from '../../../core/FactoryMaker.js';
+export default FactoryMaker.getSingletonFactory(Widevine);
 
-let Widevine = function() {
-    "use strict";
+function Widevine() {
 
-    return {
+    var instance = {
+        getServerURLFromMessage: getServerURLFromMessage,
+        getHTTPMethod: getHTTPMethod,
+        getResponseType: getResponseType,
+        getLicenseMessage: getLicenseMessage,
+        getErrorResponse: getErrorResponse,
+    }
 
-        getServerURLFromMessage: function(url /*, message, messageType*/) { return url; },
+    return instance;
 
-        getHTTPMethod: function(/*messageType*/) { return 'POST'; },
+    function getServerURLFromMessage(url /*, message, messageType*/) {
+        return url;
+    }
 
-        getResponseType: function(/*keySystemStr, messageType*/) { return 'arraybuffer'; },
+    function getHTTPMethod(/*messageType*/) {
+        return 'POST';
+    }
 
-        getLicenseMessage: function(serverResponse/*, keySystemStr, messageType*/) {
-            return serverResponse;
-        },
+    function getResponseType(/*keySystemStr, messageType*/) {
+        return 'arraybuffer';
+    }
 
-        getErrorResponse: function(serverResponse/*, keySystemStr, messageType*/) {
-            return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
-        }
-    };
+    function getLicenseMessage(serverResponse/*, keySystemStr, messageType*/) {
+        return serverResponse;
+    }
+
+    function getErrorResponse(serverResponse/*, keySystemStr, messageType*/) {
+        return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
+    }
 };
-
-Widevine.prototype = {
-    constructor: Widevine
-};
-
-export default Widevine;

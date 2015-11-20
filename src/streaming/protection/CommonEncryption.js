@@ -29,8 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-let CommonEncryption = {
-
+class CommonEncryption {
     /**
      * Find and return the ContentProtection element in the given array
      * that indicates support for MPEG Common Encryption
@@ -39,7 +38,7 @@ let CommonEncryption = {
      * @returns the Common Encryption content protection element or
      * null if one was not found
      */
-    findCencContentProtection: function(cpArray) {
+    static findCencContentProtection(cpArray) {
         var retVal = null;
         for (var i = 0; i < cpArray.length; ++i) {
             var cp = cpArray[i];
@@ -48,7 +47,7 @@ let CommonEncryption = {
                 retVal = cp;
         }
         return retVal;
-    },
+    }
 
     /**
      * Returns just the data portion of a single PSSH
@@ -56,7 +55,7 @@ let CommonEncryption = {
      * @param pssh {ArrayBuffer} the PSSH
      * @return {ArrayBuffer} data portion of the PSSH
      */
-    getPSSHData: function(pssh) {
+    static getPSSHData(pssh) {
         var offset = 8, // Box size and type fields
             view = new DataView(pssh);
 
@@ -71,7 +70,7 @@ let CommonEncryption = {
 
         offset += 4; // Data size
         return pssh.slice(offset);
-    },
+    }
 
     /**
      * Returns the PSSH associated with the given key system from the concatenated
@@ -83,13 +82,13 @@ let CommonEncryption = {
      * @returns {ArrayBuffer} The PSSH box data corresponding to the given key system
      * or null if a valid association could not be found.
      */
-    getPSSHForKeySystem: function(keySystem, initData) {
+    static getPSSHForKeySystem(keySystem, initData) {
         var psshList = CommonEncryption.parsePSSHList(initData);
         if (psshList.hasOwnProperty(keySystem.uuid.toLowerCase())) {
             return psshList[keySystem.uuid.toLowerCase()];
         }
         return null;
-    },
+    }
 
     /**
      * Parse a standard common encryption PSSH which contains a sinmple
@@ -98,12 +97,12 @@ let CommonEncryption = {
      * @param cpData the ContentProtection element
      * @returns {ArrayBuffer} the init data or null if not found
      */
-    parseInitDataFromContentProtection: function(cpData) {
+    static parseInitDataFromContentProtection(cpData) {
         if ("pssh" in cpData) {
             return BASE64.decodeArray(cpData.pssh.__text).buffer;
         }
         return null;
-    },
+    }
 
     /**
      * Parses list of PSSH boxes into keysystem-specific PSSH data
@@ -114,7 +113,7 @@ let CommonEncryption = {
      * the detected key system UUIDs (e.g. 00000000-0000-0000-0000-0000000000)
      * and a ArrayBuffer (the entire PSSH box) as the property value
      */
-    parsePSSHList: function(data) {
+    static parsePSSHList(data) {
 
         if (data === null)
             return [];

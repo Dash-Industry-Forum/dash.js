@@ -45,7 +45,6 @@
  * @interface
  */
 
-let LicenseServer = function() {};
 
 /**
  * Returns a new or updated license server URL based on the requirements of the
@@ -111,5 +110,3 @@ let LicenseServer = function() {};
  * message types can be found {@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|here}.
  * @returns {string} an error message that indicates the reason for the failure
  */
-
-export default LicenseServer;

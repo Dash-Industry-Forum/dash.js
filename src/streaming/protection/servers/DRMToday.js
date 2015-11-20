@@ -35,10 +35,12 @@
  * @implements LicenseServer
  * @class
  */
-let DRMToday = function() {
-    "use strict";
+import FactoryMaker from '../../../core/FactoryMaker.js';
+export default FactoryMaker.getSingletonFactory(DRMToday);
 
-    var keySystems = {
+function DRMToday() {
+
+    const keySystems = {
         "com.widevine.alpha": {
             responseType: "json",
             getLicenseMessage: function(response) {
@@ -57,30 +59,35 @@ let DRMToday = function() {
                 return String.fromCharCode.apply(null, new Uint8Array(response));
             }
         }
-    };
+    }
 
-    return {
+    var instance = {
+        getServerURLFromMessage: getServerURLFromMessage,
+        getHTTPMethod: getHTTPMethod,
+        getResponseType: getResponseType,
+        getLicenseMessage: getLicenseMessage,
+        getErrorResponse: getErrorResponse,
+    }
 
-        getServerURLFromMessage: function(url /*, message, messageType*/) { return url; },
+    return instance;
 
-        getHTTPMethod: function(/*messageType*/) { return 'POST'; },
+    function getServerURLFromMessage(url /*, message, messageType*/) {
+        return url;
+    }
 
-        getResponseType: function(keySystemStr/*, messageType*/) {
-            return keySystems[keySystemStr].responseType;
-        },
+    function getHTTPMethod(/*messageType*/) {
+        return 'POST';
+    }
 
-        getLicenseMessage: function(serverResponse, keySystemStr/*, messageType*/) {
-            return keySystems[keySystemStr].getLicenseMessage(serverResponse);
-        },
+    function getResponseType(keySystemStr/*, messageType*/) {
+        return keySystems[keySystemStr].responseType;
+    }
 
-        getErrorResponse: function(serverResponse, keySystemStr/*, messageType*/) {
-            return keySystems[keySystemStr].getErrorResponse(serverResponse);
-        }
-    };
+    function getLicenseMessage(serverResponse, keySystemStr/*, messageType*/) {
+        return keySystems[keySystemStr].getLicenseMessage(serverResponse);
+    }
+
+    function getErrorResponse(serverResponse, keySystemStr/*, messageType*/) {
+        return keySystems[keySystemStr].getErrorResponse(serverResponse);
+    }
 };
-
-DRMToday.prototype = {
-    constructor: DRMToday
-};
-
-export default DRMToday;

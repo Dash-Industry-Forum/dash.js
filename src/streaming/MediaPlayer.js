@@ -1130,10 +1130,8 @@ let MediaPlayer = function (context) {
             if(!controller && capabilities.supportsEncryptedMedia()) {
 
                 let protectionExt = ProtectionExtensions.getInstance();
-
                 protectionExt.setConfig({
                     log:debug.log,
-                    system:system
                 })
                 protectionExt.initialize();
 

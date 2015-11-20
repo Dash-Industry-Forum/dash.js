@@ -36,8 +36,6 @@
  * @interface
  */
 
-let KeySystem = function() {};
-
 /**
  * Key system name string (e.g. 'org.w3.clearkey')
  *
@@ -117,5 +115,3 @@ let KeySystem = function() {};
  * from the PSSH box definition
  * @returns {?string} The license server URL or null if URL is not available in initData
  */
-
-export default KeySystem;
