@@ -55,7 +55,8 @@ let Dash = {
     create: function (video, source, context) {
         if (typeof video === "undefined" || video.nodeName != "VIDEO") return null;
 
-        var player, videoID = (video.id || video.name || "video element");
+        var player;
+        var videoID = (video.id || video.name || "video element");
         context = context || new DashContext();
         source = source || [].slice.call(video.querySelectorAll("source")).filter(function(s){return s.type == Dash.supportedManifestMimeTypes.mimeType;})[0];
 

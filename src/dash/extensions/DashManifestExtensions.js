@@ -99,11 +99,12 @@ function DashManifestExtensions() {
 
         var i,
             len,
-            col = adaptation.ContentComponent_asArray,
-            mimeTypeRegEx = (type !== "text") ? new RegExp(type) : new RegExp("(vtt|ttml)"),
             representation,
             result = false,
             found = false;
+
+        var col = adaptation.ContentComponent_asArray;
+        var mimeTypeRegEx = (type !== "text") ? new RegExp(type) : new RegExp("(vtt|ttml)");
 
         if((adaptation.Representation_asArray.length>0)&&
             (adaptation.Representation_asArray[0].hasOwnProperty("codecs"))&&
@@ -213,8 +214,8 @@ function DashManifestExtensions() {
 
     function getAdaptationForId(id, manifest, periodIndex) {
 
-        var adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
-            i,
+        var adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
+        var i,
             len;
 
         for (i = 0, len = adaptations.length; i < len; i += 1) {
@@ -233,8 +234,8 @@ function DashManifestExtensions() {
 
     function getIndexForAdaptation(adaptation, manifest, periodIndex) {
 
-        var adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
-            i,
+        var adaptations = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
+        var i,
             len;
 
         for (i = 0, len = adaptations.length; i < len; i += 1) {
@@ -248,8 +249,8 @@ function DashManifestExtensions() {
 
     function getAdaptationsForType(manifest, periodIndex, type) {
 
-        var adaptationSet = manifest.Period_asArray[periodIndex].AdaptationSet_asArray,
-            i,
+        var adaptationSet = manifest.Period_asArray[periodIndex].AdaptationSet_asArray;
+        var i,
             len,
             adaptations = [];
 
@@ -310,8 +311,8 @@ function DashManifestExtensions() {
     }
 
     function getIsDVR(manifest) {
-        var isDynamic = getIsDynamic(manifest),
-            containsDVR,
+        var isDynamic = getIsDynamic(manifest);
+        var containsDVR,
             isDVR;
 
         containsDVR = !isNaN(manifest.timeShiftBufferDepth);
@@ -372,8 +373,8 @@ function DashManifestExtensions() {
 
         var a = processAdaptation(adaptation),
             reps = a.Representation_asArray,
-            ln = reps.length,
-            bitrateList = [];
+            ln = reps.length;
+        var bitrateList = [];
 
         for (var i = 0; i < ln; i += 1) {
             bitrateList.push(reps[i].bandwidth);
@@ -387,8 +388,8 @@ function DashManifestExtensions() {
     }
 
     function getRepresentationsForAdaptation(manifest, adaptation) {
-        var a = processAdaptation(manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index]),
-            representations = [],
+        var a = processAdaptation(manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index]);
+        var representations = [],
             representation,
             initialization,
             segmentInfo,
@@ -484,8 +485,8 @@ function DashManifestExtensions() {
     }
 
     function getAdaptationsForPeriod(manifest, period) {
-        var p = manifest.Period_asArray[period.index],
-            adaptations = [],
+        var p = manifest.Period_asArray[period.index];
+        var adaptations = [],
             adaptationSet,
             a;
 
@@ -519,8 +520,8 @@ function DashManifestExtensions() {
     }
 
     function getRegularPeriods(manifest, mpd) {
+        var isDynamic = getIsDynamic(manifest);
         var periods = [],
-            isDynamic = getIsDynamic(manifest),
             i,
             len,
             p1 = null,
@@ -670,8 +671,8 @@ function DashManifestExtensions() {
     }
 
     function getEndTimeForLastPeriod(manifest, period) {
-        var periodEnd,
-            checkTime = getCheckTime(manifest, period);
+        var periodEnd;
+        var checkTime = getCheckTime(manifest, period);
 
         // if the MPD@mediaPresentationDuration attribute is present, then PeriodEndTime is defined as the end time of the Media Presentation.
         // if the MPD@mediaPresentationDuration attribute is not present, then PeriodEndTime is defined as FetchTime + MPD@minimumUpdatePeriod
@@ -690,9 +691,9 @@ function DashManifestExtensions() {
 
     function getEventsForPeriod(manifest,period) {
 
-        var periodArray = manifest.Period_asArray,
-            eventStreams = periodArray[period.index].EventStream_asArray,
-            events = [];
+        var periodArray = manifest.Period_asArray;
+        var eventStreams = periodArray[period.index].EventStream_asArray;
+        var events = [];
 
         if(eventStreams) {
             for(var i = 0; i < eventStreams.length; i += 1) {
@@ -776,10 +777,10 @@ function DashManifestExtensions() {
 
     function getUTCTimingSources(manifest) {
 
-        var isDynamic = getIsDynamic(manifest),
-            hasAST = manifest.hasOwnProperty("availabilityStartTime"),
-            utcTimingsArray = manifest.UTCTiming_asArray,
-            utcTimingEntries = [];
+        var isDynamic = getIsDynamic(manifest);
+        var hasAST = manifest.hasOwnProperty("availabilityStartTime");
+        var utcTimingsArray = manifest.UTCTiming_asArray;
+        var utcTimingEntries = [];
 
         // do not bother synchronizing the clock unless MPD is live,
         // or it is static and has availabilityStartTime attribute

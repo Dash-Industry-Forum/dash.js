@@ -157,10 +157,11 @@ function  RepresentationController() {
 
     function updateData(dataValue, adaptation, type) {
         var bitrate = null,
-            streamInfo = streamProcessor.getStreamInfo(),
             quality,
-            maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id),
             averageThroughput;
+
+        var streamInfo = streamProcessor.getStreamInfo(),
+            maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
 
         updating = true;
         EventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: this});
@@ -194,9 +195,9 @@ function  RepresentationController() {
     }
 
     function addRepresentationSwitch() {
-        var now = new Date(),
-            currentRepresentation = getCurrentRepresentation(),
-            currentVideoTime = playbackController.getTime();
+        var now = new Date();
+        var currentRepresentation = getCurrentRepresentation();
+        var currentVideoTime = playbackController.getTime();
 
         metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTime, currentRepresentation.id);
     }
@@ -228,8 +229,8 @@ function  RepresentationController() {
     }
 
     function updateRepresentations(adaptation) {
-        var reps,
-            manifest = manifestModel.getValue();
+        var reps;
+        var manifest = manifestModel.getValue();
 
         dataIndex = manifestExt.getIndexForAdaptation(data, manifest, adaptation.period.index);
         reps = manifestExt.getRepresentationsForAdaptation(manifest, adaptation);
@@ -247,17 +248,17 @@ function  RepresentationController() {
     }
 
     function postponeUpdate(availabilityDelay) {
-        var delay = (availabilityDelay + (currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount())) * 1000,
-            update = function() {
-                if (isUpdating()) return;
+        var delay = (availabilityDelay + (currentRepresentation.segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount())) * 1000;
+        var update = function() {
+            if (isUpdating()) return;
 
-                updating = true;
-                EventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: instance});
+            updating = true;
+            EventBus.trigger(Events.DATA_UPDATE_STARTED, { sender: instance });
 
-                for (var i = 0; i < availableRepresentations.length; i += 1) {
-                    indexHandler.updateRepresentation(availableRepresentations[i], true);
-                }
-            };
+            for (var i = 0; i < availableRepresentations.length; i += 1) {
+                indexHandler.updateRepresentation(availableRepresentations[i], true);
+            }
+        };
 
         updating = false;
         setTimeout(update, delay);
@@ -269,8 +270,9 @@ function  RepresentationController() {
         var r = e.representation,
             streamMetrics = metricsModel.getMetricsFor("stream"),
             metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type),
-            manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(streamMetrics),
-            repInfo,
+            manifestUpdateInfo = metricsExt.getCurrentManifestUpdate(streamMetrics);
+
+        var repInfo,
             err,
             alreadyAdded = false,
             repSwitch;
@@ -328,9 +330,9 @@ function  RepresentationController() {
 
         // we need to update checkTime after we have found the live edge because its initial value
         // does not take into account clientServerTimeShift
-        var manifest = manifestModel.getValue(),
-            period = currentRepresentation.adaptation.period,
-            streamInfo = streamController.getActiveStreamInfo();
+        var manifest = manifestModel.getValue();
+        var period = currentRepresentation.adaptation.period;
+        var streamInfo = streamController.getActiveStreamInfo();
 
         if (streamInfo.isLast) {
             period.mpd.checkTime = manifestExt.getCheckTime(manifest, period);

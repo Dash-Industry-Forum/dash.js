@@ -64,9 +64,9 @@ function DashMetricsExtensions() {
 
 
     function getBandwidthForRepresentation(representationId, periodId) {
-        var manifest = manifestModel.getValue(),
-            representation,
-            period = manifest.Period_asArray[periodId];
+        var representation;
+        var manifest = manifestModel.getValue();
+        var period = manifest.Period_asArray[periodId];
 
         representation = findRepresentation(period, representationId);
 
@@ -78,9 +78,9 @@ function DashMetricsExtensions() {
     }
 
     function getIndexForRepresentation(representationId, periodIdx) {
-        var manifest = manifestModel.getValue(),
-            representationIndex,
-            period = manifest.Period_asArray[periodIdx];
+        var representationIndex;
+        var manifest = manifestModel.getValue();
+        var period = manifest.Period_asArray[periodIdx];
 
         representationIndex = findRepresentationIndex(period, representationId);
         return representationIndex;
@@ -96,9 +96,9 @@ function DashMetricsExtensions() {
      * @method
      */
     function getMaxIndexForBufferType(bufferType, periodIdx) {
-        var manifest = manifestModel.getValue(),
-            maxIndex,
-            period = manifest.Period_asArray[periodIdx];
+        var maxIndex;
+        var manifest = manifestModel.getValue();
+        var period = manifest.Period_asArray[periodIdx];
 
         maxIndex = findMaxBufferIndex(period, bufferType);
         return maxIndex;
@@ -117,8 +117,8 @@ function DashMetricsExtensions() {
      * @method
      */
     function getMaxAllowedIndexForBufferType(bufferType, periodId) {
-        var abrController = AbrController.getInstance(),
-            idx=0;
+        var idx = 0;
+        var abrController = AbrController.getInstance();
 
         if (abrController) {
             idx = abrController.getTopQualityIndexFor(bufferType, periodId);
@@ -132,8 +132,8 @@ function DashMetricsExtensions() {
             return null;
         }
 
-        var repSwitch = metrics.RepSwitchList,
-            repSwitchLength,
+        var repSwitch = metrics.RepSwitchList;
+        var repSwitchLength,
             repSwitchLastIndex,
             currentRepSwitch;
 
@@ -153,8 +153,8 @@ function DashMetricsExtensions() {
             return null;
         }
 
-        var bufferLevel = metrics.BufferLevel,
-            bufferLevelLength,
+        var bufferLevel = metrics.BufferLevel;
+        var bufferLevelLength,
             bufferLevelLastIndex,
             currentBufferLevel;
 
@@ -178,8 +178,8 @@ function DashMetricsExtensions() {
             return null;
         }
 
-        var playList = metrics.PlayList,
-            trace,
+        var playList = metrics.PlayList;
+        var trace,
             currentRate;
 
         if (playList === null || playList.length <= 0) {
@@ -201,8 +201,8 @@ function DashMetricsExtensions() {
             return null;
         }
 
-        var httpList = metrics.HttpList,
-            httpListLength,
+        var httpList = metrics.HttpList;
+        var httpListLength,
             httpListLastIndex,
             currentHttpList = null;
 
@@ -234,8 +234,8 @@ function DashMetricsExtensions() {
     function getCurrentDroppedFrames(metrics) {
         if (metrics === null) { return null; }
 
-        var droppedFrames = metrics.DroppedFrames,
-            droppedFramesLength,
+        var droppedFrames = metrics.DroppedFrames;
+        var droppedFramesLength,
             droppedFramesLastIndex,
             currentDroppedFrames;
 
@@ -253,8 +253,8 @@ function DashMetricsExtensions() {
     function getCurrentSchedulingInfo(metrics) {
         if (metrics === null) return null;
 
-        var schedulingInfo = metrics.SchedulingInfo,
-            ln,
+        var schedulingInfo = metrics.SchedulingInfo;
+        var ln,
             lastIdx,
             currentSchedulingInfo;
 
@@ -273,8 +273,8 @@ function DashMetricsExtensions() {
     function getCurrentManifestUpdate(metrics) {
         if (metrics === null) return null;
 
-        var manifestUpdate = metrics.ManifestUpdate,
-            ln,
+        var manifestUpdate = metrics.ManifestUpdate;
+        var ln,
             lastIdx,
             currentManifestUpdate;
 
@@ -296,8 +296,8 @@ function DashMetricsExtensions() {
             return null;
         }
 
-        var dvrInfo = metrics.DVRInfo,
-            dvrInfoLastIndex,
+        var dvrInfo = metrics.DVRInfo;
+        var dvrInfoLastIndex,
             curentDVRInfo;
 
         if (dvrInfo === null || dvrInfo.length <= 0) {
@@ -339,8 +339,8 @@ function DashMetricsExtensions() {
 
         if (metrics === null) return null;
 
-        var httpRequest = getCurrentHttpRequest(metrics),
-            headers;
+        var httpRequest = getCurrentHttpRequest(metrics);
+        var headers;
 
         if (httpRequest === null || httpRequest.responseHeaders === null) return null;
 

@@ -135,15 +135,15 @@ function TimelineConverter() {
     }
 
     function calcPresentationTimeFromMediaTime(mediaTime, representation) {
-        var periodStart = representation.adaptation.period.start,
-            presentationOffset = representation.presentationTimeOffset;
+        var periodStart = representation.adaptation.period.start;
+        var presentationOffset = representation.presentationTimeOffset;
 
         return mediaTime + (periodStart - presentationOffset);
     }
 
     function calcMediaTimeFromPresentationTime(presentationTime, representation) {
-        var periodStart = representation.adaptation.period.start,
-            presentationOffset = representation.presentationTimeOffset;
+        var periodStart = representation.adaptation.period.start;
+        var presentationOffset = representation.presentationTimeOffset;
 
         return presentationTime - periodStart + presentationOffset;
     }
@@ -163,11 +163,12 @@ function TimelineConverter() {
     }
 
     function calcSegmentAvailabilityRange(representation, isDynamic) {
-        var start = representation.adaptation.period.start,
-            end = start + representation.adaptation.period.duration,
-            range = {start: start, end: end},
-            d = representation.segmentDuration || ((representation.segments && representation.segments.length) ? representation.segments[representation.segments.length-1].duration : 0),
-            checkTime,
+        var start = representation.adaptation.period.start;
+        var end = start + representation.adaptation.period.duration;
+        var range = { start: start, end: end };
+        var d = representation.segmentDuration || ((representation.segments && representation.segments.length) ? representation.segments[representation.segments.length - 1].duration : 0);
+        
+        var checkTime,
             now;
 
         if (!isDynamic) return range;

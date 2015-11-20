@@ -58,8 +58,8 @@ function FragmentExtensions(config) {
             tfhdBox = isoFile.getBox("tfhd"),
             tfdtBox = isoFile.getBox("tfdt"),
             trunBox = isoFile.getBox("trun"),
-            moofBox = isoFile.getBox("moof"),
-            sampleDuration,
+            moofBox = isoFile.getBox("moof");
+        var sampleDuration,
             sampleCompostionTimeOffset,
             sampleCount,
             sampleSize,
@@ -81,10 +81,10 @@ function FragmentExtensions(config) {
             sampleCompostionTimeOffset = (sample.sample_composition_time_offset !== undefined) ? sample.sample_composition_time_offset : 0;
 
             sampleList.push({'dts' : sampleDts,
-                                'cts' : (sampleDts + sampleCompostionTimeOffset),
-                                'duration' :sampleDuration,
-                                'offset': moofBox.offset + dataOffset,
-                                'size' :sampleSize});
+                'cts' : (sampleDts + sampleCompostionTimeOffset),
+                'duration' :sampleDuration,
+                'offset': moofBox.offset + dataOffset,
+                'size' :sampleSize});
             dataOffset += sampleSize;
             sampleDts += sampleDuration;
         }
@@ -92,8 +92,8 @@ function FragmentExtensions(config) {
     }
 
     function getMediaTimescaleFromMoov(ab) {
-        var isoFile = boxParser.parse(ab),
-            mdhdBox = isoFile.getBox("mdhd");
+        var isoFile = boxParser.parse(ab);
+        var mdhdBox = isoFile.getBox("mdhd");
 
         return mdhdBox ? mdhdBox.timescale : NaN;
     };
