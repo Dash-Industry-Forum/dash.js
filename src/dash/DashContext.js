@@ -30,6 +30,7 @@
  */
 
 
-let DashContext = function () {
+class DashContext {
 };
 
+export default DashContext;
