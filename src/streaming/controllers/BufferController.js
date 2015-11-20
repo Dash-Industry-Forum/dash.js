@@ -382,6 +382,7 @@ MediaPlayer.dependencies.BufferController = function () {
         checkIfBufferingCompleted = function() {
             var TOLERANCE = 0.15,
                 currentTime = this.playbackController.getTime(),
+                isDynamic = this.playbackController.getIsDynamic(),
                 lastRange,
                 i,
                 pruneStart;
@@ -392,7 +393,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 lastRange = buffer.buffered.length - 1;
             }
 
-            if (buffer.buffered.start(lastRange) <= currentTime && buffer.buffered.end(lastRange) >= this.playbackController.getStreamDuration() - TOLERANCE) {
+            if (!isDynamic && buffer.buffered.start(lastRange) <= currentTime && buffer.buffered.end(lastRange) >= this.playbackController.getStreamDuration() - TOLERANCE) {
                 if (!bufferCompletedSent) {
                     bufferCompletedSent = true;
                     this.notify(MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFERING_COMPLETED);
@@ -402,7 +403,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 if (!isPruningInProgress) {
                     // Prune future buffer if it's discontinuous and a long way away
                     for (i = lastRange; i > 0; i--) {
-                        if (currentTime + MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP < buffer.buffered.start(i)) {
+                        if (currentTime + MediaPlayer.dependencies.BufferController.BUFFER_AHEAD_TO_KEEP < buffer.buffered.start(i)) {
                             pruneStart = buffer.buffered.start(i);
                         } else {
                             break;
@@ -410,7 +411,7 @@ MediaPlayer.dependencies.BufferController = function () {
                     }
                     if (pruneStart) {
                         isPruningInProgress = true;
-                        this.sourceBufferExt.remove(buffer, pruneStart, this.playbackController.getStreamDuration(), mediaSource);
+                        this.sourceBufferExt.remove(buffer, pruneStart, buffer.buffered.end(lastRange), mediaSource);
                     }
                 }
                 return false;
@@ -821,6 +822,7 @@ MediaPlayer.dependencies.BufferController.RICH_BUFFER_THRESHOLD = 20;
 MediaPlayer.dependencies.BufferController.BUFFER_LOADED = "bufferLoaded";
 MediaPlayer.dependencies.BufferController.BUFFER_EMPTY = "bufferStalled";
 MediaPlayer.dependencies.BufferController.BUFFER_TO_KEEP = 30;
+MediaPlayer.dependencies.BufferController.BUFFER_AHEAD_TO_KEEP = 120;
 MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL = 30;
 
 
