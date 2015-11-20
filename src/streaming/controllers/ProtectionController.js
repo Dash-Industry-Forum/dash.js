@@ -491,22 +491,22 @@ function ProtectionController(config) {
         xhr.open(licenseServerData.getHTTPMethod(messageType), url, true);
         xhr.responseType = licenseServerData.getResponseType(keySystemString, messageType);
         xhr.onload = function() {
-            if (status == 200) {
+            if (this.status == 200) {
                 sendLicenseRequestCompleteEvent(eventData);
                 protectionModel.updateKeySession(sessionToken,
-                        licenseServerData.getLicenseMessage(response, keySystemString, messageType));
+                        licenseServerData.getLicenseMessage(this.response, keySystemString, messageType));
             } else {
                 sendLicenseRequestCompleteEvent(eventData,
-                        'DRM: ' + keySystemString + ' update, XHR status is "' + statusText + '" (' + status +
-                        '), expected to be 200. readyState is ' + readyState +
-                        ".  Response is " + ((response) ? licenseServerData.getErrorResponse(response, keySystemString, messageType) : "NONE"));
+                        'DRM: ' + keySystemString + ' update, XHR status is "' + this.statusText + '" (' + this.status +
+                        '), expected to be 200. readyState is ' + this.readyState +
+                        ".  Response is " + ((this.response) ? licenseServerData.getErrorResponse(this.response, keySystemString, messageType) : "NONE"));
             }
         };
         xhr.onabort = function () {
-            sendLicenseRequestCompleteEvent(eventData, 'DRM: ' + keySystemString + ' update, XHR aborted. status is "' + statusText + '" (' + status + '), readyState is ' + readyState);
+            sendLicenseRequestCompleteEvent(eventData, 'DRM: ' + keySystemString + ' update, XHR aborted. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState);
         };
         xhr.onerror = function () {
-            sendLicenseRequestCompleteEvent(eventData, 'DRM: ' + keySystemString + ' update, XHR error. status is "' + statusText + '" (' + status + '), readyState is ' + readyState);
+            sendLicenseRequestCompleteEvent(eventData, 'DRM: ' + keySystemString + ' update, XHR error. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState);
         };
 
         // Set optional XMLHttpRequest headers from protection data and message
