@@ -76,8 +76,8 @@ function IsoFile() {
     * @memberof IsoFile#
     */
     function getBoxes(type) {
-        var boxData = parsedIsoFile.fetchAll(type),
-            boxes = [],
+        var boxData = parsedIsoFile.fetchAll(type);
+        var boxes = [],
             box;
 
         for (var i = 0, ln = boxData.length; i < ln; i += 1) {
@@ -106,8 +106,8 @@ function IsoFile() {
     function getLastBox() {
         if (!parsedIsoFile || !parsedIsoFile.boxes || !parsedIsoFile.boxes.length) return null;
 
-        var type = parsedIsoFile.boxes[parsedIsoFile.boxes.length-1].type,
-            boxes = getBoxes(type);
+        var type = parsedIsoFile.boxes[parsedIsoFile.boxes.length - 1].type;
+        var boxes = getBoxes(type);
 
         return boxes[boxes.length-1];
     }
@@ -193,8 +193,8 @@ function IsoFile() {
     function convertToDashIsoBox(boxData) {
         if (!boxData) return null;
 
-        var box = new IsoBox(),
-            i,
+        var box = new IsoBox();
+        var i,
             ln;
 
         copyProps(boxData, box, commonProps);
@@ -236,4 +236,4 @@ function IsoFile() {
 
         return box;
     }
-};
+}

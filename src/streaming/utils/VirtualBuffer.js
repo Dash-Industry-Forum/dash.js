@@ -33,7 +33,6 @@
  * Represents data structure to keep and drive {@link DataChunk}
  */
 import MediaController from '../controllers/MediaController.js';
-import SourceBufferExtensions from '../extensions/SourceBufferExtensions.js';
 import CustomTimeRanges from './CustomTimeRanges.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import EventBus from './EventBus.js';
@@ -45,15 +44,15 @@ export default FactoryMaker.getSingletonFactory(VirtualBuffer);
 function VirtualBuffer() {
 
     let instance = {
-        append:append,
-        extract :extract,
-        getChunks :getChunks,
-        storeAppendedChunk:storeAppendedChunk,
-        updateBufferedRanges :updateBufferedRanges,
-        getTotalBufferLevel :getTotalBufferLevel,
-        setConfig :setConfig,
-        reset :reset
-    }
+        append: append,
+        extract: extract,
+        getChunks: getChunks,
+        storeAppendedChunk: storeAppendedChunk,
+        updateBufferedRanges: updateBufferedRanges,
+        getTotalBufferLevel: getTotalBufferLevel,
+        setConfig: setConfig,
+        reset: reset
+    };
 
     setup();
     return instance;
@@ -71,11 +70,11 @@ function VirtualBuffer() {
      * @memberof VirtualBuffer#
      */
     function append(chunk) {
-        var streamId = chunk.streamId,
-            mediaType = chunk.mediaInfo.type,
-            segmentType = chunk.segmentType,
-            start = chunk.start,
-            end = chunk.end;
+        var streamId = chunk.streamId;
+        var mediaType = chunk.mediaInfo.type;
+        var segmentType = chunk.segmentType;
+        var start = chunk.start;
+        var end = chunk.end;
 
         data[streamId] = data[streamId] || createDataStorage();
         data[streamId][mediaType][segmentType].push(chunk);
@@ -101,11 +100,12 @@ function VirtualBuffer() {
         // We need to update actualBufferedRanges so that it reflects SourceBuffer ranges.
         // Also we store the appended chunk so that any BufferController has access to the list
         // of appended chunks.
-        var streamId = chunk.streamId,
-            mediaType = chunk.mediaInfo.type,
-            bufferedRanges = data[streamId][mediaType].actualBufferedRanges,
-            oldChunk = getChunks({streamId: streamId, mediaType: mediaType, appended: true, start: chunk.start})[0],
-            diff,
+        var streamId = chunk.streamId;
+        var mediaType = chunk.mediaInfo.type;
+        var bufferedRanges = data[streamId][mediaType].actualBufferedRanges;
+        var oldChunk = getChunks({ streamId: streamId, mediaType: mediaType, appended: true, start: chunk.start })[0];
+
+        var diff,
             idx;
 
         if (oldChunk) {
@@ -169,10 +169,11 @@ function VirtualBuffer() {
     function updateBufferedRanges(filter, ranges) {
         if (!filter) return;
 
-        var streamId = filter.streamId,
-            mediaType = filter.mediaType,
-            appendedChunks = getChunks({streamId: streamId, mediaType: mediaType, appended: true}),
-            remainingChunks = [],
+        var streamId = filter.streamId;
+        var mediaType = filter.mediaType;
+        var appendedChunks = getChunks({ streamId: streamId, mediaType: mediaType, appended: true });
+
+        var remainingChunks = [],
             start,
             end;
 
@@ -201,13 +202,14 @@ function VirtualBuffer() {
      * @memberof VirtualBuffer#
      */
     function getChunks(filter) {
-        var originData = findData(filter),
-            segmentType = filter.segmentType,
-            appended = filter.appended,
-            removeOrigin = filter.removeOrigin,
-            limit = filter.limit || Number.POSITIVE_INFINITY,
-            mediaController = MediaController.getInstance(),
-            ln = 0,
+        var originData = findData(filter);
+        var segmentType = filter.segmentType;
+        var appended = filter.appended;
+        var removeOrigin = filter.removeOrigin;
+        var limit = filter.limit || Number.POSITIVE_INFINITY;
+        var mediaController = MediaController.getInstance();
+
+        var ln = 0,
             result = [],
             sourceArr;
 
@@ -269,8 +271,8 @@ function VirtualBuffer() {
      * @memberof VirtualBuffer#
      */
     function getTotalBufferLevel(mediaInfo) {
-        var mediaType = mediaInfo.type,
-            level = 0;
+        var mediaType = mediaInfo.type;
+        var level = 0;
 
         for (var streamId in data) {
             if (data.hasOwnProperty(streamId)) {
@@ -307,8 +309,8 @@ function VirtualBuffer() {
     }
 
     function findData(filter) {
-        var streamId = filter.streamId,
-            mediaType = filter.mediaType;
+        var streamId = filter.streamId;
+        var mediaType = filter.mediaType;
 
         if (!data[streamId]) return null;
 
@@ -316,9 +318,10 @@ function VirtualBuffer() {
     }
 
     function findChunksForRange(chunks, range, truncateChunk) {
+        var rangeStart = range.start;
+        var rangeEnd = range.end;
+
         var chunksForRange = [],
-            rangeStart = range.start,
-            rangeEnd = range.end,
             chunkStart,
             chunkEnd,
             isStartIncluded,
@@ -363,21 +366,21 @@ function VirtualBuffer() {
         var data = {};
 
         data.audio = {calculatedBufferedRanges: CustomTimeRanges.create(),
-                      actualBufferedRanges: CustomTimeRanges.create(),
-                      appended: []};
+            actualBufferedRanges: CustomTimeRanges.create(),
+            appended: []};
         data.audio[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
         data.audio[HTTPRequest.INIT_SEGMENT_TYPE] = [];
         data.video = {calculatedBufferedRanges: CustomTimeRanges.create(),
-                      actualBufferedRanges: CustomTimeRanges.create(),
-                      appended: []};
+            actualBufferedRanges: CustomTimeRanges.create(),
+            appended: []};
         data.video[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
         data.video[HTTPRequest.INIT_SEGMENT_TYPE] = [];
         data.fragmentedText = {calculatedBufferedRanges: CustomTimeRanges.create(),
-                               actualBufferedRanges: CustomTimeRanges.create(),
-                               appended: []};
+            actualBufferedRanges: CustomTimeRanges.create(),
+            appended: []};
         data.fragmentedText[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
         data.fragmentedText[HTTPRequest.INIT_SEGMENT_TYPE] = [];
 
         return data;
-    };
-};
+    }
+}

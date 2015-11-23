@@ -34,13 +34,14 @@ export default FactoryMaker.getSingletonFactory(Capabilities);
 function Capabilities() {
 
     let instance = {
-        supportsMediaSource:supportsMediaSource,
-        supportsEncryptedMedia:supportsEncryptedMedia,
-        supportsCodec:supportsCodec,
-        setConfig:setConfig
-    }
+        supportsMediaSource: supportsMediaSource,
+        supportsEncryptedMedia: supportsEncryptedMedia,
+        supportsCodec: supportsCodec,
+        setConfig: setConfig
+    };
 
-    setup()
+    setup();
+
     return instance;
 
     let log,
@@ -62,8 +63,8 @@ function Capabilities() {
     }
 
     function supportsMediaSource() {
-        let hasWebKit = ("WebKitMediaSource" in window),
-            hasMediaSource = ("MediaSource" in window);
+        let hasWebKit = ("WebKitMediaSource" in window);
+        let hasMediaSource = ("MediaSource" in window);
 
         return (hasWebKit || hasMediaSource);
     }
@@ -89,7 +90,7 @@ function Capabilities() {
                 log("No supported version of EME detected on this user agent! - Attempts to play encrypted content will fail!");
 
             } else {
-                encryptedMediaSupported = true
+                encryptedMediaSupported = true;
                 log("EME detected on this user agent!");
             }
         }
@@ -106,4 +107,4 @@ function Capabilities() {
         var canPlay = element.canPlayType(codec);
         return (canPlay === "probably" || canPlay === "maybe");
     }
-};
+}

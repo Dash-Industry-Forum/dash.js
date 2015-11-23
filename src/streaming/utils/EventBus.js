@@ -28,16 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let EventBus = (function () {
+let EventBus = (function() {
 
     let handlers = {};
 
     let instance = {
-        on:on,
-        off:off,
-        trigger:trigger,
-        reset:reset
-    }
+        on: on,
+        off: off,
+        trigger: trigger,
+        reset: reset
+    };
 
     return instance;
 
@@ -92,8 +92,8 @@ let EventBus = (function () {
     }
 
     function getHandlerIdx(type, listener, scope) {
-        var handlersForType = handlers[type],
-            result = -1;
+        var handlersForType = handlers[type];
+        var result = -1;
 
         if (!handlersForType || handlersForType.length === 0) return result;
 
@@ -103,6 +103,6 @@ let EventBus = (function () {
 
         return result;
     }
-})()
+})();
 
 export default EventBus;
