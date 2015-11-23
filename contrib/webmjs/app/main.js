@@ -180,7 +180,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
 
                 requestWindow = Requests
                     .slice(-20)
-                    .filter(function(req){return req.responsecode >= 200 && req.responsecode < 300 && !!req.mediaduration && req.type === "Media Segment" && req.stream === type;})
+                    .filter(function(req){return req.responsecode >= 200 && req.responsecode < 300 && !!req._mediaduration && req.type === "MediaSegment" && req._stream === type;})
                     .slice(-4);
                 if (requestWindow.length > 0) {
 
@@ -193,7 +193,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                         count: latencyTimes.length
                     };
 
-                    downloadTimes = requestWindow.map(function (req){ return Math.abs(req.tfinish.getTime() - req.tresponse.getTime()) / 1000;});
+                    downloadTimes = requestWindow.map(function (req){ return Math.abs(req._tfinish.getTime() - req.tresponse.getTime()) / 1000;});
 
                     movingDownload[type] = {
                         average: downloadTimes.reduce(function(l, r) {return l + r;}) / downloadTimes.length,
@@ -202,7 +202,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
                         count: downloadTimes.length
                     };
 
-                    durationTimes = requestWindow.map(function (req){ return req.mediaduration;});
+                    durationTimes = requestWindow.map(function (req){ return req._mediaduration;});
 
                     movingRatio[type] = {
                         average: (durationTimes.reduce(function(l, r) {return l + r;}) / downloadTimes.length) / movingDownload[type].average,
@@ -232,7 +232,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
             numBitratesValue = metricsExt.getMaxIndexForBufferType(type);
 
             if (bufferLevel !== null) {
-                bufferLengthValue = (bufferLevel.level / 1000).toPrecision(5);
+                bufferLengthValue = bufferLevel.toPrecision(5);
             }
 
             if (droppedFramesMetrics !== null) {
