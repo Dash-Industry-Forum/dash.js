@@ -521,7 +521,7 @@ function StreamController() {
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
             allUTCTimingSources.forEach(function(item){
-                if (item.value.replace(/.*?:\/\//g, "") === MediaPlayer.UTCTimingSources.default.value.replace(/.*?:\/\//g, "")){
+                if (item.value.replace(/.*?:\/\//g, "") === MediaPlayer.DEFAULT_UTC_TIMING_SOURCE.value.replace(/.*?:\/\//g, "")){
                     item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? "https://" : "http://");
                     log("Matching default timing source protocol to manifest protocol: " , item.value);
                 }
