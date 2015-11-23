@@ -34,6 +34,6 @@ class RequestsQueue {
         this.loadingRequests = [];
         this.executedRequests = [];
     }
-};
+}
 
 export default RequestsQueue;

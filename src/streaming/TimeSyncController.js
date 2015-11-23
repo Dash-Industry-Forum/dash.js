@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/*globals MediaPlayer*/
 
 import Error from './vo/Error.js';
 import EventBus from './utils/EventBus.js';
@@ -153,9 +152,10 @@ function TimeSyncController() {
             MINUTES_IN_HOUR = 60,
             MILLISECONDS_IN_SECONDS = 1000,
             datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+\-])([0-9]{2})([0-9]{2}))?/,
-            match = datetimeRegex.exec(xsdatetimeStr),
             utcDate,
             timezoneOffset;
+
+        var match = datetimeRegex.exec(xsdatetimeStr);
 
         // If the string does not contain a timezone offset different browsers can interpret it either
         // as UTC or as a local time so we have to parse the string manually to normalize the given date value for
@@ -221,9 +221,10 @@ function TimeSyncController() {
         var oncomplete,
             onload,
             complete = false,
-            req = new XMLHttpRequest(),
-            verb = isHeadRequest ? 'HEAD' : 'GET',
-            urls = url.match(/\S+/g);
+            req = new XMLHttpRequest();
+
+        var verb = isHeadRequest ? 'HEAD' : 'GET';
+        var urls = url.match(/\S+/g);
 
         // according to ISO 23009-1, url could be a white-space
         // separated list of URLs. just handle one at a time.
@@ -277,9 +278,9 @@ function TimeSyncController() {
     }
 
     function checkForDateHeader(){
-        var metrics = metricsModel.getReadOnlyMetricsFor("stream"),
-            dateHeaderValue = metricsExt.getLatestMPDRequestHeaderValueByID(metrics, "Date"),
-            dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
+        var metrics = metricsModel.getReadOnlyMetricsFor("stream");
+        var dateHeaderValue = metricsExt.getLatestMPDRequestHeaderValueByID(metrics, "Date");
+        var dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
 
         if (!isNaN(dateHeaderTime)) {
             setOffsetMs(dateHeaderTime - new Date().getTime());
@@ -291,29 +292,29 @@ function TimeSyncController() {
 
     function completeTimeSyncSequence(failed, time, offset){
         setIsSynchronizing(false);
-        EventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, {time: time, offset: offset, error: failed ? new Error(TIME_SYNC_FAILED_ERROR_CODE) : null})
+        EventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new Error(TIME_SYNC_FAILED_ERROR_CODE) : null });
     }
 
     function attemptSync(sources, sourceIndex) {
 
-        var // if called with no sourceIndex, use zero (highest priority)
-            index = sourceIndex || 0,
+        // if called with no sourceIndex, use zero (highest priority)
+        var  index = sourceIndex || 0;
 
-            // the sources should be ordered in priority from the manifest.
-            // try each in turn, from the top, until either something
-            // sensible happens, or we run out of sources to try.
-            source = sources[index],
+        // the sources should be ordered in priority from the manifest.
+        // try each in turn, from the top, until either something
+        // sensible happens, or we run out of sources to try.
+        var source = sources[index];
 
-            // callback to emit event to listeners
-            onComplete = function (time, offset) {
-                var failed = !time || !offset;
-                if(failed && useManifestDateHeaderTimeSource) {
-                    //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.
-                    checkForDateHeader();
-                }else {
-                    completeTimeSyncSequence(failed, time, offset);
-                }
-            };
+        // callback to emit event to listeners
+        var onComplete = function(time, offset) {
+            var failed = !time || !offset;
+            if (failed && useManifestDateHeaderTimeSource) {
+                //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.
+                checkForDateHeader();
+            } else {
+                completeTimeSyncSequence(failed, time, offset);
+            }
+        };
 
         setIsSynchronizing(true);
 
@@ -325,8 +326,8 @@ function TimeSyncController() {
                     source.value,
                     function (serverTime) {
                         // the timing source returned something useful
-                        var deviceTime = new Date().getTime(),
-                            offset = serverTime - deviceTime;
+                        var deviceTime = new Date().getTime();
+                        var offset = serverTime - deviceTime;
 
                         setOffsetMs(offset);
 

@@ -56,15 +56,13 @@ export default factory;
 
 function DOMStorage() {
 
-
-
     let instance = {
-        checkInitialBitrate :checkInitialBitrate,
-        getSavedMediaSettings :getSavedMediaSettings,
-        enableLastMediaSettingsCaching :enableLastMediaSettingsCaching,
-        enableLastBitrateCaching :enableLastBitrateCaching,
-        isSupported :isSupported
-    }
+        checkInitialBitrate: checkInitialBitrate,
+        getSavedMediaSettings: getSavedMediaSettings,
+        enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
+        enableLastBitrateCaching: enableLastBitrateCaching,
+        isSupported: isSupported
+    };
 
     setup();
     return instance;
@@ -141,10 +139,10 @@ function DOMStorage() {
         //Checks local storage to see if there is valid, non-expired media settings
         if (!isSupported(STORAGE_TYPE_LOCAL) || !lastMediaSettingsCachingEnabled) return null;
 
-        var key = type === 'video' ? LOCAL_STORAGE_VIDEO_SETTINGS_KEY : LOCAL_STORAGE_AUDIO_SETTINGS_KEY,
-            obj = JSON.parse(localStorage.getItem(key)) || {},
-            isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= experationDict[MEDIA_SETTINGS_EXPIRATION] || false,
-            settings = obj.settings;
+        var key = type === 'video' ? LOCAL_STORAGE_VIDEO_SETTINGS_KEY : LOCAL_STORAGE_AUDIO_SETTINGS_KEY;
+        var obj = JSON.parse(localStorage.getItem(key)) || {};
+        var isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= experationDict[MEDIA_SETTINGS_EXPIRATION] || false;
+        var settings = obj.settings;
 
         if (isExpired){
             localStorage.removeItem(key);
@@ -162,10 +160,10 @@ function DOMStorage() {
                 //hinting from the last play session to use as a starting bit rate. if not,
                 // it uses the default video and audio value in AbrController
                 if (isSupported(STORAGE_TYPE_LOCAL) && lastBitrateCachingEnabled) {
-                    var key = value === 'video' ? LOCAL_STORAGE_VIDEO_BITRATE_KEY : LOCAL_STORAGE_AUDIO_BITRATE_KEY,
-                        obj = JSON.parse(localStorage.getItem(key)) || {},
-                        isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= experationDict[BITRATE_EXPIRATION] || false,
-                        bitrate = parseInt(obj.bitrate);
+                    var key = value === 'video' ? LOCAL_STORAGE_VIDEO_BITRATE_KEY : LOCAL_STORAGE_AUDIO_BITRATE_KEY;
+                    var obj = JSON.parse(localStorage.getItem(key)) || {};
+                    var isExpired = (new Date().getTime() - parseInt(obj.timestamp)) >= experationDict[BITRATE_EXPIRATION] || false;
+                    var bitrate = parseInt(obj.bitrate);
 
                     if (!isNaN(bitrate) && !isExpired) {
                         abrController.setInitialBitrateFor(value, bitrate);
@@ -188,4 +186,4 @@ function DOMStorage() {
             experationDict[type] = ttl;
         }
     }
-};
+}

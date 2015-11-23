@@ -37,14 +37,14 @@ export default FactoryMaker.getSingletonFactory(ErrorHandler);
 function ErrorHandler() {
 
     var instance = {
-        capabilityError :capabilityError,
-        downloadError :downloadError,
-        manifestError :manifestError,
-        timedTextError :timedTextError,
-        mediaSourceError :mediaSourceError,
-        mediaKeySessionError :mediaKeySessionError,
-        mediaKeyMessageError :mediaKeyMessageError
-    }
+        capabilityError: capabilityError,
+        downloadError: downloadError,
+        manifestError: manifestError,
+        timedTextError: timedTextError,
+        mediaSourceError: mediaSourceError,
+        mediaKeySessionError: mediaKeySessionError,
+        mediaKeyMessageError: mediaKeyMessageError
+    };
 
     return instance;
 
@@ -78,4 +78,4 @@ function ErrorHandler() {
     function mediaKeyMessageError(err) {
         EventBus.trigger(Events.ERROR, {error: "key_message", event: err});
     }
-};
+}

@@ -40,6 +40,6 @@ class NeedKey {
         this.initData = initData;
         this.initDataType = initDataType;
     }
-};
+}
 
 export default NeedKey;

@@ -2,7 +2,7 @@
 // Browserify (more accurately UMD) does not allow for multiple exported modules at once
 import MediaPlayer from './streaming/MediaPlayer.js';
 
-const SUPPORTED_MIME_TYPE = "application/dash+xml"
+const SUPPORTED_MIME_TYPE = "application/dash+xml";
 
 let MediaPlayerFactory = (function() {
     /**
@@ -11,9 +11,9 @@ let MediaPlayerFactory = (function() {
      */
 
     let instance = {
-        create:create,
-        createAll:createAll
-    }
+        create: create,
+        createAll: createAll
+    };
 
     return instance;
 
@@ -27,9 +27,11 @@ let MediaPlayerFactory = (function() {
      * @returns {MediaPlayer}
      */
     function create(video, source) {
-        if (typeof video === "undefined" || video.nodeName != "VIDEO") return null;
+        if (video === null || typeof video === "undefined" || video.nodeName !== "VIDEO") return null;
 
-        var player, videoID = (video.id || video.name || "video element");
+        var player;
+        var videoID = (video.id || video.name || "video element");
+
         source = source || [].slice.call(video.querySelectorAll("source")).filter(function(s){return s.type == SUPPORTED_MIME_TYPE;})[0];
         if (source === undefined && video.src)
         {
@@ -39,7 +41,8 @@ let MediaPlayerFactory = (function() {
         {
             return null;
         }
-        player = new MediaPlayer();
+
+        player = MediaPlayer.create();
         player.startup();
         player.attachView(video);
         player.setAutoPlay(video.autoplay);
@@ -72,7 +75,7 @@ let MediaPlayerFactory = (function() {
     }
 }());
 
-global.MediaPlayer = MediaPlayer //Needed for non ES6 players.
+global.MediaPlayer = MediaPlayer; //Needed for non ES6 players.
 global.MediaPlayerFactory = MediaPlayerFactory;
 
 export { MediaPlayerFactory };

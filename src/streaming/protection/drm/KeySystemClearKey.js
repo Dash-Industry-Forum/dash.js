@@ -43,15 +43,15 @@ export default FactoryMaker.getSingletonFactory(KeySystemClearKey);
 function KeySystemClearKey() {
 
     let instance = {
-        uuid:uuid,
-        schemeIdURI:schemeIdURI,
-        systemString:systemString,
-        getInitData:getInitData,
-        getRequestHeadersFromMessage:getRequestHeadersFromMessage,
-        getLicenseRequestFromMessage:getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData:getLicenseServerURLFromInitData,
-        getClearKeysFromProtectionData:getClearKeysFromProtectionData
-    }
+        uuid: uuid,
+        schemeIdURI: schemeIdURI,
+        systemString: systemString,
+        getInitData: getInitData,
+        getRequestHeadersFromMessage: getRequestHeadersFromMessage,
+        getLicenseRequestFromMessage: getLicenseRequestFromMessage,
+        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
+        getClearKeysFromProtectionData: getClearKeysFromProtectionData
+    };
 
     return instance;
 
@@ -73,8 +73,8 @@ function KeySystemClearKey() {
             var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
             var keyPairs = [];
             for (var i = 0; i < jsonMsg.kids.length; i++) {
-                var clearkeyID = jsonMsg.kids[i],
-                    clearkey = (protectionData.clearkeys.hasOwnProperty(clearkeyID)) ? protectionData.clearkeys[clearkeyID] : null;
+                var clearkeyID = jsonMsg.kids[i];
+                var clearkey = (protectionData.clearkeys.hasOwnProperty(clearkeyID)) ? protectionData.clearkeys[clearkeyID] : null;
                 if (!clearkey) {
                     throw new Error("DRM: ClearKey keyID (" + clearkeyID + ") is not known!");
                 }
@@ -101,4 +101,4 @@ function KeySystemClearKey() {
     function getLicenseServerURLFromInitData(/*initData*/) {
         return null;
     }
-};
+}

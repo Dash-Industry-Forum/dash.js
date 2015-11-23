@@ -52,7 +52,7 @@ function ClearKey() {
         getResponseType: getResponseType,
         getLicenseMessage: getLicenseMessage,
         getErrorResponse: getErrorResponse,
-    }
+    };
 
     return instance;
 
@@ -81,9 +81,10 @@ function ClearKey() {
         }
         var i, keyPairs = [];
         for (i = 0; i < serverResponse.keys.length; i++) {
-            var keypair = serverResponse.keys[i],
-                keyid = keypair.kid.replace(/=/g, ""),
-                key = keypair.k.replace(/=/g, "");
+            var keypair = serverResponse.keys[i];
+            var keyid = keypair.kid.replace(/=/g, "");
+            var key = keypair.k.replace(/=/g, "");
+
             keyPairs.push(new KeyPair(keyid, key));
         }
         return new ClearKeyKeySet(keyPairs);
@@ -92,4 +93,4 @@ function ClearKey() {
     function getErrorResponse(serverResponse/*, keySystemStr, messageType*/) {
         return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
     }
-};
+}

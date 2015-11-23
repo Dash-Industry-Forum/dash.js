@@ -48,14 +48,14 @@ export default FactoryMaker.getSingletonFactory(KeySystemWidevine);
 function KeySystemWidevine() {
 
     let instance = {
-        uuid:uuid,
-        schemeIdURI:schemeIdURI,
-        systemString:systemString,
-        getInitData:getInitData,
-        getRequestHeadersFromMessage:getRequestHeadersFromMessage,
-        getLicenseRequestFromMessage:getLicenseRequestFromMessage,
-        getLicenseServerURLFromInitData:getLicenseServerURLFromInitData,
-    }
+        uuid: uuid,
+        schemeIdURI: schemeIdURI,
+        systemString: systemString,
+        getInitData: getInitData,
+        getRequestHeadersFromMessage: getRequestHeadersFromMessage,
+        getLicenseRequestFromMessage: getLicenseRequestFromMessage,
+        getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
+    };
 
     return instance;
 
@@ -74,4 +74,4 @@ function KeySystemWidevine() {
     function getLicenseServerURLFromInitData(/*initData*/) {
         return null;
     }
-};
+}

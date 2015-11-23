@@ -52,7 +52,7 @@ import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
 import ManifestModel from './models/ManifestModel.js';
 import MediaPlayerModel from './models/MediaPlayerModel.js';
 import MetricsModel from './models/MetricsModel.js';
-import AbrController from './controllers/AbrController.js'
+import AbrController from './controllers/AbrController.js';
 import TimeSyncController from './TimeSyncController.js';
 import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
 import VideoModel from './models/VideoModel.js';
@@ -65,7 +65,6 @@ import VideoModelExtensions from './extensions/VideoModelExtensions.js';
 
 //dash
 import DashAdapter from '../dash/DashAdapter.js';
-import DashHandler from '../dash/DashHandler.js';
 import DashParser from '../dash/DashParser.js';
 import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js";
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
@@ -88,29 +87,28 @@ import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
 //import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
 //import ProtectionModel_01b from './models/ProtectionModel_01b.js';
 
-import FactoryMaker from '../core/FactoryMaker.js'
+import FactoryMaker from '../core/FactoryMaker.js';
 
-const DEFAULT_UTC_TIMING_SOURCE = {scheme: "urn:mpeg:dash:utc:http-xsdate:2014", value: "http://time.akamai.com/?iso"}
+const DEFAULT_UTC_TIMING_SOURCE = { scheme: "urn:mpeg:dash:utc:http-xsdate:2014", value: "http://time.akamai.com/?iso" };
 
 
-let factory = FactoryMaker.getClassFactory(MediaPlayer)
+let factory = FactoryMaker.getClassFactory(MediaPlayer);
 
 factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
 factory.events = PublicEvents;
 
 export default factory;
 
-
 function MediaPlayer() {
 
     const VERSION = "2.0.0";
 
     let instance = {
-        on:on,
-        off:off,
-        extend:extend,
-        attachView:attachView,
-        attachSource:attachSource,
+        on: on,
+        off: off,
+        extend: extend,
+        attachView: attachView,
+        attachSource: attachSource,
         isReady: isReady,
         play: play,
         seek: seek,
@@ -122,54 +120,54 @@ function MediaPlayer() {
         getDVRSeekOffset: getDVRSeekOffset,
         convertToTimeCode: convertToTimeCode,
         formatUTC: formatUTC,
-        reset:reset,
-        getVersion:getVersion,
-        startup:startup,
-        getDebug:getDebug,
-        getVideoModel:getVideoModel,
-        getVideoContainer:getVideoContainer,
-        setLiveDelayFragmentCount:setLiveDelayFragmentCount,
-        useSuggestedPresentationDelay:useSuggestedPresentationDelay,
-        enableLastBitrateCaching:enableLastBitrateCaching,
-        enableLastMediaSettingsCaching:enableLastMediaSettingsCaching,
-        setMaxAllowedBitrateFor:setMaxAllowedBitrateFor,
-        getMaxAllowedBitrateFor:getMaxAllowedBitrateFor,
-        setAutoPlay:setAutoPlay,
-        getAutoPlay:getAutoPlay,
-        setScheduleWhilePaused:setScheduleWhilePaused,
-        getScheduleWhilePaused:getScheduleWhilePaused,
-        getMetricsExt:getMetricsExt,
-        getMetricsFor:getMetricsFor,
-        getQualityFor:getQualityFor,
-        setQualityFor:setQualityFor,
-        setTextTrack:setTextTrack,
-        getBitrateInfoListFor:getBitrateInfoListFor,
-        setInitialBitrateFor:setInitialBitrateFor,
-        getInitialBitrateFor:getInitialBitrateFor,
-        getStreamsFromManifest:getStreamsFromManifest,
-        getTracksFor:getTracksFor,
-        getTracksForTypeFromManifest:getTracksForTypeFromManifest,
-        getCurrentTrackFor:getCurrentTrackFor,
-        setInitialMediaSettingsFor:setInitialMediaSettingsFor,
-        getInitialMediaSettingsFor:getInitialMediaSettingsFor,
-        setCurrentTrack:setCurrentTrack,
-        getTrackSwitchModeFor:getTrackSwitchModeFor,
-        setTrackSwitchModeFor:setTrackSwitchModeFor,
-        setSelectionModeForInitialTrack:setSelectionModeForInitialTrack,
-        getSelectionModeForInitialTrack:getSelectionModeForInitialTrack,
-        getAutoSwitchQuality:getAutoSwitchQuality,
-        setAutoSwitchQuality:setAutoSwitchQuality,
-        createProtection:createProtection,
-        retrieveManifest:retrieveManifest,
-        addUTCTimingSource:addUTCTimingSource,
-        removeUTCTimingSource:removeUTCTimingSource,
-        clearDefaultUTCTimingSources:clearDefaultUTCTimingSources,
-        restoreDefaultUTCTimingSources:restoreDefaultUTCTimingSources,
-        enableManifestDateHeaderTimeSource:enableManifestDateHeaderTimeSource,
-        displayCaptionsOnTop:displayCaptionsOnTop,
-        attachVideoContainer:attachVideoContainer,
-        attachTTMLRenderingDiv:attachTTMLRenderingDiv
-    }
+        reset: reset,
+        getVersion: getVersion,
+        startup: startup,
+        getDebug: getDebug,
+        getVideoModel: getVideoModel,
+        getVideoContainer: getVideoContainer,
+        setLiveDelayFragmentCount: setLiveDelayFragmentCount,
+        useSuggestedPresentationDelay: useSuggestedPresentationDelay,
+        enableLastBitrateCaching: enableLastBitrateCaching,
+        enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
+        setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
+        getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
+        setAutoPlay: setAutoPlay,
+        getAutoPlay: getAutoPlay,
+        setScheduleWhilePaused: setScheduleWhilePaused,
+        getScheduleWhilePaused: getScheduleWhilePaused,
+        getMetricsExt: getMetricsExt,
+        getMetricsFor: getMetricsFor,
+        getQualityFor: getQualityFor,
+        setQualityFor: setQualityFor,
+        setTextTrack: setTextTrack,
+        getBitrateInfoListFor: getBitrateInfoListFor,
+        setInitialBitrateFor: setInitialBitrateFor,
+        getInitialBitrateFor: getInitialBitrateFor,
+        getStreamsFromManifest: getStreamsFromManifest,
+        getTracksFor: getTracksFor,
+        getTracksForTypeFromManifest: getTracksForTypeFromManifest,
+        getCurrentTrackFor: getCurrentTrackFor,
+        setInitialMediaSettingsFor: setInitialMediaSettingsFor,
+        getInitialMediaSettingsFor: getInitialMediaSettingsFor,
+        setCurrentTrack: setCurrentTrack,
+        getTrackSwitchModeFor: getTrackSwitchModeFor,
+        setTrackSwitchModeFor: setTrackSwitchModeFor,
+        setSelectionModeForInitialTrack: setSelectionModeForInitialTrack,
+        getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
+        getAutoSwitchQuality: getAutoSwitchQuality,
+        setAutoSwitchQuality: setAutoSwitchQuality,
+        createProtection: createProtection,
+        retrieveManifest: retrieveManifest,
+        addUTCTimingSource: addUTCTimingSource,
+        removeUTCTimingSource: removeUTCTimingSource,
+        clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
+        restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
+        enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
+        displayCaptionsOnTop: displayCaptionsOnTop,
+        attachVideoContainer: attachVideoContainer,
+        attachTTMLRenderingDiv: attachTTMLRenderingDiv
+    };
 
     setup();
     return instance;
@@ -228,7 +226,7 @@ function MediaPlayer() {
         if (ProtectionEvents) {
             protectionEvents = new ProtectionEvents();
             Events.extend(protectionEvents);
-            PublicEvents.extend(protectionEvents, {publicOnly:true})
+            PublicEvents.extend(protectionEvents, { publicOnly: true });
         }
 
         if (PublicEvents) {
@@ -337,8 +335,8 @@ function MediaPlayer() {
      * @method
      */
     function getDVRSeekOffset(value) {
-        var metric = getDVRInfoMetric.call(this),
-            val = metric.range.start + value;
+        var metric = getDVRInfoMetric.call(this);
+        var val = metric.range.start + value;
 
         if (val > metric.range.end) {
             val = metric.range.end;
@@ -391,8 +389,8 @@ function MediaPlayer() {
 
         if (playbackController.getIsDynamic()) {
 
-            var metric = getDVRInfoMetric.call(this),
-                range;
+            var metric = getDVRInfoMetric.call(this);
+            var range;
 
             if (metric === null) {
                 return 0;
@@ -406,8 +404,8 @@ function MediaPlayer() {
 
 
     function getAsUTC(valToConvert) {
-        var metric = getDVRInfoMetric.call(this),
-            availableFrom,
+        var metric = getDVRInfoMetric.call(this);
+        var availableFrom,
             utcValue;
 
         if (metric === null) {
@@ -602,7 +600,7 @@ function MediaPlayer() {
     function createAdaptor() {
         //TODO-Refactor Need to be able to switch this create out so will need API to set which adapter to use? Handler is created is inside streamProcessor so need to figure that out as well
         adapter = DashAdapter.getInstance();
-        adapter.initialize()
+        adapter.initialize();
         adapter.setConfig({manifestExt: manifestExt});
     }
 
@@ -853,12 +851,12 @@ function MediaPlayer() {
             textSourceBuffer = TextSourceBuffer.getInstance();
         }
 
-        var tracks = element.textTracks,
-            ln = tracks.length;
+        var tracks = element.textTracks;
+        var ln = tracks.length;
 
         for (var i = 0; i < ln; i++) {
-            var track = tracks[i],
-                mode = idx === i ? "showing" : "hidden";
+            var track = tracks[i];
+            var mode = idx === i ? "showing" : "hidden";
 
             if (track.mode !== mode) { //checking that mode is not already set by 3rd Party player frameworks that set mode to prevent event retrigger.
                 track.mode = mode;
@@ -1075,19 +1073,19 @@ function MediaPlayer() {
      */
     function createProtection() {
 
-        let controller = protectionController//see if external controller has been set.
+        let controller = protectionController; //see if external controller has been set.
 
         if(!controller && capabilities.supportsEncryptedMedia()) {
 
             let protectionExt = ProtectionExtensions.getInstance();
             protectionExt.setConfig({
-                log:log,
-            })
+                log: log,
+            });
             protectionExt.initialize();
 
             let protectionModel = ProtectionModel_21Jan2015.create({
-                log:log
-            })
+                log: log
+            });
 
             controller = ProtectionController.create({
                 protectionModel:protectionModel,
@@ -1118,8 +1116,8 @@ function MediaPlayer() {
      * @memberof MediaPlayer#
      */
     function retrieveManifest(url, callback) {
-        var manifestLoader = createManifestLoader.call(this),
-            self = this;
+        var manifestLoader = createManifestLoader.call(this);
+        var self = this;
 
         var handler = function (e) {
             if (!e.error) {
@@ -1278,15 +1276,15 @@ function MediaPlayer() {
         videoModel = null;
         if (element) {
             videoModel = VideoModel.getInstance();
-            videoModel.initialize()
+            videoModel.initialize();
             videoModel.setElement(element);
             // Workaround to force Firefox to fire the canplay event.
             element.preload = "auto";
 
             capabilities.setConfig({
-                log:log,
-                videoModel:videoModel
-            })
+                log: log,
+                videoModel: videoModel
+            });
         }
         resetAndPlay.call(this);
     }
@@ -1352,7 +1350,4 @@ function MediaPlayer() {
         protectionController = null;
         protectionData = null;
     }
-};
-
-
-
+}

@@ -80,15 +80,15 @@ function AbandonRequestsRule(config) {
     //}
 
     function execute(context, callback) {
-        var now = new Date().getTime(),
-            mediaInfo = context.getMediaInfo(),
-            mediaType = mediaInfo.type,
-            progressEvent = context.getCurrentValue(),
-            representationInfo = context.getTrackInfo(),
-            req = progressEvent.data.request,
-            abrController = context.getStreamProcessor().getABRController(),
-            fragmentInfo,
-            switchRequest = SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var fragmentInfo;
+        var now = new Date().getTime();
+        var mediaInfo = context.getMediaInfo();
+        var mediaType = mediaInfo.type;
+        var progressEvent = context.getCurrentValue();
+        var representationInfo = context.getTrackInfo();
+        var req = progressEvent.data.request;
+        var abrController = context.getStreamProcessor().getABRController();
+        var switchRequest = SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         if (!isNaN(req.index)) {
             setFragmentRequestDict(mediaType, req.index);

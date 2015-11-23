@@ -51,7 +51,7 @@ class ProtectionData {
         this.httpRequestHeaders = httpRequestHeaders;
         this.clearkeys = clearkeys;
     }
-};
+}
 
 /**
  * License server URL
@@ -85,4 +85,4 @@ class ProtectionData {
  * @memberof ProtectionData
  */
 
-export default ProtectionData
+export default ProtectionData;

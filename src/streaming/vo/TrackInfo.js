@@ -40,4 +40,4 @@ class TrackInfo {
     }
 }
 
-export default TrackInfo
+export default TrackInfo;

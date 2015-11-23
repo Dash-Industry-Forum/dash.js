@@ -48,7 +48,7 @@ function PlayReady() {
         getResponseType: getResponseType,
         getLicenseMessage: getLicenseMessage,
         getErrorResponse: getErrorResponse,
-    }
+    };
 
     return instance;
 
@@ -71,4 +71,4 @@ function PlayReady() {
     function getErrorResponse(serverResponse/*, keySystemStr, messageType*/) {
         return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
     }
-};
+}

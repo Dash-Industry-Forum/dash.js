@@ -35,9 +35,6 @@
  * @class
  * @implements KeySystem
  */
-import KeyPair from '../../vo/protection/KeyPair.js';
-import LicenseRequestComplete from '../../vo/protection/LicenseRequestComplete.js';
-import ClearKeyKeySet from '../../vo/protection/ClearKeyKeySet.js';
 import CommonEncryption from '../CommonEncryption.js';
 import Error from '../../vo/Error.js';
 
@@ -52,15 +49,15 @@ export default FactoryMaker.getSingletonFactory(KeySystemPlayReady);
 function KeySystemPlayReady() {
 
     let instance = {
-        uuid:uuid,
-        schemeIdURI:schemeIdURI,
-        systemString:systemString,
+        uuid: uuid,
+        schemeIdURI: schemeIdURI,
+        systemString: systemString,
         getInitData: getInitData,
         getRequestHeadersFromMessage: getRequestHeadersFromMessage,
         getLicenseRequestFromMessage: getLicenseRequestFromMessage,
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
-        setPlayReadyMessageFormat:setPlayReadyMessageFormat
-    }
+        setPlayReadyMessageFormat: setPlayReadyMessageFormat
+    };
 
     let messageFormat = "utf16";
 
@@ -69,8 +66,8 @@ function KeySystemPlayReady() {
     function getRequestHeadersFromMessage(message) {
         var msg,
             xmlDoc,
-            headers = {},
-            parser = new DOMParser(),
+            headers = {};
+        var parser = new DOMParser(),
             dataview = (messageFormat === "utf16") ? new Uint16Array(message) : new Uint8Array(message);
 
         msg = String.fromCharCode.apply(null, dataview);
@@ -94,8 +91,8 @@ function KeySystemPlayReady() {
     function getLicenseRequestFromMessage(message) {
         var msg,
             xmlDoc,
-            parser = new DOMParser(),
-            licenseRequest = null,
+            licenseRequest = null;
+        var parser = new DOMParser(),
             dataview = (messageFormat === "utf16") ? new Uint16Array(message) : new Uint8Array(message);
 
         msg = String.fromCharCode.apply(null, dataview);
@@ -112,10 +109,10 @@ function KeySystemPlayReady() {
 
     function getLicenseServerURLFromInitData(initData) {
         if (initData) {
-            var data = new DataView(initData),
-                    numRecords = data.getUint16(4, true),
-                    offset = 6,
-                    parser = new DOMParser();
+            var data = new DataView(initData);
+            var numRecords = data.getUint16(4, true);
+            var offset = 6;
+            var parser = new DOMParser();
 
             for (var i = 0; i < numRecords; i++) {
                 // Parse the PlayReady Record header
@@ -128,9 +125,9 @@ function KeySystemPlayReady() {
                     continue;
                 }
 
-                var recordData = initData.slice(offset, offset+recordLength),
-                        record = String.fromCharCode.apply(null, new Uint16Array(recordData)),
-                        xmlDoc = parser.parseFromString(record, "application/xml");
+                var recordData = initData.slice(offset, offset + recordLength);
+                var record = String.fromCharCode.apply(null, new Uint16Array(recordData));
+                var xmlDoc = parser.parseFromString(record, "application/xml");
 
                 // First try <LA_URL>
                 if (xmlDoc.getElementsByTagName("LA_URL")[0]) {
@@ -162,11 +159,12 @@ function KeySystemPlayReady() {
         // *   Protection SystemID (16)
         // *   protection system data size (4) - length of decoded PROHeader
         // *   decoded PROHeader data from MPD file
+        var PSSHBoxType = new Uint8Array([0x70, 0x73, 0x73, 0x68, 0x00, 0x00, 0x00, 0x00]), //'PSSH' 8 bytes
+            playreadySystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86, 0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]);
+
         var byteCursor = 0,
             PROSize,
             PSSHSize,
-            PSSHBoxType = new Uint8Array([0x70, 0x73, 0x73, 0x68, 0x00, 0x00, 0x00, 0x00 ]), //'PSSH' 8 bytes
-            playreadySystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86, 0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]),
             uint8arraydecodedPROHeader = null,
             PSSHBoxBuffer,
             PSSHBox,
@@ -227,4 +225,4 @@ function KeySystemPlayReady() {
         }
         messageFormat = format;
     }
-};
+}

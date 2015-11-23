@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import EventBus from "./EventBus.js";
-import Events from '../Events.js'
+import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(Debug);
@@ -37,11 +37,11 @@ export default FactoryMaker.getSingletonFactory(Debug);
 function Debug() {
 
     let instance = {
-        log:log,
-        setLogTimestampVisible:setLogTimestampVisible,
-        setLogToBrowserConsole:setLogToBrowserConsole,
-        getLogToBrowserConsole:getLogToBrowserConsole,
-    }
+        log: log,
+        setLogTimestampVisible: setLogTimestampVisible,
+        setLogToBrowserConsole: setLogToBrowserConsole,
+        getLogToBrowserConsole: getLogToBrowserConsole,
+    };
 
     setup();
     return instance;
@@ -130,4 +130,4 @@ function Debug() {
 
         EventBus.trigger(Events.LOG, {message: message});
     }
-};
+}
