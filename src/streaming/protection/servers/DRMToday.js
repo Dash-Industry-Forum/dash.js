@@ -59,7 +59,7 @@ function DRMToday() {
                 return String.fromCharCode.apply(null, new Uint8Array(response));
             }
         }
-    }
+    };
 
     var instance = {
         getServerURLFromMessage: getServerURLFromMessage,
@@ -67,7 +67,7 @@ function DRMToday() {
         getResponseType: getResponseType,
         getLicenseMessage: getLicenseMessage,
         getErrorResponse: getErrorResponse,
-    }
+    };
 
     return instance;
 
@@ -90,4 +90,4 @@ function DRMToday() {
     function getErrorResponse(serverResponse, keySystemStr/*, messageType*/) {
         return keySystems[keySystemStr].getErrorResponse(serverResponse);
     }
-};
+}
