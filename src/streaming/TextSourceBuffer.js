@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MediaPlayer from './MediaPlayer.js';
 import StreamController from './controllers/StreamController.js';
 import TextTrackInfo from './vo/TextTrackInfo.js';
 import FragmentExtensions from '../dash/extensions/FragmentExtensions.js';
@@ -106,30 +105,30 @@ function  TextSourceBuffer() {
         var result,
             samplesInfo,
             i,
-            ccContent,
-            mediaInfo = chunk.mediaInfo,
-            mediaType = mediaInfo.type,
-            mimeType = mediaInfo.mimeType;
+            ccContent;
+        var mediaInfo = chunk.mediaInfo;
+        var mediaType = mediaInfo.type;
+        var mimeType = mediaInfo.mimeType;
 
         function createTextTrackFromMediaInfo(captionData, mediaInfo) {
-            var textTrackInfo = new TextTrackInfo(),
-                trackKindMap = {subtitle:"subtitles", caption:"captions"},//Dash Spec has no "s" on end of KIND but HTML needs plural.
-                getKind = function () {
-                    var kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
-                    kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
-                    return kind;
-                },
+            var textTrackInfo = new TextTrackInfo();
+            var trackKindMap = { subtitle: "subtitles", caption: "captions" }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
+            var getKind = function() {
+                var kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
+                kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
+                return kind;
+            };
 
-                checkTTML = function () {
-                    var ttml = false;
-                    if (mediaInfo.codec && mediaInfo.codec.search("stpp") >= 0) {
-                        ttml = true;
-                    }
-                    if (mediaInfo.mimeType && mediaInfo.mimeType.search("ttml") >= 0) {
-                        ttml = true;
-                    }
-                    return ttml;
-                };
+            var checkTTML = function() {
+                var ttml = false;
+                if (mediaInfo.codec && mediaInfo.codec.search("stpp") >= 0) {
+                    ttml = true;
+                }
+                if (mediaInfo.mimeType && mediaInfo.mimeType.search("ttml") >= 0) {
+                    ttml = true;
+                }
+                return ttml;
+            };
 
             textTrackInfo.captionData = captionData;
             textTrackInfo.lang = mediaInfo.lang;
@@ -224,9 +223,9 @@ function  TextSourceBuffer() {
 
     function setTextTrack() {
 
-        var el = videoModel.getElement(),
-            tracks = el.textTracks,
-            ln = tracks.length;
+        var el = videoModel.getElement();
+        var tracks = el.textTracks;
+        var ln = tracks.length;
 
         if (!allTracks) {
             allTracks = mediaController.getTracksFor("fragmentedText", streamController.getActiveStreamInfo());
@@ -273,4 +272,4 @@ function  TextSourceBuffer() {
         }
         return parser;
     }
-};
+}

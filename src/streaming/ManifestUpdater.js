@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import ManifestLoader from './ManifestLoader.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
@@ -38,12 +37,12 @@ export default FactoryMaker.getSingletonFactory(ManifestUpdater);
 function ManifestUpdater() {
 
     let instance = {
-        initialize:initialize,
-        setManifest:setManifest,
-        getManifestLoader:getManifestLoader,
-        setConfig:setConfig,
-        reset:reset
-    }
+        initialize: initialize,
+        setManifest: setManifest,
+        getManifestLoader: getManifestLoader,
+        setConfig: setConfig,
+        reset: reset
+    };
 
     return instance;
 
@@ -54,7 +53,7 @@ function ManifestUpdater() {
         manifestLoader,
         manifestModel,
         manifestExt,
-        log
+        log;
 
     function setConfig(config){
         if (!config) return;
@@ -72,8 +71,8 @@ function ManifestUpdater() {
 
     function initialize(loader) {
         manifestLoader = loader;
-        refreshDelay = NaN,
-        refreshTimer = null,
+        refreshDelay = NaN;
+        refreshTimer = null;
         isUpdating = false;
         isStopped = true;
 
@@ -177,4 +176,4 @@ function ManifestUpdater() {
         // When streams are ready we can consider manifest update completed. Resolve the update promise.
         isUpdating = false;
     }
-};
+}

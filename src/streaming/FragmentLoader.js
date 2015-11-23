@@ -40,10 +40,10 @@ export default FactoryMaker.getClassFactory(FragmentLoader);
 
 function FragmentLoader(config) {
 
-    let metricsModel = config.metricsModel,
-        errHandler = config.errHandler,
-        log = config.log,
-        requestModifierExt = config.requestModifierExt;
+    let metricsModel = config.metricsModel;
+    let errHandler = config.errHandler;
+    let log = config.log;
+    let requestModifierExt = config.requestModifierExt;
 
     let instance = {
         checkForExistence: checkForExistence,
@@ -65,9 +65,10 @@ function FragmentLoader(config) {
             handleLoaded = function (requestVO, succeeded) {
                 needFailureReport = false;
 
-                var currentTime = new Date(),
-                    bytes = req.response,
-                    latency,
+                var currentTime = new Date();
+                var bytes = req.response;
+
+                var latency,
                     download,
                     httpRequestMetrics = null;
 
@@ -202,12 +203,11 @@ function FragmentLoader(config) {
     function checkForExistence(request) {
 
         if (!request) {
-            EventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, {request: request, exists: false})
+            EventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, { request: request, exists: false });
             return;
         }
 
-        var self = this,
-            req = new XMLHttpRequest(),
+        var req = new XMLHttpRequest(),
             isSuccessful = false;
 
         req.open("HEAD", request.url, true);
@@ -215,13 +215,13 @@ function FragmentLoader(config) {
         req.onload = function () {
             if (req.status < 200 || req.status > 299) return;
             isSuccessful = true;
-            EventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, {request: request, exists: true})
+            EventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, { request: request, exists: true });
 
         };
 
         req.onloadend = req.onerror = function () {
             if (isSuccessful) return;
-            EventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, {request: request, exists: false})
+            EventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, { request: request, exists: false });
         };
 
         req.send();
@@ -243,8 +243,8 @@ function FragmentLoader(config) {
 
     function abort() {
         var i,
-            req,
-            ln = xhrs.length;
+            req;
+        var ln = xhrs.length;
 
         for (i = 0; i < ln; i += 1) {
             req = xhrs[i];
@@ -255,4 +255,4 @@ function FragmentLoader(config) {
 
         xhrs = [];
     }
-};
+}

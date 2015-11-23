@@ -80,12 +80,12 @@ function VTTParser() {
             {
                 if (item.match(regExToken))
                 {
-                    var attributes = parseItemAttributes(item),
-                        cuePoints = attributes.cuePoints,
-                        styles = attributes.styles,
-                        text = getSublines(data, i+1),
-                        startTime = convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, '')),
-                        endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
+                    var attributes = parseItemAttributes(item);
+                    var cuePoints = attributes.cuePoints;
+                    var styles = attributes.styles;
+                    var text = getSublines(data, i + 1);
+                    var startTime = convertCuePointTimes(cuePoints[0].replace(regExWhiteSpace, ''));
+                    var endTime = convertCuePointTimes(cuePoints[1].replace(regExWhiteSpace, ''));
 
                     if((!isNaN(startTime) && !isNaN(endTime)) && startTime >= lastStartTime && endTime > startTime) {
                         if (text !== ""){
@@ -113,8 +113,8 @@ function VTTParser() {
     }
 
     function convertCuePointTimes(time) {
-        var timeArray = time.split( ":"),
-            len = timeArray.length - 1;
+        var timeArray = time.split(":");
+        var len = timeArray.length - 1;
 
         time = parseInt( timeArray[len-1], 10 ) * 60 + parseFloat( timeArray[len]);
 
@@ -163,9 +163,10 @@ function VTTParser() {
     /**
         * VTT can have multiple lines to display per cuepoint.
         * */
-    function getSublines(data, idx){
+    function getSublines(data, idx) {
+        var i = idx;
+
         var lineCount,
-            i = idx,
             subline = "",
             lineData = "";
 

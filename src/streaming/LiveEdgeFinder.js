@@ -30,7 +30,6 @@
  */
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
 import Error from './vo/Error.js';
-import Stream from './Stream.js';
 import EventBus from './utils/EventBus.js';
 import Events from "./Events.js";
 import RulesController from './rules/RulesController.js';

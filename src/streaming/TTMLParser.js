@@ -81,9 +81,8 @@ function TTMLParser() {
      **/
 
     function parse(data) {
-        var self = this,
-            type,
-            converter = new X2JS([], "", false);
+        var type;
+        var converter = new X2JS([], "", false);
 
         // Parse the TTML in a JSON object.
         ttml = converter.xml_str2json(data);
@@ -455,8 +454,8 @@ function TTMLParser() {
 
     function parseTimings(timingStr) {
         // Test if the time provided by the caption is valid.
-        var test = timingRegex.test(timingStr),
-            timeParts,
+        var test = timingRegex.test(timingStr);
+        var timeParts,
             parsedTime,
             frameRate;
 
@@ -486,11 +485,11 @@ function TTMLParser() {
 
     function passStructuralConstraints() {
         // Check if the ttml document provide all the necessary elements.
-        var hasTt = ttml.hasOwnProperty("tt"),
-            hasHead = hasTt ? ttml.tt.hasOwnProperty("head") : false,
-            hasLayout = hasHead ? ttml.tt.head.hasOwnProperty("layout") : false,
-            hasStyling = hasHead ? ttml.tt.head.hasOwnProperty("styling") : false,
-            hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false;
+        var hasTt = ttml.hasOwnProperty("tt");
+        var hasHead = hasTt ? ttml.tt.hasOwnProperty("head") : false;
+        var hasLayout = hasHead ? ttml.tt.head.hasOwnProperty("layout") : false;
+        var hasStyling = hasHead ? ttml.tt.head.hasOwnProperty("styling") : false;
+        var hasBody = hasTt ? ttml.tt.hasOwnProperty("body") : false;
 
         // Check if the document contains all the nececessary information
         return (hasTt && hasHead && hasLayout && hasStyling && hasBody);

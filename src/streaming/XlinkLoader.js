@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import RequestModifierExtensions from './extensions/RequestModifierExtensions.js'
+import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
 import EventBus from '../streaming/utils/EventBus.js';
@@ -43,12 +43,13 @@ export default FactoryMaker.getClassFactory(XlinkLoader);
 
 function XlinkLoader(config) {
 
-    let errHandler = config.errHandler,
-        metricsModel = config.metricsModel;
+    let errHandler = config.errHandler;
+    let metricsModel = config.metricsModel;
 
     let instance = {
+    
+    };
 
-    }
     setup();
     return instance;
 
@@ -177,4 +178,4 @@ function XlinkLoader(config) {
             request.onerror();
         }
     }
-};
+}

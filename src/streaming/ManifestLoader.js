@@ -30,7 +30,7 @@
  */
 import XlinkController from './controllers/XlinkController.js';
 import XlinkLoader from './XlinkLoader.js';
-import RequestModifierExtensions from './extensions/RequestModifierExtensions.js'
+import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
 import EventBus from './utils/EventBus.js';
@@ -45,15 +45,15 @@ export default FactoryMaker.getClassFactory(ManifestLoader);
 
 function ManifestLoader(config) {
 
-    let log = config.log,
-        parser = config.parser,
-        errHandler = config.errHandler,
-        metricsModel = config.metricsModel
+    let log = config.log;
+    let parser = config.parser;
+    let errHandler = config.errHandler;
+    let metricsModel = config.metricsModel;
 
     let instance = {
-        load:load,
-        reset:reset
-    }
+        load: load,
+        reset: reset
+    };
 
     setup();
     return instance;
@@ -69,8 +69,8 @@ function ManifestLoader(config) {
     }
 
     function load (url) {
-        var baseUrl = parseBaseUrl(url),
-            request = new XMLHttpRequest(),
+        var baseUrl = parseBaseUrl(url);
+        var request = new XMLHttpRequest(),
             requestTime = new Date(),
             loadedTime = null,
             needFailureReport = true,
@@ -199,7 +199,6 @@ function ManifestLoader(config) {
     }
 
     function onXlinkReady(event) {
-        EventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: event.manifest})
-    };
-};
-
+        EventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: event.manifest });
+    }
+}

@@ -50,32 +50,32 @@ export default FactoryMaker.getClassFactory(Stream);
 
 function Stream(config) {
 
-    let manifestModel = config.manifestModel,
-        manifestUpdater = config.manifestUpdater,
-        adapter = config.adapter,
-        capabilities = config.capabilities,
-        log = config.log,
-        errHandler = config.errHandler,
-        timelineConverter = config.timelineConverter;
+    let manifestModel = config.manifestModel;
+    let manifestUpdater = config.manifestUpdater;
+    let adapter = config.adapter;
+    let capabilities = config.capabilities;
+    let log = config.log;
+    let errHandler = config.errHandler;
+    let timelineConverter = config.timelineConverter;
 
     let instance = {
-        initialize :initialize,
-        activate :activate,
-        deactivate :deactivate,
-        getDuration :getDuration,
-        getStartTime :getStartTime,
-        getStreamIndex :getStreamIndex,
-        getId :getId,
-        getStreamInfo :getStreamInfo,
-        hasMedia :hasMedia,
-        getBitrateListFor :getBitrateListFor,
-        startEventController :startEventController,
-        resetEventController :resetEventController,
-        isActivated :isActivated,
-        isInitialized :isInitialized,
+        initialize: initialize,
+        activate: activate,
+        deactivate: deactivate,
+        getDuration: getDuration,
+        getStartTime: getStartTime,
+        getStreamIndex: getStreamIndex,
+        getId: getId,
+        getStreamInfo: getStreamInfo,
+        hasMedia: hasMedia,
+        getBitrateListFor: getBitrateListFor,
+        startEventController: startEventController,
+        resetEventController: resetEventController,
+        isActivated: isActivated,
+        isInitialized: isInitialized,
         updateData: updateData,
-        reset :reset
-    }
+        reset: reset
+    };
 
     setup();
     return instance;
@@ -110,8 +110,8 @@ function Stream(config) {
         abrController = AbrController.getInstance();
         mediaController = MediaController.getInstance();
         fragmentController = FragmentController.create({
-            log:log
-        })
+            log: log
+        });
 
         EventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
@@ -150,8 +150,8 @@ function Stream(config) {
      * @memberof Stream#
      */
     function deactivate() {
-        var ln = streamProcessors.length,
-            i = 0;
+        var ln = streamProcessors.length;
+        var i = 0;
 
         for (i; i < ln; i += 1) {
             streamProcessors[i].reset();
@@ -236,7 +236,7 @@ function Stream(config) {
     function resetEventController() {
         if (eventController) {
             eventController.reset();
-       }
+        }
     }
 
     function isActivated() {
@@ -260,8 +260,8 @@ function Stream(config) {
     }
 
     function isMediaSupported(mediaInfo, mediaSource, manifest) {
-        var type = mediaInfo.type,
-            codec,
+        var type = mediaInfo.type;
+        var codec,
             msg;
 
         if (type === "muxed" && mediaInfo) {
@@ -294,12 +294,12 @@ function Stream(config) {
         var processor = getProcessorForMediaInfo(e.oldMediaInfo);
         if (!processor) return;
 
-        var currentTime = playbackController.getTime(),
-            buffer = processor.getBuffer(),
-            mediaInfo = e.newMediaInfo,
-            manifest = manifestModel.getValue(),
-            idx = streamProcessors.indexOf(processor),
-            mediaSource = processor.getMediaSource();
+        var currentTime = playbackController.getTime();
+        var buffer = processor.getBuffer();
+        var mediaInfo = e.newMediaInfo;
+        var manifest = manifestModel.getValue();
+        var idx = streamProcessors.indexOf(processor);
+        var mediaSource = processor.getMediaSource();
 
         if (mediaInfo.type !== "fragmentedText"){
             processor.reset(true);
@@ -317,12 +317,12 @@ function Stream(config) {
         baseUrlExt.initialize();
 
         let handler = DashHandler.create({
-                log:log,
-                baseURLExt:baseUrlExt,
-                timelineConverter: timelineConverter,
-                metricsExt:DashMetricsExtensions.getInstance(),
-                metricsModel:MetricsModel.getInstance()
-            }
+            log:log,
+            baseURLExt:baseUrlExt,
+            timelineConverter: timelineConverter,
+            metricsExt:DashMetricsExtensions.getInstance(),
+            metricsModel:MetricsModel.getInstance()
+        }
         );
 
         return handler;
@@ -330,12 +330,12 @@ function Stream(config) {
 
     function createStreamProcessor(mediaInfo, manifest, mediaSource, optionalSettings) {
         var streamProcessor = StreamProcessor.create({
-                indexHandler:createIndexHandler(),
-                timelineConverter:timelineConverter,
-                adapter:adapter,
-                manifestModel:manifestModel
-            }),
-            allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);
+            indexHandler: createIndexHandler(),
+            timelineConverter: timelineConverter,
+            adapter: adapter,
+            manifestModel: manifestModel
+        });
+        var allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, mediaInfo.type);
 
         streamProcessor.initialize(getMimeTypeOrType(mediaInfo), fragmentController, mediaSource, instance, eventController);
         abrController.updateTopQualityIndex(mediaInfo);
@@ -368,8 +368,8 @@ function Stream(config) {
 
     function initializeMediaForType(type, mediaSource) {
         var manifest = manifestModel.getValue(),
-            allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, type),
-            mediaInfo = null,
+            allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, type);
+        var mediaInfo = null,
             initialMediaInfo;
 
         if (!allMediaForType || allMediaForType.length === 0) {
@@ -399,8 +399,8 @@ function Stream(config) {
     }
 
     function initializeMedia(mediaSource) {
-        var manifest = manifestModel.getValue(),
-            events;
+        var manifest = manifestModel.getValue();
+        var events;
 
         eventController = EventController.getInstance();
         eventController.initialize();
@@ -436,10 +436,10 @@ function Stream(config) {
     }
 
     function checkIfInitializationCompleted() {
-        var ln = streamProcessors.length,
-            hasError = !!updateError.audio || !!updateError.video,
-            error = hasError ? new Error(Stream.DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null,
-            i = 0;
+        var ln = streamProcessors.length;
+        var hasError = !!updateError.audio || !!updateError.video;
+        var error = hasError ? new Error(Stream.DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null;
+        var i = 0;
 
         for (i; i < ln; i += 1) {
             if (streamProcessors[i].isUpdating() || isUpdating) return;
@@ -454,8 +454,8 @@ function Stream(config) {
     }
 
     function getMediaInfo(type) {
-        var ln = streamProcessors.length,
-            mediaCtrl = null;
+        var ln = streamProcessors.length;
+        var mediaCtrl = null;
 
         for (var i = 0; i < ln; i += 1) {
             mediaCtrl = streamProcessors[i];
@@ -475,9 +475,9 @@ function Stream(config) {
     function onBufferingCompleted(e) {
         if (e.streamInfo !== streamInfo) return;
 
-        var processors = getProcessors(),
-            ln = processors.length,
-            i = 0;
+        var processors = getProcessors();
+        var ln = processors.length;
+        var i = 0;
 
         // if there is at least one buffer controller that has not completed buffering yet do nothing
         for (i; i < ln; i += 1) {
@@ -507,9 +507,9 @@ function Stream(config) {
     }
 
     function getProcessors() {
+        var ln = streamProcessors.length;
         var arr = [],
             i = 0,
-            ln = streamProcessors.length,
             type,
             controller;
 
@@ -526,12 +526,13 @@ function Stream(config) {
     }
 
     function updateData(updatedStreamInfo) {
-        var ln = streamProcessors.length,
-            manifest = manifestModel.getValue(),
-            i = 0,
-            mediaInfo,
-            events,
-            controller;
+        var ln = streamProcessors.length;
+        var manifest = manifestModel.getValue();
+
+        var i = 0,
+           mediaInfo,
+           events,
+           controller;
 
         isStreamActivated = false;
         streamInfo = updatedStreamInfo;
@@ -555,4 +556,4 @@ function Stream(config) {
         isUpdating = false;
         checkIfInitializationCompleted();
     }
-};
+}
