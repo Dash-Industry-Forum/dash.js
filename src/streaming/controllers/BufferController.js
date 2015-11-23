@@ -387,7 +387,7 @@ MediaPlayer.dependencies.BufferController = function () {
                 i,
                 pruneStart;
 
-            if (buffer.buffered.length === 0) {
+            if (!buffer || !buffer.buffered || buffer.buffered.length === 0) {
                 return false;
             } else {
                 lastRange = buffer.buffered.length - 1;
