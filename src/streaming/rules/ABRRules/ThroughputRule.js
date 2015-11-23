@@ -41,14 +41,14 @@ export default FactoryMaker.getClassFactory(ThroughputRule);
 
 function ThroughputRule(config) {
 
-    let log = config.log,
-        metricsExt = config.metricsExt,
-        metricsModel = config.metricsModel;
+    let log = config.log;
+    let metricsExt = config.metricsExt;
+    let metricsModel = config.metricsModel;
 
     let instance = {
-        execute:execute,
-        reset:reset
-    }
+        execute: execute,
+        reset: reset
+    };
 
     reset();
     return instance;
@@ -64,16 +64,16 @@ function ThroughputRule(config) {
     }
 
     function getAverageThroughput(type,  isDynamic) {
-        var averageThroughput = 0,
-            sampleAmount = isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE: AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD,
-            arr = throughputArray[type],
-            len = arr.length;
+        var averageThroughput = 0;
+        var sampleAmount = isDynamic ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD;
+        var arr = throughputArray[type];
+        var len = arr.length;
 
         sampleAmount = len < sampleAmount ? len : sampleAmount;
 
         if (len > 0) {
-            var startValue = len - sampleAmount,
-                totalSampledValue = 0;
+            var startValue = len - sampleAmount;
+            var totalSampledValue = 0;
 
             for (var i = startValue; i < len; i++) {
                 totalSampledValue += arr[i];
@@ -89,6 +89,9 @@ function ThroughputRule(config) {
     }
 
     function execute (context, callback) {
+        var downloadTime;
+        var averageThroughput;
+        var lastRequestThroughput;
 
         var mediaInfo = context.getMediaInfo(),
             mediaType = mediaInfo.type,
@@ -98,9 +101,6 @@ function ThroughputRule(config) {
             abrController = streamProcessor.getABRController(),
             isDynamic= streamProcessor.isDynamic(),
             lastRequest = metricsExt.getCurrentHttpRequest(metrics),
-            downloadTime,
-            averageThroughput,
-            lastRequestThroughput,
             bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
             bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
             switchRequest =  SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
@@ -144,4 +144,4 @@ function ThroughputRule(config) {
     function reset() {
         throughputArray = [];
     }
-};
+}

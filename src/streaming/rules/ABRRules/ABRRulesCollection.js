@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import ThroughputRule from './ThroughputRule.js'
-import BufferOccupancyRule from './BufferOccupancyRule.js'
-import InsufficientBufferRule from './InsufficientBufferRule.js'
-import Debug from '../../utils/Debug.js'
+import ThroughputRule from './ThroughputRule.js';
+import BufferOccupancyRule from './BufferOccupancyRule.js';
+import InsufficientBufferRule from './InsufficientBufferRule.js';
+import Debug from '../../utils/Debug.js';
 import MetricsModel from '../../models/MetricsModel.js';
 import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
@@ -94,4 +94,4 @@ function ABRRulesCollection() {
                 return null;
         }
     }
-};
+}

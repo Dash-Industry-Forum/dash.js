@@ -168,8 +168,8 @@ function LiveEdgeBinarySearchRule(config) {
     }
 
     function onSearchForFragmentSucceeded(request, lastSearchTime) {
-        var startTime = request.startTime,
-            req,
+        var startTime = request.startTime;
+        var req,
             searchTime;
 
         if (!useBinarySearch) {
