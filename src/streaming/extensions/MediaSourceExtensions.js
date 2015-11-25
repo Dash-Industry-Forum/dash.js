@@ -87,6 +87,7 @@ MediaPlayer.dependencies.MediaSourceExtensions.prototype = {
 
         for (i; i < ln; i += 1) {
             if (buffers[i].updating) return;
+            if (buffers[i].buffered.length===0) return;
         }
 
         source.endOfStream();
