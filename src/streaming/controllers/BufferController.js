@@ -655,10 +655,13 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         onWallclockTimeUpdated = function(/*e*/) {
+            var secondsElapsed;
             appendNext.call(this);
             // constantly prune buffer every so often
             wallclockTicked += 1;
-            if ((wallclockTicked % MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) === 0 && !isAppendingInProgress) {
+            secondsElapsed = (wallclockTicked * (MediaPlayer.dependencies.PlaybackController.WALLCLOCK_TIME_UPDATE_INTERVAL / 1000));
+            if ((secondsElapsed >= MediaPlayer.dependencies.BufferController.BUFFER_PRUNING_INTERVAL) && !isAppendingInProgress) {
+                wallclockTicked = 0;
                 pruneBuffer.call(this);
             }
         },
