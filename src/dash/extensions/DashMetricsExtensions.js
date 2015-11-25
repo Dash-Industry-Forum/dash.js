@@ -445,7 +445,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
                 httpRequest = httpRequestList[i];
 
                 if (httpRequest.type === MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE) {
-                    headers = parseResponseHeaders(httpRequest.responseHeaders);
+                    headers = parseResponseHeaders(httpRequest._responseHeaders);
                     break;
                 }
             }
