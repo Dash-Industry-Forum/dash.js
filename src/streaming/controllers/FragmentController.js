@@ -31,7 +31,7 @@
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import DataChunk from '../vo/DataChunk.js';
 import FragmentModel from '../models/FragmentModel.js';
-import MetricsModel from '../models/MetricsModel.js';
+import MediaPlayer from '../../streaming/MediaPlayer.js'
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -78,7 +78,7 @@ function FragmentController(config) {
         var model = findModel(context);
 
         if (!model){
-            model = FragmentModel.create({log:log, metricsModel :MetricsModel.getInstance()});
+            model = FragmentModel.create({log:log, metricsModel :MediaPlayer.prototype.context.metricsModel});
             model.setContext(context);
             fragmentModels.push(model);
         }

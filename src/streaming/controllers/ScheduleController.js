@@ -32,10 +32,8 @@
 import PlayList from '../vo/metrics/PlayList.js';
 import ScheduleRulesCollection from '../rules/SchedulingRules/ScheduleRulesCollection.js';
 import SwitchRequest from '../rules/SwitchRequest.js';
-import PlaybackController from './PlaybackController.js';
-import AbrController from './AbrController.js';
 import BufferController from './BufferController.js';
-import LiveEdgeFinder from '../LiveEdgeFinder.js';
+import MediaPlayer from '../../streaming/MediaPlayer.js'
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -114,9 +112,9 @@ function ScheduleController(config) {
     function initialize(Type, StreamProcessor) {
         type = Type;
         streamProcessor = StreamProcessor;
-        liveEdgeFinder = LiveEdgeFinder.getInstance();
-        playbackController = PlaybackController.getInstance();
-        abrController = AbrController.getInstance();
+        liveEdgeFinder = MediaPlayer.prototype.context.liveEdgeFinder;
+        playbackController = MediaPlayer.prototype.context.playbackController;
+        abrController = MediaPlayer.prototype.context.abrController;
         fragmentController = streamProcessor.getFragmentController();
         bufferController = streamProcessor.getBufferController();
         fragmentModel = fragmentController.getModel(this);

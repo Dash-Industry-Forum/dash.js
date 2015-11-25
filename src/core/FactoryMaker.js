@@ -2,10 +2,11 @@ let FactoryMaker = (function() {
 
     let extensionDict = {};
 
+
 	let instance = {
 		extend: extend,
 		getSingletonFactory:getSingletonFactory,
-		getClassFactory:getClassFactory,
+		getClassFactory:getClassFactory
 	}
 
 	return instance;
@@ -19,18 +20,14 @@ let FactoryMaker = (function() {
 	}
 
 	function getSingletonFactory(classConstructor) {
-		var factory = (function(){
-			var instance = null;
-			return {
-				getInstance: function() {
-					if (instance) return instance;
-					instance = merge(classConstructor.name, classConstructor.apply(this, arguments));
-					return instance;
-				}
-			}
-		}());
-
-		return factory;
+        return function() {
+            var instance = null;
+            this.getInstance = function() {
+                if (instance) return instance;
+                instance = merge(classConstructor.name, classConstructor.apply(this, arguments));
+                return instance;
+            }
+        }
 	}
 
 	function getClassFactory(classConstructor) {

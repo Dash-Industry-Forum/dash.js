@@ -29,19 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashHandler from '../DashHandler.js';
-import DashManifestExtensions from "../extensions/DashManifestExtensions.js";
-import DashMetricsExtensions from "../extensions/DashMetricsExtensions.js";
-import TimelineConverter from '../TimelineConverter.js';
-import AbrController from '../../streaming/controllers/AbrController.js';
-import PlaybackController from '../../streaming/controllers/PlaybackController.js';
-import StreamController from '../../streaming/controllers/StreamController.js';
-import ManifestModel from '../../streaming/models/ManifestModel.js';
-import MetricsModel from '../../streaming/models/MetricsModel.js';
-import MediaPlayerModel from '../../streaming/models/MediaPlayerModel.js';
 import DOMStorage from '../../streaming/utils/DOMStorage.js';
 import Error from '../../streaming/vo/Error.js';
 import EventBus from '../../streaming/utils/EventBus.js';
 import Events from "../../streaming/Events.js";
+import MediaPlayer from '../../streaming/MediaPlayer.js'
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
@@ -89,16 +81,16 @@ function  RepresentationController() {
         updating = true;
         availableRepresentations = [];
 
-        abrController = AbrController.getInstance();
-        streamController = StreamController.getInstance(),
-        playbackController = PlaybackController.getInstance(),
-        manifestModel = ManifestModel.getInstance(),
-        metricsModel = MetricsModel.getInstance(),
-        domStorage = DOMStorage.getInstance(),
-        timelineConverter = TimelineConverter.getInstance(),
-        manifestExt = DashManifestExtensions.getInstance(),
-        metricsExt = DashMetricsExtensions.getInstance(),
-        mediaPlayerModel = MediaPlayerModel.getInstance();
+        abrController = MediaPlayer.prototype.context.abrController;
+        streamController = MediaPlayer.prototype.context.streamController;
+        playbackController = MediaPlayer.prototype.context.playbackController;
+        manifestModel = MediaPlayer.prototype.context.manifestModel;
+        metricsModel = MediaPlayer.prototype.context.metricsModel;
+        domStorage = MediaPlayer.prototype.context.DOMStorage;
+        timelineConverter = MediaPlayer.prototype.context.timelineConverter;
+        manifestExt = MediaPlayer.prototype.context.manifestExt;
+        metricsExt = MediaPlayer.prototype.context.metricsExt;
+        mediaPlayerModel = MediaPlayer.prototype.context.mediaPlayerModel;
 
         EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, instance);
         EventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);

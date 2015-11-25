@@ -32,13 +32,11 @@
 import FragmentModel from '../models/FragmentModel.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import SourceBufferExtensions from '../extensions/SourceBufferExtensions.js';
-import AbrController from './AbrController.js';
-import PlaybackController from './PlaybackController.js';
 import MediaController from './MediaController.js';
 import CustomTimeRanges from '../utils/CustomTimeRanges.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
-import BoxParser from '../utils/BoxParser.js';
+import MediaPlayer from '../MediaPlayer.js'
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
@@ -150,8 +148,8 @@ function BufferController(config) {
         type = Type;
         setMediaSource(Source);
         streamProcessor = StreamProcessor;
-        playbackController = PlaybackController.getInstance();
-        abrController = AbrController.getInstance();
+        playbackController = MediaPlayer.prototype.context.playbackController;
+        abrController = MediaPlayer.prototype.context.abrController;
         fragmentController = streamProcessor.getFragmentController();
         scheduleController = streamProcessor.getScheduleController();
         requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
@@ -456,7 +454,7 @@ function BufferController(config) {
             eventStreams[inbandEvents[loop].schemeIdUri] = inbandEvents[loop];
         }
 
-        isoFile = BoxParser.getInstance().parse(data);
+        isoFile = MediaPlayer.prototype.context.boxParser.parse(data);
         eventBoxes = isoFile.getBoxes("emsg");
 
         for (var i = 0, ln = eventBoxes.length; i < ln; i += 1) {

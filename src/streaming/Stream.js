@@ -28,18 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import LiveEdgeFinder from './LiveEdgeFinder.js';
 import StreamProcessor from './StreamProcessor.js';
-import MediaController from './controllers/MediaController.js';
-import EventController from './controllers/EventController.js';
 import FragmentController from './controllers/FragmentController.js';
-import AbrController from './controllers/AbrController.js';
-import VideoModel from './models/VideoModel.js';
-import MetricsModel from './models/MetricsModel.js';
-import PlaybackController from './controllers/PlaybackController.js';
+import MediaPlayer from './MediaPlayer.js';
 import DashHandler from '../dash/DashHandler.js';
-import BaseURLExtensions from '../dash/extensions/BaseURLExtensions.js';
-import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
@@ -105,10 +97,10 @@ function Stream(config) {
         isUpdating = false;
         initialized = false;
 
-        liveEdgeFinder = LiveEdgeFinder.getInstance();
-        playbackController = PlaybackController.getInstance();
-        abrController = AbrController.getInstance();
-        mediaController = MediaController.getInstance();
+        liveEdgeFinder = MediaPlayer.prototype.context.liveEdgeFinder;
+        playbackController = MediaPlayer.prototype.context.playbackController;
+        abrController = MediaPlayer.prototype.context.abrController;
+        mediaController = MediaPlayer.prototype.context.mediaController;
         fragmentController = FragmentController.create({
             log: log
         });
@@ -278,7 +270,7 @@ function Stream(config) {
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
             errHandler.capabilityError("encryptedmedia");
-        } else if (!capabilities.supportsCodec(VideoModel.getInstance().getElement(), codec)) {
+        } else if (!capabilities.supportsCodec(MediaPlayer.prototype.context.videoModel.getElement(), codec)) {
             msg = type + "Codec (" + codec + ") is not supported.";
             errHandler.manifestError(msg, "codec", manifest);
             log(msg);
@@ -312,7 +304,7 @@ function Stream(config) {
 
     function createIndexHandler() {
 
-        let baseUrlExt = BaseURLExtensions.getInstance();
+        let baseUrlExt = MediaPlayer.prototype.context.baseURLExt;
         baseUrlExt.setConfig({log:log});
         baseUrlExt.initialize();
 
@@ -320,8 +312,8 @@ function Stream(config) {
             log:log,
             baseURLExt:baseUrlExt,
             timelineConverter: timelineConverter,
-            metricsExt:DashMetricsExtensions.getInstance(),
-            metricsModel:MetricsModel.getInstance()
+            metricsExt:MediaPlayer.prototype.context.metricsExt,
+            metricsModel:MediaPlayer.prototype.context.metricsModel
         }
         );
 
@@ -402,7 +394,7 @@ function Stream(config) {
         var manifest = manifestModel.getValue();
         var events;
 
-        eventController = EventController.getInstance();
+        eventController = MediaPlayer.prototype.context.eventController;
         eventController.initialize();
         eventController.setConfig({
             log: log,

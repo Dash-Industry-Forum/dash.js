@@ -29,11 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../../core/FactoryMaker.js';
-import TimelineConverter from '../../../dash/TimelineConverter.js';
 import LiveEdgeBinarySearchRule from './LiveEdgeBinarySearchRule.js';
 import LiveEdgeWithTimeSynchronizationRule from './LiveEdgeWithTimeSynchronizationRule.js';
-import DashAdapter from '../../../dash/DashAdapter.js';
+import MediaPlayer from '../../MediaPlayer.js'
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 
 const TIME_SYNCHRONIZED_RULES = "withAccurateTimeSourceRules";
@@ -63,12 +62,12 @@ function SynchronizationRulesCollection() {
         bestGuestRules = [];
 
         withAccurateTimeSourceRules.push(LiveEdgeWithTimeSynchronizationRule.create({
-            timelineConverter:TimelineConverter.getInstance()
+            timelineConverter:MediaPlayer.prototype.context.timelineConverter
         }));
 
         bestGuestRules.push(LiveEdgeBinarySearchRule.create({
-            timelineConverter:TimelineConverter.getInstance(),
-            adapter: DashAdapter.getInstance()
+            timelineConverter:MediaPlayer.prototype.context.timelineConverter,
+            adapter: MediaPlayer.prototype.context.adapter
         }));
     }
 

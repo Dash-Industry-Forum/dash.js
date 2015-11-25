@@ -38,7 +38,6 @@
  * @class
  */
 import ProtectionModel from './ProtectionModel.js';
-import ProtectionExtensions from '../extensions/ProtectionExtensions.js';
 import NeedKey from '../vo/protection/NeedKey.js';
 import KeyError from '../vo/protection/KeyError.js';
 import KeyMessage from '../vo/protection/KeyMessage.js';
@@ -47,12 +46,12 @@ import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
 import SessionToken from '../vo/protection/SessionToken.js';
 import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
-import ErrorHandler from '../ErrorHandler.js';
+import MediaPlayer from '../../streaming/MediaPlayer.js'
 
 let ProtectionModel_01b = function () {
 
-    var protectionExt = ProtectionExtensions.getInstance();
-    var errHandler = ErrorHandler.getInstance();
+    var protectionExt = MediaPlayer.prototype.context.protectionExt;
+    var errHandler = MediaPlayer.prototype.context.errorHandler;
 
     var videoElement = null,
 

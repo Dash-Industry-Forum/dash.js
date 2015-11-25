@@ -28,15 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../../core/FactoryMaker.js';
 import BufferLevelRule from './BufferLevelRule.js';
 import PlaybackTimeRule from './PlaybackTimeRule.js';
-import TextSourceBuffer from '../../TextSourceBuffer.js';
-import MetricsModel from '../../models/MetricsModel.js';
-import DashAdapter from '../../../dash/DashAdapter.js';
-import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
-import SourceBufferExtensions from '../../extensions/SourceBufferExtensions.js';
-import VirtualBuffer from '../../utils/VirtualBuffer.js';
+import MediaPlayer from '../../MediaPlayer.js'
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 const FRAGMENTS_TO_SCHEDULE_RULES = "fragmentsToScheduleRules";
 const NEXT_FRAGMENT_RULES = "nextFragmentRules";
@@ -65,15 +60,15 @@ function ScheduleRulesCollection() {
         nextFragmentRules = [];
 
         fragmentsToScheduleRules.push(BufferLevelRule.create({
-            metricsExt: DashMetricsExtensions.getInstance(),
-            metricsModel: MetricsModel.getInstance(),
-            textSourceBuffer:TextSourceBuffer.getInstance()
+            metricsExt: MediaPlayer.prototype.context.metricsExt,
+            metricsModel: MediaPlayer.prototype.context.metricsModel,
+            textSourceBuffer:MediaPlayer.prototype.context.textSourceBuffer
         }));
         nextFragmentRules.push(PlaybackTimeRule.create({
-            adapter: DashAdapter.getInstance(),
-            sourceBufferExt: SourceBufferExtensions.getInstance(),
-            virtualBuffer: VirtualBuffer.getInstance(),
-            textSourceBuffer: TextSourceBuffer.getInstance()
+            adapter: MediaPlayer.prototype.context.adapter,
+            sourceBufferExt: MediaPlayer.prototype.context.sourceBufferExt,
+            virtualBuffer: MediaPlayer.prototype.context.virtualBuffer,
+            textSourceBuffer: MediaPlayer.prototype.context.textSourceBuffer
 
         }));
     }

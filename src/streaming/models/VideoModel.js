@@ -30,7 +30,6 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker.js';
-
 export default FactoryMaker.getSingletonFactory(VideoModel);
 
 function VideoModel() {

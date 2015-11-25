@@ -28,13 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import TextSourceBuffer from '../TextSourceBuffer.js';
-import MediaController from '../controllers/MediaController.js';
-import DashAdapter from '../../dash/DashAdapter.js';
 import Error from '../vo/Error.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
-import ErrorHandler from '../../streaming/ErrorHandler.js';
+import MediaPlayer from '../../streaming/MediaPlayer.js'
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
@@ -83,12 +80,12 @@ function SourceBufferExtensions() {
 
         } catch (ex) {
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp"') !== -1)) {
-                buffer = TextSourceBuffer.getInstance()
+                buffer = MediaPlayer.prototype.context.textSourceBuffer;
                 buffer.setConfig({
-                    errHandler: ErrorHandler.getInstance(),
-                    adapter: DashAdapter.getInstance(),
+                    errHandler: MediaPlayer.prototype.context.errorHandler,
+                    adapter: MediaPlayer.prototype.context.adapter,
                     manifestExt: manifestExt,
-                    mediaController: MediaController.getInstance(),
+                    mediaController: MediaPlayer.prototype.context.mediaController,
                 });
             } else {
                 throw ex;

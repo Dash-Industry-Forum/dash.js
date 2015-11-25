@@ -36,15 +36,9 @@
  */
 import CommonEncryption from '../protection/CommonEncryption.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
-import KeySystemClearKey from '../protection/drm/KeySystemClearKey.js';
-import KeySystemWidevine from '../protection/drm/KeySystemWidevine.js';
-import KeySystemPlayReady from '../protection/drm/KeySystemPlayReady.js';
-import DRMToday from '../protection/servers/DRMToday.js';
-import PlayReady from '../protection/servers/PlayReady.js';
-import Widevine from '../protection/servers/Widevine.js';
-import ClearKey from '../protection/servers/ClearKey.js';
-
+import MediaPlayer from '../../streaming/MediaPlayer.js'
 import FactoryMaker from '../../core/FactoryMaker.js';
+
 export default FactoryMaker.getSingletonFactory(ProtectionExtensions);
 
 function  ProtectionExtensions() {
@@ -82,15 +76,15 @@ function  ProtectionExtensions() {
         var keySystem;
 
         // PlayReady
-        keySystem = KeySystemPlayReady.getInstance()
+        keySystem = MediaPlayer.prototype.context.keySystemPlayReady;
         keySystems.push(keySystem);
 
         // Widevine
-        keySystem = KeySystemWidevine.getInstance()
+        keySystem = MediaPlayer.prototype.context.keySystemWidevine;
         keySystems.push(keySystem);
 
         // ClearKey
-        keySystem = KeySystemClearKey.getInstance();
+        keySystem = MediaPlayer.prototype.context.keySystemClearKey;
         keySystems.push(keySystem);
         clearkeyKeySystem = keySystem;
     }
@@ -261,13 +255,13 @@ function  ProtectionExtensions() {
 
         var licenseServerData = null;
         if (protData && protData.hasOwnProperty("drmtoday")) {
-            licenseServerData = DRMToday.getInstance();
+            licenseServerData = MediaPlayer.prototype.context.DRMToday;
         } else if (keySystem.systemString === "com.widevine.alpha") {
-            licenseServerData = Widevine.getInstance();
+            licenseServerData = MediaPlayer.prototype.context.Widevine;
         } else if (keySystem.systemString === "com.microsoft.playready") {
-            licenseServerData = PlayReady.getInstance();
+            licenseServerData = MediaPlayer.prototype.context.PlayReady;
         } else if (keySystem.systemString === "org.w3.clearkey") {
-            licenseServerData = ClearKey.getInstance();
+            licenseServerData = MediaPlayer.prototype.context.ClearKey;
         }
 
         return licenseServerData;

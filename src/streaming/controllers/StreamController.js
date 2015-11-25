@@ -28,15 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import PlaybackController from './PlaybackController.js';
 import ProtectionController from './ProtectionController.js';
 import MediaPlayer from '../MediaPlayer.js';
 import Stream from '../Stream.js';
-import ManifestUpdater from '../ManifestUpdater.js';
 import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
-import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
-import VideoModel from '../models/VideoModel.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const STREAM_END_THRESHOLD = 0.2;
@@ -112,7 +108,7 @@ function StreamController() {
         protectionData = protData;
         timelineConverter.initialize();
 
-        manifestUpdater = ManifestUpdater.getInstance();
+        manifestUpdater = MediaPlayer.prototype.context.manifestUpdater;
         manifestUpdater.setConfig({
             log :log,
             manifestModel: manifestModel,
@@ -120,8 +116,8 @@ function StreamController() {
         });
         manifestUpdater.initialize(manifestLoader);
 
-        videoModel = VideoModel.getInstance();
-        playbackController = PlaybackController.getInstance();
+        videoModel = MediaPlayer.prototype.context.videoModel;
+        playbackController = MediaPlayer.prototype.context.playbackController;
         playbackController.setConfig({
             streamController: instance,
             log: log,
@@ -517,7 +513,7 @@ function StreamController() {
 
             var manifestUTCTimingSources = manifestExt.getUTCTimingSources(e.manifest);
             var allUTCTimingSources = (!manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(UTCTimingSources);
-            var isHTTPS = URIQueryAndFragmentModel.getInstance().isManifestHTTPS();
+            var isHTTPS = MediaPlayer.prototype.context.URIQueryAndFragmentModel.isManifestHTTPS();
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
             allUTCTimingSources.forEach(function(item){

@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import ErrorHandler from '../streaming/ErrorHandler.js';
+import MediaPlayer from '../streaming/MediaPlayer.js'
 import FactoryMaker from '../core/FactoryMaker.js';
 
 const SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
@@ -421,7 +421,7 @@ function DashParser(config) {
 
             log("Parsing complete: ( xml2json: " + (json.getTime() - start.getTime()) + "ms, objectiron: " + (ironed.getTime() - json.getTime()) + "ms, total: " + ((ironed.getTime() - start.getTime()) / 1000) + "s)");
         } catch (err) {
-            ErrorHandler.getInstance().manifestError("parsing the manifest failed", "parse", data);
+            MediaPlayer.prototype.context.errorHandler.manifestError("parsing the manifest failed", "parse", data);
             return null;
         }
         return manifest;

@@ -30,7 +30,7 @@
  */
 import XlinkController from './controllers/XlinkController.js';
 import XlinkLoader from './XlinkLoader.js';
-import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
+import MediaPlayer from '../streaming/MediaPlayer.js'
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
 import EventBus from './utils/EventBus.js';
@@ -64,7 +64,7 @@ function ManifestLoader(config) {
     function setup() {
         let xlinkLoader = XlinkLoader.create({errHandler:errHandler, metricsModel:metricsModel});
         xlinkController = XlinkController.create({xlinkLoader:xlinkLoader});
-        requestModifierExt = RequestModifierExtensions.getInstance();
+        requestModifierExt = MediaPlayer.prototype.context.requestModifierExt;
         EventBus.on(Events.XLINK_READY, onXlinkReady, instance);
     }
 

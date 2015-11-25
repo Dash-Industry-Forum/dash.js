@@ -28,12 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import MediaPlayer from '../../MediaPlayer.js'
 import ThroughputRule from './ThroughputRule.js';
 import BufferOccupancyRule from './BufferOccupancyRule.js';
 import InsufficientBufferRule from './InsufficientBufferRule.js';
-import Debug from '../../utils/Debug.js';
-import MetricsModel from '../../models/MetricsModel.js';
-import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 const QUALITY_SWITCH_RULES = "qualitySwitchRules";
@@ -63,21 +61,21 @@ function ABRRulesCollection() {
         abandonFragmentRules = [];
 
         qualitySwitchRules.push(ThroughputRule.create({
-                log:Debug.getInstance().log,
-                metricsExt:DashMetricsExtensions.getInstance(),
-                metricsModel:MetricsModel.getInstance()
+                log:MediaPlayer.prototype.context.debug.log,
+                metricsExt:MediaPlayer.prototype.context.metricsExt,
+                metricsModel:MediaPlayer.prototype.context.metricsModel
             })
         );
 
         qualitySwitchRules.push(BufferOccupancyRule.create({
-                log:Debug.getInstance().log,
-                metricsModel:MetricsModel.getInstance()
+                log:MediaPlayer.prototype.context.debug.log,
+                metricsModel:MediaPlayer.prototype.context.metricsModel
             })
         );
 
         qualitySwitchRules.push(InsufficientBufferRule.create({
-                log:Debug.getInstance().log,
-                metricsModel:MetricsModel.getInstance()
+                log:MediaPlayer.prototype.context.debug.log,
+                metricsModel:MediaPlayer.prototype.context.metricsModel
             })
         );
 

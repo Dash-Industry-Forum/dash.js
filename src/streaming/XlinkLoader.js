@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
+import MediaPlayer from '../streaming/MediaPlayer.js'
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
 import EventBus from '../streaming/utils/EventBus.js';
@@ -56,7 +56,7 @@ function XlinkLoader(config) {
     let requestModifierExt;
 
     function setup(){
-        requestModifierExt = RequestModifierExtensions.getInstance();
+        requestModifierExt = MediaPlayer.prototype.context.requestModifierExt;
     }
 
     function load(url, element, resolveObject) {

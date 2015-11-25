@@ -28,13 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import RequestModifierExtensions from '../../streaming/extensions/RequestModifierExtensions.js'
+
 import Segment from '../vo/Segment.js';
 import Error from '../../streaming/vo/Error.js';
-import ErrorHandler from '../../streaming/ErrorHandler.js';
-import Events from '../../streaming/Events.js'
+import Events from '../../streaming/Events.js';
 import EventBus from '../../streaming/utils/EventBus.js';
-import BoxParser from '../../streaming/utils/BoxParser.js';
+import MediaPlayer from '../../streaming/MediaPlayer.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(BaseURLExtensions);
@@ -57,9 +56,9 @@ function  BaseURLExtensions() {
         log;
 
     function initialize() {
-        errHandler = ErrorHandler.getInstance();
-        boxParser = BoxParser.getInstance();
-        requestModifierExt = RequestModifierExtensions.getInstance();
+        errHandler = MediaPlayer.prototype.context.errorHandler;
+        boxParser = MediaPlayer.prototype.context.boxParser;
+        requestModifierExt = MediaPlayer.prototype.context.requestModifierExt;
     }
 
     function loadInitialization(representation, loadingInfo) {

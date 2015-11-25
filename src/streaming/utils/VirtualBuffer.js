@@ -32,7 +32,7 @@
 /**
  * Represents data structure to keep and drive {@link DataChunk}
  */
-import MediaController from '../controllers/MediaController.js';
+import MediaPlayer from '../../streaming/MediaPlayer.js'
 import CustomTimeRanges from './CustomTimeRanges.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import EventBus from './EventBus.js';
@@ -207,7 +207,7 @@ function VirtualBuffer() {
         var appended = filter.appended;
         var removeOrigin = filter.removeOrigin;
         var limit = filter.limit || Number.POSITIVE_INFINITY;
-        var mediaController = MediaController.getInstance();
+        var mediaController = MediaPlayer.prototype.context.mediaController;
 
         var ln = 0,
             result = [],

@@ -28,15 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import StreamController from './controllers/StreamController.js';
 import TextTrackInfo from './vo/TextTrackInfo.js';
-import FragmentExtensions from '../dash/extensions/FragmentExtensions.js';
-import BoxParser from './utils/BoxParser.js';
-import TextTrackExtensions from './extensions/TextTrackExtensions.js';
-import VTTParser from './VTTParser.js';
-import TTMLParser from './TTMLParser.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
-import VideoModel from './models/VideoModel.js';
+import MediaPlayer from './MediaPlayer.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(TextSourceBuffer);
@@ -86,16 +80,16 @@ function  TextSourceBuffer() {
         let streamProcessor = bufferController.getStreamProcessor();
 
         mediaInfos = streamProcessor.getMediaInfoArr();
-        videoModel = VideoModel.getInstance();
-        streamController = StreamController.getInstance();
-        textTrackExtensions = TextTrackExtensions.getInstance();
+        videoModel = MediaPlayer.prototype.context.videoModel;
+        streamController = MediaPlayer.prototype.context.streamController;
+        textTrackExtensions = MediaPlayer.prototype.context.textTrackExt;
         textTrackExtensions.setConfig({videoModel: videoModel});
         textTrackExtensions.initialize();
         isFragmented = !manifestExt.getIsTextTrack(type);
 
         if (isFragmented){
-            fragmentExt = FragmentExtensions.getInstance();
-            fragmentExt.setConfig({boxParser: BoxParser.getInstance()});
+            fragmentExt = MediaPlayer.prototype.context.fragmentExt;
+            fragmentExt.setConfig({boxParser: MediaPlayer.prototype.context.boxParser});
             fragmentModel = streamProcessor.getFragmentModel();
             this.buffered =  CustomTimeRanges.create();
         }
@@ -264,10 +258,10 @@ function  TextSourceBuffer() {
     function getParser(mimeType) {
         var parser;
         if (mimeType === "text/vtt") {
-            parser = VTTParser.getInstance();
+            parser = MediaPlayer.prototype.context.VTTParser;
             parser.setConfig({logger: log});
         } else if (mimeType === "application/ttml+xml" || mimeType === "application/mp4") {
-            parser = TTMLParser.getInstance();
+            parser = MediaPlayer.prototype.context.TTMLParser;
             parser.setConfig({videoModel: videoModel});
         }
         return parser;

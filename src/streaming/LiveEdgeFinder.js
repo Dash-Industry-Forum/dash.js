@@ -32,7 +32,7 @@ import SynchronizationRulesCollection from './rules/SynchronizationRules/Synchro
 import Error from './vo/Error.js';
 import EventBus from './utils/EventBus.js';
 import Events from "./Events.js";
-import RulesController from './rules/RulesController.js';
+import MediaPlayer from '../streaming/MediaPlayer.js'
 import FactoryMaker from '../core/FactoryMaker.js';
 
 const LIVE_EDGE_NOT_FOUND_ERROR_CODE = 1;
@@ -68,7 +68,7 @@ function LiveEdgeFinder() {
         isSearchStarted = false;
         searchStartTime = NaN;
         liveEdge = null;
-        rulesController = RulesController.getInstance();
+        rulesController = MediaPlayer.prototype.context.rulesController;
         ruleSet = SynchronizationRulesCollection.BEST_GUESS_RULES;
         EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
     }
@@ -108,7 +108,7 @@ function LiveEdgeFinder() {
 
         ruleSet = timelineConverter.isTimeSyncCompleted() ? SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES : SynchronizationRulesCollection.BEST_GUESS_RULES;
 
-        rules = SynchronizationRulesCollection.getInstance().getRules(ruleSet);
+        rules = MediaPlayer.prototype.context.synchronizationRulesCollection.getRules(ruleSet);
         isSearchStarted = true;
         searchStartTime = new Date().getTime();
 

@@ -34,7 +34,7 @@ import AdaptationSet from '../vo/AdaptationSet.js';
 import Period from '../vo/Period.js';
 import Mpd from '../vo/Mpd.js';
 import UTCTiming from '../vo/UTCTiming.js';
-import TimelineConverter from '../TimelineConverter.js';
+import MediaPlayer from '../../streaming/MediaPlayer.js'
 import Event from '../vo/Event.js';
 import EventStream from '../vo/EventStream.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -44,6 +44,7 @@ export default FactoryMaker.getSingletonFactory(DashManifestExtensions);
 function DashManifestExtensions() {
 
     let instance = {
+        initialize:initialize,
         getIsTypeOf: getIsTypeOf,
         getIsAudio: getIsAudio,
         getIsVideo: getIsVideo,
@@ -91,9 +92,15 @@ function DashManifestExtensions() {
         getUTCTimingSources: getUTCTimingSources
     }
 
-    let timelineConverter = TimelineConverter.getInstance();
+
 
     return instance;
+
+    let timelineConverter;
+
+    function initialize() {
+        timelineConverter = MediaPlayer.prototype.context.timelineConverter
+    }
 
     function getIsTypeOf(adaptation, type) {
 

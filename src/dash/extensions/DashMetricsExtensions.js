@@ -29,17 +29,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import HTTPRequest from '../../streaming/vo/metrics/HTTPRequest.js';
-import AbrController from "../../streaming/controllers/AbrController.js";
-import ManifestModel from "../../streaming/models/ManifestModel.js";
-import DashManifestExtensions from "../../dash/extensions/DashManifestExtensions.js";
+import MediaPlayer from '../../streaming/MediaPlayer.js'
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(DashMetricsExtensions);
 
-
 function DashMetricsExtensions() {
 
     let instance = {
+        initialize:initialize,
         getBandwidthForRepresentation: getBandwidthForRepresentation,
         getIndexForRepresentation: getIndexForRepresentation,
         getMaxIndexForBufferType: getMaxIndexForBufferType,
@@ -58,10 +56,13 @@ function DashMetricsExtensions() {
         getRequestsQueue: getRequestsQueue
     }
 
-    let manifestModel = ManifestModel.getInstance();
-
     return instance;
 
+    let manifestModel;
+
+    function initialize() {
+        manifestModel = MediaPlayer.prototype.context.manifestModel;
+    }
 
     function getBandwidthForRepresentation(representationId, periodId) {
         var representation;
@@ -118,7 +119,7 @@ function DashMetricsExtensions() {
      */
     function getMaxAllowedIndexForBufferType(bufferType, periodId) {
         var idx = 0;
-        var abrController = AbrController.getInstance();
+        var abrController = MediaPlayer.prototype.context.abrController;
 
         if (abrController) {
             idx = abrController.getTopQualityIndexFor(bufferType, periodId);
@@ -411,7 +412,7 @@ function DashMetricsExtensions() {
     }
 
     function adaptationIsType(adaptation, bufferType) {
-        return DashManifestExtensions.getInstance().getIsTypeOf(adaptation, bufferType);
+        return MediaPlayer.prototype.context.manifestExt.getIsTypeOf(adaptation, bufferType);
     }
 
     function findMaxBufferIndex(period, bufferType) {

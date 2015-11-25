@@ -29,28 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import AbrController from './controllers/AbrController.js';
 import BufferController from './controllers/BufferController.js';
-import PlaybackController from './controllers/PlaybackController.js';
-import StreamController from './controllers/StreamController.js';
-import MediaController from './controllers/MediaController.js';
 import TextController from './controllers/TextController.js';
 import ScheduleController from './controllers/ScheduleController.js';
-import RulesController from './rules/RulesController.js';
-import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
-import MediaPlayerModel from './models/MediaPlayerModel.js';
-import MetricsModel from './models/MetricsModel.js';
 import FragmentLoader from './FragmentLoader.js';
-import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
-import SourceBufferExtensions from './extensions/SourceBufferExtensions';
-import TextSourceBuffer from './TextSourceBuffer.js';
-import VirtualBuffer from './utils/VirtualBuffer.js';
-import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
-import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js";
-import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import RepresentationController from '../dash/controllers/RepresentationController.js';
-import ErrorHandler from './ErrorHandler.js';
-import Debug from '../streaming/utils/Debug.js';
+import MediaPlayer from '../streaming/MediaPlayer.js'
 import FactoryMaker from '../core/FactoryMaker.js';
 
 export default FactoryMaker.getClassFactory(StreamProcessor);
@@ -116,7 +100,7 @@ function StreamProcessor(config) {
 
     function setup() {
         mediaInfoArr = [];
-        log = Debug.getInstance().log;
+        log = MediaPlayer.prototype.context.debug.log;
     }
 
     function initialize(Type, FragmentController, mediaSource, Stream, EventController) {
@@ -128,7 +112,7 @@ function StreamProcessor(config) {
         dynamic = stream.getStreamInfo().manifestInfo.isDynamic;
 
 
-        abrController = AbrController.getInstance();
+        abrController = MediaPlayer.prototype.context.abrController;
         abrController.initialize(type, this);
 
         bufferController = createBufferControllerForType(Type);
@@ -136,28 +120,28 @@ function StreamProcessor(config) {
 
         scheduleController = ScheduleController.create({
             log: log,
-            metricsModel: MetricsModel.getInstance(),
+            metricsModel: MediaPlayer.prototype.context.metricsModel,
             manifestModel: manifestModel,
             adapter: adapter,
-            metricsExt: DashMetricsExtensions.getInstance(),
-            manifestExt: DashManifestExtensions.getInstance(),
+            metricsExt: MediaPlayer.prototype.context.metricsExt,
+            manifestExt:MediaPlayer.prototype.context.manifestExt,
             timelineConverter: timelineConverter,
-            scheduleRulesCollection: ScheduleRulesCollection.getInstance(),
-            rulesController: RulesController.getInstance(),
-            mediaPlayerModel: MediaPlayerModel.getInstance(),
+            scheduleRulesCollection: MediaPlayer.prototype.context.scheduleRulesCollection,
+            rulesController: MediaPlayer.prototype.context.rulesController,
+            mediaPlayerModel: MediaPlayer.prototype.context.mediaPlayerModel,
         });
 
         scheduleController.initialize(type, this);
 
         fragmentLoader = FragmentLoader.create({
-            metricsModel: MetricsModel.getInstance(),
-            errHandler: ErrorHandler.getInstance(),
+            metricsModel: MediaPlayer.prototype.context.metricsModel,
+            errHandler: MediaPlayer.prototype.context.errorHandler,
             log: log,
-            requestModifierExt: RequestModifierExtensions.getInstance()
+            requestModifierExt: MediaPlayer.prototype.context.requestModifierExt
         });
 
         indexHandler.initialize(this);
-        indexHandler.setCurrentTime(PlaybackController.getInstance().getStreamStartTime(getStreamInfo()));
+        indexHandler.setCurrentTime(MediaPlayer.prototype.context.playbackController.getStreamStartTime(getStreamInfo()));
 
         representationController = RepresentationController.create();
         representationController.initialize(this);
@@ -306,21 +290,21 @@ function StreamProcessor(config) {
         if (type === "video" || type === "audio" || type === "fragmentedText") {
             controller = BufferController.create({
                 log: log,
-                metricsModel: MetricsModel.getInstance(),
+                metricsModel: MediaPlayer.prototype.context.metricsModel,
                 manifestModel: manifestModel,
-                sourceBufferExt: SourceBufferExtensions.getInstance(),
-                errHandler: ErrorHandler.getInstance(),
-                mediaSourceExt: MediaSourceExtensions.getInstance(),
-                streamController: StreamController.getInstance(),
-                mediaController: MediaController.getInstance(),
+                sourceBufferExt: MediaPlayer.prototype.context.sourceBufferExt,
+                errHandler: MediaPlayer.prototype.context.errorHandler,
+                mediaSourceExt: MediaPlayer.prototype.context.mediaSourceExtensions,
+                streamController: MediaPlayer.prototype.context.streamController,
+                mediaController: MediaPlayer.prototype.context.mediaController,
                 adapter: adapter,
-                virtualBuffer: VirtualBuffer.getInstance(),
-                textSourceBuffer: TextSourceBuffer.getInstance(),
+                virtualBuffer: MediaPlayer.prototype.context.virtualBuffer,
+                textSourceBuffer: MediaPlayer.prototype.context.textSourceBuffer,
             });
         }else {
             controller = TextController.create({
-                errHandler: ErrorHandler.getInstance(),
-                sourceBufferExt: SourceBufferExtensions.getInstance()
+                errHandler: MediaPlayer.prototype.context.errorHandler,
+                sourceBufferExt: MediaPlayer.prototype.context.sourceBufferExtensions
             });
         }
 

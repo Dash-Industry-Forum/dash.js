@@ -37,7 +37,7 @@
  * @implements ProtectionModel
  * @class
  */
-import ProtectionExtensions from '../extensions/ProtectionExtensions.js';
+import MediaPlayer from '../../streaming/MediaPlayer.js'
 import NeedKey from '../vo/protection/NeedKey.js';
 import KeyError from '../vo/protection/KeyError.js';
 import KeyMessage from '../vo/protection/KeyMessage.js';
@@ -85,7 +85,7 @@ function ProtectionModel_21Jan2015(config) {
         videoElement = null;
         mediaKeys = null;
         sessions = [];
-        protectionExt = ProtectionExtensions.getInstance();
+        protectionExt = MediaPlayer.prototype.context.protectionExt;
         eventHandler = createEventHandler();
     }
 

@@ -17,7 +17,7 @@ module.exports = function(grunt) {
     },
    concat: {
       all: {
-        src: ['build/temp/Dash.js','./externals/*.js'],
+        src: ['build/temp/MediaPlayer.js','./externals/*.js'],
         dest: 'build/temp/Dash.all.js',
       },
     },
@@ -25,7 +25,7 @@ module.exports = function(grunt) {
       options: {
         sourceMap: true,
         sourceMapIn: 'build/temp/Dash.all.js.map',
-        sourceMapRoot: '../../src',
+        sourceMapRoot: '../../src/',
         preserveComments: 'some',
         mangle: true,
         compress: {
@@ -41,7 +41,7 @@ module.exports = function(grunt) {
       },
       build: {
         files: {
-          'build/temp/dash.min.js': 'build/temp/Dash.js',
+          'build/temp/dash.min.js': 'build/temp/MediaPlayer.js',
           'build/temp/dash.all.min.js': 'build/temp/Dash.all.js'
         }
       },
@@ -53,7 +53,7 @@ module.exports = function(grunt) {
           mangle: false,
           sourceMap: true,
           sourceMapIn: 'build/temp/Dash.all.js.map',
-          sourceMapRoot: '../../src',
+          sourceMapRoot: './src/',
         },
         files: {
           'build/temp/dash.debug.js': 'build/temp/Dash.all.js'
@@ -79,7 +79,7 @@ module.exports = function(grunt) {
       build: {
         options: {},
         files: {
-          'build/temp/Dash.js.map': ['build/temp/Dash.js'],
+          'build/temp/MediaPlayer.js.map': ['build/temp/MediaPlayer.js'],
           'build/temp/Dash.all.js.map': ['build/temp/Dash.all.js']
         }
       }
@@ -87,32 +87,32 @@ module.exports = function(grunt) {
     browserify: {
       build: {
         files: {
-          'build/temp/Dash.js': ['src/Dash.js']
+          'build/temp/MediaPlayer.js': ['src/streaming/MediaPlayer.js']
         },
         options: {
           browserifyOptions: {
             debug: true,
-            //standalone: ['Dash','MediaPlayer']
+            standalone: 'MediaPlayer'
           },
           plugin: [
             [ 'browserify-derequire' ]
           ],
           transform: [
             require('babelify').configure({
-              sourceMapRelative: './src/'
+              //sourceMapRelative: './src/'
             })
           ]
         }
       },
       watch: {
         files: {
-          'build/temp/Dash.js': ['src/js/Dash.js']
+          'build/temp/MediaPlayer.js': ['src/js/MediaPlayer.js']
         },
         options: {
           watch: true,
           keepAlive: true,
           browserifyOptions: {
-            //standalone: 'dash'
+            standalone: 'MediaPlayer'
           },
           transform: ['babelify'],
           plugin: [
@@ -204,19 +204,19 @@ module.exports = function(grunt) {
     'copy:dist'
   ]);
 
-  grunt.registerTask('test', [
-    'connect:default_options',
-    'jasmine'
-  ]);
+  //grunt.registerTask('test', [
+  //  'connect:default_options',
+  //  'jasmine'
+  //]);
 
   // Default task.
-  grunt.registerTask('default', [
-    'dist',
-    'test',
-    'jsdoc'
-  ]);
+  //grunt.registerTask('default', [
+  //  'dist',
+  //  'test',
+  //  'jsdoc'
+  //]);
 
-  grunt.registerTask('watch', [
-    'browserify:watch'
-  ]);
+  //grunt.registerTask('watch', [
+  //  'browserify:watch'
+  //]);
 };

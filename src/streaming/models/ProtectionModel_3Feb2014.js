@@ -37,9 +37,8 @@
  * @implements ProtectionModel
  * @class
  */
-
+import MediaPlayer from '../../streaming/MediaPlayer.js'
 import ProtectionModel from './ProtectionModel.js';
-import ProtectionExtensions from '../extensions/ProtectionExtensions.js';
 import NeedKey from '../vo/protection/NeedKey.js';
 import KeyError from '../vo/protection/KeyError.js';
 import KeyMessage from '../vo/protection/KeyMessage.js';
@@ -51,7 +50,7 @@ import Events from '../Events.js';
 
 let ProtectionModel_3Feb2014 = function () {
 
-    var protectionExt = ProtectionExtensions.getInstance();
+    var protectionExt = MediaPlayer.prototype.context.protectionExt;
     var videoElement = null,
         mediaKeys = null,
         keySystemAccess = null,

@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import VideoModel from '../models/VideoModel.js';
+import MediaPlayer from '../MediaPlayer.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const MPD_RELOAD_SCHEME = "urn:mpeg:dash:event:2012";
@@ -145,7 +145,7 @@ function EventController(){
     }
 
     function triggerEvents(events) {
-        var currentVideoTime = VideoModel.getInstance().getCurrentTime();
+        var currentVideoTime = MediaPlayer.prototype.context.videoModel.getCurrentTime();
         var presentationTime;
 
         /* == Trigger events that are ready == */
@@ -173,7 +173,7 @@ function EventController(){
      */
     function removeEvents() {
         if(activeEvents) {
-            var currentVideoTime = VideoModel.getInstance().getCurrentTime();
+            var currentVideoTime = MediaPlayer.prototype.context.videoModel.getCurrentTime();
             var eventIds = Object.keys(activeEvents);
 
             for (var i = 0; i < eventIds.length; i++) {

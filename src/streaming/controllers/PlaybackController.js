@@ -29,8 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import BufferController from './BufferController.js';
-import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
-import MediaPlayerModel from '../../streaming/models/MediaPlayerModel.js';
+import MediaPlayer from '../../streaming/MediaPlayer.js'
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -92,11 +91,11 @@ function PlaybackController() {
         wallclockTimeIntervalId = null;
         commonEarliestTime = {};
         firstAppended = {};
-        mediaPlayerModel = MediaPlayerModel.getInstance();
     }
 
     function initialize(streamInfoValue) {
         streamInfo = streamInfoValue;
+        mediaPlayerModel = MediaPlayer.prototype.context.mediaPlayerModel;
         removeAllListeners();
         setupVideoModel();
         isDynamic = streamInfo.manifestInfo.isDynamic;
@@ -256,7 +255,7 @@ function PlaybackController() {
      */
     function getStreamStartTime(streamInfo) {
         var presentationStartTime;
-        var startTimeOffset = parseInt(URIQueryAndFragmentModel.getInstance().getURIFragmentData().s);
+        var startTimeOffset = parseInt(MediaPlayer.prototype.context.URIQueryAndFragmentModel.getURIFragmentData().s);
 
         if (isDynamic) {
 
