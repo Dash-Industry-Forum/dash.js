@@ -28,8 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
+import MediaPlayer from '../streaming/MediaPlayer.js'
 import FactoryMaker from '../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(ManifestUpdater);
@@ -53,7 +53,8 @@ function ManifestUpdater() {
         manifestLoader,
         manifestModel,
         manifestExt,
-        log;
+        log,
+        EventBus;
 
     function setConfig(config){
         if (!config) return;
@@ -76,6 +77,7 @@ function ManifestUpdater() {
         isUpdating = false;
         isStopped = true;
 
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
         EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         EventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);

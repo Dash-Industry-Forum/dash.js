@@ -130,7 +130,6 @@ function StreamProcessor(config) {
             rulesController: MediaPlayer.prototype.context.rulesController,
             mediaPlayerModel: MediaPlayer.prototype.context.mediaPlayerModel,
         });
-
         scheduleController.initialize(type, this);
 
         fragmentLoader = FragmentLoader.create({
@@ -139,6 +138,7 @@ function StreamProcessor(config) {
             log: log,
             requestModifierExt: MediaPlayer.prototype.context.requestModifierExt
         });
+        fragmentLoader.initialize();
 
         indexHandler.initialize(this);
         indexHandler.setCurrentTime(MediaPlayer.prototype.context.playbackController.getStreamStartTime(getStreamInfo()));

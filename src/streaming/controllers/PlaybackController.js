@@ -30,7 +30,6 @@
  */
 import BufferController from './BufferController.js';
 import MediaPlayer from '../../streaming/MediaPlayer.js'
-import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -83,7 +82,8 @@ function PlaybackController() {
         firstAppended,
         streamInfo,
         isDynamic,
-        mediaPlayerModel;
+        mediaPlayerModel,
+        EventBus;
 
     function setup() {
         currentTime = 0;
@@ -101,6 +101,7 @@ function PlaybackController() {
         isDynamic = streamInfo.manifestInfo.isDynamic;
         liveStartTime = streamInfoValue.start;
 
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         EventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);

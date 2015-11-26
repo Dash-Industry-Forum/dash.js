@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Error from './vo/Error.js';
-import EventBus from './utils/EventBus.js';
+import MediaPlayer from './MediaPlayer.js';
 import Events from "./Events.js";
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -46,6 +46,7 @@ function FragmentLoader(config) {
     let requestModifierExt = config.requestModifierExt;
 
     let instance = {
+        initialize: initialize,
         checkForExistence: checkForExistence,
         load: load,
         abort: abort
@@ -53,7 +54,13 @@ function FragmentLoader(config) {
 
     return instance;
 
-    let xhrs;
+    let xhrs,
+        EventBus;
+
+    function initialize() {
+        xhrs = [];
+        EventBus = MediaPlayer.prototype.context.EventBus;
+    }
 
     function doLoad(request, remainingAttempts) {
         var req = new XMLHttpRequest(),
@@ -228,7 +235,6 @@ function FragmentLoader(config) {
     }
 
     function load(req) {
-        xhrs = xhrs || [];
         if (!req) {
             EventBus.trigger(Events.LOADING_COMPLETED, {
                 request: req,

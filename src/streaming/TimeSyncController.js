@@ -30,7 +30,7 @@
  */
 
 import Error from './vo/Error.js';
-import EventBus from './utils/EventBus.js';
+import MediaPlayer from './MediaPlayer.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -62,9 +62,11 @@ function TimeSyncController() {
         handlers,
         log,
         metricsModel,
-        metricsExt;
+        metricsExt,
+        EventBus;
 
     function initialize(timingSources, useManifestDateHeader, config) {
+        EventBus = MediaPlayer.prototype.context.EventBus;
         useManifestDateHeaderTimeSource = useManifestDateHeader;
         offsetToDeviceTimeMs = 0;
         isSynchronizing = false;

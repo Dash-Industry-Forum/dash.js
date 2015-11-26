@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Error from '../vo/Error.js';
-import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import MediaPlayer from '../../streaming/MediaPlayer.js'
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -45,6 +44,7 @@ export default factory;
 function SourceBufferExtensions() {
 
     let instance = {
+        initialize: initialize,
         append: append,
         remove: remove,
         abort: abort,
@@ -60,7 +60,12 @@ function SourceBufferExtensions() {
 
     return instance;
 
-    let manifestExt;
+    let manifestExt,
+        EventBus;
+
+    function initialize() {
+        EventBus = MediaPlayer.prototype.context.EventBus;
+    }
 
     function createSourceBuffer(mediaSource, mediaInfo) {
 

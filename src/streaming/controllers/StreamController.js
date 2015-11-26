@@ -31,7 +31,6 @@
 import ProtectionController from './ProtectionController.js';
 import MediaPlayer from '../MediaPlayer.js';
 import Stream from '../Stream.js';
-import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -89,7 +88,8 @@ function StreamController() {
         UTCTimingSources,
         useManifestDateHeaderTimeSource,
         videoModel,
-        playbackController;
+        playbackController,
+        EventBus;
 
 
     function setup() {
@@ -130,6 +130,7 @@ function StreamController() {
             videoModel: videoModel
         });
 
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
         EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);

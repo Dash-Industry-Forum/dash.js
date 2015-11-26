@@ -33,7 +33,6 @@ import XlinkLoader from './XlinkLoader.js';
 import MediaPlayer from '../streaming/MediaPlayer.js'
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
-import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -51,21 +50,24 @@ function ManifestLoader(config) {
     let metricsModel = config.metricsModel;
 
     let instance = {
+        initialize:initialize,
         load: load,
         reset: reset
     };
 
-    setup();
     return instance;
 
     let requestModifierExt,
-        xlinkController;
+        xlinkController,
+        EventBus;
 
-    function setup() {
+    function initialize() {
+        EventBus = MediaPlayer.prototype.context.EventBus;
+        EventBus.on(Events.XLINK_READY, onXlinkReady, instance);
         let xlinkLoader = XlinkLoader.create({errHandler:errHandler, metricsModel:metricsModel});
         xlinkController = XlinkController.create({xlinkLoader:xlinkLoader});
+        xlinkController.initialize();
         requestModifierExt = MediaPlayer.prototype.context.requestModifierExt;
-        EventBus.on(Events.XLINK_READY, onXlinkReady, instance);
     }
 
     function load (url) {

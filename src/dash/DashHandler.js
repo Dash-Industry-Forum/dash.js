@@ -34,7 +34,7 @@ import Error from '../streaming/vo/Error.js';
 import HTTPRequest from '../streaming/vo/metrics/HTTPRequest.js';
 import MetricsModel from '../streaming/models/MetricsModel.js';
 import Events from '../streaming/Events.js';
-import EventBus from '../streaming/utils/EventBus.js';
+import MediaPlayer from '../streaming/MediaPlayer.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
@@ -76,13 +76,15 @@ function DashHandler(config) {
         type,
         currentTime,
         absUrl,
-        streamProcessor;
+        streamProcessor,
+        EventBus;
 
     function setup() {
         index = -1;
         currentTime = 0;
         absUrl = new RegExp('^(?:(?:[a-z]+:)?\/)?\/', 'i');
 
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         EventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
     }

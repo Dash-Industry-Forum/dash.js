@@ -44,7 +44,6 @@ import KeyMessage from '../vo/protection/KeyMessage.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
 import SessionToken from '../vo/protection/SessionToken.js';
-import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import MediaPlayer from '../../streaming/MediaPlayer.js'
 
@@ -52,6 +51,7 @@ let ProtectionModel_01b = function () {
 
     var protectionExt = MediaPlayer.prototype.context.protectionExt;
     var errHandler = MediaPlayer.prototype.context.errorHandler;
+    var EventBus = MediaPlayer.prototype.context.EventBus;
 
     var videoElement = null,
 

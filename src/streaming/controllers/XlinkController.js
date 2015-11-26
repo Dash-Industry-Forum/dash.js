@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import XlinkLoader from '../XLinkLoader.js';
-import EventBus from '../utils/EventBus.js';
+import MediaPlayer from '../MediaPlayer.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -47,21 +47,23 @@ function XlinkController(config) {
     let xlinkLoader = config.xlinkLoader;
 
     let instance = {
+        initialize:initialize,
         resolveManifestOnLoad :resolveManifestOnLoad,
         setMatchers :setMatchers,
         setIron :setIron,
         reset :reset
     };
 
-    setup();
     return instance;
 
     let matchers,
         iron,
         manifest,
-        converter;
+        converter,
+        EventBus;
 
-    function setup() {
+    function initialize() {
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.XLINK_ELEMENT_LOADED, onXlinkElementLoaded, instance);
     }
 

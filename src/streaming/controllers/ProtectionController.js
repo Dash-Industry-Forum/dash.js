@@ -44,7 +44,7 @@
  */
 
 import CommonEncryption from '../protection/CommonEncryption.js';
-import EventBus from '../utils/EventBus.js';
+import MediaPlayer from '../MediaPlayer.js';
 import Events from '../Events.js';
 import MediaCapability from '../vo/protection/MediaCapability.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
@@ -84,7 +84,8 @@ function ProtectionController(config) {
         protDataSet,
         initialized,
         sessionType,
-        keySystem;
+        keySystem,
+        EventBus;
 
     function setup() {
         keySystems = protectionExt.getKeySystems();
@@ -93,6 +94,7 @@ function ProtectionController(config) {
         sessionType = "temporary";
 
         //protectionModel.init(); Not needed in lates
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.NEED_KEY, onNeedKey, this);
         EventBus.on(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
     }

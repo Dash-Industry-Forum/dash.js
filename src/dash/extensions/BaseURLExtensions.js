@@ -32,7 +32,6 @@
 import Segment from '../vo/Segment.js';
 import Error from '../../streaming/vo/Error.js';
 import Events from '../../streaming/Events.js';
-import EventBus from '../../streaming/utils/EventBus.js';
 import MediaPlayer from '../../streaming/MediaPlayer.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -53,9 +52,11 @@ function  BaseURLExtensions() {
     let errHandler,
         boxParser,
         requestModifierExt,
-        log;
+        log,
+        EventBus;
 
     function initialize() {
+        EventBus = MediaPlayer.prototype.context.EventBus;
         errHandler = MediaPlayer.prototype.context.errorHandler;
         boxParser = MediaPlayer.prototype.context.boxParser;
         requestModifierExt = MediaPlayer.prototype.context.requestModifierExt;

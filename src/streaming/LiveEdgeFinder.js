@@ -30,7 +30,6 @@
  */
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
 import Error from './vo/Error.js';
-import EventBus from './utils/EventBus.js';
 import Events from "./Events.js";
 import MediaPlayer from '../streaming/MediaPlayer.js'
 import FactoryMaker from '../core/FactoryMaker.js';
@@ -60,7 +59,8 @@ function LiveEdgeFinder() {
         searchStartTime,
         rules,
         liveEdge,
-        ruleSet;
+        ruleSet,
+        EventBus;
 
     function initialize(TimelineConverter, StreamProcessor) {
         timelineConverter = TimelineConverter;
@@ -70,6 +70,7 @@ function LiveEdgeFinder() {
         liveEdge = null;
         rulesController = MediaPlayer.prototype.context.rulesController;
         ruleSet = SynchronizationRulesCollection.BEST_GUESS_RULES;
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
     }
 

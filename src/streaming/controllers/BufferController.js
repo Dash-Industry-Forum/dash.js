@@ -34,7 +34,6 @@ import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import SourceBufferExtensions from '../extensions/SourceBufferExtensions.js';
 import MediaController from './MediaController.js';
 import CustomTimeRanges from '../utils/CustomTimeRanges.js';
-import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import MediaPlayer from '../MediaPlayer.js'
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -124,7 +123,8 @@ function BufferController(config) {
         streamProcessor,
         abrController,
         fragmentController,
-        scheduleController;
+        scheduleController,
+        EventBus;
 
     function setup() {
         requiredQuality = -1,
@@ -154,6 +154,7 @@ function BufferController(config) {
         scheduleController = streamProcessor.getScheduleController();
         requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
 
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         EventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
         EventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);

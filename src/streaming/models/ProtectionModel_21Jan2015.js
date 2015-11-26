@@ -44,7 +44,6 @@ import KeyMessage from '../vo/protection/KeyMessage.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
 import SessionToken from '../vo/protection/SessionToken.js';
-import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -78,13 +77,15 @@ function ProtectionModel_21Jan2015(config) {
         mediaKeys,
         sessions,
         eventHandler,
-        protectionExt;
+        protectionExt,
+        EventBus;
 
     function setup() {
         keySystem = null;
         videoElement = null;
         mediaKeys = null;
         sessions = [];
+        EventBus = MediaPlayer.prototype.context.EventBus;
         protectionExt = MediaPlayer.prototype.context.protectionExt;
         eventHandler = createEventHandler();
     }

@@ -31,7 +31,6 @@
 import MediaPlayer from '../streaming/MediaPlayer.js'
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
-import EventBus from '../streaming/utils/EventBus.js';
 import Events from '../streaming/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -53,9 +52,11 @@ function XlinkLoader(config) {
     setup();
     return instance;
 
-    let requestModifierExt;
+    let requestModifierExt,
+        EventBus;
 
     function setup(){
+        EventBus = MediaPlayer.prototype.context.EventBus;
         requestModifierExt = MediaPlayer.prototype.context.requestModifierExt;
     }
 

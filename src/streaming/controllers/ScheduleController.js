@@ -34,7 +34,6 @@ import ScheduleRulesCollection from '../rules/SchedulingRules/ScheduleRulesColle
 import SwitchRequest from '../rules/SwitchRequest.js';
 import BufferController from './BufferController.js';
 import MediaPlayer from '../../streaming/MediaPlayer.js'
-import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -94,7 +93,8 @@ function ScheduleController(config) {
         fragmentController,
         liveEdgeFinder,
         bufferController,
-        scheduleWhilePaused;
+        scheduleWhilePaused,
+        EventBus;
 
 
     function setup() {
@@ -121,10 +121,7 @@ function ScheduleController(config) {
         isDynamic = streamProcessor.isDynamic();
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
-        if (manifestExt.getIsTextTrack(type)){
-            EventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
-        }
-
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
         EventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
@@ -141,6 +138,9 @@ function ScheduleController(config) {
         EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         EventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
+        if (manifestExt.getIsTextTrack(type)){
+            EventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
+        }
     }
 
     function clearPlayListTraceMetrics(endTime, stopreason) {

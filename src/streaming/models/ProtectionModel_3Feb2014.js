@@ -45,12 +45,12 @@ import KeyMessage from '../vo/protection/KeyMessage.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
 import SessionToken from '../vo/protection/SessionToken.js';
-import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 
 let ProtectionModel_3Feb2014 = function () {
 
     var protectionExt = MediaPlayer.prototype.context.protectionExt;
+    var EventBus = MediaPlayer.prototype.context.EventBus;
     var videoElement = null,
         mediaKeys = null,
         keySystemAccess = null,

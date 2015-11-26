@@ -30,7 +30,7 @@
  */
 import DOMStorage from '../utils/DOMStorage.js';
 import Events from '../Events.js';
-import EventBus from '../utils/EventBus.js';
+import MediaPlayer from '../MediaPlayer.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const TRACK_SWITCH_MODE_NEVER_REPLACE = "neverReplace";
@@ -79,13 +79,14 @@ function MediaController() {
         switchMode,
         log,
         errHandler,
-        DOMStorage;
+        DOMStorage,
+        EventBus;
 
     function initialize() {
         tracks = {};
         resetInitialSettings();
         resetSwitchMode();
-
+        EventBus = MediaPlayer.prototype.context.EventBus;
     }
 
     /**

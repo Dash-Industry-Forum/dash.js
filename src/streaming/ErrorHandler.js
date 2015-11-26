@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from './utils/EventBus.js';
+import MediaPlayer from './MediaPlayer.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -37,6 +37,7 @@ export default FactoryMaker.getSingletonFactory(ErrorHandler);
 function ErrorHandler() {
 
     var instance = {
+        initialize: initialize,
         capabilityError: capabilityError,
         downloadError: downloadError,
         manifestError: manifestError,
@@ -47,6 +48,12 @@ function ErrorHandler() {
     };
 
     return instance;
+
+    let EventBus;
+
+    function initialize() {
+        EventBus = MediaPlayer.prototype.context.EventBus;
+    }
 
     // "mediasource"|"mediakeys"
     function capabilityError(err) {

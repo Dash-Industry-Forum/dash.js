@@ -32,7 +32,6 @@ import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import DataChunk from '../vo/DataChunk.js';
 import FragmentModel from '../models/FragmentModel.js';
 import MediaPlayer from '../../streaming/MediaPlayer.js'
-import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -55,10 +54,12 @@ function FragmentController(config) {
 
     return instance;
 
-    let fragmentModels;
+    let fragmentModels,
+        EventBus;
 
     function setup() {
         fragmentModels = [];
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
     }
 

@@ -30,7 +30,7 @@
  */
 import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
-import EventBus from '../../utils/EventBus.js';
+import MediaPlayer from '../../MediaPlayer.js';
 import Events from "../../Events.js";
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
@@ -52,12 +52,14 @@ function InsufficientBufferRule(config) {
 
     let bufferStateDict,
         lastSwitchTime,
-        waitToSwitchTime;
+        waitToSwitchTime,
+        EventBus;
 
     function setup() {
         bufferStateDict = {};
         lastSwitchTime = 0;
         waitToSwitchTime = 1000;
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
     }
 

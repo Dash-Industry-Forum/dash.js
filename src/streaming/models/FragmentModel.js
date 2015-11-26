@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import EventBus from '../utils/EventBus.js';
+import MediaPlayer from '../MediaPlayer.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -72,7 +72,8 @@ function FragmentModel(config) {
         executedRequests,
         loadingRequests,
         delayLoadingTimeout,
-        fragmentLoader;
+        fragmentLoader,
+        EventBus;
 
     function setup(){
         context = null;
@@ -80,6 +81,7 @@ function FragmentModel(config) {
         executedRequests = [];
         loadingRequests = [];
 
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, instance);
         EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
     }

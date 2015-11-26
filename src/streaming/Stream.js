@@ -32,7 +32,6 @@ import StreamProcessor from './StreamProcessor.js';
 import FragmentController from './controllers/FragmentController.js';
 import MediaPlayer from './MediaPlayer.js';
 import DashHandler from '../dash/DashHandler.js';
-import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -85,7 +84,8 @@ function Stream(config) {
         mediaController,
         fragmentController,
         eventController,
-        abrController;
+        abrController,
+        EventBus;
 
 
     function setup() {
@@ -105,6 +105,7 @@ function Stream(config) {
             log: log
         });
 
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
     }

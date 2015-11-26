@@ -49,7 +49,7 @@ import KeySystemWidevine from '../streaming/protection/drm/KeySystemWidevine.js'
 import KeySystemPlayReady from '../streaming/protection/drm/KeySystemPlayReady.js';
 import KeySystemClearKey from '../streaming/protection/drm/KeySystemClearKey.js';
 
-//import EventBus from '../streaming/utils/EventBus.js';
+import EventBus from '../streaming/utils/EventBus.js';
 
 class Context {
     constructor(){
@@ -108,8 +108,7 @@ class Context {
         this.textTrackExt = new TextTrackExtensions().getInstance();
         this.TTMLParser = new TTMLParser().getInstance();
         this.VTTParser = new VTTParser().getInstance();
-
-        ///this.EventBus = new EventBus().getInstance();
+        this.EventBus = new EventBus().getInstance();
 
     }
 }

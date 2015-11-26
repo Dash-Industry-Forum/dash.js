@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../utils/EventBus.js';
+import MediaPlayer from '../MediaPlayer.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -70,10 +70,12 @@ function TextTrackExtensions() {
         isChrome,
         fullscreenAttribute,
         displayCCOnTop,
-        topZIndex;
+        topZIndex,
+        EventBus;
 
     function initialize () {
         Cue = window.VTTCue || window.TextTrackCue;
+        EventBus = MediaPlayer.prototype.context.EventBus;
         textTrackQueue = [];
         trackElementArr = [];
         currentTrackIdx = -1;

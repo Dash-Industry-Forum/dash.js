@@ -28,7 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-let EventBus = (function() {
+
+import FactoryMaker from '../../core/FactoryMaker.js';
+export default FactoryMaker.getSingletonFactory(EventBus);
+
+function EventBus() {
 
     let handlers = {};
 
@@ -103,6 +107,4 @@ let EventBus = (function() {
 
         return result;
     }
-})();
-
-export default EventBus;
+};

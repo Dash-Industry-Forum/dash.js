@@ -30,7 +30,7 @@
  */
 import LiveEdgeFinder from '../streaming/LiveEdgeFinder.js';
 import TimeSyncController from '../streaming/TimeSyncController.js';
-import EventBus from '../streaming/utils/EventBus.js';
+import MediaPlayer from '../streaming/MediaPlayer.js';
 import Events from "../streaming/Events.js";
 
 import FactoryMaker from '../core/FactoryMaker.js';
@@ -64,14 +64,15 @@ function TimelineConverter() {
 
     let clientServerTimeShift,
         isClientServerTimeSyncCompleted,
-        expectedLiveEdge;
+        expectedLiveEdge,
+        EventBus = MediaPlayer.prototype.context.EventBus;;
 
     function initialize() {
 
         clientServerTimeShift = 0;
         isClientServerTimeSyncCompleted = false;
         expectedLiveEdge = NaN;
-
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
     }

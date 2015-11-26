@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import SwitchRequest from '../SwitchRequest.js';
-import EventBus from '../../utils/EventBus.js';
+import MediaPlayer from '../../MediaPlayer.js';
 import Events from '../../Events.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
@@ -60,9 +60,11 @@ function LiveEdgeBinarySearchRule(config) {
         p,
         callback,
         fragmentLoader,
-        streamProcessor;
+        streamProcessor,
+        EventBus;
 
     function setup() {
+        EventBus = MediaPlayer.prototype.context.EventBus;
         liveEdgeInitialSearchPosition = NaN;
         liveEdgeSearchRange = null;
         liveEdgeSearchStep = NaN;

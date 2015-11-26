@@ -31,7 +31,6 @@
 import DashHandler from '../DashHandler.js';
 import DOMStorage from '../../streaming/utils/DOMStorage.js';
 import Error from '../../streaming/vo/Error.js';
-import EventBus from '../../streaming/utils/EventBus.js';
 import Events from "../../streaming/Events.js";
 import MediaPlayer from '../../streaming/MediaPlayer.js'
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -72,7 +71,8 @@ function  RepresentationController() {
         timelineConverter,
         manifestExt,
         metricsExt,
-        mediaPlayerModel;
+        mediaPlayerModel,
+        EventBus;
 
 
     function setup() {
@@ -92,6 +92,7 @@ function  RepresentationController() {
         metricsExt = MediaPlayer.prototype.context.metricsExt;
         mediaPlayerModel = MediaPlayer.prototype.context.mediaPlayerModel;
 
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, instance);
         EventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
         EventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);

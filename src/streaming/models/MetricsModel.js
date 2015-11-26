@@ -39,7 +39,7 @@ import DroppedFrames from '../vo/metrics/DroppedFrames.js';
 import ManifestUpdate from '../vo/metrics/ManifestUpdate.js';
 import SchedulingInfo from '../vo/metrics/SchedulingInfo.js';
 import PlayList from '../vo/metrics/PlayList.js';
-import EventBus from '../utils/EventBus.js';
+import MediaPlayer from '../MediaPlayer.js';
 import RequestsQueue from '../vo/metrics/RequestsQueue.js';
 import Events from '../Events.js'
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -49,6 +49,7 @@ export default FactoryMaker.getSingletonFactory(MetricsModel);
 function  MetricsModel() {
 
     let instance = {
+        initialize: initialize,
         metricsChanged: metricsChanged,
         metricChanged: metricChanged,
         metricUpdated: metricUpdated,
@@ -76,14 +77,15 @@ function  MetricsModel() {
         setConfig: setConfig
     };
 
-    setup();
     return instance;
 
     let adapter,
-        streamMetrics;
+        streamMetrics,
+        EventBus;
 
-    function setup() {
+    function initialize() {
         streamMetrics = {};
+        EventBus = MediaPlayer.prototype.context.EventBus;
     }
 
     function setConfig(config) {

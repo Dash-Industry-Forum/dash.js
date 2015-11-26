@@ -35,7 +35,6 @@
 import MediaPlayer from '../../streaming/MediaPlayer.js'
 import CustomTimeRanges from './CustomTimeRanges.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
-import EventBus from './EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -44,6 +43,7 @@ export default FactoryMaker.getSingletonFactory(VirtualBuffer);
 function VirtualBuffer() {
 
     let instance = {
+        initialize: initialize,
         append: append,
         extract: extract,
         getChunks: getChunks,
@@ -54,14 +54,15 @@ function VirtualBuffer() {
         reset: reset
     };
 
-    setup();
     return instance;
 
     let data,
-        sourceBufferExt;
+        sourceBufferExt,
+        EventBus;
 
-    function setup(){
+    function initialize() {
         data = {};
+        EventBus = MediaPlayer.prototype.context.EventBus;
     }
 
     /**

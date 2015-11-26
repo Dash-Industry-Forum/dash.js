@@ -33,6 +33,7 @@ import SwitchRequest from '../rules/SwitchRequest';
 import BitrateInfo from '../vo/BitrateInfo.js';
 import ABRRulesCollection from '../rules/ABRRules/ABRRulesCollection.js';
 import FragmentModel from '../models/FragmentModel.js';
+import MediaPlayer from '../MediaPlayer.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -106,7 +107,7 @@ function AbrController() {
     }
 
     function initialize(type, streamProcessor) {
-        EventBus = MediaPlayer.prototype.context;
+        EventBus = MediaPlayer.prototype.context.EventBus;
         streamProcessorDict[type] = streamProcessor;
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
         abandonmentStateDict[type].state = ALLOW_LOAD;

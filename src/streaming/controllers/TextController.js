@@ -30,7 +30,7 @@
  */
 import RepresentationController from '../../dash/controllers/RepresentationController.js';
 import FragmentController from './FragmentController.js';
-import EventBus from '../utils/EventBus.js';
+import MediaPlayer from '../MediaPlayer.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -59,7 +59,8 @@ function TextController(config) {
         buffer,
         type,
         streamProcessor,
-        representationController;
+        representationController,
+        EventBus;
 
     function setup() {
 
@@ -70,6 +71,7 @@ function TextController(config) {
         streamProcessor = null;
         representationController = null;
 
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         EventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
     }

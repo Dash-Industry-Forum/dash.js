@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import MediaPlayer from '../MediaPlayer.js';
-import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -44,7 +43,8 @@ function  ManifestModel() {
 
     return instance;
 
-    let manifest;
+    let manifest,
+        EventBus;
 
     function getValue() {
         return manifest;
@@ -52,6 +52,7 @@ function  ManifestModel() {
 
     function setValue(value) {
         manifest = value;
+        EventBus = MediaPlayer.prototype.context.EventBus;
         EventBus.trigger(Events.MANIFEST_LOADED,  {data: value});
     }
 };

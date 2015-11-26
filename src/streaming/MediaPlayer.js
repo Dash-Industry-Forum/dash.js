@@ -44,7 +44,6 @@ import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
 //import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
 //import ProtectionModel_01b from './models/ProtectionModel_01b.js';
 
-import EventBus from "./utils/EventBus.js";
 import Events from './Events.js';
 import CoreEvents from '../core/events/CoreEvents.js';
 import PublicEvents from './PublicEvents.js';
@@ -65,7 +64,10 @@ function MediaPlayer() {
 
     const VERSION = "2.0.0";
 
+    MediaPlayer.prototype.context = new Context();
+
     let instance = {
+        initialize: initialize,
         on: on,
         off: off,
         extend: extend,
@@ -84,7 +86,6 @@ function MediaPlayer() {
         formatUTC: formatUTC,
         reset: reset,
         getVersion: getVersion,
-        startup: startup,
         getDebug: getDebug,
         getVideoModel: getVideoModel,
         getVideoContainer: getVideoContainer,
@@ -165,13 +166,27 @@ function MediaPlayer() {
         log,
         coreEvents,
         protectionEvents,
-        context;
+        context,
+        EventBus;
 
+
+    function initialize(view, source, autoPlay) {
+        if(initialized) return;
+        initialized = true;
+        if (view){
+            attachView(view);
+        }
+        if(source){
+            attachSource(source)
+        }
+        if(autoPlay){
+            setAutoPlay(autoPlay);
+        }
+    }
 
     function setup() {
-        MediaPlayer.prototype.context = new Context();
         context = MediaPlayer.prototype.context;
-
+        EventBus = context.EventBus;
 
         initialized = false;
         resetting = false;
@@ -207,10 +222,13 @@ function MediaPlayer() {
         domStorage = context.DOMStorage;
         domStorage.initialize();
         metricsModel = context.metricsModel;
+        metricsModel.initialize();
         mediaPlayerModel = context.mediaPlayerModel;
         errHandler = context.errorHandler;
+        errHandler.initialize();
         capabilities = context.capabilities;
         debug = context.debug;
+        debug.initialize();
         log = debug.log;
         createAdaptor();
 
@@ -496,14 +514,13 @@ function MediaPlayer() {
 
         let sourceBufferExt = context.sourceBufferExt;
         sourceBufferExt.setConfig({manifestExt:manifestExt});
-
+        sourceBufferExt.initialize();
 
         let virtualBuffer = context.virtualBuffer;
+        virtualBuffer.initialize();
         virtualBuffer.setConfig({
             sourceBufferExt:sourceBufferExt
         });
-
-
 
         mediaController = context.mediaController;
         mediaController.initialize();
@@ -554,12 +571,14 @@ function MediaPlayer() {
     }
 
     function createManifestLoader() {
-        return ManifestLoader.create({
+        let loader = ManifestLoader.create({
             log :log,
             errHandler : errHandler,
             parser :createManifestParser(),
             metricsModel :metricsModel
         });
+        loader.initialize();
+        return loader;
     }
 
     function createManifestParser() {
@@ -607,16 +626,6 @@ function MediaPlayer() {
      */
     function getVersion() {
         return VERSION;
-    }
-
-
-    /**
-     * @memberof MediaPlayer#
-     */
-    function startup() {
-        if (!initialized) {
-            initialized = true;
-        }
     }
 
     /**
@@ -1323,7 +1332,9 @@ function MediaPlayer() {
         protectionData = null;
     }
 }
-
+//MediaPlayer.prototype = {
+//    constructor: MediaPlayer
+//};
 MediaPlayer.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
 MediaPlayer.events = PublicEvents;
 export default MediaPlayer;
