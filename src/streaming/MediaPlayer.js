@@ -173,48 +173,9 @@ function MediaPlayer() {
     function initialize(view, source, autoPlay) {
         if(initialized) return;
         initialized = true;
-        if (view){
-            attachView(view);
-        }
-        if(source){
-            attachSource(source)
-        }
-        if(autoPlay){
-            setAutoPlay(autoPlay);
-        }
-    }
-
-    function setup() {
         context = MediaPlayer.prototype.context;
+
         EventBus = context.EventBus;
-
-        initialized = false;
-        resetting = false;
-        playing = false;
-        autoPlay = true;
-        protectionController = null;
-        protectionData = null;
-        useManifestDateHeaderTimeSource = true;
-        UTCTimingSources = [];
-        adapter = null;
-
-
-
-        if (CoreEvents) {
-            coreEvents = new CoreEvents();
-            Events.extend(coreEvents);
-        }
-
-        if (ProtectionEvents) {
-            protectionEvents = new ProtectionEvents();
-            Events.extend(protectionEvents);
-            PublicEvents.extend(protectionEvents, { publicOnly: true });
-        }
-
-        if (PublicEvents) {
-            Events.extend(PublicEvents);
-        }
-
         manifestExt = context.manifestExt;
         manifestExt.initialize();
         metricsExt = context.metricsExt;
@@ -232,12 +193,45 @@ function MediaPlayer() {
         log = debug.log;
         createAdaptor();
 
-
         metricsModel.setConfig({adapter:adapter});
 
+        if (view){
+            attachView(view);
+        }
+        if(source){
+            attachSource(source)
+        }
+        if(autoPlay){
+            setAutoPlay(autoPlay);
+        }
+        log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
+    }
+
+    function setup() {
+        initialized = false;
+        resetting = false;
+        playing = false;
+        autoPlay = true;
+        protectionController = null;
+        protectionData = null;
+        useManifestDateHeaderTimeSource = true;
+        UTCTimingSources = [];
+        adapter = null;
+
+        if (CoreEvents) {
+            coreEvents = new CoreEvents();
+            Events.extend(coreEvents);
+        }
+        if (ProtectionEvents) {
+            protectionEvents = new ProtectionEvents();
+            Events.extend(protectionEvents);
+            PublicEvents.extend(protectionEvents, { publicOnly: true });
+        }
+        if (PublicEvents) {
+            Events.extend(PublicEvents);
+        }
         //restoreDefaultUTCTimingSources();
 
-        log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
     }
 
 
