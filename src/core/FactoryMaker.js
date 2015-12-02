@@ -14,9 +14,10 @@ let FactoryMaker = (function() {
     function extend(name, childInstance) {
         if (!extensionDict[name] && childInstance){
             extensionDict[name] = childInstance;
-        } else if (!childInstance){
-            delete extensionDict[name];
         }
+        // else if (!childInstance){
+        //    delete extensionDict[name];
+        //}
     }
 
     function getSingletonFactory(classConstructor) {
