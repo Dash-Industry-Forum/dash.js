@@ -28,11 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventsBase from '../core/events/EventsBase.js';
-
-class Events extends EventsBase {
+import CoreEvents from '../core/events/CoreEvents.js';
+class Events extends CoreEvents {
 }
-
 let events = new Events();
-
 export default events;

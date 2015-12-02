@@ -30,7 +30,7 @@
  */
 import EventsBase from '../core/events/EventsBase.js';
 
-class PublicEvents extends EventsBase {
+class MediaPlayerEvents extends EventsBase {
 	constructor () {
 		super();
 		this.RESET_COMPLETE = "resetComplete";
@@ -50,7 +50,5 @@ class PublicEvents extends EventsBase {
 		this.LOG = "log";
 	}
 }
-
-let publicEvents = new PublicEvents();
-
-export {publicEvents as default};
+let mediaPlayerEvents = new MediaPlayerEvents();
+export {mediaPlayerEvents as default};

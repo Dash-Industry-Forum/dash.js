@@ -28,11 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-/**
- * @class MediaPlayer
- *
- */
-/*jshint -W020 */
 import UTCTiming from '../dash/vo/UTCTiming.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
@@ -70,29 +65,24 @@ import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import TimelineConverter from '../dash/TimelineConverter.js';
 
-
-//Utils
-import EventBus from "./utils/EventBus.js";
 import Debug from "./utils/Debug.js";
-
-//Events
+import EventBus from "./utils/EventBus.js";
 import Events from './Events.js';
-import CoreEvents from '../core/events/CoreEvents.js';
-import PublicEvents from './PublicEvents.js';
+import MediaPlayerEvents from './MediaPlayerEvents.js';
 import ProtectionEvents from './protection/ProtectionEvents.js';
-
+import FactoryMaker from '../core/FactoryMaker.js';
 
 //protection
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
 //import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
 //import ProtectionModel_01b from './models/ProtectionModel_01b.js';
 
-import FactoryMaker from '../core/FactoryMaker.js';
+
 
 const DEFAULT_UTC_TIMING_SOURCE = { scheme: "urn:mpeg:dash:utc:http-xsdate:2014", value: "http://time.akamai.com/?iso" };
 let factory = FactoryMaker.getClassFactory(MediaPlayer);
 factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
-factory.events = PublicEvents;
+factory.events = MediaPlayerEvents;
 export default factory;
 
 function MediaPlayer() {
@@ -198,7 +188,6 @@ function MediaPlayer() {
         textSourceBuffer,
         debug,
         log,
-        coreEvents,
         protectionEvents;
 
 
@@ -233,19 +222,15 @@ function MediaPlayer() {
         capabilities = Capabilities(context).getInstance();
         restoreDefaultUTCTimingSources();
 
-        if (CoreEvents) {
-            coreEvents = new CoreEvents();
-            Events.extend(coreEvents);
-        }
 
         if (ProtectionEvents) {
             protectionEvents = new ProtectionEvents();
             Events.extend(protectionEvents);
-            PublicEvents.extend(protectionEvents, { publicOnly: true });
+            MediaPlayerEvents.extend(protectionEvents, { publicOnly: true });
         }
 
-        if (PublicEvents) {
-            Events.extend(PublicEvents);
+        if (MediaPlayerEvents) {
+            Events.extend(MediaPlayerEvents);
         }
 
 
