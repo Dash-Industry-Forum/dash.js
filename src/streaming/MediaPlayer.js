@@ -181,6 +181,11 @@ MediaPlayer = function (context) {
             this.getVideoModel().setCurrentTime(s);
         },
 
+		seekUTC = function(value) {
+			var local = getAsLocal.call(this, value);
+			seek.call(this, local);
+		},
+		
         time = function () {
             var t = videoModel.getCurrentTime();
 
@@ -209,6 +214,10 @@ MediaPlayer = function (context) {
             return d;
         },
 
+		getDVRStart = function() {
+			return 0;
+		},
+		
         getAsUTC = function(valToConvert) {
             var metric = getDVRInfoMetric.call(this),
                 availableFrom,
@@ -223,6 +232,22 @@ MediaPlayer = function (context) {
             utcValue = valToConvert + (availableFrom + metric.range.start);
 
             return utcValue;
+        },
+
+        getAsLocal = function(valToConvert) {
+            var metric = getDVRInfoMetric.call(this),
+                availableFrom,
+                localValue;
+
+            if (metric === null) {
+                return 0;
+            }
+			
+            availableFrom = metric.manifestInfo.availableFrom.getTime() / 1000;
+
+            localValue = valToConvert - (availableFrom + metric.range.start);
+
+            return localValue;
         },
 
         timeAsUTC = function () {
@@ -1333,6 +1358,17 @@ MediaPlayer = function (context) {
         seek : seek,
 
         /**
+         * Sets the currentTime property of the attached video element with an UTC value. 
+         * Note - this property only has meaning for live streams
+         *
+         * @param value {number} An absolute value, the time in seconds since midnight UTC, Jan 1 1970, 
+		 * based on the return value of the {@link MediaPlayer#durationAsUTC durationAsUTC()} method is expected
+         * @memberof MediaPlayer#
+         * @method
+         */
+        seekUTC : seekUTC,
+
+        /**
          * Current time of the playhead, in seconds.
          *
          * @returns {number} The current playhead time of the media.
@@ -1350,6 +1386,16 @@ MediaPlayer = function (context) {
          */
         duration : duration,
 
+        /**
+         * DVR start time of the media, in seconds.
+         * Note - this property only has meaning for live streams.
+         *
+         * @returns {number} The current DVR start time.
+         * @memberof MediaPlayer#
+         * @method
+         */
+		getDVRStart : getDVRStart,
+		
         /**
          * Use this method to get the current playhead time as an absolute value, the time in seconds since midnight UTC, Jan 1 1970.
          * Note - this property only has meaning for live streams
@@ -1370,6 +1416,16 @@ MediaPlayer = function (context) {
          */
         durationAsUTC : durationAsUTC,
 
+        /**
+         * Use this method to get the current DVR start time as an absolute value, the time in seconds since midnight UTC, Jan 1 1970.
+         * Note - this property only has meaning for live streams.
+         *
+         * @returns {number} The current DVR start time as UTC timestamp.
+         * @memberof MediaPlayer#
+         * @method
+         */
+		getDVRStartAsUTC : getDVRStartAsUTC,
+		
         /**
          * The timeShiftBufferLength (DVR Window), in seconds.
          *
