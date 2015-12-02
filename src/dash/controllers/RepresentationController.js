@@ -29,16 +29,28 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashHandler from '../DashHandler.js';
+import DashManifestExtensions from "../extensions/DashManifestExtensions.js";
+import DashMetricsExtensions from "../extensions/DashMetricsExtensions.js";
+import TimelineConverter from '../TimelineConverter.js';
+import AbrController from '../../streaming/controllers/AbrController.js';
+import PlaybackController from '../../streaming/controllers/PlaybackController.js';
+import StreamController from '../../streaming/controllers/StreamController.js';
+import ManifestModel from '../../streaming/models/ManifestModel.js';
+import MetricsModel from '../../streaming/models/MetricsModel.js';
+import MediaPlayerModel from '../../streaming/models/MediaPlayerModel.js';
 import DOMStorage from '../../streaming/utils/DOMStorage.js';
 import Error from '../../streaming/vo/Error.js';
+import EventBus from '../../streaming/utils/EventBus.js';
 import Events from "../../streaming/Events.js";
-import MediaPlayer from '../../streaming/MediaPlayer.js'
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
 export default FactoryMaker.getClassFactory(RepresentationController);
 
 function  RepresentationController() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
         initialize: initialize,
@@ -71,9 +83,7 @@ function  RepresentationController() {
         timelineConverter,
         manifestExt,
         metricsExt,
-        mediaPlayerModel,
-        EventBus;
-
+        mediaPlayerModel;
 
     function setup() {
         data = null;
@@ -81,22 +91,21 @@ function  RepresentationController() {
         updating = true;
         availableRepresentations = [];
 
-        abrController = MediaPlayer.prototype.context.abrController;
-        streamController = MediaPlayer.prototype.context.streamController;
-        playbackController = MediaPlayer.prototype.context.playbackController;
-        manifestModel = MediaPlayer.prototype.context.manifestModel;
-        metricsModel = MediaPlayer.prototype.context.metricsModel;
-        domStorage = MediaPlayer.prototype.context.DOMStorage;
-        timelineConverter = MediaPlayer.prototype.context.timelineConverter;
-        manifestExt = MediaPlayer.prototype.context.manifestExt;
-        metricsExt = MediaPlayer.prototype.context.metricsExt;
-        mediaPlayerModel = MediaPlayer.prototype.context.mediaPlayerModel;
+        abrController = AbrController(self.context).getInstance();
+        streamController = StreamController(self.context).getInstance(),
+        playbackController = PlaybackController(self.context).getInstance(),
+        manifestModel = ManifestModel(self.context).getInstance(),
+        metricsModel = MetricsModel(self.context).getInstance(),
+        domStorage = DOMStorage(self.context).getInstance(),
+        timelineConverter = TimelineConverter(self.context).getInstance(),
+        manifestExt = DashManifestExtensions(self.context).getInstance(),
+        metricsExt = DashMetricsExtensions(self.context).getInstance(),
+        mediaPlayerModel = MediaPlayerModel(self.context).getInstance();
 
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, instance);
-        EventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
-        EventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
-        EventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+        eventBus.on(Events.QUALITY_CHANGED, onQualityChanged, instance);
+        eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
+        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+        eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
     }
 
     function initialize(StreamProcessor) {
@@ -126,10 +135,10 @@ function  RepresentationController() {
 
     function reset() {
 
-        EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, instance);
-        EventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
-        EventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
-        EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, instance);
+        eventBus.off(Events.QUALITY_CHANGED, onQualityChanged, instance);
+        eventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
+        eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+        eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, instance);
 
         data = null;
         dataIndex = -1;
@@ -157,7 +166,7 @@ function  RepresentationController() {
             maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
 
         updating = true;
-        EventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: this});
+        eventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: this});
 
         availableRepresentations = updateRepresentations(adaptation);
 
@@ -178,7 +187,7 @@ function  RepresentationController() {
 
         if (type !== "video" && type !== "audio" && type !== "fragmentedText") {
             updating = false;
-            EventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentRepresentation});
+            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentRepresentation});
             return;
         }
 
@@ -246,7 +255,7 @@ function  RepresentationController() {
             if (isUpdating()) return;
 
             updating = true;
-            EventBus.trigger(Events.DATA_UPDATE_STARTED, { sender: instance });
+            eventBus.trigger(Events.DATA_UPDATE_STARTED, { sender: instance });
 
             for (var i = 0; i < availableRepresentations.length; i += 1) {
                 indexHandler.updateRepresentation(availableRepresentations[i], true);
@@ -274,7 +283,7 @@ function  RepresentationController() {
             addDVRMetric();
             postponeUpdate(e.error.data.availabilityDelay);
             err = new Error(SEGMENTS_UPDATE_FAILED_ERROR_CODE, "Segments update failed", null);
-            EventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentRepresentation, error: err});
+            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentRepresentation, error: err});
 
             return;
         }
@@ -305,7 +314,7 @@ function  RepresentationController() {
                 addRepresentationSwitch();
             }
 
-            EventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentRepresentation});
+            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: data, currentRepresentation: currentRepresentation});
         }
     }
 

@@ -28,10 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import FactoryMaker from '../../../core/FactoryMaker.js';
 import BufferLevelRule from './BufferLevelRule.js';
 import PlaybackTimeRule from './PlaybackTimeRule.js';
-import MediaPlayer from '../../MediaPlayer.js'
-import FactoryMaker from '../../../core/FactoryMaker.js';
+import TextSourceBuffer from '../../TextSourceBuffer.js';
+import MetricsModel from '../../models/MetricsModel.js';
+import DashAdapter from '../../../dash/DashAdapter.js';
+import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
+import SourceBufferExtensions from '../../extensions/SourceBufferExtensions.js';
+import VirtualBuffer from '../../utils/VirtualBuffer.js';
 
 const FRAGMENTS_TO_SCHEDULE_RULES = "fragmentsToScheduleRules";
 const NEXT_FRAGMENT_RULES = "nextFragmentRules";
@@ -44,6 +49,7 @@ factory.NEXT_FRAGMENT_RULES = NEXT_FRAGMENT_RULES;
 export default factory;
 
 function ScheduleRulesCollection() {
+    const self = this;
 
     let instance = {
         initialize:initialize,
@@ -59,16 +65,16 @@ function ScheduleRulesCollection() {
         fragmentsToScheduleRules = [];
         nextFragmentRules = [];
 
-        fragmentsToScheduleRules.push(BufferLevelRule.create({
-            metricsExt: MediaPlayer.prototype.context.metricsExt,
-            metricsModel: MediaPlayer.prototype.context.metricsModel,
-            textSourceBuffer:MediaPlayer.prototype.context.textSourceBuffer
+        fragmentsToScheduleRules.push(BufferLevelRule(self.context).create({
+            metricsExt: DashMetricsExtensions(self.context).getInstance(),
+            metricsModel: MetricsModel(self.context).getInstance(),
+            textSourceBuffer:TextSourceBuffer(self.context).getInstance()
         }));
-        nextFragmentRules.push(PlaybackTimeRule.create({
-            adapter: MediaPlayer.prototype.context.adapter,
-            sourceBufferExt: MediaPlayer.prototype.context.sourceBufferExt,
-            virtualBuffer: MediaPlayer.prototype.context.virtualBuffer,
-            textSourceBuffer: MediaPlayer.prototype.context.textSourceBuffer
+        nextFragmentRules.push(PlaybackTimeRule(self.context).create({
+            adapter: DashAdapter(self.context).getInstance(),
+            sourceBufferExt: SourceBufferExtensions(self.context).getInstance(),
+            virtualBuffer: VirtualBuffer(self.context).getInstance(),
+            textSourceBuffer: TextSourceBuffer(self.context).getInstance()
 
         }));
     }

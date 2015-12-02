@@ -40,6 +40,7 @@ const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3;
 export default FactoryMaker.getClassFactory(ThroughputRule);
 
 function ThroughputRule(config) {
+    const self = this;
 
     let log = config.log;
     let metricsExt = config.metricsExt;
@@ -103,7 +104,7 @@ function ThroughputRule(config) {
             lastRequest = metricsExt.getCurrentHttpRequest(metrics),
             bufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null,
             bufferLevelVO = (metrics.BufferLevel.length > 0) ? metrics.BufferLevel[metrics.BufferLevel.length - 1] : null,
-            switchRequest =  SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+            switchRequest =  SwitchRequest(self.context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         if (!metrics || !lastRequest || lastRequest.type !== HTTPRequest.MEDIA_SEGMENT_TYPE ||
             !bufferStateVO || !bufferLevelVO ) {
@@ -128,7 +129,7 @@ function ThroughputRule(config) {
             if (bufferStateVO.state === BufferController.BUFFER_LOADED || isDynamic) {
                 var newQuality = abrController.getQualityForBitrate(mediaInfo, averageThroughput);
                 streamProcessor.getScheduleController().setTimeToLoadDelay(0); // TODO Watch out for seek event - no delay when seeking.!!
-                switchRequest = SwitchRequest.create(newQuality, SwitchRequest.DEFAULT);
+                switchRequest = SwitchRequest(self.context).create(newQuality, SwitchRequest.DEFAULT);
             }
 
             if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {

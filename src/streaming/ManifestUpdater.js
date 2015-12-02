@@ -28,13 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
-import MediaPlayer from '../streaming/MediaPlayer.js'
 import FactoryMaker from '../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(ManifestUpdater);
 
 function ManifestUpdater() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
         initialize: initialize,
@@ -53,8 +56,7 @@ function ManifestUpdater() {
         manifestLoader,
         manifestModel,
         manifestExt,
-        log,
-        EventBus;
+        log;
 
     function setConfig(config){
         if (!config) return;
@@ -77,11 +79,10 @@ function ManifestUpdater() {
         isUpdating = false;
         isStopped = true;
 
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
-        EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-        EventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-        EventBus.on(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
+        eventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
+        eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
+        eventBus.on(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
     }
 
     function setManifest(manifest) {
@@ -93,10 +94,10 @@ function ManifestUpdater() {
     }
 
     function reset() {
-        EventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-        EventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-        EventBus.off(Events.STREAMS_COMPOSED, onStreamsComposed, this);
-        EventBus.off(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
+        eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
+        eventBus.off(Events.STREAMS_COMPOSED, onStreamsComposed, this);
+        eventBus.off(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
 
         isStopped = true;
         isUpdating = false;
@@ -132,7 +133,7 @@ function ManifestUpdater() {
         timeSinceLastUpdate = (new Date().getTime() - manifest.loadedTime.getTime()) / 1000;
         refreshDelay = Math.max(delay - timeSinceLastUpdate, 0);
 
-        EventBus.trigger(Events.MANIFEST_UPDATED, {manifest: manifest});
+        eventBus.trigger(Events.MANIFEST_UPDATED, {manifest: manifest});
 
         if (!isStopped) {
             start();

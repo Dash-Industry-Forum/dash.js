@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MediaPlayer from '../MediaPlayer.js';
+import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -49,6 +49,9 @@ factory.FRAGMENT_MODEL_FAILED = FRAGMENT_MODEL_FAILED;
 export default factory;
 
 function FragmentModel(config) {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let log = config.log;
     let metricsModel = config.metricsModel;
@@ -72,8 +75,7 @@ function FragmentModel(config) {
         executedRequests,
         loadingRequests,
         delayLoadingTimeout,
-        fragmentLoader,
-        EventBus;
+        fragmentLoader;
 
     function setup(){
         context = null;
@@ -81,9 +83,8 @@ function FragmentModel(config) {
         executedRequests = [];
         loadingRequests = [];
 
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, instance);
-        EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.on(Events.LOADING_COMPLETED, onLoadingCompleted, instance);
+        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
     }
 
     function setLoader(value) {
@@ -218,7 +219,7 @@ function FragmentModel(config) {
                 // Stream has completed, execute the corresponding callback
                 executedRequests.push(request);
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_EXECUTED);
-                EventBus.trigger(Events.STREAM_COMPLETED, {request: request, fragmentModel:this});
+                eventBus.trigger(Events.STREAM_COMPLETED, {request: request, fragmentModel:this});
                 break;
             case "download":
                 loadingRequests.push(request);
@@ -231,8 +232,8 @@ function FragmentModel(config) {
     }
 
     function reset() {
-        EventBus.off(Events.LOADING_COMPLETED, onLoadingCompleted, this);
-        EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.off(Events.LOADING_COMPLETED, onLoadingCompleted, this);
+        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
 
         fragmentLoader.abort();
         fragmentLoader = null;
@@ -242,7 +243,7 @@ function FragmentModel(config) {
     }
 
     function loadCurrentFragment(request) {
-        EventBus.trigger(Events.FRAGMENT_LOADING_STARTED, {sender: instance, request: request});
+        eventBus.trigger(Events.FRAGMENT_LOADING_STARTED, {sender: instance, request: request});
         fragmentLoader.load(request);
     }
 
@@ -341,7 +342,7 @@ function FragmentModel(config) {
         }
 
         addSchedulingInfoMetrics(request, error ? FRAGMENT_MODEL_FAILED : FRAGMENT_MODEL_EXECUTED);
-        EventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {request: request, response: response, error:error, sender:this})
+        eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {request: request, response: response, error:error, sender:this})
     }
 
     function onPlaybackSeeking (){

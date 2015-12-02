@@ -28,32 +28,33 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import EventBus from "./EventBus.js";
 import Events from '../Events.js';
-import MediaPlayer from '../MediaPlayer.js'
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(Debug);
 
 function Debug() {
+    const self = this;
+    
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
-        initialize: initialize,
         log: log,
         setLogTimestampVisible: setLogTimestampVisible,
         setLogToBrowserConsole: setLogToBrowserConsole,
         getLogToBrowserConsole: getLogToBrowserConsole,
     };
 
+    setup();
     return instance;
 
     let logToBrowserConsole,
         showLogTimestamp,
         //showCalleeName,
-        startTime,
-        EventBus;
+        startTime;
 
-    function initialize() {
-        EventBus = MediaPlayer.prototype.context.EventBus;
+    function setup() {
         logToBrowserConsole = true;
         showLogTimestamp = false;
         //showCalleeName = false,
@@ -130,6 +131,6 @@ function Debug() {
             console.log(message);
         }
 
-        EventBus.trigger(Events.LOG, {message: message});
+        eventBus.trigger(Events.LOG, {message: message});
     }
 }

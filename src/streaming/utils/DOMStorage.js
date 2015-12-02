@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MediaPlayer from '../../streaming/MediaPlayer.js'
+import Debug from '../utils/Debug.js';
 import AbrController from '../controllers/AbrController.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -55,9 +55,9 @@ factory.LOCAL_STORAGE_VIDEO_SETTINGS_KEY = LOCAL_STORAGE_VIDEO_SETTINGS_KEY;
 export default factory;
 
 function DOMStorage() {
+    const self = this;
 
     let instance = {
-        initialize:initialize,
         checkInitialBitrate: checkInitialBitrate,
         getSavedMediaSettings: getSavedMediaSettings,
         enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
@@ -75,12 +75,9 @@ function DOMStorage() {
         experationDict,
         log;
 
-    function initialize() {
-        log = MediaPlayer.prototype.context.debug.log;
-        abrController = MediaPlayer.prototype.context.abrController;
-    }
-
     function setup() {
+        log = Debug(self.context).getInstance().log;
+
         experationDict = {
             BITRATE_EXPIRATION :DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION,
             MEDIA_SETTINGS_EXPIRATION :DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
@@ -88,6 +85,8 @@ function DOMStorage() {
 
         lastBitrateCachingEnabled = true;
         lastMediaSettingsCachingEnabled = true;
+
+        abrController = AbrController(self.context).getInstance();
     }
 
     function enableLastBitrateCaching(enable, ttl) {

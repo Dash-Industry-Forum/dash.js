@@ -29,7 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import BufferController from './BufferController.js';
-import MediaPlayer from '../../streaming/MediaPlayer.js'
+import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
+import MediaPlayerModel from '../../streaming/models/MediaPlayerModel.js';
+import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -38,6 +40,9 @@ const WALLCLOCK_TIME_UPDATE_INTERVAL = 50; //This value influences the startup t
 export default FactoryMaker.getSingletonFactory(PlaybackController);
 
 function PlaybackController() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
         initialize: initialize,
@@ -82,8 +87,7 @@ function PlaybackController() {
         firstAppended,
         streamInfo,
         isDynamic,
-        mediaPlayerModel,
-        EventBus;
+        mediaPlayerModel;
 
     function setup() {
         currentTime = 0;
@@ -91,21 +95,20 @@ function PlaybackController() {
         wallclockTimeIntervalId = null;
         commonEarliestTime = {};
         firstAppended = {};
+        mediaPlayerModel = MediaPlayerModel(self.context).getInstance();
     }
 
     function initialize(streamInfoValue) {
         streamInfo = streamInfoValue;
-        mediaPlayerModel = MediaPlayer.prototype.context.mediaPlayerModel;
         removeAllListeners();
         setupVideoModel();
         isDynamic = streamInfo.manifestInfo.isDynamic;
         liveStartTime = streamInfoValue.start;
 
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-        EventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
-        EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+        eventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
+        eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
     }
 
     function getTimeToStreamEnd() {
@@ -195,10 +198,10 @@ function PlaybackController() {
     }
 
     function reset() {
-        EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        EventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-        EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-        EventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
+        eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+        eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
 
         stopUpdatingWallclockTime();
         removeAllListeners();
@@ -256,7 +259,7 @@ function PlaybackController() {
      */
     function getStreamStartTime(streamInfo) {
         var presentationStartTime;
-        var startTimeOffset = parseInt(MediaPlayer.prototype.context.URIQueryAndFragmentModel.getURIFragmentData().s);
+        var startTimeOffset = parseInt(URIQueryAndFragmentModel(self.context).getInstance().getURIFragmentData().s);
 
         if (isDynamic) {
 
@@ -318,7 +321,7 @@ function PlaybackController() {
     function initialStart() {
         if (firstAppended[streamInfo.id] || isSeeking()) return;
         var initialSeekTime = getStreamStartTime(streamInfo);
-        EventBus.trigger(Events.PLAYBACK_SEEKING, {seekTime: initialSeekTime});
+        eventBus.trigger(Events.PLAYBACK_SEEKING, {seekTime: initialSeekTime});
         log("Starting playback at offset: " + initialSeekTime);
     }
 
@@ -370,34 +373,34 @@ function PlaybackController() {
     }
 
     function onCanPlay(/*e*/) {
-        EventBus.trigger(Events.CAN_PLAY);
+        eventBus.trigger(Events.CAN_PLAY);
     }
 
     function onPlaybackStart() {
         log("Native video element event: play");
         updateCurrentTime();
         startUpdatingWallclockTime();
-        EventBus.trigger(Events.PLAYBACK_STARTED, {startTime: getTime()});
+        eventBus.trigger(Events.PLAYBACK_STARTED, {startTime: getTime()});
     }
 
     function onPlaybackPlaying() {
         log("Native video element event: playing");
-        EventBus.trigger(Events.PLAYBACK_PLAYING, {playingTime: getTime()});
+        eventBus.trigger(Events.PLAYBACK_PLAYING, {playingTime: getTime()});
     }
 
     function onPlaybackPaused() {
         log("Native video element event: pause");
-        EventBus.trigger(Events.PLAYBACK_PAUSED);
+        eventBus.trigger(Events.PLAYBACK_PAUSED);
     }
 
     function onPlaybackSeeking() {
         startUpdatingWallclockTime();
-        EventBus.trigger(Events.PLAYBACK_SEEKING, {seekTime: getTime()});
+        eventBus.trigger(Events.PLAYBACK_SEEKING, {seekTime: getTime()});
     }
 
     function onPlaybackSeeked() {
         log("Native video element event: seeked");
-        EventBus.trigger(Events.PLAYBACK_SEEKED);
+        eventBus.trigger(Events.PLAYBACK_SEEKED);
     }
 
     function onPlaybackTimeUpdated() {
@@ -405,7 +408,7 @@ function PlaybackController() {
         var time = getTime();
         if (time === currentTime) return;
         currentTime = time;
-        EventBus.trigger(Events.PLAYBACK_TIME_UPDATED, {timeToEnd: getTimeToStreamEnd()});
+        eventBus.trigger(Events.PLAYBACK_TIME_UPDATED, {timeToEnd: getTimeToStreamEnd()});
     }
 
     function onPlaybackProgress() {
@@ -420,12 +423,12 @@ function PlaybackController() {
             bufferEndTime = ranges.end(lastRange);
             remainingUnbufferedDuration = getStreamStartTime(streamInfo) + streamInfo.duration - bufferEndTime;
         }
-        EventBus.trigger(Events.PLAYBACK_PROGRESS, {bufferedRanges: videoModel.getElement().buffered, remainingUnbufferedDuration: remainingUnbufferedDuration})
+        eventBus.trigger(Events.PLAYBACK_PROGRESS, {bufferedRanges: videoModel.getElement().buffered, remainingUnbufferedDuration: remainingUnbufferedDuration})
     }
 
     function onPlaybackRateChanged() {
         log("Native video element event: ratechange: ", getPlaybackRate());
-        EventBus.trigger(Events.PLAYBACK_RATE_CHANGED);
+        eventBus.trigger(Events.PLAYBACK_RATE_CHANGED);
     }
 
     function onPlaybackMetaDataLoaded() {
@@ -433,24 +436,24 @@ function PlaybackController() {
         if (!isDynamic || timelineConverter.isTimeSyncCompleted()) {
             initialStart();
         }
-        EventBus.trigger(Events.PLAYBACK_METADATA_LOADED);
+        eventBus.trigger(Events.PLAYBACK_METADATA_LOADED);
         startUpdatingWallclockTime();
     }
 
     function onPlaybackEnded() {
         log("Native video element event: ended");
         stopUpdatingWallclockTime();
-        EventBus.trigger(Events.PLAYBACK_ENDED);
+        eventBus.trigger(Events.PLAYBACK_ENDED);
     }
 
     function onPlaybackError(event) {
         var target = event.target || event.srcElement;
 
-        EventBus.trigger(Events.PLAYBACK_ERROR, {error: target.error});
+        eventBus.trigger(Events.PLAYBACK_ERROR, {error: target.error});
     }
 
     function onWallclockTime() {
-        EventBus.trigger(Events.WALLCLOCK_TIME_UPDATED, {isDynamic: isDynamic, time: new Date()});
+        eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED, {isDynamic: isDynamic, time: new Date()});
     }
 
     function onBytesAppended(e) {

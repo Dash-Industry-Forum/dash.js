@@ -37,19 +37,23 @@
  * @implements ProtectionModel
  * @class
  */
-import MediaPlayer from '../../streaming/MediaPlayer.js'
+import ProtectionExtensions from '../extensions/ProtectionExtensions.js';
 import NeedKey from '../vo/protection/NeedKey.js';
 import KeyError from '../vo/protection/KeyError.js';
 import KeyMessage from '../vo/protection/KeyMessage.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
 import SessionToken from '../vo/protection/SessionToken.js';
+import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);
 
 function ProtectionModel_21Jan2015(config) {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let log = config.log;
 
@@ -77,16 +81,14 @@ function ProtectionModel_21Jan2015(config) {
         mediaKeys,
         sessions,
         eventHandler,
-        protectionExt,
-        EventBus;
+        protectionExt;
 
     function setup() {
         keySystem = null;
         videoElement = null;
         mediaKeys = null;
         sessions = [];
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        protectionExt = MediaPlayer.prototype.context.protectionExt;
+        protectionExt = ProtectionExtensions(self.context).getInstance();
         eventHandler = createEventHandler();
     }
 
@@ -102,10 +104,10 @@ function ProtectionModel_21Jan2015(config) {
                     if (videoElement) {
                         videoElement.removeEventListener("encrypted", eventHandler);
                         videoElement.setMediaKeys(null).then(function () {
-                            EventBus.trigger(Events.TEARDOWN_COMPLETE);
+                            eventBus.trigger(Events.TEARDOWN_COMPLETE);
                         });
                     } else {
-                        EventBus.trigger(Events.TEARDOWN_COMPLETE);
+                        eventBus.trigger(Events.TEARDOWN_COMPLETE);
                     }
                 }
             };
@@ -125,7 +127,7 @@ function ProtectionModel_21Jan2015(config) {
                 })(session);
             }
         } else {
-            EventBus.trigger(Events.TEARDOWN_COMPLETE);
+            eventBus.trigger(Events.TEARDOWN_COMPLETE);
         }
     }
 
@@ -152,10 +154,10 @@ function ProtectionModel_21Jan2015(config) {
             if (videoElement) {
                 videoElement.setMediaKeys(mediaKeys);
             }
-            EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
+            eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
 
         }).catch(function() {
-            EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED, {error:"Error selecting keys system (" + keySystemAccess.keySystem.systemString + ")! Could not create MediaKeys -- TODO"});
+            eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED, {error:"Error selecting keys system (" + keySystemAccess.keySystem.systemString + ")! Could not create MediaKeys -- TODO"});
         });
     }
 
@@ -186,9 +188,9 @@ function ProtectionModel_21Jan2015(config) {
         }
         mediaKeys.setServerCertificate(serverCertificate).then(function() {
             log("DRM: License server certificate successfully updated.");
-            EventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED);
+            eventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED);
         }).catch(function(error) {
-            EventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED, {error:"Error updating server certificate -- " + error.name});
+            eventBus.trigger(Events.SERVER_CERTIFICATE_UPDATED, {error:"Error updating server certificate -- " + error.name});
         });
     }
 
@@ -204,11 +206,11 @@ function ProtectionModel_21Jan2015(config) {
         // Generate initial key request
         session.generateRequest("cenc", initData).then(function() {
             log("DRM: Session created.  SessionID = " + sessionToken.getSessionID());
-            EventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
+            eventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
         }).catch(function(error) {
             // TODO: Better error string
             removeSession(sessionToken);
-            EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Error generating key request -- " + error.name});
+            eventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Error generating key request -- " + error.name});
         });
     }
 
@@ -221,7 +223,7 @@ function ProtectionModel_21Jan2015(config) {
             message = message.toJWK();
         }
         session.update(message).catch(function (error) {
-            EventBus.trigger(Events.KEY_ERROR, {data:new KeyError(sessionToken, "Error sending update() message! " + error.name)});
+            eventBus.trigger(Events.KEY_ERROR, {data:new KeyError(sessionToken, "Error sending update() message! " + error.name)});
         });
     }
 
@@ -237,12 +239,12 @@ function ProtectionModel_21Jan2015(config) {
             if (success) {
                 var sessionToken = createSessionToken(session);
                 log("DRM: Session created.  SessionID = " + sessionToken.getSessionID());
-                EventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
+                eventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
             } else {
-                EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Could not load session! Invalid Session ID (" + sessionID + ")"});
+                eventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Could not load session! Invalid Session ID (" + sessionID + ")"});
             }
         }).catch(function (error) {
-            EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Could not load session (" + sessionID + ")! " + error.name});
+            eventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Could not load session (" + sessionID + ")! " + error.name});
         });
     }
 
@@ -251,9 +253,9 @@ function ProtectionModel_21Jan2015(config) {
 
         session.remove().then(function () {
             log("DRM: Session removed.  SessionID = " + sessionToken.getSessionID());
-            EventBus.trigger(Events.KEY_SESSION_REMOVED, {data:sessionToken.getSessionID()});
+            eventBus.trigger(Events.KEY_SESSION_REMOVED, {data:sessionToken.getSessionID()});
         }, function (error) {
-            EventBus.trigger(Events.KEY_SESSION_REMOVED, {data:null, error:"Error removing session (" + sessionToken.getSessionID() + "). " + error.name});
+            eventBus.trigger(Events.KEY_SESSION_REMOVED, {data:null, error:"Error removing session (" + sessionToken.getSessionID() + "). " + error.name});
 
         });
     }
@@ -262,7 +264,7 @@ function ProtectionModel_21Jan2015(config) {
         // Send our request to the key session
         closeKeySessionInternal(sessionToken).catch(function(error) {
             removeSession(sessionToken);
-            EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:null, error:"Error closing session (" + sessionToken.getSessionID() + ") " + error.name});
+            eventBus.trigger(Events.KEY_SESSION_CLOSED, {data:null, error:"Error closing session (" + sessionToken.getSessionID() + ") " + error.name});
         });
     }
 
@@ -277,13 +279,13 @@ function ProtectionModel_21Jan2015(config) {
                         mediaKeySystemAccess.getConfiguration() : null;
                 var keySystemAccess = new KeySystemAccess(keySystem, configuration);
                 keySystemAccess.mksa = mediaKeySystemAccess;
-                EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data:keySystemAccess});
+                eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data:keySystemAccess});
 
             }).catch(function() {
                 if (++i < ksConfigurations.length) {
                     requestKeySystemAccessInternal(ksConfigurations, i);
                 } else {
-                    EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:"Key system access denied!"});
+                    eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:"Key system access denied!"});
                 }
             });
         })(idx);
@@ -311,7 +313,7 @@ function ProtectionModel_21Jan2015(config) {
                     case "encrypted":
                         if (event.initData) {
                             var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                            EventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, event.initDataType)});
+                            eventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, event.initDataType)});
                         }
                         break;
                 }
@@ -343,12 +345,12 @@ function ProtectionModel_21Jan2015(config) {
             handleEvent: function(event) {
                 switch (event.type) {
                     case "keystatuseschange":
-                        EventBus.trigger(Events.KEY_STATUSES_CHANGED, {data:this});
+                        eventBus.trigger(Events.KEY_STATUSES_CHANGED, {data:this});
                         break;
 
                     case "message":
                         var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                        EventBus.trigger(Events.INTERNAL_KEY_MESSAGE, {data:new KeyMessage(this, message, undefined, event.messageType)});
+                        eventBus.trigger(Events.INTERNAL_KEY_MESSAGE, {data:new KeyMessage(this, message, undefined, event.messageType)});
                         break;
                 }
             },
@@ -378,7 +380,7 @@ function ProtectionModel_21Jan2015(config) {
         session.closed.then(function () {
             removeSession(token);
             log("DRM: Session closed.  SessionID = " + token.getSessionID());
-            EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:token.getSessionID()});
+            eventBus.trigger(Events.KEY_SESSION_CLOSED, {data:token.getSessionID()});
         });
 
         // Add to our session list

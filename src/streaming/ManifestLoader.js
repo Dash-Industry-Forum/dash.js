@@ -30,9 +30,10 @@
  */
 import XlinkController from './controllers/XlinkController.js';
 import XlinkLoader from './XlinkLoader.js';
-import MediaPlayer from '../streaming/MediaPlayer.js'
+import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
+import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -43,6 +44,9 @@ const PARSERERROR_ERROR_CODE = 1;
 export default FactoryMaker.getClassFactory(ManifestLoader);
 
 function ManifestLoader(config) {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let log = config.log;
     let parser = config.parser;
@@ -50,24 +54,21 @@ function ManifestLoader(config) {
     let metricsModel = config.metricsModel;
 
     let instance = {
-        initialize:initialize,
         load: load,
         reset: reset
     };
 
+    setup();
     return instance;
 
     let requestModifierExt,
-        xlinkController,
-        EventBus;
+        xlinkController;
 
-    function initialize() {
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.XLINK_READY, onXlinkReady, instance);
-        let xlinkLoader = XlinkLoader.create({errHandler:errHandler, metricsModel:metricsModel});
-        xlinkController = XlinkController.create({xlinkLoader:xlinkLoader});
-        xlinkController.initialize();
-        requestModifierExt = MediaPlayer.prototype.context.requestModifierExt;
+    function setup() {
+        let xlinkLoader = XlinkLoader(self.context).create({errHandler:errHandler, metricsModel:metricsModel});
+        xlinkController = XlinkController(self.context).create({xlinkLoader:xlinkLoader});
+        requestModifierExt = RequestModifierExtensions(self.context).getInstance();
+        eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
     }
 
     function load (url) {
@@ -121,7 +122,7 @@ function ManifestLoader(config) {
                 xlinkController.resolveManifestOnLoad(manifest);
             } else {
                 errorMsg = "Failed loading manifest: " + url + ", parsing failed";
-                EventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: null, error:new Error(PARSERERROR_ERROR_CODE, errorMsg, null)});
+                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: null, error:new Error(PARSERERROR_ERROR_CODE, errorMsg, null)});
                 log(errorMsg);
             }
         };
@@ -154,7 +155,7 @@ function ManifestLoader(config) {
             } else {
                 log("Failed loading manifest: " + url + " no retry attempts left");
                 errHandler.downloadError("manifest", url, request);
-                EventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {error:new Error("Failed loading manifest: " + url + " no retry attempts left")});
+                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {error:new Error("Failed loading manifest: " + url + " no retry attempts left")});
             }
         };
 
@@ -181,7 +182,7 @@ function ManifestLoader(config) {
     }
 
     function reset() {
-        EventBus.off(Events.XLINK_READY, onXlinkReady, instance);
+        eventBus.off(Events.XLINK_READY, onXlinkReady, instance);
         requestModifierExt = null;
         xlinkController = null;
     }
@@ -201,6 +202,6 @@ function ManifestLoader(config) {
     }
 
     function onXlinkReady(event) {
-        EventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: event.manifest });
+        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: event.manifest });
     }
 }

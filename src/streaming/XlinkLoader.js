@@ -28,9 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MediaPlayer from '../streaming/MediaPlayer.js'
+import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
+import EventBus from '../streaming/utils/EventBus.js';
 import Events from '../streaming/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -41,6 +42,9 @@ const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 export default FactoryMaker.getClassFactory(XlinkLoader);
 
 function XlinkLoader(config) {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let errHandler = config.errHandler;
     let metricsModel = config.metricsModel;
@@ -52,12 +56,10 @@ function XlinkLoader(config) {
     setup();
     return instance;
 
-    let requestModifierExt,
-        EventBus;
+    let requestModifierExt;
 
     function setup(){
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        requestModifierExt = MediaPlayer.prototype.context.requestModifierExt;
+        requestModifierExt = RequestModifierExtensions(self.context).getInstance();
     }
 
     function load(url, element, resolveObject) {
@@ -65,7 +67,7 @@ function XlinkLoader(config) {
         if (url === RESOLVE_TO_ZERO) {
             element.resolvedContent = null;
             element.resolved = true;
-            EventBus.trigger(Events.XLINK_ELEMENT_LOADED, {element: element, resolveObject: resolveObject});
+            eventBus.trigger(Events.XLINK_ELEMENT_LOADED, {element: element, resolveObject: resolveObject});
         } else {
             doLoad(url, element, resolveObject, RETRY_ATTEMPTS);
         }
@@ -106,10 +108,10 @@ function XlinkLoader(config) {
 
             if (content) {
                 element.resolvedContent = content;
-                EventBus.trigger(Events.XLINK_ELEMENT_LOADED, {element: element, resolveObject: resolveObject});
+                eventBus.trigger(Events.XLINK_ELEMENT_LOADED, {element: element, resolveObject: resolveObject});
             } else {
                 element.resolvedContent = null;
-                EventBus.trigger(Events.XLINK_ELEMENT_LOADED,
+                eventBus.trigger(Events.XLINK_ELEMENT_LOADED,
                     {
                         element: element,
                         resolveObject: resolveObject,
@@ -148,7 +150,7 @@ function XlinkLoader(config) {
                 errHandler.downloadError("xlink", url, request);
                 element.resolved = true;
                 element.resolvedContent = null;
-                EventBus.trigger(Events.XLINK_ELEMENT_LOADED,
+                eventBus.trigger(Events.XLINK_ELEMENT_LOADED,
                     {
                         element: element,
                         resolveObject: resolveObject,

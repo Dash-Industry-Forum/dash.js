@@ -31,7 +31,8 @@
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import DataChunk from '../vo/DataChunk.js';
 import FragmentModel from '../models/FragmentModel.js';
-import MediaPlayer from '../../streaming/MediaPlayer.js'
+import MetricsModel from '../models/MetricsModel.js';
+import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -39,6 +40,9 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(FragmentController);
 
 function FragmentController(config) {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let log = config.log;
 
@@ -54,13 +58,11 @@ function FragmentController(config) {
 
     return instance;
 
-    let fragmentModels,
-        EventBus;
+    let fragmentModels;
 
     function setup() {
         fragmentModels = [];
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
+        eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
     }
 
     function process(bytes) {
@@ -79,7 +81,7 @@ function FragmentController(config) {
         var model = findModel(context);
 
         if (!model){
-            model = FragmentModel.create({log:log, metricsModel :MediaPlayer.prototype.context.metricsModel});
+            model = FragmentModel(self.context).create({log:log, metricsModel :MetricsModel(self.context).getInstance()});
             model.setContext(context);
             fragmentModels.push(model);
         }
@@ -100,7 +102,7 @@ function FragmentController(config) {
     }
 
     function reset() {
-        EventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
+        eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
         fragmentModels = [];
     }
 
@@ -150,6 +152,6 @@ function FragmentController(config) {
         }
 
         chunk = createDataChunk(bytes, request, streamId);
-        EventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {chunk: chunk, fragmentModel: e.sender});
+        eventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {chunk: chunk, fragmentModel: e.sender});
     }
 };

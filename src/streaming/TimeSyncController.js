@@ -30,7 +30,7 @@
  */
 
 import Error from './vo/Error.js';
-import MediaPlayer from './MediaPlayer.js';
+import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -45,6 +45,9 @@ factory.HTTP_TIMEOUT_MS = HTTP_TIMEOUT_MS;
 export default factory;
 
 function TimeSyncController() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
         initialize: initialize,
@@ -62,11 +65,9 @@ function TimeSyncController() {
         handlers,
         log,
         metricsModel,
-        metricsExt,
-        EventBus;
+        metricsExt;
 
     function initialize(timingSources, useManifestDateHeader, config) {
-        EventBus = MediaPlayer.prototype.context.EventBus;
         useManifestDateHeaderTimeSource = useManifestDateHeader;
         offsetToDeviceTimeMs = 0;
         isSynchronizing = false;
@@ -294,7 +295,7 @@ function TimeSyncController() {
 
     function completeTimeSyncSequence(failed, time, offset){
         setIsSynchronizing(false);
-        EventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new Error(TIME_SYNC_FAILED_ERROR_CODE) : null });
+        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new Error(TIME_SYNC_FAILED_ERROR_CODE) : null });
     }
 
     function attemptSync(sources, sourceIndex) {

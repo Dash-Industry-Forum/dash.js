@@ -28,13 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MediaPlayer from '../MediaPlayer.js';
+import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(TextTrackExtensions);
 
 function TextTrackExtensions() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
         initialize          :initialize,
@@ -70,12 +73,10 @@ function TextTrackExtensions() {
         isChrome,
         fullscreenAttribute,
         displayCCOnTop,
-        topZIndex,
-        EventBus;
+        topZIndex;
 
     function initialize () {
         Cue = window.VTTCue || window.TextTrackCue;
-        EventBus = MediaPlayer.prototype.context.EventBus;
         textTrackQueue = [];
         trackElementArr = [];
         currentTrackIdx = -1;
@@ -160,10 +161,10 @@ function TextTrackExtensions() {
                     textTrack.renderingType = "default";
                 }
                 this.addCaptions(0, textTrackQueue[i].captionData);
-                EventBus.trigger(Events.TEXT_TRACK_ADDED);
+                eventBus.trigger(Events.TEXT_TRACK_ADDED);
             }
             setCurrentTrackIdx.call(this, defaultIndex);
-            EventBus.trigger(Events.TEXT_TRACKS_ADDED, {index:currentTrackIdx, tracks:textTrackQueue});//send default idx.
+            eventBus.trigger(Events.TEXT_TRACKS_ADDED, {index:currentTrackIdx, tracks:textTrackQueue});//send default idx.
         }
     }
 

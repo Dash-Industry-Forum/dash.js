@@ -28,16 +28,21 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+import RequestModifierExtensions from '../../streaming/extensions/RequestModifierExtensions.js'
 import Segment from '../vo/Segment.js';
 import Error from '../../streaming/vo/Error.js';
-import Events from '../../streaming/Events.js';
-import MediaPlayer from '../../streaming/MediaPlayer.js';
+import ErrorHandler from '../../streaming/ErrorHandler.js';
+import Events from '../../streaming/Events.js'
+import EventBus from '../../streaming/utils/EventBus.js';
+import BoxParser from '../../streaming/utils/BoxParser.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(BaseURLExtensions);
 
 function  BaseURLExtensions() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
         initialize:initialize,
@@ -52,14 +57,12 @@ function  BaseURLExtensions() {
     let errHandler,
         boxParser,
         requestModifierExt,
-        log,
-        EventBus;
+        log;
 
     function initialize() {
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        errHandler = MediaPlayer.prototype.context.errorHandler;
-        boxParser = MediaPlayer.prototype.context.boxParser;
-        requestModifierExt = MediaPlayer.prototype.context.requestModifierExt;
+        errHandler = ErrorHandler(self.context).getInstance();
+        boxParser = BoxParser(self.context).getInstance();
+        requestModifierExt = RequestModifierExtensions(self.context).getInstance();
     }
 
     function loadInitialization(representation, loadingInfo) {
@@ -95,7 +98,7 @@ function  BaseURLExtensions() {
             if (initRange) {
                 representation.range = initRange;
                 representation.initialization = media;
-                EventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
+                eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
             } else {
                 info.range.end = info.bytesLoaded + info.bytesToLoad;
                 loadInitialization(representation, info);
@@ -108,7 +111,7 @@ function  BaseURLExtensions() {
             needFailureReport = false;
 
             errHandler.downloadError("initialization", info.url, request);
-            EventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
+            eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
         };
 
         sendRequest(request, info);
@@ -300,9 +303,9 @@ function  BaseURLExtensions() {
 
     function onLoaded(segments, representation, type) {
         if(segments) {
-            EventBus.trigger(Events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
+            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
         } else {
-            EventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new Error(null, "error loading segments", null)});
+            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new Error(null, "error loading segments", null)});
         }
     }
 };

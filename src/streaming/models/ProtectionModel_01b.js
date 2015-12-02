@@ -38,20 +38,23 @@
  * @class
  */
 import ProtectionModel from './ProtectionModel.js';
+import ProtectionExtensions from '../extensions/ProtectionExtensions.js';
 import NeedKey from '../vo/protection/NeedKey.js';
 import KeyError from '../vo/protection/KeyError.js';
 import KeyMessage from '../vo/protection/KeyMessage.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
 import SessionToken from '../vo/protection/SessionToken.js';
+import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
-import MediaPlayer from '../../streaming/MediaPlayer.js'
+import ErrorHandler from '../ErrorHandler.js';
 
 let ProtectionModel_01b = function () {
+    const self = this;
 
-    var protectionExt = MediaPlayer.prototype.context.protectionExt;
-    var errHandler = MediaPlayer.prototype.context.errorHandler;
-    var EventBus = MediaPlayer.prototype.context.EventBus;
+    let eventBus = EventBus(self.context).getInstance();
+    var protectionExt = ProtectionExtensions(self.context).getInstance();
+    var errHandler = ErrorHandler(self.context).getInstance();
 
     var videoElement = null,
 
@@ -89,7 +92,7 @@ let ProtectionModel_01b = function () {
 
                         case api.needkey:
                             var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                            EventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, "cenc")});
+                            eventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, "cenc")});
                             break;
 
                         case api.keyerror:
@@ -122,7 +125,7 @@ let ProtectionModel_01b = function () {
                                 }
                                 msg += "  System Code = " + event.systemCode;
                                 // TODO: Build error string based on key error
-                                EventBus.trigger(Events.KEY_ERROR, {data:new KeyError(sessionToken, msg)});
+                                eventBus.trigger(Events.KEY_ERROR, {data:new KeyError(sessionToken, msg)});
                             } else {
                                 self.log("No session token found for key error");
                             }
@@ -136,7 +139,7 @@ let ProtectionModel_01b = function () {
 
                             if (sessionToken) {
                                 self.log("DRM: Key added.");
-                                EventBus.trigger(Events.KEY_ADDED, {data:sessionToken});//TODO not sure anything is using sessionToken? why there?
+                                eventBus.trigger(Events.KEY_ADDED, {data:sessionToken});//TODO not sure anything is using sessionToken? why there?
                             } else {
                                 self.log("No session token found for key added");
                             }
@@ -178,7 +181,7 @@ let ProtectionModel_01b = function () {
                                 // addKey method, so we always save it to the token since there is no
                                 // way to tell which key system is in use
                                 sessionToken.keyMessage = message;
-                                EventBus.trigger(Events.KEY_MESSAGE, {data:new KeyMessage(sessionToken, message, event.defaultURL)});
+                                eventBus.trigger(Events.KEY_MESSAGE, {data:new KeyMessage(sessionToken, message, event.defaultURL)});
 
                             } else {
                                 self.log("No session token found for key message");
@@ -244,7 +247,7 @@ let ProtectionModel_01b = function () {
             for (var i = 0; i < sessions.length; i++) {
                 this.closeKeySession(sessions[i]);
             }
-            EventBus.trigger(Events.TEARDOWN_COMPLETE);
+            eventBus.trigger(Events.TEARDOWN_COMPLETE);
         },
 
         getAllInitData: function() {
@@ -313,18 +316,18 @@ let ProtectionModel_01b = function () {
                     found = true;
                     var ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
                     var ks = protectionExt.getKeySystemBySystemString(systemString);
-                    EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data:new KeySystemAccess(ks, ksConfig)})
+                    eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data:new KeySystemAccess(ks, ksConfig)})
                     break;
                 }
             }
             if (!found) {
-                EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:"Key system access denied! -- No valid audio/video content configurations detected!"});
+                eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:"Key system access denied! -- No valid audio/video content configurations detected!"});
             }
         },
 
         selectKeySystem: function(keySystemAccess) {
             this.keySystem = keySystemAccess.keySystem;
-            EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
+            eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
         },
 
         setMediaElement: function(mediaElement) {
@@ -345,7 +348,7 @@ let ProtectionModel_01b = function () {
                 videoElement.addEventListener(api.needkey, eventHandler);
                 videoElement.addEventListener(api.keymessage, eventHandler);
                 videoElement.addEventListener(api.keyadded, eventHandler);
-                EventBus.trigger(Events.VIDEO_ELEMENT_SELECTED);
+                eventBus.trigger(Events.VIDEO_ELEMENT_SELECTED);
             }
         },
 

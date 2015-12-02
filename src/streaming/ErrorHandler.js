@@ -28,16 +28,18 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MediaPlayer from './MediaPlayer.js';
+import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(ErrorHandler);
 
 function ErrorHandler() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     var instance = {
-        initialize: initialize,
         capabilityError: capabilityError,
         downloadError: downloadError,
         manifestError: manifestError,
@@ -49,40 +51,34 @@ function ErrorHandler() {
 
     return instance;
 
-    let EventBus;
-
-    function initialize() {
-        EventBus = MediaPlayer.prototype.context.EventBus;
-    }
-
     // "mediasource"|"mediakeys"
     function capabilityError(err) {
-        EventBus.trigger(Events.ERROR, {error: "capability", event: err});
+        eventBus.trigger(Events.ERROR, {error: "capability", event: err});
     }
 
     // {id: "manifest"|"SIDX"|"content"|"initialization", url: "", request: {XMLHttpRequest instance}}
     function downloadError(id, url, request) {
-        EventBus.trigger(Events.ERROR, {error: "download", event: {id: id, url: url, request: request}});
+        eventBus.trigger(Events.ERROR, {error: "download", event: {id: id, url: url, request: request}});
     }
 
     // {message: "", id: "codec"|"parse"|"nostreams", manifest: {parsed manifest}}
     function manifestError(message, id, manifest) {
-        EventBus.trigger(Events.ERROR, {error: "manifestError", event: {message: message, id: id, manifest: manifest}});
+        eventBus.trigger(Events.ERROR, {error: "manifestError", event: {message: message, id: id, manifest: manifest}});
     }
 
     function timedTextError(message, id, ccContent) {
-        EventBus.trigger(Events.ERROR, {error: "cc", event: {message: message, id: id, cc: ccContent}});
+        eventBus.trigger(Events.ERROR, {error: "cc", event: {message: message, id: id, cc: ccContent}});
     }
 
     function mediaSourceError(err) {
-        EventBus.trigger(Events.ERROR, {error: "mediasource", event: err});
+        eventBus.trigger(Events.ERROR, {error: "mediasource", event: err});
     }
 
     function mediaKeySessionError(err) {
-        EventBus.trigger(Events.ERROR, {error: "key_session", event: err});
+        eventBus.trigger(Events.ERROR, {error: "key_session", event: err});
     }
 
     function mediaKeyMessageError(err) {
-        EventBus.trigger(Events.ERROR, {error: "key_message", event: err});
+        eventBus.trigger(Events.ERROR, {error: "key_message", event: err});
     }
 }

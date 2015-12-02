@@ -30,7 +30,7 @@
  */
 import DOMStorage from '../utils/DOMStorage.js';
 import Events from '../Events.js';
-import MediaPlayer from '../MediaPlayer.js';
+import EventBus from '../utils/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const TRACK_SWITCH_MODE_NEVER_REPLACE = "neverReplace";
@@ -50,6 +50,9 @@ factory.DEFAULT_INIT_TRACK_SELECTION_MODE = DEFAULT_INIT_TRACK_SELECTION_MODE;
 export default factory;
 
 function MediaController() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
         initialize:initialize,
@@ -79,14 +82,13 @@ function MediaController() {
         switchMode,
         log,
         errHandler,
-        DOMStorage,
-        EventBus;
+        DOMStorage;
 
     function initialize() {
         tracks = {};
         resetInitialSettings();
         resetSwitchMode();
-        EventBus = MediaPlayer.prototype.context.EventBus;
+
     }
 
     /**
@@ -204,7 +206,7 @@ function MediaController() {
         tracks[id][type].current = track;
 
         if (current) {
-            EventBus.trigger(Events.CURRENT_TRACK_CHANGED, {oldMediaInfo: current, newMediaInfo: track, switchMode: switchMode[type]});
+            eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {oldMediaInfo: current, newMediaInfo: track, switchMode: switchMode[type]});
         }
 
         var settings = extractSettings(track);

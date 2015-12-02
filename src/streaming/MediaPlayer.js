@@ -32,42 +32,80 @@
  * @class MediaPlayer
  *
  */
+/*jshint -W020 */
 import UTCTiming from '../dash/vo/UTCTiming.js';
+import PlaybackController from './controllers/PlaybackController.js';
+import StreamController from './controllers/StreamController.js';
+import MediaController from './controllers/MediaController.js';
+import ProtectionController from './controllers/ProtectionController.js';
+import ProtectionExtensions from './extensions/ProtectionExtensions.js';
 import ManifestLoader from './ManifestLoader.js';
+import LiveEdgeFinder from './LiveEdgeFinder.js';
+import ErrorHandler from './ErrorHandler.js';
+import Capabilities from './utils/Capabilities.js';
+import DOMStorage from './utils/DOMStorage.js';
+import TextTrackExtensions from './extensions/TextTrackExtensions.js';
+import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
+import VirtualBuffer from './utils/VirtualBuffer.js';
+import TextSourceBuffer from './TextSourceBuffer.js';
+import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
+import ManifestModel from './models/ManifestModel.js';
+import MediaPlayerModel from './models/MediaPlayerModel.js';
+import MetricsModel from './models/MetricsModel.js';
+import AbrController from './controllers/AbrController.js';
+import TimeSyncController from './TimeSyncController.js';
+import ABRRulesCollection from './rules/ABRRules/ABRRulesCollection.js';
+import VideoModel from './models/VideoModel.js';
+import RulesController from './rules/RulesController.js';
+import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollection.js';
+import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
+import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
+import VideoModelExtensions from './extensions/VideoModelExtensions.js';
+
+
+//dash
+import DashAdapter from '../dash/DashAdapter.js';
 import DashParser from '../dash/DashParser.js';
+import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js";
+import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
+import TimelineConverter from '../dash/TimelineConverter.js';
+
+
+//Utils
+import EventBus from "./utils/EventBus.js";
+import Debug from "./utils/Debug.js";
+
+//Events
+import Events from './Events.js';
+import CoreEvents from '../core/events/CoreEvents.js';
+import PublicEvents from './PublicEvents.js';
+import ProtectionEvents from './protection/ProtectionEvents.js';
 
 
 //protection
-import ProtectionEvents from './protection/ProtectionEvents.js';
-import ProtectionController from './controllers/ProtectionController.js';
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
 //import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
 //import ProtectionModel_01b from './models/ProtectionModel_01b.js';
 
-import Events from './Events.js';
-import CoreEvents from '../core/events/CoreEvents.js';
-import PublicEvents from './PublicEvents.js';
 import FactoryMaker from '../core/FactoryMaker.js';
-import Context from '../core/Context.js';
 
 const DEFAULT_UTC_TIMING_SOURCE = { scheme: "urn:mpeg:dash:utc:http-xsdate:2014", value: "http://time.akamai.com/?iso" };
 
 
+let factory = FactoryMaker.getClassFactory(MediaPlayer);
 
-//let factory = FactoryMaker.getClassFactory(MediaPlayer);
-//factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
-//factory.events = PublicEvents;
+factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
+factory.events = PublicEvents;
 
-//export default factory;
+export default factory;
 
 function MediaPlayer() {
-
     const VERSION = "2.0.0";
+    const self = this;
 
-    MediaPlayer.prototype.context = new Context();
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
-        initialize: initialize,
         on: on,
         off: off,
         extend: extend,
@@ -86,6 +124,7 @@ function MediaPlayer() {
         formatUTC: formatUTC,
         reset: reset,
         getVersion: getVersion,
+        startup: startup,
         getDebug: getDebug,
         getVideoModel: getVideoModel,
         getVideoContainer: getVideoContainer,
@@ -165,49 +204,11 @@ function MediaPlayer() {
         debug,
         log,
         coreEvents,
-        protectionEvents,
-        context,
-        EventBus;
+        protectionEvents;
 
-
-    function initialize(view, source, autoPlay) {
-        if(initialized) return;
-        initialized = true;
-        context = MediaPlayer.prototype.context;
-
-        EventBus = context.EventBus;
-        manifestExt = context.manifestExt;
-        manifestExt.initialize();
-        metricsExt = context.metricsExt;
-        metricsExt.initialize();
-        domStorage = context.DOMStorage;
-        domStorage.initialize();
-        metricsModel = context.metricsModel;
-        metricsModel.initialize();
-        mediaPlayerModel = context.mediaPlayerModel;
-        errHandler = context.errorHandler;
-        errHandler.initialize();
-        capabilities = context.capabilities;
-        debug = context.debug;
-        debug.initialize();
-        log = debug.log;
-        createAdaptor();
-
-        metricsModel.setConfig({adapter:adapter});
-
-        if (view){
-            attachView(view);
-        }
-        if(source){
-            attachSource(source)
-        }
-        if(autoPlay){
-            setAutoPlay(autoPlay);
-        }
-        log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
-    }
 
     function setup() {
+
         initialized = false;
         resetting = false;
         playing = false;
@@ -218,20 +219,39 @@ function MediaPlayer() {
         UTCTimingSources = [];
         adapter = null;
 
+
         if (CoreEvents) {
             coreEvents = new CoreEvents();
             Events.extend(coreEvents);
         }
+
         if (ProtectionEvents) {
             protectionEvents = new ProtectionEvents();
             Events.extend(protectionEvents);
             PublicEvents.extend(protectionEvents, { publicOnly: true });
         }
+
         if (PublicEvents) {
             Events.extend(PublicEvents);
         }
+
+        manifestExt = DashManifestExtensions(self.context).getInstance();
+        metricsExt = DashMetricsExtensions(self.context).getInstance();
+        domStorage = DOMStorage(self.context).getInstance();
+        metricsModel = MetricsModel(self.context).getInstance();
+        mediaPlayerModel = MediaPlayerModel(self.context).getInstance();
+        errHandler = ErrorHandler(self.context).getInstance();
+        capabilities = Capabilities(self.context).getInstance();
+        debug = Debug(self.context).getInstance();
+        log = debug.log;
+        createAdaptor();
+
+
+        metricsModel.setConfig({adapter:adapter});
+
         //restoreDefaultUTCTimingSources();
 
+        log("[dash.js " + VERSION + "] " + "new MediaPlayer instance has been created");
     }
 
 
@@ -269,7 +289,7 @@ function MediaPlayer() {
             throw "Missing view or source.";
         }
         playing = true;
-        createControllers();
+        createControllers.call(this);
         domStorage.checkInitialBitrate();
         log("Playback initiated!");
 
@@ -285,7 +305,7 @@ function MediaPlayer() {
 
     function doAutoPlay() {
         if (isReady()) {
-            play();
+            play.call(this);
         }
     }
 
@@ -302,7 +322,7 @@ function MediaPlayer() {
      * @method
      */
     function getDVRWindowSize() {
-        return getDVRInfoMetric().manifestInfo.DVRWindowSize;
+        return getDVRInfoMetric.call(this).manifestInfo.DVRWindowSize;
     }
 
     /**
@@ -317,7 +337,7 @@ function MediaPlayer() {
      * @method
      */
     function getDVRSeekOffset(value) {
-        var metric = getDVRInfoMetric();
+        var metric = getDVRInfoMetric.call(this);
         var val = metric.range.start + value;
 
         if (val > metric.range.end) {
@@ -337,8 +357,8 @@ function MediaPlayer() {
      * @method
      */
     function seek(value) {
-        var s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
-        getVideoModel().setCurrentTime(s);
+        var s = playbackController.getIsDynamic() ? this.getDVRSeekOffset(value) : value;
+        this.getVideoModel().setCurrentTime(s);
     }
 
 
@@ -353,8 +373,8 @@ function MediaPlayer() {
         var t = videoModel.getCurrentTime();
 
         if (playbackController.getIsDynamic()) {
-            var metric = getDVRInfoMetric();
-            t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);
+            var metric = getDVRInfoMetric.call(this);
+            t = (metric === null) ? 0 : this.duration() - (metric.range.end - metric.time);
         }
         return t;
     }
@@ -371,7 +391,7 @@ function MediaPlayer() {
 
         if (playbackController.getIsDynamic()) {
 
-            var metric = getDVRInfoMetric();
+            var metric = getDVRInfoMetric.call(this);
             var range;
 
             if (metric === null) {
@@ -386,7 +406,7 @@ function MediaPlayer() {
 
 
     function getAsUTC(valToConvert) {
-        var metric = getDVRInfoMetric();
+        var metric = getDVRInfoMetric.call(this);
         var availableFrom,
             utcValue;
 
@@ -410,7 +430,7 @@ function MediaPlayer() {
      * @method
      */
     function timeAsUTC() {
-        return getAsUTC(time());
+        return getAsUTC.call(this, this.time());
     }
 
     /**
@@ -422,7 +442,7 @@ function MediaPlayer() {
      * @method
      */
     function durationAsUTC() {
-        return getAsUTC(duration());
+        return getAsUTC.call(this, this.duration());
     }
 
     /**
@@ -472,11 +492,11 @@ function MediaPlayer() {
         mediaController.reset();
         streamController = null;
         playing = false;
-        EventBus.off(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
+        eventBus.off(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
 
         resetting = false;
-        if (isReady()) {
-            doAutoPlay();
+        if (isReady.call(this)) {
+            doAutoPlay.call(this);
         }
     }
 
@@ -485,38 +505,37 @@ function MediaPlayer() {
         if (playing && streamController) {
             if (!resetting) {
                 resetting = true;
-                EventBus.on(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
+                eventBus.on(Events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
                 streamController.reset();
             }
         } else {
-            if (isReady()) {
-                doAutoPlay();
+            if (isReady.call(this)) {
+                doAutoPlay.call(this);
             }
         }
     }
 
     function createControllers() {
 
-        let synchronizationRulesCollection = context.synchronizationRulesCollection;
+        let synchronizationRulesCollection = SynchronizationRulesCollection(self.context).getInstance();
         synchronizationRulesCollection.initialize();
 
-        let abrRulesCollection = context.abrRulesCollection
+        let abrRulesCollection = ABRRulesCollection(self.context).getInstance();
         abrRulesCollection.initialize();
 
-        let scheduleRulesCollection = context.scheduleRulesCollection;
+        let scheduleRulesCollection = ScheduleRulesCollection(self.context).getInstance();
         scheduleRulesCollection.initialize();
 
-        let sourceBufferExt = context.sourceBufferExt;
+        let sourceBufferExt = SourceBufferExtensions(self.context).getInstance();
         sourceBufferExt.setConfig({manifestExt:manifestExt});
-        sourceBufferExt.initialize();
 
-        let virtualBuffer = context.virtualBuffer;
-        virtualBuffer.initialize();
+
+        let virtualBuffer = VirtualBuffer(self.context).getInstance();
         virtualBuffer.setConfig({
             sourceBufferExt:sourceBufferExt
         });
 
-        mediaController = context.mediaController;
+        mediaController = MediaController(self.context).getInstance();
         mediaController.initialize();
         mediaController.setConfig({
             log :log,
@@ -524,9 +543,9 @@ function MediaPlayer() {
             errHandler :errHandler
         });
 
-        playbackController = context.playbackController;
+        playbackController = PlaybackController(self.context).getInstance();
 
-        rulesController = context.rulesController;
+        rulesController = RulesController(self.context).getInstance();
         rulesController.initialize();
         rulesController.setConfig({
             abrRulesCollection:abrRulesCollection,
@@ -534,28 +553,28 @@ function MediaPlayer() {
             synchronizationRulesCollection: synchronizationRulesCollection
         });
 
-        streamController = context.streamController;
+        streamController = StreamController(self.context).getInstance();
         streamController.setConfig({
             log: log,
             capabilities: capabilities,
-            manifestLoader: createManifestLoader(),
-            manifestModel: context.manifestModel,
+            manifestLoader: createManifestLoader.call(this),
+            manifestModel: ManifestModel(self.context).getInstance(),
             manifestExt: manifestExt,
-            protectionController: createProtection(),
+            protectionController: this.createProtection(),
             adapter: adapter,
             metricsModel: metricsModel,
             metricsExt: metricsExt,
-            videoModelExt: context.videoModelExt,
-            liveEdgeFinder: context.liveEdgeFinder,
-            mediaSourceExt: context.mediaSourceExt,
-            timeSyncController: context.timeSyncController,
+            videoModelExt: VideoModelExtensions(self.context).getInstance(),
+            liveEdgeFinder: LiveEdgeFinder(self.context).getInstance(),
+            mediaSourceExt: MediaSourceExtensions(self.context).getInstance(),
+            timeSyncController: TimeSyncController(self.context).getInstance(),
             virtualBuffer: virtualBuffer,
             errHandler: errHandler,
-            timelineConverter:context.timelineConverter
+            timelineConverter:TimelineConverter(self.context).getInstance()
         });
         streamController.initialize(autoPlay, protectionData);
 
-        abrController = context.abrController;
+        abrController = AbrController(self.context).getInstance();
         abrController.setConfig({
             abrRulesCollection: abrRulesCollection,
             rulesController: rulesController,
@@ -565,26 +584,24 @@ function MediaPlayer() {
     }
 
     function createManifestLoader() {
-        let loader = ManifestLoader.create({
+        return ManifestLoader(self.context).create({
             log :log,
             errHandler : errHandler,
-            parser :createManifestParser(),
+            parser :createManifestParser.call(),
             metricsModel :metricsModel
         });
-        loader.initialize();
-        return loader;
     }
 
     function createManifestParser() {
         //TODO-Refactor Need to be able to switch this create out so will need API to set which parser to use?
-        return DashParser.create({
+        return DashParser(self.context).create({
             log:log
         });
     }
 
     function createAdaptor() {
         //TODO-Refactor Need to be able to switch this create out so will need API to set which adapter to use? Handler is created is inside streamProcessor so need to figure that out as well
-        adapter = context.adapter;
+        adapter = DashAdapter(self.context).getInstance();
         adapter.initialize();
         adapter.setConfig({manifestExt: manifestExt});
     }
@@ -601,7 +618,7 @@ function MediaPlayer() {
      * @memberof MediaPlayer#
      */
     function on(type, listener, scope) {
-        EventBus.on(type, listener, scope);
+        eventBus.on(type, listener, scope);
     }
 
     /**
@@ -611,7 +628,7 @@ function MediaPlayer() {
      * @memberof MediaPlayer#
      */
     function off(type, listener, scope) {
-        EventBus.off(type, listener, scope);
+        eventBus.off(type, listener, scope);
     }
 
     /**
@@ -620,6 +637,16 @@ function MediaPlayer() {
      */
     function getVersion() {
         return VERSION;
+    }
+
+
+    /**
+     * @memberof MediaPlayer#
+     */
+    function startup() {
+        if (!initialized) {
+            initialized = true;
+        }
     }
 
     /**
@@ -823,7 +850,7 @@ function MediaPlayer() {
         //For external time text file,  the only action needed to change a track is marking the track mode to showing.
         // Fragmented text tracks need the additional step of calling textSourceBuffer.setTextTrack();
         if (textSourceBuffer === undefined) {
-            textSourceBuffer = context.textSourceBuffer;
+            textSourceBuffer = TextSourceBuffer(self.context).getInstance();
         }
 
         var tracks = element.textTracks;
@@ -847,7 +874,7 @@ function MediaPlayer() {
      * @memberof MediaPlayer#
      */
     function getBitrateInfoListFor(type) {
-        var stream = getActiveStream();
+        var stream = getActiveStream.call(this);
         return stream ? stream.getBitrateListFor(type) : [];
     }
 
@@ -1052,17 +1079,17 @@ function MediaPlayer() {
 
         if(!controller && capabilities.supportsEncryptedMedia()) {
 
-            let protectionExt = context.protectionExt;
+            let protectionExt = ProtectionExtensions(self.context).getInstance();
             protectionExt.setConfig({
                 log: log,
             });
             protectionExt.initialize();
 
-            let protectionModel = ProtectionModel_21Jan2015.create({
+            let protectionModel = ProtectionModel_21Jan2015(self.context).create({
                 log: log
             });
 
-            controller = ProtectionController.create({
+            controller = ProtectionController(self.context).create({
                 protectionModel:protectionModel,
                 protectionExt: protectionExt,
                 adapter: adapter,
@@ -1091,7 +1118,7 @@ function MediaPlayer() {
      * @memberof MediaPlayer#
      */
     function retrieveManifest(url, callback) {
-        var manifestLoader = createManifestLoader();
+        var manifestLoader = createManifestLoader.call(this);
         var self = this;
 
         var handler = function (e) {
@@ -1100,13 +1127,13 @@ function MediaPlayer() {
             } else {
                 callback(null, e.error);
             }
-            EventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+            eventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, self);
             manifestLoader.reset();
         };
 
-        EventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+        eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
 
-        let uriQueryFragModel = context.URIQueryAndFragmentModel;
+        let uriQueryFragModel = URIQueryAndFragmentModel(self.context).getInstance();
         uriQueryFragModel.initialize();
         manifestLoader.load(uriQueryFragModel.parseURI(url));
     }
@@ -1141,7 +1168,7 @@ function MediaPlayer() {
      * @see {@link MediaPlayer#removeUTCTimingSource removeUTCTimingSource()}
      */
     function addUTCTimingSource(schemeIdUri, value) {
-        removeUTCTimingSource(schemeIdUri, value);//check if it already exists and remove if so.
+        this.removeUTCTimingSource(schemeIdUri, value);//check if it already exists and remove if so.
         var vo = new UTCTiming();
         vo.schemeIdUri = schemeIdUri;
         vo.value = value;
@@ -1192,7 +1219,7 @@ function MediaPlayer() {
      * @see {@link MediaPlayer#addUTCTimingSource addUTCTimingSource()}
      */
     function restoreDefaultUTCTimingSources() {
-        addUTCTimingSource(DEFAULT_UTC_TIMING_SOURCE.scheme, DEFAULT_UTC_TIMING_SOURCE.value);
+        this.addUTCTimingSource(DEFAULT_UTC_TIMING_SOURCE.scheme, DEFAULT_UTC_TIMING_SOURCE.value);
     }
 
 
@@ -1215,7 +1242,7 @@ function MediaPlayer() {
      * @param value {Boolean}
      */
     function displayCaptionsOnTop(value) {
-        var textTrackExt = context.textTrackExt;
+        var textTrackExt = TextTrackExtensions(self.context).getInstance();
         textTrackExt.setConfig({videoModel:videoModel});
         textTrackExt.initialize();
         textTrackExt.displayCConTop(value);
@@ -1250,7 +1277,7 @@ function MediaPlayer() {
 
         videoModel = null;
         if (element) {
-            videoModel =  context.videoModel;
+            videoModel = VideoModel(self.context).getInstance();
             videoModel.initialize();
             videoModel.setElement(element);
             // Workaround to force Firefox to fire the canplay event.
@@ -1261,7 +1288,7 @@ function MediaPlayer() {
                 videoModel: videoModel
             });
         }
-        resetAndPlay();
+        resetAndPlay.call(this);
     }
 
     /**
@@ -1299,7 +1326,7 @@ function MediaPlayer() {
         }
 
         if (typeof urlOrManifest === "string") {
-            var uriQueryFragModel = context.URIQueryAndFragmentModel;
+            var uriQueryFragModel = URIQueryAndFragmentModel(self.context).getInstance();
             uriQueryFragModel.initialize();
             source = uriQueryFragModel.parseURI(urlOrManifest);
         } else {
@@ -1310,7 +1337,7 @@ function MediaPlayer() {
         protectionData = data;
 
         // TODO : update
-        resetAndPlay();
+        resetAndPlay.call(this);
     }
 
     /**
@@ -1320,15 +1347,9 @@ function MediaPlayer() {
      */
     function reset() {
         //todo add all vars in reset that need to be in here
-        attachSource(null);
-        attachView(null);
+        this.attachSource(null);
+        this.attachView(null);
         protectionController = null;
         protectionData = null;
     }
 }
-//MediaPlayer.prototype = {
-//    constructor: MediaPlayer
-//};
-MediaPlayer.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
-MediaPlayer.events = PublicEvents;
-export default MediaPlayer;

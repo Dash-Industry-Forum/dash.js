@@ -28,9 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import TextSourceBuffer from '../TextSourceBuffer.js';
+import MediaController from '../controllers/MediaController.js';
+import DashAdapter from '../../dash/DashAdapter.js';
 import Error from '../vo/Error.js';
+import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
-import MediaPlayer from '../../streaming/MediaPlayer.js'
+import ErrorHandler from '../../streaming/ErrorHandler.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
@@ -42,9 +46,11 @@ factory.QUOTA_EXCEEDED_ERROR_CODE = QUOTA_EXCEEDED_ERROR_CODE;
 export default factory;
 
 function SourceBufferExtensions() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
-        initialize: initialize,
         append: append,
         remove: remove,
         abort: abort,
@@ -60,12 +66,7 @@ function SourceBufferExtensions() {
 
     return instance;
 
-    let manifestExt,
-        EventBus;
-
-    function initialize() {
-        EventBus = MediaPlayer.prototype.context.EventBus;
-    }
+    let manifestExt;
 
     function createSourceBuffer(mediaSource, mediaInfo) {
 
@@ -85,12 +86,12 @@ function SourceBufferExtensions() {
 
         } catch (ex) {
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp"') !== -1)) {
-                buffer = MediaPlayer.prototype.context.textSourceBuffer;
+                buffer = TextSourceBuffer(self.context).getInstance();
                 buffer.setConfig({
-                    errHandler: MediaPlayer.prototype.context.errorHandler,
-                    adapter: MediaPlayer.prototype.context.adapter,
+                    errHandler: ErrorHandler(self.context).getInstance(),
+                    adapter: DashAdapter(self.context).getInstance(),
                     manifestExt: manifestExt,
-                    mediaController: MediaPlayer.prototype.context.mediaController,
+                    mediaController: MediaController(self.context).getInstance(),
                 });
             } else {
                 throw ex;
@@ -300,11 +301,11 @@ function SourceBufferExtensions() {
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 waitForUpdateEnd(buffer, function() {
-                    EventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
+                    eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes});
                 });
             });
         } catch (err) {
-            EventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes, error:new Error(err.code, err.message, null)});
+            eventBus.trigger(Events.SOURCEBUFFER_APPEND_COMPLETED, {buffer: buffer, bytes: bytes, error:new Error(err.code, err.message, null)});
         }
     }
 
@@ -319,11 +320,11 @@ function SourceBufferExtensions() {
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 waitForUpdateEnd(buffer, function() {
-                    EventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
+                    eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end});
                 });
             });
         } catch (err) {
-            EventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end, error:new Error(err.code, err.message, null)});
+            eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {buffer: buffer, from: start, to: end, error:new Error(err.code, err.message, null)});
         }
     }
 

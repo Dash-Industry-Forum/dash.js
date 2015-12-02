@@ -37,20 +37,24 @@
  * @implements ProtectionModel
  * @class
  */
-import MediaPlayer from '../../streaming/MediaPlayer.js'
+
 import ProtectionModel from './ProtectionModel.js';
+import ProtectionExtensions from '../extensions/ProtectionExtensions.js';
 import NeedKey from '../vo/protection/NeedKey.js';
 import KeyError from '../vo/protection/KeyError.js';
 import KeyMessage from '../vo/protection/KeyMessage.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
 import SessionToken from '../vo/protection/SessionToken.js';
+import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 
 let ProtectionModel_3Feb2014 = function () {
+    const self = this;
 
-    var protectionExt = MediaPlayer.prototype.context.protectionExt;
-    var EventBus = MediaPlayer.prototype.context.EventBus;
+    let eventBus = EventBus(self.context).getInstance();
+    var protectionExt = ProtectionExtensions(self.context).getInstance();
+
     var videoElement = null,
         mediaKeys = null,
         keySystemAccess = null,
@@ -72,7 +76,7 @@ let ProtectionModel_3Feb2014 = function () {
                         case api.needkey:
                             if (event.initData) {
                                 var initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                                EventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, "cenc")});
+                                eventBus.trigger(Events.NEED_KEY, {key:new NeedKey(initData, "cenc")});
                             }
                             break;
                     }
@@ -89,7 +93,7 @@ let ProtectionModel_3Feb2014 = function () {
             var doSetKeys = function() {
                 videoElement.removeEventListener("loadedmetadata", boundDoSetKeys);
                 videoElement[api.setMediaKeys](mediaKeys);
-                EventBus.trigger(Events.VIDEO_ELEMENT_SELECTED);
+                eventBus.trigger(Events.VIDEO_ELEMENT_SELECTED);
             };
             if (videoElement.readyState >= 1) {
                 doSetKeys.call(this);
@@ -116,20 +120,20 @@ let ProtectionModel_3Feb2014 = function () {
 
                         case api.error:
                             var errorStr = "KeyError"; // TODO: Make better string from event
-                            EventBus.trigger(Events.KEY_ERROR, {data:new KeyError(this, errorStr)});
+                            eventBus.trigger(Events.KEY_ERROR, {data:new KeyError(this, errorStr)});
                             break;
                         case api.message:
                             var message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                            EventBus.trigger(Events.INTERNAL_KEY_MESSAGE, {data:new KeyMessage(this, message, event.destinationURL)});
+                            eventBus.trigger(Events.INTERNAL_KEY_MESSAGE, {data:new KeyMessage(this, message, event.destinationURL)});
                             break;
                         case api.ready:
                             self.log("DRM: Key added.");
-                            EventBus.trigger(Events.KEY_ADDED);
+                            eventBus.trigger(Events.KEY_ADDED);
                             break;
 
                         case api.close:
                             self.log("DRM: Session closed.  SessionID = " + this.getSessionID());
-                            EventBus.trigger(Events.KEY_SESSION_CLOSED, {data:this.getSessionID()});
+                            eventBus.trigger(Events.KEY_SESSION_CLOSED, {data:this.getSessionID()});
                             break;
                     }
                 },
@@ -173,9 +177,9 @@ let ProtectionModel_3Feb2014 = function () {
                 if (videoElement) {
                     videoElement.removeEventListener(api.needkey, eventHandler);
                 }
-                EventBus.trigger(Events.TEARDOWN_COMPLETE);
+                eventBus.trigger(Events.TEARDOWN_COMPLETE);
             } catch (error) {
-                EventBus.trigger(Events.TEARDOWN_COMPLETE, {error:"Error tearing down key sessions and MediaKeys! -- " + error.message});
+                eventBus.trigger(Events.TEARDOWN_COMPLETE, {error:"Error tearing down key sessions and MediaKeys! -- " + error.message});
             }
         },
 
@@ -236,12 +240,12 @@ let ProtectionModel_3Feb2014 = function () {
                     found = true;
                     var ksConfig = new KeySystemConfiguration(supportedAudio, supportedVideo);
                     var ks = protectionExt.getKeySystemBySystemString(systemString);
-                    EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data:new KeySystemAccess(ks, ksConfig)});
+                    eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {data:new KeySystemAccess(ks, ksConfig)});
                     break;
                 }
             }
             if (!found) {
-                EventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:"Key system access denied! -- No valid audio/video content configurations detected!"});
+                eventBus.trigger(Events.KEY_SYSTEM_ACCESS_COMPLETE, {error:"Key system access denied! -- No valid audio/video content configurations detected!"});
             }
         },
 
@@ -253,9 +257,9 @@ let ProtectionModel_3Feb2014 = function () {
                 if (videoElement) {
                     setMediaKeys.call(this);
                 }
-                EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
+                eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED);
             } catch (error) {
-                EventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED, {error:"Error selecting keys system (" + this.keySystem.systemString + ")! Could not create MediaKeys -- TODO"});
+                eventBus.trigger(Events.INTERNAL_KEY_SYSTEM_SELECTED, {error:"Error selecting keys system (" + this.keySystem.systemString + ")! Could not create MediaKeys -- TODO"});
             }
         },
 
@@ -300,7 +304,7 @@ let ProtectionModel_3Feb2014 = function () {
             // Add to our session list
             sessions.push(sessionToken);
             this.log("DRM: Session created.  SessionID = " + sessionToken.getSessionID());
-            EventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
+            eventBus.trigger(Events.KEY_SESSION_CREATED, {data:sessionToken});
         },
 
         updateKeySession: function(sessionToken, message) {

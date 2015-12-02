@@ -28,10 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import LiveEdgeFinder from './LiveEdgeFinder.js';
 import StreamProcessor from './StreamProcessor.js';
+import MediaController from './controllers/MediaController.js';
+import EventController from './controllers/EventController.js';
 import FragmentController from './controllers/FragmentController.js';
-import MediaPlayer from './MediaPlayer.js';
+import AbrController from './controllers/AbrController.js';
+import VideoModel from './models/VideoModel.js';
+import MetricsModel from './models/MetricsModel.js';
+import PlaybackController from './controllers/PlaybackController.js';
 import DashHandler from '../dash/DashHandler.js';
+import BaseURLExtensions from '../dash/extensions/BaseURLExtensions.js';
+import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
+import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -40,6 +49,9 @@ const DATA_UPDATE_FAILED_ERROR_CODE = 1;
 export default FactoryMaker.getClassFactory(Stream);
 
 function Stream(config) {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let manifestModel = config.manifestModel;
     let manifestUpdater = config.manifestUpdater;
@@ -84,8 +96,7 @@ function Stream(config) {
         mediaController,
         fragmentController,
         eventController,
-        abrController,
-        EventBus;
+        abrController;
 
 
     function setup() {
@@ -97,17 +108,16 @@ function Stream(config) {
         isUpdating = false;
         initialized = false;
 
-        liveEdgeFinder = MediaPlayer.prototype.context.liveEdgeFinder;
-        playbackController = MediaPlayer.prototype.context.playbackController;
-        abrController = MediaPlayer.prototype.context.abrController;
-        mediaController = MediaPlayer.prototype.context.mediaController;
-        fragmentController = FragmentController.create({
+        liveEdgeFinder = LiveEdgeFinder(self.context).getInstance();
+        playbackController = PlaybackController(self.context).getInstance();
+        abrController = AbrController(self.context).getInstance();
+        mediaController = MediaController(self.context).getInstance();
+        fragmentController = FragmentController(self.context).create({
             log: log
         });
 
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
-        EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+        eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
     }
 
     function initialize(StreamInfo, ProtectionController) {
@@ -116,11 +126,11 @@ function Stream(config) {
         //TODO will need to seperate this once DRM is optional.
         protectionController = ProtectionController;
         if (protectionController) {
-            EventBus.on(Events.KEY_ERROR, onProtectionError, instance);
-            EventBus.on(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
-            EventBus.on(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
-            EventBus.on(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
-            EventBus.on(Events.KEY_SESSION_CREATED, onProtectionError, instance);
+            eventBus.on(Events.KEY_ERROR, onProtectionError, instance);
+            eventBus.on(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
+            eventBus.on(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
+            eventBus.on(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
+            eventBus.on(Events.KEY_SESSION_CREATED, onProtectionError, instance);
         }
     }
 
@@ -131,7 +141,7 @@ function Stream(config) {
      */
     function activate(mediaSource){
         if (!isStreamActivated) {
-            EventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+            eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
             initializeMedia(mediaSource);
         } else {
             createBuffers();
@@ -154,7 +164,7 @@ function Stream(config) {
         isStreamActivated = false;
         isMediaInitialized = false;
         resetEventController();
-        EventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+        eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 
     function reset() {
@@ -177,13 +187,13 @@ function Stream(config) {
         initialized = false;
         updateError = {};
 
-        EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
-        EventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
-        EventBus.off(Events.KEY_ERROR, onProtectionError, instance);
-        EventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
-        EventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
-        EventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
-        EventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, instance);
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+        eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
+        eventBus.off(Events.KEY_ERROR, onProtectionError, instance);
+        eventBus.off(Events.SERVER_CERTIFICATE_UPDATED, onProtectionError, instance);
+        eventBus.off(Events.LICENSE_REQUEST_COMPLETE, onProtectionError, instance);
+        eventBus.off(Events.KEY_SYSTEM_SELECTED, onProtectionError, instance);
+        eventBus.off(Events.KEY_SESSION_CREATED, onProtectionError, instance);
     }
 
     function getDuration() {
@@ -271,7 +281,7 @@ function Stream(config) {
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
             errHandler.capabilityError("encryptedmedia");
-        } else if (!capabilities.supportsCodec(MediaPlayer.prototype.context.videoModel.getElement(), codec)) {
+        } else if (!capabilities.supportsCodec(VideoModel(self.context).getInstance().getElement(), codec)) {
             msg = type + "Codec (" + codec + ") is not supported.";
             errHandler.manifestError(msg, "codec", manifest);
             log(msg);
@@ -305,16 +315,16 @@ function Stream(config) {
 
     function createIndexHandler() {
 
-        let baseUrlExt = MediaPlayer.prototype.context.baseURLExt;
+        let baseUrlExt = BaseURLExtensions(self.context).getInstance();
         baseUrlExt.setConfig({log:log});
         baseUrlExt.initialize();
 
-        let handler = DashHandler.create({
+        let handler = DashHandler(self.context).create({
             log:log,
             baseURLExt:baseUrlExt,
             timelineConverter: timelineConverter,
-            metricsExt:MediaPlayer.prototype.context.metricsExt,
-            metricsModel:MediaPlayer.prototype.context.metricsModel
+            metricsExt:DashMetricsExtensions(self.context).getInstance(),
+            metricsModel:MetricsModel(self.context).getInstance()
         }
         );
 
@@ -322,7 +332,7 @@ function Stream(config) {
     }
 
     function createStreamProcessor(mediaInfo, manifest, mediaSource, optionalSettings) {
-        var streamProcessor = StreamProcessor.create({
+        var streamProcessor = StreamProcessor(self.context).create({
             indexHandler: createIndexHandler(),
             timelineConverter: timelineConverter,
             adapter: adapter,
@@ -395,7 +405,7 @@ function Stream(config) {
         var manifest = manifestModel.getValue();
         var events;
 
-        eventController = MediaPlayer.prototype.context.eventController;
+        eventController = EventController(self.context).getInstance();
         eventController.initialize();
         eventController.setConfig({
             log: log,
@@ -439,7 +449,7 @@ function Stream(config) {
         }
 
         initialized = true;
-        EventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error:error});
+        eventBus.trigger(Events.STREAM_INITIALIZED, {streamInfo: streamInfo, error:error});
 
         if (!isMediaInitialized || isStreamActivated) return;
         protectionController.initialize(manifestModel.getValue(), getMediaInfo("audio"), getMediaInfo("video"));
@@ -477,7 +487,7 @@ function Stream(config) {
             if (!processors[i].isBufferingCompleted()) return;
         }
 
-        EventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {streamInfo: streamInfo});
+        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {streamInfo: streamInfo});
     }
 
     function onDataUpdateCompleted(e) {

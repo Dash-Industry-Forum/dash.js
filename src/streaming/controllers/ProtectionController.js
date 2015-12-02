@@ -44,7 +44,7 @@
  */
 
 import CommonEncryption from '../protection/CommonEncryption.js';
-import MediaPlayer from '../MediaPlayer.js';
+import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import MediaCapability from '../vo/protection/MediaCapability.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
@@ -53,6 +53,9 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(ProtectionController);
 
 function ProtectionController(config) {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let protectionExt = config.protectionExt;
     let protectionModel = config.protectionModel;
@@ -84,8 +87,7 @@ function ProtectionController(config) {
         protDataSet,
         initialized,
         sessionType,
-        keySystem,
-        EventBus;
+        keySystem;
 
     function setup() {
         keySystems = protectionExt.getKeySystems();
@@ -94,9 +96,8 @@ function ProtectionController(config) {
         sessionType = "temporary";
 
         //protectionModel.init(); Not needed in lates
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.NEED_KEY, onNeedKey, this);
-        EventBus.on(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
+        eventBus.on(Events.NEED_KEY, onNeedKey, this);
+        eventBus.on(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
     }
 
     /**
@@ -174,10 +175,10 @@ function ProtectionController(config) {
             try {
                 protectionModel.createKeySession(initDataForKS, sessionType);
             } catch (error) {
-                EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Error creating key session! " + error.message});
+                eventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Error creating key session! " + error.message});
             }
         } else {
-            EventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Selected key system is " + keySystem.systemString + ".  needkey/encrypted event contains no initData corresponding to that key system!"});
+            eventBus.trigger(Events.KEY_SESSION_CREATED, {data:null, error:"Selected key system is " + keySystem.systemString + ".  needkey/encrypted event contains no initData corresponding to that key system!"});
         }
     }
 
@@ -252,10 +253,10 @@ function ProtectionController(config) {
     function setMediaElement(element) {
         if (element) {
             protectionModel.setMediaElement(element);
-            EventBus.on(Events.NEED_KEY, onNeedKey, this);
+            eventBus.on(Events.NEED_KEY, onNeedKey, this);
         } else if (element === null) {
             protectionModel.setMediaElement(element);
-            EventBus.off(Events.NEED_KEY, onNeedKey, this);
+            eventBus.off(Events.NEED_KEY, onNeedKey, this);
         }
     }
 
@@ -295,8 +296,8 @@ function ProtectionController(config) {
      */
     function reset() {
         setMediaElement(null);
-        EventBus.off(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
-        EventBus.off(Events.NEED_KEY, onNeedKey, this);
+        eventBus.off(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
+        eventBus.off(Events.NEED_KEY, onNeedKey, this);
 
         keySystem = undefined;//TODO-Refactor look at why undefined is needed for this. refactor
 
@@ -347,18 +348,18 @@ function ProtectionController(config) {
                     // Ensure that we would be granted key system access using the key
                     // system and codec information
                     let onKeySystemAccessComplete = function(event) {
-                        EventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+                        eventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                         if (event.error) {
                             if (!fromManifest) {
-                                EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {error: "DRM: KeySystem Access Denied! -- " + event.error});
+                                eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {error: "DRM: KeySystem Access Denied! -- " + event.error});
                             }
                         } else {
                             log("KeySystem Access Granted");
-                            EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: event.data});
+                            eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: event.data});
                             createKeySession(supportedKS[ksIdx].initData);
                         }
                     };
-                    EventBus.on(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+                    eventBus.on(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                     protectionModel.requestKeySystemAccess(requestedKeySystems);
                     break;
                 }
@@ -376,13 +377,13 @@ function ProtectionController(config) {
 
             var keySystemAccess;
             var onKeySystemAccessComplete = function(event) {
-                EventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+                eventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                 if (event.error) {
                     keySystem = undefined;
-                    EventBus.off(Events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+                    eventBus.off(Events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
 
                     if (!fromManifest) {
-                        EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: null, error: "DRM: KeySystem Access Denied! -- " + event.error});
+                        eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: null, error: "DRM: KeySystem Access Denied! -- " + event.error});
                     }
                 } else {
                     keySystemAccess = event.data;
@@ -391,11 +392,11 @@ function ProtectionController(config) {
                 }
             };
             var onKeySystemSelected = function(event) {
-                EventBus.off(Events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
-                EventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+                eventBus.off(Events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+                eventBus.off(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                 if (!event.error) {
                     keySystem = protectionModel.getKeySystem();
-                    EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: keySystemAccess});
+                    eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: keySystemAccess});
                     for (var i = 0; i < pendingNeedKeyData.length; i++) {
                         for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                             if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
@@ -407,12 +408,12 @@ function ProtectionController(config) {
                 } else {
                     keySystem = undefined;
                     if (!fromManifest) {
-                        EventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: null, error: "DRM: Error selecting key system! -- " + event.error});
+                        eventBus.trigger(Events.KEY_SYSTEM_SELECTED, {data: null, error: "DRM: Error selecting key system! -- " + event.error});
                     }
                 }
             };
-            EventBus.on(Events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
-            EventBus.on(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+            eventBus.on(Events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+            eventBus.on(Events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
             protectionModel.requestKeySystemAccess(requestedKeySystems);
         } else {
             // We are in the process of selecting a key system, so just save the data
@@ -421,7 +422,7 @@ function ProtectionController(config) {
     }
 
     function sendLicenseRequestCompleteEvent(data, error) {
-        EventBus.trigger(Events.LICENSE_REQUEST_COMPLETE, {data: data, error: error});
+        eventBus.trigger(Events.LICENSE_REQUEST_COMPLETE, {data: data, error: error});
     }
 
     function onKeyMessage(e) {
@@ -432,7 +433,7 @@ function ProtectionController(config) {
 
         // Dispatch event to applications indicating we received a key message
         var keyMessage = e.data;
-        EventBus.trigger(Events.KEY_MESSAGE, {data: keyMessage});
+        eventBus.trigger(Events.KEY_MESSAGE, {data: keyMessage});
         var messageType = (keyMessage.messageType) ? keyMessage.messageType : "license-request";
         var message = keyMessage.message;
         var sessionToken = keyMessage.sessionToken;

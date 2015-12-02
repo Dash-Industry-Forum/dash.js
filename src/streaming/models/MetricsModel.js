@@ -39,7 +39,7 @@ import DroppedFrames from '../vo/metrics/DroppedFrames.js';
 import ManifestUpdate from '../vo/metrics/ManifestUpdate.js';
 import SchedulingInfo from '../vo/metrics/SchedulingInfo.js';
 import PlayList from '../vo/metrics/PlayList.js';
-import MediaPlayer from '../MediaPlayer.js';
+import EventBus from '../utils/EventBus.js';
 import RequestsQueue from '../vo/metrics/RequestsQueue.js';
 import Events from '../Events.js'
 import FactoryMaker from '../../core/FactoryMaker.js';
@@ -47,9 +47,11 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(MetricsModel);
 
 function  MetricsModel() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
-        initialize: initialize,
         metricsChanged: metricsChanged,
         metricChanged: metricChanged,
         metricUpdated: metricUpdated,
@@ -77,15 +79,14 @@ function  MetricsModel() {
         setConfig: setConfig
     };
 
+    setup();
     return instance;
 
     let adapter,
-        streamMetrics,
-        EventBus;
+        streamMetrics;
 
-    function initialize() {
+    function setup() {
         streamMetrics = {};
-        EventBus = MediaPlayer.prototype.context.EventBus;
     }
 
     function setConfig(config) {
@@ -97,21 +98,21 @@ function  MetricsModel() {
     }
 
     function metricsChanged() {
-        EventBus.trigger(Events.METRICS_CHANGED);
+        eventBus.trigger(Events.METRICS_CHANGED);
     }
 
     function metricChanged(mediaType) {
-        EventBus.trigger(Events.METRIC_CHANGED, {mediaType: mediaType});
+        eventBus.trigger(Events.METRIC_CHANGED, {mediaType: mediaType});
         metricsChanged();
     }
 
     function metricUpdated(mediaType, metricType, vo) {
-        EventBus.trigger(Events.METRIC_UPDATED, {mediaType: mediaType, metric: metricType, value: vo});
+        eventBus.trigger(Events.METRIC_UPDATED, {mediaType: mediaType, metric: metricType, value: vo});
         metricChanged(mediaType);
     }
 
     function metricAdded(mediaType, metricType, vo) {
-        EventBus.trigger(Events.METRIC_ADDED, {mediaType: mediaType, metric: metricType, value: vo});
+        eventBus.trigger(Events.METRIC_ADDED, {mediaType: mediaType, metric: metricType, value: vo});
         metricChanged(mediaType);
     }
 

@@ -30,13 +30,14 @@
  */
 import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
-import MediaPlayer from '../../MediaPlayer.js'
+import PlaybackController from '../../controllers/PlaybackController.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 export default FactoryMaker.getClassFactory(BufferLevelRule);
 
 function BufferLevelRule(config) {
     "use strict";
+    const self = this;
 
     let metricsExt = config.metricsExt;
     let metricsModel = config.metricsModel;
@@ -58,7 +59,7 @@ function BufferLevelRule(config) {
 
         fragmentCount = bufferLevel < getBufferTarget(context, mediaType) ? 1 : 0;
 
-        callback(SwitchRequest.create(fragmentCount, SwitchRequest.DEFAULT));
+        callback(SwitchRequest(self.context).create(fragmentCount, SwitchRequest.DEFAULT));
     }
 
     function reset() {}
@@ -79,7 +80,7 @@ function BufferLevelRule(config) {
             //General VOD target non top quality and not stabilized on a given quality.
             bufferTarget = BufferController.DEFAULT_MIN_BUFFER_TIME;
         } else {
-            bufferTarget = MediaPlayer.prototype.context.playbackController.getLiveDelay();
+            bufferTarget = PlaybackController(self.context).getInstance().getLiveDelay();
         }
 
         if (type === "fragmentedText"){
