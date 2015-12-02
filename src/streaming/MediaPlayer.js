@@ -258,6 +258,10 @@ MediaPlayer = function (context) {
             return getAsUTC.call(this, this.duration());
         },
 
+		getDVRStartAsUTC = function () {
+			return getAsUTC.call(this, this.getDVRStart());
+		},
+		
         formatUTC = function (time, locales, hour12) {
             var dt = new Date(time*1000);
             var d = dt.toLocaleDateString(locales);
