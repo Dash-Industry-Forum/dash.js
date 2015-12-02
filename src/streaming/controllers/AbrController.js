@@ -465,7 +465,9 @@ MediaPlayer.dependencies.AbrController = function () {
                 bitrateInfo = new MediaPlayer.vo.BitrateInfo();
                 bitrateInfo.mediaType = type;
                 bitrateInfo.qualityIndex = i;
-                bitrateInfo.bitrate = bitrateList[i];
+                bitrateInfo.bitrate = bitrateList[i].bandwidth;
+                bitrateInfo.width = bitrateList[i].width;
+                bitrateInfo.height = bitrateList[i].height;
                 infoList.push(bitrateInfo);
             }
 

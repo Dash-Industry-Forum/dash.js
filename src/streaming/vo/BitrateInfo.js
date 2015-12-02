@@ -32,6 +32,8 @@ MediaPlayer.vo.BitrateInfo = function () {
     "use strict";
     this.mediaType = null;
     this.bitrate = null;
+    this.width = null;
+    this.height = null;
     this.qualityIndex = NaN;
 };
 

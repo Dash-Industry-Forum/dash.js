@@ -94,7 +94,7 @@ MediaPlayer.dependencies.MediaController = function () {
                          tmp;
 
                      trackArr.forEach(function(track) {
-                         tmp = Math.max.apply(Math, track.bitrateList);
+                         tmp = Math.max.apply(Math, track.bitrateList.map(function(obj) { return obj.bandwidth; }));
 
                          if (tmp > max) {
                              max = tmp;
