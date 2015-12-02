@@ -161,6 +161,11 @@ MediaPlayer.dependencies.ManifestLoader = function () {
                     }
                 }
 
+                if (event.lengthComputable) {
+                    request.bytesLoaded = event.loaded;
+                    request.bytesTotal = event.total;
+                }
+
                 traces.push({
                     s: lastTraceTime,
                     d: currentTime.getTime() - lastTraceTime.getTime(),
