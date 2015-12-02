@@ -30,7 +30,7 @@
  */
 import LiveEdgeFinder from '../streaming/LiveEdgeFinder.js';
 import TimeSyncController from '../streaming/TimeSyncController.js';
-import MediaPlayer from '../streaming/MediaPlayer.js';
+import EventBus from '../streaming/utils/EventBus.js';
 import Events from "../streaming/Events.js";
 
 import FactoryMaker from '../core/FactoryMaker.js';
@@ -38,6 +38,9 @@ import FactoryMaker from '../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(TimelineConverter);
 
 function TimelineConverter() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
         initialize:initialize,
@@ -64,17 +67,16 @@ function TimelineConverter() {
 
     let clientServerTimeShift,
         isClientServerTimeSyncCompleted,
-        expectedLiveEdge,
-        EventBus = MediaPlayer.prototype.context.EventBus;;
+        expectedLiveEdge;
 
     function initialize() {
 
         clientServerTimeShift = 0;
         isClientServerTimeSyncCompleted = false;
         expectedLiveEdge = NaN;
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-        EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
+
+        eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+        eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
     }
 
 
@@ -231,8 +233,8 @@ function TimelineConverter() {
     }
 
     function reset() {
-        EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-        EventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
+        eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
         clientServerTimeShift = 0;
         isClientServerTimeSyncCompleted = false;
         expectedLiveEdge = NaN;

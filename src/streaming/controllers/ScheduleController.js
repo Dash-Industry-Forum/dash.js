@@ -32,14 +32,20 @@
 import PlayList from '../vo/metrics/PlayList.js';
 import ScheduleRulesCollection from '../rules/SchedulingRules/ScheduleRulesCollection.js';
 import SwitchRequest from '../rules/SwitchRequest.js';
+import PlaybackController from './PlaybackController.js';
+import AbrController from './AbrController.js';
 import BufferController from './BufferController.js';
-import MediaPlayer from '../../streaming/MediaPlayer.js'
+import LiveEdgeFinder from '../LiveEdgeFinder.js';
+import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getClassFactory(ScheduleController);
 
 function ScheduleController(config) {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let log = config.log;
     let metricsModel = config.metricsModel;
@@ -93,8 +99,7 @@ function ScheduleController(config) {
         fragmentController,
         liveEdgeFinder,
         bufferController,
-        scheduleWhilePaused,
-        EventBus;
+        scheduleWhilePaused;
 
 
     function setup() {
@@ -112,35 +117,35 @@ function ScheduleController(config) {
     function initialize(Type, StreamProcessor) {
         type = Type;
         streamProcessor = StreamProcessor;
-        liveEdgeFinder = MediaPlayer.prototype.context.liveEdgeFinder;
-        playbackController = MediaPlayer.prototype.context.playbackController;
-        abrController = MediaPlayer.prototype.context.abrController;
+        liveEdgeFinder = LiveEdgeFinder(self.context).getInstance();
+        playbackController = PlaybackController(self.context).getInstance();
+        abrController = AbrController(self.context).getInstance();
         fragmentController = streamProcessor.getFragmentController();
         bufferController = streamProcessor.getBufferController();
         fragmentModel = fragmentController.getModel(this);
         isDynamic = streamProcessor.isDynamic();
         scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
 
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-        EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
-        EventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
-        EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        EventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
-        EventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
-        EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
-        EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-        EventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
-        EventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
-        EventBus.on(Events.INIT_REQUESTED, onInitRequested, this);
-        EventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
-        EventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-        EventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-        EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        EventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         if (manifestExt.getIsTextTrack(type)){
-            EventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
+            eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
+
+        eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+        eventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
+        eventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
+        eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
+        eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
+        eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
+        eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
+        eventBus.on(Events.BYTES_APPENDED, onBytesAppended, this);
+        eventBus.on(Events.INIT_REQUESTED, onInitRequested, this);
+        eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
+        eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
+        eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
     }
 
     function clearPlayListTraceMetrics(endTime, stopreason) {
@@ -449,25 +454,25 @@ function ScheduleController(config) {
     }
 
     function reset() {
-        EventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-        EventBus.off(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
-        EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        EventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-        EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
-        EventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
-        EventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
-        EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
-        EventBus.off(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
-        EventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
-        EventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
-        EventBus.off(Events.INIT_REQUESTED, onInitRequested, this);
-        EventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
-        EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        EventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
+        eventBus.off(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
+        eventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
+        eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
+        eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
+        eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
+        eventBus.off(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
+        eventBus.off(Events.BYTES_APPENDED, onBytesAppended, this);
+        eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
+        eventBus.off(Events.INIT_REQUESTED, onInitRequested, this);
+        eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
+        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
 
 
         if (manifestExt.getIsTextTrack(type)){
-            EventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
+            eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
         doStop();

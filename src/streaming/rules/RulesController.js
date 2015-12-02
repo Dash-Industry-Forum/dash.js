@@ -47,6 +47,7 @@ factory.SYNC_RULE = SYNC_RULE;
 export default factory;
 
 function RulesController() {
+    const self = this;
 
     let instance = {
         initialize:initialize,
@@ -198,7 +199,7 @@ function RulesController() {
     }
 
     function getRulesContext(streamProcessor, currentValue) {
-        return RulesContext.create({streamProcessor: streamProcessor, currentValue: currentValue});
+        return RulesContext(self.context).create({streamProcessor: streamProcessor, currentValue: currentValue});
     }
 
     function normalizeRule(rule) {
@@ -206,7 +207,7 @@ function RulesController() {
 
         rule.execute = function(context, callback) {
             var normalizedCallback = function(result) {
-                callback.call(rule, SwitchRequest.create(result.value, result.priority));
+                callback.call(rule, SwitchRequest(self.context).create(result.value, result.priority));
             };
 
             exec(context, normalizedCallback);

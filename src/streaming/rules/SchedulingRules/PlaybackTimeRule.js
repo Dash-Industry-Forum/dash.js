@@ -36,6 +36,7 @@ export default FactoryMaker.getClassFactory(PlaybackTimeRule);
 
 function PlaybackTimeRule(config) {
     "use strict";
+    const self = this;
 
     let adapter = config.adapter;
     let sourceBufferExt = config.sourceBufferExt;
@@ -67,7 +68,7 @@ function PlaybackTimeRule(config) {
             request;
 
         if (isNaN(time) || (mediaType === "fragmentedText" && textSourceBuffer.getAllTracksAreDisabled())) {
-            callback(SwitchRequest.create(null, p));
+            callback(SwitchRequest(self.context).create(null, p));
             return;
         }
 
@@ -102,6 +103,6 @@ function PlaybackTimeRule(config) {
             request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
         }
 
-        callback(SwitchRequest.create(request, p));
+        callback(SwitchRequest(self.context).create(request, p));
     }
 }

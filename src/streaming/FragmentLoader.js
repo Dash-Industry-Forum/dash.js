@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Error from './vo/Error.js';
-import MediaPlayer from './MediaPlayer.js';
+import EventBus from './utils/EventBus.js';
 import Events from "./Events.js";
 import FactoryMaker from '../core/FactoryMaker.js';
 
@@ -39,6 +39,9 @@ const RETRY_INTERVAL = 3;
 export default FactoryMaker.getClassFactory(FragmentLoader);
 
 function FragmentLoader(config) {
+    const _self = this;
+
+    let eventBus = EventBus(_self.context).getInstance();
 
     let metricsModel = config.metricsModel;
     let errHandler = config.errHandler;
@@ -46,7 +49,6 @@ function FragmentLoader(config) {
     let requestModifierExt = config.requestModifierExt;
 
     let instance = {
-        initialize: initialize,
         checkForExistence: checkForExistence,
         load: load,
         abort: abort
@@ -54,13 +56,7 @@ function FragmentLoader(config) {
 
     return instance;
 
-    let xhrs,
-        EventBus;
-
-    function initialize() {
-        xhrs = [];
-        EventBus = MediaPlayer.prototype.context.EventBus;
-    }
+    let xhrs;
 
     function doLoad(request, remainingAttempts) {
         var req = new XMLHttpRequest(),
@@ -166,13 +162,13 @@ function FragmentLoader(config) {
             });
 
             lastTraceTime = currentTime;
-            EventBus.trigger(Events.LOADING_PROGRESS, {request: request});
+            eventBus.trigger(Events.LOADING_PROGRESS, {request: request});
         };
 
         req.onload = function () {
             if (req.status < 200 || req.status > 299) return;
             handleLoaded(request, true);
-            EventBus.trigger(Events.LOADING_COMPLETED, {request: request, response: req.response, sender: instance});
+            eventBus.trigger(Events.LOADING_COMPLETED, {request: request, response: req.response, sender: instance});
         };
 
         req.onloadend = req.onerror = function () {
@@ -195,7 +191,7 @@ function FragmentLoader(config) {
             } else {
                 log("Failed loading fragment: " + request.mediaType + ":" + request.type + ":" + request.startTime + " no retry attempts left");
                 errHandler.downloadError("content", request.url, req);
-                EventBus.trigger(Events.LOADING_COMPLETED, {
+                eventBus.trigger(Events.LOADING_COMPLETED, {
                     request: request,
                     bytes: null,
                     error: new Error(null, "failed loading fragment", null),
@@ -210,7 +206,7 @@ function FragmentLoader(config) {
     function checkForExistence(request) {
 
         if (!request) {
-            EventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, { request: request, exists: false });
+            eventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, { request: request, exists: false });
             return;
         }
 
@@ -222,21 +218,22 @@ function FragmentLoader(config) {
         req.onload = function () {
             if (req.status < 200 || req.status > 299) return;
             isSuccessful = true;
-            EventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, { request: request, exists: true });
+            eventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, { request: request, exists: true });
 
         };
 
         req.onloadend = req.onerror = function () {
             if (isSuccessful) return;
-            EventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, { request: request, exists: false });
+            eventBus.trigger(Events.CHECK_FOR_EXISTENCE_COMPLETED, { request: request, exists: false });
         };
 
         req.send();
     }
 
     function load(req) {
+        xhrs = xhrs || [];
         if (!req) {
-            EventBus.trigger(Events.LOADING_COMPLETED, {
+            eventBus.trigger(Events.LOADING_COMPLETED, {
                 request: req,
                 bytes: null,
                 error: new Error(null, "request is null", null),

@@ -33,7 +33,7 @@ import SwitchRequest from '../rules/SwitchRequest';
 import BitrateInfo from '../vo/BitrateInfo.js';
 import ABRRulesCollection from '../rules/ABRRules/ABRRulesCollection.js';
 import FragmentModel from '../models/FragmentModel.js';
-import MediaPlayer from '../MediaPlayer.js';
+import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -50,6 +50,9 @@ factory.BANDWIDTH_SAFETY = BANDWIDTH_SAFETY;
 export default factory;
 
 function AbrController() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
         isPlayingAtTopQuality   :isPlayingAtTopQuality,
@@ -92,8 +95,7 @@ function AbrController() {
         averageThroughputDict,
         streamProcessorDict,
         abandonmentStateDict,
-        abandonmentTimeout,
-        EventBus;
+        abandonmentTimeout;
 
     function setup() {
         autoSwitchBitrate = true;
@@ -107,11 +109,10 @@ function AbrController() {
     }
 
     function initialize(type, streamProcessor) {
-        EventBus = MediaPlayer.prototype.context.EventBus;
         streamProcessorDict[type] = streamProcessor;
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
         abandonmentStateDict[type].state = ALLOW_LOAD;
-        //EventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
+        //eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
     }
 
     function setConfig(config){
@@ -214,7 +215,7 @@ function AbrController() {
                 //log("New quality of " + quality);
                 setConfidenceFor(type, streamId, confidence);
                 //log("New confidence of " + confidence);
-                EventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
+                eventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamProcessor.getStreamInfo(), oldQuality: oldQuality, newQuality: quality});
 
             }
 
@@ -249,7 +250,7 @@ function AbrController() {
 
         if (newPlaybackQuality !== quality && newPlaybackQuality >= 0 && newPlaybackQuality <= getTopQualityIndexFor(type, id)) {
             setInternalQuality(type, id, newPlaybackQuality);
-            EventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality});
+            eventBus.trigger(Events.QUALITY_CHANGED, {mediaType: type, streamInfo: streamInfo, oldQuality: quality, newQuality: newPlaybackQuality});
         }
     }
 
@@ -340,7 +341,7 @@ function AbrController() {
 
     function reset () {
         //Uncomment when needed again.
-        //EventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
+        //eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         clearTimeout(abandonmentTimeout);
         abandonmentTimeout = null;
         setup();

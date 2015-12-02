@@ -28,10 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import PlaybackController from './PlaybackController.js';
 import ProtectionController from './ProtectionController.js';
 import MediaPlayer from '../MediaPlayer.js';
 import Stream from '../Stream.js';
+import ManifestUpdater from '../ManifestUpdater.js';
+import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
+import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
+import VideoModel from '../models/VideoModel.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const STREAM_END_THRESHOLD = 0.2;
@@ -39,6 +44,9 @@ const STREAM_END_THRESHOLD = 0.2;
 export default FactoryMaker.getSingletonFactory(StreamController);
 
 function StreamController() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
         initialize          :initialize,
@@ -88,8 +96,7 @@ function StreamController() {
         UTCTimingSources,
         useManifestDateHeaderTimeSource,
         videoModel,
-        playbackController,
-        EventBus;
+        playbackController;
 
 
     function setup() {
@@ -108,7 +115,7 @@ function StreamController() {
         protectionData = protData;
         timelineConverter.initialize();
 
-        manifestUpdater = MediaPlayer.prototype.context.manifestUpdater;
+        manifestUpdater = ManifestUpdater(self.context).getInstance();
         manifestUpdater.setConfig({
             log :log,
             manifestModel: manifestModel,
@@ -116,8 +123,8 @@ function StreamController() {
         });
         manifestUpdater.initialize(manifestLoader);
 
-        videoModel = MediaPlayer.prototype.context.videoModel;
-        playbackController = MediaPlayer.prototype.context.playbackController;
+        videoModel = VideoModel(self.context).getInstance();
+        playbackController = PlaybackController(self.context).getInstance();
         playbackController.setConfig({
             streamController: instance,
             log: log,
@@ -130,15 +137,14 @@ function StreamController() {
             videoModel: videoModel
         });
 
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
-        EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
-        EventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
-        EventBus.on(Events.CAN_PLAY, onCanPlay, this);
-        EventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
-        EventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
-        EventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
+        eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
+        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
+        eventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
+        eventBus.on(Events.CAN_PLAY, onCanPlay, this);
+        eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
+        eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
+        eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
     }
 
     /*
@@ -146,7 +152,7 @@ function StreamController() {
      * and implements corresponding logic to switch between them.
      */
     function fireSwitchEvent(eventType, fromStream, toStream) {
-        EventBus.trigger(eventType, {fromStreamInfo: fromStream ? fromStream.getStreamInfo() : null, toStreamInfo: toStream.getStreamInfo()})
+        eventBus.trigger(eventType, {fromStreamInfo: fromStream ? fromStream.getStreamInfo() : null, toStreamInfo: toStream.getStreamInfo()})
     }
 
     function startAutoPlay() {
@@ -379,7 +385,7 @@ function StreamController() {
         //capabilities.supportsEncryptedMedia() &&
         if ( protectionController) {
             //if (!protectionController) {//Todo detech here and create on mediaplayer level?
-            //    protectionController = ProtectionController.create({
+            //    protectionController = ProtectionController(self.context).create({
             //        protectionExt: system.getObject('protectionExt'),
             //        adapter: adapter,
             //        log: log,
@@ -388,7 +394,7 @@ function StreamController() {
             //
             //    ownProtectionController = true;
             //}
-            EventBus.trigger(Events.PROTECTION_CREATED, {controller: protectionController, manifest: manifest});
+            eventBus.trigger(Events.PROTECTION_CREATED, {controller: protectionController, manifest: manifest});
             protectionController.setMediaElement(videoModel.getElement());
             if (protectionData) {
                 protectionController.setProtectionData(protectionData);
@@ -421,7 +427,7 @@ function StreamController() {
                 // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
                 if (!stream) {
 
-                    stream = Stream.create({
+                    stream = Stream(self.context).create({
                         manifestModel: manifestModel,
                         manifestUpdater: manifestUpdater,
                         adapter: adapter,
@@ -432,7 +438,7 @@ function StreamController() {
                     });
                     stream.initialize(streamInfo, protectionController);
 
-                    EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
+                    eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
                     remainingStreams.push(stream);
 
                     if (activeStream) {
@@ -477,7 +483,7 @@ function StreamController() {
             if (!streams[i].isInitialized()) return;
         }
 
-        EventBus.trigger(Events.STREAMS_COMPOSED);
+        eventBus.trigger(Events.STREAMS_COMPOSED);
     }
 
     function onStreamInitialized(/*e*/) {
@@ -514,7 +520,7 @@ function StreamController() {
 
             var manifestUTCTimingSources = manifestExt.getUTCTimingSources(e.manifest);
             var allUTCTimingSources = (!manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(UTCTimingSources);
-            var isHTTPS = MediaPlayer.prototype.context.URIQueryAndFragmentModel.isManifestHTTPS();
+            var isHTTPS = URIQueryAndFragmentModel(self.context).getInstance().isManifestHTTPS();
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
             allUTCTimingSources.forEach(function(item){
@@ -626,19 +632,19 @@ function StreamController() {
 
         for (var i = 0, ln = streams.length; i < ln; i++) {
             stream = streams[i];
-            EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
+            eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
             stream.reset(hasMediaError);
         }
 
         streams = [];
 
-        EventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
-        EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        EventBus.off(Events.CAN_PLAY, onCanPlay, this);
-        EventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
-        EventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
-        EventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
-        EventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
+        eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
+        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.off(Events.CAN_PLAY, onCanPlay, this);
+        eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
+        eventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
+        eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
+        eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
         manifestUpdater.reset();
         metricsModel.clearAllCurrentMetrics();
 
@@ -666,28 +672,28 @@ function StreamController() {
 
         // Teardown the protection system, if necessary
         if (!protectionController) {
-            EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
+            eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
         }
             /*else if (ownProtectionController) {
                 var onTeardownComplete = function () {
-                    EventBus.off(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
+                    eventBus.off(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
                     // Complete teardown process
                     ownProtectionController = false;
                     protectionController = null;
                     protectionData = null;
                     if (manifestUrl) {
-                        EventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestUrl});
+                        eventBus.trigger(Events.PROTECTION_DESTROYED, {data: manifestUrl});
                     }
-                    EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
+                    eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
                 };
-                EventBus.on(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
+                eventBus.on(Events.TEARDOWN_COMPLETE, onTeardownComplete, this);
                 protectionController.reset();
             }*/
         else {
             protectionController.setMediaElement(null);
             protectionController = null;
             protectionData = null;
-            EventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
+            eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
         }
     }
 };

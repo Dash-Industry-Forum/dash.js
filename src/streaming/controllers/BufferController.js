@@ -32,10 +32,13 @@
 import FragmentModel from '../models/FragmentModel.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import SourceBufferExtensions from '../extensions/SourceBufferExtensions.js';
+import AbrController from './AbrController.js';
+import PlaybackController from './PlaybackController.js';
 import MediaController from './MediaController.js';
 import CustomTimeRanges from '../utils/CustomTimeRanges.js';
+import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
-import MediaPlayer from '../MediaPlayer.js'
+import BoxParser from '../utils/BoxParser.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
@@ -62,6 +65,9 @@ factory.BUFFER_EMPTY = BUFFER_EMPTY;
 export default factory;
 
 function BufferController(config) {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let log = config.log;
     let metricsModel = config.metricsModel;
@@ -123,8 +129,7 @@ function BufferController(config) {
         streamProcessor,
         abrController,
         fragmentController,
-        scheduleController,
-        EventBus;
+        scheduleController;
 
     function setup() {
         requiredQuality = -1,
@@ -148,27 +153,26 @@ function BufferController(config) {
         type = Type;
         setMediaSource(Source);
         streamProcessor = StreamProcessor;
-        playbackController = MediaPlayer.prototype.context.playbackController;
-        abrController = MediaPlayer.prototype.context.abrController;
+        playbackController = PlaybackController(self.context).getInstance();
+        abrController = AbrController(self.context).getInstance();
         fragmentController = streamProcessor.getFragmentController();
         scheduleController = streamProcessor.getScheduleController();
         requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
 
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        EventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
-        EventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
-        EventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
-        EventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
-        EventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
-        EventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
-        EventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
-        EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        EventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        EventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
-        EventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
-        EventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
-        EventBus.on(Events.CHUNK_APPENDED, onChunkAppended, this);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
+        eventBus.on(Events.QUALITY_CHANGED, onQualityChanged, this);
+        eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
+        eventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
+        eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
+        eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
+        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
+        eventBus.on(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
+        eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+        eventBus.on(Events.CHUNK_APPENDED, onChunkAppended, this);
     }
 
     function createBuffer(mediaInfo) {
@@ -292,7 +296,7 @@ function BufferController(config) {
             appendToBuffer(chunk);
         } else {
             // if we have not loaded the init fragment for the current quality, do it
-            EventBus.trigger(Events.INIT_REQUESTED, {sender: instance, requiredQuality: quality});
+            eventBus.trigger(Events.INIT_REQUESTED, {sender: instance, requiredQuality: quality});
         }
     }
 
@@ -321,7 +325,7 @@ function BufferController(config) {
             if (e.error.code === SourceBufferExtensions.QUOTA_EXCEEDED_ERROR_CODE) {
                 virtualBuffer.append(appendedBytesInfo);
                 criticalBufferLevel = sourceBufferExt.getTotalBufferedTime(buffer) * 0.8;
-                EventBus.trigger(Events.QUOTA_EXCEEDED, {sender: instance, criticalBufferLevel: criticalBufferLevel});
+                eventBus.trigger(Events.QUOTA_EXCEEDED, {sender: instance, criticalBufferLevel: criticalBufferLevel});
                 clearBuffer(getClearRange());
             }
             isAppendingInProgress = false;
@@ -329,7 +333,7 @@ function BufferController(config) {
         }
 
         if (!hasEnoughSpaceToAppend()) {
-            EventBus.trigger(Events.QUOTA_EXCEEDED, {sender: instance, criticalBufferLevel: criticalBufferLevel});
+            eventBus.trigger(Events.QUOTA_EXCEEDED, {sender: instance, criticalBufferLevel: criticalBufferLevel});
             clearBuffer(getClearRange());
         }
 
@@ -361,7 +365,7 @@ function BufferController(config) {
             }
         }
 
-        EventBus.trigger(Events.BYTES_APPENDED, {sender: instance, quality: appendedBytesInfo.quality, startTime: appendedBytesInfo.start, index: appendedBytesInfo.index, bufferedRanges: ranges});
+        eventBus.trigger(Events.BYTES_APPENDED, {sender: instance, quality: appendedBytesInfo.quality, startTime: appendedBytesInfo.start, index: appendedBytesInfo.index, bufferedRanges: ranges});
     }
 
     function onQualityChanged(e) {
@@ -390,7 +394,7 @@ function BufferController(config) {
         var currentTime = playbackController.getTime();
 
         bufferLevel = sourceBufferExt.getBufferLength(buffer, currentTime);
-        EventBus.trigger(Events.BUFFER_LEVEL_UPDATED, {sender: instance, bufferLevel: bufferLevel});
+        eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, {sender: instance, bufferLevel: bufferLevel});
         checkIfSufficientBuffer();
     }
 
@@ -418,7 +422,7 @@ function BufferController(config) {
         if (!isLastIdxAppended || isBufferingCompleted) return;
 
         isBufferingCompleted = true;
-        EventBus.trigger(Events.BUFFERING_COMPLETED, {sender: instance});
+        eventBus.trigger(Events.BUFFERING_COMPLETED, {sender: instance});
     }
 
     function checkIfSufficientBuffer() {
@@ -434,7 +438,7 @@ function BufferController(config) {
 
         bufferState = state;
         addBufferMetrics();
-        EventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {sender: instance, state:state, mediaType:type, streamInfo:streamProcessor.getStreamInfo()});
+        eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, {sender: instance, state:state, mediaType:type, streamInfo:streamProcessor.getStreamInfo()});
         log(state === BUFFER_LOADED ? ("Got enough buffer to start.") : ("Waiting for more buffer before starting playback."));
     }
 
@@ -455,7 +459,7 @@ function BufferController(config) {
             eventStreams[inbandEvents[loop].schemeIdUri] = inbandEvents[loop];
         }
 
-        isoFile = MediaPlayer.prototype.context.boxParser.parse(data);
+        isoFile = BoxParser(self.context).getInstance().parse(data);
         eventBoxes = isoFile.getBoxes("emsg");
 
         for (var i = 0, ln = eventBoxes.length; i < ln; i += 1) {
@@ -571,7 +575,7 @@ function BufferController(config) {
         }
         virtualBuffer.updateBufferedRanges({streamId: getStreamId(), mediaType: type}, sourceBufferExt.getAllRanges(buffer));
         updateBufferLevel();
-        EventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
+        eventBus.trigger(Events.BUFFER_CLEARED, {sender: instance, from: e.from, to: e.to, hasEnoughSpaceToAppend: hasEnoughSpaceToAppend()});
         if (hasEnoughSpaceToAppend()) return;
 
         setTimeout(clearBuffer(getClearRange()), minBufferTime * 1000);
@@ -591,8 +595,11 @@ function BufferController(config) {
 
     function removeOldTrackData() {
         var allAppendedChunks = virtualBuffer.getChunks({ streamId: getStreamId(), mediaType: type, segmentType: HTTPRequest.MEDIA_SEGMENT_TYPE, appended: true });
-        var rangesToClear = CustomTimeRanges.create();
-        var rangesToLeave = CustomTimeRanges.create();
+        
+        const customTimeRangesFactory = CustomTimeRanges(self.context);
+        var rangesToClear = customTimeRangesFactory.create();
+        var rangesToLeave = customTimeRangesFactory.create();
+        
         var currentTime = playbackController.getTime();
         var safeBufferLength = streamProcessor.getCurrentRepresentationInfo().fragmentDuration * 2;
 
@@ -733,20 +740,20 @@ function BufferController(config) {
 
     function reset(errored) {
 
-        EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        EventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
-        EventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
-        EventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
-        EventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
-        EventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
-        EventBus.off(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
-        EventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
-        EventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
-        EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        EventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        EventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
-        EventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
-        EventBus.off(Events.CHUNK_APPENDED, onChunkAppended, this);
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.off(Events.QUALITY_CHANGED, onQualityChanged, this);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
+        eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
+        eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
+        eventBus.off(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
+        eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
+        eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
+        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        eventBus.off(Events.SOURCEBUFFER_APPEND_COMPLETED, onAppended, this);
+        eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+        eventBus.off(Events.CHUNK_APPENDED, onChunkAppended, this);
 
         criticalBufferLevel = Number.POSITIVE_INFINITY;
         bufferState = BUFFER_EMPTY;

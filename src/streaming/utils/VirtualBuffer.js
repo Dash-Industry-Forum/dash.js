@@ -32,18 +32,21 @@
 /**
  * Represents data structure to keep and drive {@link DataChunk}
  */
-import MediaPlayer from '../../streaming/MediaPlayer.js'
+import MediaController from '../controllers/MediaController.js';
 import CustomTimeRanges from './CustomTimeRanges.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
+import EventBus from './EventBus.js';
 import Events from "../Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(VirtualBuffer);
 
 function VirtualBuffer() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
-        initialize: initialize,
         append: append,
         extract: extract,
         getChunks: getChunks,
@@ -54,15 +57,14 @@ function VirtualBuffer() {
         reset: reset
     };
 
+    setup();
     return instance;
 
     let data,
-        sourceBufferExt,
-        EventBus;
+        sourceBufferExt;
 
-    function initialize() {
+    function setup(){
         data = {};
-        EventBus = MediaPlayer.prototype.context.EventBus;
     }
 
     /**
@@ -83,7 +85,7 @@ function VirtualBuffer() {
 
         if (!isNaN(start) && !isNaN(end)) {
             data[streamId][mediaType].calculatedBufferedRanges.add(start, end);
-            EventBus.trigger(Events.CHUNK_APPENDED, {chunk: chunk, sender:this});
+            eventBus.trigger(Events.CHUNK_APPENDED, {chunk: chunk, sender:this});
         }
     }
 
@@ -178,7 +180,7 @@ function VirtualBuffer() {
             start,
             end;
 
-        data[streamId][mediaType].actualBufferedRanges = CustomTimeRanges.create();
+        data[streamId][mediaType].actualBufferedRanges = CustomTimeRanges(self.context).create();
 
         if (!ranges || ranges.length === 0) {
             data[streamId][mediaType].appended = [];
@@ -208,7 +210,7 @@ function VirtualBuffer() {
         var appended = filter.appended;
         var removeOrigin = filter.removeOrigin;
         var limit = filter.limit || Number.POSITIVE_INFINITY;
-        var mediaController = MediaPlayer.prototype.context.mediaController;
+        var mediaController = MediaController(self.context).getInstance();
 
         var ln = 0,
             result = [],
@@ -366,18 +368,18 @@ function VirtualBuffer() {
     function createDataStorage() {
         var data = {};
 
-        data.audio = {calculatedBufferedRanges: CustomTimeRanges.create(),
-            actualBufferedRanges: CustomTimeRanges.create(),
+        data.audio = {calculatedBufferedRanges: CustomTimeRanges(self.context).create(),
+            actualBufferedRanges: CustomTimeRanges(self.context).create(),
             appended: []};
         data.audio[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
         data.audio[HTTPRequest.INIT_SEGMENT_TYPE] = [];
-        data.video = {calculatedBufferedRanges: CustomTimeRanges.create(),
-            actualBufferedRanges: CustomTimeRanges.create(),
+        data.video = {calculatedBufferedRanges: CustomTimeRanges(self.context).create(),
+            actualBufferedRanges: CustomTimeRanges(self.context).create(),
             appended: []};
         data.video[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
         data.video[HTTPRequest.INIT_SEGMENT_TYPE] = [];
-        data.fragmentedText = {calculatedBufferedRanges: CustomTimeRanges.create(),
-            actualBufferedRanges: CustomTimeRanges.create(),
+        data.fragmentedText = {calculatedBufferedRanges: CustomTimeRanges(self.context).create(),
+            actualBufferedRanges: CustomTimeRanges(self.context).create(),
             appended: []};
         data.fragmentedText[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
         data.fragmentedText[HTTPRequest.INIT_SEGMENT_TYPE] = [];

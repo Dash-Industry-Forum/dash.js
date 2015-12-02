@@ -30,8 +30,9 @@
  */
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
 import Error from './vo/Error.js';
+import EventBus from './utils/EventBus.js';
 import Events from "./Events.js";
-import MediaPlayer from '../streaming/MediaPlayer.js'
+import RulesController from './rules/RulesController.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 const LIVE_EDGE_NOT_FOUND_ERROR_CODE = 1;
@@ -42,6 +43,9 @@ factory.LIVE_EDGE_NOT_FOUND_ERROR_CODE = LIVE_EDGE_NOT_FOUND_ERROR_CODE;
 export default factory;
 
 function LiveEdgeFinder() {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let instance = {
         initialize:initialize,
@@ -59,8 +63,7 @@ function LiveEdgeFinder() {
         searchStartTime,
         rules,
         liveEdge,
-        ruleSet,
-        EventBus;
+        ruleSet;
 
     function initialize(TimelineConverter, StreamProcessor) {
         timelineConverter = TimelineConverter;
@@ -68,10 +71,9 @@ function LiveEdgeFinder() {
         isSearchStarted = false;
         searchStartTime = NaN;
         liveEdge = null;
-        rulesController = MediaPlayer.prototype.context.rulesController;
+        rulesController = RulesController(self.context).getInstance();
         ruleSet = SynchronizationRulesCollection.BEST_GUESS_RULES;
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
+        eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
     }
 
     function abortSearch() {
@@ -84,7 +86,7 @@ function LiveEdgeFinder() {
     }
 
     function reset(){
-        EventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
+        eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
         abortSearch();
         liveEdge = null;
         timelineConverter = null;
@@ -98,7 +100,7 @@ function LiveEdgeFinder() {
     function onSearchCompleted(req) {
         var searchTime = (new Date().getTime() - searchStartTime) / 1000;
         liveEdge = req.value;
-        EventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime, error:liveEdge === null ? new Error(LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null});
+        eventBus.trigger(Events.LIVE_EDGE_SEARCH_COMPLETED, {liveEdge: liveEdge, searchTime: searchTime, error:liveEdge === null ? new Error(LIVE_EDGE_NOT_FOUND_ERROR_CODE, "live edge has not been found", null) : null});
     }
 
     function onStreamInitialized(e) {
@@ -109,7 +111,7 @@ function LiveEdgeFinder() {
 
         ruleSet = timelineConverter.isTimeSyncCompleted() ? SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES : SynchronizationRulesCollection.BEST_GUESS_RULES;
 
-        rules = MediaPlayer.prototype.context.synchronizationRulesCollection.getRules(ruleSet);
+        rules = SynchronizationRulesCollection(self.context).getInstance().getRules(ruleSet);
         isSearchStarted = true;
         searchStartTime = new Date().getTime();
 

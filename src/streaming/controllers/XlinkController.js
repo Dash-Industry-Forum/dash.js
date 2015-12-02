@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import XlinkLoader from '../XLinkLoader.js';
-import MediaPlayer from '../MediaPlayer.js';
+import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -43,28 +43,29 @@ const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 export default FactoryMaker.getClassFactory(XlinkController);
 
 function XlinkController(config) {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let xlinkLoader = config.xlinkLoader;
 
     let instance = {
-        initialize:initialize,
         resolveManifestOnLoad :resolveManifestOnLoad,
         setMatchers :setMatchers,
         setIron :setIron,
         reset :reset
     };
 
+    setup();
     return instance;
 
     let matchers,
         iron,
         manifest,
-        converter,
-        EventBus;
+        converter;
 
-    function initialize() {
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.XLINK_ELEMENT_LOADED, onXlinkElementLoaded, instance);
+    function setup() {
+        eventBus.on(Events.XLINK_ELEMENT_LOADED, onXlinkElementLoaded, instance);
     }
 
     function setMatchers(value) {
@@ -89,7 +90,7 @@ function XlinkController(config) {
     }
 
     function reset() {
-        EventBus.off(Events.XLINK_ELEMENT_LOADED, onXlinkElementLoaded, instance);
+        eventBus.off(Events.XLINK_ELEMENT_LOADED, onXlinkElementLoaded, instance);
     }
 
     function resolve(elements, type, resolveType) {
@@ -146,7 +147,7 @@ function XlinkController(config) {
 
         mergeElementsBack(resolveObject);
         if (resolveObject.resolveType === RESOLVE_TYPE_ONACTUATE) {
-            EventBus.trigger(Events.XLINK_READY, {manifest: manifest});
+            eventBus.trigger(Events.XLINK_READY, {manifest: manifest});
         }
         if (resolveObject.resolveType === RESOLVE_TYPE_ONLOAD) {
             switch (resolveObject.type) {
@@ -165,7 +166,7 @@ function XlinkController(config) {
                     break;
                 case ELEMENT_TYPE_ADAPTATIONSET:
                     // TODO: Resolve SegmentList here
-                    EventBus.trigger(Events.XLINK_READY, {manifest: manifest});
+                    eventBus.trigger(Events.XLINK_READY, {manifest: manifest});
                     break;
             }
         }

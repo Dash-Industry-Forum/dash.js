@@ -30,13 +30,16 @@
  */
 import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
-import MediaPlayer from '../../MediaPlayer.js';
+import EventBus from '../../utils/EventBus.js';
 import Events from "../../Events.js";
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 export default FactoryMaker.getClassFactory(InsufficientBufferRule);
 
 function InsufficientBufferRule(config) {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let log = config.log;
     let metricsModel = config.metricsModel;
@@ -52,15 +55,13 @@ function InsufficientBufferRule(config) {
 
     let bufferStateDict,
         lastSwitchTime,
-        waitToSwitchTime,
-        EventBus;
+        waitToSwitchTime;
 
     function setup() {
         bufferStateDict = {};
         lastSwitchTime = 0;
         waitToSwitchTime = 1000;
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
     }
 
     function execute (context, callback) {
@@ -69,7 +70,7 @@ function InsufficientBufferRule(config) {
         var current = context.getCurrentValue();
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
-        var switchRequest = SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var switchRequest = SwitchRequest(self.context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             lastBufferStateVO === null) {
@@ -80,7 +81,7 @@ function InsufficientBufferRule(config) {
         setBufferInfo(mediaType, lastBufferStateVO.state);
         // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
         if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
-            switchRequest = SwitchRequest.create(0, SwitchRequest.STRONG);
+            switchRequest = SwitchRequest(self.context).create(0, SwitchRequest.STRONG);
         }
 
         if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {
@@ -106,7 +107,7 @@ function InsufficientBufferRule(config) {
     }
 
     function reset() {
-        EventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         bufferStateDict = {};
         lastSwitchTime = 0;
     }

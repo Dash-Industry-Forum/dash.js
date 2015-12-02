@@ -28,10 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MediaPlayer from '../../MediaPlayer.js'
 import ThroughputRule from './ThroughputRule.js';
 import BufferOccupancyRule from './BufferOccupancyRule.js';
 import InsufficientBufferRule from './InsufficientBufferRule.js';
+import Debug from '../../utils/Debug.js';
+import MetricsModel from '../../models/MetricsModel.js';
+import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 const QUALITY_SWITCH_RULES = "qualitySwitchRules";
@@ -45,6 +47,7 @@ factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
 export default factory;
 
 function ABRRulesCollection() {
+    const self = this;
 
     let instance = {
         initialize:initialize,
@@ -60,22 +63,22 @@ function ABRRulesCollection() {
         qualitySwitchRules = [];
         abandonFragmentRules = [];
 
-        qualitySwitchRules.push(ThroughputRule.create({
-                log:MediaPlayer.prototype.context.debug.log,
-                metricsExt:MediaPlayer.prototype.context.metricsExt,
-                metricsModel:MediaPlayer.prototype.context.metricsModel
+        qualitySwitchRules.push(ThroughputRule(self.context).create({
+                log:Debug(self.context).getInstance().log,
+                metricsExt:DashMetricsExtensions(self.context).getInstance(),
+                metricsModel:MetricsModel(self.context).getInstance()
             })
         );
 
-        qualitySwitchRules.push(BufferOccupancyRule.create({
-                log:MediaPlayer.prototype.context.debug.log,
-                metricsModel:MediaPlayer.prototype.context.metricsModel
+        qualitySwitchRules.push(BufferOccupancyRule(self.context).create({
+                log:Debug(self.context).getInstance().log,
+                metricsModel:MetricsModel(self.context).getInstance()
             })
         );
 
-        qualitySwitchRules.push(InsufficientBufferRule.create({
-                log:MediaPlayer.prototype.context.debug.log,
-                metricsModel:MediaPlayer.prototype.context.metricsModel
+        qualitySwitchRules.push(InsufficientBufferRule(self.context).create({
+                log:Debug(self.context).getInstance().log,
+                metricsModel:MetricsModel(self.context).getInstance()
             })
         );
 

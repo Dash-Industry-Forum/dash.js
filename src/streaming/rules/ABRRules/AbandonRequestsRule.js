@@ -38,6 +38,7 @@ const ABANDON_MULTIPLIER = 1.5;
 export default FactoryMaker.getClassFactory(AbandonRequestsRule);
 
 function AbandonRequestsRule(config) {
+    const self = this;
 
     let log = config.log;
 
@@ -88,7 +89,7 @@ function AbandonRequestsRule(config) {
         var representationInfo = context.getTrackInfo();
         var req = progressEvent.data.request;
         var abrController = context.getStreamProcessor().getABRController();
-        var switchRequest = SwitchRequest.create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var switchRequest = SwitchRequest(self.context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         if (!isNaN(req.index)) {
             setFragmentRequestDict(mediaType, req.index);
@@ -124,7 +125,7 @@ function AbandonRequestsRule(config) {
                     return;
                 }else if (!abandonDict.hasOwnProperty(fragmentInfo.id)) {
                     var newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * AbrController.BANDWIDTH_SAFETY);
-                    switchRequest = SwitchRequest.create(newQuality, SwitchRequest.STRONG);
+                    switchRequest = SwitchRequest(self.context).create(newQuality, SwitchRequest.STRONG);
                     abandonDict[fragmentInfo.id] = fragmentInfo;
                     log("AbandonRequestsRule ( ", mediaType, "frag id",fragmentInfo.id,") is asking to abandon and switch to quality to ", newQuality, " measured bandwidth was", fragmentInfo.measuredBandwidthInKbps);
                     delete fragmentDict[mediaType][fragmentInfo.id];

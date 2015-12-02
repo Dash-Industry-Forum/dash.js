@@ -28,14 +28,21 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import StreamController from './controllers/StreamController.js';
 import TextTrackInfo from './vo/TextTrackInfo.js';
+import FragmentExtensions from '../dash/extensions/FragmentExtensions.js';
+import BoxParser from './utils/BoxParser.js';
+import TextTrackExtensions from './extensions/TextTrackExtensions.js';
+import VTTParser from './VTTParser.js';
+import TTMLParser from './TTMLParser.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
-import MediaPlayer from './MediaPlayer.js';
+import VideoModel from './models/VideoModel.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(TextSourceBuffer);
 
 function  TextSourceBuffer() {
+    const self = this;
 
     let instance = {
         initialize :initialize,
@@ -80,18 +87,18 @@ function  TextSourceBuffer() {
         let streamProcessor = bufferController.getStreamProcessor();
 
         mediaInfos = streamProcessor.getMediaInfoArr();
-        videoModel = MediaPlayer.prototype.context.videoModel;
-        streamController = MediaPlayer.prototype.context.streamController;
-        textTrackExtensions = MediaPlayer.prototype.context.textTrackExt;
+        videoModel = VideoModel(self.context).getInstance();
+        streamController = StreamController(self.context).getInstance();
+        textTrackExtensions = TextTrackExtensions(self.context).getInstance();
         textTrackExtensions.setConfig({videoModel: videoModel});
         textTrackExtensions.initialize();
         isFragmented = !manifestExt.getIsTextTrack(type);
 
         if (isFragmented){
-            fragmentExt = MediaPlayer.prototype.context.fragmentExt;
-            fragmentExt.setConfig({boxParser: MediaPlayer.prototype.context.boxParser});
+            fragmentExt = FragmentExtensions(self.context).getInstance();
+            fragmentExt.setConfig({boxParser: BoxParser(self.context).getInstance()});
             fragmentModel = streamProcessor.getFragmentModel();
-            this.buffered =  CustomTimeRanges.create();
+            this.buffered =  CustomTimeRanges(self.context).create();
         }
     }
 
@@ -258,10 +265,10 @@ function  TextSourceBuffer() {
     function getParser(mimeType) {
         var parser;
         if (mimeType === "text/vtt") {
-            parser = MediaPlayer.prototype.context.VTTParser;
+            parser = VTTParser(self.context).getInstance();
             parser.setConfig({logger: log});
         } else if (mimeType === "application/ttml+xml" || mimeType === "application/mp4") {
-            parser = MediaPlayer.prototype.context.TTMLParser;
+            parser = TTMLParser(self.context).getInstance();
             parser.setConfig({videoModel: videoModel});
         }
         return parser;

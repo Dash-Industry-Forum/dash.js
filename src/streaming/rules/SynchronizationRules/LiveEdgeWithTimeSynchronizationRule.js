@@ -36,6 +36,7 @@ export default FactoryMaker.getClassFactory(LiveEdgeWithTimeSynchronizationRule)
 
 function LiveEdgeWithTimeSynchronizationRule(config) {
     "use strict";
+    const self = this;
 
     let timelineConverter = config.timelineConverter;
 
@@ -63,9 +64,9 @@ function LiveEdgeWithTimeSynchronizationRule(config) {
             // Thus, we need to switch an expected live edge and actual live edge for SegmentTimelne streams.
             var actualLiveEdge = timelineConverter.getExpectedLiveEdge();
             timelineConverter.setExpectedLiveEdge(liveEdgeInitialSearchPosition);
-            callback(SwitchRequest.create(actualLiveEdge, p));
+            callback(SwitchRequest(self.context).create(actualLiveEdge, p));
         } else {
-            callback(SwitchRequest.create(liveEdgeInitialSearchPosition, p));
+            callback(SwitchRequest(self.context).create(liveEdgeInitialSearchPosition, p));
         }
     }
 }

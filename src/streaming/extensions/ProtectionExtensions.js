@@ -36,12 +36,19 @@
  */
 import CommonEncryption from '../protection/CommonEncryption.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
-import MediaPlayer from '../../streaming/MediaPlayer.js'
-import FactoryMaker from '../../core/FactoryMaker.js';
+import KeySystemClearKey from '../protection/drm/KeySystemClearKey.js';
+import KeySystemWidevine from '../protection/drm/KeySystemWidevine.js';
+import KeySystemPlayReady from '../protection/drm/KeySystemPlayReady.js';
+import DRMToday from '../protection/servers/DRMToday.js';
+import PlayReady from '../protection/servers/PlayReady.js';
+import Widevine from '../protection/servers/Widevine.js';
+import ClearKey from '../protection/servers/ClearKey.js';
 
+import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(ProtectionExtensions);
 
 function  ProtectionExtensions() {
+    const self = this;
 
     let instance = {
         initialize: initialize,
@@ -76,15 +83,15 @@ function  ProtectionExtensions() {
         var keySystem;
 
         // PlayReady
-        keySystem = MediaPlayer.prototype.context.keySystemPlayReady;
+        keySystem = KeySystemPlayReady(self.context).getInstance();
         keySystems.push(keySystem);
 
         // Widevine
-        keySystem = MediaPlayer.prototype.context.keySystemWidevine;
+        keySystem = KeySystemWidevine(self.context).getInstance();
         keySystems.push(keySystem);
 
         // ClearKey
-        keySystem = MediaPlayer.prototype.context.keySystemClearKey;
+        keySystem = KeySystemClearKey(self.context).getInstance();
         keySystems.push(keySystem);
         clearkeyKeySystem = keySystem;
     }
@@ -255,13 +262,13 @@ function  ProtectionExtensions() {
 
         var licenseServerData = null;
         if (protData && protData.hasOwnProperty("drmtoday")) {
-            licenseServerData = MediaPlayer.prototype.context.DRMToday;
+            licenseServerData = DRMToday(self.context).getInstance();
         } else if (keySystem.systemString === "com.widevine.alpha") {
-            licenseServerData = MediaPlayer.prototype.context.Widevine;
+            licenseServerData = Widevine(self.context).getInstance();
         } else if (keySystem.systemString === "com.microsoft.playready") {
-            licenseServerData = MediaPlayer.prototype.context.PlayReady;
+            licenseServerData = PlayReady(self.context).getInstance();
         } else if (keySystem.systemString === "org.w3.clearkey") {
-            licenseServerData = MediaPlayer.prototype.context.ClearKey;
+            licenseServerData = ClearKey(self.context).getInstance();
         }
 
         return licenseServerData;

@@ -34,7 +34,7 @@ import Error from '../streaming/vo/Error.js';
 import HTTPRequest from '../streaming/vo/metrics/HTTPRequest.js';
 import MetricsModel from '../streaming/models/MetricsModel.js';
 import Events from '../streaming/Events.js';
-import MediaPlayer from '../streaming/MediaPlayer.js';
+import EventBus from '../streaming/utils/EventBus.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
@@ -46,6 +46,9 @@ factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
 export default factory;
 
 function DashHandler(config) {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let log = config.log;
     let baseURLExt = config.baseURLExt;
@@ -76,17 +79,15 @@ function DashHandler(config) {
         type,
         currentTime,
         absUrl,
-        streamProcessor,
-        EventBus;
+        streamProcessor;
 
     function setup() {
         index = -1;
         currentTime = 0;
         absUrl = new RegExp('^(?:(?:[a-z]+:)?\/)?\/', 'i');
 
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
-        EventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
+        eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
+        eventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
     }
 
     function initialize(StreamProcessor) {
@@ -118,8 +119,8 @@ function DashHandler(config) {
         isDynamic = null;
         type = null;
         streamProcessor = null;
-        EventBus.off(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
-        EventBus.off(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
+        eventBus.off(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
+        eventBus.off(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
     }
 
     function zeroPadToLength(numStr, minStrLength) {
@@ -736,7 +737,7 @@ function DashHandler(config) {
 
         if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
             error = new Error(SEGMENTS_UNAVAILABLE_ERROR_CODE, "no segments are available yet", {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
-            EventBus.trigger(Events.REPRESENTATION_UPDATED, {sender:this, representation: representation, error: error});
+            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender:this, representation: representation, error: error});
             return;
         }
 
@@ -755,7 +756,7 @@ function DashHandler(config) {
         }
 
         if (hasInitialization && hasSegments) {
-            EventBus.trigger(Events.REPRESENTATION_UPDATED, {sender:this, representation: representation});
+            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender:this, representation: representation});
         }
     }
 
@@ -950,7 +951,7 @@ function DashHandler(config) {
         //log("Got an initialization.");
         if (!representation.segments) return;
 
-        EventBus.trigger(Events.REPRESENTATION_UPDATED, {sender:this, representation: representation});
+        eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender:this, representation: representation});
     }
 
     function onSegmentsLoaded(e) {
@@ -989,6 +990,6 @@ function DashHandler(config) {
 
         if (!representation.initialization) return;
 
-        EventBus.trigger(Events.REPRESENTATION_UPDATED, {sender:this, representation: representation});
+        eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender:this, representation: representation});
     }
 };

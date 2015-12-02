@@ -30,13 +30,16 @@
  */
 import RepresentationController from '../../dash/controllers/RepresentationController.js';
 import FragmentController from './FragmentController.js';
-import MediaPlayer from '../MediaPlayer.js';
+import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getClassFactory(TextController);
 
 function TextController(config) {
+    const self = this;
+
+    let eventBus = EventBus(self.context).getInstance();
 
     let sourceBufferExt = config.sourceBufferExt;
     let errHandler = config.errHandler;
@@ -59,8 +62,7 @@ function TextController(config) {
         buffer,
         type,
         streamProcessor,
-        representationController,
-        EventBus;
+        representationController;
 
     function setup() {
 
@@ -71,9 +73,8 @@ function TextController(config) {
         streamProcessor = null;
         representationController = null;
 
-        EventBus = MediaPlayer.prototype.context.EventBus;
-        EventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        EventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
     }
 
     function initialize(Type, source, StreamProcessor) {
@@ -119,8 +120,8 @@ function TextController(config) {
 
     function reset(errored) {
 
-        EventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        EventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
 
         if (!errored) {
             sourceBufferExt.abort(mediaSource, buffer);
@@ -130,7 +131,7 @@ function TextController(config) {
 
     function onDataUpdateCompleted(e) {
          if (e.sender.getStreamProcessor() !== streamProcessor) return;
-         EventBus.trigger(Events.TIMED_TEXT_REQUESTED, {index: 0, sender:e.sender}) //TODO make index dynamic if referring to MP?
+         eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {index: 0, sender:e.sender}) //TODO make index dynamic if referring to MP?
      }
 
     function onInitFragmentLoaded(e) {

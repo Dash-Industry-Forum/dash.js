@@ -29,15 +29,18 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import HTTPRequest from '../../streaming/vo/metrics/HTTPRequest.js';
-import MediaPlayer from '../../streaming/MediaPlayer.js'
+import AbrController from "../../streaming/controllers/AbrController.js";
+import ManifestModel from "../../streaming/models/ManifestModel.js";
+import DashManifestExtensions from "../../dash/extensions/DashManifestExtensions.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(DashMetricsExtensions);
 
+
 function DashMetricsExtensions() {
+    const self = this;
 
     let instance = {
-        initialize:initialize,
         getBandwidthForRepresentation: getBandwidthForRepresentation,
         getIndexForRepresentation: getIndexForRepresentation,
         getMaxIndexForBufferType: getMaxIndexForBufferType,
@@ -56,13 +59,10 @@ function DashMetricsExtensions() {
         getRequestsQueue: getRequestsQueue
     }
 
+    let manifestModel = ManifestModel(self.context).getInstance();
+
     return instance;
 
-    let manifestModel;
-
-    function initialize() {
-        manifestModel = MediaPlayer.prototype.context.manifestModel;
-    }
 
     function getBandwidthForRepresentation(representationId, periodId) {
         var representation;
@@ -119,7 +119,7 @@ function DashMetricsExtensions() {
      */
     function getMaxAllowedIndexForBufferType(bufferType, periodId) {
         var idx = 0;
-        var abrController = MediaPlayer.prototype.context.abrController;
+        var abrController = AbrController(self.context).getInstance();
 
         if (abrController) {
             idx = abrController.getTopQualityIndexFor(bufferType, periodId);
@@ -412,7 +412,7 @@ function DashMetricsExtensions() {
     }
 
     function adaptationIsType(adaptation, bufferType) {
-        return MediaPlayer.prototype.context.manifestExt.getIsTypeOf(adaptation, bufferType);
+        return DashManifestExtensions(self.context).getInstance().getIsTypeOf(adaptation, bufferType);
     }
 
     function findMaxBufferIndex(period, bufferType) {
