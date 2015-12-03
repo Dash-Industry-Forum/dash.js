@@ -126,7 +126,19 @@ module.exports = function (grunt) {
                     configure: 'build/jsdoc/jsdoc_conf.json'
                 }
             }
-        }
+        },
+        mocha_istanbul: {
+            test: {
+                src: './test/specs',
+                options: {
+                    mask: '**/*.js',
+                    coverageFolder: './reports',
+                    mochaOptions: ['--compilers', 'js:babel/register'],
+                    print: 'summary',
+                    root: './src'
+                }
+            }
+        },
     });
 
     // load all the npm grunt tasks
@@ -152,6 +164,7 @@ module.exports = function (grunt) {
     ]);
 
     grunt.registerTask('test', [
+        'mocha_istanbul:test'
     ]);
 
     // Default task.

@@ -1,131 +1,135 @@
-(function(global){
-    var mpdHelper = window.Helpers.getMpdHelper(),
-        specHelper = window.Helpers.getSpecHelper(),
-        voRep,
-        voAdaptation,
-        unixTime = specHelper.getUnixTime(),
-        adaptation,
-        defaultMpdType = "static",
+import MpdHelper from './MPDHelper.js'
+import SpecHelper from './SpecHelper.js'
+import Representation from '../../src/dash/vo/Representation.js'
 
-        createMpd = function(type) {
-            var mpd = {};
+class VoHelper {
+    constructor() {
+        this.mpdHelper = new MpdHelper();
+        this.specHelper = new SpecHelper();
+        this.voRep;
+        this.voAdaptation;
+        this.unixTime = this.specHelper.getUnixTime();
+        this.adaptation;
+        this.defaultMpdType = "static";
+    }
 
-            mpd.manifest = mpdHelper.getMpd(type || defaultMpdType);
-            mpd.suggestedPresentationDelay = 0;
-            mpd.availabilityStartTime = unixTime;
-            mpd.availabilityEndTime = Number.POSITIVE_INFINITY;
-            mpd.timeShiftBufferDepth = 50;
-            mpd.maxSegmentDuration = 1;
-            mpd.checkTime = 10;
+    createMpd(type) {
+        var mpd = {};
 
-            return mpd;
-        },
+        mpd.manifest = this.mpdHelper.getMpd(type || this.defaultMpdType);
+        mpd.suggestedPresentationDelay = 0;
+        mpd.availabilityStartTime = this.unixTime;
+        mpd.availabilityEndTime = Number.POSITIVE_INFINITY;
+        mpd.timeShiftBufferDepth = 50;
+        mpd.maxSegmentDuration = 1;
+        mpd.checkTime = 10;
 
-        createPeriod = function() {
-            var period = {};
+        return mpd;
+    }
 
-            period.mpd = createMpd();
-            period.start = 0;
+    createPeriod() {
+        var period = {};
 
-            period.id = "id1";
-            period.index = 0;
-            period.duration = 100;
-            period.liveEdge = 50;
-            period.isClientServerTimeSyncCompleted = false;
-            period.clientServerTimeShift = 0;
+        period.mpd = this.createMpd();
+        period.start = 0;
 
-            return period;
-        },
+        period.id = "id1";
+        period.index = 0;
+        period.duration = 100;
+        period.liveEdge = 50;
+        period.isClientServerTimeSyncCompleted = false;
+        period.clientServerTimeShift = 0;
 
-        createAdaptation = function(type) {
-            var adaptation = {};
-            adaptation.period = createPeriod();
-            adaptation.index = 0;
-            adaptation.type = type;
+        return period;
+    }
 
-            return adaptation;
-        },
+    createAdaptation(type) {
+        var adaptation = {};
+        adaptation.period = this.createPeriod();
+        adaptation.index = 0;
+        adaptation.type = type;
 
-        createRepresentation = function(type) {
-            var rep = new Dash.vo.Representation(),
-                data = adaptation || mpdHelper.getAdaptationWithSegmentTemplate(type);
+        return adaptation;
+    }
 
-            rep.id = null;
-            rep.index = 0;
-            rep.adaptation = createAdaptation(type);
-            rep.fragmentInfoType = null;
-            rep.initialization = "http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s";
-            rep.segmentDuration = 1;
-            rep.timescale = 1;
-            rep.startNumber = 1;
-            rep.indexRange = null;
-            rep.range = null;
-            rep.presentationTimeOffset = 10;
-            // Set the source buffer timeOffset to this
-            rep.MSETimeOffset = NaN;
-            rep.segmentAvailabilityRange = null;
-            rep.availableSegmentsNumber = 0;
+    createRepresentation(type) {
+        var rep = new Representation(),
+            data = this.adaptation || this.mpdHelper.getAdaptationWithSegmentTemplate(type);
 
-            return rep;
-        },
+        rep.id = null;
+        rep.index = 0;
+        rep.adaptation = this.createAdaptation(type);
+        rep.fragmentInfoType = null;
+        rep.initialization = "http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s";
+        rep.segmentDuration = 1;
+        rep.timescale = 1;
+        rep.startNumber = 1;
+        rep.indexRange = null;
+        rep.range = null;
+        rep.presentationTimeOffset = 10;
+        // Set the source buffer timeOffset to this
+        rep.MSETimeOffset = NaN;
+        rep.segmentAvailabilityRange = null;
+        rep.availableSegmentsNumber = 0;
 
-        createRequest = function(type) {
-            var req = {};
-            req.action = "download";
-            req.quality = 0;
-            req.mediaType = "video";
-            req.type = type;
-            req.url = "http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s";
-            req.startTime = NaN;
-            req.duration = NaN;
+        return rep;
+    }
 
-            if (type === "Media Segment") {
-                req.url = "http://dash.edgesuite.net/envivio/dashpr/clear/video4/0.m4s";
-                req.startTime = 0;
-                req.duration = 4;
-                req.index = 0;
-            } else if (type === "complete") {
-                req.action = type;
-                req.url = undefined;
-                req.quality = NaN;
-            }
+    createRequest(type) {
+        var req = {};
+        req.action = "download";
+        req.quality = 0;
+        req.mediaType = "video";
+        req.type = type;
+        req.url = "http://dash.edgesuite.net/envivio/dashpr/clear/video4/Header.m4s";
+        req.startTime = NaN;
+        req.duration = NaN;
 
-            return req;
-        },
-
-    voHelper =  {
-        getDummyRepresentation: function(type){
-            return voRep || createRepresentation(type);
-        },
-
-        getDummyMpd: function(type){
-            return createMpd(type);
-        },
-
-        getDummyPeriod: function() {
-            return createPeriod();
-        },
-
-        getMediaRequest: function() {
-            return createRequest("Media Segment");
-        },
-
-        getInitRequest: function() {
-            return createRequest("Initialization Segment");
-        },
-
-        getCompleteRequest: function() {
-            return createRequest("complete");
-        },
-
-        getDummyMediaInfo: function(type) {
-            return {
-                type: type,
-                bitrateList: [1000, 2000, 3000],
-                representationCount: 3
-            }
+        if (type === "Media Segment") {
+            req.url = "http://dash.edgesuite.net/envivio/dashpr/clear/video4/0.m4s";
+            req.startTime = 0;
+            req.duration = 4;
+            req.index = 0;
+        } else if (type === "complete") {
+            req.action = type;
+            req.url = undefined;
+            req.quality = NaN;
         }
-    };
 
-    global.Helpers.setVOHelper(voHelper);
-}(window));
+        return req;
+    }
+
+    getDummyRepresentation(type) {
+        return this.voRep || this.createRepresentation(type);
+    }
+
+    getDummyMpd(type) {
+        return this.createMpd(type);
+    }
+
+    getDummyPeriod() {
+        return this.createPeriod();
+    }
+
+    getMediaRequest() {
+        return this.createRequest("Media Segment");
+    }
+
+    getInitRequest() {
+        return this.createRequest("Initialization Segment");
+    }
+
+    getCompleteRequest() {
+        return this.createRequest("complete");
+    }
+
+    getDummyMediaInfo(type) {
+        return {
+            type: type,
+            bitrateList: [1000, 2000, 3000],
+            representationCount: 3
+        }
+    }
+}
+
+export default VoHelper;

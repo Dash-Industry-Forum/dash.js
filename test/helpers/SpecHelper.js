@@ -1,40 +1,40 @@
-(function(global){
-    var DEFAULT_QUALITY = 0,
-        EVENT_NOTIFICATION_DELAY = 200,
-        TIMEOUT_DELAY = 2000,
-        isHtmlRunner = window.location.href.indexOf("runner.html") > 0,
-        dummyUrl = "http://dummyUrl.com",
-        dummyView = {},
+class SpecHelper {
+    constructor() {
+        this.DEFAULT_QUALITY = 0;
+        this.EVENT_NOTIFICATION_DELAY = 200;
+        this.TIMEOUT_DELAY = 2000;
+        this.isHtmlRunner = false; //window.location.href.indexOf("runner.html") > 0;
+        this.dummyUrl = "http://dummyUrl.com";
+        this.dummyView = {};
+    }
 
-    specHelper =  {
-        isHtmlRunner: function() {
-            return isHtmlRunner;
-        },
+    isHtmlRunner() {
+        return this.isHtmlRunner;
+    }
 
-        getDummyView: function() {
-            return dummyView;
-        },
+    getDummyView() {
+        return this.dummyView;
+    }
 
-        getDummyUrl: function() {
-            return dummyUrl;
-        },
+    getDummyUrl() {
+        return dummyUrl;
+    }
 
-        getExecutionDelay: function() {
-            return EVENT_NOTIFICATION_DELAY;
-        },
+    getExecutionDelay() {
+        return this.EVENT_NOTIFICATION_DELAY;
+    }
 
-        getTimeoutDelay: function() {
-            return TIMEOUT_DELAY;
-        },
+    getTimeoutDelay() {
+        return this.TIMEOUT_DELAY;
+    }
 
-        getDefaultQuality: function() {
-            return DEFAULT_QUALITY;
-        },
+    getDefaultQuality() {
+        return this.DEFAULT_QUALITY;
+    }
 
-        getUnixTime: function() {
-            return new Date("01/01/1970 GMT");
-        }
-    };
+    getUnixTime() {
+        return new Date("01/01/1970 GMT");
+    }
+}
 
-    global.Helpers.setSpecHelper(specHelper);
-}(window));
+export default SpecHelper
