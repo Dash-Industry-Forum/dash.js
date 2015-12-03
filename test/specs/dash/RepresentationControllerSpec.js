@@ -1,5 +1,5 @@
 describe("RepresentationController", function () {
-    var helper = window.Helpers.getSpecHelper(),
+    /*var helper = window.Helpers.getSpecHelper(),
         objHelper = window.Helpers.getObjectsHelper(),
         mpdHelper = window.Helpers.getMpdHelper(),
         testType = "video",
@@ -67,5 +67,5 @@ describe("RepresentationController", function () {
 
             expect(representationCtrl.getRepresentationForQuality(quality).index).toEqual(expectedValue);
         });
-    });
+    });*/
 });

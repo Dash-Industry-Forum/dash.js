@@ -1,5 +1,5 @@
 describe("DashHandler", function () {
-    var objHelper = window.Helpers.getObjectsHelper(),
+    /*var objHelper = window.Helpers.getObjectsHelper(),
         testType = "video",
         indexHandler = objHelper.getIndexHandler(testType),
         representation = window.Helpers.getVOHelper().getDummyRepresentation(testType);
@@ -8,5 +8,5 @@ describe("DashHandler", function () {
 
         expect(initRequest).toBeDefined();
         expect(initRequest).not.toBeNull();
-    });
+    });*/
 });

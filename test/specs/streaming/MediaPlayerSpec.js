@@ -1,5 +1,5 @@
 describe("MediaPlayer", function () {
-    var NOT_INITIALIZED_ERROR_MSG = "MediaPlayer not initialized!",
+    /*var NOT_INITIALIZED_ERROR_MSG = "MediaPlayer not initialized!",
         MISSING_VIEW_OR_SOURCE_ERROR_MSG = "Missing view or source.",
         helper = window.Helpers.getSpecHelper(),
         objectsHelper = window.Helpers.getObjectsHelper(),
@@ -86,5 +86,5 @@ describe("MediaPlayer", function () {
                 expect(videoModel).not.toBeNull();
             });
         });
-    });
+    });*/
 });

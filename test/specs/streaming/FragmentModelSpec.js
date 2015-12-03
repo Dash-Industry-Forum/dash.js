@@ -1,5 +1,5 @@
 describe("FragmentModel", function () {
-    var helper = window.Helpers.getSpecHelper(),
+    /*var helper = window.Helpers.getSpecHelper(),
         voHelper = window.Helpers.getVOHelper(),
         objectsHelper = window.Helpers.getObjectsHelper(),
         context,
@@ -39,7 +39,7 @@ describe("FragmentModel", function () {
             var observer = {},
                 isFired = false;
 
-            observer[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED] = function(/*e*/) {
+            observer[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED] = function(/*e#1#) {
                 isFired = true;
             };
 
@@ -75,7 +75,7 @@ describe("FragmentModel", function () {
                 var observer = {},
                     isFired = false;
 
-                observer[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = function(/*e*/) {
+                observer[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = function(/*e#1#) {
                     isFired = true;
                 };
 
@@ -113,5 +113,5 @@ describe("FragmentModel", function () {
                 expect(loadingRequests.length).toEqual(expectedValue);
             });
         });
-    });
+    });*/
 });
