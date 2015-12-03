@@ -1,3 +1,31 @@
+class ObjectsHelper {
+    constructor() {
+        this.defaultStreamType = "video";
+    }
+
+    getDummyStreamProcessor(type) {
+        type = type || this.defaultStreamType;
+
+        return {
+            getType: () => type,
+            getCurrentTrack: () => {},
+            getStreamInfo: () => { return {id: 'some_id'} },
+            getMediaInfo: () => { return { bitrateList: [] } },
+            getIndexHandler: () => {},
+            isDynamic: () => true
+        };
+    }
+
+    getDummyTimelineConverter() {
+        return {
+            calcAvailabilityStartTimeFromPresentationTime: () => 0,
+            calcAvailabilityEndTimeFromPresentationTime: () => 0
+        };
+    }
+}
+
+export default ObjectsHelper;
+/*
 (function(global){
     var system = new dijon.System(),
         notifier,
@@ -100,3 +128,4 @@
 
     global.Helpers.setObjectsHelper(objectsHelper);
 }(window));
+*/

@@ -1,5 +1,5 @@
 describe("FragmentController", function () {
-    var voHelper = window.Helpers.getVOHelper(),
+    /*var voHelper = window.Helpers.getVOHelper(),
         objectsHelper = window.Helpers.getObjectsHelper(),
         fragmentController = objectsHelper.getFragmentController();
 
@@ -54,5 +54,5 @@ describe("FragmentController", function () {
         expect(fragmentController.isInitializationRequest(null)).toBeFalsy();
         request.type = undefined;
         expect(fragmentController.isInitializationRequest(null)).toBeFalsy();
-    });
+    });*/
 });

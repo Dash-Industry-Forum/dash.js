@@ -1,5 +1,5 @@
 describe("TimelineConverter", function () {
-    var helper = window.Helpers.getSpecHelper(),
+    /*var helper = window.Helpers.getSpecHelper(),
         objHelper = window.Helpers.getObjectsHelper(),
         timelineConverter = objHelper.getTimelineConverter(),
         liveEdgeFinder = objHelper.getLiveEdgeFinder(),
@@ -103,5 +103,5 @@ describe("TimelineConverter", function () {
             expectedValue = 9;
             expect(range.end).toEqual(expectedValue);
         });
-    });
+    });*/
 });
