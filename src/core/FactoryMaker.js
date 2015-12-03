@@ -1,7 +1,6 @@
 let FactoryMaker = (function() {
 
-    let extensionDict = {};
-
+    let extensions = [];
 
     let instance = {
         extend: extend,
@@ -11,13 +10,26 @@ let FactoryMaker = (function() {
 
     return instance;
 
-    function extend(name, childInstance) {
-        if (!extensionDict[name] && childInstance){
-            extensionDict[name] = childInstance;
+
+    function getExtensionContext(context) {
+        let extensionContext;
+        extensions.forEach(function(obj){
+            if (obj === context) {
+                extensionContext = obj;
+            }
+        })
+        if(!extensionContext) {
+            extensionContext = extensions.push(context);
         }
-        // else if (!childInstance){
-        //    delete extensionDict[name];
-        //}
+
+        return extensionContext;
+    }
+
+    function extend(name, childInstance, context) {
+        let extensionContext = getExtensionContext(context)
+        if (!extensionContext[name] && childInstance) {
+            extensionContext[name] = childInstance;
+        }
     }
 
     function getSingletonFactory(classConstructor) {
@@ -40,7 +52,7 @@ let FactoryMaker = (function() {
                         return instance;
                     }
 
-                    instance = merge(classConstructor.name, classConstructor.apply({ context: context }, arguments));
+                    instance = merge(classConstructor.name, classConstructor.apply({ context: context }, arguments), context);
                     contexts.push({ context : context, instance : instance });
 
                     return instance;
@@ -53,15 +65,17 @@ let FactoryMaker = (function() {
         return function (context){
             return {
                 create: function() {
-                    return merge(classConstructor.name, classConstructor.apply({ context:context } ,arguments));
+                    return merge(classConstructor.name, classConstructor.apply({ context:context } ,arguments), context);
                 }
             }
         }
     }
 
-    function merge(name, instance) {
-        var extended = extensionDict[name];
+    function merge(name, instance, context) {
+        let extensionContext = getExtensionContext(context)
+        let extended = extensionContext[name];
         if (extended) {
+            extended = extended.apply({ context:context });
             for(const prop in extended){
                 if (instance.hasOwnProperty(prop)){
                     instance[prop] = extended[prop];

@@ -471,7 +471,7 @@ function MediaPlayer() {
     }
 
     function extend(parentNameString, childInstance) {
-        FactoryMaker.extend(parentNameString, childInstance);
+        FactoryMaker.extend(parentNameString, childInstance, context);
     }
 
     /**

@@ -25,7 +25,7 @@ module.exports = function (grunt) {
             options: {
                 sourceMap: true,
                 sourceMapIn: 'build/temp/Dash.all.js.map',
-                sourceMapRoot: '../../src/',
+                sourceMapRoot: './src/',
                 preserveComments: 'some',
                 mangle: true,
                 compress: {
@@ -99,11 +99,7 @@ module.exports = function (grunt) {
                     plugin: [
                       ['browserify-derequire']
                     ],
-                    transform: [
-                      require('babelify').configure({
-                          //sourceMapRelative: './src/'
-                      })
-                    ]
+                    transform: ['babelify']
                 }
             },
             watch: {
