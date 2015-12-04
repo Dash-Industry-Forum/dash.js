@@ -37,17 +37,16 @@ import EventBus from './utils/EventBus.js';
 import Events from './Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
-const RETRY_ATTEMPTS = 3;
-const RETRY_INTERVAL = 500;
-const PARSERERROR_ERROR_CODE = 1;
-
 export default FactoryMaker.getClassFactory(ManifestLoader);
 
 function ManifestLoader(config) {
+
     const self = this;
+    const RETRY_ATTEMPTS = 3;
+    const RETRY_INTERVAL = 500;
+    const PARSERERROR_ERROR_CODE = 1;
 
     let eventBus = EventBus(self.context).getInstance();
-
     let log = config.log;
     let parser = config.parser;
     let errHandler = config.errHandler;
@@ -62,9 +61,11 @@ function ManifestLoader(config) {
     return instance;
 
     let requestModifierExt,
-        xlinkController;
+        xlinkController,
+        remainingAttempts;
 
     function setup() {
+        remainingAttempts = RETRY_ATTEMPTS;
         let xlinkLoader = XlinkLoader(self.context).create({errHandler:errHandler, metricsModel:metricsModel});
         xlinkController = XlinkController(self.context).create({xlinkLoader:xlinkLoader});
         requestModifierExt = RequestModifierExtensions(self.context).getInstance();
@@ -91,7 +92,9 @@ function ManifestLoader(config) {
                 return;
             }
 
+
             needFailureReport = false;
+            remainingAttempts = RETRY_ATTEMPTS;
             loadedTime = new Date();
 
             // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
@@ -146,7 +149,8 @@ function ManifestLoader(config) {
                 request.status,
                 null,
                 request.getAllResponseHeaders());
-            if (RETRY_ATTEMPTS > 0) {
+
+            if (remainingAttempts > 0) {
                 log("Failed loading manifest: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
                 remainingAttempts--;
                 setTimeout(function() {
