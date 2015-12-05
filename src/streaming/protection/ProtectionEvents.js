@@ -183,5 +183,5 @@ class ProtectionEvents extends EventsBase {
         this.LICENSE_REQUEST_COMPLETE = "public_licenseRequestComplete";
     }
 }
-
-export default ProtectionEvents;
+let protectionEvents = new ProtectionEvents();
+export {protectionEvents as default};

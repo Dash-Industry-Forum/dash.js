@@ -51,14 +51,13 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);
 
 function ProtectionModel_21Jan2015(config) {
+
     const self = this;
 
-    let eventBus = EventBus(self.context).getInstance();
-
+    let eventBus = config.eventBus;
     let log = config.log;
 
     let instance = {
-        reset:reset,
         getAllInitData:getAllInitData,
         requestKeySystemAccess:requestKeySystemAccess,
         getKeySystem:getKeySystem,
@@ -70,6 +69,7 @@ function ProtectionModel_21Jan2015(config) {
         loadKeySession:loadKeySession,
         removeKeySession:removeKeySession,
         closeKeySession:closeKeySession,
+        reset:reset
     };
 
     setup();

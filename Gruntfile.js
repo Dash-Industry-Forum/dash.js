@@ -46,6 +46,21 @@ module.exports = function (grunt) {
                 }
             },
 
+            buildprotection: {
+                options: {
+                    sourceMap: true,
+                    sourceMapIn: 'build/temp/Protection.js.map',
+                    sourceMapRoot: './src/streaming/',
+                    beautify: true,
+                    compress: false,
+                    mangle: false
+                },
+                files: {
+                    'build/temp/dash.protection.min.js': 'build/temp/Protection.js',
+                }
+
+            },
+
             debug: {
                 options: {
                     beautify: true,
@@ -72,6 +87,7 @@ module.exports = function (grunt) {
                 cwd: 'build/temp/',
                 src: ['dash.min.js', 'dash.min.js.map',
                       'dash.all.min.js', 'dash.all.min.js.map',
+                      'dash.protection.min.js', 'dash.protection.min.js.map',
                       'dash.debug.js', 'dash.debug.js.map'],
                 dest: 'dist/',
                 filter: 'isFile'
@@ -82,6 +98,7 @@ module.exports = function (grunt) {
                 options: {},
                 files: {
                     'build/temp/MediaPlayer.js.map': ['build/temp/MediaPlayer.js'],
+                    'build/temp/Protection.js.map': ['build/temp/Protection.js'],
                     'build/temp/Dash.all.js.map': ['build/temp/Dash.all.js']
                 }
             }
@@ -98,6 +115,21 @@ module.exports = function (grunt) {
                     },
                     plugin: [
                       ['browserify-derequire']
+                    ],
+                    transform: ['babelify']
+                }
+            },
+            buildprotection: {
+                files: {
+                    'build/temp/Protection.js': ['src/streaming/protection/Protection.js']
+                },
+                options: {
+                    browserifyOptions: {
+                        debug: true,
+                        standalone: 'Protection'
+                    },
+                    plugin: [
+                        ['browserify-derequire']
                     ],
                     transform: ['babelify']
                 }
@@ -147,8 +179,9 @@ module.exports = function (grunt) {
     grunt.registerTask('build', [
       'clean:build',
       //'jshint', //TODO: lots of failures heres
-      'browserify:build',
-      'concat:all'
+        'browserify:build',
+        'browserify:buildprotection',
+        'concat:all'
     ]);
 
     grunt.registerTask('minimize', [

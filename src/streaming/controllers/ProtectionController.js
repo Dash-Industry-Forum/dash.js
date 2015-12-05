@@ -49,17 +49,18 @@ import Events from '../Events.js';
 import MediaCapability from '../vo/protection/MediaCapability.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-
+import Protection from '../protection/Protection.js'
 export default FactoryMaker.getClassFactory(ProtectionController);
 
 function ProtectionController(config) {
     const self = this;
 
-    let eventBus = EventBus(self.context).getInstance();
+
 
     let protectionExt = config.protectionExt;
     let protectionModel = config.protectionModel;
     let adapter = config.adapter;
+    let eventBus = config.eventBus
     let log = config.log;
 
     let instance = {
@@ -95,7 +96,8 @@ function ProtectionController(config) {
         initialized = false;
         sessionType = "temporary";
 
-        //protectionModel.init(); Not needed in lates
+        Events.extend(Protection.events);
+        //protectionModel.init(); Not needed in latest
         eventBus.on(Events.NEED_KEY, onNeedKey, this);
         eventBus.on(Events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
     }

@@ -555,11 +555,11 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     ////////////////////////////////////////
 
     video = document.querySelector(".dash-video-player video");
-    player = MediaPlayer.create();
+    player = MediaPlayer({}).create();
 
     $scope.version = player.getVersion();
 
-    player.startup();
+    player.initialize();
     player.on(MediaPlayer.events.ERROR, onError.bind(this));
     player.on(MediaPlayer.events.METRIC_CHANGED, metricChanged.bind(this));
     player.on(MediaPlayer.events.METRIC_UPDATED, metricUpdated.bind(this));

@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import PlaybackController from './PlaybackController.js';
-import ProtectionController from './ProtectionController.js';
 import MediaPlayer from '../MediaPlayer.js';
 import Stream from '../Stream.js';
 import ManifestUpdater from '../ManifestUpdater.js';
@@ -382,24 +381,12 @@ function StreamController() {
         if (!manifest) return;
 
         streamsInfo = adapter.getStreamsInfo(manifest);
-        //capabilities.supportsEncryptedMedia() &&
         if ( protectionController) {
-            //if (!protectionController) {//Todo detech here and create on mediaplayer level?
-            //    protectionController = ProtectionController(self.context).create({
-            //        protectionExt: system.getObject('protectionExt'),
-            //        adapter: adapter,
-            //        log: log,
-            //        system: system
-            //    })
-            //
-            //    ownProtectionController = true;
-            //}
             eventBus.trigger(Events.PROTECTION_CREATED, {controller: protectionController, manifest: manifest});
             protectionController.setMediaElement(videoModel.getElement());
             if (protectionData) {
                 protectionController.setProtectionData(protectionData);
             }
-
         }
 
         try {
