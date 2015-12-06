@@ -166,6 +166,9 @@ MediaPlayer.utils.TextTrackExtensions = function () {
         checkVideoSize: function() {
             var track = this.getCurrentTextTrack();
             if (track && track.renderingType === "html") {
+                if (track.mode !== "showing") {
+                    return; // Nothing to do.
+                }
                 var newVideoWidth = video.clientWidth;
                 var newVideoHeight = video.clientHeight;
 
