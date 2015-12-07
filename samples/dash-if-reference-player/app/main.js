@@ -555,7 +555,7 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     ////////////////////////////////////////
 
     video = document.querySelector(".dash-video-player video");
-    player = MediaPlayer({}).create();
+    player = MediaPlayer().create();
 
     $scope.version = player.getVersion();
 
