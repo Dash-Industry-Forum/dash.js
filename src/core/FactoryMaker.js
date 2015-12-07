@@ -13,7 +13,8 @@ let FactoryMaker = (function() {
     return instance;
 
     function extend(name, childInstance, context) {
-        let extensionContext = getExtensionContext(context)
+        let extensionContext = getExtensionContext(context);
+
         if (!extensionContext[name] && childInstance) {
             extensionContext[name] = childInstance;
         }
@@ -21,16 +22,23 @@ let FactoryMaker = (function() {
 
     function getSingletonInstance(context, className) {
         let instance = null;
+
         singletonContexts.forEach(function(obj) {
             if (obj.context === context && obj.name === className) {
                 instance = obj.instance;
             }
-        })
+        });
+
         return instance;
     }
 
     function getClassFactory(classConstructor) {
         return function (context){
+
+            if (context === undefined) {
+                context = {};
+            }
+
             return {
                 create: function() {
                     return merge(classConstructor.name, classConstructor.apply({ context:context } ,arguments), context);
@@ -43,6 +51,10 @@ let FactoryMaker = (function() {
         let contexts = [];
         return function(context) {
             let instance = null;
+
+            if (context === undefined) {
+                context = {};
+            }
 
             for (let i in contexts) {
                 if (contexts[i].context === context)
@@ -69,7 +81,8 @@ let FactoryMaker = (function() {
     }
 
     function merge(name, classConstructor, context) {
-        let extensionContext = getExtensionContext(context)
+        let extensionContext = getExtensionContext(context);
+
         let extended = extensionContext[name];
         if (extended) {
             extended = extended.apply({ context:context, factory:instance});
@@ -84,14 +97,17 @@ let FactoryMaker = (function() {
 
     function getExtensionContext(context) {
         let extensionContext;
-        extensions.forEach(function(obj){
+        
+        extensions.forEach(function(obj) {
             if (obj === context) {
                 extensionContext = obj;
             }
-        })
+        });
+
         if(!extensionContext) {
             extensionContext = extensions.push(context);
         }
+
         return extensionContext;
     }
 
