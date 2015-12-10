@@ -11,9 +11,15 @@ class ObjectsHelper {
             getCurrentTrack: () => {},
             getStreamInfo: () => { return {id: 'some_id'} },
             getMediaInfo: () => { return { bitrateList: [] } },
-            getIndexHandler: () => {},
+            getIndexHandler: () => this.getDummyIndexHandler(),
             isDynamic: () => true
         };
+    }
+
+    getDummyIndexHandler() {
+        return {
+            updateRepresentation : () => {}
+        }
     }
 
     getDummyTimelineConverter() {
