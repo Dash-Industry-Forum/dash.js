@@ -46,9 +46,9 @@ factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
 export default factory;
 
 function DashHandler(config) {
-    const self = this;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let context = this.context;
+    let eventBus = EventBus(context).getInstance();
 
     let log = config.log;
     let baseURLExt = config.baseURLExt;

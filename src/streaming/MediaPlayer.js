@@ -40,6 +40,7 @@ import DOMStorage from './utils/DOMStorage.js';
 import TextTrackExtensions from './extensions/TextTrackExtensions.js';
 import SourceBufferExtensions from './extensions/SourceBufferExtensions.js';
 import VirtualBuffer from './utils/VirtualBuffer.js';
+import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
 import TextSourceBuffer from './TextSourceBuffer.js';
 import URIQueryAndFragmentModel from './models/URIQueryAndFragmentModel.js';
 import ManifestModel from './models/ManifestModel.js';
@@ -1239,7 +1240,8 @@ function MediaPlayer() {
             log :log,
             errHandler : errHandler,
             parser :createManifestParser(),
-            metricsModel :metricsModel
+            metricsModel :metricsModel,
+            requestModifierExt:RequestModifierExtensions(context).getInstance()
         });
     }
 

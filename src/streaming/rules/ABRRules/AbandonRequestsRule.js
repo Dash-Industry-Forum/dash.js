@@ -38,7 +38,7 @@ const ABANDON_MULTIPLIER = 1.5;
 export default FactoryMaker.getClassFactory(AbandonRequestsRule);
 
 function AbandonRequestsRule(config) {
-    const self = this;
+    let context = this.context;
 
     let log = config.log;
 

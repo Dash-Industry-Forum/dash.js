@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
 import EventBus from '../streaming/utils/EventBus.js';
@@ -42,25 +41,21 @@ const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 export default FactoryMaker.getClassFactory(XlinkLoader);
 
 function XlinkLoader(config) {
-    const self = this;
 
+    let context  = this.context;
     let eventBus = EventBus(self.context).getInstance();
 
     let errHandler = config.errHandler;
     let metricsModel = config.metricsModel;
+    let requestModifierExt = config.requestModifierExt;
 
     let instance = {
-    
+        load:load
     };
 
-    setup();
+
     return instance;
 
-    let requestModifierExt;
-
-    function setup(){
-        requestModifierExt = RequestModifierExtensions(self.context).getInstance();
-    }
 
     function load(url, element, resolveObject) {
         // Error handling: resolveToZero, no valid url

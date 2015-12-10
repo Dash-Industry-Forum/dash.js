@@ -30,7 +30,6 @@
  */
 import XlinkController from './controllers/XlinkController.js';
 import XlinkLoader from './XlinkLoader.js';
-import RequestModifierExtensions from './extensions/RequestModifierExtensions.js';
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
 import EventBus from './utils/EventBus.js';
@@ -41,16 +40,18 @@ export default FactoryMaker.getClassFactory(ManifestLoader);
 
 function ManifestLoader(config) {
 
-    const self = this;
     const RETRY_ATTEMPTS = 3;
     const RETRY_INTERVAL = 500;
     const PARSERERROR_ERROR_CODE = 1;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let context = this.context;
+    let eventBus = EventBus(context).getInstance();
+
     let log = config.log;
     let parser = config.parser;
     let errHandler = config.errHandler;
     let metricsModel = config.metricsModel;
+    let requestModifierExt = config.requestModifierExt;
 
     let instance = {
         load: load,
@@ -60,15 +61,19 @@ function ManifestLoader(config) {
     setup();
     return instance;
 
-    let requestModifierExt,
-        xlinkController,
+    let xlinkController,
         remainingAttempts;
 
     function setup() {
         remainingAttempts = RETRY_ATTEMPTS;
-        let xlinkLoader = XlinkLoader(self.context).create({errHandler:errHandler, metricsModel:metricsModel});
-        xlinkController = XlinkController(self.context).create({xlinkLoader:xlinkLoader});
-        requestModifierExt = RequestModifierExtensions(self.context).getInstance();
+        let xlinkLoader = XlinkLoader(context).create({
+            errHandler:errHandler,
+            metricsModel:metricsModel,
+            requestModifierExt:requestModifierExt
+        });
+        xlinkController = XlinkController(context).create({
+            xlinkLoader:xlinkLoader
+        });
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
     }
 

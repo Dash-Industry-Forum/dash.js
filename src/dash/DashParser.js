@@ -42,8 +42,8 @@ const MILLISECONDS_IN_SECONDS = 1000;
 export default FactoryMaker.getClassFactory(DashParser);
 
 function DashParser(config) {
-    const self = this;
 
+    let context = this.context;
     let log = config.log;
 
     let instance = {
@@ -422,7 +422,7 @@ function DashParser(config) {
 
             log("Parsing complete: ( xml2json: " + (json.getTime() - start.getTime()) + "ms, objectiron: " + (ironed.getTime() - json.getTime()) + "ms, total: " + ((ironed.getTime() - start.getTime()) / 1000) + "s)");
         } catch (err) {
-            ErrorHandler(self.context).getInstance().manifestError("parsing the manifest failed", "parse", data);
+            ErrorHandler(context).getInstance().manifestError("parsing the manifest failed", "parse", data);
             return null;
         }
         return manifest;
