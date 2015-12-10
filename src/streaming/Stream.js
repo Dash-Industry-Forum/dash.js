@@ -49,9 +49,9 @@ const DATA_UPDATE_FAILED_ERROR_CODE = 1;
 export default FactoryMaker.getClassFactory(Stream);
 
 function Stream(config) {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let manifestModel = config.manifestModel;
     let manifestUpdater = config.manifestUpdater;
@@ -108,11 +108,11 @@ function Stream(config) {
         isUpdating = false;
         initialized = false;
 
-        liveEdgeFinder = LiveEdgeFinder(self.context).getInstance();
-        playbackController = PlaybackController(self.context).getInstance();
-        abrController = AbrController(self.context).getInstance();
-        mediaController = MediaController(self.context).getInstance();
-        fragmentController = FragmentController(self.context).create({
+        liveEdgeFinder = LiveEdgeFinder(context).getInstance();
+        playbackController = PlaybackController(context).getInstance();
+        abrController = AbrController(context).getInstance();
+        mediaController = MediaController(context).getInstance();
+        fragmentController = FragmentController(context).create({
             log: log
         });
 
@@ -281,7 +281,7 @@ function Stream(config) {
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
             errHandler.capabilityError("encryptedmedia");
-        } else if (!capabilities.supportsCodec(VideoModel(self.context).getInstance().getElement(), codec)) {
+        } else if (!capabilities.supportsCodec(VideoModel(context).getInstance().getElement(), codec)) {
             msg = type + "Codec (" + codec + ") is not supported.";
             errHandler.manifestError(msg, "codec", manifest);
             log(msg);
@@ -315,16 +315,16 @@ function Stream(config) {
 
     function createIndexHandler() {
 
-        let baseUrlExt = BaseURLExtensions(self.context).getInstance();
+        let baseUrlExt = BaseURLExtensions(context).getInstance();
         baseUrlExt.setConfig({log:log});
         baseUrlExt.initialize();
 
-        let handler = DashHandler(self.context).create({
+        let handler = DashHandler(context).create({
             log:log,
             baseURLExt:baseUrlExt,
             timelineConverter: timelineConverter,
-            metricsExt:DashMetricsExtensions(self.context).getInstance(),
-            metricsModel:MetricsModel(self.context).getInstance()
+            metricsExt:DashMetricsExtensions(context).getInstance(),
+            metricsModel:MetricsModel(context).getInstance()
         }
         );
 
@@ -332,7 +332,7 @@ function Stream(config) {
     }
 
     function createStreamProcessor(mediaInfo, manifest, mediaSource, optionalSettings) {
-        var streamProcessor = StreamProcessor(self.context).create({
+        var streamProcessor = StreamProcessor(context).create({
             indexHandler: createIndexHandler(),
             timelineConverter: timelineConverter,
             adapter: adapter,
@@ -405,7 +405,7 @@ function Stream(config) {
         var manifest = manifestModel.getValue();
         var events;
 
-        eventController = EventController(self.context).getInstance();
+        eventController = EventController(context).getInstance();
         eventController.initialize();
         eventController.setConfig({
             log: log,

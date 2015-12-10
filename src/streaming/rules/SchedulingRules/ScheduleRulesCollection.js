@@ -49,7 +49,7 @@ factory.NEXT_FRAGMENT_RULES = NEXT_FRAGMENT_RULES;
 export default factory;
 
 function ScheduleRulesCollection() {
-    const self = this;
+    let context = this.context;
 
     let instance = {
         initialize:initialize,
@@ -65,16 +65,16 @@ function ScheduleRulesCollection() {
         fragmentsToScheduleRules = [];
         nextFragmentRules = [];
 
-        fragmentsToScheduleRules.push(BufferLevelRule(self.context).create({
-            metricsExt: DashMetricsExtensions(self.context).getInstance(),
-            metricsModel: MetricsModel(self.context).getInstance(),
-            textSourceBuffer:TextSourceBuffer(self.context).getInstance()
+        fragmentsToScheduleRules.push(BufferLevelRule(context).create({
+            metricsExt: DashMetricsExtensions(context).getInstance(),
+            metricsModel: MetricsModel(context).getInstance(),
+            textSourceBuffer:TextSourceBuffer(context).getInstance()
         }));
-        nextFragmentRules.push(PlaybackTimeRule(self.context).create({
-            adapter: DashAdapter(self.context).getInstance(),
-            sourceBufferExt: SourceBufferExtensions(self.context).getInstance(),
-            virtualBuffer: VirtualBuffer(self.context).getInstance(),
-            textSourceBuffer: TextSourceBuffer(self.context).getInstance()
+        nextFragmentRules.push(PlaybackTimeRule(context).create({
+            adapter: DashAdapter(context).getInstance(),
+            sourceBufferExt: SourceBufferExtensions(context).getInstance(),
+            virtualBuffer: VirtualBuffer(context).getInstance(),
+            textSourceBuffer: TextSourceBuffer(context).getInstance()
 
         }));
     }

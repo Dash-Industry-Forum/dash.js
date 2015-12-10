@@ -43,9 +43,9 @@ const STREAM_END_THRESHOLD = 0.2;
 export default FactoryMaker.getSingletonFactory(StreamController);
 
 function StreamController() {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let instance = {
         initialize          :initialize,
@@ -114,7 +114,7 @@ function StreamController() {
         protectionData = protData;
         timelineConverter.initialize();
 
-        manifestUpdater = ManifestUpdater(self.context).getInstance();
+        manifestUpdater = ManifestUpdater(context).getInstance();
         manifestUpdater.setConfig({
             log :log,
             manifestModel: manifestModel,
@@ -122,8 +122,8 @@ function StreamController() {
         });
         manifestUpdater.initialize(manifestLoader);
 
-        videoModel = VideoModel(self.context).getInstance();
-        playbackController = PlaybackController(self.context).getInstance();
+        videoModel = VideoModel(context).getInstance();
+        playbackController = PlaybackController(context).getInstance();
         playbackController.setConfig({
             streamController: instance,
             log: log,
@@ -414,7 +414,7 @@ function StreamController() {
                 // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
                 if (!stream) {
 
-                    stream = Stream(self.context).create({
+                    stream = Stream(context).create({
                         manifestModel: manifestModel,
                         manifestUpdater: manifestUpdater,
                         adapter: adapter,
@@ -507,7 +507,7 @@ function StreamController() {
 
             var manifestUTCTimingSources = manifestExt.getUTCTimingSources(e.manifest);
             var allUTCTimingSources = (!manifestExt.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(UTCTimingSources);
-            var isHTTPS = URIQueryAndFragmentModel(self.context).getInstance().isManifestHTTPS();
+            var isHTTPS = URIQueryAndFragmentModel(context).getInstance().isManifestHTTPS();
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
             allUTCTimingSources.forEach(function(item){
@@ -517,11 +517,12 @@ function StreamController() {
                 }
             });
 
-            timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource, {
+            timeSyncController.setConfig({
                 log: log,
                 metricsModel: metricsModel,
                 metricsExt: metricsExt
             });
+            timeSyncController.initialize(allUTCTimingSources, useManifestDateHeaderTimeSource);
         } else {
             reset();
         }

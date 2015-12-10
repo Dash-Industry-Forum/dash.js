@@ -31,11 +31,17 @@
 import TextSourceBuffer from '../TextSourceBuffer.js';
 import MediaController from '../controllers/MediaController.js';
 import DashAdapter from '../../dash/DashAdapter.js';
+import ErrorHandler from '../../streaming/ErrorHandler.js';
+import StreamController from '../controllers/StreamController.js';
+import TextTrackExtensions from '../extensions/TextTrackExtensions.js';
+import VTTParser from '../VTTParser.js';
+import TTMLParser from '../TTMLParser.js';
+import VideoModel from '../models/VideoModel.js';
 import Error from '../vo/Error.js';
 import EventBus from '../utils/EventBus.js';
 import Events from "../Events.js";
-import ErrorHandler from '../../streaming/ErrorHandler.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+
 
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
@@ -46,9 +52,9 @@ factory.QUOTA_EXCEEDED_ERROR_CODE = QUOTA_EXCEEDED_ERROR_CODE;
 export default factory;
 
 function SourceBufferExtensions() {
-    const self = this;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let context = this.context;
+    let eventBus = EventBus(context).getInstance();
 
     let instance = {
         append: append,
@@ -86,12 +92,18 @@ function SourceBufferExtensions() {
 
         } catch (ex) {
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp"') !== -1)) {
-                buffer = TextSourceBuffer(self.context).getInstance();
+                buffer = TextSourceBuffer(context).getInstance();
                 buffer.setConfig({
-                    errHandler: ErrorHandler(self.context).getInstance(),
-                    adapter: DashAdapter(self.context).getInstance(),
+                    errHandler: ErrorHandler(context).getInstance(),
+                    adapter: DashAdapter(context).getInstance(),
                     manifestExt: manifestExt,
-                    mediaController: MediaController(self.context).getInstance(),
+                    mediaController: MediaController(context).getInstance(),
+                    videoModel: VideoModel(context).getInstance(),
+                    streamController: StreamController(context).getInstance(),
+                    textTrackExtensions: TextTrackExtensions(context).getInstance(),
+                    VTTParser: VTTParser(context).getInstance(),
+                    TTMLParser: TTMLParser(context).getInstance()
+
                 });
             } else {
                 throw ex;
@@ -102,8 +114,6 @@ function SourceBufferExtensions() {
     }
 
     function removeSourceBuffer(mediaSource, buffer) {
-        "use strict";
-
         try {
             mediaSource.removeSourceBuffer(buffer);
         } catch(ex){
@@ -111,8 +121,6 @@ function SourceBufferExtensions() {
     }
 
     function getBufferRange(buffer, time, tolerance) {
-        "use strict";
-
         var ranges = null,
             start = 0,
             end = 0,
@@ -329,7 +337,6 @@ function SourceBufferExtensions() {
     }
 
     function abort(mediaSource, buffer) {
-        "use strict";
         try {
             if (mediaSource.readyState === "open") {
                 buffer.abort();
@@ -348,7 +355,6 @@ function SourceBufferExtensions() {
 
     //private
     function waitForUpdateEnd(buffer, callback) {
-        "use strict";
         var intervalId,
             CHECK_INTERVAL = 50;
         var checkIsUpdateEnded = function() {

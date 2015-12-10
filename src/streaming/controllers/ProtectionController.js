@@ -53,7 +53,7 @@ import Protection from '../protection/Protection.js'
 export default FactoryMaker.getClassFactory(ProtectionController);
 
 function ProtectionController(config) {
-    const self = this;
+    let context = this.context;
 
 
 

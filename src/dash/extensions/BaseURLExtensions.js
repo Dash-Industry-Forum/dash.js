@@ -40,9 +40,9 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(BaseURLExtensions);
 
 function  BaseURLExtensions() {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let instance = {
         initialize:initialize,
@@ -60,9 +60,9 @@ function  BaseURLExtensions() {
         log;
 
     function initialize() {
-        errHandler = ErrorHandler(self.context).getInstance();
-        boxParser = BoxParser(self.context).getInstance();
-        requestModifierExt = RequestModifierExtensions(self.context).getInstance();
+        errHandler = ErrorHandler(context).getInstance();
+        boxParser = BoxParser(context).getInstance();
+        requestModifierExt = RequestModifierExtensions(context).getInstance();
     }
 
     function loadInitialization(representation, loadingInfo) {

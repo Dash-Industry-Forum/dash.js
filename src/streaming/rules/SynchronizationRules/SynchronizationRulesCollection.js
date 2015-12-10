@@ -47,7 +47,7 @@ factory.BEST_GUESS_RULES = BEST_GUESS_RULES;
 export default factory;
 
 function SynchronizationRulesCollection() {
-    const self = this;
+    let context = this.context;
 
     let instance = {
         initialize: initialize,
@@ -63,13 +63,13 @@ function SynchronizationRulesCollection() {
         withAccurateTimeSourceRules = [];
         bestGuestRules = [];
 
-        withAccurateTimeSourceRules.push(LiveEdgeWithTimeSynchronizationRule(self.context).create({
-            timelineConverter:TimelineConverter(self.context).getInstance()
+        withAccurateTimeSourceRules.push(LiveEdgeWithTimeSynchronizationRule(context).create({
+            timelineConverter:TimelineConverter(context).getInstance()
         }));
 
-        bestGuestRules.push(LiveEdgeBinarySearchRule(self.context).create({
-            timelineConverter:TimelineConverter(self.context).getInstance(),
-            adapter: DashAdapter(self.context).getInstance()
+        bestGuestRules.push(LiveEdgeBinarySearchRule(context).create({
+            timelineConverter:TimelineConverter(context).getInstance(),
+            adapter: DashAdapter(context).getInstance()
         }));
     }
 

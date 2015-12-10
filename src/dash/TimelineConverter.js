@@ -38,9 +38,9 @@ import FactoryMaker from '../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(TimelineConverter);
 
 function TimelineConverter() {
-    const self = this;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let context = this.context;
+    let eventBus = EventBus(context).getInstance();
 
     let instance = {
         initialize:initialize,
@@ -64,7 +64,6 @@ function TimelineConverter() {
 
     return instance;
 
-
     let clientServerTimeShift,
         isClientServerTimeSyncCompleted,
         expectedLiveEdge;
@@ -78,8 +77,6 @@ function TimelineConverter() {
         eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
     }
-
-
 
     function isTimeSyncCompleted() {
         return isClientServerTimeSyncCompleted;

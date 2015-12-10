@@ -35,9 +35,9 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(Debug);
 
 function Debug() {
-    const self = this;
+    let context = this.context;
     
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let instance = {
         log: log,

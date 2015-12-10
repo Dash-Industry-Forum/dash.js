@@ -43,9 +43,9 @@ const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 export default FactoryMaker.getClassFactory(XlinkController);
 
 function XlinkController(config) {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let xlinkLoader = config.xlinkLoader;
 

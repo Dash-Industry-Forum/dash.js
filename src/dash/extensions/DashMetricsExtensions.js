@@ -38,7 +38,7 @@ export default FactoryMaker.getSingletonFactory(DashMetricsExtensions);
 
 
 function DashMetricsExtensions() {
-    const self = this;
+    let context = this.context;
 
     let instance = {
         getBandwidthForRepresentation: getBandwidthForRepresentation,
@@ -59,7 +59,7 @@ function DashMetricsExtensions() {
         getRequestsQueue: getRequestsQueue
     }
 
-    let manifestModel = ManifestModel(self.context).getInstance();
+    let manifestModel = ManifestModel(context).getInstance();
 
     return instance;
 
@@ -119,7 +119,7 @@ function DashMetricsExtensions() {
      */
     function getMaxAllowedIndexForBufferType(bufferType, periodId) {
         var idx = 0;
-        var abrController = AbrController(self.context).getInstance();
+        var abrController = AbrController(context).getInstance();
 
         if (abrController) {
             idx = abrController.getTopQualityIndexFor(bufferType, periodId);
@@ -412,7 +412,7 @@ function DashMetricsExtensions() {
     }
 
     function adaptationIsType(adaptation, bufferType) {
-        return DashManifestExtensions(self.context).getInstance().getIsTypeOf(adaptation, bufferType);
+        return DashManifestExtensions(context).getInstance().getIsTypeOf(adaptation, bufferType);
     }
 
     function findMaxBufferIndex(period, bufferType) {

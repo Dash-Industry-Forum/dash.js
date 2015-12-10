@@ -48,9 +48,9 @@ const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
 export default FactoryMaker.getClassFactory(RepresentationController);
 
 function  RepresentationController() {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let instance = {
         initialize: initialize,
@@ -91,16 +91,16 @@ function  RepresentationController() {
         updating = true;
         availableRepresentations = [];
 
-        abrController = AbrController(self.context).getInstance();
-        streamController = StreamController(self.context).getInstance(),
-        playbackController = PlaybackController(self.context).getInstance(),
-        manifestModel = ManifestModel(self.context).getInstance(),
-        metricsModel = MetricsModel(self.context).getInstance(),
-        domStorage = DOMStorage(self.context).getInstance(),
-        timelineConverter = TimelineConverter(self.context).getInstance(),
-        manifestExt = DashManifestExtensions(self.context).getInstance(),
-        metricsExt = DashMetricsExtensions(self.context).getInstance(),
-        mediaPlayerModel = MediaPlayerModel(self.context).getInstance();
+        abrController = AbrController(context).getInstance();
+        streamController = StreamController(context).getInstance(),
+        playbackController = PlaybackController(context).getInstance(),
+        manifestModel = ManifestModel(context).getInstance(),
+        metricsModel = MetricsModel(context).getInstance(),
+        domStorage = DOMStorage(context).getInstance(),
+        timelineConverter = TimelineConverter(context).getInstance(),
+        manifestExt = DashManifestExtensions(context).getInstance(),
+        metricsExt = DashMetricsExtensions(context).getInstance(),
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
 
         eventBus.on(Events.QUALITY_CHANGED, onQualityChanged, instance);
         eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);

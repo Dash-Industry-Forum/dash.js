@@ -35,9 +35,9 @@ import FactoryMaker from '../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(ErrorHandler);
 
 function ErrorHandler() {
-    const self = this;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let context = this.context;
+    let eventBus = EventBus(context).getInstance();
 
     var instance = {
         capabilityError: capabilityError,

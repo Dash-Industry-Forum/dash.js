@@ -50,10 +50,10 @@ import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 
 let ProtectionModel_3Feb2014 = function () {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
-    var protectionExt = ProtectionExtensions(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
+    var protectionExt = ProtectionExtensions(context).getInstance();
 
     var videoElement = null,
         mediaKeys = null,

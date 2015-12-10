@@ -35,9 +35,9 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(TextTrackExtensions);
 
 function TextTrackExtensions() {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let instance = {
         initialize          :initialize,

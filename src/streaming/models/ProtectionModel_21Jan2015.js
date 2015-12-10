@@ -52,7 +52,7 @@ export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);
 
 function ProtectionModel_21Jan2015(config) {
 
-    const self = this;
+    let context = this.context;
 
     let eventBus = config.eventBus;
     let log = config.log;
@@ -88,7 +88,7 @@ function ProtectionModel_21Jan2015(config) {
         videoElement = null;
         mediaKeys = null;
         sessions = [];
-        protectionExt = ProtectionExtensions(self.context).getInstance();
+        protectionExt = ProtectionExtensions(context).getInstance();
         eventHandler = createEventHandler();
     }
 

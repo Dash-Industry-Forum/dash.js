@@ -40,9 +40,9 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(FragmentController);
 
 function FragmentController(config) {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let log = config.log;
 
@@ -75,14 +75,14 @@ function FragmentController(config) {
         return result;
     }
 
-    function getModel(context) {
-        if (!context) return null;
+    function getModel(scheduleController) {
+        if (!scheduleController) return null;
         // Wrap the buffer controller into model and store it to track the loading state and execute the requests
-        var model = findModel(context);
+        var model = findModel(scheduleController);
 
         if (!model){
-            model = FragmentModel(self.context).create({log:log, metricsModel :MetricsModel(self.context).getInstance()});
-            model.setContext(context);
+            model = FragmentModel(context).create({log:log, metricsModel :MetricsModel(context).getInstance()});
+            model.setScheduleController(scheduleController);
             fragmentModels.push(model);
         }
 
@@ -106,12 +106,12 @@ function FragmentController(config) {
         fragmentModels = [];
     }
 
-    function findModel(context) {
+    function findModel(scheduleController) {
         var ln = fragmentModels.length;
         // We expect one-to-one relation between FragmentModel and context,
         // so just compare the given context object with the one that stored in the model to find the model for it
         for (var i = 0; i < ln; i++) {
-            if (fragmentModels[i].getContext() == context) {
+            if (fragmentModels[i].getScheduleController() == scheduleController) {
                 return fragmentModels[i];
             }
         }
@@ -136,15 +136,14 @@ function FragmentController(config) {
     }
 
     function onFragmentLoadingCompleted(e) {
-        if (!findModel(e.sender.getContext())) return;
+        let scheduleController = e.sender.getScheduleController()
+        if (!findModel(scheduleController)) return;
 
-        var request = e.request;
-        var bytes = e.response;
-        var isInit = isInitializationRequest(request);
-        var chunk;
-
-        var streamId = e.sender.getContext().getStreamProcessor().getStreamInfo().id;
-
+        let request = e.request;
+        let bytes = e.response;
+        let isInit = isInitializationRequest(request);
+        let streamId = scheduleController.getStreamProcessor().getStreamInfo().id;
+        let chunk;
 
         if (!bytes) {
             log("No " + request.mediaType + " bytes to push.");

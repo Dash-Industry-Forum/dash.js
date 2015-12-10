@@ -35,7 +35,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(BoxParser);
 
 function BoxParser(/*config*/) {
-    const self = this;
+    let context = this.context;
 
     let instance = {
         parse: parse
@@ -56,7 +56,7 @@ function BoxParser(/*config*/) {
         }
 
         var parsedFile = ISOBoxer.parseBuffer(data);
-        var dashIsoFile = IsoFile(self.context).create();
+        var dashIsoFile = IsoFile(context).create();
 
         dashIsoFile.setData(parsedFile);
 

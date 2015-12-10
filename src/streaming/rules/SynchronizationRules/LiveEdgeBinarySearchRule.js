@@ -38,9 +38,9 @@ const SEARCH_TIME_SPAN = 12 * 60 * 60; // set the time span that limits our sear
 export default FactoryMaker.getClassFactory(LiveEdgeBinarySearchRule);
 
 function LiveEdgeBinarySearchRule(config) {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let adapter = config.adapter;
     let timelineConverter = config.timelineConverter;
@@ -98,7 +98,7 @@ function LiveEdgeBinarySearchRule(config) {
             // Thus, we need to switch an expected live edge and actual live edge for SegmentTimelne streams.
             var actualLiveEdge = timelineConverter.getExpectedLiveEdge();
             timelineConverter.setExpectedLiveEdge(liveEdgeInitialSearchPosition);
-            callback(SwitchRequest(self.context).create(actualLiveEdge, p));
+            callback(SwitchRequest(context).create(actualLiveEdge, p));
             return;
         }
 
@@ -162,7 +162,7 @@ function LiveEdgeBinarySearchRule(config) {
 
         // if the search time is out of the range bounds we have not be able to find live edge, stop trying
         if (searchTime < liveEdgeSearchRange.start && searchTime > liveEdgeSearchRange.end) {
-            callback(SwitchRequest(self.context).create(null, p));
+            callback(SwitchRequest(context).create(null, p));
         } else {
             // continue searching for a first available fragment
             req = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, searchTime, {ignoreIsFinished: true});
@@ -179,7 +179,7 @@ function LiveEdgeBinarySearchRule(config) {
             // if the fragment duration is unknown we cannot use binary search because we will not be able to
             // decide when to stop the search, so let the start time of the current fragment be a liveEdge
             if (!representationInfo.fragmentDuration) {
-                callback(SwitchRequest(self.context).create(startTime, p));
+                callback(SwitchRequest(context).create(startTime, p));
                 return;
             }
             useBinarySearch = true;
@@ -193,7 +193,7 @@ function LiveEdgeBinarySearchRule(config) {
                 findLiveEdge(searchTime, function() {
                     binarySearch(true, searchTime);
                 }, function(){
-                    callback(SwitchRequest(self.context).create(searchTime, p));
+                    callback(SwitchRequest(context).create(searchTime, p));
                 }, req);
 
                 return;
@@ -219,7 +219,7 @@ function LiveEdgeBinarySearchRule(config) {
         if (isSearchCompleted) {
             // search completed, we should take the time of the last found fragment. If the last search succeded we
             // take this time. Otherwise, we should subtract the time of the search step which is equal to fragment duaration
-            callback(SwitchRequest(self.context).create((lastSearchSucceeded ? lastSearchTime : (lastSearchTime - fragmentDuration)), p));
+            callback(SwitchRequest(context).create((lastSearchSucceeded ? lastSearchTime : (lastSearchTime - fragmentDuration)), p));
         } else {
             // update the search time and continue searching
             searchTime = ((liveEdgeSearchRange.start + liveEdgeSearchRange.end) / 2);

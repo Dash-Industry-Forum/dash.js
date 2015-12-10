@@ -43,9 +43,9 @@ factory.LIVE_EDGE_NOT_FOUND_ERROR_CODE = LIVE_EDGE_NOT_FOUND_ERROR_CODE;
 export default factory;
 
 function LiveEdgeFinder() {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let instance = {
         initialize:initialize,
@@ -71,7 +71,7 @@ function LiveEdgeFinder() {
         isSearchStarted = false;
         searchStartTime = NaN;
         liveEdge = null;
-        rulesController = RulesController(self.context).getInstance();
+        rulesController = RulesController(context).getInstance();
         ruleSet = SynchronizationRulesCollection.BEST_GUESS_RULES;
         eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
     }
@@ -111,7 +111,7 @@ function LiveEdgeFinder() {
 
         ruleSet = timelineConverter.isTimeSyncCompleted() ? SynchronizationRulesCollection.TIME_SYNCHRONIZED_RULES : SynchronizationRulesCollection.BEST_GUESS_RULES;
 
-        rules = SynchronizationRulesCollection(self.context).getInstance().getRules(ruleSet);
+        rules = SynchronizationRulesCollection(context).getInstance().getRules(ruleSet);
         isSearchStarted = true;
         searchStartTime = new Date().getTime();
 

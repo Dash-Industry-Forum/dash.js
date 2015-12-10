@@ -36,7 +36,7 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(BufferOccupancyRule);
 
 function BufferOccupancyRule(config) {
-    const self = this;
+    let context = this.context;
     let log = config ? config.log : null;
     let metricsModel = config ? config.metricsModel : null;
 
@@ -63,7 +63,7 @@ function BufferOccupancyRule(config) {
         var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         var isBufferRich = false;
         var maxIndex = mediaInfo.representationCount - 1;
-        var switchRequest = SwitchRequest(self.context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             abrController.getAbandonmentStateFor(mediaType) === AbrController.ABANDON_LOAD) {
@@ -77,7 +77,7 @@ function BufferOccupancyRule(config) {
             if (lastBufferLevelVO.level > lastBufferStateVO.target) {
                 isBufferRich = (lastBufferLevelVO.level - lastBufferStateVO.target) > BufferController.RICH_BUFFER_THRESHOLD;
                 if (isBufferRich && mediaInfo.representationCount > 1) {
-                    switchRequest = SwitchRequest(self.context).create(maxIndex, SwitchRequest.STRONG);
+                    switchRequest = SwitchRequest(context).create(maxIndex, SwitchRequest.STRONG);
                 }
             }
         }

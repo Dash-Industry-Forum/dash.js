@@ -45,10 +45,9 @@ factory.HTTP_TIMEOUT_MS = HTTP_TIMEOUT_MS;
 export default factory;
 
 function TimeSyncController() {
-    const self = this;
 
-    let eventBus = EventBus(self.context).getInstance();
-
+    let context = this.context;
+    let eventBus = EventBus(context).getInstance();
     let instance = {
         initialize: initialize,
         getOffsetToDeviceTimeMs: getOffsetToDeviceTimeMs,
@@ -58,7 +57,7 @@ function TimeSyncController() {
 
     return instance;
 
-    let offsetToDeviceTimeMs, // the offset between the time returned from the time source and the client time at that point, in milliseconds.
+    let offsetToDeviceTimeMs,
         isSynchronizing,
         isInitialised,
         useManifestDateHeaderTimeSource,
@@ -67,7 +66,7 @@ function TimeSyncController() {
         metricsModel,
         metricsExt;
 
-    function initialize(timingSources, useManifestDateHeader, config) {
+    function initialize(timingSources, useManifestDateHeader) {
         useManifestDateHeaderTimeSource = useManifestDateHeader;
         offsetToDeviceTimeMs = 0;
         isSynchronizing = false;
@@ -97,8 +96,6 @@ function TimeSyncController() {
             "urn:mpeg:dash:utc:ntp:2014":           notSupportedHandler,
             "urn:mpeg:dash:utc:sntp:2014":          notSupportedHandler
         };
-
-        setConfig(config);
 
         if (!getIsSynchronizing()) {
             attemptSync(timingSources);

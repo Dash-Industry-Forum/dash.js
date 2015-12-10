@@ -56,7 +56,7 @@ import FactoryMaker from '../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(StreamProcessor);
 
 function StreamProcessor(config) {
-    const self = this;
+    let context = this.context;
 
     let indexHandler = config.indexHandler;
     let timelineConverter = config.timelineConverter;
@@ -117,7 +117,7 @@ function StreamProcessor(config) {
 
     function setup() {
         mediaInfoArr = [];
-        log = Debug(self.context).getInstance().log;
+        log = Debug(context).getInstance().log;
     }
 
     function initialize(Type, FragmentController, mediaSource, Stream, EventController) {
@@ -129,38 +129,38 @@ function StreamProcessor(config) {
         dynamic = stream.getStreamInfo().manifestInfo.isDynamic;
 
 
-        abrController = AbrController(self.context).getInstance();
+        abrController = AbrController(context).getInstance();
         abrController.initialize(type, this);
 
         bufferController = createBufferControllerForType(Type);
         bufferController.initialize(type, mediaSource, this);
 
-        scheduleController = ScheduleController(self.context).create({
+        scheduleController = ScheduleController(context).create({
             log: log,
-            metricsModel: MetricsModel(self.context).getInstance(),
+            metricsModel: MetricsModel(context).getInstance(),
             manifestModel: manifestModel,
             adapter: adapter,
-            metricsExt: DashMetricsExtensions(self.context).getInstance(),
-            manifestExt: DashManifestExtensions(self.context).getInstance(),
+            metricsExt: DashMetricsExtensions(context).getInstance(),
+            manifestExt: DashManifestExtensions(context).getInstance(),
             timelineConverter: timelineConverter,
-            scheduleRulesCollection: ScheduleRulesCollection(self.context).getInstance(),
-            rulesController: RulesController(self.context).getInstance(),
-            mediaPlayerModel: MediaPlayerModel(self.context).getInstance(),
+            scheduleRulesCollection: ScheduleRulesCollection(context).getInstance(),
+            rulesController: RulesController(context).getInstance(),
+            mediaPlayerModel: MediaPlayerModel(context).getInstance(),
         });
 
         scheduleController.initialize(type, this);
 
-        fragmentLoader = FragmentLoader(self.context).create({
-            metricsModel: MetricsModel(self.context).getInstance(),
-            errHandler: ErrorHandler(self.context).getInstance(),
+        fragmentLoader = FragmentLoader(context).create({
+            metricsModel: MetricsModel(context).getInstance(),
+            errHandler: ErrorHandler(context).getInstance(),
             log: log,
-            requestModifierExt: RequestModifierExtensions(self.context).getInstance()
+            requestModifierExt: RequestModifierExtensions(context).getInstance()
         });
 
         indexHandler.initialize(this);
-        indexHandler.setCurrentTime(PlaybackController(self.context).getInstance().getStreamStartTime(getStreamInfo()));
+        indexHandler.setCurrentTime(PlaybackController(context).getInstance().getStreamStartTime(getStreamInfo()));
 
-        representationController = RepresentationController(self.context).create();
+        representationController = RepresentationController(context).create();
         representationController.initialize(this);
 
         fragmentModel = scheduleController.getFragmentModel();
@@ -305,23 +305,23 @@ function StreamProcessor(config) {
         var controller = null;
 
         if (type === "video" || type === "audio" || type === "fragmentedText") {
-            controller = BufferController(self.context).create({
+            controller = BufferController(context).create({
                 log: log,
-                metricsModel: MetricsModel(self.context).getInstance(),
+                metricsModel: MetricsModel(context).getInstance(),
                 manifestModel: manifestModel,
-                sourceBufferExt: SourceBufferExtensions(self.context).getInstance(),
-                errHandler: ErrorHandler(self.context).getInstance(),
-                mediaSourceExt: MediaSourceExtensions(self.context).getInstance(),
-                streamController: StreamController(self.context).getInstance(),
-                mediaController: MediaController(self.context).getInstance(),
+                sourceBufferExt: SourceBufferExtensions(context).getInstance(),
+                errHandler: ErrorHandler(context).getInstance(),
+                mediaSourceExt: MediaSourceExtensions(context).getInstance(),
+                streamController: StreamController(context).getInstance(),
+                mediaController: MediaController(context).getInstance(),
                 adapter: adapter,
-                virtualBuffer: VirtualBuffer(self.context).getInstance(),
-                textSourceBuffer: TextSourceBuffer(self.context).getInstance(),
+                virtualBuffer: VirtualBuffer(context).getInstance(),
+                textSourceBuffer: TextSourceBuffer(context).getInstance(),
             });
         }else {
-            controller = TextController(self.context).create({
-                errHandler: ErrorHandler(self.context).getInstance(),
-                sourceBufferExt: SourceBufferExtensions(self.context).getInstance()
+            controller = TextController(context).create({
+                errHandler: ErrorHandler(context).getInstance(),
+                sourceBufferExt: SourceBufferExtensions(context).getInstance()
             });
         }
 

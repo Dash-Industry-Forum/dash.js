@@ -49,17 +49,16 @@ factory.FRAGMENT_MODEL_FAILED = FRAGMENT_MODEL_FAILED;
 export default factory;
 
 function FragmentModel(config) {
-    const self = this;
 
-    let eventBus = EventBus(self.context).getInstance();
-
+    let context = this.context;
+    let eventBus = EventBus(context).getInstance();
     let log = config.log;
     let metricsModel = config.metricsModel;
 
     let instance = {
         setLoader: setLoader,
-        setContext: setContext,
-        getContext: getContext,
+        setScheduleController: setScheduleController,
+        getScheduleController: getScheduleController,
         getRequests: getRequests,
         isFragmentLoaded: isFragmentLoaded,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
@@ -71,14 +70,14 @@ function FragmentModel(config) {
     setup();
     return instance;
 
-    let context,
+    let scheduleController,
         executedRequests,
         loadingRequests,
         delayLoadingTimeout,
         fragmentLoader;
 
     function setup(){
-        context = null;
+        scheduleController = null;
         fragmentLoader = null;
         executedRequests = [];
         loadingRequests = [];
@@ -91,12 +90,12 @@ function FragmentModel(config) {
         fragmentLoader = value;
     }
 
-    function setContext(value) {
-        context = value;
+    function setScheduleController(value) {
+        scheduleController = value;
     }
 
-    function getContext() {
-        return context;
+    function getScheduleController() {
+        return scheduleController
     }
 
     function isFragmentLoaded(request) {

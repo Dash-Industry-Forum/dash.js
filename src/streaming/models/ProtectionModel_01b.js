@@ -50,11 +50,11 @@ import Events from '../Events.js';
 import ErrorHandler from '../ErrorHandler.js';
 
 let ProtectionModel_01b = function () {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
-    var protectionExt = ProtectionExtensions(self.context).getInstance();
-    var errHandler = ErrorHandler(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
+    var protectionExt = ProtectionExtensions(context).getInstance();
+    var errHandler = ErrorHandler(context).getInstance();
 
     var videoElement = null,
 

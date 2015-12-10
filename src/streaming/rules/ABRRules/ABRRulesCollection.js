@@ -47,7 +47,7 @@ factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
 export default factory;
 
 function ABRRulesCollection() {
-    const self = this;
+    let context = this.context;
 
     let instance = {
         initialize:initialize,
@@ -63,22 +63,22 @@ function ABRRulesCollection() {
         qualitySwitchRules = [];
         abandonFragmentRules = [];
 
-        qualitySwitchRules.push(ThroughputRule(self.context).create({
-                log:Debug(self.context).getInstance().log,
-                metricsExt:DashMetricsExtensions(self.context).getInstance(),
-                metricsModel:MetricsModel(self.context).getInstance()
+        qualitySwitchRules.push(ThroughputRule(context).create({
+                log:Debug(context).getInstance().log,
+                metricsExt:DashMetricsExtensions(context).getInstance(),
+                metricsModel:MetricsModel(context).getInstance()
             })
         );
 
-        qualitySwitchRules.push(BufferOccupancyRule(self.context).create({
-                log:Debug(self.context).getInstance().log,
-                metricsModel:MetricsModel(self.context).getInstance()
+        qualitySwitchRules.push(BufferOccupancyRule(context).create({
+                log:Debug(context).getInstance().log,
+                metricsModel:MetricsModel(context).getInstance()
             })
         );
 
-        qualitySwitchRules.push(InsufficientBufferRule(self.context).create({
-                log:Debug(self.context).getInstance().log,
-                metricsModel:MetricsModel(self.context).getInstance()
+        qualitySwitchRules.push(InsufficientBufferRule(context).create({
+                log:Debug(context).getInstance().log,
+                metricsModel:MetricsModel(context).getInstance()
             })
         );
 

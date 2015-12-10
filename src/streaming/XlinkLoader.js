@@ -43,7 +43,7 @@ export default FactoryMaker.getClassFactory(XlinkLoader);
 function XlinkLoader(config) {
 
     let context  = this.context;
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let errHandler = config.errHandler;
     let metricsModel = config.metricsModel;

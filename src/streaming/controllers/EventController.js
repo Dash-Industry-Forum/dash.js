@@ -39,7 +39,7 @@ export default FactoryMaker.getSingletonFactory(EventController);
 
 function EventController(){
     "use strict";
-    const self = this;
+    let context = this.context;
 
     let instance = {
         initialize: initialize,
@@ -146,7 +146,7 @@ function EventController(){
     }
 
     function triggerEvents(events) {
-        var currentVideoTime = VideoModel(self.context).getInstance().getCurrentTime();
+        var currentVideoTime = VideoModel(context).getInstance().getCurrentTime();
         var presentationTime;
 
         /* == Trigger events that are ready == */
@@ -174,7 +174,7 @@ function EventController(){
      */
     function removeEvents() {
         if(activeEvents) {
-            var currentVideoTime = VideoModel(self.context).getInstance().getCurrentTime();
+            var currentVideoTime = VideoModel(context).getInstance().getCurrentTime();
             var eventIds = Object.keys(activeEvents);
 
             for (var i = 0; i < eventIds.length; i++) {

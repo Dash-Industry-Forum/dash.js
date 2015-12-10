@@ -55,7 +55,7 @@ factory.LOCAL_STORAGE_VIDEO_SETTINGS_KEY = LOCAL_STORAGE_VIDEO_SETTINGS_KEY;
 export default factory;
 
 function DOMStorage() {
-    const self = this;
+    let context = this.context;
 
     let instance = {
         checkInitialBitrate: checkInitialBitrate,
@@ -76,7 +76,7 @@ function DOMStorage() {
         log;
 
     function setup() {
-        log = Debug(self.context).getInstance().log;
+        log = Debug(context).getInstance().log;
 
         experationDict = {
             BITRATE_EXPIRATION :DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION,
@@ -86,7 +86,7 @@ function DOMStorage() {
         lastBitrateCachingEnabled = true;
         lastMediaSettingsCachingEnabled = true;
 
-        abrController = AbrController(self.context).getInstance();
+        abrController = AbrController(context).getInstance();
     }
 
     function enableLastBitrateCaching(enable, ttl) {

@@ -48,7 +48,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(ProtectionExtensions);
 
 function  ProtectionExtensions() {
-    const self = this;
+    let context = this.context;
 
     let instance = {
         initialize: initialize,
@@ -83,15 +83,15 @@ function  ProtectionExtensions() {
         var keySystem;
 
         // PlayReady
-        keySystem = KeySystemPlayReady(self.context).getInstance();
+        keySystem = KeySystemPlayReady(context).getInstance();
         keySystems.push(keySystem);
 
         // Widevine
-        keySystem = KeySystemWidevine(self.context).getInstance();
+        keySystem = KeySystemWidevine(context).getInstance();
         keySystems.push(keySystem);
 
         // ClearKey
-        keySystem = KeySystemClearKey(self.context).getInstance();
+        keySystem = KeySystemClearKey(context).getInstance();
         keySystems.push(keySystem);
         clearkeyKeySystem = keySystem;
     }
@@ -262,13 +262,13 @@ function  ProtectionExtensions() {
 
         var licenseServerData = null;
         if (protData && protData.hasOwnProperty("drmtoday")) {
-            licenseServerData = DRMToday(self.context).getInstance();
+            licenseServerData = DRMToday(context).getInstance();
         } else if (keySystem.systemString === "com.widevine.alpha") {
-            licenseServerData = Widevine(self.context).getInstance();
+            licenseServerData = Widevine(context).getInstance();
         } else if (keySystem.systemString === "com.microsoft.playready") {
-            licenseServerData = PlayReady(self.context).getInstance();
+            licenseServerData = PlayReady(context).getInstance();
         } else if (keySystem.systemString === "org.w3.clearkey") {
-            licenseServerData = ClearKey(self.context).getInstance();
+            licenseServerData = ClearKey(context).getInstance();
         }
 
         return licenseServerData;

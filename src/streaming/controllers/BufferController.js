@@ -65,9 +65,9 @@ factory.BUFFER_EMPTY = BUFFER_EMPTY;
 export default factory;
 
 function BufferController(config) {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let log = config.log;
     let metricsModel = config.metricsModel;
@@ -153,8 +153,8 @@ function BufferController(config) {
         type = Type;
         setMediaSource(Source);
         streamProcessor = StreamProcessor;
-        playbackController = PlaybackController(self.context).getInstance();
-        abrController = AbrController(self.context).getInstance();
+        playbackController = PlaybackController(context).getInstance();
+        abrController = AbrController(context).getInstance();
         fragmentController = streamProcessor.getFragmentController();
         scheduleController = streamProcessor.getScheduleController();
         requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
@@ -459,7 +459,7 @@ function BufferController(config) {
             eventStreams[inbandEvents[loop].schemeIdUri] = inbandEvents[loop];
         }
 
-        isoFile = BoxParser(self.context).getInstance().parse(data);
+        isoFile = BoxParser(context).getInstance().parse(data);
         eventBoxes = isoFile.getBoxes("emsg");
 
         for (var i = 0, ln = eventBoxes.length; i < ln; i += 1) {
@@ -596,7 +596,7 @@ function BufferController(config) {
     function removeOldTrackData() {
         var allAppendedChunks = virtualBuffer.getChunks({ streamId: getStreamId(), mediaType: type, segmentType: HTTPRequest.MEDIA_SEGMENT_TYPE, appended: true });
         
-        const customTimeRangesFactory = CustomTimeRanges(self.context);
+        const customTimeRangesFactory = CustomTimeRanges(context);
         var rangesToClear = customTimeRangesFactory.create();
         var rangesToLeave = customTimeRangesFactory.create();
         

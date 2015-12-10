@@ -40,9 +40,9 @@ const WALLCLOCK_TIME_UPDATE_INTERVAL = 50; //This value influences the startup t
 export default FactoryMaker.getSingletonFactory(PlaybackController);
 
 function PlaybackController() {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let instance = {
         initialize: initialize,
@@ -95,7 +95,7 @@ function PlaybackController() {
         wallclockTimeIntervalId = null;
         commonEarliestTime = {};
         firstAppended = {};
-        mediaPlayerModel = MediaPlayerModel(self.context).getInstance();
+        mediaPlayerModel = MediaPlayerModel(context).getInstance();
     }
 
     function initialize(streamInfoValue) {
@@ -259,7 +259,7 @@ function PlaybackController() {
      */
     function getStreamStartTime(streamInfo) {
         var presentationStartTime;
-        var startTimeOffset = parseInt(URIQueryAndFragmentModel(self.context).getInstance().getURIFragmentData().s);
+        var startTimeOffset = parseInt(URIQueryAndFragmentModel(context).getInstance().getURIFragmentData().s);
 
         if (isDynamic) {
 

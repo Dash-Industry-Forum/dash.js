@@ -37,9 +37,9 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(InsufficientBufferRule);
 
 function InsufficientBufferRule(config) {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let log = config.log;
     let metricsModel = config.metricsModel;
@@ -70,7 +70,7 @@ function InsufficientBufferRule(config) {
         var current = context.getCurrentValue();
         var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         var lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
-        var switchRequest = SwitchRequest(self.context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
+        var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
         if (now - lastSwitchTime < waitToSwitchTime ||
             lastBufferStateVO === null) {
@@ -81,7 +81,7 @@ function InsufficientBufferRule(config) {
         setBufferInfo(mediaType, lastBufferStateVO.state);
         // After the sessions first buffer loaded event , if we ever have a buffer empty event we want to switch all the way down.
         if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY && bufferStateDict[mediaType].firstBufferLoadedEvent !== undefined) {
-            switchRequest = SwitchRequest(self.context).create(0, SwitchRequest.STRONG);
+            switchRequest = SwitchRequest(context).create(0, SwitchRequest.STRONG);
         }
 
         if (switchRequest.value !== SwitchRequest.NO_CHANGE && switchRequest.value !== current) {

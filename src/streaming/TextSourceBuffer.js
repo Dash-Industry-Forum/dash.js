@@ -28,22 +28,18 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import StreamController from './controllers/StreamController.js';
 import TextTrackInfo from './vo/TextTrackInfo.js';
 import FragmentExtensions from '../dash/extensions/FragmentExtensions.js';
 import BoxParser from './utils/BoxParser.js';
-import TextTrackExtensions from './extensions/TextTrackExtensions.js';
-import VTTParser from './VTTParser.js';
-import TTMLParser from './TTMLParser.js';
 import CustomTimeRanges from './utils/CustomTimeRanges.js';
-import VideoModel from './models/VideoModel.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(TextSourceBuffer);
 
 function  TextSourceBuffer() {
-    const self = this;
-
+    
+    let context = this.context;
+    
     let instance = {
         initialize :initialize,
         append :append,
@@ -62,6 +58,8 @@ function  TextSourceBuffer() {
         log,
         allTracksAreDisabled,
         parser,
+        VTTParser,
+        TTMLParser,
         fragmentExt,
         mediaInfos,
         textTrackExtensions,
@@ -87,18 +85,15 @@ function  TextSourceBuffer() {
         let streamProcessor = bufferController.getStreamProcessor();
 
         mediaInfos = streamProcessor.getMediaInfoArr();
-        videoModel = VideoModel(self.context).getInstance();
-        streamController = StreamController(self.context).getInstance();
-        textTrackExtensions = TextTrackExtensions(self.context).getInstance();
         textTrackExtensions.setConfig({videoModel: videoModel});
         textTrackExtensions.initialize();
         isFragmented = !manifestExt.getIsTextTrack(type);
 
         if (isFragmented){
-            fragmentExt = FragmentExtensions(self.context).getInstance();
-            fragmentExt.setConfig({boxParser: BoxParser(self.context).getInstance()});
+            fragmentExt = FragmentExtensions(context).getInstance();
+            fragmentExt.setConfig({boxParser: BoxParser(context).getInstance()});
             fragmentModel = streamProcessor.getFragmentModel();
-            this.buffered =  CustomTimeRanges(self.context).create();
+            this.buffered =  CustomTimeRanges(context).create();
         }
     }
 
@@ -200,26 +195,39 @@ function  TextSourceBuffer() {
         return allTracksAreDisabled;
     }
 
-    function setConfig(config){
+    function setConfig(config) {
         if (!config) return;
 
-        if (config.errHandler){
+        if (config.errHandler) {
             errHandler = config.errHandler;
         }
-        if (config.adapter){
+        if (config.adapter) {
             adapter = config.adapter;
         }
-        if (config.manifestExt){
+        if (config.manifestExt) {
             manifestExt = config.manifestExt;
         }
-        if (config.mediaController){
+        if (config.mediaController) {
             mediaController = config.mediaController;
         }
-
-        if (config.log){
+        if (config.videoModel) {
+            videoModel = config.videoModel;
+        }
+        if (config.streamController) {
+            streamController = config.streamController;
+        }
+        if (config.textTrackExtensions) {
+            textTrackExtensions = config.textTrackExtensions;
+        }
+        if (config.VTTParser) {
+            VTTParser = config.VTTParser;
+        }
+        if (config.TTMLParser) {
+            TTMLParser = config.TTMLParser;
+        }
+        if (config.log) {
             log = config.log;
         }
-
     }
 
     function setTextTrack() {
@@ -265,10 +273,10 @@ function  TextSourceBuffer() {
     function getParser(mimeType) {
         var parser;
         if (mimeType === "text/vtt") {
-            parser = VTTParser(self.context).getInstance();
-            parser.setConfig({logger: log});
+            parser = VTTParser;
+            parser.setConfig({log: log});
         } else if (mimeType === "application/ttml+xml" || mimeType === "application/mp4") {
-            parser = TTMLParser(self.context).getInstance();
+            parser = TTMLParser;
             parser.setConfig({videoModel: videoModel});
         }
         return parser;

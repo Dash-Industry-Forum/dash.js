@@ -42,9 +42,9 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(VirtualBuffer);
 
 function VirtualBuffer() {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let instance = {
         append: append,
@@ -180,7 +180,7 @@ function VirtualBuffer() {
             start,
             end;
 
-        data[streamId][mediaType].actualBufferedRanges = CustomTimeRanges(self.context).create();
+        data[streamId][mediaType].actualBufferedRanges = CustomTimeRanges(context).create();
 
         if (!ranges || ranges.length === 0) {
             data[streamId][mediaType].appended = [];
@@ -210,7 +210,7 @@ function VirtualBuffer() {
         var appended = filter.appended;
         var removeOrigin = filter.removeOrigin;
         var limit = filter.limit || Number.POSITIVE_INFINITY;
-        var mediaController = MediaController(self.context).getInstance();
+        var mediaController = MediaController(context).getInstance();
 
         var ln = 0,
             result = [],
@@ -368,18 +368,18 @@ function VirtualBuffer() {
     function createDataStorage() {
         var data = {};
 
-        data.audio = {calculatedBufferedRanges: CustomTimeRanges(self.context).create(),
-            actualBufferedRanges: CustomTimeRanges(self.context).create(),
+        data.audio = {calculatedBufferedRanges: CustomTimeRanges(context).create(),
+            actualBufferedRanges: CustomTimeRanges(context).create(),
             appended: []};
         data.audio[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
         data.audio[HTTPRequest.INIT_SEGMENT_TYPE] = [];
-        data.video = {calculatedBufferedRanges: CustomTimeRanges(self.context).create(),
-            actualBufferedRanges: CustomTimeRanges(self.context).create(),
+        data.video = {calculatedBufferedRanges: CustomTimeRanges(context).create(),
+            actualBufferedRanges: CustomTimeRanges(context).create(),
             appended: []};
         data.video[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
         data.video[HTTPRequest.INIT_SEGMENT_TYPE] = [];
-        data.fragmentedText = {calculatedBufferedRanges: CustomTimeRanges(self.context).create(),
-            actualBufferedRanges: CustomTimeRanges(self.context).create(),
+        data.fragmentedText = {calculatedBufferedRanges: CustomTimeRanges(context).create(),
+            actualBufferedRanges: CustomTimeRanges(context).create(),
             appended: []};
         data.fragmentedText[HTTPRequest.MEDIA_SEGMENT_TYPE] = [];
         data.fragmentedText[HTTPRequest.INIT_SEGMENT_TYPE] = [];

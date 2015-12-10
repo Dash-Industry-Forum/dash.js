@@ -43,9 +43,9 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(ScheduleController);
 
 function ScheduleController(config) {
-    const self = this;
+    let context = this.context;
 
-    let eventBus = EventBus(self.context).getInstance();
+    let eventBus = EventBus(context).getInstance();
 
     let log = config.log;
     let metricsModel = config.metricsModel;
@@ -117,9 +117,9 @@ function ScheduleController(config) {
     function initialize(Type, StreamProcessor) {
         type = Type;
         streamProcessor = StreamProcessor;
-        liveEdgeFinder = LiveEdgeFinder(self.context).getInstance();
-        playbackController = PlaybackController(self.context).getInstance();
-        abrController = AbrController(self.context).getInstance();
+        liveEdgeFinder = LiveEdgeFinder(context).getInstance();
+        playbackController = PlaybackController(context).getInstance();
+        abrController = AbrController(context).getInstance();
         fragmentController = streamProcessor.getFragmentController();
         bufferController = streamProcessor.getBufferController();
         fragmentModel = fragmentController.getModel(this);

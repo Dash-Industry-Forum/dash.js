@@ -59,7 +59,7 @@ function VTTParser() {
         if (!config) return;
 
         if (config.logger) {
-            log = config.logger;
+            log = config.log;
         }
     }
 

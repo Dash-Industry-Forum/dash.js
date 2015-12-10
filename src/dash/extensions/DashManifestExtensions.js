@@ -42,7 +42,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(DashManifestExtensions);
 
 function DashManifestExtensions() {
-    const self = this;
+    let context = this.context;
 
     let instance = {
         getIsTypeOf: getIsTypeOf,
@@ -92,7 +92,7 @@ function DashManifestExtensions() {
         getUTCTimingSources: getUTCTimingSources
     }
 
-    let timelineConverter = TimelineConverter(self.context).getInstance();
+    let timelineConverter = TimelineConverter(context).getInstance();
 
     return instance;
 
