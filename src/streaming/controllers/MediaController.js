@@ -36,8 +36,8 @@ MediaPlayer.dependencies.MediaController = function () {
          switchMode,
 
          storeLastSettings = function(type, value) {
-             if (this.DOMStorage.isSupported(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL) && (type === "video" || type === "audio")) {
-                 localStorage.setItem(MediaPlayer.utils.DOMStorage["LOCAL_STORAGE_"+type.toUpperCase()+"_SETTINGS_KEY"], JSON.stringify({settings: value, timestamp:new Date().getTime()}));
+             if (type === "video" || type === "audio") {
+                 this.DOMStorage.storeLastSettings(MediaPlayer.utils.DOMStorage.STORAGE_TYPE_LOCAL, type, value);
              }
          },
 
@@ -197,7 +197,7 @@ MediaPlayer.dependencies.MediaController = function () {
             ["audio", "video", "text", "fragmentedText"].forEach(function(type){
                 var settings = self.getInitialSettings(type),
                     tracksForType = self.getTracksFor(type, streamInfo),
-                    isSet = false;
+                    tracks = [];
 
                 if (!settings) {
                     settings = self.DOMStorage.getSavedMediaSettings(type);
@@ -208,15 +208,20 @@ MediaPlayer.dependencies.MediaController = function () {
 
                 if (settings) {
                     tracksForType.forEach(function(track){
-                        if (!isSet && matchSettings.call(self, settings, track)) {
-                            self.setTrack(track);
-                            isSet = true;
+                        if (matchSettings.call(self, settings, track)) {
+                            tracks.push(track);
                         }
                     });
                 }
 
-                if (!isSet) {
+                if (tracks.length === 0) {
                     self.setTrack(selectInitialTrack.call(self, tracksForType));
+                } else {
+                    if (tracks.length > 1) {
+                        self.setTrack(selectInitialTrack.call(self, tracks));
+                    } else {
+                        self.setTrack(tracks[0]);
+                    }
                 }
             });
         },
@@ -228,9 +233,7 @@ MediaPlayer.dependencies.MediaController = function () {
          */
         addTrack: function(track) {
             var mediaType = track ? track.type : null,
-                streamId = track? track.streamInfo.id : null,
-                initSettings = this.getInitialSettings(mediaType);
-
+                streamId = track? track.streamInfo.id : null;
             if (!track || (!this.isMultiTrackSupportedByType(mediaType))) return false;
 
             tracks[streamId] = tracks[streamId] || createTrackInfo.call(this);
@@ -239,9 +242,13 @@ MediaPlayer.dependencies.MediaController = function () {
 
             tracks[streamId][mediaType].list.push(track);
 
+            /*
+
+            var  initSettings = this.getInitialSettings(mediaType);
+
             if (initSettings && (matchSettings.call(this, initSettings, track)) && !this.getCurrentTrackFor(mediaType, track.streamInfo)) {
                 this.setTrack(track);
-            }
+                }*/
 
             return true;
         },
@@ -417,7 +424,6 @@ MediaPlayer.dependencies.MediaController = function () {
                 sameRoles = t1.roles.toString() == t2.roles.toString(),
                 sameAccessibility = t1.accessibility.toString() == t2.accessibility.toString(),
                 sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() == t2.audioChannelConfiguration.toString();
-
             return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
         },
 

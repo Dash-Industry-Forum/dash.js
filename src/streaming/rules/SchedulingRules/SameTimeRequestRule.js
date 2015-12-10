@@ -31,9 +31,7 @@
 MediaPlayer.rules.SameTimeRequestRule = function () {
     "use strict";
 
-    var lastMediaRequestIdxs = {},
-
-        findClosestToTime = function(fragmentModels, time) {
+    var findClosestToTime = function(fragmentModels, time) {
             var req,
                 r,
                 pendingReqs,
@@ -49,35 +47,44 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 for (j = 0, pln = pendingReqs.length; j < pln; j++) {
                     req = pendingReqs[j];
 
-                    if (isNaN(req.startTime) && (req.action !== "complete")) {
-                        r = req;
-                        break;
-                    }
-
                     if ((req.startTime > time) && (!r || req.startTime < r.startTime)) {
                         r = req;
                     }
                 }
             }
-
-            return r || req;
+            if (r || req) {
+                return [r || req];
+            }
+            return null;
         },
 
         getForTime = function(fragmentModels, currentTime) {
             var ln = fragmentModels.length,
                 req,
-                r = null,
-                i;
+            i, initSegs = [],requestSegs = [];
 
             for (i = 0; i < ln; i += 1) {
+                var pendingReqs = fragmentModels[i].getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
+                for (var j=0;j<pendingReqs.length;j++) {
+                    req=pendingReqs[j];
+                    if (req.type == MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE) {
+                        initSegs.push(req);
+                    }
+                }
+
                 req = fragmentModels[i].getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING, time: currentTime})[0];
 
-                if (req && (!r || req.startTime > r.startTime)) {
-                    r = req;
+                if (req) {
+                    requestSegs.push(req);
                 }
             }
-
-            return r;
+            if (initSegs.length>0) {
+                return initSegs;
+            }
+            if (requestSegs.length>0) {
+                return requestSegs;
+            }
+            return null;
         },
 
         sortRequestsByProperty = function(requestsArray, sortProp) {
@@ -89,27 +96,13 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
 
             requestsArray.sort(compare);
 
-        },
-
-        getLastMediaRequestIdx = function(streamId, type) {
-            return ((lastMediaRequestIdxs[streamId] && lastMediaRequestIdxs[streamId][type]) ? lastMediaRequestIdxs[streamId][type] : NaN);
-        },
-
-        onStreamCompleted = function(e) {
-            var model = e.data.fragmentModel,
-                req = e.data.request,
-                streamId = model.getContext().streamProcessor.getStreamInfo().id,
-                type = req.mediaType;
-
-            lastMediaRequestIdxs[streamId] = lastMediaRequestIdxs[streamId] || {};
-            lastMediaRequestIdxs[streamId][type] = req.index - 1;
         };
 
     return {
         playbackController: undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
+
         },
 
         setFragmentModels: function(fragmentModels, streamid) {
@@ -124,19 +117,13 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
                 p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
                 playbackController = this.playbackController,
                 fragmentModels = this.fragmentModels[streamId],
-                type,
                 model,
-                sameTimeReq,
-                mIdx,
                 req,
                 currentTime,
                 wallclockTime = new Date(),
-                time = null,
                 reqForCurrentTime,
                 mLength = fragmentModels ? fragmentModels.length : null,
-                shouldWait = false,
                 reqsToExecute = [],
-                pendingReqs,
                 loadingLength;
 
             if (!fragmentModels || !mLength) {
@@ -148,72 +135,31 @@ MediaPlayer.rules.SameTimeRequestRule = function () {
             reqForCurrentTime = getForTime(fragmentModels, currentTime);
             req = reqForCurrentTime || findClosestToTime(fragmentModels, currentTime) || current;
 
-            if (!req) {
+            if (!req || req.length===0) {
                 callback(new MediaPlayer.rules.SwitchRequest([], p));
                 return;
             }
+            for (var i=0;i<req.length;i++) {
+                reqsToExecute.push(req[i]);
+            }
 
-            for (mIdx = 0; mIdx < mLength; mIdx += 1) {
-                model = fragmentModels[mIdx];
-                type = model.getContext().streamProcessor.getType();
-
-                if (type !== "video" && type !== "audio" && type !== "fragmentedText") continue;
-
-                pendingReqs = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING});
+            for (i=0;i<mLength;i++) {
+                model = fragmentModels[i];
+                // Should we enforce this here, as opposed to a
+                // loadingLength count rule?
                 loadingLength = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING}).length;
-
                 if (loadingLength > MediaPlayer.dependencies.ScheduleController.LOADING_REQUEST_THRESHOLD) {
                     callback(new MediaPlayer.rules.SwitchRequest([], p));
                     return;
                 }
-
-                time = time || ((req === reqForCurrentTime) ? currentTime : req.startTime);
-
-                if (pendingReqs.indexOf(req) !== -1) {
-                    reqsToExecute.push(req);
-                    continue;
-                }
-
-                sameTimeReq = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.PENDING, time: time})[0];
-
-                // if a target fragment is the first fragment in the mpd and we have not found a match fragment for the same time,
-                // we need to look for a first fragment by index as well, because there may be a time shift between audio and video,
-                // so getRequestS may not detect a corresponding fragment.
-                if (!sameTimeReq && req.index === 0) {
-                    sameTimeReq = pendingReqs.filter(
-                        function(r){
-                            return r.index === req.index;
-                        })[0];
-                }
-
-                if (sameTimeReq) {
-                    reqsToExecute.push(sameTimeReq);
-                    continue;
-                }
-
-                sameTimeReq = model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.LOADING, time: time})[0] ||
-                    model.getRequests({state: MediaPlayer.dependencies.FragmentModel.states.EXECUTED, time: time})[0];
-
-                if (!sameTimeReq && (req.index !== getLastMediaRequestIdx.call(this, streamId, req.mediaType)) && type !== "fragmentedText") {
-                    shouldWait = true;
-                    break;
-                }
             }
 
+            // Should we enforce this here or have a proper can we load it rule?
             reqsToExecute = reqsToExecute.filter( function(req) {
                 return (req.action === "complete") || (wallclockTime.getTime() >= req.availabilityStartTime.getTime());
             });
 
-            if (shouldWait) {
-                callback(new MediaPlayer.rules.SwitchRequest([], p));
-                return;
-            }
-
             callback(new MediaPlayer.rules.SwitchRequest(reqsToExecute, p));
-        },
-
-        reset: function() {
-            lastMediaRequestIdxs = {};
         }
     };
 };

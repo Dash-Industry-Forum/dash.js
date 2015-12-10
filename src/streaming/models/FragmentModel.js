@@ -38,8 +38,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
         loadingRequests = [],
         rejectedRequests = [],
 
-        isLoadingPostponed = false,
-
         loadCurrentFragment = function(request) {
             var self = this;
 
@@ -163,14 +161,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     addSchedulingInfoMetrics.call(this, req, MediaPlayer.dependencies.FragmentModel.states.REJECTED);
                 }
             }
-        },
-
-        onBufferLevelOutrun = function(/*e*/) {
-            isLoadingPostponed = true;
-        },
-
-        onBufferLevelBalanced = function(/*e*/) {
-            isLoadingPostponed = false;
         };
 
     return {
@@ -180,11 +170,12 @@ MediaPlayer.dependencies.FragmentModel = function () {
         notify: undefined,
         subscribe: undefined,
         unsubscribe: undefined,
+        videoModel: undefined,
+        sourceBufferExt: undefined,
+        eventBus: undefined,
         manifestExt:undefined,
 
         setup: function() {
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_OUTRUN] = onBufferLevelOutrun;
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
             this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BYTES_REJECTED] = onBytesRejected;
             this[MediaPlayer.dependencies.FragmentLoader.eventList.ENAME_LOADING_COMPLETED] = onLoadingCompleted;
         },
@@ -201,13 +192,9 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return context;
         },
 
-        getIsPostponed: function() {
-            return isLoadingPostponed;
-        },
-
         addRequest: function(value) {
 
-            if (!this.manifestExt.getIsTextTrack(value.mediaType) && (!value || this.isFragmentLoadedOrPending(value))) return false;
+            if (!this.manifestExt.getIsTextTrack(value.mediaType) && (!value || this.isFragmentLoadedOrPendingAndNotDiscarded(value))) return false;
 
             pendingRequests.push(value);
             addSchedulingInfoMetrics.call(this, value, MediaPlayer.dependencies.FragmentModel.states.PENDING);
@@ -215,17 +202,44 @@ MediaPlayer.dependencies.FragmentModel = function () {
             return true;
         },
 
-        isFragmentLoadedOrPending: function(request) {
+        isFragmentLoadedOrPendingAndNotDiscarded: function(request) {
             var isEqualComplete = function(req1, req2) {
                     return ((req1.action === "complete") && (req1.action === req2.action));
                 },
 
                 isEqualMedia = function(req1, req2) {
-                    return ((req1.url === req2.url) && (req1.startTime === req2.startTime));
+                    return ((req1.mediaType === req2.mediaType) && (req1.startTime === req2.startTime));
                 },
 
                 isEqualInit = function(req1, req2) {
                     return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
+                },
+
+                isDiscarded = function() {
+                    var buffer = this.videoModel.getElement(),
+                        inBuffer = this.sourceBufferExt.getBufferRange(buffer, request.startTime) !== null,
+                        req,
+                        d;
+
+                    // It can take a few moments to get into the buffer
+                    if (!inBuffer) {
+                        d = new Date();
+                        d.setSeconds(d.getSeconds() - 3);
+                        for (var i = 0; i < executedRequests.length; i += 1) {
+                            req = executedRequests[i];
+
+                            if (isEqualMedia(request, req) && req.requestEndDate >= d) {
+                                return false;
+                            }
+                        }
+
+                        this.eventBus.dispatchEvent({
+                            type: MediaPlayer.events.FRAGMENT_DISCARDED,
+                            data: request.startTime
+                        });
+                    }
+
+                    return !inBuffer;
                 },
 
                 check = function(arr) {
@@ -247,7 +261,7 @@ MediaPlayer.dependencies.FragmentModel = function () {
                     return isLoaded;
                 };
 
-            return (check(pendingRequests) || check(loadingRequests) || check(executedRequests));
+            return (check(pendingRequests) || check(loadingRequests) || (check(executedRequests) && !isDiscarded.call(this)));
         },
 
         /**
@@ -331,21 +345,19 @@ MediaPlayer.dependencies.FragmentModel = function () {
 
         cancelPendingRequests: function(quality) {
             var self = this,
-                reqs = pendingRequests,
-                canceled = reqs;
+                newPendingRequests = [],
+                canceled = [];
 
-            pendingRequests = [];
-
-            if (quality !== undefined) {
-                pendingRequests = reqs.filter(function(request) {
-                    if (request.quality === quality) {
-                        return false;
-                    }
-
-                    canceled.splice(canceled.indexOf(request), 1);
-                    return true;
-                });
+            var length = pendingRequests.length;
+            for (var i=0;i<length;i++) {
+                var request=pendingRequests[i];
+                if (quality!==undefined && request.quality==quality) {
+                    newPendingRequests.push(request);
+                } else {
+                    canceled.push(request);
+                }
             }
+            pendingRequests = newPendingRequests;
 
             canceled.forEach(function(request) {
                 addSchedulingInfoMetrics.call(self, request, MediaPlayer.dependencies.FragmentModel.states.CANCELED);
@@ -401,7 +413,6 @@ MediaPlayer.dependencies.FragmentModel = function () {
             pendingRequests = [];
             loadingRequests = [];
             rejectedRequests = [];
-            isLoadingPostponed = false;
         }
     };
 };

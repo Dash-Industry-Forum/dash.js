@@ -47,5 +47,24 @@ MediaPlayer.rules.SwitchRequest.prototype = {
     NO_CHANGE: 999,
     DEFAULT: 0.5,
     STRONG: 1,
-    WEAK: 0
+    WEAK: 0,
+
+    // Used in Logging only
+
+    formatPriority: function() {
+        if (this.priority == this.WEAK) {
+            return "Weak";
+        }
+        if (this.priority == this.STRONG) {
+            return "Strong";
+        }
+        if (this.priority == this.DEFAULT) {
+            return "Default";
+        }
+        if (this.priority == this.NO_CHANGE) {
+            return "No Change";
+        }
+        return this.priority;
+    }
+
 };

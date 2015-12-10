@@ -457,7 +457,12 @@ Dash.dependencies.DashHandler = function () {
 
             periodRelativeRange.start = Math.max(periodRelativeRange.start, 0);
 
-            if (isDynamic && !self.timelineConverter.isTimeSyncCompleted()) {
+            // I can't see any reason why we should just look at
+            // anything but the full range, if we've seeked or
+            // otherwise, just looking in already downloaded segments
+            // as the code below this does doesn't make sense, so
+            // we're going with just the whole range always.
+            if (true || isDynamic && !self.timelineConverter.isTimeSyncCompleted()) {
                 start = Math.floor(periodRelativeRange.start / duration);
                 end = Math.floor(periodRelativeRange.end / duration);
                 range = {start: start, end: end};
@@ -744,10 +749,16 @@ Dash.dependencies.DashHandler = function () {
                 seg,
                 i;
 
+            if (index<ln) {
+                seg=representation.segments[index];
+                if (seg && seg.availabilityIdx === index) {
+                    return seg;
+                }
+            }
+
             for (i = 0; i < ln; i += 1) {
                 seg = representation.segments[i];
-
-                if (seg.availabilityIdx === index) {
+                if (seg && seg.availabilityIdx === index) {
                     return seg;
                 }
             }

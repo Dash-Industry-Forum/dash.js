@@ -115,10 +115,6 @@ MediaPlayer.dependencies.FragmentController = function () {
             this.notify(MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED, {request: e.data.request, fragmentModel: e.sender});
         },
 
-        onBufferLevelBalanced = function(/*e*/) {
-            executeRequests.call(this);
-        },
-
         onGetRequests = function(result) {
             var reqsToExecute = result.value,
                 mediaType,
@@ -170,12 +166,6 @@ MediaPlayer.dependencies.FragmentController = function () {
             this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_STARTED] = onFragmentLoadingStart;
             this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_FRAGMENT_LOADING_COMPLETED] = onFragmentLoadingCompleted;
             this[MediaPlayer.dependencies.FragmentModel.eventList.ENAME_STREAM_COMPLETED] = onStreamCompleted;
-
-            this[MediaPlayer.dependencies.BufferController.eventList.ENAME_BUFFER_LEVEL_BALANCED] = onBufferLevelBalanced;
-
-            if (this.scheduleRulesCollection.sameTimeRequestRule) {
-                this.subscribe(MediaPlayer.dependencies.FragmentController.eventList.ENAME_STREAM_COMPLETED, this.scheduleRulesCollection.sameTimeRequestRule);
-            }
         },
 
         process: function (bytes) {

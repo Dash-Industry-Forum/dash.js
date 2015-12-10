@@ -15,6 +15,10 @@
  limitations under the License.
  */
 
+/*
+ Modified to keep track of children nodes in order in attribute __children.
+*/
+
 function X2JS(matchers, attrPrefix, ignoreRoot) {
     if (attrPrefix === null || attrPrefix === undefined) {
         attrPrefix = "_";
@@ -88,6 +92,8 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 		if(node.nodeType == DOMNodeTypes.ELEMENT_NODE) {
 			var result = new Object;
 			result.__cnt=0;
+
+            var children = [];
 			
 			var nodeChildren = node.childNodes;
 			
@@ -98,7 +104,13 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 				
 				result.__cnt++;
 				if(result[childName] == null) {
-					result[childName] = parseDOMChildren(child);
+                    var c = parseDOMChildren(child);
+                    if (childName != "#text" || /[^\s]/.test(c)) {
+                        var o = {};
+                        o[childName] = c;
+                        children.push(o);
+                    }
+					result[childName] = c;
 					result[childName+"_asArray"] = new Array(1);
 					result[childName+"_asArray"][0] = result[childName];
 				}
@@ -114,9 +126,18 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 					}
 					var aridx = 0;
 					while(result[childName][aridx]!=null) aridx++;
-					(result[childName])[aridx] = parseDOMChildren(child);
+
+                    var c = parseDOMChildren(child);
+					if (childName != "#text" || /[^\s]/.test(c)) { // Don't add white-space text nodes
+                        var o = {};
+                        o[childName] = c;
+                        children.push( o );
+                    }
+					(result[childName])[aridx] = c;
 				}			
 			}
+
+            result.__children = children;
 			
 			// Attributes
 			for(var aidx=0; aidx <node.attributes.length; aidx++) {
@@ -328,10 +349,32 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 	}
 	
 	this.parseXmlString = function(xmlDocStr) {
-		var xmlDoc;
+		var xmlDoc,
+			parser,
+			ns;
+
 		if (window.DOMParser) {
-			var parser=new window.DOMParser();			
-			xmlDoc = parser.parseFromString( xmlDocStr, "text/xml" );
+			parser = new window.DOMParser();
+
+			try {
+				ns = parser.parseFromString('<', 'text/xml').getElementsByTagName("parsererror")[0].namespaceURI;
+			} catch (e) {
+				// IE11 will definitely throw SyntaxError here
+				// ns will be undefined
+			}
+
+			try {
+				xmlDoc = parser.parseFromString( xmlDocStr, "text/xml" );
+
+				if (ns) {
+					if(xmlDoc.getElementsByTagNameNS(ns, 'parsererror').length) {
+						xmlDoc = undefined;
+					}
+				}
+			} catch (e) {
+				// IE11 may throw SyntaxError here if xmlDocStr is
+				// not well formed. xmlDoc will be undefined
+			}
 		}
 		else {
 			// IE :(
@@ -351,7 +394,7 @@ function X2JS(matchers, attrPrefix, ignoreRoot) {
 	
 	this.xml_str2json = function (xmlDocStr) {
 		var xmlDoc = this.parseXmlString(xmlDocStr);	
-		return this.xml2json(xmlDoc);
+		return xmlDoc ? this.xml2json(xmlDoc) : undefined;
 	}
 
 	this.json2xml_str = function (jsonObj) {

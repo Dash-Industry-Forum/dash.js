@@ -28,31 +28,37 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 MediaPlayer.vo.metrics.HTTPRequest = function () {
     "use strict";
+    this.tcpid = null;              // Identifier of the TCP connection on which the HTTP request was sent.
+    this.type = null;               // This is an optional parameter and should not be included in HTTP request/response transactions for progressive download.
+                                        // The type of the request:
+                                        // - MPD
+                                        // - XLink expansion
+                                        // - Initialization Fragment
+                                        // - Index Fragment
+                                        // - Media Fragment
+                                        // - Bitstream Switching Fragment
+                                        // - other
+    this.url = null;                // The original URL (before any redirects or failures)
+    this.actualurl = null;          // The actual URL requested, if different from above
+    this.range = null;              // The contents of the byte-range-spec part of the HTTP Range header.
+    this.trequest = null;           // Real-Time | The real time at which the request was sent.
+    this.tresponse = null;          // Real-Time | The real time at which the first byte of the response was received.
+    this.responsecode = null;       // The HTTP response code.
+    this.interval = null;           // The duration of the throughput trace intervals (ms), for successful requests only.
+    this.trace = [];                // Throughput traces, for successful requests only.
 
-    this.stream = null;         // type of stream ("audio" | "video" etc..)
-    this.tcpid = null;          // Identifier of the TCP connection on which the HTTP request was sent.
-    this.type = null;           // This is an optional parameter and should not be included in HTTP request/response transactions for progressive download.
-                                    // The type of the request:
-                                    // - MPD
-                                    // - XLink expansion
-                                    // - Initialization Fragment
-                                    // - Index Fragment
-                                    // - Media Fragment
-                                    // - Bitstream Switching Fragment
-                                    // - other
-    this.url = null;            // The original URL (before any redirects or failures)
-    this.actualurl = null;      // The actual URL requested, if different from above
-    this.range = null;          // The contents of the byte-range-spec part of the HTTP Range header.
-    this.trequest = null;       // Real-Time | The real time at which the request was sent.
-    this.tresponse = null;      // Real-Time | The real time at which the first byte of the response was received.
-    this.tfinish = null;        // Real-Time | The real time at which the request finshed.
-    this.responsecode = null;   // The HTTP response code.
-    this.interval = null;       // The duration of the throughput trace intervals (ms), for successful requests only.
-    this.mediaduration = null;  // The duration of the media requests, if available, in milliseconds.
-    this.responseHeaders = null; // all the response headers from request.
-    this.trace = [];            // Throughput traces, for successful requests only.
+    this._latency = null;  // latency of the request
+    this._bytes = null;    // total bytes of successful request (ie trace summed)
+
+    // Additional metrics used internally which we do not want to report to the outside world
+    // Anything beginning with an _ will not be reported
+    this._stream = null;            // type of stream ("audio" | "video" etc..)
+    this._tfinish = null;           // Real-Time | The real time at which the request finshed.
+    this._mediaduration = null;     // The duration of the media requests, if available, in milliseconds.
+    this._responseHeaders = null;   // all the response headers from request.
 };
 
 MediaPlayer.vo.metrics.HTTPRequest.prototype = {
@@ -76,13 +82,10 @@ MediaPlayer.vo.metrics.HTTPRequest.Trace.prototype = {
     constructor : MediaPlayer.vo.metrics.HTTPRequest.Trace
 };
 
-// these should possibly be MPD, XLinkExpansion, InitializationSegment,
-// MediaSegment, IndexSegment, BitstreamSwitchingSegment, other. See
-// ISO 23009-1 D.4.3
 MediaPlayer.vo.metrics.HTTPRequest.MPD_TYPE = 'MPD';
-MediaPlayer.vo.metrics.HTTPRequest.XLINK_EXPANSION_TYPE = 'XLink Expansion';
-MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE = 'Initialization Segment';
-MediaPlayer.vo.metrics.HTTPRequest.INDEX_SEGMENT_TYPE = 'Index Segment';
-MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE = 'Media Segment';
-MediaPlayer.vo.metrics.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'Bitstream Switching Segment';
+MediaPlayer.vo.metrics.HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
+MediaPlayer.vo.metrics.HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';
+MediaPlayer.vo.metrics.HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
+MediaPlayer.vo.metrics.HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
+MediaPlayer.vo.metrics.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
 MediaPlayer.vo.metrics.HTTPRequest.OTHER_TYPE = 'other';

@@ -31,35 +31,35 @@
 MediaPlayer.vo.metrics.PlayList = function () {
     "use strict";
 
-    this.stream = null;     // type of stream ("audio" | "video" etc..)
-    this.start = null;      // Real-Time | Timestamp of the user action that starts the playback stream...
-    this.mstart = null;     // Media-Time | Presentation time at which playout was requested by the user...
-    this.starttype = null;  // Type of user action which triggered playout
-                            //      - New playout request (e.g. initial playout or seeking)
-                            //      - Resume from pause
-                            //        - Other user request (e.g. user-requested quality change)
-                            //        - Start of a metrics collection stream (hence earlier entries in the play list not collected)
-    this.trace = [];        // List of streams of continuous rendering of decoded samples.
+    this.start = null;              // Real-Time | Timestamp of the user action that starts the playback stream...
+    this.mstart = null;             // Media-Time | Presentation time at which playout was requested by the user...
+    this.starttype = null;          // Enum | Type of user action which triggered playout
+                                    //          - New playout request (e.g. initial playout or seeking)
+                                    //          - Resume from pause
+                                    //          - Other user request (e.g. user-requested quality change)
+                                    //          - Start of a metrics collection stream (hence earlier entries in the play list not collected)
+    this.trace = [];                // List | Listof streams of continuous rendering of decoded samples.
 };
 
 MediaPlayer.vo.metrics.PlayList.Trace = function () {
     "use strict";
 
     /*
-     * representationid - The value of the Representation@id of the Representation from which the samples were taken.
-     * subreplevel      - If not present, this metrics concerns the Representation as a whole. If present, subreplevel indicates the greatest value of any Subrepresentation@level being rendered.
+     * representationid - String | The value of the Representation@id of the Representation from which the samples were taken.
+     * subreplevel      - Integer | If not present, this metrics concerns the Representation as a whole. If present, subreplevel indicates the greatest value of any Subrepresentation@level being rendered.
      * start            - Real-Time | The time at which the first sample was rendered.
      * mstart           - Media-Time | The presentation time of the first sample rendered.
-     * duration         - The duration of the continuously presented samples (which is the same in real time and media time). ―Continuously presented‖ means that the media clock continued to advance at the playout speed throughout the interval.
-     * playbackspeed    - The playback speed relative to normal playback speed (i.e.normal forward playback speed is 1.0).
-     * stopreason       - The reason why continuous presentation of this Representation was stopped.
+     * duration         - Integer | The duration of the continuously presented samples (which is the same in real time and media time). "Continuously presented" means that the media clock continued to advance at the playout speed throughout the interval. NOTE: the spec does not call out the units, but all other durations etc are in ms, and we use ms too.
+     * playbackspeed    - Real | The playback speed relative to normal playback speed (i.e.normal forward playback speed is 1.0).
+     * stopreason       - Enum | The reason why continuous presentation of this Representation was stopped.
      *                    Either:
      *                    representation switch
      *                    rebuffering
      *                    user request
+     *                    end of Period
      *                    end of Stream
      *                    end of content
-     *                    end of a metrics collection stream
+     *                    end of a metrics collection period
      */
     this.representationid = null;
     this.subreplevel = null;
@@ -75,15 +75,20 @@ MediaPlayer.vo.metrics.PlayList.prototype = {
 };
 
 /* Public Static Constants */
-MediaPlayer.vo.metrics.PlayList.INITIAL_PLAY_START_REASON = "initial_start";
+MediaPlayer.vo.metrics.PlayList.INITIAL_PLAYOUT_START_REASON = "initial_playout";
 MediaPlayer.vo.metrics.PlayList.SEEK_START_REASON = "seek";
+MediaPlayer.vo.metrics.PlayList.RESUME_FROM_PAUSE_START_REASON = "resume";
+MediaPlayer.vo.metrics.PlayList.METRICS_COLLECTION_START_REASON = "metrics_collection_start";
 
 MediaPlayer.vo.metrics.PlayList.Trace.prototype = {
     constructor: MediaPlayer.vo.metrics.PlayList.Trace()
 };
 
 /* Public Static Constants */
-MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON = "user_request";
 MediaPlayer.vo.metrics.PlayList.Trace.REPRESENTATION_SWITCH_STOP_REASON = "representation_switch";
-MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON = "end_of_content";
 MediaPlayer.vo.metrics.PlayList.Trace.REBUFFERING_REASON = "rebuffering";
+MediaPlayer.vo.metrics.PlayList.Trace.USER_REQUEST_STOP_REASON = "user_request";
+MediaPlayer.vo.metrics.PlayList.Trace.END_OF_PERIOD_STOP_REASON = "end_of_period";
+MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON = "end_of_content";
+MediaPlayer.vo.metrics.PlayList.Trace.METRICS_COLLECTION_STOP_REASON = "metrics_collection_end";
+MediaPlayer.vo.metrics.PlayList.Trace.FAILURE_STOP_REASON = "failure";

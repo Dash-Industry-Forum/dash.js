@@ -49,7 +49,7 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
                                 self.textTrackExtensions.deleteTrackCues(self.textTrackExtensions.getCurrentTextTrack());
                                 self.fragmentModel.cancelPendingRequests();
                                 self.fragmentModel.abortRequests();
-                                self.buffered.clear();
+                                //self.buffered.clear(); //Don't clear to avoid that player stalls. New subtitle track will after current buffer is consumed.
                                 self.mediaController.setTrack(self.allTracks[i]);
                             }
                         }
