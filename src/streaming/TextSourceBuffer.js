@@ -192,6 +192,10 @@ MediaPlayer.dependencies.TextSourceBuffer = function () {
         getAllTracksAreDisabled : function (){
             return allTracksAreDisabled;
         },
+        
+        remove : function(start, end) {
+            this.buffered.remove(start, end);
+        },
 
         setTextTrack: setTextTrack,
     };
