@@ -369,7 +369,7 @@ function ScheduleController(config) {
     }
 
     function onTimedTextRequested(e) {
-        if (e.sender.streamProcessor !== streamProcessor) return;
+        if (e.sender.getStreamProcessor() !== streamProcessor) return;
         getInitRequest(e.index);
     }
 

@@ -318,7 +318,6 @@ function SourceBufferExtensions() {
     }
 
     function remove(buffer, start, end, mediaSource) {
-        var self = this;
 
         try {
             // make sure that the given time range is correct. Otherwise we will get InvalidAccessError

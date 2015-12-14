@@ -65,8 +65,8 @@ factory.BUFFER_EMPTY = BUFFER_EMPTY;
 export default factory;
 
 function BufferController(config) {
-    let context = this.context;
 
+    let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
     let log = config.log;
@@ -80,7 +80,6 @@ function BufferController(config) {
     let adapter = config.adapter;
     let virtualBuffer = config.virtualBuffer;
     let textSourceBuffer = config.textSourceBuffer;
-
 
     let instance = {
         initialize               :initialize,

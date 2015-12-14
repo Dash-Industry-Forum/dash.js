@@ -49,6 +49,7 @@ function TextController(config) {
         createBuffer :createBuffer,
         getBuffer :getBuffer,
         setBuffer :setBuffer,
+        getStreamProcessor:getStreamProcessor,
         setMediaSource :setMediaSource,
         reset :reset
     };
@@ -116,6 +117,10 @@ function TextController(config) {
 
     function setMediaSource(value) {
         mediaSource = value;
+    }
+
+    function getStreamProcessor() {
+        return streamProcessor;
     }
 
     function reset(errored) {

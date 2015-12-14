@@ -308,17 +308,10 @@ function StreamController() {
             isStreamSwitchingInProgress = false;
             fireSwitchEvent(Events.PERIOD_SWITCH_COMPLETED, from, to);
         };
-
-        // TODO switchStream could be called from a handler of seeking event. from.deactivate() contains logic for
-        // removing event listeners including that seeking event handler. Since dijon calls event listeners
-        // synchronously an attempt to remove listener from itself leads to an exception in dijon lib. setTimeout is
-        // used to workaround this issue.
-        setTimeout(function() {
-            from.deactivate();
-            activeStream = to;
-            playbackController.initialize(activeStream.getStreamInfo());
-            setupMediaSource(onMediaSourceReady);
-        }, 0);
+        from.deactivate();
+        activeStream = to;
+        playbackController.initialize(activeStream.getStreamInfo());
+        setupMediaSource(onMediaSourceReady);
     }
 
     function setupMediaSource(callback) {

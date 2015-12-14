@@ -16,6 +16,10 @@ class ObjectsHelper {
         };
     }
 
+    getDummyLogger() {
+        return (message) => {console.log(message)}
+    }
+
     getDummyIndexHandler() {
         return {
             updateRepresentation : () => {}
