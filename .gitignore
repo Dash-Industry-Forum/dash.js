@@ -15,6 +15,7 @@ reports
 jsdocs
 dist
 build/temp
+coverage/
 
 #################
 ## Eclipse
