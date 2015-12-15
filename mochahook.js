@@ -1,3 +1,3 @@
 require("babel/register")({
-    ignore: false,
+    ignore: /node_modules/,
 });
