@@ -161,9 +161,9 @@ module.exports = function (grunt) {
         },
         mocha_istanbul: {
             test: {
-                src: './test/specs',
+                src: './test',
                 options: {
-                    mask: '**/*.js',
+                    mask: '*.js',
                     coverageFolder: './reports',
                     mochaOptions: ['--compilers', 'js:babel/register'],
                     print: 'summary',

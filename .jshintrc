@@ -13,7 +13,8 @@
     "browser": true,
     "loopfunc" : true,
     "predef" : [
-        "dijon",
+        "it",
+        "describe",
         "ISOBoxer",
         "ObjectIron",
         "X2JS",
