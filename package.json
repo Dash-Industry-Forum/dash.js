@@ -5,7 +5,7 @@
   "main": "dist/dash.all.js",
   "scripts": {
     "// TODO": "We wil need to return 'postinstall': 'grunt uglify' into 'scripts' after we finish refactoring",
-    "test": "npm install && grunt"
+    "test": "mocha --require mochahook test/specs/*"
   },
   "devDependencies": {
     "babel": "^5.3.1",
