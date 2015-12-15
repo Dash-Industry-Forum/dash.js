@@ -5,7 +5,8 @@
   "main": "dist/dash.all.js",
   "scripts": {
     "// TODO": "We wil need to return 'postinstall': 'grunt uglify' into 'scripts' after we finish refactoring",
-    "test": "mocha --require mochahook"
+    "test": "mocha --require mochahook",
+    "debug": "iron-mocha --require mochahook"
   },
   "devDependencies": {
     "babel": "^5.3.1",
@@ -26,6 +27,7 @@
     "grunt-exorcise": "^2.1.0",
     "grunt-jsdoc": "^0.5.8",
     "grunt-mocha-istanbul": "^3.0.1",
+    "iron-mocha": "^1.0.3",
     "istanbul": "^0.4.1",
     "jsdoc": "^3.3.0",
     "load-grunt-tasks": "^3.1.0",
