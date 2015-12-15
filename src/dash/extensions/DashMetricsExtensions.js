@@ -331,7 +331,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
                     // this implies all were thought of as in the cache,
                     // just return the last throughput, it's likely to be
                     // higher than any of our manifests
-                    return throughput;
+                    return throughput*1000;
                 }
                 return -1;
             }
