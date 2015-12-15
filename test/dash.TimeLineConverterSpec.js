@@ -1,7 +1,6 @@
 import LiveEdgeFinder from '../src/streaming/LiveEdgeFinder.js';
 import EventBus from '../src/streaming/utils/EventBus.js';
 import VoHelper from './helpers/VOHelper.js';
-import ObjectHelper from './helpers/ObjectsHelper.js';
 import TimeLineConverter from '../src/dash/TimelineConverter.js';
 import Events from '../src/streaming/Events.js';
 import SpecHelper from './helpers/SpecHelper.js';
@@ -16,7 +15,6 @@ describe("TimelineConverter", function () {
         voHelper = new VoHelper(),
         specHelper = new SpecHelper(),
         eventBus = EventBus(context).getInstance(),
-        liveEdgeFinder = LiveEdgeFinder(context).getInstance(),
         representation = voHelper.getDummyRepresentation(testType),
         timeLineConverter = TimeLineConverter(context).getInstance();
     
