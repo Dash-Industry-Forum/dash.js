@@ -31,6 +31,7 @@
 import ThroughputRule from './ThroughputRule.js';
 import BufferOccupancyRule from './BufferOccupancyRule.js';
 import InsufficientBufferRule from './InsufficientBufferRule.js';
+import AbandonRequestsRule from './AbandonRequestsRule.js';
 import Debug from '../../utils/Debug.js';
 import MetricsModel from '../../models/MetricsModel.js';
 import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
@@ -63,26 +64,31 @@ function ABRRulesCollection() {
         qualitySwitchRules = [];
         abandonFragmentRules = [];
 
+        let log = Debug(context).getInstance().log;
+        let metricsModel = MetricsModel(context).getInstance();
+
         qualitySwitchRules.push(ThroughputRule(context).create({
-                log:Debug(context).getInstance().log,
-                metricsExt:DashMetricsExtensions(context).getInstance(),
-                metricsModel:MetricsModel(context).getInstance()
+                log:log,
+                metricsModel:metricsModel,
+                metricsExt:DashMetricsExtensions(context).getInstance()
             })
         );
 
         qualitySwitchRules.push(BufferOccupancyRule(context).create({
-                log:Debug(context).getInstance().log,
-                metricsModel:MetricsModel(context).getInstance()
+                log:log,
+                metricsModel:metricsModel
             })
         );
 
         qualitySwitchRules.push(InsufficientBufferRule(context).create({
-                log:Debug(context).getInstance().log,
-                metricsModel:MetricsModel(context).getInstance()
+                log:log,
+                metricsModel:metricsModel
             })
         );
 
-        //adandonFragmentRules.push(this.abandonRequestRule);
+        abandonFragmentRules.push(AbandonRequestsRule(context).create({
+            log:log
+        }));
     }
 
     function getRules (type) {

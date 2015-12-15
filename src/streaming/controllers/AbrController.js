@@ -112,7 +112,7 @@ function AbrController() {
         streamProcessorDict[type] = streamProcessor;
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
         abandonmentStateDict[type].state = ALLOW_LOAD;
-        //eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
+        eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
     }
 
     function setConfig(config){
@@ -340,8 +340,7 @@ function AbrController() {
     }
 
     function reset () {
-        //Uncomment when needed again.
-        //eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
+        eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         clearTimeout(abandonmentTimeout);
         abandonmentTimeout = null;
         setup();
@@ -417,7 +416,7 @@ function AbrController() {
 
                 if (switchRequest.confidence === SwitchRequest.STRONG) {
 
-                    var requests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING, });
+                    var requests = fragmentModel.getRequests({ state:FragmentModel.FRAGMENT_MODEL_LOADING});
                     var newQuality = switchRequest.value;
                     var currentQuality = getQualityFor(type, streamController.getActiveStreamInfo());
 

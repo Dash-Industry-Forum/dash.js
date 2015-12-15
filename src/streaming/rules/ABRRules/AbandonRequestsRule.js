@@ -38,8 +38,8 @@ const ABANDON_MULTIPLIER = 1.5;
 export default FactoryMaker.getClassFactory(AbandonRequestsRule);
 
 function AbandonRequestsRule(config) {
-    let context = this.context;
 
+    let context = this.context;
     let log = config.log;
 
     let instance = {
@@ -64,22 +64,6 @@ function AbandonRequestsRule(config) {
         fragmentDict[type][id] = fragmentDict[type][id] || {};
     }
 
-    //function getAggragateBandwidth(mediaType, concurrentCount){
-    //    var tbl = 0,
-    //        tet = 0;
-    //    for (var key in fragmentDict[mediaType]) {
-    //        var obj = fragmentDict[mediaType][key];
-    //        if (obj.bytesLoaded < obj.bytesTotal && obj.elapsedTime >= GRACE_TIME_THRESHOLD) { //check if obj is complete or not
-    //            tbl += obj.bytesLoaded;
-    //            tet += obj.elapsedTime;
-    //        }else{
-    //            delete fragmentDict[mediaType][key];//delete entries that are complete.
-    //        }
-    //    }
-    //    var measuredBandwidthInKbps = Math.round((tbl*8/tet) * concurrentCount);
-    //    return measuredBandwidthInKbps;
-    //}
-
     function execute(context, callback) {
         var fragmentInfo;
         var now = new Date().getTime();
@@ -87,7 +71,7 @@ function AbandonRequestsRule(config) {
         var mediaType = mediaInfo.type;
         var progressEvent = context.getCurrentValue();
         var representationInfo = context.getTrackInfo();
-        var req = progressEvent.data.request;
+        var req = progressEvent.request;
         var abrController = context.getStreamProcessor().getABRController();
         var switchRequest = SwitchRequest(context).create(SwitchRequest.NO_CHANGE, SwitchRequest.WEAK);
 
@@ -116,7 +100,6 @@ function AbandonRequestsRule(config) {
                 fragmentInfo.elapsedTime >= GRACE_TIME_THRESHOLD) {
 
                 fragmentInfo.measuredBandwidthInKbps = Math.round(fragmentInfo.bytesLoaded*8/fragmentInfo.elapsedTime);
-                //fragmentInfo.measuredBandwidthInKbps = (concurrentCount > 1) ? getAggragateBandwidth(mediaType, concurrentCount) :  Math.round(fragmentInfo.bytesLoaded*8/fragmentInfo.elapsedTime);
                 fragmentInfo.estimatedTimeOfDownload = (fragmentInfo.bytesTotal*8*0.001/fragmentInfo.measuredBandwidthInKbps).toFixed(2);
                 //log("XXX","id: ",fragmentInfo.id,  "kbps: ", fragmentInfo.measuredBandwidthInKbps, "etd: ",fragmentInfo.estimatedTimeOfDownload, "et: ", fragmentInfo.elapsedTime/1000);
 
