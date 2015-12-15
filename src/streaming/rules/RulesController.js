@@ -31,8 +31,8 @@
 import RulesContext from './RulesContext.js';
 import SwitchRequest from './SwitchRequest.js';
 import ABRRulesCollection from './ABRRules/ABRRulesCollection.js';
-import ScheduleRulesCollection from './schedulingRules/ScheduleRulesCollection.js';
-import SynchronizationRulesCollection from './synchronizationRules/SynchronizationRulesCollection.js';
+import ScheduleRulesCollection from './SchedulingRules/ScheduleRulesCollection.js';
+import SynchronizationRulesCollection from './SynchronizationRules/SynchronizationRulesCollection.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const SCHEDULING_RULE = 0;
