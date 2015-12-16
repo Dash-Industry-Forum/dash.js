@@ -33,8 +33,8 @@ import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import Error from '../streaming/vo/Error.js';
 import HTTPRequest from '../streaming/vo/metrics/HTTPRequest.js';
 import MetricsModel from '../streaming/models/MetricsModel.js';
-import Events from '../streaming/Events.js';
-import EventBus from '../streaming/utils/EventBus.js';
+import Events from '../core/events/Events.js';
+import EventBus from '../core/EventBus.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;

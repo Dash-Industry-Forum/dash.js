@@ -30,8 +30,8 @@
  */
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
 import Error from './vo/Error.js';
-import EventBus from './utils/EventBus.js';
-import Events from "./Events.js";
+import EventBus from './../core/EventBus.js';
+import Events from "./../core/events/Events.js";
 import RulesController from './rules/RulesController.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 

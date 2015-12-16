@@ -38,15 +38,15 @@
  * @class
  */
 
-import ProtectionExtensions from '../extensions/ProtectionExtensions.js';
-import NeedKey from '../vo/protection/NeedKey.js';
-import KeyError from '../vo/protection/KeyError.js';
-import KeyMessage from '../vo/protection/KeyMessage.js';
-import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
-import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
-import SessionToken from '../vo/protection/SessionToken.js';
-import Events from '../Events.js';
-import FactoryMaker from '../../core/FactoryMaker.js'
+import ProtectionExtensions from '../../extensions/ProtectionExtensions.js';
+import NeedKey from '../../vo/protection/NeedKey.js';
+import KeyError from '../../vo/protection/KeyError.js';
+import KeyMessage from '../../vo/protection/KeyMessage.js';
+import KeySystemConfiguration from '../../vo/protection/KeySystemConfiguration.js';
+import KeySystemAccess from '../../vo/protection/KeySystemAccess.js';
+import SessionToken from '../../vo/protection/SessionToken.js';
+import Events from '../../../core/events/Events.js';
+import FactoryMaker from '../../../core/FactoryMaker.js'
 
 export default FactoryMaker.getClassFactory(ProtectionModel_3Feb2014);
 

@@ -32,8 +32,8 @@ import HTTPRequest from '../vo/metrics/HTTPRequest.js';
 import DataChunk from '../vo/DataChunk.js';
 import FragmentModel from '../models/FragmentModel.js';
 import MetricsModel from '../models/MetricsModel.js';
-import EventBus from '../utils/EventBus.js';
-import Events from "../Events.js";
+import EventBus from '../../core/EventBus.js';
+import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 

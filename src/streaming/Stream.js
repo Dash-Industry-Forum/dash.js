@@ -40,8 +40,8 @@ import PlaybackController from './controllers/PlaybackController.js';
 import DashHandler from '../dash/DashHandler.js';
 import BaseURLExtensions from '../dash/extensions/BaseURLExtensions.js';
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
-import EventBus from './utils/EventBus.js';
-import Events from './Events.js';
+import EventBus from './../core/EventBus.js';
+import Events from './../core/events/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 const DATA_UPDATE_FAILED_ERROR_CODE = 1;

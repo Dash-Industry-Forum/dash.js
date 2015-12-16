@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import SwitchRequest from '../SwitchRequest.js';
-import EventBus from '../../utils/EventBus.js';
-import Events from '../../Events.js';
+import EventBus from '../../../core/EventBus.js';
+import Events from '../../../core/events/Events.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 const SEARCH_TIME_SPAN = 12 * 60 * 60; // set the time span that limits our search range to a 12 hours in seconds

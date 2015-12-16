@@ -36,8 +36,8 @@ import PlaybackController from './PlaybackController.js';
 import AbrController from './AbrController.js';
 import BufferController from './BufferController.js';
 import LiveEdgeFinder from '../LiveEdgeFinder.js';
-import EventBus from '../utils/EventBus.js';
-import Events from "../Events.js";
+import EventBus from '../../core/EventBus.js';
+import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getClassFactory(ScheduleController);

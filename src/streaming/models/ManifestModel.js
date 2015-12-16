@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import MediaPlayer from '../MediaPlayer.js';
-import EventBus from '../utils/EventBus.js';
-import Events from '../Events.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(ManifestModel);

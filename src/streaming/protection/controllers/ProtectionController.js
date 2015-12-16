@@ -43,13 +43,13 @@
  * each step manually (key system selection, session creation, session maintenance).
  */
 
-import CommonEncryption from '../protection/CommonEncryption.js';
-import EventBus from '../utils/EventBus.js';
-import Events from '../Events.js';
-import MediaCapability from '../vo/protection/MediaCapability.js';
-import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Protection from '../protection/Protection.js'
+import CommonEncryption from '../CommonEncryption.js';
+import EventBus from '../../utils/EventBus.js';
+import Events from '../../../core/events/Events.js';
+import MediaCapability from '../../vo/protection/MediaCapability.js';
+import KeySystemConfiguration from '../../vo/protection/KeySystemConfiguration.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import Protection from '../Protection.js'
 export default FactoryMaker.getClassFactory(ProtectionController);
 
 function ProtectionController(config) {

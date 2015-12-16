@@ -38,8 +38,8 @@
  * @implements LicenseServer
  * @class
  */
-import KeyPair from '../../vo/protection/KeyPair.js';
-import ClearKeyKeySet from '../../vo/protection/ClearKeyKeySet.js';
+import KeyPair from '../vo/KeyPair.js';
+import ClearKeyKeySet from '../vo/ClearKeyKeySet.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(ClearKey);

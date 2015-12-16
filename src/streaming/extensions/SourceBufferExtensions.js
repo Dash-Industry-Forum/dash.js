@@ -38,8 +38,8 @@ import VTTParser from '../VTTParser.js';
 import TTMLParser from '../TTMLParser.js';
 import VideoModel from '../models/VideoModel.js';
 import Error from '../vo/Error.js';
-import EventBus from '../utils/EventBus.js';
-import Events from "../Events.js";
+import EventBus from '../../core/EventBus.js';
+import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 

@@ -36,8 +36,8 @@ import AbrController from './AbrController.js';
 import PlaybackController from './PlaybackController.js';
 import MediaController from './MediaController.js';
 import CustomTimeRanges from '../utils/CustomTimeRanges.js';
-import EventBus from '../utils/EventBus.js';
-import Events from "../Events.js";
+import EventBus from '../../core/EventBus.js';
+import Events from "../../core/events/Events.js";
 import BoxParser from '../utils/BoxParser.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 

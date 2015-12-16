@@ -30,8 +30,8 @@
  */
 import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
-import EventBus from '../../utils/EventBus.js';
-import Events from "../../Events.js";
+import EventBus from '../../../core/EventBus.js';
+import Events from "../../../core/events/Events.js";
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
 export default FactoryMaker.getClassFactory(InsufficientBufferRule);

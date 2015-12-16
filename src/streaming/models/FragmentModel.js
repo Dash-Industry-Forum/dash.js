@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import EventBus from '../utils/EventBus.js';
-import Events from "../Events.js";
+import EventBus from '../../core/EventBus.js';
+import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const FRAGMENT_MODEL_LOADING = "loading";

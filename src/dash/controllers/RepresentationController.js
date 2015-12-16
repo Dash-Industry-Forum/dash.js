@@ -40,8 +40,8 @@ import MetricsModel from '../../streaming/models/MetricsModel.js';
 import MediaPlayerModel from '../../streaming/models/MediaPlayerModel.js';
 import DOMStorage from '../../streaming/utils/DOMStorage.js';
 import Error from '../../streaming/vo/Error.js';
-import EventBus from '../../streaming/utils/EventBus.js';
-import Events from "../../streaming/Events.js";
+import EventBus from '../../core/EventBus.js';
+import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;

@@ -33,8 +33,8 @@ import SwitchRequest from '../rules/SwitchRequest';
 import BitrateInfo from '../vo/BitrateInfo.js';
 import ABRRulesCollection from '../rules/ABRRules/ABRRulesCollection.js';
 import FragmentModel from '../models/FragmentModel.js';
-import EventBus from '../utils/EventBus.js';
-import Events from '../Events.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const ABANDON_LOAD = "abandonload";

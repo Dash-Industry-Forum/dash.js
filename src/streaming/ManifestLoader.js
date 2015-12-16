@@ -32,8 +32,8 @@ import XlinkController from './controllers/XlinkController.js';
 import XlinkLoader from './XlinkLoader.js';
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
-import EventBus from './utils/EventBus.js';
-import Events from './Events.js';
+import EventBus from './../core/EventBus.js';
+import Events from './../core/events/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 export default FactoryMaker.getClassFactory(ManifestLoader);

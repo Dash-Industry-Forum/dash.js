@@ -35,8 +35,8 @@
 import MediaController from '../controllers/MediaController.js';
 import CustomTimeRanges from './CustomTimeRanges.js';
 import HTTPRequest from '../vo/metrics/HTTPRequest.js';
-import EventBus from './EventBus.js';
-import Events from "../Events.js";
+import EventBus from './../../core/EventBus.js';
+import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(VirtualBuffer);

@@ -31,8 +31,8 @@
 import BufferController from './BufferController.js';
 import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
 import MediaPlayerModel from '../../streaming/models/MediaPlayerModel.js';
-import EventBus from '../utils/EventBus.js';
-import Events from "../Events.js";
+import EventBus from '../../core/EventBus.js';
+import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50; //This value influences the startup time for live.

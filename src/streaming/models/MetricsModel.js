@@ -39,9 +39,9 @@ import DroppedFrames from '../vo/metrics/DroppedFrames.js';
 import ManifestUpdate from '../vo/metrics/ManifestUpdate.js';
 import SchedulingInfo from '../vo/metrics/SchedulingInfo.js';
 import PlayList from '../vo/metrics/PlayList.js';
-import EventBus from '../utils/EventBus.js';
+import EventBus from '../../core/EventBus.js';
 import RequestsQueue from '../vo/metrics/RequestsQueue.js';
-import Events from '../Events.js'
+import Events from '../../core/events/Events.js'
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(MetricsModel);

@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DOMStorage from '../utils/DOMStorage.js';
-import Events from '../Events.js';
-import EventBus from '../utils/EventBus.js';
+import Events from '../../core/events/Events.js';
+import EventBus from '../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 const TRACK_SWITCH_MODE_NEVER_REPLACE = "neverReplace";

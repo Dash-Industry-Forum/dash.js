@@ -32,8 +32,8 @@ import RequestModifierExtensions from '../../streaming/extensions/RequestModifie
 import Segment from '../vo/Segment.js';
 import Error from '../../streaming/vo/Error.js';
 import ErrorHandler from '../../streaming/ErrorHandler.js';
-import Events from '../../streaming/Events.js'
-import EventBus from '../../streaming/utils/EventBus.js';
+import Events from '../../core/events/Events.js'
+import EventBus from '../../core/EventBus.js';
 import BoxParser from '../../streaming/utils/BoxParser.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 

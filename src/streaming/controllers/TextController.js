@@ -30,8 +30,8 @@
  */
 import RepresentationController from '../../dash/controllers/RepresentationController.js';
 import FragmentController from './FragmentController.js';
-import EventBus from '../utils/EventBus.js';
-import Events from '../Events.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getClassFactory(TextController);

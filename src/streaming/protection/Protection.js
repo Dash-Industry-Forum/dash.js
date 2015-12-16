@@ -1,10 +1,10 @@
 //protection
-import ProtectionController from '../controllers/ProtectionController.js';
-import ProtectionExtensions from '../extensions/ProtectionExtensions.js';
+import ProtectionController from './controllers/ProtectionController.js';
+import ProtectionExtensions from './ProtectionExtensions.js';
 import ProtectionEvents from './ProtectionEvents.js';
-import ProtectionModel_21Jan2015 from '../models/ProtectionModel_21Jan2015.js';
-import ProtectionModel_3Feb2014 from '../models/ProtectionModel_3Feb2014.js';
-import ProtectionModel_01b from '../models/ProtectionModel_01b.js';
+import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015.js';
+import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
+import ProtectionModel_01b from './models/ProtectionModel_01b.js';
 import FactoryMaker from '../../core/FactoryMaker.js'
 
 const APIS_ProtectionModel_01b = [

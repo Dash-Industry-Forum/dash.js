@@ -28,15 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from "./EventBus.js";
-import Events from '../Events.js';
+import EventBus from "./../../core/EventBus.js";
+import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(Debug);
 
 function Debug() {
+
     let context = this.context;
-    
     let eventBus = EventBus(context).getInstance();
 
     let instance = {
