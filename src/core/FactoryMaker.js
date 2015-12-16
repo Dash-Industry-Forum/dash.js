@@ -23,11 +23,13 @@ let FactoryMaker = (function() {
     function getSingletonInstance(context, className) {
         let instance = null;
 
-        singletonContexts.forEach(function(obj) {
+        for (let i in singletonContexts) {
+            const obj = singletonContexts[i];
             if (obj.context === context && obj.name === className) {
                 instance = obj.instance;
+                break;
             }
-        });
+        }
 
         return instance;
     }
@@ -48,21 +50,12 @@ let FactoryMaker = (function() {
     }
 
     function getSingletonFactory(classConstructor) {
-        let contexts = [];
         return function(context) {
-            let instance = null;
-
             if (context === undefined) {
                 context = {};
             }
 
-            for (let i in contexts) {
-                if (contexts[i].context === context)
-                {
-                    instance = contexts[i].instance;
-                    break;
-                }
-            }
+            let instance = getSingletonInstance(context, classConstructor.name);
 
             return {
                 getInstance : function() {
@@ -71,8 +64,7 @@ let FactoryMaker = (function() {
                     }
 
                     instance = merge(classConstructor.name, classConstructor.apply({ context: context }, arguments), context);
-                    contexts.push({ name:classConstructor.name, context : context, instance : instance });
-                    singletonContexts = singletonContexts.concat(contexts);
+                    singletonContexts.push({ name:classConstructor.name, context : context, instance : instance });
 
                     return instance;
                 }
