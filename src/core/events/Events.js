@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import CoreEvents from 'CoreEvents.js';
+import CoreEvents from './CoreEvents.js';
 class Events extends CoreEvents {
 }
 let events = new Events();

@@ -44,19 +44,17 @@
  */
 
 import CommonEncryption from '../CommonEncryption.js';
-import EventBus from '../../utils/EventBus.js';
+import EventBus from '../../../core/EventBus.js';
 import Events from '../../../core/events/Events.js';
-import MediaCapability from '../../vo/protection/MediaCapability.js';
-import KeySystemConfiguration from '../../vo/protection/KeySystemConfiguration.js';
+import MediaCapability from '../vo/MediaCapability.js';
+import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import Protection from '../Protection.js'
 export default FactoryMaker.getClassFactory(ProtectionController);
 
 function ProtectionController(config) {
+
     let context = this.context;
-
-
-
     let protectionExt = config.protectionExt;
     let protectionModel = config.protectionModel;
     let adapter = config.adapter;

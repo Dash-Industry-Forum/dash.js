@@ -34,20 +34,21 @@
  *
  * @class ProtectionExtensions
  */
-import CommonEncryption from 'CommonEncryption.js';
-import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
-import KeySystemClearKey from 'drm/KeySystemClearKey.js';
-import KeySystemWidevine from 'drm/KeySystemWidevine.js';
-import KeySystemPlayReady from 'drm/KeySystemPlayReady.js';
-import DRMToday from 'servers/DRMToday.js';
-import PlayReady from 'servers/PlayReady.js';
-import Widevine from 'servers/Widevine.js';
-import ClearKey from 'servers/ClearKey.js';
-
+import CommonEncryption from './CommonEncryption.js';
+import KeySystemConfiguration from './vo/KeySystemConfiguration.js';
+import KeySystemClearKey from './drm/KeySystemClearKey.js';
+import KeySystemWidevine from './drm/KeySystemWidevine.js';
+import KeySystemPlayReady from './drm/KeySystemPlayReady.js';
+import DRMToday from './servers/DRMToday.js';
+import PlayReady from './servers/PlayReady.js';
+import Widevine from './servers/Widevine.js';
+import ClearKey from './servers/ClearKey.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+
 export default FactoryMaker.getSingletonFactory(ProtectionExtensions);
 
 function  ProtectionExtensions() {
+
     let context = this.context;
 
     let instance = {
