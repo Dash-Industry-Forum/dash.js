@@ -1,10 +1,10 @@
 import ObjectsHelper from './helpers/ObjectsHelper.js';
 import VoHelper from './helpers/VOHelper.js';
 import MpdHelper from './helpers/MPDHelper.js';
-import EventBus from '../src/streaming/utils/EventBus.js';
+import EventBus from '../src/core/EventBus.js';
 import RepresentationControler from '../src/dash/controllers/RepresentationController.js';
 import ManifestModel from '../src/streaming/models/ManifestModel.js';
-import Events from '../src/streaming/Events.js';
+import Events from '../src/core/events/Events.js';
 import SpecHelper from './helpers/SpecHelper.js';
 
 const chai = require('chai'),
