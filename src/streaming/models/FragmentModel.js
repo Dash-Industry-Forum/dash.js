@@ -30,8 +30,9 @@
  */
 
 import EventBus from '../utils/EventBus.js';
-import Events from "../Events.js";
+import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import FragmentRequest from '../vo/FragmentRequest.js';
 
 const FRAGMENT_MODEL_LOADING = "loading";
 const FRAGMENT_MODEL_EXECUTED = "executed";
@@ -100,7 +101,7 @@ function FragmentModel(config) {
 
     function isFragmentLoaded(request) {
         var isEqualComplete = function(req1, req2) {
-                return ((req1.action === "complete") && (req1.action === req2.action));
+                return ((req1.action === FragmentRequest.ACTION_COMPLETE) && (req1.action === req2.action));
             },
 
             isEqualMedia = function(req1, req2) {
@@ -214,13 +215,13 @@ function FragmentModel(config) {
         }
 
         switch (request.action) {
-            case "complete":
+            case FragmentRequest.ACTION_COMPLETE:
                 // Stream has completed, execute the corresponding callback
                 executedRequests.push(request);
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_EXECUTED);
                 eventBus.trigger(Events.STREAM_COMPLETED, {request: request, fragmentModel:this});
                 break;
-            case "download":
+            case FragmentRequest.ACTION_DOWNLOAD:
                 loadingRequests.push(request);
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_LOADING);
                 loadCurrentFragment(request);

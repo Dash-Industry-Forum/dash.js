@@ -31,7 +31,7 @@
 
 import SwitchRequest from '../SwitchRequest.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
-
+import FragmentRequest from '../../vo/FragmentRequest.js';
 export default FactoryMaker.getClassFactory(PlaybackTimeRule);
 
 function PlaybackTimeRule(config) {
@@ -89,7 +89,7 @@ function PlaybackTimeRule(config) {
         request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {keepIdx: keepIdx});
 
         while (request && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
-            if (request.action === "complete") {
+            if (request.action === FragmentRequest.ACTION_COMPLETE) {
                 request = null;
                 streamProcessor.setIndexHandlerTime(NaN);
                 break;

@@ -888,7 +888,7 @@ function DashHandler(config) {
         finished = !ignoreIsFinished ? isMediaFinished(representation) : false;
         if (finished) {
             request = new FragmentRequest();
-            request.action = request.ACTION_COMPLETE;
+            request.action = FragmentRequest.ACTION_COMPLETE;
             request.index = index;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
@@ -932,7 +932,7 @@ function DashHandler(config) {
         finished = isMediaFinished(representation);
         if (finished) {
             request = new FragmentRequest();
-            request.action = request.ACTION_COMPLETE;
+            request.action = FragmentRequest.ACTION_COMPLETE;
             request.index = idx;
             request.mediaType = type;
             request.mediaInfo = streamProcessor.getMediaInfo();
