@@ -1,6 +1,7 @@
 import MpdHelper from './MPDHelper.js'
 import SpecHelper from './SpecHelper.js'
 import Representation from '../../src/dash/vo/Representation.js'
+import FragmentRequest from '../../src/streaming/vo/FragmentRequest.js';
 
 class VoHelper {
     constructor() {
@@ -77,7 +78,7 @@ class VoHelper {
 
     createRequest(type) {
         var req = {};
-        req.action = "download";
+        req.action = FragmentRequest.ACTION_DOWNLOAD;
         req.quality = 0;
         req.mediaType = "video";
         req.type = type;
@@ -90,7 +91,7 @@ class VoHelper {
             req.startTime = 0;
             req.duration = 4;
             req.index = 0;
-        } else if (type === "complete") {
+        } else if (type === FragmentRequest.ACTION_COMPLETE) {
             req.action = type;
             req.url = undefined;
             req.quality = NaN;
@@ -120,7 +121,7 @@ class VoHelper {
     }
 
     getCompleteRequest() {
-        return this.createRequest("complete");
+        return this.createRequest(FragmentRequest.ACTION_COMPLETE);
     }
 
     getDummyMediaInfo(type) {
