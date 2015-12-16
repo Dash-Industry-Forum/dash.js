@@ -259,6 +259,7 @@ function MediaPlayer() {
         playing = true;
         log("Playback initiated!");
 
+
         createControllers();
         domStorage.checkInitialBitrate();
         if (typeof source === "string") {
@@ -1073,10 +1074,6 @@ function MediaPlayer() {
             // Workaround to force Firefox to fire the canplay event.
             element.preload = "auto";
 
-            capabilities.setConfig({
-                log: log,
-                videoModel: videoModel
-            });
             detectProtection();
         }
     }
@@ -1267,6 +1264,7 @@ function MediaPlayer() {
             MediaPlayerEvents.extend(Protection.events, { publicOnly: true });
             protectionController = protection.createProtectionSystem({
                 log:log,
+                videoModel:videoModel,
                 capabilities:capabilities,
                 eventBus:eventBus,
                 adapter:adapter

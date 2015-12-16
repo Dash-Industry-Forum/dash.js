@@ -37,29 +37,17 @@ function Capabilities() {
         supportsMediaSource: supportsMediaSource,
         supportsEncryptedMedia: supportsEncryptedMedia,
         supportsCodec: supportsCodec,
-        setConfig: setConfig
+        setEncryptedMediaSupported:setEncryptedMediaSupported
     };
 
     setup();
 
     return instance;
 
-    let log,
-        videoModel,
-        encryptedMediaSupported;
+    let encryptedMediaSupported;
 
     function setup(){
-        encryptedMediaSupported = null;
-    }
-
-    function setConfig(config){
-        if (!config) return;
-        if (config.log) {
-            log = config.log;
-        }
-        if (config.videoModel) {
-            videoModel = config.videoModel;
-        }
+        encryptedMediaSupported = false;
     }
 
     function supportsMediaSource() {
@@ -76,26 +64,11 @@ function Capabilities() {
      * @return {boolean} true if EME is supported, false otherwise
      */
     function supportsEncryptedMedia() {
-
-        if (!encryptedMediaSupported) {
-
-            let videoElement = videoModel.getElement();
-
-            if (videoElement.onencrypted === undefined ||
-                videoElement.mediaKeys === undefined ||
-                navigator.requestMediaKeySystemAccess === undefined ||
-                typeof navigator.requestMediaKeySystemAccess !== 'function') {
-
-                encryptedMediaSupported = false;
-                log("No supported version of EME detected on this user agent! - Attempts to play encrypted content will fail!");
-
-            } else {
-                encryptedMediaSupported = true;
-                log("EME detected on this user agent!");
-            }
-        }
-
         return encryptedMediaSupported;
+    }
+
+    function setEncryptedMediaSupported(value) {
+        encryptedMediaSupported = value;
     }
 
     function supportsCodec(element, codec) {

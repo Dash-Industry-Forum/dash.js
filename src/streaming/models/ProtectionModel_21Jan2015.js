@@ -44,7 +44,6 @@ import KeyMessage from '../vo/protection/KeyMessage.js';
 import KeySystemConfiguration from '../vo/protection/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/protection/KeySystemAccess.js';
 import SessionToken from '../vo/protection/SessionToken.js';
-import EventBus from '../utils/EventBus.js';
 import Events from '../Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 
@@ -53,8 +52,7 @@ export default FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);
 function ProtectionModel_21Jan2015(config) {
 
     let context = this.context;
-
-    let eventBus = config.eventBus;
+    let eventBus = config.eventBus;//Need to pass in here so we can use same instance since this is optional module
     let log = config.log;
 
     let instance = {
