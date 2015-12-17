@@ -351,6 +351,7 @@ function BufferController(config) {
                 }
             }
         }
+
         //finish appending
         isAppendingInProgress = false;
         if (!isNaN(appendedBytesInfo.index)) {
@@ -422,7 +423,7 @@ function BufferController(config) {
         if (!isLastIdxAppended || isBufferingCompleted) return;
 
         isBufferingCompleted = true;
-        eventBus.trigger(Events.BUFFERING_COMPLETED, {sender: instance});
+        eventBus.trigger(Events.BUFFERING_COMPLETED, {sender: instance, streamInfo: streamProcessor.getStreamInfo()});
     }
 
     function checkIfSufficientBuffer() {
