@@ -148,22 +148,14 @@ function ReceiverController($scope) {
             var startVideo = function(url, isLive) {
                     console.log("Loading video: " + url, " | is live: " + isLive);
 
-                    var video;
+                    var video = document.querySelector(".dash-video-player video");
 
-                    context = new Dash.di.DashContext();
-                    player = new MediaPlayer(context);
-                    player.startup();
-
-                    player.setIsLive(isLive);
-                    player.attachSource(url);
-
+                    player = MediaPlayer({}).create();
+                    player.initialize(video, url, true)
+                    //player.setIsLive(isLive);
                     $scope.showSpinner = false;
                     $scope.showVideo = true;
                     $scope.showStats = true;
-
-                    video = document.querySelector(".dash-video-player video"),
-                    player.setAutoPlay(true);
-                    player.attachView(video);
 
                     setTimeout(update, graphUpdateInterval);
 

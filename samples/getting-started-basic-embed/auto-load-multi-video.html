@@ -15,10 +15,10 @@
         }
     </style>
 
-    <body onload="Dash.createAll()">
+    <body onload="MediaPlayer.MediaPlayerFactory.createAll()">
         <div>
-            <video class="dashjs-player" autoplay controls="true">
-                <source src="http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd" dtype="application/dash+xml"/>
+            <video class="dashjs-player" autoplay controls>
+                <source src="http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd" type="application/dash+xml"/>
             </video>
             <br/>This is a dash.js player that should autostart<p/>
         </div>

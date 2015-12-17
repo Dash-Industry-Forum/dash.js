@@ -10,14 +10,13 @@
 
     <script>
         function init() {
-            var video,context,player;
+            var video,
+                player,
+                url = "http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd";
+
             video = document.querySelector("video");
-            context = new Dash.di.DashContext();
-            player = new MediaPlayer(context);
-            player.startup();
-            player.attachView(video);
-            player.setAutoPlay(true);
-            player.attachSource("http://dash.edgesuite.net/envivio/Envivio-dash2/manifest.mpd");
+            player = MediaPlayer({}).create();
+            player.initialize(video, url, true);
         }
     </script>
 

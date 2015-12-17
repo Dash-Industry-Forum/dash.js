@@ -66,9 +66,11 @@ import DashParser from '../dash/DashParser.js';
 import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js";
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import TimelineConverter from '../dash/TimelineConverter.js';
+import MediaPlayerFactory from '../streaming/MediaPlayerFactory.js';
 
 const DEFAULT_UTC_TIMING_SOURCE = { scheme: "urn:mpeg:dash:utc:http-xsdate:2014", value: "http://time.akamai.com/?iso" };
 let factory = FactoryMaker.getClassFactory(MediaPlayer);
+factory.MediaPlayerFactory = MediaPlayerFactory().getInstance();
 factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
 factory.events = MediaPlayerEvents;
 export default factory;

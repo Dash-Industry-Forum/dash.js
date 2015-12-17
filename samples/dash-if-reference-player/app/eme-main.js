@@ -76,17 +76,14 @@ app.controller('DashController', function($scope, Sources, Notes, Contributors, 
     ////////////////////////////////////////
 
     video = document.querySelector(".dash-video-player video");
-    player = new MediaPlayer();
-    $scope.version = player.getVersion();
-
-    player.startup();
+    player = MediaPlayer({}).create();
+    player.initialize(video, null, true);
     player.on(MediaPlayer.events.ERROR, onError.bind(this));
-    player.attachView(video);
     player.attachVideoContainer(document.getElementById("videoContainer"));
-    player.setAutoPlay(true);
     controlbar = new ControlBar(player, video);
     controlbar.initialize();
-    controlbar.disable() //controlbar.hide() // other option
+    controlbar.disable();
+    $scope.version = player.getVersion();
 
     function getUrlVars() {
         var vars = {};
