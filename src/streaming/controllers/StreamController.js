@@ -37,14 +37,16 @@ import Events from '../../core/events/Events.js';
 import URIQueryAndFragmentModel from '../models/URIQueryAndFragmentModel.js';
 import VideoModel from '../models/VideoModel.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-
-const STREAM_END_THRESHOLD = 0.2;
+import Debug from '../../core/Debug.js';
 
 export default FactoryMaker.getSingletonFactory(StreamController);
 
 function StreamController() {
-    let context = this.context;
 
+    const STREAM_END_THRESHOLD = 0.2;
+
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
     let instance = {
@@ -65,8 +67,7 @@ function StreamController() {
     return instance;
 
 
-    let log,
-        capabilities,
+    let capabilities,
         manifestUpdater,
         manifestLoader,
         manifestModel,
@@ -126,7 +127,6 @@ function StreamController() {
         playbackController = PlaybackController(context).getInstance();
         playbackController.setConfig({
             streamController: instance,
-            log: log,
             timelineConverter: timelineConverter,
             metricsModel: metricsModel,
             metricsExt: metricsExt,
@@ -413,7 +413,6 @@ function StreamController() {
                         adapter: adapter,
                         timelineConverter: timelineConverter,
                         capabilities: capabilities,
-                        log: log,
                         errHandler: errHandler
                     });
                     stream.initialize(streamInfo, protectionController);
@@ -511,7 +510,6 @@ function StreamController() {
             });
 
             timeSyncController.setConfig({
-                log: log,
                 metricsModel: metricsModel,
                 metricsExt: metricsExt
             });
@@ -555,9 +553,6 @@ function StreamController() {
     function setConfig(config){
         if (!config) return;
 
-        if (config.log){
-            log = config.log;
-        }
         if (config.capabilities){
             capabilities = config.capabilities;
         }

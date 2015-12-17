@@ -36,21 +36,19 @@ import MetricsModel from '../streaming/models/MetricsModel.js';
 import Events from '../core/events/Events.js';
 import EventBus from '../core/EventBus.js';
 import FactoryMaker from '../core/FactoryMaker.js';
+import Debug from '../core/Debug.js';
 
 const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
-
 let factory = FactoryMaker.getClassFactory(DashHandler);
-
 factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
-
 export default factory;
 
 function DashHandler(config) {
 
     let context = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
-    let log = config.log;
     let baseURLExt = config.baseURLExt;
     let timelineConverter = config.timelineConverter;
     let metricsExt = config.metricsExt;
@@ -71,6 +69,7 @@ function DashHandler(config) {
     }
 
     setup();
+
     return instance;
 
     let index,

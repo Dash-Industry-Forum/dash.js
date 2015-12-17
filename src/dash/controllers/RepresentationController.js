@@ -44,12 +44,13 @@ import EventBus from '../../core/EventBus.js';
 import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 
-const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
 export default FactoryMaker.getClassFactory(RepresentationController);
 
 function  RepresentationController() {
-    let context = this.context;
 
+    const SEGMENTS_UPDATE_FAILED_ERROR_CODE = 1;
+
+    let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
     let instance = {

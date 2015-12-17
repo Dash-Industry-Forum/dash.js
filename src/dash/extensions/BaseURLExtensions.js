@@ -36,19 +36,20 @@ import Events from '../../core/events/Events.js'
 import EventBus from '../../core/EventBus.js';
 import BoxParser from '../../streaming/utils/BoxParser.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
 export default FactoryMaker.getSingletonFactory(BaseURLExtensions);
 
 function  BaseURLExtensions() {
-    let context = this.context;
 
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
     let instance = {
         initialize:initialize,
         loadInitialization: loadInitialization,
         loadSegments:loadSegments,
-        setConfig:setConfig,
         reset:reset
     }
 
@@ -56,8 +57,7 @@ function  BaseURLExtensions() {
 
     let errHandler,
         boxParser,
-        requestModifierExt,
-        log;
+        requestModifierExt;
 
     function initialize() {
         errHandler = ErrorHandler(context).getInstance();
@@ -224,14 +224,6 @@ function  BaseURLExtensions() {
 
         sendRequest(request, info);
         log("Perform SIDX load: " + info.url);
-    }
-
-    function setConfig(config) {
-        if (!config) return;
-
-        if (config.log) {
-            log = config.log;
-        }
     }
 
     function reset() {

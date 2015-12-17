@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Debug from '../utils/Debug.js';
 import AbrController from '../controllers/AbrController.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
 const LOCAL_STORAGE_VIDEO_BITRATE_KEY = "dashjs_vbitrate";
 const LOCAL_STORAGE_AUDIO_BITRATE_KEY = "dashjs_abitrate";
@@ -55,7 +55,9 @@ factory.LOCAL_STORAGE_VIDEO_SETTINGS_KEY = LOCAL_STORAGE_VIDEO_SETTINGS_KEY;
 export default factory;
 
 function DOMStorage() {
+
     let context = this.context;
+    let log = Debug(context).getInstance().log;
 
     let instance = {
         checkInitialBitrate: checkInitialBitrate,
@@ -72,12 +74,9 @@ function DOMStorage() {
         abrController,
         lastBitrateCachingEnabled,
         lastMediaSettingsCachingEnabled,
-        experationDict,
-        log;
+        experationDict;
 
     function setup() {
-        log = Debug(context).getInstance().log;
-
         experationDict = {
             BITRATE_EXPIRATION :DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION,
             MEDIA_SETTINGS_EXPIRATION :DEFAULT_LOCAL_STORAGE_MEDIA_SETTINGS_EXPIRATION
@@ -85,7 +84,6 @@ function DOMStorage() {
 
         lastBitrateCachingEnabled = true;
         lastMediaSettingsCachingEnabled = true;
-
         abrController = AbrController(context).getInstance();
     }
 

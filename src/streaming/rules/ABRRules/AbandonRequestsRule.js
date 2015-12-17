@@ -31,16 +31,17 @@
 import SwitchRequest from '../SwitchRequest.js';
 import AbrController from '../../controllers/AbrController.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import Debug from '../../../core/Debug.js';
 
 const GRACE_TIME_THRESHOLD = 500;
 const ABANDON_MULTIPLIER = 1.5;
 
 export default FactoryMaker.getClassFactory(AbandonRequestsRule);
 
-function AbandonRequestsRule(config) {
+function AbandonRequestsRule(/*config*/) {
 
     let context = this.context;
-    let log = config.log;
+    let log = Debug(context).getInstance().log;
 
     let instance = {
         execute: execute,

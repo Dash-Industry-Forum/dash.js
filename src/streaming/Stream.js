@@ -40,24 +40,25 @@ import PlaybackController from './controllers/PlaybackController.js';
 import DashHandler from '../dash/DashHandler.js';
 import BaseURLExtensions from '../dash/extensions/BaseURLExtensions.js';
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
-import EventBus from './../core/EventBus.js';
-import Events from './../core/events/Events.js';
+import EventBus from '../core/EventBus.js';
+import Events from '../core/events/Events.js';
+import Debug from '../core/Debug.js';
 import FactoryMaker from '../core/FactoryMaker.js';
-
-const DATA_UPDATE_FAILED_ERROR_CODE = 1;
 
 export default FactoryMaker.getClassFactory(Stream);
 
 function Stream(config) {
-    let context = this.context;
 
+    const DATA_UPDATE_FAILED_ERROR_CODE = 1;
+
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
     let manifestModel = config.manifestModel;
     let manifestUpdater = config.manifestUpdater;
     let adapter = config.adapter;
     let capabilities = config.capabilities;
-    let log = config.log;
     let errHandler = config.errHandler;
     let timelineConverter = config.timelineConverter;
 
@@ -112,9 +113,7 @@ function Stream(config) {
         playbackController = PlaybackController(context).getInstance();
         abrController = AbrController(context).getInstance();
         mediaController = MediaController(context).getInstance();
-        fragmentController = FragmentController(context).create({
-            log: log
-        });
+        fragmentController = FragmentController(context).create();
 
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
@@ -316,17 +315,14 @@ function Stream(config) {
     function createIndexHandler() {
 
         let baseUrlExt = BaseURLExtensions(context).getInstance();
-        baseUrlExt.setConfig({log:log});
         baseUrlExt.initialize();
 
         let handler = DashHandler(context).create({
-            log:log,
             baseURLExt:baseUrlExt,
             timelineConverter: timelineConverter,
             metricsExt:DashMetricsExtensions(context).getInstance(),
             metricsModel:MetricsModel(context).getInstance()
-        }
-        );
+        });
 
         return handler;
     }
@@ -408,7 +404,6 @@ function Stream(config) {
         eventController = EventController(context).getInstance();
         eventController.initialize();
         eventController.setConfig({
-            log: log,
             manifestModel: manifestModel,
             manifestUpdater: manifestUpdater
         });
@@ -441,7 +436,7 @@ function Stream(config) {
     function checkIfInitializationCompleted() {
         var ln = streamProcessors.length;
         var hasError = !!updateError.audio || !!updateError.video;
-        var error = hasError ? new Error(Stream.DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null;
+        var error = hasError ? new Error(DATA_UPDATE_FAILED_ERROR_CODE, "Data update failed", null) : null;
         var i = 0;
 
         for (i; i < ln; i += 1) {

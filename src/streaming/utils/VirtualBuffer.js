@@ -42,8 +42,8 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(VirtualBuffer);
 
 function VirtualBuffer() {
-    let context = this.context;
 
+    let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
     let instance = {

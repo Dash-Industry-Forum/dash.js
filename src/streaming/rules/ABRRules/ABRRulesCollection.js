@@ -32,7 +32,6 @@ import ThroughputRule from './ThroughputRule.js';
 import BufferOccupancyRule from './BufferOccupancyRule.js';
 import InsufficientBufferRule from './InsufficientBufferRule.js';
 import AbandonRequestsRule from './AbandonRequestsRule.js';
-import Debug from '../../utils/Debug.js';
 import MetricsModel from '../../models/MetricsModel.js';
 import DashMetricsExtensions from '../../../dash/extensions/DashMetricsExtensions.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
@@ -64,31 +63,16 @@ function ABRRulesCollection() {
         qualitySwitchRules = [];
         abandonFragmentRules = [];
 
-        let log = Debug(context).getInstance().log;
         let metricsModel = MetricsModel(context).getInstance();
 
         qualitySwitchRules.push(ThroughputRule(context).create({
-                log:log,
                 metricsModel:metricsModel,
                 metricsExt:DashMetricsExtensions(context).getInstance()
             })
         );
-
-        qualitySwitchRules.push(BufferOccupancyRule(context).create({
-                log:log,
-                metricsModel:metricsModel
-            })
-        );
-
-        qualitySwitchRules.push(InsufficientBufferRule(context).create({
-                log:log,
-                metricsModel:metricsModel
-            })
-        );
-
-        abandonFragmentRules.push(AbandonRequestsRule(context).create({
-            log:log
-        }));
+        qualitySwitchRules.push(BufferOccupancyRule(context).create({metricsModel:metricsModel}));
+        qualitySwitchRules.push(InsufficientBufferRule(context).create({metricsModel:metricsModel}));
+        abandonFragmentRules.push(AbandonRequestsRule(context).create());
     }
 
     function getRules (type) {

@@ -33,6 +33,7 @@ import Error from './vo/Error.js';
 import EventBus from './../core/EventBus.js';
 import Events from './../core/events/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
+import Debug from '../core/Debug.js';
 
 const TIME_SYNC_FAILED_ERROR_CODE = 1;
 const HTTP_TIMEOUT_MS = 5000;
@@ -47,7 +48,9 @@ export default factory;
 function TimeSyncController() {
 
     let context = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
+
     let instance = {
         initialize: initialize,
         getOffsetToDeviceTimeMs: getOffsetToDeviceTimeMs,
@@ -62,7 +65,6 @@ function TimeSyncController() {
         isInitialised,
         useManifestDateHeaderTimeSource,
         handlers,
-        log,
         metricsModel,
         metricsExt;
 
@@ -105,10 +107,6 @@ function TimeSyncController() {
 
     function setConfig(config) {
         if (!config) return;
-
-        if (config.log) {
-            log = config.log;
-        }
 
         if (config.metricsModel) {
             metricsModel = config.metricsModel;

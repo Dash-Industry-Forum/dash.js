@@ -55,7 +55,6 @@ function  TextSourceBuffer() {
         adapter,
         manifestExt,
         mediaController,
-        log,
         allTracksAreDisabled,
         parser,
         VTTParser,
@@ -225,9 +224,6 @@ function  TextSourceBuffer() {
         if (config.TTMLParser) {
             TTMLParser = config.TTMLParser;
         }
-        if (config.log) {
-            log = config.log;
-        }
     }
 
     function setTextTrack() {
@@ -274,7 +270,6 @@ function  TextSourceBuffer() {
         var parser;
         if (mimeType === "text/vtt") {
             parser = VTTParser;
-            parser.setConfig({log: log});
         } else if (mimeType === "application/ttml+xml" || mimeType === "application/mp4") {
             parser = TTMLParser;
             parser.setConfig({videoModel: videoModel});

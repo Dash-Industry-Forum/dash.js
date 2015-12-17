@@ -35,7 +35,7 @@ import FragmentRequest from '../../vo/FragmentRequest.js';
 export default FactoryMaker.getClassFactory(PlaybackTimeRule);
 
 function PlaybackTimeRule(config) {
-    "use strict";
+
     let context = this.context;
 
     let adapter = config.adapter;

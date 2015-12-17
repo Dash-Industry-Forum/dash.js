@@ -36,7 +36,7 @@ import ManifestInfo from '../streaming/vo/ManifestInfo.js';
 import Event from './vo/Event.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
-const METRIC_LIST = {
+const METRIC_LIST = { //TODO need to refactor all that reference to be able to export like all other const on factory object.
     TCP_CONNECTION: "TcpConnection",
     HTTP_REQUEST: "HttpRequest",
     HTTP_REQUEST_TRACE: "HttpRequestTrace",

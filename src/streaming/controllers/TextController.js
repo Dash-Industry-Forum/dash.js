@@ -37,8 +37,8 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(TextController);
 
 function TextController(config) {
-    let context = this.context;
 
+    let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
     let sourceBufferExt = config.sourceBufferExt;

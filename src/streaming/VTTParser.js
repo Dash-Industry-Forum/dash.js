@@ -29,21 +29,22 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../core/FactoryMaker.js';
+import Debug from '../core/Debug.js';
 
 export default FactoryMaker.getSingletonFactory(VTTParser);
 
 function VTTParser() {
 
+    let log = Debug(context).getInstance().log;
+
     let instance = {
-        parse: parse,
-        setConfig: setConfig
+        parse: parse
     };
 
     setup();
     return instance;
 
-    let log,
-        regExNewLine,
+    let regExNewLine,
         regExToken,
         regExWhiteSpace,
         regExWhiteSpaceWordBoundry;
@@ -53,14 +54,6 @@ function VTTParser() {
         regExToken = /-->/;
         regExWhiteSpace = /(^[\s]+|[\s]+$)/g;
         regExWhiteSpaceWordBoundry = /\s\b/g;
-    }
-
-    function setConfig(config) {
-        if (!config) return;
-
-        if (config.logger) {
-            log = config.log;
-        }
     }
 
     function parse(data) {

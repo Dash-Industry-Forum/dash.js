@@ -50,13 +50,15 @@ import DashManifestExtensions from "../dash/extensions/DashManifestExtensions.js
 import DashMetricsExtensions from '../dash/extensions/DashMetricsExtensions.js';
 import RepresentationController from '../dash/controllers/RepresentationController.js';
 import ErrorHandler from './ErrorHandler.js';
-import Debug from '../streaming/utils/Debug.js';
+import Debug from '../core/Debug.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 export default FactoryMaker.getClassFactory(StreamProcessor);
 
 function StreamProcessor(config) {
+
     let context = this.context;
+    let log = Debug(context).getInstance().log;
 
     let indexHandler = config.indexHandler;
     let timelineConverter = config.timelineConverter;
@@ -111,13 +113,11 @@ function StreamProcessor(config) {
         representationController,
         fragmentController,
         fragmentLoader,
-        fragmentModel,
-        log;
+        fragmentModel;
 
 
     function setup() {
         mediaInfoArr = [];
-        log = Debug(context).getInstance().log;
     }
 
     function initialize(Type, FragmentController, mediaSource, Stream, EventController) {
@@ -136,7 +136,6 @@ function StreamProcessor(config) {
         bufferController.initialize(type, mediaSource, this);
 
         scheduleController = ScheduleController(context).create({
-            log: log,
             metricsModel: MetricsModel(context).getInstance(),
             manifestModel: manifestModel,
             adapter: adapter,
@@ -153,7 +152,6 @@ function StreamProcessor(config) {
         fragmentLoader = FragmentLoader(context).create({
             metricsModel: MetricsModel(context).getInstance(),
             errHandler: ErrorHandler(context).getInstance(),
-            log: log,
             requestModifierExt: RequestModifierExtensions(context).getInstance()
         });
 
@@ -306,7 +304,6 @@ function StreamProcessor(config) {
 
         if (type === "video" || type === "audio" || type === "fragmentedText") {
             controller = BufferController(context).create({
-                log: log,
                 metricsModel: MetricsModel(context).getInstance(),
                 manifestModel: manifestModel,
                 sourceBufferExt: SourceBufferExtensions(context).getInstance(),

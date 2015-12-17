@@ -28,15 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from './../core/EventBus.js';
-import Events from './../core/events/Events.js';
+import EventBus from '../core/EventBus.js';
+import Events from '../core/events/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
+import Debug from '../core/Debug.js';
 
 export default FactoryMaker.getSingletonFactory(ManifestUpdater);
 
 function ManifestUpdater() {
-    let context = this.context;
 
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
     let instance = {
@@ -55,15 +57,11 @@ function ManifestUpdater() {
         isUpdating,
         manifestLoader,
         manifestModel,
-        manifestExt,
-        log;
+        manifestExt;
 
     function setConfig(config){
         if (!config) return;
 
-        if (config.log) {
-            log = config.log;
-        }
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }

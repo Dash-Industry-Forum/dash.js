@@ -35,7 +35,7 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(LiveEdgeWithTimeSynchronizationRule);
 
 function LiveEdgeWithTimeSynchronizationRule(config) {
-    "use strict";
+
     let context = this.context;
 
     let timelineConverter = config.timelineConverter;

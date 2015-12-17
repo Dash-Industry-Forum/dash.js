@@ -55,7 +55,7 @@ import ScheduleRulesCollection from './rules/SchedulingRules/ScheduleRulesCollec
 import SynchronizationRulesCollection from './rules/SynchronizationRules/SynchronizationRulesCollection.js';
 import MediaSourceExtensions from './extensions/MediaSourceExtensions.js';
 import VideoModelExtensions from './extensions/VideoModelExtensions.js';
-import Debug from "./utils/Debug.js";
+import Debug from "./../core/Debug.js";
 import EventBus from "./../core/EventBus.js";
 import Events from './../core/events/Events.js';
 import MediaPlayerEvents from './MediaPlayerEvents.js';
@@ -79,6 +79,9 @@ function MediaPlayer() {
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
+    let debug = Debug(context).getInstance();
+    let log = debug.log;
+
 
     let instance = {
         initialize:initialize,
@@ -173,9 +176,7 @@ function MediaPlayer() {
         metricsExt,
         manifestExt,
         videoModel,
-        textSourceBuffer,
-        debug,
-        log;
+        textSourceBuffer;
 
     function setup() {
         initialized = false;
@@ -194,8 +195,6 @@ function MediaPlayer() {
         if (initialized) return;
         initialized = true;
 
-        debug = Debug(context).getInstance();
-        log = debug.log;
         manifestExt = DashManifestExtensions(context).getInstance();
         metricsExt = DashMetricsExtensions(context).getInstance();
         domStorage = DOMStorage(context).getInstance();
@@ -1187,7 +1186,6 @@ function MediaPlayer() {
         mediaController = MediaController(context).getInstance();
         mediaController.initialize();
         mediaController.setConfig({
-            log :log,
             DOMStorage :domStorage,
             errHandler :errHandler
         });
@@ -1204,7 +1202,6 @@ function MediaPlayer() {
 
         streamController = StreamController(context).getInstance();
         streamController.setConfig({
-            log: log,
             capabilities: capabilities,
             manifestLoader: createManifestLoader(),
             manifestModel: ManifestModel(context).getInstance(),
@@ -1227,14 +1224,12 @@ function MediaPlayer() {
         abrController.setConfig({
             abrRulesCollection: abrRulesCollection,
             rulesController: rulesController,
-            streamController: streamController,
-            log: log
+            streamController: streamController
         });
     }
 
     function createManifestLoader() {
         return ManifestLoader(context).create({
-            log :log,
             errHandler : errHandler,
             parser :createManifestParser(),
             metricsModel :metricsModel,
@@ -1244,9 +1239,7 @@ function MediaPlayer() {
 
     function createManifestParser() {
         //TODO-Refactor Need to be able to switch this create out so will need API to set which parser to use?
-        return DashParser(context).create({
-            log:log
-        });
+        return DashParser(context).create();
     }
 
     function createAdaptor() {

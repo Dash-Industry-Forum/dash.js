@@ -32,9 +32,10 @@ import XlinkController from './controllers/XlinkController.js';
 import XlinkLoader from './XlinkLoader.js';
 import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
-import EventBus from './../core/EventBus.js';
-import Events from './../core/events/Events.js';
+import EventBus from '../core/EventBus.js';
+import Events from '../core/events/Events.js';
 import FactoryMaker from '../core/FactoryMaker.js';
+import Debug from '../core/Debug.js';
 
 export default FactoryMaker.getClassFactory(ManifestLoader);
 
@@ -45,9 +46,9 @@ function ManifestLoader(config) {
     const PARSERERROR_ERROR_CODE = 1;
 
     let context = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
-    let log = config.log;
     let parser = config.parser;
     let errHandler = config.errHandler;
     let metricsModel = config.metricsModel;

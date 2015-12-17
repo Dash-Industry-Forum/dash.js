@@ -42,7 +42,9 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getSingletonFactory(DashManifestExtensions);
 
 function DashManifestExtensions() {
+
     let context = this.context;
+    let timelineConverter = TimelineConverter(context).getInstance();//TODO Need to pass this in not bake in
 
     let instance = {
         getIsTypeOf: getIsTypeOf,
@@ -91,8 +93,6 @@ function DashManifestExtensions() {
         getEventStreamForRepresentation: getEventStreamForRepresentation,
         getUTCTimingSources: getUTCTimingSources
     }
-
-    let timelineConverter = TimelineConverter(context).getInstance();
 
     return instance;
 

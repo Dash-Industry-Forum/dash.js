@@ -46,7 +46,7 @@ factory.WEAK = WEAK;
 export default factory;
 
 function SwitchRequest (v, p) {
-    "use strict";
+
     let value = (v === undefined) ? NO_CHANGE : v;
     let priority = (p === undefined) ? DEFAULT : p;
 

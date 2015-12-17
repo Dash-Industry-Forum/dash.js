@@ -32,6 +32,7 @@ import DOMStorage from '../utils/DOMStorage.js';
 import Events from '../../core/events/Events.js';
 import EventBus from '../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
 const TRACK_SWITCH_MODE_NEVER_REPLACE = "neverReplace";
 const TRACK_SWITCH_MODE_ALWAYS_REPLACE = "alwaysReplace";
@@ -50,8 +51,9 @@ factory.DEFAULT_INIT_TRACK_SELECTION_MODE = DEFAULT_INIT_TRACK_SELECTION_MODE;
 export default factory;
 
 function MediaController() {
-    let context = this.context;
 
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
     let instance = {
@@ -80,7 +82,6 @@ function MediaController() {
         initialSettings,
         selectionMode,
         switchMode,
-        log,
         errHandler,
         DOMStorage;
 
@@ -327,9 +328,6 @@ function MediaController() {
     function setConfig(config){
         if (!config) return;
 
-        if (config.log){
-            log = config.log;
-        }
         if (config.errHandler){
             errHandler = config.errHandler;
         }

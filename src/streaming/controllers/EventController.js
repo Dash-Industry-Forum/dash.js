@@ -31,15 +31,17 @@
 
 import VideoModel from '../models/VideoModel.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-
-const MPD_RELOAD_SCHEME = "urn:mpeg:dash:event:2012";
-const MPD_RELOAD_VALUE = 1;
+import Debug from '../../core/Debug.js';
 
 export default FactoryMaker.getSingletonFactory(EventController);
 
-function EventController(){
-    "use strict";
+function EventController() {
+
+    const MPD_RELOAD_SCHEME = "urn:mpeg:dash:event:2012";
+    const MPD_RELOAD_VALUE = 1;
+
     let context = this.context;
+    let log = Debug(context).getInstance().log;
 
     let instance = {
         initialize: initialize,
@@ -53,6 +55,15 @@ function EventController(){
 
     return instance;
 
+    let inlineEvents, // Holds all Inline Events not triggered yet
+        inbandEvents, // Holds all Inband Events not triggered yet
+        activeEvents, // Holds all Events currently running
+        eventInterval, // variable holding the setInterval
+        refreshDelay, // refreshTime for the setInterval
+        presentationTimeThreshold,
+        manifestModel,
+        manifestUpdater;
+
     function initialize() {
         inlineEvents = {};
         inbandEvents = {};
@@ -61,32 +72,6 @@ function EventController(){
         refreshDelay = 100;
         presentationTimeThreshold = refreshDelay / 1000;
     }
-
-    function setConfig(config) {
-        if (!config) return;
-
-        if (config.log) {
-            log = config.log;
-        }
-
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
-        }
-
-        if (config.manifestUpdater) {
-            manifestUpdater = config.manifestUpdater;
-        }
-    }
-
-    let inlineEvents, // Holds all Inline Events not triggered yet
-        inbandEvents, // Holds all Inband Events not triggered yet
-        activeEvents, // Holds all Events currently running
-        eventInterval, // variable holding the setInterval
-        refreshDelay, // refreshTime for the setInterval
-        presentationTimeThreshold,
-        log,
-        manifestModel,
-        manifestUpdater;
 
     function clear() {
         if(eventInterval !== null) {
@@ -199,6 +184,18 @@ function EventController(){
         }
         log("Refresh manifest @ " + url);
         manifestUpdater.getManifestLoader().load(url);
+    }
+
+    function setConfig(config) {
+        if (!config) return;
+
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
+        }
+
+        if (config.manifestUpdater) {
+            manifestUpdater = config.manifestUpdater;
+        }
     }
 
     function reset() {

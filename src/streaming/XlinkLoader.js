@@ -32,17 +32,19 @@ import Error from './vo/Error.js';
 import HTTPRequest from './vo/metrics/HTTPRequest.js';
 import EventBus from '../core/EventBus.js';
 import Events from '../core/events/Events.js';
+import Debug from '../core/Debug.js';
 import FactoryMaker from '../core/FactoryMaker.js';
-
-const RETRY_ATTEMPTS = 1;
-const RETRY_INTERVAL = 500;
-const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 
 export default FactoryMaker.getClassFactory(XlinkLoader);
 
 function XlinkLoader(config) {
 
+    const RETRY_ATTEMPTS = 1;
+    const RETRY_INTERVAL = 500;
+    const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
+
     let context  = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
     let errHandler = config.errHandler;
@@ -53,12 +55,9 @@ function XlinkLoader(config) {
         load:load
     };
 
-
     return instance;
 
-
     function load(url, element, resolveObject) {
-        // Error handling: resolveToZero, no valid url
         if (url === RESOLVE_TO_ZERO) {
             element.resolvedContent = null;
             element.resolved = true;
@@ -67,7 +66,6 @@ function XlinkLoader(config) {
             doLoad(url, element, resolveObject, RETRY_ATTEMPTS);
         }
     }
-
 
     function doLoad(url, element, resolveObject, remainingAttempts) {
         var request = new XMLHttpRequest(),
@@ -135,13 +133,13 @@ function XlinkLoader(config) {
                 request.getAllResponseHeaders());
 
             if (remainingAttempts > 0) {
-                console.log("Failed loading xLink content: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
+                log("Failed loading xLink content: " + url + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
                 remainingAttempts--;
                 setTimeout(function () {
                     doLoad(url, element, resolveObject, remainingAttempts);
                 }, RETRY_INTERVAL);
             } else {
-                console.log("Failed loading Xlink content: " + url + " no retry attempts left");
+                log("Failed loading Xlink content: " + url + " no retry attempts left");
                 errHandler.downloadError("xlink", url, request);
                 element.resolved = true;
                 element.resolvedContent = null;
@@ -164,7 +162,7 @@ function XlinkLoader(config) {
         };
 
         try {
-            //console.log("Start loading manifest: " + url);
+            //log("Start loading manifest: " + url);
             request.onload = onload;
             request.onloadend = report;
             request.onerror = report;
@@ -172,7 +170,7 @@ function XlinkLoader(config) {
             request.open("GET", requestModifierExt.modifyRequestURL(url), true);
             request.send();
         } catch (e) {
-            console.log("Error");
+            log("Xlink loading Error");
             request.onerror();
         }
     }

@@ -35,16 +35,15 @@ import MetricsModel from '../models/MetricsModel.js';
 import EventBus from '../../core/EventBus.js';
 import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
-
+import Debug from '../../core/Debug.js';
 
 export default FactoryMaker.getClassFactory(FragmentController);
 
-function FragmentController(config) {
+function FragmentController(/*config*/) {
+
     let context = this.context;
-
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
-
-    let log = config.log;
 
     let instance = {
         process :process,
@@ -81,7 +80,7 @@ function FragmentController(config) {
         var model = findModel(scheduleController);
 
         if (!model){
-            model = FragmentModel(context).create({log:log, metricsModel :MetricsModel(context).getInstance()});
+            model = FragmentModel(context).create({metricsModel: MetricsModel(context).getInstance()});
             model.setScheduleController(scheduleController);
             fragmentModels.push(model);
         }

@@ -36,6 +36,7 @@ import FragmentModel from '../models/FragmentModel.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
 const ABANDON_LOAD = "abandonload";
 const BANDWIDTH_SAFETY = 0.9;
@@ -50,8 +51,9 @@ factory.BANDWIDTH_SAFETY = BANDWIDTH_SAFETY;
 export default factory;
 
 function AbrController() {
-    let context = this.context;
 
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
     let instance = {
@@ -83,8 +85,7 @@ function AbrController() {
 
     return instance;
 
-    let log,
-        abrRulesCollection,
+    let abrRulesCollection,
         rulesController,
         streamController,
         autoSwitchBitrate,
@@ -118,9 +119,6 @@ function AbrController() {
     function setConfig(config){
         if (!config) return;
 
-        if (config.log){
-            log = config.log;
-        }
         if (config.abrRulesCollection){
             abrRulesCollection = config.abrRulesCollection;
         }
@@ -208,7 +206,7 @@ function AbrController() {
             }
 
             oldQuality = getQualityFor(type, streamInfo);
-            //if (quality === oldQuality || (abandonmentStateDict[type].state === ABANDON_LOAD &&  quality > oldQuality)) return;
+            if (quality === oldQuality || (abandonmentStateDict[type].state === ABANDON_LOAD &&  quality > oldQuality)) return;
             if (quality !== oldQuality) {
 
                 setInternalQuality(type, streamId, quality);

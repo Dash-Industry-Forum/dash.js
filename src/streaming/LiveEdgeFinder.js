@@ -43,8 +43,8 @@ factory.LIVE_EDGE_NOT_FOUND_ERROR_CODE = LIVE_EDGE_NOT_FOUND_ERROR_CODE;
 export default factory;
 
 function LiveEdgeFinder() {
-    let context = this.context;
 
+    let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
     let instance = {

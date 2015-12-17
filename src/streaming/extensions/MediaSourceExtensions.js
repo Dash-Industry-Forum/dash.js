@@ -44,7 +44,6 @@ function MediaSourceExtensions() {
     return instance;
 
     function createMediaSource() {
-        "use strict";
 
         var hasWebKit = ("WebKitMediaSource" in window);
         var hasMediaSource = ("MediaSource" in window);
@@ -59,7 +58,6 @@ function MediaSourceExtensions() {
     }
 
     function attachMediaSource(source, videoModel) {
-        "use strict";
 
         var objectURL = window.URL.createObjectURL(source);
 
@@ -69,14 +67,12 @@ function MediaSourceExtensions() {
     }
 
     function detachMediaSource(videoModel) {
-        "use strict";
         // it seems that any value passed to the setSource is cast to a sting when setting element.src,
         // so we cannot use null or undefined to reset the element. Use empty string instead.
         videoModel.setSource("");
     }
 
     function setDuration(source, value) {
-        "use strict";
 
         if (source.duration != value)
             source.duration = value;
@@ -85,7 +81,6 @@ function MediaSourceExtensions() {
     }
 
     function signalEndOfStream(source) {
-        "use strict";
 
         var buffers = source.sourceBuffers;
         var ln = buffers.length;

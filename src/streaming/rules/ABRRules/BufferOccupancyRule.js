@@ -31,14 +31,17 @@
 import SwitchRequest from '../SwitchRequest.js';
 import BufferController from '../../controllers/BufferController.js';
 import AbrController from '../../controllers/AbrController.js';
-
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import Debug from '../../../core/Debug.js';
+
 export default FactoryMaker.getClassFactory(BufferOccupancyRule);
 
 function BufferOccupancyRule(config) {
+
     let context = this.context;
-    let log = config ? config.log : null;
-    let metricsModel = config ? config.metricsModel : null;
+    let log = Debug(context).getInstance().log;
+
+    let metricsModel = config.metricsModel;
 
     let instance = {
         execute: execute,

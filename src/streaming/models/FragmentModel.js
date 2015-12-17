@@ -34,6 +34,7 @@ import EventBus from '../../core/EventBus.js';
 import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
 import FragmentRequest from '../vo/FragmentRequest.js';
+import Debug from '../../core/Debug.js';
 
 const FRAGMENT_MODEL_LOADING = "loading";
 const FRAGMENT_MODEL_EXECUTED = "executed";
@@ -53,8 +54,9 @@ export default factory;
 function FragmentModel(config) {
 
     let context = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
-    let log = config.log;
+
     let metricsModel = config.metricsModel;
 
     let instance = {

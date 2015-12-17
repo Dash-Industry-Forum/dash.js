@@ -39,15 +39,16 @@ import LiveEdgeFinder from '../LiveEdgeFinder.js';
 import EventBus from '../../core/EventBus.js';
 import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
 export default FactoryMaker.getClassFactory(ScheduleController);
 
 function ScheduleController(config) {
-    let context = this.context;
 
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
-    let log = config.log;
     let metricsModel = config.metricsModel;
     let manifestModel = config.manifestModel;
     let adapter = config.adapter;

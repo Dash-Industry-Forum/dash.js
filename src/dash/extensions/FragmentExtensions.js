@@ -33,7 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 export default FactoryMaker.getSingletonFactory(FragmentExtensions);
 
-function FragmentExtensions(config) {
+function FragmentExtensions(/*config*/) {
 
     let instance = {
         getSamplesInfo: getSamplesInfo,

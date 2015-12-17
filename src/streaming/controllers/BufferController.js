@@ -40,6 +40,7 @@ import EventBus from '../../core/EventBus.js';
 import Events from "../../core/events/Events.js";
 import BoxParser from '../utils/BoxParser.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const BUFFER_TIME_AT_TOP_QUALITY = 30;
@@ -67,9 +68,9 @@ export default factory;
 function BufferController(config) {
 
     let context = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
-    let log = config.log;
     let metricsModel = config.metricsModel;
     let manifestModel = config.manifestModel;
     let sourceBufferExt = config.sourceBufferExt;

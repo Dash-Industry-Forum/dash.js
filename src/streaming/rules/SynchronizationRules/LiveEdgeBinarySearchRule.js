@@ -38,8 +38,8 @@ const SEARCH_TIME_SPAN = 12 * 60 * 60; // set the time span that limits our sear
 export default FactoryMaker.getClassFactory(LiveEdgeBinarySearchRule);
 
 function LiveEdgeBinarySearchRule(config) {
-    let context = this.context;
 
+    let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
     let adapter = config.adapter;

@@ -32,20 +32,21 @@ import Error from './vo/Error.js';
 import EventBus from './../core/EventBus.js';
 import Events from "./../core/events/Events.js";
 import FactoryMaker from '../core/FactoryMaker.js';
-
-const RETRY_ATTEMPTS = 3;
-const RETRY_INTERVAL = 3;
+import Debug from '../core/Debug.js';
 
 export default FactoryMaker.getClassFactory(FragmentLoader);
 
 function FragmentLoader(config) {
-    const _self = this;
 
-    let eventBus = EventBus(_self.context).getInstance();
+    const RETRY_ATTEMPTS = 3;
+    const RETRY_INTERVAL = 3;
+
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
+    let eventBus = EventBus(context).getInstance();
 
     let metricsModel = config.metricsModel;
     let errHandler = config.errHandler;
-    let log = config.log;
     let requestModifierExt = config.requestModifierExt;
 
     let instance = {

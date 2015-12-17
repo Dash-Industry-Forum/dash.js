@@ -30,21 +30,22 @@
  */
 import ErrorHandler from '../streaming/ErrorHandler.js';
 import FactoryMaker from '../core/FactoryMaker.js';
-
-const SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
-const SECONDS_IN_MONTH = 30 * 24 * 60 * 60;
-const SECONDS_IN_DAY = 24 * 60 * 60;
-const SECONDS_IN_HOUR = 60 * 60;
-const SECONDS_IN_MIN = 60;
-const MINUTES_IN_HOUR = 60;
-const MILLISECONDS_IN_SECONDS = 1000;
+import Debug from '../core/Debug.js';
 
 export default FactoryMaker.getClassFactory(DashParser);
 
-function DashParser(config) {
+function DashParser(/*config*/) {
+
+    const SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
+    const SECONDS_IN_MONTH = 30 * 24 * 60 * 60;
+    const SECONDS_IN_DAY = 24 * 60 * 60;
+    const SECONDS_IN_HOUR = 60 * 60;
+    const SECONDS_IN_MIN = 60;
+    const MINUTES_IN_HOUR = 60;
+    const MILLISECONDS_IN_SECONDS = 1000;
 
     let context = this.context;
-    let log = config.log;
+    let log = Debug(context).getInstance().log;
 
     let instance = {
         parse:parse

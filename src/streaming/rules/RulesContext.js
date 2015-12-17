@@ -34,7 +34,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(RulesContext);
 
 function RulesContext(config) {
-    "use strict";
+
     let representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
     let sp = config.streamProcessor;
     let currentValue = config.currentValue;

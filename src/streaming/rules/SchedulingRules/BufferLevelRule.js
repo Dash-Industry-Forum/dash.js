@@ -36,7 +36,7 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(BufferLevelRule);
 
 function BufferLevelRule(config) {
-    "use strict";
+
     let context = this.context;
 
     let metricsExt = config.metricsExt;

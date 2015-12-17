@@ -38,7 +38,9 @@ export default FactoryMaker.getSingletonFactory(DashMetricsExtensions);
 
 
 function DashMetricsExtensions() {
+
     let context = this.context;
+    let manifestModel = ManifestModel(context).getInstance();//TODO Need to pass this in not bake in
 
     let instance = {
         getBandwidthForRepresentation: getBandwidthForRepresentation,
@@ -59,10 +61,7 @@ function DashMetricsExtensions() {
         getRequestsQueue: getRequestsQueue
     }
 
-    let manifestModel = ManifestModel(context).getInstance();
-
     return instance;
-
 
     function getBandwidthForRepresentation(representationId, periodId) {
         var representation;

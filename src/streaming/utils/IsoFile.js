@@ -35,7 +35,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 export default FactoryMaker.getClassFactory(IsoFile);
 
 function IsoFile() {
-    "use strict";
+
     let parsedIsoFile,
         commonProps,
         sidxProps,

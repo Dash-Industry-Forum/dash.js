@@ -34,14 +34,17 @@ import MediaPlayerModel from '../../streaming/models/MediaPlayerModel.js';
 import EventBus from '../../core/EventBus.js';
 import Events from "../../core/events/Events.js";
 import FactoryMaker from '../../core/FactoryMaker.js';
-
-const WALLCLOCK_TIME_UPDATE_INTERVAL = 50; //This value influences the startup time for live.
+import Debug from '../../core/Debug.js';
 
 export default FactoryMaker.getSingletonFactory(PlaybackController);
 
 function PlaybackController() {
-    let context = this.context;
 
+    //This value influences the startup time for live.
+    const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
+
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
     let eventBus = EventBus(context).getInstance();
 
     let instance = {
@@ -72,7 +75,6 @@ function PlaybackController() {
     return instance;
 
     let streamController,
-        log,
         timelineConverter,
         metricsModel,
         metricsExt,
@@ -217,10 +219,6 @@ function PlaybackController() {
 
         if (config.streamController) {
             streamController = config.streamController;
-        }
-
-        if (config.log) {
-            log = config.log;
         }
 
         if (config.timelineConverter) {

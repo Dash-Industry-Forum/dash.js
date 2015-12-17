@@ -33,16 +33,18 @@ import BufferController from '../../controllers/BufferController.js';
 import AbrController from '../../controllers/AbrController.js';
 import HTTPRequest from '../../vo/metrics/HTTPRequest.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
-
-const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2;
-const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3;
+import Debug from '../../../core/Debug.js';
 
 export default FactoryMaker.getClassFactory(ThroughputRule);
 
 function ThroughputRule(config) {
-    let context = this.context;
 
-    let log = config.log;
+    const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 2;
+    const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 3;
+
+    let context = this.context;
+    let log = Debug(context).getInstance().log;
+
     let metricsExt = config.metricsExt;
     let metricsModel = config.metricsModel;
 
