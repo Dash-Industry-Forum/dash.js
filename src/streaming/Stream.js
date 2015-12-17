@@ -366,8 +366,9 @@ function Stream(config) {
     }
 
     function initializeMediaForType(type, mediaSource) {
-        var manifest = manifestModel.getValue(),
-            allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, type);
+        var manifest = manifestModel.getValue();
+        var allMediaForType = adapter.getAllMediaInfoForType(manifest, streamInfo, type);
+
         var mediaInfo = null,
             initialMediaInfo;
 
