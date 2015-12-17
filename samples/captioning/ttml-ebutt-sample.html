@@ -23,20 +23,16 @@
 
         function startVideo() {
             var url = CAPTION_URL,
-                context,
                 TTMLRenderingDiv;
 
             videoElement = document.querySelector(".videoContainer video");
             TTMLRenderingDiv = document.querySelector("#ttml-rendering-div");
-            context = new Dash.di.DashContext();
-            player = new MediaPlayer(context);
-            player.startup();
-            player.attachView(videoElement);
+
+            player = MediaPlayer({}).create();
+            player.initialize(videoElement, url, true);
             player.attachTTMLRenderingDiv(TTMLRenderingDiv);
             controlbar = new ControlBar(player); // Checkout ControlBar.js for more info on how to target/add text tracks to UI
             controlbar.initialize();
-            player.setAutoPlay(true);
-            player.attachSource(url);
         }
 
 

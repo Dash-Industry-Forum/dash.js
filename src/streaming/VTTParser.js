@@ -35,6 +35,7 @@ export default FactoryMaker.getSingletonFactory(VTTParser);
 
 function VTTParser() {
 
+    let context = this.context
     let log = Debug(context).getInstance().log;
 
     let instance = {

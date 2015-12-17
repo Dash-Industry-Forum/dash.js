@@ -37,6 +37,8 @@ export default FactoryMaker.getSingletonFactory(TTMLParser);
 
 function TTMLParser() {
 
+    //let context = this.context;
+
     let instance = {
         parse: parse,
         setConfig: setConfig
